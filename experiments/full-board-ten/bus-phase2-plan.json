@@ -1,0 +1,186 @@
+{
+  "status": "Single observed diagnostic authorized byroot; no routinggain claim",
+  "question": "Which native byte1 child/stage/net consumes the remaining time, and does the production path reach the legal expanded-site domain for DQ13?",
+  "scope": "Exact captured candidate phase2 replay, diagnostic only. No whole-board completion or performance gain claim.",
+  "source": {
+    "runtimeControllerCommit": "e4344fecafcca442908a608484f574fd640c4c55",
+    "sourceCandidateCommit": "a928e5c2c0d7a13b4038430fb4fa3b9008b8bdb6",
+    "sourcePatchSha256": "0861f64ae6cb37b23de1582a4ac41ae58c58b7f93bbce804ba440952d4eba2c5",
+    "sourceMappingSha256": "76dfde9e3a6e5562bfc1e0b53bdd381ceda94b784b0324c44e7423064be6c317",
+    "candidateCoreSha256": "9dbc237005e3a517d804d7661abd1a2d4519b7b678abac237d636ad8d84d26d6",
+    "publishedPackages": {
+      "main": "0.0.3234",
+      "core": "0.0.2414",
+      "eval": "0.0.1807",
+      "autorouter": "0.0.1127",
+      "bus": "0.0.62",
+      "publishedCoreSha256": "f8a561fdb5f796e6590524bde049412a9e43310416d00ff3b78e33558a65b49d",
+      "candidateCoreSha256": "9dbc237005e3a517d804d7661abd1a2d4519b7b678abac237d636ad8d84d26d6",
+      "noAutorouterOverride": true
+    },
+    "adapter": "Existing getBusLanesInputFromSrj from this exact Core bundle",
+    "pipeline": "Existing BusLanesPipelineSolver, native options {}",
+    "runtimeGraph": "Reuse frozen published3234 bootstrap/locks and qualified bounded Core overlay; retain every unrelated package, alias, source case and dependency identity."
+  },
+  "input": {
+    "artifact": {
+      "id": 14464941154,
+      "node_id": "MDg6QXJ0aWZhY3QxNDQ2NDk0MTE1NA==",
+      "name": "butterstick-bounded-pending-exits-spaced-candidate-1",
+      "size_in_bytes": 6836882,
+      "url": "https://api.github.com/repos/tscircuit/tscircuit-autorouter/actions/artifacts/14464941154",
+      "archive_download_url": "https://api.github.com/repos/tscircuit/tscircuit-autorouter/actions/artifacts/14464941154/zip",
+      "expired": false,
+      "digest": "sha256:def3d0830ff3e0d787bbb5eca068d02eb3ebb4f0cb37d1325171ceec43f0b471",
+      "created_at": "2026-11-18T19:39:26Z",
+      "updated_at": "2026-11-18T19:39:26Z",
+      "expires_at": "2026-11-25T19:39:24Z",
+      "workflow_run": {
+        "id": 44377275955,
+        "repository_id": 924883209,
+        "head_repository_id": 924883209,
+        "head_branch": "bench/bus-pending-exits-bounded-3234-20261118",
+        "head_sha": "e4344fecafcca442908a608484f574fd640c4c55"
+      }
+    },
+    "members": {
+      "results/butterstick/spaced/phase-2-input.srj.json.gz": {
+        "path": "results/butterstick/spaced/phase-2-input.srj.json.gz",
+        "bytes": 2062367,
+        "sha256": "8c570d59a95204509b2645716ba409ca65d70b4e664dc6092141099b0168c702",
+        "jsonSha256": "cc7843ecfae413f5afc1eefc88fa5dcd92e152aba3bb97fa266bd6ef1cafb272"
+      },
+      "results/butterstick/spaced/progress.json": {
+        "path": "results/butterstick/spaced/progress.json",
+        "bytes": 11455,
+        "sha256": "f35f520e2767d2a3f6151e5d102034310771512d52a2c2fa5c91aab98739530f"
+      }
+    },
+    "rawSha256": "cc7843ecfae413f5afc1eefc88fa5dcd92e152aba3bb97fa266bd6ef1cafb272",
+    "obstacles": 1720,
+    "retainedTraces": 16,
+    "retainedVias": 16,
+    "connections": 8,
+    "terminals": 24,
+    "connectionOrder": [
+      "source_net_270",
+      "source_net_271",
+      "source_net_273",
+      "source_net_278",
+      "source_net_279",
+      "source_net_281",
+      "source_net_308",
+      "source_net_309"
+    ],
+    "target": {
+      "sourceNet": "source_net_309",
+      "nativeNet": "/FPGA-DDR3L/DQ13",
+      "ports": [
+        "pcb_port_848",
+        "pcb_port_944",
+        "pcb_port_1430"
+      ]
+    },
+    "transformations": "Only exact native Core adapter; hash raw and adapted input before/after. No reordering, geometry/policy changes or rerouting of byte0."
+  },
+  "reuse": {
+    "controller": "/workspace/bus-site-controller-3234",
+    "files": [
+      "experiments/full-board-ten/prepare-bus-site-input.py",
+      "experiments/full-board-ten/instrument-core.py",
+      "experiments/full-board-ten/run-bus-site-diagnostic.ts",
+      "experiments/full-board-ten/verify-bus-site-diagnostic.py",
+      ".github/workflows/bus-site-diagnostic.yml"
+    ],
+    "compatibilityProof": "/workspace/full-board-ten-20261118-3234/bus-pending-run44377275955/phase2-observer-compatibility.json",
+    "existingObserverAnchorsMatched": 44,
+    "qualification": "Existing old observer matches exact new Core in memory. This is a text compatibility proof, not dynamic observational equivalence."
+  },
+  "recommendedExecution": {
+    "worker": "blacksmith-8vcpu-ubuntu-2404-arm",
+    "bun": "1.4.3",
+    "jobs": 1,
+    "lanes": [
+      "observed"
+    ],
+    "softCaptureMs": 900000,
+    "hardCaptureSeconds": 960,
+    "workflowTimeoutMinutes": 30,
+    "productionRoutingBudgetOverrides": false,
+    "stopAfterFirstFallback": false,
+    "controlLaneExecuted": false,
+    "qualification": "Diagnostic only; structural hook review, exact source/input authentication. No dynamic neutrality or performance claim."
+  },
+  "minimalObserverChanges": [
+    "Accept exact qualified source-overlay manifest/source commit and CoreSHA; remove old published-only sourceOverrides=false assertions.",
+    "Use new captured input SHA and artifact member paths. Remove old historical11223-yield/null-fallback assertions and old lifecycle dependency.",
+    "Continue after first generated-sites return. Record solved/failed/capture distinctly; a900s diagnostic capture is valid evidence, not a route failure.",
+    "Retain existing parent/child pipeline _step wrapper. Snapshot root and nested child class, phase, attempt, iterations, MAX_ITERATIONS, carrierStrategy, canNegotiateGeneratedSites, child failureCode/congestionPass/conflictingLanes and active finishing/rematch/shared/backward/pending-exit generator flags.",
+    "Record phase transitions and 10-second checkpoints; output every active native net/domain status, including unvisited vs visited-empty.",
+    "Add generated-site subpass markers: expandAllGridSites, allowPadEdgeSites, expandEmptyDomainsOnly. Track runBoundedRouting configured limit, yields consumed, result and cancellation location without modifying the original generator or budget.",
+    "Attach monotonic timestamps/cumulative yield counters to existing local.search, domain.local/expanded/final, sites.begin/end and pair accepted/rejected events. Capture local-vs-expanded stage and net ordinal to reveal starvation before309.",
+    "For existing expandedSignalSites searches, record alignSurfaceGrid, explicit grid.bounds or null, maxLength, nx*ny and constructor wall time; cacheHit only if already known without a new query. Distinguish first unbounded-grid pass from already local aligned-grid pass. Do not change any bounds in the observer.",
+    "Capture GridVisibilitySearch constructor wall time and cell count, search steps/expanded/solved/failed/capped at actual existing callsites; retain original predicates/short-circuit order and never evaluate a geometry predicate twice.",
+    "Fix observer event-name collision: details.kind currently overwrites event kind; use eventType or write kind last. Rename candidate subtype to siteKind if needed only in diagnostic output.",
+    "Remove rasters, SVGs, full live solver snapshots and repeated input serialization. Never query live lazy component caches solely for reporting."
+  ],
+  "compactEvidence": {
+    "always": [
+      "input-proof.json",
+      "runtime-manifest.json",
+      "published-runtime-manifest.json",
+      "candidate-runtime-manifest.json",
+      "source-mapping.json",
+      "overlay-proof.json",
+      "instrumentation-proof.json",
+      "observation-proof.json",
+      "compressed native phase2 input",
+      "report.json or checkpoint.json on hardcapture"
+    ],
+    "perLane": [
+      "phase transition/checkpoint JSONL capped at1000 records",
+      "aggregate counters/timings by boundedfunction/net/layer/reason",
+      "last32 generated-site pass summaries containing all8 net domains",
+      "at most4000 detailed sampled events; dropped-example counts explicit and aggregate counts retained",
+      "at most20 errors",
+      "final active-stage summary even on external capture"
+    ],
+    "optional": [
+      "actual completed phase2 output.srj.json.gz and continuity/physical validation if solver returns output; do not manufacture partial completed output"
+    ],
+    "storageGoal": "Under10MB total; no raw grid/raster snapshots or whole Core bundle artifacts."
+  },
+  "neutralityChecks": [
+    "Original qualified Core hash and frozen dependency graph unchanged before/after",
+    "Only bounded unique read-only observer insertions plus export appendix; record source/control/observed entry hashes and exact patch records",
+    "Raw/native-adapted input hashes and native options unchanged",
+    "Original solver iteration limits and constructor arguments identical",
+    "No observer errors; sampled example overflow allowed only with complete bounded aggregate counters; no routing WASM attempts"
+  ],
+  "interpretation": [
+    "All8 domains must be observed: current source enumerates270,271,273,278,279,281,308,309 serially, so DQ13 may never be reached before a bounded pass cancels.",
+    "Local A\u00d7B\u00d7carrier searches each have up to3000 yields; first whole all-grid fallback also has3000-yield budget. These are observation targets, not established root cause.",
+    "Read-only source audit finds expandedSignalSites first pass supplies no bounds even for a maximum2mm pad-to-via path; second aligned pass already supplies local bounds. Large constructor/grid preparation may therefore dominate before yield budgets move. This requires live timing/cell-count evidence; no bound mutation is part of the diagnosis.",
+    "Previous full candidate top-layer enclosure is real, but3 physically valid0.4mm through-via sites exist in the accepted final copper. Do not claim3D impossibility.",
+    "If a phase replay completes, validate actual8net/24terminal output and retained copper; it remains a phase diagnostic, not a new full-board result."
+  ],
+  "reviewBeforeLaunch": [
+    "Independent observer/control-flow review",
+    "Unique anchors and syntax checks",
+    "Success/null/cancel wrapper contracts without routing",
+    "Rootpushafterreview"
+  ],
+  "observerHooksSource": {
+    "basedOn": "/workspace/bus-site-controller-3234/experiments/full-board-ten/instrument-core.py",
+    "scope": "Read-only events; geometry predicates evaluated once in original short-circuit order",
+    "wrapperContract": "Successful/null/cancel/throw behavior verified without routing; actualsuccessfulresult hascarriers/escapes/traces"
+  },
+  "localChecks": {
+    "instrumentedCoreUniqueAnchors": true,
+    "instrumentedCoreNodeSyntax": true,
+    "runnerTypeScriptTranspileAndNodeSyntax": true,
+    "pythonCompile": true,
+    "generatorWrapperSuccessNullCancelThrow": true,
+    "routingExecuted": false
+  }
+}

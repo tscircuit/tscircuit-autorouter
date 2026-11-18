@@ -1,0 +1,101 @@
+name: ButterStick native byte1 diagnostic
+
+on:
+  push:
+    branches: [bench/bus-phase2-observer-3234-20261118]
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  observe:
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 30
+    env:
+      FULL_BOARD_ROOT: ${{ github.workspace }}/.full-board-run
+      FULL_BOARD_RUNTIME_MANIFEST: ${{ github.workspace }}/.full-board-run/runtime-manifest.json
+      BUN_INSTALL_CACHE_DIR: ${{ github.workspace }}/.full-board-run/bun-cache
+      FULL_BOARD_EXPERIMENT: published
+      FULL_BOARD_COHORTS: original,spaced
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            experiments/full-board-ten
+            .github/workflows/bus-phase2-diagnostic.yml
+            AGENTS.md
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/tscircuit-autorouter
+          ref: ea398b4023119f65157e876a3101aa6ce3ca5f97
+          path: .full-board-run/sources/original
+          persist-credentials: false
+          sparse-checkout: experiments/full-board-priority-analysis
+      - uses: actions/checkout@v4
+        with:
+          repository: ShiboSoftwareDev/core-ddr-benchmark
+          ref: a3679559d6027aea2c441c1078853d58925d3a12
+          path: .full-board-run/sources/spaced
+          persist-credentials: false
+          sparse-checkout: |
+            full-boards
+            circuits
+            scripts
+            licenses
+            provenance
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/bus-lanes-solver
+          ref: 202b034659fb96bad44d11b8190f4044b675116f
+          path: .full-board-run/source-bus
+          persist-credentials: false
+          sparse-checkout: lib
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Prepare frozen runtime and exact source overlay
+        run: |
+          python3 experiments/full-board-ten/bootstrap.py --root "$FULL_BOARD_ROOT"
+          bun experiments/full-board-ten/prepare-cases.ts "$FULL_BOARD_ROOT/sources/original/experiments/full-board-priority-analysis" "$FULL_BOARD_ROOT/sources/spaced" "$FULL_BOARD_ROOT/cases" butterstick
+          python3 experiments/full-board-ten/prepare-bus-pending-exits.py "$FULL_BOARD_ROOT" baseline
+          python3 experiments/full-board-ten/prepare-bus-pending-exits.py "$FULL_BOARD_ROOT" source
+          python3 experiments/full-board-ten/prepare-bus-pending-exits.py "$FULL_BOARD_ROOT" candidate
+      - name: Authenticate captured byte1 and prepare observation copy
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 experiments/full-board-ten/prepare-bus-phase2-input.py "$FULL_BOARD_ROOT/bus-phase2"
+          python3 experiments/full-board-ten/instrument-bus-phase2.py "$FULL_BOARD_ROOT/npm/core-pending-exits/dist/index.js" "$FULL_BOARD_ROOT/npm/core-pending-exits/dist/bus-phase2-observed.js" > "$FULL_BOARD_ROOT/bus-phase2/instrumentation-proof.json"
+      - name: Observe exact native byte1 for at most900 seconds
+        id: observe
+        continue-on-error: true
+        run: >-
+          timeout --signal=TERM --kill-after=10s 960s
+          bun experiments/full-board-ten/run-bus-phase2-diagnostic.ts
+          "$FULL_BOARD_ROOT/npm/core-pending-exits/dist/bus-phase2-observed.js"
+          "$FULL_BOARD_ROOT/bus-phase2"
+          "$FULL_BOARD_ROOT/candidate-runtime-manifest.json"
+      - name: Restore and verify untouched published runtime
+        if: ${{ !cancelled() && steps.observe.outcome != 'skipped' }}
+        run: python3 experiments/full-board-ten/prepare-bus-pending-exits.py "$FULL_BOARD_ROOT" restore
+      - name: Classify diagnostic outcome
+        if: ${{ !cancelled() && steps.observe.outcome != 'skipped' }}
+        env:
+          OBSERVER_STEP_OUTCOME: ${{ steps.observe.outcome }}
+        run: python3 experiments/full-board-ten/verify-bus-phase2-diagnostic.py "$FULL_BOARD_ROOT/bus-phase2"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          include-hidden-files: true
+          name: butterstick-native-byte1-observer-${{ github.run_attempt }}
+          path: |
+            .full-board-run/bus-phase2
+            .full-board-run/*runtime-manifest.json
+            .full-board-run/bus-pending-exits/overlay-proof.json
+            .full-board-run/bus-pending-exits/source-mapping.json
+            .full-board-run/bus-pending-exits/assessment-runtime-restored.json
+            experiments/full-board-ten/bus-phase2-plan.json
+          retention-days: 7
+          if-no-files-found: warn
