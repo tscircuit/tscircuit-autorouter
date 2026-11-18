@@ -21,7 +21,7 @@ export default (): ReactElement => (
       style={{ width: "100%", maxWidth: 1000 }}
     />
     <img
-      alt="VCC on bottom and GATE on top, with no trace clearance errors"
+      alt="VCC and GATE clearance with surrounding copper and measured same-layer gap"
       src={
         new URL(
           "../../../tests/repro/__snapshots__/sepic-converter-pipeline9-clearance-bottom-clearance.snap.svg",
