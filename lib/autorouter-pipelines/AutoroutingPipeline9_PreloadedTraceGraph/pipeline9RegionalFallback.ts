@@ -3,7 +3,10 @@ import type {
   NodeWithPortPoints,
   PortPoint,
 } from "lib/types/high-density-types"
-import { classifyPointInBounds } from "lib/utils/classifyPointInBounds"
+import {
+  BOUNDARY_COORDINATE_TOLERANCE_MM,
+  classifyPointInBounds,
+} from "lib/utils/classifyPointInBounds"
 import type { PreloadedHighDensityRoute } from "./convertPreloadedTraceToHdRoutes"
 
 type RoutePoint = HighDensityRoute["route"][number]
@@ -286,9 +289,18 @@ export const createRegionalFallbackProblem = (
   for (const section of sections) {
     // A zero-length slice still owns its position in a contiguous source
     // section, so a replacement spanning its neighbors must absorb it. An
-    // isolated zero-length section has no copper to reroute and cannot form a
-    // meaningful fallback port pair.
-    if (pointsAreEqual(section.start.point, section.end.point)) continue
+    // isolated boundary contact cannot form a meaningful port pair. Retain
+    // its copper as an obstacle rather than hiding it from the repair solver.
+    if (
+      section.start.point.z === section.end.point.z &&
+      Math.hypot(
+        section.start.point.x - section.end.point.x,
+        section.start.point.y - section.end.point.y,
+      ) <= BOUNDARY_COORDINATE_TOLERANCE_MM
+    ) {
+      fixedObstacleRoutes.push(...section.sourceRoutes)
+      continue
+    }
     const connectionName = section.sourceRoutes[0]!.connectionName
     if (fixedRouteSectionsByConnectionName.has(connectionName)) {
       throw new Error(

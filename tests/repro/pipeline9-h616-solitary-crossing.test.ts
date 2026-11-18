@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test"
 import { readFileSync } from "node:fs"
 import { gunzipSync } from "node:zlib"
-import { createPreloadedInnerLayerPortValidator } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/createPreloadedInnerLayerPortValidator"
+import { createPreloadedPortValidator } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/createPreloadedPortValidator"
 import { pointToSegmentDistance } from "@tscircuit/math-utils"
 import type { AnyCircuitElement } from "circuit-json"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
@@ -54,7 +54,7 @@ test("routes the H616 ZQ1 crossing beside existing DDR copper", async (): Promis
   const uniform = new UniformPortDistributionSolver({
     ...fixture.uniformInput,
     obstacles: fixture.obstacles,
-    isPortPointClear: createPreloadedInnerLayerPortValidator({
+    isPortPointClear: createPreloadedPortValidator({
       srj: fixture.board.srj,
       connMap,
       traceWidth: fixture.highDensityInput.traceWidth,

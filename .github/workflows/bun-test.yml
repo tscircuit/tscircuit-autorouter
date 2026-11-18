@@ -61,7 +61,7 @@ jobs:
           fi
 
           echo "Running ${#test_files[@]} test files from $test_plan"
-          # Full-board routing and STMP157 mesh validation can exceed five minutes.
+          # Full-board sample 2 and STMP157 mesh validation can exceed five minutes.
           # Keep their assertions and allow the same runner-variance budget.
           regular_tests=()
           slow_tests=()
@@ -71,10 +71,10 @@ jobs:
               bun install --ignore-scripts --cwd tests/repro/orangecrab-via-roundoff
             fi
             case "$test_file" in
-              tests/bugs/bugreport107-board-1726.test.ts|tests/bugs/bugreport110/motherboard-power-full-route.test.ts|tests/repro/pipeline9-stmp157-native-ddr-via-space.test.ts)
+              tests/bugs/bugreport107-board-1726.test.ts|tests/bugs/bugreport110/motherboard-power-full-route.test.ts|tests/bugs/beagleplay-am6254-ddr4.test.ts|tests/repro/pipeline9-stmp157-native-ddr-via-space.test.ts)
                 full_board_tests+=("$test_file")
                 ;;
-              tests/features/pipeline9-srj18-sample2-bounded-regional-drc.test.ts|tests/features/pipeline9-a13-srj18-sample2-drc.test.ts|tests/features/pipeline9-srj18-sample2-via-simplification.test.ts|tests/repro/pipeline9-stmp157-mesh-memory.test.ts)
+              tests/features/pipeline9-srj18-sample2-bounded-regional-drc.test.ts|tests/features/pipeline9-a13-srj18-sample2-drc.test.ts|tests/features/pipeline9-srj18-sample2-via-simplification.test.ts|tests/repro/pipeline9-stmp157-mesh-memory.test.ts|tests/repro/pipeline10-artix7-ddr-bus-length-matching.test.ts|tests/repro/pipeline9-imx6-fixed-via-force-full-board.test.ts)
                 slow_tests+=("$test_file")
                 ;;
               *) regular_tests+=("$test_file") ;;

@@ -20,6 +20,7 @@ import { TOPOLOGY_MERGING_EPSILON } from "./topology-merging-types"
 import type {
   HorizontalTopologyMergingBucketKey,
   PreparedTopologyMergingNode,
+  TopologyMergingLayerTopology,
   TopologyMergingRegion,
   TopologyMergingSolverParams,
 } from "./topology-merging-types"
@@ -32,6 +33,8 @@ export type {
 const WORKING_NODE_RELEASE_THRESHOLD = 50_000
 
 type TopologyMergingSourceSetKey = string
+type MinY = TopologyMergingRegion["bounds"]["minY"]
+type MaxY = TopologyMergingRegion["bounds"]["maxY"]
 type LayerTopologySelection = ReturnType<
   typeof getLayerTopologiesForCoveredNodes
 >
@@ -55,6 +58,10 @@ export class TopologyMergingSolver extends BaseSolver {
   private layerTopologiesBySources = new Map<
     TopologyMergingSourceSetKey,
     LayerTopologySelection
+  >()
+  private readonly horizontalBucketKeysByTopology = new WeakMap<
+    TopologyMergingLayerTopology,
+    Map<MinY, Map<MaxY, HorizontalTopologyMergingBucketKey>>
   >()
   private readonly overruledTargetSourceKeys = new Set<string>()
   private outputNodes: CapacityMeshNode[] = []
@@ -275,7 +282,10 @@ export class TopologyMergingSolver extends BaseSolver {
           topologyMode: layerTopology.topologyMode,
           topologySignature: layerTopology.topologySignature,
         }
-        const bucketKey = getHorizontalMergeBucketKey(region)
+        const bucketKey = this.getCachedHorizontalBucketKey(
+          layerTopology,
+          region,
+        )
         const previousRegion =
           nextHorizontalRegionByBucket.get(bucketKey) ??
           this.horizontalRegionByBucket.get(bucketKey)
@@ -299,5 +309,29 @@ export class TopologyMergingSolver extends BaseSolver {
     }
     this.horizontalRegionByBucket = nextHorizontalRegionByBucket
     this.layerTopologiesBySources = nextLayerTopologiesBySources
+  }
+
+  private getCachedHorizontalBucketKey(
+    layerTopology: TopologyMergingLayerTopology,
+    region: TopologyMergingRegion,
+  ): HorizontalTopologyMergingBucketKey {
+    let keysByMinY = this.horizontalBucketKeysByTopology.get(layerTopology)
+    if (!keysByMinY) {
+      keysByMinY = new Map()
+      this.horizontalBucketKeysByTopology.set(layerTopology, keysByMinY)
+    }
+    let keysByMaxY = keysByMinY.get(region.bounds.minY)
+    if (!keysByMaxY) {
+      keysByMaxY = new Map()
+      keysByMinY.set(region.bounds.minY, keysByMaxY)
+    }
+    const cachedBucketKey = keysByMaxY.get(region.bounds.maxY)
+    if (cachedBucketKey !== undefined) return cachedBucketKey
+
+    // Slab selections are immutable. Reuse the exact serialized key while
+    // weak ownership releases keys for selections no longer in the slab cache.
+    const bucketKey = getHorizontalMergeBucketKey(region)
+    keysByMaxY.set(region.bounds.maxY, bucketKey)
+    return bucketKey
   }
 }

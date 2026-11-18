@@ -75,6 +75,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
   viaDiameter: number
   traceWidth: number
   obstacleMargin: number
+  padObstacles: SingleHighDensityRouteSolver["padObstacles"]
   captureSearchDebug: boolean
   rerouteAttemptsByConnection: Map<string, number>
 
@@ -127,7 +128,8 @@ export class IntraNodeRouteSolver extends BaseSolver {
     this.captureSearchDebug = params.captureSearchDebug ?? true
     const precomputedParams =
       params.precomputedIntraNodeRouteParams ??
-      precomputeIntraNodeRouteParams(nodeWithPortPoints)
+      precomputeIntraNodeRouteParams(params)
+    this.padObstacles = precomputedParams.padObstacles
     this.rootConnectionNameByConnectionName = new Map(
       precomputedParams.rootConnectionNameByConnectionName,
     )
@@ -244,6 +246,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
               !this.connMap!.areIdsConnected(sr.connectionName, connectionName),
           )
         : this.solvedRoutes,
+      padObstacles: this.padObstacles,
       futureConnections: this.unsolvedConnections,
       layerCount: this.nodeWithPortPoints.portPoints.reduce(
         (max, p) => Math.max(max, (p.z ?? 0) + 1),

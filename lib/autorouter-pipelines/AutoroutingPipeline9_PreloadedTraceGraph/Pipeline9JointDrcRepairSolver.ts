@@ -16,6 +16,8 @@ import { BaseSolver } from "lib/solvers/BaseSolver"
 import { isObstacleConnectedToRoute } from "lib/solvers/TraceWidthSolver/isObstacleConnectedToRoute"
 import { combinePreloadedAndRoutedTraces } from "lib/utils/combinePreloadedAndRoutedTraces"
 import { createPipeline9AutoroutingDrcEvaluator } from "./createPipeline9AutoroutingDrcEvaluator"
+import { createPipeline9ReferenceDrcGuard } from "./createPipeline9ReferenceDrcGuard"
+import { canValidatePipeline9ReferenceCopper } from "./canValidatePipeline9ReferenceCopper"
 import { convertToCircuitJson } from "lib/utils/convertToCircuitJson"
 import type {
   Obstacle,
@@ -1708,6 +1710,14 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     drcEvaluator.inputMode = "routes-only"
     this.drcEvaluator = drcEvaluator
 
+    const referenceDrcGuard = canValidatePipeline9ReferenceCopper({
+      originalSrj: params.originalSrj,
+      connections: params.srjWithPointPairs.connections,
+      hasNativePreloadedTraces,
+    })
+      ? createPipeline9ReferenceDrcGuard(cachedReferenceDrcEvaluator)
+      : undefined
+
     this.exactRepairParams = {
       srj: extendedSrjWithPointPairs as RepairSimpleRouteJson,
       hdRoutes: [
@@ -1720,6 +1730,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       effort: params.effort,
       viaHoleDiameter: params.defaultViaHoleDiameter,
       drcEvaluator,
+      referenceDrcEvaluator: referenceDrcGuard,
       viaInPadDrcEvaluator: drcEvaluator,
       maxIterations: maxRepairIterations,
       enableBroadFallback: false,
@@ -2282,6 +2293,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       ...this.exactRepairParams,
       hdRoutes: this.combinedOutput,
       inputHdRoutes: this.traceContactInputHdRoutes,
+      tracePairDrcEvaluator: this.cachedReferenceDrcEvaluator!,
       deferTraceContactGuard: false,
     })
     this.activeSubSolver = this.traceContactRepairSolver

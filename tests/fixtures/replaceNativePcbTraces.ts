@@ -6,6 +6,37 @@ type PcbTraceId = string
 type SourceTraceId = string
 const PORT_POSITION_TOLERANCE_MM = 1e-6
 
+function getNativeCopperOwner({
+  circuitJson,
+  connectionName,
+}: {
+  circuitJson: AnyCircuitElement[]
+  connectionName: string
+}): SourceTrace {
+  const net = circuitJson.find(
+    (element) =>
+      element.type === "source_net" && element.source_net_id === connectionName,
+  )
+  const owners = circuitJson.filter(
+    (element): element is SourceTrace =>
+      element.type === "source_trace" &&
+      (element.source_trace_id === connectionName ||
+        element.connected_source_net_ids?.includes(connectionName) === true),
+  )
+  if (owners.length === 0 || (!net && owners.length !== 1)) {
+    throw new Error(`Missing unambiguous native owner for ${connectionName}`)
+  }
+  if (owners.length === 1) return owners[0]!
+  // Core also routes source nets whose members each attach one native port.
+  return {
+    ...owners[0]!,
+    source_trace_id: connectionName,
+    connected_source_port_ids: [
+      ...new Set(owners.flatMap((owner) => owner.connected_source_port_ids)),
+    ],
+  }
+}
+
 /** Replace routed nets while retaining native pads, components and fixed copper. */
 export const replaceNativePcbTraces = ({
   circuitJson,
@@ -18,17 +49,13 @@ export const replaceNativePcbTraces = ({
 }): AnyCircuitElement[] => {
   const ownerByTraceId = new Map<PcbTraceId, SourceTrace>()
   for (const trace of traces) {
-    const owners = circuitJson.filter(
-      (element): element is SourceTrace =>
-        element.type === "source_trace" &&
-        (element.source_trace_id === trace.connection_name ||
-          element.connected_source_net_ids?.includes(trace.connection_name) ===
-            true),
+    ownerByTraceId.set(
+      trace.pcb_trace_id,
+      getNativeCopperOwner({
+        circuitJson,
+        connectionName: trace.connection_name,
+      }),
     )
-    if (owners.length !== 1) {
-      throw new Error(`Expected one native owner for ${trace.connection_name}`)
-    }
-    ownerByTraceId.set(trace.pcb_trace_id, owners[0]!)
   }
   const replacedSourceTraceIds = new Set<SourceTraceId>(
     [...ownerByTraceId.values()].map((source) => source.source_trace_id),
@@ -71,14 +98,13 @@ export const replaceNativePcbTraces = ({
   }
   return circuit.map((element): AnyCircuitElement => {
     if (element.type !== "pcb_trace") return element
-    const source = circuitJson.find(
-      (source) =>
-        source.type === "source_trace" &&
-        source.source_trace_id === element.source_trace_id,
-    )
-    if (source?.type !== "source_trace") {
+    if (!element.source_trace_id) {
       throw new Error("Missing native source for PCB port binding")
     }
+    const source = getNativeCopperOwner({
+      circuitJson,
+      connectionName: element.source_trace_id,
+    })
     const nativePorts = circuitJson.filter(
       (port): port is PcbPort =>
         port.type === "pcb_port" &&
