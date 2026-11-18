@@ -1,4 +1,9 @@
-import { distance, doSegmentsIntersect } from "@tscircuit/math-utils"
+import {
+  distance,
+  doSegmentsIntersect,
+  segmentToBoxMinDistance,
+  segmentToCircleMinDistance,
+} from "@tscircuit/math-utils"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import Flatbush from "flatbush"
 import type { GraphicsObject } from "graphics-debug"
@@ -7,7 +12,15 @@ import {
   SingleRouteCandidatePriorityQueue,
 } from "lib/data-structures/SingleRouteCandidatePriorityQueue"
 import type { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
+import type { Obstacle } from "lib/types/srj-types"
+import {
+  applyToPoint,
+  compose,
+  rotateDEG,
+  translate,
+} from "transformation-matrix"
 import { BaseSolver } from "../BaseSolver"
+import { isObstacleConnectedToRoute } from "../TraceWidthSolver/isObstacleConnectedToRoute"
 import { HighDensityHyperParameters } from "./HighDensityHyperParameters"
 
 export type FutureConnection = {
@@ -38,6 +51,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
   }
 
   obstacleRoutes: HighDensityIntraNodeRoute[]
+  padObstacles: (Obstacle & { __zLayers: number[] })[]
   bounds: { minX: number; maxX: number; minY: number; maxY: number }
   boundsSize: { width: number; height: number }
   boundsCenter: { x: number; y: number }
@@ -108,6 +122,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     rootConnectionName?: string
     regionId?: string
     obstacleRoutes: HighDensityIntraNodeRoute[]
+    padObstacles?: SingleHighDensityRouteSolver["padObstacles"]
     minDistBetweenEnteringPoints: number
     bounds: { minX: number; maxX: number; minY: number; maxY: number }
     A: { x: number; y: number; z: number }
@@ -140,6 +155,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     this.rootConnectionName = opts.rootConnectionName
     this.regionId = opts.regionId
     this.obstacleRoutes = opts.obstacleRoutes
+    this.padObstacles = opts.padObstacles ?? []
     this.A = opts.A
     this.B = opts.B
     this.viaDiameter = opts.viaDiameter ?? 0.3
@@ -246,7 +262,36 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     ])
   }
 
-  handleSimpleCases() {
+  private doesShortcutOverlapPad(): boolean {
+    const { A, B } = this
+    for (const obstacle of this.padObstacles) {
+      if (!obstacle.__zLayers.includes(A.z)) continue
+      if (isObstacleConnectedToRoute(obstacle, this, this.connMap)) continue
+      let distanceToObstacle: number
+      if (obstacle.shape === "circle") {
+        distanceToObstacle = segmentToCircleMinDistance(A, B, {
+          ...obstacle.center,
+          radius: obstacle.width / 2,
+        })
+      } else {
+        const boardToObstacleTransform = compose(
+          rotateDEG(-(obstacle.ccwRotationDegrees ?? 0)),
+          translate(-obstacle.center.x, -obstacle.center.y),
+        )
+        const localA = applyToPoint(boardToObstacleTransform, A)
+        const localB = applyToPoint(boardToObstacleTransform, B)
+        distanceToObstacle = segmentToBoxMinDistance(localA, localB, {
+          center: { x: 0, y: 0 },
+          width: obstacle.width,
+          height: obstacle.height,
+        })
+      }
+      if (distanceToObstacle < this.traceThickness / 2 - 1e-6) return true
+    }
+    return false
+  }
+
+  handleSimpleCases(): void {
     this.solved = true
     const { A, B } = this
     const route =
@@ -261,6 +306,47 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
             },
             B,
           ]
+    // A diagonal between boundary ports can clip the neighboring corner.
+    const isDiagonalShortcut = A.x !== B.x && A.y !== B.y
+    // Endpoint exceptions in the grid check must not hide boundary ports.
+    const aBoundaryDistance = Math.min(
+      A.x - this.bounds.minX,
+      this.bounds.maxX - A.x,
+      A.y - this.bounds.minY,
+      this.bounds.maxY - A.y,
+    )
+    const bBoundaryDistance = Math.min(
+      B.x - this.bounds.minX,
+      this.bounds.maxX - B.x,
+      B.y - this.bounds.minY,
+      this.bounds.maxY - B.y,
+    )
+    if (
+      A.z === B.z &&
+      isDiagonalShortcut &&
+      this.boundsSize.width > this.obstacleMargin &&
+      this.boundsSize.height > this.obstacleMargin &&
+      aBoundaryDistance < 1e-6 &&
+      bBoundaryDistance < 1e-6 &&
+      this.isNodeTooCloseToEdge({
+        x: (A.x + B.x) / 2,
+        y: (A.y + B.y) / 2,
+      }) &&
+      this.doesShortcutOverlapPad()
+    ) {
+      // Preserve the edge ports and use the same inset as the grid search.
+      const inset = this.obstacleMargin / 2
+      const minX = this.bounds.minX + inset
+      const maxX = this.bounds.maxX - inset
+      const minY = this.bounds.minY + inset
+      const maxY = this.bounds.maxY - inset
+      route.splice(
+        1,
+        0,
+        { x: clamp(A.x, minX, maxX), y: clamp(A.y, minY, maxY), z: A.z },
+        { x: clamp(B.x, minX, maxX), y: clamp(B.y, minY, maxY), z: B.z },
+      )
+    }
     this.solvedPath = {
       connectionName: this.connectionName,
       rootConnectionName: this.rootConnectionName,
@@ -409,7 +495,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     return false
   }
 
-  isNodeTooCloseToEdge(node: Node, isVia?: boolean) {
+  isNodeTooCloseToEdge(node: Pick<Node, "x" | "y">, isVia?: boolean): boolean {
     const margin = isVia
       ? this.viaDiameter / 2 + this.obstacleMargin / 2
       : this.obstacleMargin / 2

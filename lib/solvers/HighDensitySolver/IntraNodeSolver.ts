@@ -3,6 +3,7 @@ import type { GraphicsObject } from "graphics-debug"
 import { HighDensityRouteSpatialIndex } from "lib/data-structures/HighDensityRouteSpatialIndex"
 import { cloneAndShuffleArray } from "lib/utils/cloneAndShuffleArray"
 import { getBoundsFromNodeWithPortPoints } from "lib/utils/getBoundsFromNodeWithPortPoints"
+import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import type {
   HighDensityIntraNodeRoute,
   NodeWithPortPoints,
@@ -75,6 +76,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
   viaDiameter: number
   traceWidth: number
   obstacleMargin: number
+  padObstacles: SingleHighDensityRouteSolver["padObstacles"]
   captureSearchDebug: boolean
   rerouteAttemptsByConnection: Map<string, number>
 
@@ -124,6 +126,29 @@ export class IntraNodeRouteSolver extends BaseSolver {
     this.viaDiameter = params.viaDiameter ?? 0.3
     this.traceWidth = params.traceWidth ?? 0.15
     this.obstacleMargin = params.obstacleMargin ?? 0.15
+    const bounds = getBoundsFromNodeWithPortPoints(nodeWithPortPoints)
+    this.padObstacles = (params.obstacles ?? [])
+      .filter((obstacle) => {
+        if (!obstacle.componentId || obstacle.isFanoutSourceKeepout) return false
+        // The diagonal radius also covers rotated rectangles.
+        const radius =
+          Math.hypot(obstacle.width, obstacle.height) / 2 + this.traceWidth / 2
+        return (
+          obstacle.center.x + radius >= bounds.minX &&
+          obstacle.center.x - radius <= bounds.maxX &&
+          obstacle.center.y + radius >= bounds.minY &&
+          obstacle.center.y - radius <= bounds.maxY
+        )
+      })
+      .map((obstacle) => ({
+        ...obstacle,
+        __zLayers:
+          obstacle.__zLayers ??
+          obstacle.zLayers ??
+          obstacle.layers.map((layer) =>
+            mapLayerNameToZ(layer, params.layerCount ?? 2),
+          ),
+      }))
     this.captureSearchDebug = params.captureSearchDebug ?? true
     const precomputedParams =
       params.precomputedIntraNodeRouteParams ??
@@ -244,6 +269,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
               !this.connMap!.areIdsConnected(sr.connectionName, connectionName),
           )
         : this.solvedRoutes,
+      padObstacles: this.padObstacles,
       futureConnections: this.unsolvedConnections,
       layerCount: this.nodeWithPortPoints.portPoints.reduce(
         (max, p) => Math.max(max, (p.z ?? 0) + 1),
