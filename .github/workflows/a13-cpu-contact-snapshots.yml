@@ -13,8 +13,14 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - group: 2
-            tests: ./tests/bugs/bugreport82-0e99ec.test.ts ./tests/repro/icepi-power-ground-cutout.test.ts ./tests/repro/pipeline9-h616-full-board-ddr-clearance.test.ts
+          - group: 4
+            tests: ./tests/ordered-usb-pair-length-matching2.test.ts ./tests/bugs/bugreport99-nrf52810-drc-identity-swap.test.ts
+          - group: 6
+            tests: ./tests/bugs/bugreport64-be7d8f.test.ts
+          - group: 8
+            tests: ./tests/ordered-usb-pair-length-matching1.test.ts ./tests/bugs/bugreport94-56fa2e.test.ts ./tests/bugs/bugreport109-book-reading-clip-lamp.test.ts
+          - group: 9
+            tests: ./tests/bugs/bugreport85-pico-usb-differential-pair-visual.test.ts ./tests/bugs/nema-23-stepper-controller.test.ts
     steps:
       - uses: actions/checkout@v4
         with:
@@ -38,6 +44,37 @@ jobs:
         env:
           BUN_UPDATE_SNAPSHOTS: 1
         run: bun test ${{ matrix.tests }} --timeout 9999999
+      - name: Compare DRC counts for legacy snapshots without a DRC badge
+        if: matrix.group == 6
+        run: |
+          cat > review-legacy-drc.private.ts <<'TS'
+          import { AutoroutingPipelineSolver7_MultiGraph } from "./lib"
+          import { evaluateRelaxedDrc } from "./lib/testing/evaluate-relaxed-drc"
+          import type { SimpleRouteJson } from "./lib/types"
+          for(const name of ["bugreport64-be7d8f","bugreport71-dd7d15","bugreport82-0e99ec"]) {
+            const report=(await import("./fixtures/bug-reports/"+name+"/"+name+".json")).default
+            const srj=structuredClone(report.simple_route_json) as SimpleRouteJson
+            const solver=new AutoroutingPipelineSolver7_MultiGraph(srj)
+            solver.solve()
+            const traces=solver.getOutputSimplifiedPcbTraces()
+            const errors=evaluateRelaxedDrc({inputSrj:srj,srjWithPointPairs:solver.srjWithPointPairs!,routedTraces:traces}).errors
+            console.log("LEGACY_DRC_COMPARISON="+JSON.stringify({variant:process.argv[2],name,solved:solver.solved,traceCount:traces.length,drcCount:errors.length}))
+          }
+          TS
+          bun review-legacy-drc.private.ts head
+          mkdir -p /tmp/legacy-source
+          for file in lib/solvers/HighDensitySolver/SingleHighDensityRouteSolver.ts lib/solvers/HighDensitySolver/IntraNodeSolver.ts lib/solvers/HighDensitySolver/CachedIntraNodeRouteSolver.ts lib/solvers/TraceWidthSolver/TraceWidthSolver.ts; do cp --parents "$file" /tmp/legacy-source; done
+          cat > restore-legacy-source.private.ts <<'TS'
+          import {writeFile} from "node:fs/promises"
+          for(const path of ["lib/solvers/HighDensitySolver/SingleHighDensityRouteSolver.ts","lib/solvers/HighDensitySolver/IntraNodeSolver.ts","lib/solvers/HighDensitySolver/CachedIntraNodeRouteSolver.ts","lib/solvers/TraceWidthSolver/TraceWidthSolver.ts"]) {
+            const response=await fetch("https://raw.githubusercontent.com/tscircuit/tscircuit-autorouter/8c542342138f0db34a39126687d8015a5eb9920b/"+path)
+            if(!response.ok)throw Error(response.status+" "+path)
+            await writeFile(path,await response.text())
+          }
+          TS
+          bun restore-legacy-source.private.ts
+          bun review-legacy-drc.private.ts base
+          cp -r /tmp/legacy-source/lib/. lib/
       - name: Stage only generated SVG snapshots
         run: |
           python3 - <<'PY'
