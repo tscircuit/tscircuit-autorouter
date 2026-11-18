@@ -59,6 +59,7 @@ jobs:
             const state=projection.state
             if(state.phase===phase)continue
             phase=state.phase
+          if(phase==="select")projection.params.allowPartialRepair=false
             if(state.candidate)console.log("GAP_PROBE_CANDIDATE="+JSON.stringify({phase,counts:summarize(evaluator({traces:[],routes:state.candidate,hdRoutes:state.candidate}))}))
            }
            const output=projection.getOutput()
