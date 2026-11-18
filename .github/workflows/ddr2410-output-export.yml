@@ -1,0 +1,44 @@
+name: Export actual PCB circuits from both reroutes
+on:
+  push:
+    branches: [codex/ddr2410-output-export]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: refresh2410-*
+          run-id: 44260589530
+          github-token: ${{ github.token }}
+          path: captured/before
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: connectivity2410-*
+          run-id: 44265378769
+          github-token: ${{ github.token }}
+          path: captured/after
+      - name: Export native PCB output for matched renderings
+        run: |
+          python3 - <<'PY'
+          import base64,io,zipfile
+          from pathlib import Path
+          stream=io.BytesIO();counts={}
+          with zipfile.ZipFile(stream,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=9) as archive:
+              for side in ['before','after']:
+                  count=0
+                  for path in (Path('captured')/side).rglob('circuit.json'):
+                      if '/ddr/' in str(path): name=side+'/ddr/'+path.parent.name+'/circuit.json'
+                      elif path.parent.name in ['orangecrab-phased','icepi-phased']: name=side+'/full/'+path.parent.name+'/circuit.json'
+                      else: continue
+                      archive.writestr(name,path.read_bytes());count+=1
+                  counts[side]=count
+          assert counts=={'before':8,'after':8},counts
+          print('CONNECTIVITY2410_PCB_CIRCUITS_BEGIN')
+          encoded=base64.b64encode(stream.getvalue()).decode()
+          for offset in range(0,len(encoded),8000): print(encoded[offset:offset+8000])
+          print('CONNECTIVITY2410_PCB_CIRCUITS_END')
+          PY
