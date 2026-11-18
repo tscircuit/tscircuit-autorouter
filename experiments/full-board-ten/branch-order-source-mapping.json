@@ -1,0 +1,107 @@
+{
+  "passed": true,
+  "schemaVersion": 2,
+  "sourceCandidateCommit": "8dfe935be7de1f2798221fef6de5117303d2fedf",
+  "sourceCommitProvenance": "Revision supplied by controller; installer authenticates exact source patch and before/after file hashes.",
+  "bun": "1.4.3",
+  "typescript": "5.9.3",
+  "sourceFiles": {
+    "lib/route-multi-terminal-buses.ts": {
+      "beforeSha256": "d2f523d4fd33e28129888f6a2734b377daa5e3efaa9e3ec15e34ec36200980f6",
+      "afterSha256": "702fb915faa663f594ea7eaea6999bf7f069c6f209e336f86a05ce3a84fff743"
+    }
+  },
+  "sourceScopeQualification": [
+    {
+      "relative": "lib/route-multi-terminal-buses.ts",
+      "allOtherRuntimeStatementsUnchanged": true,
+      "erasedTypeDeclarationsAllowed": true,
+      "runtimeImports": [
+        {
+          "module": "./bus-lanes-pipeline-solver",
+          "names": [
+            {
+              "name": "BusLanesPipelineSolver"
+            }
+          ]
+        },
+        {
+          "module": "./effective-carrier-layers",
+          "names": [
+            {
+              "name": "effectiveCarrierLayers"
+            }
+          ]
+        },
+        {
+          "module": "./select-branch-attachment",
+          "names": [
+            {
+              "name": "selectBranchAttachment"
+            }
+          ]
+        },
+        {
+          "module": "@tscircuit/fanout-solver",
+          "names": [
+            {
+              "name": "getCopperLayerNames"
+            },
+            {
+              "name": "getRouteViaSpanLayers"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "originalCoreSha256": "25f088d42671b5efbf026c70a1216d754c01179e7d767f37e83bef11a0e79fd9",
+  "originalBusModuleSha256": "b0ba29b5b2db66be7218ea0896b179281aba3ddc39fbe7eeb472e4de1959f249",
+  "candidateCoreSha256": "426044a899711814d034b6b0e3574e1de541252e03ed04263a3af83c610eb898",
+  "bundledAliases": {
+    "getCopperLayerNames3": "getCopperLayerNames",
+    "getRouteViaSpanLayers3": "getRouteViaSpanLayers",
+    "point52": "point",
+    "a2": "a",
+    "b2": "b"
+  },
+  "externalAliases": {
+    "getCopperLayerNames": "getCopperLayerNames3",
+    "getRouteViaSpanLayers": "getRouteViaSpanLayers3"
+  },
+  "unchangedSegments": [
+    {
+      "start": 0,
+      "end": 3765913,
+      "sha256": "b1869bc21f2453aa4e62536823dc3aa4e3466cdec4482f8e41201bffb982077d"
+    },
+    {
+      "start": 3771421,
+      "end": 7227188,
+      "sha256": "190549090926576d6a14ce305eeedd82fb7f85edc8b2917bdbfe4597100e0657"
+    }
+  ],
+  "unchangedDeclarations": [],
+  "replacedDeclarations": [
+    {
+      "kind": "replace",
+      "name": "routeMultiTerminalBuses",
+      "relative": "lib/route-multi-terminal-buses.ts",
+      "characterOffset": 3765913,
+      "byteOffset": 3765913,
+      "oldBlockSha256": "17b52e27fc432736d964986f68ab0e76dd30277edb4b11c9f8d25f37ad5ae945",
+      "newBlockSha256": "22cead2acbcbd01a8507764aea2a0104c28bcbbaf59da641ad5570e057ce20cf",
+      "beforeTokenSha256": "f996c02d7323df1a8f18811ce7bead60d978d0f8cf1a5e13d0bc8c974f6c371a",
+      "afterTokenSha256": "5d9a354f13c59393fc6b38ccb1278539afe8660f5f08a759ff5d91218ae2e2d4"
+    }
+  ],
+  "insertedDeclarations": [],
+  "publishedCallCoverage": {
+    "function": "routeMultiTerminalBuses",
+    "callCount": 1,
+    "unchangedArgumentsAndArity": true
+  },
+  "nativeRoutingExecuted": false,
+  "moduleImported": false,
+  "normalization": "Same Bun syntax transform and parser-aware tokens; shorthand preserves keys and bundled aliases are lexically verified. Only routeMultiTerminalBuses is replaced. Runtime imports and every source runtime statement outside this function remain unchanged, as does every Core byte outside the single declaration span. External calls retain their exact arguments and arity. No native completion benefit is claimed."
+}

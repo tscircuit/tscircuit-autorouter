@@ -18,8 +18,8 @@
     },
     {
       "name": "run-one.ts",
-      "bytes": 11179,
-      "sha256": "ec8a529060577fd51d1718634d54fc061c9629080b2a710308000cb8c2f18ebc"
+      "bytes": 11177,
+      "sha256": "b3ac65f0a0e50e3759968cdd365df66d0cb1c446aef2b91e7e78ac87991fc101"
     },
     {
       "name": "calibrate-assessment.tsx",
@@ -47,7 +47,7 @@
     "basedOn": "500b7b89a7e748e601285e349e3266086c6b2614",
     "renderChanges": "Declared source-overlay metadata and native package/class identity checks only; same rendering calls, inputs and routing policies.",
     "assessmentChanges": "After candidate render process exits, restore authenticated published Core aliases before starting the unchanged assessor in a fresh process.",
-    "sourceChangeScope": "Only the reviewed pending-access Bus62 production patch in published Core2418:14 existing declarations and2 helper insertions, including active future branch guides and generated-copper costs. No physical branch-via, eligibility-gate or expanded-site bounds patch.",
+    "sourceChangeScope": "Only routeMultiTerminalBuses in published Core2418, using the reviewed clean Bus62 branch-order source; no pending-guidance, physical branch-via, eligibility-gate, expanded-site bounds or Core phase reordering.",
     "limitsMs": [
       900000,
       960000,
@@ -55,11 +55,11 @@
     ],
     "coverage": "Initial ButterStick spaced screen; not all-ten qualification."
   },
-  "pendingAccessPreparation": {
-    "inheritedController": "c32db53eb5998f7877afe0eb3f68c9fb408dce6e",
-    "sourceChangeScope": "Only the reviewed pending-access Bus62 production patch in published Core2418:14 existing declarations and2 helper insertions, including active future branch guides and generated-copper costs. No physical branch-via, eligibility-gate or expanded-site bounds patch.",
+  "branchOrderPreparation": {
+    "inheritedController": "1557bd914a3344e51c35a7b3ef6d996511b9a5e8",
+    "sourceChangeScope": "Only routeMultiTerminalBuses in published Core2418, using the reviewed clean Bus62 branch-order source; no pending-guidance, physical branch-via, eligibility-gate, expanded-site bounds or Core phase reordering.",
     "qualificationReady": true,
     "routingExecuted": false,
-    "sourceCandidateCommit": "520dd0fb4f7264ffa597782aff7f91313f5a78b9"
+    "sourceCandidateCommit": "8dfe935be7de1f2798221fef6de5117303d2fedf"
   }
 }

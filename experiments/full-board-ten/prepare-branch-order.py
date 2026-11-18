@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Authenticate a paired native run and the reviewed pending-access protection overlay."""
+"""Authenticate a paired native run and the reviewed branch-order overlay."""
 import argparse
 import copy
 import gzip
@@ -80,9 +80,9 @@ parser.add_argument("cohort", choices=["original", "spaced"])
 args = parser.parse_args()
 root = args.root.resolve()
 controller = Path(__file__).resolve().parent
-plan = json.loads((controller / "pending-access-plan.json").read_text())
+plan = json.loads((controller / "branch-order-plan.json").read_text())
 if plan["qualificationReady"] is not True:
-    raise RuntimeError("Pending-access source and exact Core mapping are pending; controller held")
+    raise RuntimeError("Branch-order source and exact Core mapping are pending; controller held")
 assert len(plan["source"]["candidateCommit"]) == 40
 selected_cases = [case for case in plan["cases"] if case["board"] == args.board and case["cohort"] == args.cohort]
 assert len(selected_cases) == 1, "Case is outside the reviewed single-case screen"
@@ -91,15 +91,15 @@ required_harness_files = {
     'autorouter-dependencies/package.json',
     'bootstrap.py',
     'calibrate-assessment.tsx',
-    'compare-pending-access.py',
+    'compare-branch-order.py',
     'createCoarseRoutingDiagnostics.ts',
-    'createPendingAccessOverlay.ts',
-    'pending-access-production.patch',
-    'pending-access-source-mapping.json',
+    'createBranchOrderOverlay.ts',
+    'branch-order-production.patch',
+    'branch-order-source-mapping.json',
     'harness-provenance.json',
     'package.json',
     'prepare-cases.ts',
-    'prepare-pending-access.py',
+    'prepare-branch-order.py',
     'published-release-provenance.json',
     'release.json',
     'render-published.tsx',
@@ -115,15 +115,15 @@ for name, digest in plan["frozenFiles"].items():
     assert sha(controller.parents[1] / name) == digest, f"Reviewed controller changed: {name}"
 for name, digest in plan["frozenHarnessFiles"].items():
     assert sha(controller / name) == digest, f"Reviewed harness changed: {name}"
-assert sha(controller / "createPendingAccessOverlay.ts") == plan["sourceMappingToolSha256"]
-assert sha(controller / "pending-access-source-mapping.json") == plan["sourceMappingSha256"]
-proof = root / "pending-access"
+assert sha(controller / "createBranchOrderOverlay.ts") == plan["sourceMappingToolSha256"]
+assert sha(controller / "branch-order-source-mapping.json") == plan["sourceMappingSha256"]
+proof = root / "branch-order"
 proof.mkdir(exist_ok=True)
 manifest_path = root / "runtime-manifest.json"
 published_path = root / "published-runtime-manifest.json"
 candidate_path = root / "candidate-runtime-manifest.json"
 original = root / "npm/core"
-overlay = root / "npm/core-pending-access"
+overlay = root / "npm/core-branch-order"
 alias = root / "runtime/node_modules/@tscircuit/core"
 
 if args.operation == "baseline":
@@ -189,7 +189,7 @@ if args.operation == "source":
             target = base / relative
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(source / relative, target)
-    patch = controller / "pending-access-production.patch"
+    patch = controller / "branch-order-production.patch"
     assert sha(patch) == plan["source"]["patchSha256"]
     subprocess.run(["git", "apply", "--index", "--check", str(patch)], cwd=source, check=True)
     subprocess.run(["git", "apply", "--index", str(patch)], cwd=source, check=True)
@@ -200,7 +200,7 @@ if args.operation == "source":
     for relative, row in plan["source"]["files"].items():
         assert sha(source / relative) == row["afterSha256"]
     compiler = root / "runtime/node_modules/typescript/lib/typescript.js"
-    subprocess.run(["bun", str(controller / "createPendingAccessOverlay.ts"), str(base), str(source), core["entry"], str(compiler), str(proof), plan["source"]["candidateCommit"]], check=True)
+    subprocess.run(["bun", str(controller / "createBranchOrderOverlay.ts"), str(base), str(source), core["entry"], str(compiler), str(proof), plan["source"]["candidateCommit"]], check=True)
     assert sha(proof / "source-mapping.json") == plan["sourceMappingSha256"], "Runner qualification differs from reviewed source proof"
     verify_packages(published)
     verify_graph()
