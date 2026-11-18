@@ -24,8 +24,8 @@ const cloneValue = <T>(value: T): T =>
 
 setupGlobalCaches()
 
-// Version 6 replaces typed object serialization with tagged JSON.
-const INTRA_NODE_CACHE_SCHEMA_VERSION = 6
+// Version 7 checks physical obstacles before accepting diagonal shortcuts.
+const INTRA_NODE_CACHE_SCHEMA_VERSION = 7
 
 export class CachedIntraNodeRouteSolver
   extends IntraNodeRouteSolver
@@ -167,6 +167,15 @@ export class CachedIntraNodeRouteSolver
           : undefined,
         portPoints: normalizedPortPoints,
       },
+      obstacles: this.obstacles.map((obstacle) => ({
+        center: obstacle.center,
+        width: obstacle.width,
+        height: obstacle.height,
+        shape: obstacle.shape,
+        ccwRotationDegrees: obstacle.ccwRotationDegrees,
+        zLayers: obstacle.__zLayers,
+        connectedTo: obstacle.connectedTo,
+      })),
       normalizedConnections,
       normalizedHyperParameters,
       minDistBetweenEnteringPoints: roundCoord(
