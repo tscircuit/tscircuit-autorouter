@@ -77,7 +77,7 @@ jobs:
           run_check("bun-version", ["bun", "--version"])
           run_check("node-version", ["node", "--version"])
           if run_check("install", ["bun", "install"]) == 0:
-              run_check("dependency-inventory", ["bun", "pm", "ls", "--all"])
+              run_check("typescript-version", ["bunx", "tsc", "--version"])
               run_check("typecheck", ["bunx", "tsc", "--noEmit"])
               run_check("class-export-tests", ["bun", "test", "tests/scripts/"])
               run_check("class-exports", ["bun", "run", "check:class-exports"])
