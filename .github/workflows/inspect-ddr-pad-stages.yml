@@ -64,7 +64,7 @@ jobs:
            phase=next
           }
           console.log("PAD_STAGE_SOLVED="+JSON.stringify({release:process.env.LABEL,solved:solver.solved,failed:solver.failed}))
-                    TS
+          TS
           bun inspect-pad-stages.private.ts
       - uses: actions/upload-artifact@v4
         if: always()
