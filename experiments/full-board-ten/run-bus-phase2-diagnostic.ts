@@ -33,6 +33,8 @@ const ids = new WeakMap<object, number>()
 let droppedExamples = 0, startedAt = performance.now(), lastFlush = -Infinity
 let lastEvent: Data | null = null, executionError: string | null = null
 let checkpointCount = 0
+let child2CaptureAttempted = false
+let child2Geometry: Data | null = null
 const nativeNames = input.connections.map((connection: Data) => connection.name)
 const point = (value: Data): Data => ({ x: value.x, y: value.y, layer: value.layer, pointId: value.pointId ?? null, pcb_port_id: value.pcb_port_id ?? null })
 function compactInput(value: Data): Data {
@@ -139,11 +141,48 @@ Object.defineProperty(Pipeline.prototype, "_step", { ...descriptor, value(this: 
       id = instances.length
       const initial = { id, parentId: stack.at(-1) ?? null, input: compactInput(this.input), routingInput: compactInput(this.routingInput), options: structuredClone(this.options), initialMaxIterations: this.MAX_ITERATIONS }
       ids.set(this, id); instances.push(this); pipelines.push(initial)
+      if (id === 2) {
+        child2CaptureAttempted = true
+        const first = instances[1]
+        assert(first.solved && !first.failed, "First native child must already be solved")
+        const childInput = Buffer.from(JSON.stringify(this.input))
+        const routingInput = Buffer.from(JSON.stringify(this.routingInput))
+        const firstOutput = Buffer.from(JSON.stringify(first.getOutput()))
+        const inputSha256 = hash(childInput), routingInputSha256 = hash(routingInput)
+        writeFileSync(resolve(output, "child2-input.srj.json.gz"), gzipSync(childInput))
+        if (routingInputSha256 !== inputSha256) writeFileSync(resolve(output, "child2-routing-input.srj.json.gz"), gzipSync(routingInput))
+        writeFileSync(resolve(output, "solved-child1-output.srj.json.gz"), gzipSync(firstOutput))
+        child2Geometry = { pipelineId: id, parentId: initial.parentId, elapsedMs: performance.now() - startedAt,
+          inputSha256, routingInputSha256, firstChildOutputSha256: hash(firstOutput), firstChildSolved: first.solved,
+          inputTraceCount: this.input.traces.length, inputConnectionCount: this.input.connections.length,
+          options: structuredClone(this.options), capturedBeforeFirstChild2Step: true }
+        writeFileSync(resolve(output, "child2-geometry-proof.json"), JSON.stringify(child2Geometry, null, 2) + "\n")
+        assert.equal(inputSha256, "97225ab8d4c4365275e8fa542cbaf25f3acbe4732879669189e71dc6463bff85")
+      }
     }
     stack.push(id); pushed = true
   } catch (error) { if (observerErrors.length < 20) observerErrors.push(String(error)) }
   try { return descriptor.value.apply(this, arguments_) }
-  finally { if (pushed) stack.pop() }
+  finally {
+    try {
+      if (ids.get(this) === 2 && child2Geometry) {
+        assert(this.child?.input, "Second child must expose its prepared lane input")
+        const laneInput = Buffer.from(JSON.stringify(this.child.input))
+        writeFileSync(resolve(output, "child2-lane-input.srj.json.gz"), gzipSync(laneInput))
+        const parameters = { options: this.child.options, terminalLayers: [...this.child.terminalLayers],
+          pipelineTerminalLayers: [...this.terminalLayers], canNegotiateGeneratedSites: this.canNegotiateGeneratedSites,
+          pipelinePhase: this.phase, childPhase: this.child.phase, childIterations: this.child.iterations,
+          childMaxIterations: this.child.MAX_ITERATIONS, childUseNegotiation: this.child.useNegotiation,
+          escapes: this.escapes, capturedAfterFirstPipelineStep: true }
+        const parameterBytes = Buffer.from(JSON.stringify(parameters))
+        writeFileSync(resolve(output, "child2-lane-parameters.json"), parameterBytes)
+        Object.assign(child2Geometry, { laneInputSha256: hash(laneInput), laneParameterSha256: hash(parameterBytes),
+          laneInputTraceCount: this.child.input.traces.length, preparedLaneCaptured: true })
+        writeFileSync(resolve(output, "child2-geometry-proof.json"), JSON.stringify(child2Geometry, null, 2) + "\n")
+      }
+    } catch (error) { if (observerErrors.length < 20) observerErrors.push(String(error)) }
+    if (pushed) stack.pop()
+  }
 } })
 const adapted = exported.__busDiagAdapt(input)
 const adaptedBeforeSha256 = hash(JSON.stringify(adapted))
@@ -152,8 +191,8 @@ let captureDeadlineReached = false
 startedAt = performance.now()
 writeFileSync(resolve(output, "start-proof.json"), JSON.stringify({ rawInputSha256: hash(inputBytes), adaptedBeforeSha256, coreSha256: core.entrySha256, observerSha256: hash(readFileSync(modulePath)), nativeOptions: {}, routingBudgetsChanged: false }) + "\n")
 try {
-  while (!solver.solved && !solver.failed) {
-    for (let count = 0; count < 200 && !solver.solved && !solver.failed; count++) solver.step()
+  while (!solver.solved && !solver.failed && !child2CaptureAttempted) {
+    for (let count = 0; count < 200 && !solver.solved && !solver.failed && !child2CaptureAttempted; count++) solver.step()
     flush()
     if (performance.now() - startedAt >= 900000) { captureDeadlineReached = true; break }
     await new Promise<void>(done => setImmediate(done))
@@ -163,10 +202,10 @@ finally {
   flush(true)
   Object.defineProperty(Pipeline.prototype, "_step", descriptor)
   delete (globalThis as Data).__busDiag
-  const report = { scope: "Single observed native phase2 replay; diagnostics only, no performance or full-board completion claim", elapsedMs: performance.now() - startedAt,
+  const report = { scope: "Capture the authentic second-child geometry after a solved first child; no performance or full-board completion claim", elapsedMs: performance.now() - startedAt,
     mainVersion: manifest.mainVersion, coreVersion: core.version, originalEntrySha256: core.entrySha256,
     diagnosticEntrySha256: hash(readFileSync(modulePath)), rawInputSha256: hash(inputBytes), canonicalRawInputBeforeSha256, canonicalRawInputAfterSha256: hash(JSON.stringify(input)), adaptedBeforeSha256, adaptedAfterSha256: hash(JSON.stringify(adapted)),
-    nativeOptions: {}, routingBudgetsChanged: false, captureDeadlineReached, executionError, observerErrors, wasmAttempts, importWasm,
+    nativeOptions: {}, routingBudgetsChanged: false, child2CaptureAttempted, child2Geometry, captureDeadlineReached, executionError, observerErrors, wasmAttempts, importWasm,
     solved: solver.solved, failed: solver.failed, error: solver.error ?? null, nativeNames, eventCounts, aggregates, domains, subpasses, generatedCalls, droppedExamples,
     pipelines: pipelines.map((initial, id) => ({ ...initial, final: state(instances[id]), currentTracesSha256: hash(JSON.stringify(instances[id].traces)) })), diagnosticMetadata: exported.busDiagMetadata }
   if (solver.solved) {
@@ -176,7 +215,7 @@ finally {
     Object.assign(report, { outputSha256: hash(bytes), outputNeedsPhysicalValidation: true })
   }
   writeFileSync(resolve(output, "report.json"), JSON.stringify(report, null, 2) + "\n")
-  console.log(JSON.stringify({ solved: solver.solved, failed: solver.failed, captureDeadlineReached, executionError, observerErrors, pipelines: report.pipelines.map(p => ({ id: p.id, final: p.final })), generatedCalls }))
+  console.log(JSON.stringify({ solved: solver.solved, failed: solver.failed, child2CaptureAttempted, child2Geometry, captureDeadlineReached, executionError, observerErrors, pipelines: report.pipelines.map(p => ({ id: p.id, final: p.final })), generatedCalls }))
 }
 assert.equal(hash(readFileSync(core.entry)), core.entrySha256)
 assert.equal(executionError, null)

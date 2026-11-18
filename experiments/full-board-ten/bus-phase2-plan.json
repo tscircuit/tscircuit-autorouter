@@ -1,6 +1,6 @@
 {
-  "status": "Single observed diagnostic authorized byroot; no routinggain claim",
-  "question": "Which native byte1 child/stage/net consumes the remaining time, and does the production path reach the legal expanded-site domain for DQ13?",
+  "status": "Root-authorized follow-up geometry capture; stop at second child before its routing attempt",
+  "question": "Capture the authentic second RAM branch input after the first 8-net child is solved, for the observed source_net_278 vector-search stall.",
   "scope": "Exact captured candidate phase2 replay, diagnostic only. No whole-board completion or performance gain claim.",
   "source": {
     "runtimeControllerCommit": "e4344fecafcca442908a608484f574fd640c4c55",
@@ -101,7 +101,7 @@
     "bun": "1.4.3",
     "jobs": 1,
     "lanes": [
-      "observed"
+      "geometry-capture"
     ],
     "softCaptureMs": 900000,
     "hardCaptureSeconds": 960,
@@ -109,7 +109,8 @@
     "productionRoutingBudgetOverrides": false,
     "stopAfterFirstFallback": false,
     "controlLaneExecuted": false,
-    "qualification": "Diagnostic only; structural hook review, exact source/input authentication. No dynamic neutrality or performance claim."
+    "qualification": "Diagnostic only; structural hook review, exact source/input authentication. No dynamic neutrality or performance claim.",
+    "stopCondition": "External driver stops as soon as child2 geometry is captured;900/960 remain emergencyguards only, not planned runtime"
   },
   "minimalObserverChanges": [
     "Accept exact qualified source-overlay manifest/source commit and CoreSHA; remove old published-only sourceOverrides=false assertions.",
@@ -135,7 +136,12 @@
       "instrumentation-proof.json",
       "observation-proof.json",
       "compressed native phase2 input",
-      "report.json or checkpoint.json on hardcapture"
+      "report.json or checkpoint.json on hardcapture",
+      "child2-input.srj.json.gz",
+      "solved-child1-output.srj.json.gz",
+      "child2-geometry-proof.json",
+      "child2-lane-input.srj.json.gz",
+      "child2-lane-parameters.json"
     ],
     "perLane": [
       "phase transition/checkpoint JSONL capped at1000 records",
@@ -146,7 +152,7 @@
       "final active-stage summary even on external capture"
     ],
     "optional": [
-      "actual completed phase2 output.srj.json.gz and continuity/physical validation if solver returns output; do not manufacture partial completed output"
+      "child2-routing-input.srj.json.gz ifdifferent frominput"
     ],
     "storageGoal": "Under10MB total; no raw grid/raster snapshots or whole Core bundle artifacts."
   },
@@ -182,5 +188,22 @@
     "pythonCompile": true,
     "generatorWrapperSuccessNullCancelThrow": true,
     "routingExecuted": false
+  },
+  "geometryCapture": {
+    "targetChildId": 2,
+    "expectedInputSha256": "97225ab8d4c4365275e8fa542cbaf25f3acbe4732879669189e71dc6463bff85",
+    "requiredSolvedChildId": 1,
+    "inputTraces": 24,
+    "connections": 8,
+    "captureTiming": "Before first child2 _step call; original first step still executes, then external runner stops without changing any routing decisions or solver budget",
+    "retained": [
+      "fullchild2input",
+      "routingInputifdistinct",
+      "solvedchild1output",
+      "compactproof",
+      "preparedlaneinputafterfirstpipelinestep",
+      "laneoptions/terminalLayers/escapes/canNegotiateGeneratedSites"
+    ],
+    "expectedElapsedSeconds": "Approximately240 based on previous observed solve; not a time budget or performance claim"
   }
 }

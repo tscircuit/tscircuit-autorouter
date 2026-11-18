@@ -1,4 +1,4 @@
-name: ButterStick native byte1 diagnostic
+name: ButterStick native second-branch geometry capture
 
 on:
   push:
@@ -68,7 +68,7 @@ jobs:
         run: |
           python3 experiments/full-board-ten/prepare-bus-phase2-input.py "$FULL_BOARD_ROOT/bus-phase2"
           python3 experiments/full-board-ten/instrument-bus-phase2.py "$FULL_BOARD_ROOT/npm/core-pending-exits/dist/index.js" "$FULL_BOARD_ROOT/npm/core-pending-exits/dist/bus-phase2-observed.js" > "$FULL_BOARD_ROOT/bus-phase2/instrumentation-proof.json"
-      - name: Observe exact native byte1 for at most900 seconds
+      - name: Capture second branch after the first native child solves
         id: observe
         continue-on-error: true
         run: >-
@@ -89,7 +89,7 @@ jobs:
         if: always()
         with:
           include-hidden-files: true
-          name: butterstick-native-byte1-observer-${{ github.run_attempt }}
+          name: butterstick-native-byte1-child2-geometry-${{ github.run_attempt }}
           path: |
             .full-board-run/bus-phase2
             .full-board-run/*runtime-manifest.json
