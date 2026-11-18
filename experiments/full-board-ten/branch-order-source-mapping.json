@@ -55,9 +55,9 @@
       ]
     }
   ],
-  "originalCoreSha256": "25f088d42671b5efbf026c70a1216d754c01179e7d767f37e83bef11a0e79fd9",
+  "originalCoreSha256": "f8122fb04b46cb37bf48de0f8642044bc8360937a03630e4655112cc8694471b",
   "originalBusModuleSha256": "b0ba29b5b2db66be7218ea0896b179281aba3ddc39fbe7eeb472e4de1959f249",
-  "candidateCoreSha256": "426044a899711814d034b6b0e3574e1de541252e03ed04263a3af83c610eb898",
+  "candidateCoreSha256": "5ebb4e8d3bb1c21911dd9aa59d914b6cc8685b8e9c29d8e7c167f3dd3b496ea1",
   "bundledAliases": {
     "getCopperLayerNames3": "getCopperLayerNames",
     "getRouteViaSpanLayers3": "getRouteViaSpanLayers",
@@ -72,13 +72,13 @@
   "unchangedSegments": [
     {
       "start": 0,
-      "end": 3765913,
-      "sha256": "b1869bc21f2453aa4e62536823dc3aa4e3466cdec4482f8e41201bffb982077d"
+      "end": 3766116,
+      "sha256": "2e2b270a6d7a86ce546060b70cc1d52e451f049dc79ef40e5858e3a269e11ef7"
     },
     {
-      "start": 3771421,
-      "end": 7227188,
-      "sha256": "190549090926576d6a14ce305eeedd82fb7f85edc8b2917bdbfe4597100e0657"
+      "start": 3771624,
+      "end": 7227391,
+      "sha256": "17e78cae7af0eb24ba1cf0135b4d1a59dbcbfc40469fc43e029097bce32439e7"
     }
   ],
   "unchangedDeclarations": [],
@@ -87,8 +87,8 @@
       "kind": "replace",
       "name": "routeMultiTerminalBuses",
       "relative": "lib/route-multi-terminal-buses.ts",
-      "characterOffset": 3765913,
-      "byteOffset": 3765913,
+      "characterOffset": 3766116,
+      "byteOffset": 3766116,
       "oldBlockSha256": "17b52e27fc432736d964986f68ab0e76dd30277edb4b11c9f8d25f37ad5ae945",
       "newBlockSha256": "22cead2acbcbd01a8507764aea2a0104c28bcbbaf59da641ad5570e057ce20cf",
       "beforeTokenSha256": "f996c02d7323df1a8f18811ce7bead60d978d0f8cf1a5e13d0bc8c974f6c371a",

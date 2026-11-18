@@ -16,7 +16,7 @@ const output = resolve(outputArgument)
 const bytes = readFileSync(corePath)
 const core = (corePath.endsWith(".gz") ? gunzipSync(bytes) : bytes).toString()
 const sha = (value: string): string => createHash("sha256").update(value).digest("hex")
-assert.equal(sha(core), "25f088d42671b5efbf026c70a1216d754c01179e7d767f37e83bef11a0e79fd9")
+assert.equal(sha(core), "f8122fb04b46cb37bf48de0f8642044bc8360937a03630e4655112cc8694471b")
 const marker = "// node_modules/@tscircuit/bus-lanes-solver/dist/index.js"
 const start = core.indexOf(marker), end = core.indexOf("\n// ", start + 3) + 1
 assert(start >= 0 && end > start && core.indexOf(marker, start + marker.length) === -1)

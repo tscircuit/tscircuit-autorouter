@@ -87,6 +87,7 @@ assert len(plan["source"]["candidateCommit"]) == 40
 selected_cases = [case for case in plan["cases"] if case["board"] == args.board and case["cohort"] == args.cohort]
 assert len(selected_cases) == 1, "Case is outside the reviewed single-case screen"
 required_harness_files = {
+    'baseline-run-plan.json',
     'autorouter-dependencies/bun.lock',
     'autorouter-dependencies/package.json',
     'bootstrap.py',
@@ -130,7 +131,7 @@ if args.operation == "baseline":
     manifest = json.loads(manifest_path.read_text())
     assert not manifest["sourceOverrides"] and not manifest["dependencyOverrides"] and manifest["experiment"] == "published"
     versions = {row["name"]: row["version"] for row in manifest["packages"]}
-    assert versions == {"tscircuit": "0.0.3236", "@tscircuit/core": "0.0.2418", "@tscircuit/eval": "0.0.1811", "@tscircuit/capacity-autorouter": "0.0.1129"}
+    assert versions == {"tscircuit": "0.0.3242", "@tscircuit/core": "0.0.2424", "@tscircuit/eval": "0.0.1818", "@tscircuit/capacity-autorouter": "0.0.1132"}
     assert manifest["runner"]["architecture"] in ["arm64", "aarch64"] and manifest["runner"]["bun"] == "1.4.3"
     assert manifest["runner"]["cpuCount"] == 8 and manifest["runner"]["artificialMemoryLimitApplied"] is False
     verify_packages(manifest)

@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
-  "purpose": "Latest frozen published full native ten-board baseline for comparison with published3234",
-  "mainVersion": "0.0.3236",
+  "purpose": "Frozen latest published full native ten-board baseline for comparison with published3236",
+  "mainVersion": "0.0.3242",
   "priorBaseline": {
-    "mainVersion": "0.0.3234",
-    "controllerCommit": "13889f2abbe8201e23fe90d9a04ee26d0445d06e",
-    "runId": 44332031639
+    "mainVersion": "0.0.3236",
+    "controllerCommit": "500b7b89a7e748e601285e349e3266086c6b2614",
+    "runId": 44380970575
   },
   "workflow": ".github/workflows/full-board-ten.yml",
-  "branch": "bench/full-board-ten-3236-20261118",
+  "branch": "bench/full-board-ten-3242-20261118",
   "runner": "blacksmith-8vcpu-ubuntu-2404-arm",
   "jobs": 5,
   "maxParallel": 5,
@@ -79,7 +79,7 @@
   "dependencyOverrides": [],
   "originalGeometryPolicy": "phased native, fanout false, planes true",
   "spacedGeometryPolicy": "phased native, fanout false, planes false",
-  "assessmentPolicy": "Authentic cohort assessor sources and controller policy are unchanged. Assessors resolve the published3236 runtime, including Checks280 and the published Core2418 copper helper.",
+  "assessmentPolicy": "Authentic cohort assessor sources and controller policy are unchanged. Assessors resolve the published3242 runtime, including Checks282 and the published Core2424 copper helper.",
   "unchangedNativeFiles": [
     "bootstrap.py",
     "prepare-cases.ts",
@@ -94,7 +94,7 @@
   ],
   "frozenFiles": {
     ".github/workflows/full-board-ten.yml": {
-      "sha256": "c35844c26ffce4a27b544b127a3cea572a93124ebbdc3a0f231f61c72c8442c7",
+      "sha256": "4cc59922690f566f4e5e8b7948a83cbcdf4489d00f23db7efaa23a7303c156a7",
       "bytes": 5858
     },
     "experiments/full-board-ten/bootstrap.py": {
@@ -138,24 +138,24 @@
       "bytes": 208
     },
     "experiments/full-board-ten/release.json": {
-      "sha256": "02acd9d4eea8e583d506c7f43be119c9aa5f6e740496bc0032ce85febb43f738",
-      "bytes": 5142
+      "sha256": "5eece79b055b28bd17e321140949a66f036ceb28573adf108419b5f2f64ddbd4",
+      "bytes": 5677
     },
     "experiments/full-board-ten/harness-provenance.json": {
-      "sha256": "c7657a744106922d6e0dae9cc9594f13c5ba246208fe331b5d3c50040c0caa56",
+      "sha256": "fc4b9191002e33b0561d50a2208d38848d81da0735869bb4f563bb9afe1b7405",
       "bytes": 1479
     },
     "experiments/full-board-ten/published-release-provenance.json": {
-      "sha256": "1ec33d4dc1d1dcaf5986366823edd77b261f60a9e4826d4f7f8f92cba8f52ea8",
-      "bytes": 14497
+      "sha256": "89326fdcc1e99945b98798b0b5b95c60560be6f1f3789184e3bda84464577dc3",
+      "bytes": 19481
     },
     "experiments/full-board-ten/runtime/package.json": {
-      "sha256": "15215d5cd97fd8b6ce7b5070902bbeccb212c124e9899d1255d46aa9cb703d1d",
+      "sha256": "c0542a47684ae97ccbe3670fbd2555c3ce0b935e00e8c13aff983442426decda",
       "bytes": 2804
     },
     "experiments/full-board-ten/runtime/bun.lock": {
-      "sha256": "06d711c1fec0d9098a68ca0fa233c3cac41cddbda5b1b7ee0238f459dbf6a5e0",
-      "bytes": 72090
+      "sha256": "cdf19ae5668a61815a76f9d912b1fbc88907b1f029b2f3dd955f6f81a6cb7b57",
+      "bytes": 72080
     },
     "experiments/full-board-ten/autorouter-dependencies/package.json": {
       "sha256": "7b4c1ecf979432e472a4f0589ed49976a8a1323ff7bf651a5938ee7006b61360",

@@ -1,10 +1,10 @@
 {
   "schemaVersion": 1,
-  "qualificationReady": true,
+  "qualificationReady": false,
   "experiment": "branch-target-ordering",
-  "baselineController": "500b7b89a7e748e601285e349e3266086c6b2614",
-  "baselineRun": 44380970575,
-  "branch": "bench/branch-order-3236-20261118",
+  "baselineController": "49e9de35db347f94eeeaef9bca48d821ed3be51e",
+  "baselineRun": null,
+  "branch": "bench/branch-order-3242-20261118",
   "workflow": ".github/workflows/branch-order-screen.yml",
   "runner": "blacksmith-8vcpu-ubuntu-2404-arm",
   "jobs": 1,
@@ -29,13 +29,13 @@
   },
   "jobTimeoutMinutes": 60,
   "runtime": {
-    "main": "0.0.3236",
-    "core": "0.0.2418",
-    "eval": "0.0.1811",
-    "autorouter": "0.0.1129",
+    "main": "0.0.3242",
+    "core": "0.0.2424",
+    "eval": "0.0.1818",
+    "autorouter": "0.0.1132",
     "bus": "0.0.62",
-    "publishedCoreSha256": "25f088d42671b5efbf026c70a1216d754c01179e7d767f37e83bef11a0e79fd9",
-    "candidateCoreSha256": "426044a899711814d034b6b0e3574e1de541252e03ed04263a3af83c610eb898"
+    "publishedCoreSha256": "f8122fb04b46cb37bf48de0f8642044bc8360937a03630e4655112cc8694471b",
+    "candidateCoreSha256": "5ebb4e8d3bb1c21911dd9aa59d914b6cc8685b8e9c29d8e7c167f3dd3b496ea1"
   },
   "source": {
     "repository": "tscircuit/bus-lanes-solver",
@@ -53,7 +53,7 @@
     "expandedSiteBoundsPatchIncluded": false,
     "branchPadEligibilityPatchIncluded": false,
     "physicalBranchViaPatchIncluded": false,
-    "scope": "Only routeMultiTerminalBuses in published Core2418, using the reviewed clean Bus62 branch-order source; no pending-guidance, physical branch-via, eligibility-gate, expanded-site bounds or Core phase reordering."
+    "scope": "Only routeMultiTerminalBuses in published Core2424, using the reviewed clean Bus62 branch-order source; no pending-guidance, physical branch-via, eligibility-gate, expanded-site bounds or Core phase reordering."
   },
   "overlay": {
     "schemaVersion": 2,
@@ -63,8 +63,8 @@
     "insert": [],
     "unchanged": []
   },
-  "sourceMappingToolSha256": "2ddbad0527ca4fe033c43164d9be5982cd9b56c983c9f4869911aa29938e5083",
-  "sourceMappingSha256": "507b75a6e1d96e999c6e18ba4a918434e25270265de507d0b4ec163308acc6aa",
+  "sourceMappingToolSha256": "13a5007d4b116acd3c54ee306cf412dcaa4b6da9413ddc56c19aa847e024135d",
+  "sourceMappingSha256": "edda17634b3b984ba64a4750353cf86d35584b501a5f61588834fc8413860187",
   "frozenHarnessFiles": {
     "bootstrap.py": "23de25ac8960be89afc57ba27b0d3fddb6e65dba593024be59ec5073d266164d",
     "prepare-cases.ts": "b72e632e9c9152c9e5daedf1bb60daa5d86c33fdcc454f2a7825827d24124330",
@@ -73,20 +73,21 @@
     "calibrate-assessment.tsx": "efeb820cf34239465df53ce4c7932293e41a14dcab4bedb823c3bc60cc9627a0",
     "createCoarseRoutingDiagnostics.ts": "dea45bba3386a9b55b7709834dff65468c421992808b406f54c6f9e556e8b618",
     "source-provenance.json": "bd24be29c5fdd5ae68ce15c5b2bc50f172ecdd325dcc1b57a80ec653d12570fb",
-    "release.json": "02acd9d4eea8e583d506c7f43be119c9aa5f6e740496bc0032ce85febb43f738",
-    "published-release-provenance.json": "1ec33d4dc1d1dcaf5986366823edd77b261f60a9e4826d4f7f8f92cba8f52ea8",
-    "harness-provenance.json": "a11c1c8434d2143d56e5ce9322269479a2766d411865ddd46127b65c2c4ab29f",
-    "runtime/package.json": "15215d5cd97fd8b6ce7b5070902bbeccb212c124e9899d1255d46aa9cb703d1d",
-    "runtime/bun.lock": "06d711c1fec0d9098a68ca0fa233c3cac41cddbda5b1b7ee0238f459dbf6a5e0",
+    "release.json": "5eece79b055b28bd17e321140949a66f036ceb28573adf108419b5f2f64ddbd4",
+    "published-release-provenance.json": "89326fdcc1e99945b98798b0b5b95c60560be6f1f3789184e3bda84464577dc3",
+    "harness-provenance.json": "14692a191b902d52a9db68ee9880691210743ba5444cb0320d0fcf0523c5c5a5",
+    "runtime/package.json": "c0542a47684ae97ccbe3670fbd2555c3ce0b935e00e8c13aff983442426decda",
+    "runtime/bun.lock": "cdf19ae5668a61815a76f9d912b1fbc88907b1f029b2f3dd955f6f81a6cb7b57",
     "autorouter-dependencies/package.json": "7b4c1ecf979432e472a4f0589ed49976a8a1323ff7bf651a5938ee7006b61360",
     "autorouter-dependencies/bun.lock": "ec313c582c29c1e35bb31190151a5649198c177119d32fe311746c06e94e8c4e",
-    "createBranchOrderOverlay.ts": "2ddbad0527ca4fe033c43164d9be5982cd9b56c983c9f4869911aa29938e5083",
+    "createBranchOrderOverlay.ts": "13a5007d4b116acd3c54ee306cf412dcaa4b6da9413ddc56c19aa847e024135d",
     "branch-order-production.patch": "fcdcf53b371cb6a85967a54a47bfbc433a00e5919e243be62aceef456720ab76",
-    "branch-order-source-mapping.json": "507b75a6e1d96e999c6e18ba4a918434e25270265de507d0b4ec163308acc6aa",
-    "prepare-branch-order.py": "394645a0ef48cf2be3ffbf7f066e6230d85d49c6561db26ad1f8cd001d3221d8",
-    "compare-branch-order.py": "2fe6802fbf7d9c9c8868a2d45f215d79f7a2c03f0cd77690af213cdaaa131623",
+    "branch-order-source-mapping.json": "edda17634b3b984ba64a4750353cf86d35584b501a5f61588834fc8413860187",
+    "prepare-branch-order.py": "dc409126554af32e6ada1389cb6bbeb8740af6d05354f3b87dc60c6b4ee92497",
+    "compare-branch-order.py": "6ed0505a7ccb53eef32823b90bbff68a458468ac04ae70234d84861a62da6b5e",
     "package.json": "469e1861d1259cd1307bca324fb0d8ba0a67ea0323d4e728a35c90a2bc92bdf3",
-    "tsconfig.json": "2e881577c63bb6b62d14abd319240bbc6ae5e206ecb007dae80ab3ec922293c7"
+    "tsconfig.json": "2e881577c63bb6b62d14abd319240bbc6ae5e206ecb007dae80ab3ec922293c7",
+    "baseline-run-plan.json": "3b3d1b99221b1e175eae3f5e6a824b959b9a97f19e67bb2eb3da2ad4704689bf"
   },
   "frozenFiles": {
     "experiments/full-board-ten/bootstrap.py": "23de25ac8960be89afc57ba27b0d3fddb6e65dba593024be59ec5073d266164d",
@@ -96,21 +97,22 @@
     "experiments/full-board-ten/calibrate-assessment.tsx": "efeb820cf34239465df53ce4c7932293e41a14dcab4bedb823c3bc60cc9627a0",
     "experiments/full-board-ten/createCoarseRoutingDiagnostics.ts": "dea45bba3386a9b55b7709834dff65468c421992808b406f54c6f9e556e8b618",
     "experiments/full-board-ten/source-provenance.json": "bd24be29c5fdd5ae68ce15c5b2bc50f172ecdd325dcc1b57a80ec653d12570fb",
-    "experiments/full-board-ten/release.json": "02acd9d4eea8e583d506c7f43be119c9aa5f6e740496bc0032ce85febb43f738",
-    "experiments/full-board-ten/published-release-provenance.json": "1ec33d4dc1d1dcaf5986366823edd77b261f60a9e4826d4f7f8f92cba8f52ea8",
-    "experiments/full-board-ten/harness-provenance.json": "a11c1c8434d2143d56e5ce9322269479a2766d411865ddd46127b65c2c4ab29f",
-    "experiments/full-board-ten/runtime/package.json": "15215d5cd97fd8b6ce7b5070902bbeccb212c124e9899d1255d46aa9cb703d1d",
-    "experiments/full-board-ten/runtime/bun.lock": "06d711c1fec0d9098a68ca0fa233c3cac41cddbda5b1b7ee0238f459dbf6a5e0",
+    "experiments/full-board-ten/release.json": "5eece79b055b28bd17e321140949a66f036ceb28573adf108419b5f2f64ddbd4",
+    "experiments/full-board-ten/published-release-provenance.json": "89326fdcc1e99945b98798b0b5b95c60560be6f1f3789184e3bda84464577dc3",
+    "experiments/full-board-ten/harness-provenance.json": "14692a191b902d52a9db68ee9880691210743ba5444cb0320d0fcf0523c5c5a5",
+    "experiments/full-board-ten/runtime/package.json": "c0542a47684ae97ccbe3670fbd2555c3ce0b935e00e8c13aff983442426decda",
+    "experiments/full-board-ten/runtime/bun.lock": "cdf19ae5668a61815a76f9d912b1fbc88907b1f029b2f3dd955f6f81a6cb7b57",
     "experiments/full-board-ten/autorouter-dependencies/package.json": "7b4c1ecf979432e472a4f0589ed49976a8a1323ff7bf651a5938ee7006b61360",
     "experiments/full-board-ten/autorouter-dependencies/bun.lock": "ec313c582c29c1e35bb31190151a5649198c177119d32fe311746c06e94e8c4e",
-    "experiments/full-board-ten/createBranchOrderOverlay.ts": "2ddbad0527ca4fe033c43164d9be5982cd9b56c983c9f4869911aa29938e5083",
+    "experiments/full-board-ten/createBranchOrderOverlay.ts": "13a5007d4b116acd3c54ee306cf412dcaa4b6da9413ddc56c19aa847e024135d",
     "experiments/full-board-ten/branch-order-production.patch": "fcdcf53b371cb6a85967a54a47bfbc433a00e5919e243be62aceef456720ab76",
-    "experiments/full-board-ten/branch-order-source-mapping.json": "507b75a6e1d96e999c6e18ba4a918434e25270265de507d0b4ec163308acc6aa",
-    "experiments/full-board-ten/prepare-branch-order.py": "394645a0ef48cf2be3ffbf7f066e6230d85d49c6561db26ad1f8cd001d3221d8",
-    "experiments/full-board-ten/compare-branch-order.py": "2fe6802fbf7d9c9c8868a2d45f215d79f7a2c03f0cd77690af213cdaaa131623",
+    "experiments/full-board-ten/branch-order-source-mapping.json": "edda17634b3b984ba64a4750353cf86d35584b501a5f61588834fc8413860187",
+    "experiments/full-board-ten/prepare-branch-order.py": "dc409126554af32e6ada1389cb6bbeb8740af6d05354f3b87dc60c6b4ee92497",
+    "experiments/full-board-ten/compare-branch-order.py": "6ed0505a7ccb53eef32823b90bbff68a458468ac04ae70234d84861a62da6b5e",
     "experiments/full-board-ten/package.json": "469e1861d1259cd1307bca324fb0d8ba0a67ea0323d4e728a35c90a2bc92bdf3",
     "experiments/full-board-ten/tsconfig.json": "2e881577c63bb6b62d14abd319240bbc6ae5e206ecb007dae80ab3ec922293c7",
-    ".github/workflows/branch-order-screen.yml": "3bb21a8921432dabadf50675e0aa72aefe3c0f21cc4b4af1cb9ed624fdf1f21f"
+    "experiments/full-board-ten/baseline-run-plan.json": "3b3d1b99221b1e175eae3f5e6a824b959b9a97f19e67bb2eb3da2ad4704689bf",
+    ".github/workflows/branch-order-screen.yml": "c8184d38c96f275c07b8371e6d93fa24b7c90e70f94ebe2a571038efe8eb2284"
   },
   "acceptance": "Actual connected native net names without lost previous nets or physical regressions. Stage progress/timing alone is not completion; a valid comparison does not imply candidate acceptance.",
   "nativePolicies": "Unchanged full components, geometry and net names; phased routing, fanout false; original planes true and spaced planes false; no routing WASM.",
@@ -136,28 +138,35 @@
     "prepare-branch-order.py",
     "compare-branch-order.py",
     "package.json",
-    "tsconfig.json"
+    "tsconfig.json",
+    "baseline-run-plan.json"
   ],
-  "selectionStatus": "HELD source proposal; native completion gain on published baseline required before selection.",
+  "selectionStatus": "HELD scaffold; source efficacy on latest published package unknown",
   "observerContext": "Native completion gain is unknown; fresh full render begins from original empty byte0 copper, allowing branch choices to propagate into byte1.",
   "qualification": {
-    "sourceReview": "PASS independent source/static ordering; completion untested",
-    "mapping": "PASS exact one-declaration replacement, unchanged runtime imports/statements and outside Core bytes",
-    "controllerReview": "PASS independent bus_phase2_observer: one exact source/Core replacement, all22 frozen files, paired runtime/assessment policies, rejection contracts and only intended push workflow",
+    "controllerReview": "PASS final held wrapper review; no native efficacy claim",
     "sourceSelectedForPR": false,
     "agentPushed": false,
-    "contractScope": "Exact authentic source/Core bytes with synthetic non-Core packages and fabricated comparator outcomes; no native routing or completion claim",
-    "mapperRejectionContracts": "PASS wrong published Core, extra runtime declaration, extra runtime import and unchanged candidate rejected",
-    "installerContract": "PASS authentic Core and one-file source patch; exact single span; unrelated AR/runtime drift rejected; published assessment runtime restored. Other package bodies synthetic.",
-    "comparatorContract": "PASS authenticated native317 names with synthetic reports; five invalid source/runtime/membership/restoration/case scenarios rejected."
+    "baselineGraph": "Frozen exact49e9de35 published3242 baseline; no independent dependency refresh",
+    "mapping": "PASS independently reconstructed Core2424 one-function replacement; all4 mapper rejection contracts passed",
+    "wrapper": "PASS independent branch_fallback_controller: exact49e9de35 graph, one-function new-Core mapping,23 frozen files, native317/budgets and synthetic contracts",
+    "installer": "PASS exact Core/source and synthetic non-Core graph; single-span activation, AR/runtime drift rejection and published assessment restore",
+    "comparator": "PASS6 synthetic cases with authentic native317 names and3242 package identities; source/runtime/membership/restoration/case rejection checks",
+    "heldGates": "PASS6 workflow/installer/comparator entry points reject before setup while readinessfalse"
   },
   "externalAliases": {
     "getCopperLayerNames": "getCopperLayerNames3",
     "getRouteViaSpanLayers": "getRouteViaSpanLayers3"
   },
   "pendingInputs": [
-    "Root verification of committed frozen files and push authorization",
-    "Fresh native completion comparison; gain not assumed"
+    "Native evidence justifying paired candidate and root release",
+    "Root verification of committed files before push or dispatch"
   ],
-  "holdReason": "Ready for root committed-file verification; no push/dispatch until root approval."
+  "holdReason": "HELD reviewed latest3242 paired screen. Root must judge native evidence and explicitly release after committed-file verification. qualificationReady remains false; no push or dispatch.",
+  "latestPublishedBaseline": {
+    "controllerCommit": "49e9de35db347f94eeeaef9bca48d821ed3be51e",
+    "baselinePlanSha256": "3b3d1b99221b1e175eae3f5e6a824b959b9a97f19e67bb2eb3da2ad4704689bf",
+    "mainVersion": "0.0.3242",
+    "nativeRunPending": true
+  }
 }

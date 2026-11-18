@@ -34,10 +34,10 @@ assert [row["name"] for row in source_mapping["insertedDeclarations"]] == plan["
 assert [row["name"] for row in source_mapping["unchangedDeclarations"]] == plan["overlay"]["unchanged"]
 assert source_mapping["sourceFiles"] == plan["source"]["files"]
 frozen_packages = {
-    "tscircuit": ("0.0.3236", "cfd669f2d96ac77eb054aab53ff34a80120bcd3db72b87f969b3d8b8d2af78a3"),
-    "@tscircuit/core": ("0.0.2418", "25f088d42671b5efbf026c70a1216d754c01179e7d767f37e83bef11a0e79fd9"),
-    "@tscircuit/eval": ("0.0.1811", "71517bf85bef897c0a658f69fba77e69dc6599f82f701ce966fa6af370991465"),
-    "@tscircuit/capacity-autorouter": ("0.0.1129", "76fa23f4776f98870e3d48e0d824fb5737ad3735914d18defe886f318ad172d3"),
+    "tscircuit": ("0.0.3242", "cfd669f2d96ac77eb054aab53ff34a80120bcd3db72b87f969b3d8b8d2af78a3"),
+    "@tscircuit/core": ("0.0.2424", "f8122fb04b46cb37bf48de0f8642044bc8360937a03630e4655112cc8694471b"),
+    "@tscircuit/eval": ("0.0.1818", "71517bf85bef897c0a658f69fba77e69dc6599f82f701ce966fa6af370991465"),
+    "@tscircuit/capacity-autorouter": ("0.0.1132", "5695c6361c0f7a7dc26ddd1b9264b8a8c122e5f7b9610cf24c6af3b99c545df1"),
 }
 assert source_mapping["originalCoreSha256"] == frozen_packages["@tscircuit/core"][1]
 assert source_mapping["candidateCoreSha256"] != source_mapping["originalCoreSha256"]
@@ -55,7 +55,7 @@ for variant in ["base", "candidate"]:
     packages = {package["name"]: package for package in manifest["packages"]}
     assert len(packages) == len(manifest["packages"]) == len(frozen_packages)
     assert set(packages) == set(frozen_packages)
-    assert manifest["mainVersion"] == "0.0.3236"
+    assert manifest["mainVersion"] == "0.0.3242"
     for name, (version, published_sha) in frozen_packages.items():
         expected_sha = source_mapping["candidateCoreSha256"] if variant == "candidate" and name == "@tscircuit/core" else published_sha
         assert packages[name]["version"] == version and packages[name]["entrySha256"] == expected_sha, f"Unexpected selected runtime: {variant} {name}"
@@ -147,7 +147,7 @@ for field in ["runtimeDependencyFiles", "autorouterDependencyFiles", "runner", "
     assert base_manifest[field] == candidate_manifest[field], f"Unrelated runtime changed: {field}"
 base_packages = {package["name"]: package for package in base_manifest["packages"] if package["name"] != "@tscircuit/core"}
 candidate_packages = {package["name"]: package for package in candidate_manifest["packages"] if package["name"] != "@tscircuit/core"}
-assert base_packages == candidate_packages, "Only Core may be overlaid; published autorouter1129 must remain exact"
+assert base_packages == candidate_packages, "Only Core may be overlaid; published autorouter1132 must remain exact"
 base_core = next(package for package in base_manifest["packages"] if package["name"] == "@tscircuit/core")
 candidate_core = next(package for package in candidate_manifest["packages"] if package["name"] == "@tscircuit/core")
 allowed_core_changes = {"entry", "entrySha256", "publishedFiles", "entryProvenance"}
@@ -188,7 +188,7 @@ assert base["phasePayloads"][0]["inputSha256"] == candidate["phasePayloads"][0][
 gained = sorted(set(base["unconnectedNets"]) - set(candidate["unconnectedNets"]))
 lost = sorted(set(candidate["unconnectedNets"]) - set(base["unconnectedNets"]))
 comparison = {
-    "scope": "Fresh selected full native circuit, published base then branch target ordering candidate on the same ARM worker in separate Bun processes. Frozen Main3236/Core2418/Eval1811/AR1129; candidate changes only the reviewed AST-qualified Bus62 routeMultiTerminalBuses declaration. Native900/960-second render and180-second assessment limits are unchanged. This initial ButterStick spaced screen is not all-ten coverage.",
+    "scope": "Fresh selected full native circuit, published base then branch target ordering candidate on the same ARM worker in separate Bun processes. Frozen Main3242/Core2424/Eval1818/AR1132; candidate changes only the reviewed AST-qualified Bus62 routeMultiTerminalBuses declaration. Native900/960-second render and180-second assessment limits are unchanged. This initial ButterStick spaced screen is not all-ten coverage.",
     "board": board,
     "cohort": cohort,
     "runId": os.environ.get("GITHUB_RUN_ID"),

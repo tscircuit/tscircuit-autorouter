@@ -1,8 +1,8 @@
-name: Branch target ordering published3236 native paired screen
+name: HELD branch target ordering published3242 native paired screen
 
 on:
   push:
-    branches: [bench/branch-order-3236-20261118]
+    branches: [bench/branch-order-3242-20261118]
   workflow_dispatch:
 
 permissions:
@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   paired:
-    if: github.ref == 'refs/heads/bench/branch-order-3236-20261118'
+    if: github.ref == 'refs/heads/bench/branch-order-3242-20261118'
     name: Full native (${{ matrix.board }}, ${{ matrix.cohort }}, published then branch target ordering)
     runs-on: blacksmith-8vcpu-ubuntu-2404-arm
     timeout-minutes: 60
@@ -82,7 +82,7 @@ jobs:
         with:
           bun-version: 1.4.3
 
-      - name: Prepare locked published3236 runtime
+      - name: Prepare locked published3242 runtime
         run: python3 experiments/full-board-ten/bootstrap.py --root "$FULL_BOARD_ROOT"
 
       - name: Prepare authentic full-component board cases
