@@ -1,0 +1,21 @@
+name: Check stacked fanout plane-drop source
+on:
+  push:
+    branches: [codex/ddr2410-plane-source]
+permissions:
+  contents: read
+jobs:
+  source:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: 80f8a8871626fdd470092c2ae9a8e1bb2b0cc731
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - run: bun install --frozen-lockfile --ignore-scripts
+      - run: bun run format:check
+      - if: always()
+        run: bun run typecheck
