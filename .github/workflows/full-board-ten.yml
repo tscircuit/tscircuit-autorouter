@@ -1,8 +1,8 @@
-name: Core routing and copper pour dependency all-ten regression
+name: Core simple render guard H616 regression
 
 on:
   push:
-    branches: [bench/core-pour-dependency-all-ten-3230]
+    branches: [bench/core-render-guard-h616-3230]
 
 permissions:
   contents: read
@@ -10,24 +10,15 @@ permissions:
 
 jobs:
   qualify:
-    name: Copper pour dependency ${{ matrix.board }} ${{ matrix.cohort }}
+    name: Render guard ${{ matrix.board }} ${{ matrix.cohort }}
     runs-on: blacksmith-8vcpu-ubuntu-2404-arm
     timeout-minutes: 30
     strategy:
       fail-fast: false
-      max-parallel: 5
+      max-parallel: 1
       matrix:
         include:
-          - { board: glider, cohort: original }
-          - { board: imx6, cohort: original }
-          - { board: icepi, cohort: original }
-          - { board: butterstick, cohort: spaced }
-          - { board: imx6, cohort: spaced }
-          - { board: butterstick, cohort: original }
-          - { board: icepi, cohort: spaced }
           - { board: h616, cohort: original }
-          - { board: h616, cohort: spaced }
-          - { board: glider, cohort: spaced }
     env:
       FULL_BOARD_ROOT: ${{ github.workspace }}/.full-board-run
       FULL_BOARD_RUNTIME_MANIFEST: ${{ github.workspace }}/.full-board-run/runtime-manifest.json
@@ -79,7 +70,7 @@ jobs:
           "$FULL_BOARD_ROOT/sources/spaced" "$FULL_BOARD_ROOT/cases" "$CASE_BOARD"
       - name: Authenticate saved published control and runtime graph
         run: python3 experiments/full-board-ten/prepare-core-reentrancy.py "$FULL_BOARD_ROOT" baseline "$CASE_BOARD" "$CASE_COHORT"
-      - name: Authenticate passed source pair, prove scoped compiled mapping and held-routing repro
+      - name: Authenticate passed source pair, prove scoped compiled mapping and real-router repro
         run: python3 experiments/full-board-ten/prepare-core-reentrancy.py "$FULL_BOARD_ROOT" source "$CASE_BOARD" "$CASE_COHORT"
       - name: Qualify complete via and pour geometry audit
         run: python3 experiments/full-board-ten/audit-via-pour.py --self-test --output "$FULL_BOARD_ROOT/core-reentrancy/audit-self-test.json"
@@ -89,7 +80,7 @@ jobs:
           --baseline "$FULL_BOARD_ROOT/core-reentrancy/base.circuit.json"
           --candidate "$FULL_BOARD_ROOT/core-reentrancy/candidate.circuit.json"
           --output "$FULL_BOARD_ROOT/core-reentrancy/tiny-via-pour-audit.json"
-      - name: Install only reviewed routing and copper pour runtime spans
+      - name: Install only the reviewed render guard
         run: python3 experiments/full-board-ten/prepare-core-reentrancy.py "$FULL_BOARD_ROOT" candidate "$CASE_BOARD" "$CASE_COHORT"
       - name: Run one isolated case and restore Core before neutral assessment
         run: >-
@@ -120,7 +111,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           include-hidden-files: true
-          name: core-pour-dependency-${{ matrix.board }}-${{ matrix.cohort }}-${{ github.run_attempt }}
+          name: core-render-guard-${{ matrix.board }}-${{ matrix.cohort }}-${{ github.run_attempt }}
           path: |
             .full-board-run/core-reentrancy/*.json
             .full-board-run/core-reentrancy/*.json.gz
@@ -137,29 +128,4 @@ jobs:
             experiments/full-board-ten/core-reentrancy-repro.test.tsx
           if-no-files-found: error
           compression-level: 6
-          retention-days: 7
-
-  report:
-    name: Summarize all ten independent regression cases
-    needs: qualify
-    if: always()
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          persist-credentials: false
-          sparse-checkout: experiments/full-board-ten
-      - uses: actions/download-artifact@v4
-        with:
-          pattern: core-pour-dependency-*-*-${{ github.run_attempt }}
-          path: .all-ten-artifacts
-      - name: Require every case report and retain explicit pending global gates
-        run: python3 experiments/full-board-ten/report-core-reentrancy.py .all-ten-artifacts core-reentrancy-all-ten-report.json
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: core-pour-dependency-all-ten-report-${{ github.run_attempt }}
-          path: core-reentrancy-all-ten-report.json
-          if-no-files-found: error
           retention-days: 7

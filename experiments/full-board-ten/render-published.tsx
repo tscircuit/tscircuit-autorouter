@@ -81,6 +81,7 @@ function readablePackage(folder: string, name: string): boolean {
 }
 const { RootCircuit, SOLVERS } = await import("tscircuit")
 let coreChunkBinding: any = null
+let reviewedCircuit: any = null
 let reviewedRenderable: any = null
 let reviewedGroup: any = null
 let reviewedCopperPour: any = null
@@ -99,9 +100,10 @@ if (task.runtimeChunkProof) {
   if (RootCircuit !== (await import("@tscircuit/core")).RootCircuit) throw new Error("Main and Core resolved different circuit classes")
   reviewedRenderable = (await import(pathToFileURL(actualChunk).href)).Renderable
   const reviewedCore = await import(pathToFileURL(actualEntry).href)
+  reviewedCircuit = reviewedCore.IsolatedCircuit
   reviewedGroup = reviewedCore.Group
   reviewedCopperPour = reviewedCore.CopperPour
-  if (typeof reviewedCopperPour.prototype.doInitialPcbCopperPourPreviewRender !== "function") throw new Error("Reviewed CopperPour preview phase is absent")
+  if (!reviewedCircuit.prototype.render.toString().includes("this._isRendering")) throw new Error("Reviewed render guard is absent")
   coreChunkBinding = { actualEntry, actualChunk, reviewedFiles, sha256: sha(readFileSync(actualChunk)), mainAndCoreClassIdentical: true }
 }
 importingPublishedMain = false
@@ -155,10 +157,12 @@ for (const eventName of ["autorouting:start", "autorouting:end", "autorouting:er
     if (eventName === "autorouting:start") {
       if (progress.phases.length === 0) {
         if (reviewedRenderable) {
+          if (circuit.render !== reviewedCircuit.prototype.render) throw new Error("Native circuit does not use the reviewed render guard")
+          coreChunkBinding.nativeRenderMethodIdentical = true
           if ((circuit as any).firstChild?._queueAsyncEffect !== reviewedRenderable.prototype._queueAsyncEffect) throw new Error("Native board does not inherit the reviewed Renderable method")
           if ((circuit as any).firstChild?._startAsyncAutorouting !== reviewedGroup.prototype._startAsyncAutorouting) throw new Error("Native board does not inherit the reviewed Group routing method")
           const authoredPours = (circuit as any).firstChild.selectAll("copperpour")
-          if (authoredPours.some((pour: any) => pour.doInitialPcbCopperPourPreviewRender !== reviewedCopperPour.prototype.doInitialPcbCopperPourPreviewRender || pour.doInitialPcbCopperPourRender !== reviewedCopperPour.prototype.doInitialPcbCopperPourRender)) throw new Error("Native pours do not inherit the reviewed preview/final methods")
+          if (authoredPours.some((pour: any) => pour.doInitialPcbCopperPourRender !== reviewedCopperPour.prototype.doInitialPcbCopperPourRender)) throw new Error("Native pours do not inherit the unchanged pour method")
           if ((circuit as any).firstChild?._parsedProps.enableViaStitching !== false) throw new Error("Authentic full-board via-stitching policy changed")
           coreChunkBinding.nativeBoardMethodIdentical = true
           coreChunkBinding.nativeGroupMethodIdentical = true

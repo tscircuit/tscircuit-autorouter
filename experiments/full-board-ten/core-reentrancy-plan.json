@@ -8,34 +8,19 @@
   "source": {
     "repository": "tscircuit/core",
     "baseCommit": "fb77fad92dd4197eab9934a5ebbb5dfcbffc7eaf",
-    "candidateCommit": "bef5b1308ea2a670026cba1f64ffc26551014d42",
-    "patchSha256": "74b3d53b31745efa5c9d5e305391caa8c1448523769f5e8068a70cfea318aded",
+    "candidateCommit": "c647b88752e8319622d1441445ec5da5069f3d78",
+    "patchSha256": "78c6f511dd01f1962be06251aeb5db0fc440c1e8d2703fc3c65f6524dd966c43",
     "files": [
       {
-        "path": "lib/components/base-components/Renderable.ts",
-        "beforeSha256": "278273dbcb4f24d86bd2c362f6c6cd11402e340428166f0e54b79239a81eb6ee",
-        "afterSha256": "50e8f7cbfc48c20142a97a08d273ceafd07cdcdc7a3f6959a23eb17306e8a67b"
-      },
-      {
-        "path": "lib/components/primitive-components/Group/Group.ts",
-        "beforeSha256": "9ddb264132ddc6642a655ea2d42c5a631ba5c5805224f34a33718944b905e560",
-        "afterSha256": "fb5b6ad919807e1ce1f77df277affdc66a23ed870d8bf094b29193d048bc4848"
-      },
-      {
-        "path": "lib/components/primitive-components/CopperPour/CopperPour.ts",
-        "beforeSha256": "69e8fefdce0f0ef9fd141b62b737efe4cc629f98165584b7bc30296b769097e6",
-        "afterSha256": "673b03c13f83b48ae18c09403ca91d5e89fbdbe192a64cb1af8c682349c636e9"
-      },
-      {
-        "path": "lib/components/primitive-components/CopperPour/CopperPour_doInitialPcbCopperPourRender.ts",
-        "beforeSha256": "8192548a7da9ec8e22b8244534416b6b96cd5d97844d1a4393c9eb9c29592049",
-        "afterSha256": "75c45ed099cb1e9c4a51ad81ec3b23b68d9d19f9b823ab6fdc273a3c4658e895"
+        "path": "lib/IsolatedCircuit.ts",
+        "beforeSha256": "646c2d712aa8f7b9a70e887571aedee3dac6ee4ec68bc87d4ddfd0eeac25eb34",
+        "afterSha256": "e5396d89a41dc242bbadadd145235cdeb380490976b71d0eb7b4e5b92c9f97e3"
       }
     ],
     "testPath": "tests/repros/repro-routing-event-copper-pour.test.tsx",
-    "testSha256": "63e591d1b396a8a6ac861749ff78b53d4cdb658c7851b6b0f2c0d06ee0bd3ad9"
+    "testSha256": "4de225993bc4bf372b6bd6f1edfde878c953fc4dac3f75aca38b3837dc3724e6"
   },
-  "acceptance": "Require every baseline native connected name and baseline pour net/layer group, exact phase SRJ and emitted trace/via geometry, authored geometry, routing policy, and neutral shared findings. Added pour groups are reported separately. Pending previews are never counted as final clearance repairs. H616 alone must remove its 146 actual contacts with the same 221 traces and 140 vias. Mixed-zone absolute audit coverage may remain incomplete only when exact unchanged copper geometry proves no regression; expose that coverage limitation.",
+  "acceptance": "One authentic H616 original circuit. Preserve every baseline connected native name, authored geometry, phase SRJ and routed trace/via geometry. Require both intended pour groups and removal of actual foreign via/pour contacts. Positive-gap clearance deficits remain separate. No full-ten or interim-preview preservation claim.",
   "audit": {
     "path": "audit-via-pour.py",
     "sha256": "39e01ab31ab7a3c56aa603634f64c52480f5b11f68d6b284b44ad7026f47374e",
@@ -58,7 +43,7 @@
   "frozenHarnessFiles": {
     "bootstrap.py": "23de25ac8960be89afc57ba27b0d3fddb6e65dba593024be59ec5073d266164d",
     "prepare-cases.ts": "b72e632e9c9152c9e5daedf1bb60daa5d86c33fdcc454f2a7825827d24124330",
-    "render-published.tsx": "a80eedceb4056c5f04a5285086d646eac7461dd62acd937c6c62b9626c701be6",
+    "render-published.tsx": "e565f0dd3ff9be943d0a98457e5963c0d3ee4771cf7f82eed30be3c09d5bbf29",
     "run-one.ts": "762bcd7e24eb1b00ac2a28a1cc2d15aa7be89dc856b50279e9c6fe173926f0ac",
     "createCoarseRoutingDiagnostics.ts": "dea45bba3386a9b55b7709834dff65468c421992808b406f54c6f9e556e8b618",
     "release.json": "96e08807976db44ebaa50d577434017e65f26f377f19cd24c6fd0be37a21a257",
@@ -67,800 +52,18 @@
     "runtime/bun.lock": "48d6176171adaa6a6f2a0704b562d6e80d773a43a5ac511fc124411cd50e79ba",
     "autorouter-dependencies/package.json": "7b4c1ecf979432e472a4f0589ed49976a8a1323ff7bf651a5938ee7006b61360",
     "autorouter-dependencies/bun.lock": "ec313c582c29c1e35bb31190151a5649198c177119d32fe311746c06e94e8c4e",
-    "prepare-core-reentrancy.py": "54cccba6ed0e0f8a6ab66456b02eb78aadf78347320284687ec205b3712e3ba0",
-    "qualifyCoreReentrancy.mjs": "4e3f03784ba3f13f98c3001c55604320c3109e9590edd9937fd589f35edd542b",
+    "prepare-core-reentrancy.py": "fe19cdd298ec8d33f7dead2d33c67b8008bbab132b123cbd5ba2410abdc3c97b",
+    "qualifyCoreReentrancy.mjs": "2222dd0c7e54f91be353e73405df999e096438addc13ab1b44b6f1beece2934c",
     "core-reentrancy-wasm-preload.ts": "434f872bea27da61c46e255a3723734fb97880e96f3cd3b5e6502a5b211489fd",
-    "verify-core-reentrancy.py": "631588abc637b4a3f0ce725ef410ca4604b664abe09b4dae294900c488887e4f",
-    "core-reentrancy-repro.test.tsx": "63e591d1b396a8a6ac861749ff78b53d4cdb658c7851b6b0f2c0d06ee0bd3ad9",
-    "core-reentrancy-production.patch": "74b3d53b31745efa5c9d5e305391caa8c1448523769f5e8068a70cfea318aded",
+    "verify-core-reentrancy.py": "2a71e3a6447a00b5e258e8c398a939700d605b91a2a843268294a50082306999",
+    "core-reentrancy-repro.test.tsx": "4de225993bc4bf372b6bd6f1edfde878c953fc4dac3f75aca38b3837dc3724e6",
+    "core-reentrancy-production.patch": "78c6f511dd01f1962be06251aeb5db0fc440c1e8d2703fc3c65f6524dd966c43",
     "audit-via-pour.py": "39e01ab31ab7a3c56aa603634f64c52480f5b11f68d6b284b44ad7026f47374e",
     "core-reentrancy-materialization.py": "9d899d2354c9be139d7f58c7d9ef719457b90b3c6cdc8ac93b01ce6f02068d78",
     "report-core-reentrancy.py": "fcf03ba8a59f4187d18d70e424f5b9be659d67728f306ec039a5fc073fdfeb4e"
   },
-  "status": "Frozen after passed actual source pair, exact compiled-to-published mapping and independent controller review; each native worker must still pass the real focused published-runtime pair and physical audit before routing.",
+  "status": "Frozen after passed actual source pair, exact one-file render-guard mapping and root controller review; worker must pass published real-router repro and physical audit before authentic H616 run.",
   "cases": [
-    {
-      "key": "glider-original",
-      "board": "glider",
-      "cohort": "original",
-      "sourceSha256": "a21964b260594e1d88afca54f7b58d7d99b804232d26e3f0b33176c051128935",
-      "components": 379,
-      "pads": 1700,
-      "nets": 459,
-      "requestedNets": 356,
-      "baselineArtifact": {
-        "id": 14373022203,
-        "node_id": "MDg6QXJ0aWZhY3QxNDM3MzAyMjIwMw==",
-        "name": "full-board-glider-published-original-1",
-        "size_in_bytes": 9041091,
-        "url": "https://api.github.com/repos/tscircuit/tscircuit-autorouter/actions/artifacts/14373022203",
-        "archive_download_url": "https://api.github.com/repos/tscircuit/tscircuit-autorouter/actions/artifacts/14373022203/zip",
-        "expired": false,
-        "digest": "sha256:aed4de424b0a31e8cbb1d76f4da971a5acae4294432b9103979ddddd890fbf69",
-        "created_at": "2026-11-17T21:42:54Z",
-        "updated_at": "2026-11-17T21:42:54Z",
-        "expires_at": "2026-11-24T21:42:52Z",
-        "workflow_run": {
-          "id": 44179934754,
-          "repository_id": 924883209,
-          "head_repository_id": 924883209,
-          "head_branch": "bench/full-board-ten-3230-20261117",
-          "head_sha": "29cacbbcce6b3acb6ee09a8d67cff3223f49597e"
-        }
-      },
-      "baselineFiles": [
-        {
-          "name": "assessment.json",
-          "bytes": 22667,
-          "sha256": "80d769e942f5750bfd24ed9baa9a709a2d89ff8d2be9eb97596340429b53f000"
-        },
-        {
-          "name": "audit.log",
-          "bytes": 620,
-          "sha256": "2eb080981822b343a876e67911cea6f7653732b8a71a73ee40e1c561524029b7"
-        },
-        {
-          "name": "circuit.json.gz",
-          "bytes": 408358,
-          "sha256": "6963efd292baefc49960cd94583cb16c13f71e764d3d3d223df1cc85aae0d85e"
-        },
-        {
-          "name": "findings.json.gz",
-          "bytes": 99,
-          "sha256": "54e6135ff46197fd9c12b52dd3a27bcca1057a65c76e8965fabda67fee45c4d4"
-        },
-        {
-          "name": "phase-1-input.srj.json.gz",
-          "bytes": 2690493,
-          "sha256": "10c1f310a64d98d93d04a777adac4db2bda820d32354ea1b27ffa981afe732fc"
-        },
-        {
-          "name": "phase-1-output.srj.json.gz",
-          "bytes": 2782215,
-          "sha256": "7b84312b220e42592fe5c3364bc8c6329794d36d3abb31d03bec04f5c7597540"
-        },
-        {
-          "name": "phase-2-input.srj.json.gz",
-          "bytes": 2770950,
-          "sha256": "0398df114834c924be1770923a951b08f1efc9e89c509ce6f9ac1a5cbb28e477"
-        },
-        {
-          "name": "process.json",
-          "bytes": 343,
-          "sha256": "1412d88f08404f7896416e1a9111dd6e95d2f7ac3878724a03051a57161f4b5e"
-        },
-        {
-          "name": "progress.json",
-          "bytes": 8804,
-          "sha256": "142063f9fd0a37dd8bd0f8a2da3018be18af4bee7ed46e4a906751cd558fddde"
-        },
-        {
-          "name": "result.json",
-          "bytes": 3535,
-          "sha256": "00318241a77841b603d14d30798a75357754fc54590de60d8303e92519259bf2"
-        },
-        {
-          "name": "unrouted.circuit.json.gz",
-          "bytes": 350999,
-          "sha256": "899d565ed9e40d6264cf2982a7eabe1e41fce9788b5de78011426828c0db1fc7"
-        },
-        {
-          "name": "worker.log",
-          "bytes": 480,
-          "sha256": "7c11eb950d13c69c052e05b65408cd67356dd20af3f5d1bd5c00720a09ade09e"
-        }
-      ],
-      "expectedBaseline": {
-        "connectedNets": 0,
-        "traces": 0,
-        "vias": 0,
-        "pours": 1,
-        "renderCompleted": false,
-        "renderExitCode": 124,
-        "progressStatus": "capture_deadline"
-      }
-    },
-    {
-      "key": "imx6-original",
-      "board": "imx6",
-      "cohort": "original",
-      "sourceSha256": "9e5845dc94317c2dfc1ac95d80f84f3a852da4a6649b22dfe6e2f93e75a2a090",
-      "components": 498,
-      "pads": 1904,
-      "nets": 588,
-      "requestedNets": 404,
-      "baselineArtifact": {
-        "id": 14371598669,
-        "node_id": "MDg6QXJ0aWZhY3QxNDM3MTU5ODY2OQ==",
-        "name": "full-board-imx6-published-original-1",
-        "size_in_bytes": 14727840,
-        "url": "https://api.github.com/repos/tscircuit/tscircuit-autorouter/actions/artifacts/14371598669",
-        "archive_download_url": "https://api.github.com/repos/tscircuit/tscircuit-autorouter/actions/artifacts/14371598669/zip",
-        "expired": false,
-        "digest": "sha256:ccffd41573ae1530ba3e3d43b43644f879c9535554cc6f433281bf2274277cf3",
-        "created_at": "2026-11-17T21:42:39Z",
-        "updated_at": "2026-11-17T21:42:39Z",
-        "expires_at": "2026-11-24T21:42:37Z",
-        "workflow_run": {
-          "id": 44179934754,
-          "repository_id": 924883209,
-          "head_repository_id": 924883209,
-          "head_branch": "bench/full-board-ten-3230-20261117",
-          "head_sha": "29cacbbcce6b3acb6ee09a8d67cff3223f49597e"
-        }
-      },
-      "baselineFiles": [
-        {
-          "name": "assessment.json",
-          "bytes": 30187,
-          "sha256": "e1be8c1099d90a2458ceea95be86602370dfd79118156deb13a936eab26a2b71"
-        },
-        {
-          "name": "audit.log",
-          "bytes": 620,
-          "sha256": "0c2b8bc1ec6fd21dce98c611337b29c8f5274085bf17ac83d3e2e2d4a5b4cea2"
-        },
-        {
-          "name": "circuit.json.gz",
-          "bytes": 798013,
-          "sha256": "c34c3bf7ed9fc9b7d64990c3ba524df1a1ef5c6edfcf696d31330159282ef6cf"
-        },
-        {
-          "name": "findings.json.gz",
-          "bytes": 99,
-          "sha256": "54e6135ff46197fd9c12b52dd3a27bcca1057a65c76e8965fabda67fee45c4d4"
-        },
-        {
-          "name": "phase-1-input.srj.json.gz",
-          "bytes": 4413215,
-          "sha256": "d521a6aa97f3b7c1c533ef755d91aa1bd139d5a0bd3a9112374b4c717e7ae5a0"
-        },
-        {
-          "name": "phase-1-output.srj.json.gz",
-          "bytes": 4529344,
-          "sha256": "75011b595865c6daba3375d8ec70c30c4ebe121074584c77621068233c253629"
-        },
-        {
-          "name": "phase-2-input.srj.json.gz",
-          "bytes": 4516368,
-          "sha256": "ebf5a54dba4a5e63f847976094ccacc1d80a871a3a2e4e172421a2e7e2df39f8"
-        },
-        {
-          "name": "process.json",
-          "bytes": 345,
-          "sha256": "be316a27bb97b68db69bfa4bdcabb92a39a8272af37dff7455910b1e975ab2eb"
-        },
-        {
-          "name": "progress.json",
-          "bytes": 8822,
-          "sha256": "72ed2c74f01198a84ff02429b973f3d8326b3280df9098ff320591b5d039ad60"
-        },
-        {
-          "name": "result.json",
-          "bytes": 3539,
-          "sha256": "483c0bd6120965eb29865b99fb2904d3f7933d230c033b642aa897d1d6049cd2"
-        },
-        {
-          "name": "unrouted.circuit.json.gz",
-          "bytes": 425284,
-          "sha256": "2eb52d4d0040a2c89dae192fc7d6c1aa5f3455fe8d133740342f8695db5908b6"
-        },
-        {
-          "name": "worker.log",
-          "bytes": 476,
-          "sha256": "9119779282b9d130474b5bd27a20c6637d00cdd05d405f0b75de71a0e4ddae4d"
-        }
-      ],
-      "expectedBaseline": {
-        "connectedNets": 3,
-        "traces": 0,
-        "vias": 0,
-        "pours": 140,
-        "renderCompleted": false,
-        "renderExitCode": 124,
-        "progressStatus": "capture_deadline"
-      }
-    },
-    {
-      "key": "icepi-original",
-      "board": "icepi",
-      "cohort": "original",
-      "sourceSha256": "5a9800a5bea6fa3278dee1bd1afdaec26bc93e4d593c79093930bb910345ee5b",
-      "components": 280,
-      "pads": 1426,
-      "nets": 466,
-      "requestedNets": 230,
-      "baselineArtifact": {
-        "id": 14372133096,
-        "node_id": "MDg6QXJ0aWZhY3QxNDM3MjEzMzA5Ng==",
-        "name": "full-board-icepi-published-original-1",
-        "size_in_bytes": 6349868,
-        "url": "https://api.github.com/repos/tscircuit/tscircuit-autorouter/actions/artifacts/14372133096",
-        "archive_download_url": "https://api.github.com/repos/tscircuit/tscircuit-autorouter/actions/artifacts/14372133096/zip",
-        "expired": false,
-        "digest": "sha256:45ef090b6b2c1f1700d1648dacfff9bd25c5c30d7626fb874875ef27e335d947",
-        "created_at": "2026-11-17T21:42:38Z",
-        "updated_at": "2026-11-17T21:42:38Z",
-        "expires_at": "2026-11-24T21:42:36Z",
-        "workflow_run": {
-          "id": 44179934754,
-          "repository_id": 924883209,
-          "head_repository_id": 924883209,
-          "head_branch": "bench/full-board-ten-3230-20261117",
-          "head_sha": "29cacbbcce6b3acb6ee09a8d67cff3223f49597e"
-        }
-      },
-      "baselineFiles": [
-        {
-          "name": "assessment.json",
-          "bytes": 14467,
-          "sha256": "9ee0e8d05fc007ae4dfa7a7029310fcd85636462ffb57706ee9dd6b3f4d84305"
-        },
-        {
-          "name": "audit.log",
-          "bytes": 620,
-          "sha256": "c5b08b6d3c892f6191bdc1d6501bf479d55214a3d994d326bd4049d708355625"
-        },
-        {
-          "name": "circuit.json.gz",
-          "bytes": 574797,
-          "sha256": "2e12128a57f8a401d788542e16a5e1e56c724087ae83997534722d13756b4b6b"
-        },
-        {
-          "name": "coarse-diagnostics.json",
-          "bytes": 95802,
-          "sha256": "0c745cfb268c2b0beed61bb7c9b9045f4cdea3766c8ea9ac6f0111612b3c644f"
-        },
-        {
-          "name": "findings.json.gz",
-          "bytes": 99,
-          "sha256": "54e6135ff46197fd9c12b52dd3a27bcca1057a65c76e8965fabda67fee45c4d4"
-        },
-        {
-          "name": "phase-1-input.srj.json.gz",
-          "bytes": 1702305,
-          "sha256": "e5392c09a437a9992535d6250d25ea632cc06405a16340b6a088e4cdd82cfe1c"
-        },
-        {
-          "name": "phase-1-output.srj.json.gz",
-          "bytes": 1832088,
-          "sha256": "4d9d5ffdb16f0759448fb043463c3bcaf6efc95a86eb5c69b6d1b1ba6decf339"
-        },
-        {
-          "name": "phase-2-input.srj.json.gz",
-          "bytes": 1818874,
-          "sha256": "9fbc5b1efb17c5f72dfed382e9aa952b9692d77a0dce814573a629d8582bacf8"
-        },
-        {
-          "name": "process.json",
-          "bytes": 339,
-          "sha256": "52ceaa7f077f00498809a5ee2d1e6f0fb38657d0d6dd057ae0a88ea269fac173"
-        },
-        {
-          "name": "progress.json",
-          "bytes": 8831,
-          "sha256": "94b49de28663bd5221ace208a64626956eda68068eeeff5b1847af5997696578"
-        },
-        {
-          "name": "result.json",
-          "bytes": 3532,
-          "sha256": "2e0eaf06d821d5c221f137cdfaacd9720235da2f2ac25e0e469eebe64993168f"
-        },
-        {
-          "name": "unrouted.circuit.json.gz",
-          "bytes": 295974,
-          "sha256": "e68e8b0f56fe713435b0765263e0dcb025f18a13c89dfd7d89fb8baee455f2e5"
-        },
-        {
-          "name": "worker.log",
-          "bytes": 474,
-          "sha256": "544d9d452135e69de1b02f74f5e3ca85fa89c360602a0c3c809811655b9cd3cb"
-        }
-      ],
-      "expectedBaseline": {
-        "connectedNets": 7,
-        "traces": 0,
-        "vias": 0,
-        "pours": 70,
-        "renderCompleted": false,
-        "renderExitCode": 124,
-        "progressStatus": "capture_deadline"
-      }
-    },
-    {
-      "key": "butterstick-spaced",
-      "board": "butterstick",
-      "cohort": "spaced",
-      "sourceSha256": "62b2e7b8716f92baf49e9d2c445e8b1eb07443343168c96a85970f33423d0fbf",
-      "components": 350,
-      "pads": 1623,
-      "nets": 317,
-      "requestedNets": 317,
-      "baselineArtifact": {
-        "id": 14372554326,
-        "node_id": "MDg6QXJ0aWZhY3QxNDM3MjU1NDMyNg==",
-        "name": "full-board-butterstick-published-spaced-1",
-        "size_in_bytes": 6816996,
-        "url": "https://api.github.com/repos/tscircuit/tscircuit-autorouter/actions/artifacts/14372554326",
-        "archive_download_url": "https://api.github.com/repos/tscircuit/tscircuit-autorouter/actions/artifacts/14372554326/zip",
-        "expired": false,
-        "digest": "sha256:8196f4ef8b5b7b0612855163d10e1e69126ca1b7f3be011389251964f960cb82",
-        "created_at": "2026-11-17T21:50:06Z",
-        "updated_at": "2026-11-17T21:50:06Z",
-        "expires_at": "2026-11-24T21:50:05Z",
-        "workflow_run": {
-          "id": 44179934754,
-          "repository_id": 924883209,
-          "head_repository_id": 924883209,
-          "head_branch": "bench/full-board-ten-3230-20261117",
-          "head_sha": "29cacbbcce6b3acb6ee09a8d67cff3223f49597e"
-        }
-      },
-      "baselineFiles": [
-        {
-          "name": "assessment.json",
-          "bytes": 7539,
-          "sha256": "1e99bd6f2177bbea659ac894a4fbecbd9b1e2eaffc82cd367cda35047e0c57c2"
-        },
-        {
-          "name": "audit.log",
-          "bytes": 0,
-          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-        },
-        {
-          "name": "circuit.json.gz",
-          "bytes": 290456,
-          "sha256": "4e265d18f376a23889e538c52d7ea11513e89915ab4baffe5502532f99a3becd"
-        },
-        {
-          "name": "findings.json.gz",
-          "bytes": 35413,
-          "sha256": "0a8a1a48554e27a7e664230087c1625f93f1ad2fb04cda007c417edb806efee5"
-        },
-        {
-          "name": "phase-1-input.srj.json.gz",
-          "bytes": 2059085,
-          "sha256": "425229028203e91a7854a4e10a1e7e3040163e23592b6bf68c12c46efcc5737d"
-        },
-        {
-          "name": "phase-1-output.srj.json.gz",
-          "bytes": 2062333,
-          "sha256": "c9b8917a3edcc2b2417734555c530c53daf7d9e6ab4f8894f2e26308f5eb722e"
-        },
-        {
-          "name": "phase-2-input.srj.json.gz",
-          "bytes": 2062394,
-          "sha256": "f443b05bce41c591a18a9e98407bb372f254e98d22cb9824c6e0f438ac1af3c5"
-        },
-        {
-          "name": "process.json",
-          "bytes": 346,
-          "sha256": "eb5285742448098705253a7cd33a0a7d357d5bf5ff3f546662709fa6249ed6d7"
-        },
-        {
-          "name": "progress.json",
-          "bytes": 7851,
-          "sha256": "0a7d502a99e7cb52ddfedbcd34527984779a986acd59c6ce196cb1ee1b545870"
-        },
-        {
-          "name": "result.json",
-          "bytes": 3025,
-          "sha256": "ead944393de3a38f363cc4c7a2e4f5227de29a518b3775eac6b2b51b3e8c133c"
-        },
-        {
-          "name": "unrouted.circuit.json.gz",
-          "bytes": 286560,
-          "sha256": "a73de596afb43108115c83d10d7aaccca0af4b69bb570d48f7381f71a5876096"
-        },
-        {
-          "name": "worker.log",
-          "bytes": 466,
-          "sha256": "9e1c236c61cb96e02e27738224319718abfa713da97106e1092c0e1b14a2331d"
-        }
-      ],
-      "expectedBaseline": {
-        "connectedNets": 8,
-        "traces": 16,
-        "vias": 16,
-        "pours": 0,
-        "renderCompleted": false,
-        "renderExitCode": 124,
-        "progressStatus": "capture_deadline"
-      }
-    },
-    {
-      "key": "imx6-spaced",
-      "board": "imx6",
-      "cohort": "spaced",
-      "sourceSha256": "d8cccad6f5cf63911130fbb5e13af9a961064bc231b92f639afa3944d6131c77",
-      "components": 498,
-      "pads": 1904,
-      "nets": 404,
-      "requestedNets": 404,
-      "baselineArtifact": {
-        "id": 14374885179,
-        "node_id": "MDg6QXJ0aWZhY3QxNDM3NDg4NTE3OQ==",
-        "name": "full-board-imx6-published-spaced-1",
-        "size_in_bytes": 19344073,
-        "url": "https://api.github.com/repos/tscircuit/tscircuit-autorouter/actions/artifacts/14374885179",
-        "archive_download_url": "https://api.github.com/repos/tscircuit/tscircuit-autorouter/actions/artifacts/14374885179/zip",
-        "expired": false,
-        "digest": "sha256:689cf10c5f99801c95bb20b93761a35d6a3f32698dcd09861fb12bf284a4662a",
-        "created_at": "2026-11-17T21:55:22Z",
-        "updated_at": "2026-11-17T21:55:22Z",
-        "expires_at": "2026-11-24T21:55:20Z",
-        "workflow_run": {
-          "id": 44179934754,
-          "repository_id": 924883209,
-          "head_repository_id": 924883209,
-          "head_branch": "bench/full-board-ten-3230-20261117",
-          "head_sha": "29cacbbcce6b3acb6ee09a8d67cff3223f49597e"
-        }
-      },
-      "baselineFiles": [
-        {
-          "name": "assessment.json",
-          "bytes": 11134,
-          "sha256": "ba35ea140165661381a9860d5125904c7e6562c2eaaad95012c75c9b03be2c71"
-        },
-        {
-          "name": "audit.log",
-          "bytes": 0,
-          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-        },
-        {
-          "name": "circuit.json.gz",
-          "bytes": 418959,
-          "sha256": "cb90fe69ce0320d24d35fc1942a5312aa4bba7e8c124461826c84a8417577211"
-        },
-        {
-          "name": "coarse-diagnostics.json",
-          "bytes": 19490,
-          "sha256": "59c04c6beb5ad45fa2ed60b2b7fa9b8b7f36f11bbdeaa7d3e49dce34ea977b4b"
-        },
-        {
-          "name": "findings.json.gz",
-          "bytes": 41047,
-          "sha256": "80ce1df225e4d1e24a794591cf6a866c03f6d1e089c4872ed2602150ae796525"
-        },
-        {
-          "name": "pcb.svg.gz",
-          "bytes": 118801,
-          "sha256": "90e9bfee2afb8ebb30eb15ac7445e6f62193757590d76fd2fd8636011fbf190c"
-        },
-        {
-          "name": "phase-1-input.srj.json.gz",
-          "bytes": 2269468,
-          "sha256": "d74eea817428293e398d3a9a9000e6f38ed7b4f4a8c19103e317f1b551c2e288"
-        },
-        {
-          "name": "phase-1-output.srj.json.gz",
-          "bytes": 2271113,
-          "sha256": "8ed219067cb868b11fe2c0203211ba07af324cc37bab97beab7a84ce396852ad"
-        },
-        {
-          "name": "phase-2-input.srj.json.gz",
-          "bytes": 2271161,
-          "sha256": "1486908e405cf2675f22f8c69146160bc35da38e25432936c09cbea4a6a254df"
-        },
-        {
-          "name": "phase-2-output.srj.json.gz",
-          "bytes": 2272928,
-          "sha256": "11e2eae2274554a4546366a83c8a5161ee16f27e06c7b71f627b4c47f7272378"
-        },
-        {
-          "name": "phase-3-input.srj.json.gz",
-          "bytes": 2294679,
-          "sha256": "ece2225264e89bd1f8b8a5fbf6c2749d0ef6d70c8089ed12bc10dfdd29633986"
-        },
-        {
-          "name": "phase-3-output.srj.json.gz",
-          "bytes": 2317725,
-          "sha256": "dc948f5f428b8fcb16e648b850e2b6dd3144d1837255cbc1e37c23ac0e0e3f54"
-        },
-        {
-          "name": "phase-4-error.srj.json.gz",
-          "bytes": 2336792,
-          "sha256": "8a50830db75d63b04a7084feb530780e54974ec1c3566518e9033be9fef99991"
-        },
-        {
-          "name": "phase-4-input.srj.json.gz",
-          "bytes": 2336792,
-          "sha256": "8a50830db75d63b04a7084feb530780e54974ec1c3566518e9033be9fef99991"
-        },
-        {
-          "name": "process.json",
-          "bytes": 338,
-          "sha256": "7d13dabcd272cacc3613b33f5471a36c63d51d49d2d8f836e4ebbd2688dfb33e"
-        },
-        {
-          "name": "progress.json",
-          "bytes": 9411,
-          "sha256": "3f0bd990caa6b06adfae338b2015581446d400c2b0569fb0a4a61bb26033d6ed"
-        },
-        {
-          "name": "result.json",
-          "bytes": 3017,
-          "sha256": "056744563e801e4ca517855eb67650fb7550163e22cbff92b1ce031d44206fc7"
-        },
-        {
-          "name": "unrouted.circuit.json.gz",
-          "bytes": 346116,
-          "sha256": "a420e58f844c2442a88364f1219aa95c9947c485f92d7eacbe9d449490f6b4a1"
-        },
-        {
-          "name": "worker.log",
-          "bytes": 2610,
-          "sha256": "71e4752899a8e097e52dd69cd6e9ff4179571be22f9f4208f23bc24be58aee99"
-        }
-      ],
-      "expectedBaseline": {
-        "connectedNets": 53,
-        "traces": 66,
-        "vias": 127,
-        "pours": 0,
-        "renderCompleted": true,
-        "renderExitCode": 0,
-        "progressStatus": "failed"
-      }
-    },
-    {
-      "key": "butterstick-original",
-      "board": "butterstick",
-      "cohort": "original",
-      "sourceSha256": "faca5e7d7a0356991df589180984b68afd83a4a33998f6f62f7738d2f2d8c844",
-      "components": 350,
-      "pads": 1623,
-      "nets": 349,
-      "requestedNets": 317,
-      "baselineArtifact": {
-        "id": 14372701322,
-        "node_id": "MDg6QXJ0aWZhY3QxNDM3MjcwMTMyMg==",
-        "name": "full-board-butterstick-published-original-1",
-        "size_in_bytes": 8267032,
-        "url": "https://api.github.com/repos/tscircuit/tscircuit-autorouter/actions/artifacts/14372701322",
-        "archive_download_url": "https://api.github.com/repos/tscircuit/tscircuit-autorouter/actions/artifacts/14372701322/zip",
-        "expired": false,
-        "digest": "sha256:09c959074279525642f3b577fa05ff3dc50121471f81a38f50021aa1f482c5a2",
-        "created_at": "2026-11-17T21:34:57Z",
-        "updated_at": "2026-11-17T21:34:57Z",
-        "expires_at": "2026-11-24T21:34:55Z",
-        "workflow_run": {
-          "id": 44179934754,
-          "repository_id": 924883209,
-          "head_repository_id": 924883209,
-          "head_branch": "bench/full-board-ten-3230-20261117",
-          "head_sha": "29cacbbcce6b3acb6ee09a8d67cff3223f49597e"
-        }
-      },
-      "baselineFiles": [
-        {
-          "name": "assessment.json",
-          "bytes": 20791,
-          "sha256": "03ddcc811f69144877a187399d06051f9dfc678e6bfcbb1bdb1ef6319733a5fe"
-        },
-        {
-          "name": "audit.log",
-          "bytes": 626,
-          "sha256": "f4fa1152f82ed83bd9b320240fcb63344b2383c178bb5b2a9898d75a5728d488"
-        },
-        {
-          "name": "circuit.json.gz",
-          "bytes": 428837,
-          "sha256": "48b2201d73b6b7c522bee7ef21c45887ffe67f9ed37569ebd7526849af91e646"
-        },
-        {
-          "name": "coarse-diagnostics.json",
-          "bytes": 105117,
-          "sha256": "036b9022683c9896ef9fca7506260f4a9452e8ff20b8dce76c602d8ec5c5a5dd"
-        },
-        {
-          "name": "findings.json.gz",
-          "bytes": 264,
-          "sha256": "bb165bdfc675567f35d4c14d0499fedf7a2b828ef205cf836a839b43bd0b603a"
-        },
-        {
-          "name": "pcb.svg.gz",
-          "bytes": 180978,
-          "sha256": "efbbb9817e1f0f67575d75a31152f806fb40bd11075ee3b5b453c8874039d5ee"
-        },
-        {
-          "name": "phase-1-error.srj.json.gz",
-          "bytes": 3602375,
-          "sha256": "4c0b0d079a4842e38d90045b08146334dafdc67f47a1a7a609a58906de2852a0"
-        },
-        {
-          "name": "phase-1-input.srj.json.gz",
-          "bytes": 3602375,
-          "sha256": "4c0b0d079a4842e38d90045b08146334dafdc67f47a1a7a609a58906de2852a0"
-        },
-        {
-          "name": "process.json",
-          "bytes": 346,
-          "sha256": "e5f01749f01b678a9c6637c5d22627d2f271246e92e26c2563a4caba7f30bb17"
-        },
-        {
-          "name": "progress.json",
-          "bytes": 8408,
-          "sha256": "506e65232004f94b6f41de187d306b7e1ef247075c82dbac0abbd7c2919f9df5"
-        },
-        {
-          "name": "result.json",
-          "bytes": 3536,
-          "sha256": "6a5f03d1e1ddd75ce5d3608272cb98f49623e6a6e02916ccd7f5bdc3c1915aa3"
-        },
-        {
-          "name": "unrouted.circuit.json.gz",
-          "bytes": 309047,
-          "sha256": "cc9d0e60bfca07af8439de916a3fee7ae41e25f4c7effcf50e96f4f37378f1a2"
-        },
-        {
-          "name": "worker.log",
-          "bytes": 2698,
-          "sha256": "522aa1cd8c28f7d156d6a61cf36dce44f2d7736e33d1f5ed315b04fabbeef30a"
-        }
-      ],
-      "expectedBaseline": {
-        "connectedNets": 9,
-        "traces": 0,
-        "vias": 0,
-        "pours": 39,
-        "renderCompleted": true,
-        "renderExitCode": 0,
-        "progressStatus": "failed"
-      }
-    },
-    {
-      "key": "icepi-spaced",
-      "board": "icepi",
-      "cohort": "spaced",
-      "sourceSha256": "c27dd280882cfa15a3516a9c60796c83f47ff380505a212d2d1672ea4b61f375",
-      "components": 280,
-      "pads": 1426,
-      "nets": 230,
-      "requestedNets": 230,
-      "baselineArtifact": {
-        "id": 14371524871,
-        "node_id": "MDg6QXJ0aWZhY3QxNDM3MTUyNDg3MQ==",
-        "name": "full-board-icepi-published-spaced-1",
-        "size_in_bytes": 11571008,
-        "url": "https://api.github.com/repos/tscircuit/tscircuit-autorouter/actions/artifacts/14371524871",
-        "archive_download_url": "https://api.github.com/repos/tscircuit/tscircuit-autorouter/actions/artifacts/14371524871/zip",
-        "expired": false,
-        "digest": "sha256:7beb25978e38f050743649da26d05e6a768e65f4799f9fc2abab71d35bd3784a",
-        "created_at": "2026-11-17T21:48:48Z",
-        "updated_at": "2026-11-17T21:48:48Z",
-        "expires_at": "2026-11-24T21:48:46Z",
-        "workflow_run": {
-          "id": 44179934754,
-          "repository_id": 924883209,
-          "head_repository_id": 924883209,
-          "head_branch": "bench/full-board-ten-3230-20261117",
-          "head_sha": "29cacbbcce6b3acb6ee09a8d67cff3223f49597e"
-        }
-      },
-      "baselineFiles": [
-        {
-          "name": "assessment.json",
-          "bytes": 4066,
-          "sha256": "418d4fc9517b321ec920a13ddc06b250256aaf5621e8de700d14d62ac30af02c"
-        },
-        {
-          "name": "audit.log",
-          "bytes": 0,
-          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-        },
-        {
-          "name": "circuit.json.gz",
-          "bytes": 312724,
-          "sha256": "d79a0fc31866ad1dc9443951eaadc84c1a9f30537ba21180324e448ac6232b57"
-        },
-        {
-          "name": "findings.json.gz",
-          "bytes": 28650,
-          "sha256": "8ae77981b5d81ab0ceddf60e546a0ee865a43fe07e891e2700a29d864b4af66d"
-        },
-        {
-          "name": "pcb.svg.gz",
-          "bytes": 115137,
-          "sha256": "873e22d5533da6ec8b5435a57052161bb1eac683a87c02e51dc5388d4d77b0d3"
-        },
-        {
-          "name": "phase-1-input.srj.json.gz",
-          "bytes": 1332592,
-          "sha256": "9656bb05f53f660a5fb33775564360044433241405b88480f20e7063d454a17a"
-        },
-        {
-          "name": "phase-1-output.srj.json.gz",
-          "bytes": 1333962,
-          "sha256": "590ec66516110990d7a0d976b158a4210ce3b76c79477ae8d323e469526ee3d2"
-        },
-        {
-          "name": "phase-2-input.srj.json.gz",
-          "bytes": 1333997,
-          "sha256": "d2e69ffa193065e2637eb2f0212713f5fde59d8193de3fe341b2fbd2ba5abd58"
-        },
-        {
-          "name": "phase-2-output.srj.json.gz",
-          "bytes": 1335378,
-          "sha256": "503093520eaf143530f0fd17c993ffd6abedc23e6e654af870348cc9c649567b"
-        },
-        {
-          "name": "phase-3-input.srj.json.gz",
-          "bytes": 1346747,
-          "sha256": "59ef001e0a562c644817a7f0bb4be30b4ea25a1ccc61f5cbfcf52ab90b7149a3"
-        },
-        {
-          "name": "phase-3-output.srj.json.gz",
-          "bytes": 1381511,
-          "sha256": "4384cc8bce4e558bc7843bb1bb29c42038f5656f5e80671f52f80034d828b3d9"
-        },
-        {
-          "name": "phase-4-error.srj.json.gz",
-          "bytes": 1391572,
-          "sha256": "bf47f206b0491b30d1904fc0ff0b58bfe0e32c98c309b2e854cd1957385f6e9f"
-        },
-        {
-          "name": "phase-4-input.srj.json.gz",
-          "bytes": 1391572,
-          "sha256": "bf47f206b0491b30d1904fc0ff0b58bfe0e32c98c309b2e854cd1957385f6e9f"
-        },
-        {
-          "name": "process.json",
-          "bytes": 337,
-          "sha256": "ee7f8bb44ae4441472a68fafef53f209b1ff7af8fe8d240525ab1d210b3646e5"
-        },
-        {
-          "name": "progress.json",
-          "bytes": 10917,
-          "sha256": "eacbb54e08c62f10862d120975f43848b7d21e42cd99e84b0144cebfd97313f8"
-        },
-        {
-          "name": "result.json",
-          "bytes": 3525,
-          "sha256": "28143302d736cbdaf4bec785a1a48a01294ba9ab2ee401d26a69ed0ff7d11888"
-        },
-        {
-          "name": "unrouted.circuit.json.gz",
-          "bytes": 242838,
-          "sha256": "1a5ab28aa556178f0aaf6cb8ed5a7f2959756819407b5b2e9a8b089d3cc832d9"
-        },
-        {
-          "name": "worker.log",
-          "bytes": 3129,
-          "sha256": "71071a425276f470cac059fa72bc93a6dd23aad07029b4675808743e116f0f1a"
-        }
-      ],
-      "expectedBaseline": {
-        "connectedNets": 50,
-        "traces": 52,
-        "vias": 106,
-        "pours": 0,
-        "renderCompleted": true,
-        "renderExitCode": 0,
-        "progressStatus": "failed"
-      }
-    },
     {
       "key": "h616-original",
       "board": "h616",
@@ -979,292 +182,16 @@
         "acceptedVias": 140,
         "candidatePhysicalContacts": 0
       }
-    },
-    {
-      "key": "h616-spaced",
-      "board": "h616",
-      "cohort": "spaced",
-      "sourceSha256": "c8b058094b8346508bb492f7ca71c249cb517fdbe4612c254386821826b99eab",
-      "components": 125,
-      "pads": 760,
-      "nets": 121,
-      "requestedNets": 121,
-      "baselineArtifact": {
-        "id": 14372457413,
-        "node_id": "MDg6QXJ0aWZhY3QxNDM3MjQ1NzQxMw==",
-        "name": "full-board-h616-published-spaced-1",
-        "size_in_bytes": 3989494,
-        "url": "https://api.github.com/repos/tscircuit/tscircuit-autorouter/actions/artifacts/14372457413",
-        "archive_download_url": "https://api.github.com/repos/tscircuit/tscircuit-autorouter/actions/artifacts/14372457413/zip",
-        "expired": false,
-        "digest": "sha256:e6080d2879df15bc1f2633f70862366285232a7cba5747d2696823a532524b74",
-        "created_at": "2026-11-17T21:37:18Z",
-        "updated_at": "2026-11-17T21:37:18Z",
-        "expires_at": "2026-11-24T21:37:17Z",
-        "workflow_run": {
-          "id": 44179934754,
-          "repository_id": 924883209,
-          "head_repository_id": 924883209,
-          "head_branch": "bench/full-board-ten-3230-20261117",
-          "head_sha": "29cacbbcce6b3acb6ee09a8d67cff3223f49597e"
-        }
-      },
-      "baselineFiles": [
-        {
-          "name": "assessment.json",
-          "bytes": 1807,
-          "sha256": "c9eb953ea06772d45d1040d96372f01a15a9240fb699ef4460335ad87542b448"
-        },
-        {
-          "name": "audit.log",
-          "bytes": 0,
-          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-        },
-        {
-          "name": "circuit.json.gz",
-          "bytes": 155483,
-          "sha256": "47ae870c6fb6479bc6805bf6f4379f6d7cb9921274814e3cea09d1c8919a0b35"
-        },
-        {
-          "name": "findings.json.gz",
-          "bytes": 13821,
-          "sha256": "ecf03c7a934287cd44acdd8ac08bc5099a990398845d8fcd60bc4709120bf3c9"
-        },
-        {
-          "name": "pcb.svg.gz",
-          "bytes": 61008,
-          "sha256": "4d29443cb1adf818432eb1b2ed90155c999ed50e1c5f7583eb5181c0a4d82b1b"
-        },
-        {
-          "name": "phase-1-input.srj.json.gz",
-          "bytes": 435371,
-          "sha256": "0751854a922c2da4782db2c51921116de21b986d18ade22092daef675d267602"
-        },
-        {
-          "name": "phase-1-output.srj.json.gz",
-          "bytes": 436887,
-          "sha256": "dcb237fd6541627176371c71d712fc6e4f850da468af62908ed733d7a7bceaa2"
-        },
-        {
-          "name": "phase-2-input.srj.json.gz",
-          "bytes": 436883,
-          "sha256": "fa8ce087aa344feeb720bd2487140e5b1d64cf84f93bdeed80b15b3ca78d7474"
-        },
-        {
-          "name": "phase-2-output.srj.json.gz",
-          "bytes": 438377,
-          "sha256": "a606fea7e19b80d8870736a8d1b2ef720d22c3ec3b01ff3e9657dedd4573eeb9"
-        },
-        {
-          "name": "phase-3-input.srj.json.gz",
-          "bytes": 455345,
-          "sha256": "d1738b713c24ff88945bf314a2c69318d632840398019d0798c5cfd3a3041ac3"
-        },
-        {
-          "name": "phase-3-output.srj.json.gz",
-          "bytes": 468579,
-          "sha256": "1d207f464a081162bc7f82491622e5eb584bf7b200e1f12eb45e4c51416a7aee"
-        },
-        {
-          "name": "phase-4-error.srj.json.gz",
-          "bytes": 470892,
-          "sha256": "1570a142ed767cfa749b1c52a7eb418a3d5d08cffe47deb84807d04d32fc1c9d"
-        },
-        {
-          "name": "phase-4-input.srj.json.gz",
-          "bytes": 470892,
-          "sha256": "1570a142ed767cfa749b1c52a7eb418a3d5d08cffe47deb84807d04d32fc1c9d"
-        },
-        {
-          "name": "process.json",
-          "bytes": 337,
-          "sha256": "ca1404a07e2d62a5e1830c78dacb00aa912e9d542b002aa6d9c57c2b57025d00"
-        },
-        {
-          "name": "progress.json",
-          "bytes": 11040,
-          "sha256": "c509706821a97192245996d21af2f67b1e086cabeb0908df9f12cb767bc6b815"
-        },
-        {
-          "name": "result.json",
-          "bytes": 3555,
-          "sha256": "aaebf83b6f11e4f982a0f73e7a98f63224a846aed21347429b8022ef2be9a120"
-        },
-        {
-          "name": "unrouted.circuit.json.gz",
-          "bytes": 123692,
-          "sha256": "ba066e7759d94a8b2a900934d70e4a7235da6d4cdd1e9e7c660c883edad4d40d"
-        },
-        {
-          "name": "worker.log",
-          "bytes": 3171,
-          "sha256": "75bd17043a1b0e3507e36a66bccbbad46fc31c3f691a71993f9d525aeda9e0fd"
-        }
-      ],
-      "expectedBaseline": {
-        "connectedNets": 53,
-        "traces": 57,
-        "vias": 94,
-        "pours": 0,
-        "renderCompleted": true,
-        "renderExitCode": 0,
-        "progressStatus": "failed"
-      }
-    },
-    {
-      "key": "glider-spaced",
-      "board": "glider",
-      "cohort": "spaced",
-      "sourceSha256": "8addde162ad12f391f4f5b8205845e236c94bbcccafd8a31846a1a710ac5f4ed",
-      "components": 379,
-      "pads": 1700,
-      "nets": 356,
-      "requestedNets": 356,
-      "baselineArtifact": {
-        "id": 14373660910,
-        "node_id": "MDg6QXJ0aWZhY3QxNDM3MzY2MDkxMA==",
-        "name": "full-board-glider-published-spaced-1",
-        "size_in_bytes": 18064924,
-        "url": "https://api.github.com/repos/tscircuit/tscircuit-autorouter/actions/artifacts/14373660910",
-        "archive_download_url": "https://api.github.com/repos/tscircuit/tscircuit-autorouter/actions/artifacts/14373660910/zip",
-        "expired": false,
-        "digest": "sha256:bc664a7f66f0c1f418a272e65e7708d5124738dbfe81de5a229bbca25c7927aa",
-        "created_at": "2026-11-17T21:45:34Z",
-        "updated_at": "2026-11-17T21:45:34Z",
-        "expires_at": "2026-11-24T21:45:33Z",
-        "workflow_run": {
-          "id": 44179934754,
-          "repository_id": 924883209,
-          "head_repository_id": 924883209,
-          "head_branch": "bench/full-board-ten-3230-20261117",
-          "head_sha": "29cacbbcce6b3acb6ee09a8d67cff3223f49597e"
-        }
-      },
-      "baselineFiles": [
-        {
-          "name": "assessment.json",
-          "bytes": 6065,
-          "sha256": "b91f6b1ded5f22bb563317d935fc66e94b13c878b6017cde3f44ac3495076d2d"
-        },
-        {
-          "name": "audit.log",
-          "bytes": 0,
-          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-        },
-        {
-          "name": "circuit.json.gz",
-          "bytes": 353189,
-          "sha256": "8a81a2ea71f0a4a3704b199b1e7b93d131f3cb344be8d2c17cca8eb4be8d282f"
-        },
-        {
-          "name": "coarse-diagnostics.json",
-          "bytes": 79996,
-          "sha256": "192941959f38fbabf66f52e79eeb422a9822558aa70333cb47d231d8cfab61bf"
-        },
-        {
-          "name": "findings.json.gz",
-          "bytes": 37576,
-          "sha256": "6a5a868e9ce3e083373eac2305f7b8d5c85c78ef66b49165a12efdd5ea7cc789"
-        },
-        {
-          "name": "pcb.svg.gz",
-          "bytes": 105966,
-          "sha256": "96ff36be816b69777bdadd7a18698b6d79663625f0b97ad148022bd21d49f5dd"
-        },
-        {
-          "name": "phase-1-input.srj.json.gz",
-          "bytes": 2128109,
-          "sha256": "e631baef2e6ed5f6e686540d94bf095d2a6beaefc33cd7f1e910cf130f38961b"
-        },
-        {
-          "name": "phase-1-output.srj.json.gz",
-          "bytes": 2129566,
-          "sha256": "c921cbe9fdd24d2c337ec2926db9fedf84febe104b945bcf9092e68dd1039f92"
-        },
-        {
-          "name": "phase-2-input.srj.json.gz",
-          "bytes": 2129559,
-          "sha256": "607492d40139ccfddaef83bc0d9618c76416a87f1a426651ab4585573b5ad792"
-        },
-        {
-          "name": "phase-2-output.srj.json.gz",
-          "bytes": 2130798,
-          "sha256": "5d8012665b14fd1a839146913c95c4c9aaad7a8add89223e6ee61acd55c1224f"
-        },
-        {
-          "name": "phase-3-input.srj.json.gz",
-          "bytes": 2141051,
-          "sha256": "db7e146450ba904ebf6f2aa8fd246b9350edbcb8c5b5a768dc517d49d5ecafa5"
-        },
-        {
-          "name": "phase-3-output.srj.json.gz",
-          "bytes": 2159855,
-          "sha256": "9431f40c63ad96ae7400c5a9d481207c8c1d3e99c97de34f1f1192552dadcef2"
-        },
-        {
-          "name": "phase-4-error.srj.json.gz",
-          "bytes": 2175278,
-          "sha256": "b2b4f83a7f0da6ee4a98ea8bbb4e99611356cefd6bbc4ac153bc4d84aab0443e"
-        },
-        {
-          "name": "phase-4-input.srj.json.gz",
-          "bytes": 2175278,
-          "sha256": "b2b4f83a7f0da6ee4a98ea8bbb4e99611356cefd6bbc4ac153bc4d84aab0443e"
-        },
-        {
-          "name": "process.json",
-          "bytes": 338,
-          "sha256": "8bc9dcf64a720fefc863eda69fa0405da579a592eb63359a61860dbea23c3b18"
-        },
-        {
-          "name": "progress.json",
-          "bytes": 9373,
-          "sha256": "7405d1fb6f07d22bf72c52e3227d49d4a8166c5d912e02a967b1671a0a7ae2f5"
-        },
-        {
-          "name": "result.json",
-          "bytes": 3017,
-          "sha256": "a7a2410c653a2aaef257fbe18f74e31ea12c88508b0d043226df74a5705997a3"
-        },
-        {
-          "name": "unrouted.circuit.json.gz",
-          "bytes": 294809,
-          "sha256": "fbe6146e999e16fead434587e1022a77bedaa62a550746463392a84b9ad43a13"
-        },
-        {
-          "name": "worker.log",
-          "bytes": 2609,
-          "sha256": "a31ffacdfd740e3f962ad2b2390569c85e3fa411c12a4da1b1276df314460d50"
-        }
-      ],
-      "expectedBaseline": {
-        "connectedNets": 49,
-        "traces": 53,
-        "vias": 111,
-        "pours": 0,
-        "renderCompleted": true,
-        "renderExitCode": 0,
-        "progressStatus": "failed"
-      }
     }
   ],
   "runner": {
     "label": "blacksmith-8vcpu-ubuntu-2404-arm",
     "bunVersion": "1.4.3",
-    "maxParallel": 5,
-    "peakVcpu": 40,
+    "maxParallel": 1,
+    "peakVcpu": 8,
     "oneCasePerFreshWorkspace": true,
     "order": [
-      "glider-original",
-      "imx6-original",
-      "icepi-original",
-      "butterstick-spaced",
-      "imx6-spaced",
-      "butterstick-original",
-      "icepi-spaced",
-      "h616-original",
-      "h616-spaced",
-      "glider-spaced"
+      "h616-original"
     ]
   },
   "baselineRun": {
@@ -1273,26 +200,32 @@
     "allFifteenArtifactProofsVerified": true
   },
   "finalSourceBuildPreviewEquivalence": {
+    "requiredBeforePrOrGlobalClaim": true,
     "actualSourcePair": {
       "passed": true,
-      "runId": 44244982670,
-      "artifactId": 14401606835,
-      "sourceCommit": "bef5b1308ea2a670026cba1f64ffc26551014d42"
+      "runId": 44261599517,
+      "artifactId": 14408716111,
+      "sourceCommit": "c647b88752e8319622d1441445ec5da5069f3d78"
     },
     "publishedRuntimeMapping": {
       "passed": true,
-      "proofSha256": "c20388415a4202b30ff10351636ace5ac636b394245d893e97e8eea95fa5c432"
+      "proofSha256": "e5e35ddf0c73c631740abfd05b3ea471a6665f093164b9dc4e0e0ce166bde1ad"
     },
-    "prPreview": "pending",
-    "requiredBeforePrOrGlobalClaim": true,
+    "prPreview": {
+      "passed": true,
+      "candidate": "c647b88752e8319622d1441445ec5da5069f3d78",
+      "sourceRun": 44261599517,
+      "sourceArtifactSha256": "2845661b7314b9e55cee199636522932b966d61d3bf47caa465cfbfd2db1c332",
+      "previewUrl": "https://pkg.pr.new/tscircuit/core/@tscircuit/core@c647b88",
+      "previewArchiveSha256": "63818fb6792c40214288a63f18e30c81b1bcf3b843341c08876212673e14eb77",
+      "noNormalization": true,
+      "matchedFiles": 8,
+      "matchedBytes": 19279429,
+      "proofSha256": "8e63625537abd92e4fbc0e0594502460c2a01c2bee5851e18ca5969cf25fb2fc"
+    },
     "actualPr": {
       "url": "https://github.com/tscircuit/core/pull/5659",
-      "head": "f0b8ab80374f7ff3f4ade551c18e400c79b74e94",
-      "differenceFromQualifiedSource": [
-        "tests/repros/__snapshots__/repro-routing-event-copper-pour-pcb.snap.svg"
-      ],
-      "verifiedSnapshotSha256": "31c82543b953b740c271e8fd90d358ac229491dbd76026cef6cefe7534852b65",
-      "productionTestAndPackageTreeIdentical": true
+      "head": "c647b88752e8319622d1441445ec5da5069f3d78"
     }
   },
   "initialGeometryComparison": "Initial Circuit JSON is an unordered flat record collection: compare complete canonical record multisets including multiplicity; retain array-order equality as a separate diagnostic. Phase SRJ array payloads remain byte-exact.",
@@ -1301,39 +234,32 @@
     {
       "path": "dist/index.js",
       "beforeSha256": "53798b0d37ae966acca93e503de4d20e6bb98086d9ec27313646030c364ec519",
-      "afterSha256": "5362e084d8a9e1b8becb1489a4ed4d0d47e35f782e9ac84031de772acd65b6b3",
-      "bytes": 7203493
-    },
-    {
-      "path": "dist/chunk-MS7QPCOY.js",
-      "beforeSha256": "7ac2d30da88918e7faa8fcfb7770e25321bbbec3edcf7b2e4cdc21713e54a24a",
-      "afterSha256": "a95ff96c9fb1304b511520e72a94f46fe210feceadabed5af64b5f2db799441e",
-      "bytes": 88369
+      "afterSha256": "3361d80fbcd070a32770eda3643affc731a3f71b6c1b10be2487ce710069ce7a",
+      "bytes": 7201619
     }
   ],
   "sourceQualification": {
     "artifact": {
-      "id": 14401606835,
-      "node_id": "MDg6QXJ0aWZhY3QxNDQwMTYwNjgzNQ==",
+      "id": 14408716111,
       "name": "core-pour-source-pair-1",
-      "size_in_bytes": 4176427,
-      "url": "https://api.github.com/repos/tscircuit/tscircuit-autorouter/actions/artifacts/14401606835",
-      "archive_download_url": "https://api.github.com/repos/tscircuit/tscircuit-autorouter/actions/artifacts/14401606835/zip",
+      "size_in_bytes": 4177468,
+      "url": "https://api.github.com/repos/tscircuit/tscircuit-autorouter/actions/artifacts/14408716111",
+      "archive_download_url": "https://api.github.com/repos/tscircuit/tscircuit-autorouter/actions/artifacts/14408716111/zip",
       "expired": false,
-      "digest": "sha256:7d71fc49a3d0c0cd27c982aa43a09cfc1d8e7a9162142e2cf97c4bdf348522ac",
-      "created_at": "2026-11-18T05:38:14Z",
-      "updated_at": "2026-11-18T05:38:14Z",
-      "expires_at": "2026-11-25T05:38:12Z",
+      "created_at": "2026-11-18T07:51:54Z",
+      "expires_at": "2026-11-25T07:51:52Z",
+      "updated_at": "2026-11-18T07:51:54Z",
+      "digest": "sha256:2845661b7314b9e55cee199636522932b966d61d3bf47caa465cfbfd2db1c332",
       "workflow_run": {
-        "id": 44244982670,
+        "id": 44261599517,
         "repository_id": 924883209,
         "head_repository_id": 924883209,
         "head_branch": "bench/core-pour-dependency-source-ci-3230",
-        "head_sha": "260159bf5b5a6484e6227ede41a203d2ade02cf7"
+        "head_sha": "dab4ab5957ad30a63e385b03601826fcc2e6b069"
       }
     },
-    "sourcePlanSha256": "dff7d5c916e59ea7c1ecdff9972eef26228e5c1bd703bbe2b06b937767a545a1",
-    "resultSha256": "1c0ac3c0ba04a249ab2ded3e2094b3ccf65b3a242a7fd62c3850335ad75823c1",
+    "sourcePlanSha256": "9e54aef1bbaf5a17b45485437e70384c39e6a171d680b57d75028c9723847c7f",
+    "resultSha256": "840b6f2818240750de1cdd1788cfbfe0de75347a331955aec026c9f3e3c998ba",
     "files": [
       {
         "name": "base/dist/check-circuit-json-assembly-explosion-collisions-CDCU43YZ.js",
@@ -1341,14 +267,14 @@
         "sha256": "f5fef8250e71f5388970b277cbecbf27a474ca4ed231f99670bd6c2017cdcc89"
       },
       {
-        "name": "base/dist/chunk-MS7QPCOY.js",
-        "bytes": 88037,
-        "sha256": "7ac2d30da88918e7faa8fcfb7770e25321bbbec3edcf7b2e4cdc21713e54a24a"
-      },
-      {
         "name": "base/dist/chunk-CE5AIPIV.js",
         "bytes": 27645,
         "sha256": "438d4fb83cd96e792535af6f2c5d0c3edd5a9c7f4f73ef98ec45d5c9acc9a9a3"
+      },
+      {
+        "name": "base/dist/chunk-MS7QPCOY.js",
+        "bytes": 88037,
+        "sha256": "7ac2d30da88918e7faa8fcfb7770e25321bbbec3edcf7b2e4cdc21713e54a24a"
       },
       {
         "name": "base/dist/chunk-VWT4VTBG.js",
@@ -1377,13 +303,13 @@
       },
       {
         "name": "base/tests/repros/repro-routing-event-copper-pour.test.tsx",
-        "bytes": 2672,
-        "sha256": "8ad354cff4ed6b29b2a9fbe4487ecc262f8945c8ab929502ddbb602bf9bf737a"
+        "bytes": 1686,
+        "sha256": "b962f2fe284a6aad8046246ddab43f4096d1f108db1d8b872d17a802d76b8dea"
       },
       {
         "name": "base-build.log",
-        "bytes": 880,
-        "sha256": "7206645538ce6def9772b719f421bf458a42bee1324c032ef93d925ef25d6ea6"
+        "bytes": 879,
+        "sha256": "24d4c31ab4409cbb6beb4b5f5bc7c236dbdf100ec0429d5a265a52e2f9c0115b"
       },
       {
         "name": "base-class-exports.log",
@@ -1397,28 +323,28 @@
       },
       {
         "name": "base-format.log",
-        "bytes": 43,
-        "sha256": "86d35cb9209438f1e483897d609887fa8b88e96c6f26944d9734493e92448e1a"
+        "bytes": 42,
+        "sha256": "2da747d3f669e92026c1ee66c469df054276c8f3e4ccb6be41e3f5334b5db9df"
       },
       {
         "name": "base-regression.log",
-        "bytes": 1070,
-        "sha256": "727ea6c5cf68f66bae930c702b1022ba264c1851e229879edc38270d90537a1f"
+        "bytes": 1088,
+        "sha256": "5212728cd062f3f54dd130bb8f4008990f649d0dbac549fdeef14b3264450be8"
       },
       {
         "name": "base-related-tests.log",
         "bytes": 6870,
-        "sha256": "fe09ddd5071314d36b74e5a52e10f341b91f5f61999a5a4bb4214aea5fa6458b"
+        "sha256": "a84195ff90d8cd8b7dfdac669fc2e1a266808d2d0def0fbb2f435733a036db83"
       },
       {
         "name": "base-repro-create.log",
         "bytes": 433,
-        "sha256": "e4bd730b60704d47009d2e3db0a563d6e2953eced6ecdd790183494d686273cd"
+        "sha256": "300c65ecb1b22bcf589a31a247cdef74028dffff94d39ddbd07d7a14c0d7839a"
       },
       {
         "name": "base-repro-repeat.log",
-        "bytes": 263,
-        "sha256": "8cfebb9dd3f26728e2e0aee02398e5c1500fb94ea88eb38d3391bb4db510a2bb"
+        "bytes": 267,
+        "sha256": "1bd89b232da27b0cb5af51b89d349668c8baa783f5b2f0696bf3efcce868d868"
       },
       {
         "name": "base-typescript.log",
@@ -1428,12 +354,7 @@
       {
         "name": "base-unchanged-timing-tests.log",
         "bytes": 1465,
-        "sha256": "70e9c30c65bf2732e972c8fb0626b1cdf7db0cca3368539ac77c59ba91b0aae6"
-      },
-      {
-        "name": "bun.lock",
-        "bytes": 203519,
-        "sha256": "daca50e342bd3ed156ee05da35def79620c89897d9ba1a560b27cbf69dfbc4a7"
+        "sha256": "9b1f82d5ce69f66a0cc44c59f546d19933bf5e122ba651a078a64caca27c2157"
       },
       {
         "name": "candidate/dist/check-circuit-json-assembly-explosion-collisions-CDCU43YZ.js",
@@ -1446,9 +367,14 @@
         "sha256": "438d4fb83cd96e792535af6f2c5d0c3edd5a9c7f4f73ef98ec45d5c9acc9a9a3"
       },
       {
-        "name": "candidate/dist/chunk-JF7HKV4Y.js",
-        "bytes": 88369,
-        "sha256": "a95ff96c9fb1304b511520e72a94f46fe210feceadabed5af64b5f2db799441e"
+        "name": "bun.lock",
+        "bytes": 203519,
+        "sha256": "daca50e342bd3ed156ee05da35def79620c89897d9ba1a560b27cbf69dfbc4a7"
+      },
+      {
+        "name": "candidate/dist/chunk-MS7QPCOY.js",
+        "bytes": 88037,
+        "sha256": "7ac2d30da88918e7faa8fcfb7770e25321bbbec3edcf7b2e4cdc21713e54a24a"
       },
       {
         "name": "candidate/dist/chunk-VWT4VTBG.js",
@@ -1457,23 +383,18 @@
       },
       {
         "name": "candidate/dist/index.d.ts",
-        "bytes": 11840031,
-        "sha256": "4a13e07919f3848228030378485434fc5cc2586370d637782d17dd5181221e8f"
+        "bytes": 11839947,
+        "sha256": "6ac65a109d69de1d0b60331551fd84d2b7adbe0c64f79bad81ff753bd2682790"
       },
       {
         "name": "candidate/dist/index.js",
-        "bytes": 7227128,
-        "sha256": "966368caaddcedf2ae861afe8c0c9b882996e91b0cb35925ed301737ffc3376f"
+        "bytes": 7225254,
+        "sha256": "8186087a0701de6312492aca4bd0b5a31e2a5bfa490b7b07d9e2b972e327b749"
       },
       {
-        "name": "candidate/dist/resolve-drawing-dimensions-CTHJGTPO.js",
+        "name": "candidate/dist/resolve-drawing-dimensions-B5HVZ7YJ.js",
         "bytes": 17991,
-        "sha256": "af9987f18c9fad1310bf6810e45f8601ee765e61f30d3e07eb51cf4c14d0312f"
-      },
-      {
-        "name": "candidate/tests/repros/repro-routing-event-copper-pour.test.tsx",
-        "bytes": 2703,
-        "sha256": "63e591d1b396a8a6ac861749ff78b53d4cdb658c7851b6b0f2c0d06ee0bd3ad9"
+        "sha256": "f74ea1e66b46192518905179c67c0aadb35c8d89a33e07fc8701824712212a62"
       },
       {
         "name": "candidate/tests/repros/__snapshots__/repro-routing-event-copper-pour-pcb.snap.svg",
@@ -1481,9 +402,14 @@
         "sha256": "31c82543b953b740c271e8fd90d358ac229491dbd76026cef6cefe7534852b65"
       },
       {
+        "name": "candidate/tests/repros/repro-routing-event-copper-pour.test.tsx",
+        "bytes": 1717,
+        "sha256": "4de225993bc4bf372b6bd6f1edfde878c953fc4dac3f75aca38b3837dc3724e6"
+      },
+      {
         "name": "candidate-build.log",
-        "bytes": 880,
-        "sha256": "2d4ee3b49c4235d8b9a419a224814a26911f5203e0051939d92be9d9b030c045"
+        "bytes": 879,
+        "sha256": "3083987624915d2dddfba09b30c41804f7ee21013ed1454b5cd1426f12377ab1"
       },
       {
         "name": "candidate-class-exports.log",
@@ -1497,23 +423,18 @@
       },
       {
         "name": "candidate-format.log",
-        "bytes": 43,
-        "sha256": "f871b70f8e3502f34125b5677e2585f74666aa95a38f5ab2662c551b4cd52596"
+        "bytes": 42,
+        "sha256": "2da747d3f669e92026c1ee66c469df054276c8f3e4ccb6be41e3f5334b5db9df"
       },
       {
         "name": "candidate-related-tests.log",
-        "bytes": 6552,
-        "sha256": "4bcab0eb2932a3c3b6f40cc501f3c05ab5540b5b585ea7ac5cf891249bb52e9a"
+        "bytes": 6869,
+        "sha256": "4ce8861d978c54b603d9c1c34cc0abb4b346f1dea1eb74f26c3599906db16d52"
       },
       {
         "name": "candidate-repro-create.log",
         "bytes": 433,
-        "sha256": "58586614c76912c6ca8468123b1059dce782266c80befdab7ba61005e99061cb"
-      },
-      {
-        "name": "candidate-repro-repeat.log",
-        "bytes": 267,
-        "sha256": "de385b20923ff5f4c1ecc72949ce82b7380f7a3a31db6c8846f4f4c3296ed04d"
+        "sha256": "d78c033a5db391aa166490c64688a43527b83ede2edb09635d678514a3d85f60"
       },
       {
         "name": "candidate-typescript.log",
@@ -1521,14 +442,19 @@
         "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
       },
       {
+        "name": "candidate-repro-repeat.log",
+        "bytes": 267,
+        "sha256": "8ee68754bfd3af9520c2abee6eb752cc74694772710feca9a456c242ce875f3d"
+      },
+      {
         "name": "candidate-unchanged-timing-tests.log",
         "bytes": 1465,
-        "sha256": "40c3a14896ca1835a25c1f52f1aead3bfa2b8d93c56a69d579690011d96b5d4f"
+        "sha256": "4906bb5f3e141b52be48bcfba6dcfef9357b2bc21b6b0e75f2ef4b5cd0c37b2b"
       },
       {
         "name": "checks.json",
-        "bytes": 11538,
-        "sha256": "cd1ee2bfbcf11326f0f18a0e4988e3fef87bc3e4c9785e6679dc211c9d4d53b7"
+        "bytes": 10488,
+        "sha256": "e6e1ead6165e0141aa6957072818f9501a71ccbfba3da7cc3d5684c51c6e15fa"
       },
       {
         "name": "dependency-graph.json.gz",
@@ -1536,9 +462,19 @@
         "sha256": "fc783f2c70c14a16fda58e2d7f989dfc3f8da15c852a7c9c261d8cc500445c61"
       },
       {
+        "name": "files/base/lib/IsolatedCircuit.ts",
+        "bytes": 14747,
+        "sha256": "646c2d712aa8f7b9a70e887571aedee3dac6ee4ec68bc87d4ddfd0eeac25eb34"
+      },
+      {
         "name": "files/base/lib/components/base-components/Renderable.ts",
         "bytes": 19301,
         "sha256": "278273dbcb4f24d86bd2c362f6c6cd11402e340428166f0e54b79239a81eb6ee"
+      },
+      {
+        "name": "files/base/lib/components/primitive-components/CopperPour/CopperPour.ts",
+        "bytes": 1125,
+        "sha256": "69e8fefdce0f0ef9fd141b62b737efe4cc629f98165584b7bc30296b769097e6"
       },
       {
         "name": "files/base/lib/components/primitive-components/CopperPour/CopperPour_doInitialPcbCopperPourRender.ts",
@@ -1551,49 +487,44 @@
         "sha256": "9ddb264132ddc6642a655ea2d42c5a631ba5c5805224f34a33718944b905e560"
       },
       {
-        "name": "files/base/lib/components/primitive-components/CopperPour/CopperPour.ts",
-        "bytes": 1125,
-        "sha256": "69e8fefdce0f0ef9fd141b62b737efe4cc629f98165584b7bc30296b769097e6"
-      },
-      {
         "name": "files/base/tests/repros/repro-routing-event-copper-pour.test.tsx",
         "bytes": 1349,
         "sha256": "1e538048e84171de607c3b876d279bfb1d0daaae78b1aa48dc1d8a6df2f5cbde"
       },
       {
-        "name": "files/candidate/lib/components/primitive-components/CopperPour/CopperPour.ts",
-        "bytes": 1314,
-        "sha256": "673b03c13f83b48ae18c09403ca91d5e89fbdbe192a64cb1af8c682349c636e9"
-      },
-      {
-        "name": "files/candidate/lib/components/primitive-components/CopperPour/CopperPour_doInitialPcbCopperPourRender.ts",
-        "bytes": 7845,
-        "sha256": "75c45ed099cb1e9c4a51ad81ec3b23b68d9d19f9b823ab6fdc273a3c4658e895"
+        "name": "files/candidate/lib/IsolatedCircuit.ts",
+        "bytes": 14923,
+        "sha256": "e5396d89a41dc242bbadadd145235cdeb380490976b71d0eb7b4e5b92c9f97e3"
       },
       {
         "name": "files/candidate/lib/components/base-components/Renderable.ts",
-        "bytes": 19634,
-        "sha256": "50e8f7cbfc48c20142a97a08d273ceafd07cdcdc7a3f6959a23eb17306e8a67b"
+        "bytes": 19301,
+        "sha256": "278273dbcb4f24d86bd2c362f6c6cd11402e340428166f0e54b79239a81eb6ee"
+      },
+      {
+        "name": "files/candidate/lib/components/primitive-components/CopperPour/CopperPour.ts",
+        "bytes": 1125,
+        "sha256": "69e8fefdce0f0ef9fd141b62b737efe4cc629f98165584b7bc30296b769097e6"
+      },
+      {
+        "name": "files/candidate/lib/components/primitive-components/CopperPour/CopperPour_doInitialPcbCopperPourRender.ts",
+        "bytes": 5527,
+        "sha256": "8192548a7da9ec8e22b8244534416b6b96cd5d97844d1a4393c9eb9c29592049"
       },
       {
         "name": "files/candidate/lib/components/primitive-components/Group/Group.ts",
-        "bytes": 120857,
-        "sha256": "fb5b6ad919807e1ce1f77df277affdc66a23ed870d8bf094b29193d048bc4848"
+        "bytes": 120610,
+        "sha256": "9ddb264132ddc6642a655ea2d42c5a631ba5c5805224f34a33718944b905e560"
       },
       {
         "name": "files/candidate/tests/repros/repro-routing-event-copper-pour.test.tsx",
-        "bytes": 2703,
-        "sha256": "63e591d1b396a8a6ac861749ff78b53d4cdb658c7851b6b0f2c0d06ee0bd3ad9"
-      },
-      {
-        "name": "install.bunfig.toml",
-        "bytes": 31,
-        "sha256": "dd971fd2b2405f75aeecc03afa5cb599079953746b358f7f7cda328b16517024"
+        "bytes": 1717,
+        "sha256": "4de225993bc4bf372b6bd6f1edfde878c953fc4dac3f75aca38b3837dc3724e6"
       },
       {
         "name": "install.log",
-        "bytes": 5658,
-        "sha256": "60c047f72dd654220f7aa4b259ada5d588eb0421f4e39e57f71ff7c2f6d737f5"
+        "bytes": 4075,
+        "sha256": "6a51ba4484ff07146689635bd86e4948dced7725a9ccf0f4a7b40253ed654716"
       },
       {
         "name": "original-repro-snapshot.svg",
@@ -1601,34 +532,24 @@
         "sha256": "dd1bce2861313667cdbdbd42d42cf2d84b77dfbf143a11c5703d2ddb681ef1da"
       },
       {
+        "name": "production.patch",
+        "bytes": 1463,
+        "sha256": "78c6f511dd01f1962be06251aeb5db0fc440c1e8d2703fc3c65f6524dd966c43"
+      },
+      {
         "name": "package.json",
         "bytes": 8216,
         "sha256": "68fe69beb0f33bb8d7d23aaf732350613482e92952f08601a43e17ff62fa855e"
       },
       {
-        "name": "production-build-equivalence.json",
-        "bytes": 6531,
-        "sha256": "114b6b028497f96e7ff241e2b5621ba240b49fd30afa8237878dc3c02871a35e"
-      },
-      {
-        "name": "production-build-equivalence.log",
-        "bytes": 0,
-        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-      },
-      {
-        "name": "production.patch",
-        "bytes": 10419,
-        "sha256": "74b3d53b31745efa5c9d5e305391caa8c1448523769f5e8068a70cfea318aded"
-      },
-      {
         "name": "result.json",
-        "bytes": 13241,
-        "sha256": "1c0ac3c0ba04a249ab2ded3e2094b3ccf65b3a242a7fd62c3850335ad75823c1"
+        "bytes": 12276,
+        "sha256": "840b6f2818240750de1cdd1788cfbfe0de75347a331955aec026c9f3e3c998ba"
       },
       {
         "name": "source-plan.json",
-        "bytes": 6313,
-        "sha256": "dff7d5c916e59ea7c1ecdff9972eef26228e5c1bd703bbe2b06b937767a545a1"
+        "bytes": 6656,
+        "sha256": "9e54aef1bbaf5a17b45485437e70384c39e6a171d680b57d75028c9723847c7f"
       },
       {
         "name": "tool-versions.log",

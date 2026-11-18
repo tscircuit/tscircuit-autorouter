@@ -91,11 +91,11 @@ def compare(root, board, cohort, report):
     report["process"] = {"baseline": process_state(base_result, base_progress), "candidate": process_state(result, progress), "note": "renderCompleted plus exit status distinguishes finished routing failures from timed captures; renderSettled alone does not."}
     binding = progress["runtime"]["coreChunkBinding"]
     restored = read(proof / "assessment-runtime-restored.json")
-    report["runtimeGuards"] = {"publishedCoreRestoredBeforeAssessment": restored["allPublishedFilesVerified"] and restored["publishedAliasesRestored"], "mainAndCoreClassIdentical": binding["mainAndCoreClassIdentical"], "nativeBoardMethodIdentical": binding["nativeBoardMethodIdentical"], "nativeGroupMethodIdentical": binding["nativeGroupMethodIdentical"], "nativePourMethodsIdentical": binding["nativePourMethodsIdentical"], "reviewedFiles": binding["reviewedFiles"], "chunkSha256": binding["sha256"], "noRoutingWasm": result["wasmUsage"]["routingOrUnknownAttempts"] == 0 and progress["forbiddenRoutingSolverSelections"] == [], "viaStitchingDisabled": binding["viaStitchingEnabled"] is False, "sourceSha256": progress["sourceSha256"]}
+    report["runtimeGuards"] = {"publishedCoreRestoredBeforeAssessment": restored["allPublishedFilesVerified"] and restored["publishedAliasesRestored"], "mainAndCoreClassIdentical": binding["mainAndCoreClassIdentical"], "nativeRenderMethodIdentical": binding["nativeRenderMethodIdentical"], "nativeBoardMethodIdentical": binding["nativeBoardMethodIdentical"], "nativeGroupMethodIdentical": binding["nativeGroupMethodIdentical"], "nativePourMethodsIdentical": binding["nativePourMethodsIdentical"], "reviewedFiles": binding["reviewedFiles"], "chunkSha256": binding["sha256"], "noRoutingWasm": result["wasmUsage"]["routingOrUnknownAttempts"] == 0 and progress["forbiddenRoutingSolverSelections"] == [], "viaStitchingDisabled": binding["viaStitchingEnabled"] is False, "sourceSha256": progress["sourceSha256"]}
     assert progress["sourceSha256"] == case["sourceSha256"] == task["sourceSha256"]
     assert hashlib.sha256(Path(task["sourcePath"]).read_bytes()).hexdigest() == task["sourceSha256"]
     assert [result["captureDeadlineMs"], result["hardDeadlineMs"], task["assessmentDeadlineMs"]] == [plan["limitsMs"][key] for key in ["capture", "hard", "assessment"]]
-    assert all(report["runtimeGuards"][key] for key in ["publishedCoreRestoredBeforeAssessment", "mainAndCoreClassIdentical", "nativeBoardMethodIdentical", "nativeGroupMethodIdentical", "nativePourMethodsIdentical", "noRoutingWasm", "viaStitchingDisabled"])
+    assert all(report["runtimeGuards"][key] for key in ["publishedCoreRestoredBeforeAssessment", "mainAndCoreClassIdentical", "nativeRenderMethodIdentical", "nativeBoardMethodIdentical", "nativeGroupMethodIdentical", "nativePourMethodsIdentical", "noRoutingWasm", "viaStitchingDisabled"])
     assert {row["path"]: row["sha256"] for row in binding["reviewedFiles"]} == {row["path"]: row["afterSha256"] for row in plan["runtimeChanges"]}
     assert result["assessmentReady"] and result["completeSourceCounts"] and result["routingPolicyObserved"]
     assert result["auditExitCode"] == 0 and not result["auditTimedOut"]
@@ -147,7 +147,7 @@ def compare(root, board, cohort, report):
     report["qualified"] = all(report["gates"].values())
     report["finalSourceBuildPreviewEquivalence"] = plan["finalSourceBuildPreviewEquivalence"]
     report["globalClaimPermitted"] = False
-    report["scope"] = "One authentic case in the ten-case regression. Exact accepted SRJ, emitted trace/via materialization, native connectivity and physical pour contacts remain separate claims."
+    report["scope"] = "One authentic H616 original case for the simplified render guard. No ten-case or interim-preview preservation claim. Exact accepted SRJ, emitted trace/via materialization, native connectivity and physical pour contacts remain separate claims."
 
 
 def main():
