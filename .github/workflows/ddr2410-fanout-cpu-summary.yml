@@ -1,0 +1,32 @@
+name: Aggregate native fanout CPU paths without double counting
+on:
+  push:
+    branches: [codex/ddr2410-fanout-cpu-summary]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  summary:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: fanout-bus-first-native-icepi-profile
+          run-id: 44297964676
+          github-token: ${{ github.token }}
+          path: captured
+      - run: |
+          python3 - <<'PY'
+          import collections,json
+          from pathlib import Path
+          p=json.loads(Path('captured/fanout.cpuprofile').read_text());nodes={n['id']:n for n in p['nodes']};parents={c:n['id'] for n in p['nodes'] for c in n.get('children',[])}
+          own=collections.Counter();union=collections.Counter();total=0
+          for sample,delta in zip(p['samples'],p['timeDeltas']):
+              total+=delta;own[nodes[sample]['callFrame']['functionName']]+=delta;names=set();current=sample
+              while current is not None:
+                  names.add(nodes[current]['callFrame']['functionName']);current=parents.get(current)
+              for name in names: union[name]+=delta
+          focus=['routePlaneTerminatedBus','buildPlan','planIsClear','planIsStaticallyClear','segmentIsClearOfObstacles','obstacleSharesElectricalNet']
+          report={'sampledMs':total/1000,'unionInclusiveMs':{name:union[name]/1000 for name in focus},'selfIncludesMs':own['includes']/1000,'note':'Each sample counts once per function name across the entire call stack. Inclusive rows overlap and must not be summed.'}
+          print('FANOUT_CPU_UNION_RESULT',json.dumps(report,separators=(',',':')))
+          PY
