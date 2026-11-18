@@ -47,21 +47,18 @@ beforeAll((): void => {
   for (const wait of waits) expect(wait.after).toEqual(terminalState)
 })
 
-test(
-  "completion during a phase wait and repeated waits report the unreached phase",
-  (): void => {
-    const error = new Error(
-      'Routing finished before phase "notARealPhase" was reached',
-    )
-    expect(
-      waits.map((wait) => ({
-        error: wait.error,
-        stepCalls: wait.stepCalls,
-        terminalStepCalls: wait.terminalStepCalls,
-      })),
-    ).toEqual([
-      { error, stepCalls: terminalState.iterations, terminalStepCalls: 0 },
-      { error, stepCalls: 0, terminalStepCalls: 0 },
-    ])
-  },
-)
+test("completion during a phase wait and repeated waits report the unreached phase", (): void => {
+  const error = new Error(
+    'Routing finished before phase "notARealPhase" was reached',
+  )
+  expect(
+    waits.map((wait) => ({
+      error: wait.error,
+      stepCalls: wait.stepCalls,
+      terminalStepCalls: wait.terminalStepCalls,
+    })),
+  ).toEqual([
+    { error, stepCalls: terminalState.iterations, terminalStepCalls: 0 },
+    { error, stepCalls: 0, terminalStepCalls: 0 },
+  ])
+})

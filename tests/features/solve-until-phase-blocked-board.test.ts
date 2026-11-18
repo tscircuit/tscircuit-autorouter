@@ -122,29 +122,26 @@ beforeAll(async (): Promise<void> => {
   await expect(svg).toMatchSvgSnapshot(import.meta.path)
 })
 
-test(
-  "blocked-board phase waits preserve the real failure without terminal steps",
-  (): void => {
-    expect(
-      waits.map((wait) => ({
-        error: wait.error,
-        stepCalls: wait.stepCalls,
-        terminalStepCalls: wait.terminalStepCalls,
-        state: wait.after,
-      })),
-    ).toEqual([
-      {
-        error: new Error(terminalState.error!),
-        stepCalls: terminalState.iterations,
-        terminalStepCalls: 0,
-        state: terminalState,
-      },
-      {
-        error: new Error(terminalState.error!),
-        stepCalls: 0,
-        terminalStepCalls: 0,
-        state: terminalState,
-      },
-    ])
-  },
-)
+test("blocked-board phase waits preserve the real failure without terminal steps", (): void => {
+  expect(
+    waits.map((wait) => ({
+      error: wait.error,
+      stepCalls: wait.stepCalls,
+      terminalStepCalls: wait.terminalStepCalls,
+      state: wait.after,
+    })),
+  ).toEqual([
+    {
+      error: new Error(terminalState.error!),
+      stepCalls: terminalState.iterations,
+      terminalStepCalls: 0,
+      state: terminalState,
+    },
+    {
+      error: new Error(terminalState.error!),
+      stepCalls: 0,
+      terminalStepCalls: 0,
+      state: terminalState,
+    },
+  ])
+})

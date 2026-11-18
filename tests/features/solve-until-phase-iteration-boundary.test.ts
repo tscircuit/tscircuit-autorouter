@@ -47,18 +47,15 @@ beforeAll((): void => {
   }
 })
 
-test(
-  "phase entry cannot hide an iteration failure, including repeated waits",
-  (): void => {
-    expect(
-      waits.map((wait) => ({
-        error: wait.error,
-        stepCalls: wait.stepCalls,
-        terminalStepCalls: wait.terminalStepCalls,
-      })),
-    ).toEqual([
-      { error: new Error(failure), stepCalls: 2, terminalStepCalls: 0 },
-      { error: new Error(failure), stepCalls: 0, terminalStepCalls: 0 },
-    ])
-  },
-)
+test("phase entry cannot hide an iteration failure, including repeated waits", (): void => {
+  expect(
+    waits.map((wait) => ({
+      error: wait.error,
+      stepCalls: wait.stepCalls,
+      terminalStepCalls: wait.terminalStepCalls,
+    })),
+  ).toEqual([
+    { error: new Error(failure), stepCalls: 2, terminalStepCalls: 0 },
+    { error: new Error(failure), stepCalls: 0, terminalStepCalls: 0 },
+  ])
+})
