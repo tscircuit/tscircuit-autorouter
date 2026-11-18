@@ -1,0 +1,972 @@
+diff --git a/lib/bus-lanes-solver.ts b/lib/bus-lanes-solver.ts
+index 7140697..c8a56c5 100644
+--- a/lib/bus-lanes-solver.ts
++++ b/lib/bus-lanes-solver.ts
+@@ -18,7 +18,10 @@ import { spreadCoupledTuningLanes } from "./spread-coupled-tuning-lanes"
+ import { simplifyMatchedTraces } from "./simplify-matched-traces"
+ import { tuneCoupledLengths } from "./tune-coupled-lengths"
+ import { negotiateLanes } from "./negotiate-lanes"
+-import { pendingPackageExits } from "./pending-lane-certificates"
++import {
++  getPendingExitPathCost,
++  pendingPackageExits,
++} from "./pending-lane-certificates"
+ import { pairCouplingReports } from "./pair-coupling"
+ import { tuningPathIsSelfClear } from "./length-tuning"
+ import {
+@@ -33,7 +36,6 @@ import type {
+   SolverOptions,
+   Connection,
+   Trace,
+-  Point,
+   Wire,
+ } from "./types"
+ import {
+@@ -357,34 +359,18 @@ export class BusLanesSolver extends BaseSolver {
+     }
+     const c = this.orders[this.attempt][this.lane],
+       [a, b] = c.pointsToConnect
+-    const exitScene = this.pendingExits?.length
+-      ? new VectorScene(
+-          this.input,
+-          c,
+-          this.widths.get(c.name)!,
+-          this.pendingExits,
+-        )
+-      : undefined
+     this.search = this.useNegotiation
+       ? new GridVisibilitySearch(this.scene(c), a, b)
+       : new VectorVisibilitySearch(
+           this.scene(c),
+           a,
+           b,
+-          exitScene
+-            ? (path) =>
+-                path
+-                  .slice(1)
+-                  .reduce(
+-                    (cost, point, index) =>
+-                      cost +
+-                      distance(path[index], point) +
+-                      (exitScene.visible(path[index], point)
+-                        ? 0
+-                        : 10 * this.input.minTraceWidth),
+-                    0,
+-                  )
+-            : undefined,
++          getPendingExitPathCost({
++            input: this.input,
++            connection: c,
++            width: this.widths.get(c.name)!,
++            pendingExits: this.pendingExits,
++          }),
+         )
+   }
+   private retry() {
+@@ -424,17 +410,13 @@ export class BusLanesSolver extends BaseSolver {
+     this.startLane()
+   }
+   private route() {
+-    if (
+-      !this.useNegotiation &&
+-      this.input.buses?.length &&
+-      this.pendingExits === undefined
+-    ) {
++    if (this.input.buses?.length && this.pendingExits === undefined) {
+       this.pendingExitSearch ??= pendingPackageExits(this.input, this.fixed)
+       const step = this.pendingExitSearch.next()
+       if (!step.done) return
+       this.pendingExits = step.value
+       this.pendingExitSearch = undefined
+-      this.startLane()
++      if (!this.useNegotiation) this.startLane()
+     }
+     if (this.useNegotiation) {
+       // Dense negotiation owns its searches; the initial lane search is unused.
+@@ -511,19 +493,20 @@ export class BusLanesSolver extends BaseSolver {
+         }
+       }
+       this.reservePackageExits ??= backwardFacingPackageTerminals(this.input)
+-      this.negotiated ??= negotiateLanes(
+-        this.input,
+-        this.orders[0],
+-        this.fixed,
+-        this.pairedTraces,
+-        this.widths,
+-        (pass, conflicts) => {
++      this.negotiated ??= negotiateLanes({
++        input: this.input,
++        connections: this.orders[0],
++        fixed: this.fixed,
++        paired: this.pairedTraces,
++        widths: this.widths,
++        reportProgress: (pass, conflicts) => {
+           this.congestionPass = pass
+           this.conflictingLanes = conflicts
+         },
+-        this.terminalLayers,
+-        () => this.reservePackageExits!,
+-      )
++        terminalLayers: this.terminalLayers,
++        enableTerminalReservations: () => this.reservePackageExits!,
++        pendingExits: this.pendingExits,
++      })
+       const step = this.negotiated.next()
+       if (!step.done) {
+         this.traces = step.value
+diff --git a/lib/negotiate-lanes.ts b/lib/negotiate-lanes.ts
+index fff945e..be21588 100644
+--- a/lib/negotiate-lanes.ts
++++ b/lib/negotiate-lanes.ts
+@@ -1,7 +1,10 @@
+ import { maximumCarrierLength } from "./route-lengths"
+ import { refineRouteCandidates } from "./refine-route-candidates"
+ import { routeViaWaypoint } from "./route-via-waypoint"
+-import { pendingLaneCertificates } from "./pending-lane-certificates"
++import {
++  getPendingExitPathCost,
++  pendingLaneCertificates,
++} from "./pending-lane-certificates"
+ import { RouteCandidatePool } from "./select-route-candidates"
+ import { routeCoupledPair } from "./coupled-pair-routing"
+ import { GridHistoryProjector, GridVisibilitySearch } from "./grid-visibility"
+@@ -12,22 +15,40 @@ import { reduceOrdinaryTurns } from "./reduce-ordinary-turns"
+ import { repairLaneClosures } from "./repair-lane-closures"
+ import type { SimpleRouteJson, Connection, Trace, Wire } from "./types"
+ 
++type ConnectionName = Connection["name"]
++type LayerName = Wire["layer"]
++
++interface NegotiateLanesOptions {
++  input: SimpleRouteJson
++  connections: Connection[]
++  fixed: Copper[]
++  paired: Trace[]
++  widths: Map<ConnectionName, number>
++  reportProgress?: (pass: number, conflictingLanes: number) => void
++  terminalLayers?: ReadonlyMap<ConnectionName, LayerName[]>
++  enableTerminalReservations?: () => boolean
++  deferRetainedSelfClearance?: boolean
++  checkReachability?: boolean
++  pendingExits?: Copper[]
++}
++
+ /** Queue-based rip-up routing adapted from the reference's negotiate-fine.ts.
+  * Supplied copper and generated paired corridors remain fixed. Runtime candidate
+  * selection can combine earlier compatible alternatives; only complete,
+  * nonoverlapping solutions are returned. Board-world mm. */
+-export function* negotiateLanes(
+-  input: SimpleRouteJson,
+-  connections: Connection[],
+-  fixed: Copper[],
+-  paired: Trace[],
+-  widths: Map<string, number>,
+-  reportProgress?: (pass: number, conflictingLanes: number) => void,
+-  terminalLayers: ReadonlyMap<string, string[]> = new Map(),
+-  enableTerminalReservations: () => boolean = () => true,
++export function* negotiateLanes({
++  input,
++  connections,
++  fixed,
++  paired,
++  widths,
++  reportProgress,
++  terminalLayers = new Map<ConnectionName, LayerName[]>(),
++  enableTerminalReservations = () => true,
+   deferRetainedSelfClearance = false,
+   checkReachability = false,
+-): Generator<Trace[], Trace[] | null> {
++  pendingExits = [],
++}: NegotiateLanesOptions): Generator<Trace[], Trace[] | null> {
+   const flexibleTerminals = connections.some(
+     (connection) => (terminalLayers.get(connection.name)?.length ?? 1) > 1,
+   )
+@@ -216,6 +237,9 @@ export function* negotiateLanes(
+           : []),
+       ]
+       const scene = new VectorScene(input, connection, width, sceneCopper)
++      const foreignPendingExits = pendingExits.filter(
++        (guide) => !guide.owners.some((owner) => scene.owners.has(owner)),
++      )
+       if (unit.pair) {
+         // Paired alternatives use their own coupled search. They only need
+         // the shared grid coordinates for accumulated intersection history.
+@@ -295,7 +319,7 @@ export function* negotiateLanes(
+         scene,
+         connection.pointsToConnect[0],
+         connection.pointsToConnect[1],
+-        [...routedCopper, ...pendingCopper],
++        [...routedCopper, ...pendingCopper, ...foreignPendingExits],
+         congestionPenalty,
+         histories.get(layer),
+         {
+@@ -326,7 +350,7 @@ export function* negotiateLanes(
+                 candidateScene,
+                 connection.pointsToConnect[0],
+                 connection.pointsToConnect[1],
+-                [...routedCopper, ...pendingCopper],
++                [...routedCopper, ...pendingCopper, ...foreignPendingExits],
+                 congestionPenalty,
+                 histories.get(candidateLayer),
+                 {
+@@ -433,7 +457,7 @@ export function* negotiateLanes(
+           const generator = routeViaWaypoint(
+             candidateScene,
+             waypoint,
+-            routedCopper,
++            [...routedCopper, ...foreignPendingExits],
+             congestionPenalty,
+             histories.get(candidateLayer),
+             limits.get(connection.name)!,
+@@ -449,6 +473,12 @@ export function* negotiateLanes(
+           }
+           if (step.value) paths.push(step.value)
+         }
++        const pathCost = getPendingExitPathCost({
++          input,
++          connection,
++          width,
++          pendingExits,
++        })
+         for (const path of paths) {
+           if (
+             length(path) >
+@@ -465,7 +495,8 @@ export function* negotiateLanes(
+             )
+             if (hit) hits++
+           }
+-          const score = length(path) + hits * length(connection.pointsToConnect)
++          const score =
++            pathCost(path) + hits * length(connection.pointsToConnect)
+           const choice: { score: number; trace: Trace } = {
+             score,
+             trace: {
+@@ -676,7 +707,13 @@ export function* negotiateLanes(
+         ...fixed,
+         ...result.flatMap(routeCopper),
+       ])
+-      trace.route = reduceOrdinaryTurns(trace.route, scene).map((p) => ({
++      trace.route = reduceOrdinaryTurns(
++        trace.route,
++        scene,
++        0,
++        false,
++        getPendingExitPathCost({ input, connection, width, pendingExits }),
++      ).map((p) => ({
+         ...p,
+         route_type: "wire",
+         layer: connection.pointsToConnect[0].layer,
+diff --git a/lib/negotiate-signal-sites.ts b/lib/negotiate-signal-sites.ts
+index 8fd1220..a884ef7 100644
+--- a/lib/negotiate-signal-sites.ts
++++ b/lib/negotiate-signal-sites.ts
+@@ -23,6 +23,7 @@ import { retargetGeneratedEscape } from "./retarget-generated-escape"
+ import { RouteConflictIndex } from "./route-conflict-index"
+ import { maximumCarrierLength } from "./route-lengths"
+ import { solveSignalCandidatePool } from "./solve-signal-candidate-pool"
++import { getPendingExitCopperCost } from "./pending-lane-certificates"
+ import type { Connection, Terminal, Trace, Wire } from "./types"
+ import {
+   type Copper,
+@@ -39,8 +40,11 @@ interface SignalSiteOptions {
+   maxCandidateSearchNodes?: number
+   retainExistingRoutes?: boolean
+   onBlockedConnection?: (name: string) => void
++  pendingExits?: Copper[]
+ }
+ 
++type ConnectionName = Connection["name"]
++
+ interface SiteOption {
+   connection: Connection
+   escapes: Trace[]
+@@ -56,6 +60,7 @@ interface Candidate extends SiteOption {
+   copper: Copper[]
+   hits: Candidate[]
+   score: number
++  pendingCost: number
+ }
+ 
+ /** Owned escapes declare their manufactured barrel and both layer handoffs.
+@@ -304,6 +309,13 @@ export function* negotiateSignalSites(
+   if (!base.connections.length) return null
+   const hard = fixedCopper(base),
+     variants = new Map<string, SiteOption[]>()
++  const pendingExits = options.pendingExits ?? []
++  const pendingCosts = new Map<ConnectionName, (copper: Copper[]) => number>(
++    base.connections.map((connection) => [
++      connection.name,
++      getPendingExitCopperCost({ input: native, connection, pendingExits }),
++    ]),
++  )
+   const existing = new Map<string, { option: SiteOption; trace?: Trace }>()
+   const histories = new Map<string, Float32Array>(),
+     projectors = new Map<string, GridHistoryProjector>()
+@@ -525,7 +537,15 @@ export function* negotiateSignalSites(
+         })
+       }
+     }
+-    choices.sort((a, b) => a.length - b.length)
++    const pendingCost = pendingCosts.get(connection.name)!
++    if (pendingExits.length)
++      choices.sort(
++        (a, b) =>
++          a.length +
++          pendingCost(a.escapeCopper) -
++          (b.length + pendingCost(b.escapeCopper)),
++      )
++    else choices.sort((a, b) => a.length - b.length)
+     if (!choices.length) {
+       options.onBlockedConnection?.(connection.name)
+       return null
+@@ -598,7 +618,12 @@ export function* negotiateSignalSites(
+     if (base.connections.some((c) => !pools.get(c.name)?.length)) return
+     return (
+       solveSignalCandidatePool(
+-        base.connections.map((c) => [...pools.get(c.name)!].reverse()),
++        base.connections.map((c) => {
++          const candidates = [...pools.get(c.name)!].reverse()
++          if (pendingExits.length)
++            candidates.sort((a, b) => a.pendingCost - b.pendingCost)
++          return candidates
++        }),
+         compatible,
+         options.maxCandidateSearchNodes ?? 4000,
+       ) ?? undefined
+@@ -615,13 +640,19 @@ export function* negotiateSignalSites(
+         (sum, escape) => sum + length(escape.route),
+         0,
+       )
++    const copper = [
++      ...previous.option.escapeCopper,
++      ...routeCopper(previous.trace),
++    ]
++    const pendingCost = pendingCosts.get(connection.name)!(copper)
+     const candidate: Candidate = {
+       ...previous.option,
+       id: candidateId++,
+       trace: previous.trace,
+-      copper: [...previous.option.escapeCopper, ...routeCopper(previous.trace)],
++      copper,
+       hits: [],
+-      score: length(previous.trace.route) + escapeLength,
++      pendingCost,
++      score: length(previous.trace.route) + escapeLength + pendingCost,
+     }
+     addCandidate(candidate)
+     if ([...routed.values()].every((other) => compatible(candidate, other)))
+@@ -692,7 +723,15 @@ export function* negotiateSignalSites(
+         scene,
+         local.pointsToConnect[0],
+         local.pointsToConnect[1],
+-        soft,
++        pendingExits.length
++          ? [
++              ...soft,
++              ...pendingExits.filter(
++                (guide) =>
++                  !guide.owners.some((owner) => scene.owners.has(owner)),
++              ),
++            ]
++          : soft,
+         10 + iteration,
+         histories.get(layer),
+         {
+@@ -725,7 +764,12 @@ export function* negotiateSignalSites(
+                   other.escapes,
+                 ),
+             ),
+-            score = length(trace.route) + escapeLength + hits.length * 100
++            pendingCost = pendingCosts.get(connection.name)!(copper),
++            score =
++              length(trace.route) +
++              escapeLength +
++              hits.length * 100 +
++              pendingCost
+           const candidate = {
+             ...option,
+             id: candidateId++,
+@@ -733,6 +777,7 @@ export function* negotiateSignalSites(
+             copper,
+             hits,
+             score,
++            pendingCost,
+           }
+           if (!stopWithOneRemaining) addCandidate(candidate)
+           if (!best || score < best.score) best = candidate
+diff --git a/lib/pending-lane-certificates.ts b/lib/pending-lane-certificates.ts
+index 1b1c990..daf0134 100644
+--- a/lib/pending-lane-certificates.ts
++++ b/lib/pending-lane-certificates.ts
+@@ -1,19 +1,98 @@
+ import { applyToPoint } from "transformation-matrix"
+ import { GridVisibilitySearch } from "./grid-visibility"
+-import { VectorScene, type Copper } from "./vector-scene"
+-import type { Connection, SimpleRouteJson, Trace } from "./types"
++import {
++  VectorScene,
++  routeCopper,
++  fixedCopper,
++  clearanceToCopper,
++  type Copper,
++} from "./vector-scene"
++import { CopperConflictIndex } from "./copper-conflict-index"
++import { distance, length } from "./geometry"
++import type {
++  Connection,
++  Point,
++  SimpleRouteJson,
++  Terminal,
++  Trace,
++} from "./types"
+ import { packageApproachRegions } from "./package-approach-regions"
+ import { getConnectedPadGroups } from "./connected-pad-groups"
+ import { getPackagePadFrame } from "./package-pad-frame"
+ 
++interface PendingExitPathCostOptions {
++  input: SimpleRouteJson
++  connection: Connection
++  width: number
++  pendingExits?: Copper[]
++}
++
++type ConnectionName = Connection["name"]
++type GuideOwnersKey = string
++type CoordinateKey = `${number},${number}`
++
++/** Prefer paths that leave future package exits open, including after shortening. */
++export function getPendingExitPathCost({
++  input,
++  connection,
++  width,
++  pendingExits = [],
++}: PendingExitPathCostOptions): (path: Point[]) => number {
++  if (!pendingExits.length) return length
++  const scene = new VectorScene(input, connection, width, pendingExits)
++  return (path: Point[]): number =>
++    path
++      .slice(1)
++      .reduce(
++        (cost, point, index) =>
++          cost +
++          distance(path[index], point) +
++          (scene.visible(path[index], point) ? 0 : 10 * input.minTraceWidth),
++        0,
++      )
++}
++
++/** Charge once per foreign connection guide crossed, including via lands on every layer. */
++export function getPendingExitCopperCost({
++  input,
++  connection,
++  pendingExits = [],
++}: Omit<PendingExitPathCostOptions, "width">): (copper: Copper[]) => number {
++  if (!pendingExits.length) return () => 0
++  const owners = new VectorScene(input, connection, input.minTraceWidth, [])
++    .owners
++  const groups = new Map<GuideOwnersKey, Copper[]>()
++  for (const guide of pendingExits) {
++    if (guide.owners.some((owner) => owners.has(owner))) continue
++    const key = guide.owners.join("\0")
++    const group = groups.get(key) ?? []
++    group.push(guide)
++    groups.set(key, group)
++  }
++  const conflicts = new CopperConflictIndex()
++  const clearance =
++    input.minTraceToPadEdgeClearance ?? input.defaultObstacleMargin ?? 0.075
++  const guidesByConnection = [...groups.values()]
++  return (copper) =>
++    guidesByConnection.reduce(
++      (cost, guides) =>
++        cost +
++        (conflicts.firstConflict(copper, guides, clearance - 1e-8)
++          ? 10 * input.minTraceWidth
++          : 0),
++      0,
++    )
++}
++
+ const certificates = new WeakMap<SimpleRouteJson, Map<string, Trace[]>>()
+ 
+ /** Preserve access for the pads of nets that a later request still has to
+  * route. A request needs no completed trunk to receive them: a first bus
+  * between two packages can close the last exit of a neighboring pad as easily
+  * as a branch added to an existing trunk. The ordered lane search asks for
+- * them for every input with buses; dense negotiation does not use them. Each
+- * guide runs from its pad to the nearest side of the package's pad field,
++ * them for every input with buses, as does dense negotiation. An unvisited pad
++ * of an active net gets a path to a real terminal or retained trunk vertex.
++ * Other guides run from their pad to the nearest side of the package's pad field,
+  * measured in the package's own frame so that a rotated package is not given
+  * guides across the open board beside it. These soft guides retain native
+  * connectivity aliases; they never become routed connections. */
+@@ -51,10 +130,117 @@ export function* pendingPackageExits(
+   const clearance =
+     input.minTraceToPadEdgeClearance ?? input.defaultObstacleMargin ?? 0.075
+   const extension = (input.minViaPadDiameter ?? 0.6) / 2 + width / 2 + clearance
++  const step = Math.max(0.01, width / 2)
++  const board = input.bounds
+   const result: Copper[] = []
++  const branches: Connection[] = []
++  const branchWidths = new Map<ConnectionName, number>()
++  const branchOwners = new Map<ConnectionName, string[]>()
++  const traceCopper = fixedCopper({ ...input, obstacles: [] })
+   for (const group of groups) {
+     if (group.size < 2) continue
+     const owners = [...new Set([...group].flatMap((pad) => pad.connectedTo))]
++    const active = input.connections.find(
++      (connection) =>
++        owners.includes(connection.name) ||
++        (!!connection.source_trace_id &&
++          owners.includes(connection.source_trace_id)) ||
++        connection.pointsToConnect.some((point) =>
++          [point.pcb_port_id, point.pointId].some(
++            (owner) => !!owner && owners.includes(owner),
++          ),
++        ),
++    )
++    if (active) {
++      const activeOwners = [
++        ...new Set(
++          [
++            ...owners,
++            active.name,
++            active.source_trace_id,
++            ...active.pointsToConnect.flatMap((point) => [
++              point.pcb_port_id,
++              point.pointId,
++            ]),
++          ].filter((owner): owner is string => !!owner),
++        ),
++      ]
++      const ownedCopper = traceCopper.filter((copper) =>
++        copper.owners.some((owner) => activeOwners.includes(owner)),
++      )
++      const anchors: Terminal[] = [
++        ...active.pointsToConnect,
++        ...(input.traces ?? [])
++          .filter(
++            (trace) =>
++              (!!trace.connection_name &&
++                activeOwners.includes(trace.connection_name)) ||
++              (!!trace.source_trace_id &&
++                activeOwners.includes(trace.source_trace_id)),
++          )
++          .flatMap((trace) =>
++            trace.route.flatMap((point) =>
++              point.route_type === "wire" ? [point] : [],
++            ),
++          ),
++      ]
++      for (const pad of group) {
++        const port = (
++          pad as typeof pad & { circuitJsonMetadata?: { pcb_port_id?: string } }
++        ).circuitJsonMetadata?.pcb_port_id
++        const padCopper = fixedCopper({
++          ...input,
++          traces: [],
++          obstacles: [pad],
++        })
++        if (
++          !port ||
++          anchors.some(
++            (point) =>
++              point.pcb_port_id === port ||
++              (pad.layers.includes(point.layer) &&
++                distance(point, pad.center) < 1e-8),
++          ) ||
++          ownedCopper.some((copper) =>
++            padCopper.some(
++              (land) =>
++                land.layer === copper.layer &&
++                clearanceToCopper(copper.a, copper.b, land) <=
++                  copper.radius + 1e-8,
++            ),
++          )
++        )
++          continue
++        for (const layer of pad.layers) {
++          const goals = [
++            ...new Map<CoordinateKey, Terminal>(
++              anchors
++                .filter((point) => point.layer === layer)
++                .map((point) => [`${point.x},${point.y}`, { ...point, layer }]),
++            ).values(),
++          ]
++          if (!goals.length) continue
++          branches.push({
++            ...active,
++            pointsToConnect: [
++              { ...pad.center, layer, pcb_port_id: port },
++              ...goals,
++            ],
++          })
++          branchOwners.set(active.name, activeOwners)
++          branchWidths.set(
++            active.name,
++            input.buses?.find((bus) =>
++              bus.connectionNames.includes(active.name),
++            )?.traceWidth ??
++              active.nominalTraceWidth ??
++              active.width ??
++              width,
++          )
++        }
++      }
++      continue
++    }
+     if (owners.some((owner) => assigned.has(owner))) continue
+     const ports = new Set(
+       [...group].flatMap((pad) => {
+@@ -79,6 +265,37 @@ export function* pendingPackageExits(
+       )!
+       // Exits leave along the package frame's axes.
+       const padCenterInPackage = applyToPoint(boardToPackage, pad.center)
++      const corners = [
++        { x: field.minX - extension, y: field.minY - extension },
++        { x: field.minX - extension, y: field.maxY + extension },
++        { x: field.maxX + extension, y: field.minY - extension },
++        { x: field.maxX + extension, y: field.maxY + extension },
++      ].map((point) => applyToPoint(packageToBoard, point))
++      const minX = Math.min(...corners.map((p) => p.x))
++      const maxX = Math.max(...corners.map((p) => p.x))
++      const minY = Math.min(...corners.map((p) => p.y))
++      const maxY = Math.max(...corners.map((p) => p.y))
++      // Guides leave this package, so their grid need not span the whole board.
++      // Keep its cells aligned with the normal board-origin package grid.
++      const bounds: SimpleRouteJson["bounds"] = {
++        minX: Math.max(
++          board.minX,
++          board.minX + Math.floor((minX - board.minX) / step) * step,
++        ),
++        maxX: Math.min(
++          board.maxX,
++          board.minX + Math.ceil((maxX - board.minX) / step) * step,
++        ),
++        minY: Math.max(
++          board.minY,
++          board.minY + Math.floor((minY - board.minY) / step) * step,
++        ),
++        maxY: Math.min(
++          board.maxY,
++          board.minY + Math.ceil((maxY - board.minY) / step) * step,
++        ),
++      }
++      if (bounds.minX > bounds.maxX || bounds.minY > bounds.maxY) continue
+       for (const layer of pad.layers) {
+         const start = { ...pad.center, layer, pcb_port_id: port }
+         const end = [
+@@ -101,7 +318,17 @@ export function* pendingPackageExits(
+           pointsToConnect: [start, end],
+         }
+         const scene = new VectorScene(input, connection, width, foreignCopper)
+-        const search = new GridVisibilitySearch(scene, start, end, [], 0)
++        const search = new GridVisibilitySearch(
++          scene,
++          start,
++          end,
++          [],
++          0,
++          undefined,
++          {
++            bounds,
++          },
++        )
+         try {
+           while (!search.solved && !search.failed) {
+             search.step()
+@@ -122,6 +349,21 @@ export function* pendingPackageExits(
+       }
+     }
+   }
++  if (branches.length) {
++    const paths = yield* pendingLaneCertificates(
++      input,
++      branches,
++      fixed,
++      branchWidths,
++    )
++    for (const trace of paths)
++      result.push(
++        ...routeCopper(trace).map((copper) => ({
++          ...copper,
++          owners: branchOwners.get(trace.connection_name!)!,
++        })),
++      )
++  }
+   return result
+ }
+ 
+@@ -162,6 +404,16 @@ export function* pendingLaneCertificates(
+       new VectorScene(input, connection, width, fixed),
+       connection.pointsToConnect[0],
+       connection.pointsToConnect[1],
++      [],
++      4,
++      undefined,
++      connection.pointsToConnect.length > 2
++        ? {
++            ends: connection.pointsToConnect.slice(1),
++            allTerminalAttachments: true,
++            checkReachability: true,
++          }
++        : undefined,
+     )
+     try {
+       while (!search.solved && !search.failed) {
+diff --git a/lib/repair-bus-dogbones.ts b/lib/repair-bus-dogbones.ts
+index e358c80..2943ef8 100644
+--- a/lib/repair-bus-dogbones.ts
++++ b/lib/repair-bus-dogbones.ts
+@@ -149,17 +149,16 @@ export function* repairBusDogbones(
+           6000,
+         )
+         if (!paired) continue
+-        const generator = negotiateLanes(
+-          local,
+-          ordinary,
++        const generator = negotiateLanes({
++          input: local,
++          connections: ordinary,
+           fixed,
+           paired,
+           widths,
+-          undefined,
+-          new Map(),
+-          () => false,
+-          true,
+-        )
++          terminalLayers: new Map(),
++          enableTerminalReservations: () => false,
++          deferRetainedSelfClearance: true,
++        })
+         let state = generator.next()
+         let steps = 0
+         let best = 0
+diff --git a/lib/route-backward-package-buses.ts b/lib/route-backward-package-buses.ts
+index a81f5e8..0385e64 100644
+--- a/lib/route-backward-package-buses.ts
++++ b/lib/route-backward-package-buses.ts
+@@ -172,17 +172,16 @@ export function* routeBackwardPackageBuses(
+   }
+   network.transforms = network.transforms.filter((t) => !locked.includes(t))
+   network.copper = fixedCopper(network.local)
+-  const generator = negotiateLanes(
+-    network.local,
+-    network.local.connections,
+-    network.copper,
+-    [],
+-    network.widths,
+-    undefined,
++  const generator = negotiateLanes({
++    input: network.local,
++    connections: network.local.connections,
++    fixed: network.copper,
++    paired: [],
++    widths: network.widths,
+     terminalLayers,
+-    () => false,
+-    true,
+-  )
++    enableTerminalReservations: () => false,
++    deferRetainedSelfClearance: true,
++  })
+   const originalNames = new Set(input.connections.map((c) => c.name))
+   const busNames = new Set(input.buses?.flatMap((b) => b.connectionNames))
+   const routeIds = new WeakMap<Trace, number>()
+diff --git a/lib/route-fresh-shared-buses.ts b/lib/route-fresh-shared-buses.ts
+index d248675..a871eab 100644
+--- a/lib/route-fresh-shared-buses.ts
++++ b/lib/route-fresh-shared-buses.ts
+@@ -137,18 +137,17 @@ export function* routeFreshSharedBuses(
+     const widths = new Map(
+       pending.connections.map((c) => [c.name, signalWidth(native, c)]),
+     )
+-    const route = negotiateLanes(
+-      pending,
+-      pending.connections,
+-      fixedCopper(pending),
+-      [],
++    const route = negotiateLanes({
++      input: pending,
++      connections: pending.connections,
++      fixed: fixedCopper(pending),
++      paired: [],
+       widths,
+-      undefined,
+-      layers,
+-      () => false,
+-      true,
+-      true,
+-    )
++      terminalLayers: layers,
++      enableTerminalReservations: () => false,
++      deferRetainedSelfClearance: true,
++      checkReachability: true,
++    })
+     let state: FlexibleSignalState | undefined
+     try {
+       let step = route.next(),
+diff --git a/lib/route-generated-signal-sites.ts b/lib/route-generated-signal-sites.ts
+index 607fbff..3ded77f 100644
+--- a/lib/route-generated-signal-sites.ts
++++ b/lib/route-generated-signal-sites.ts
+@@ -4,6 +4,8 @@ import {
+ } from "./finish-generated-surface-carriers"
+ import { negotiateSignalSites } from "./negotiate-signal-sites"
+ import { runBoundedRouting } from "./run-bounded-routing"
++import { pendingPackageExits } from "./pending-lane-certificates"
++import { fixedCopper, type Copper } from "./vector-scene"
+ import type { SimpleRouteJson, SolverOptions } from "./types"
+ 
+ const EXPANDED_GRID_PROBE_STEPS = 3000
+@@ -19,24 +21,34 @@ interface GeneratedSignalSitesRequest {
+ export function* routeGeneratedSignalSites(
+   request: GeneratedSignalSitesRequest,
+ ): Generator<void, CompletedGeneratedSurfaceCarriers | null> {
++  const pendingExits = yield* pendingPackageExits(
++    request.input,
++    fixedCopper(request.input),
++  )
+   // Try additional grid-centered sites together before freezing a local
+   // assignment. Keep this probe bounded before the ordinary site search.
+   if (request.maxSteps > 2 * EXPANDED_GRID_PROBE_STEPS) {
+     const expandedGridRoute = yield* runBoundedRouting(
+-      completeGeneratedSignalSites(request, { expandAllGridSites: true }),
++      completeGeneratedSignalSites(request, {
++        expandAllGridSites: true,
++        pendingExits,
++      }),
+       EXPANDED_GRID_PROBE_STEPS,
+     )
+     if (expandedGridRoute) return expandedGridRoute
+   }
+-  return yield* completeGeneratedSignalSites(request)
++  return yield* completeGeneratedSignalSites(request, { pendingExits })
+ }
+ 
+ function* completeGeneratedSignalSites(
+   { input, options, maxSteps }: GeneratedSignalSitesRequest,
+-  { expandAllGridSites = false } = {},
++  {
++    expandAllGridSites = false,
++    pendingExits = [],
++  }: { expandAllGridSites?: boolean; pendingExits?: Copper[] } = {},
+ ): Generator<void, CompletedGeneratedSurfaceCarriers | null> {
+   const routed = yield* runBoundedRouting(
+-    negotiateGeneratedSignalSites(input, expandAllGridSites),
++    negotiateGeneratedSignalSites(input, { expandAllGridSites, pendingExits }),
+     maxSteps,
+   )
+   if (!routed) return null
+@@ -51,7 +63,10 @@ function* completeGeneratedSignalSites(
+ 
+ function* negotiateGeneratedSignalSites(
+   input: SimpleRouteJson,
+-  expandAllGridSites: boolean,
++  {
++    expandAllGridSites,
++    pendingExits,
++  }: { expandAllGridSites: boolean; pendingExits: Copper[] },
+ ): ReturnType<typeof negotiateSignalSites> {
+   // Preserve the ordinary fallback when the grid-only probe cannot complete.
+   for (const allowPadEdgeSites of [false, true]) {
+@@ -68,6 +83,7 @@ function* negotiateGeneratedSignalSites(
+         expandEmptyDomainsOnly,
+         allowPadEdgeSites,
+         maxCandidateSearchNodes: 12000,
++        pendingExits,
+       },
+     )
+     if (routed) return routed
+diff --git a/lib/route-independent-buses.ts b/lib/route-independent-buses.ts
+index 758d789..be857d7 100644
+--- a/lib/route-independent-buses.ts
++++ b/lib/route-independent-buses.ts
+@@ -105,18 +105,16 @@ export function* routeIndependentBuses(
+         solved = finish(input, paired)
+         continue
+       }
+-      const search = negotiateLanes(
++      const search = negotiateLanes({
+         input,
+-        ordinary,
++        connections: ordinary,
+         fixed,
+         paired,
+         widths,
+-        undefined,
+-        new Map(),
+-        () => false,
+-        false,
+-        !!pair && pairHasUnroutedNativePads(input, pair),
+-      )
++        terminalLayers: new Map(),
++        enableTerminalReservations: () => false,
++        checkReachability: !!pair && pairHasUnroutedNativePads(input, pair),
++      })
+       let state = search.next(),
+         steps = 0
+       try {
+diff --git a/lib/route-paired-network.ts b/lib/route-paired-network.ts
+index ed31c94..758e217 100644
+--- a/lib/route-paired-network.ts
++++ b/lib/route-paired-network.ts
+@@ -15,17 +15,16 @@ export function* routePairedNetwork(
+   const network = yield* preparePairedNetwork(input, layers)
+   if (!network) return null
+   const { local, copper, widths } = network
+-  const negotiate = negotiateLanes(
+-    local,
+-    local.connections,
+-    copper,
+-    [],
++  const negotiate = negotiateLanes({
++    input: local,
++    connections: local.connections,
++    fixed: copper,
++    paired: [],
+     widths,
+-    undefined,
+-    layers,
+-    () => false,
+-    true,
+-  )
++    terminalLayers: layers,
++    enableTerminalReservations: () => false,
++    deferRetainedSelfClearance: true,
++  })
+   let raw: Trace[] | null = null,
+     best = 0
+   try {
+diff --git a/lib/route-shared-layer-buses.ts b/lib/route-shared-layer-buses.ts
+index aa8c038..ab81010 100644
+--- a/lib/route-shared-layer-buses.ts
++++ b/lib/route-shared-layer-buses.ts
+@@ -120,17 +120,16 @@ export function* routeSharedLayerBuses(
+       reachableLayers.set(connection.name, reachableForConnection)
+     }
+     if (!accessible) continue
+-    const route = negotiateLanes(
+-      busInput,
+-      ordinary,
+-      fixedCopper(local),
++    const route = negotiateLanes({
++      input: busInput,
++      connections: ordinary,
++      fixed: fixedCopper(local),
+       paired,
+       widths,
+-      undefined,
+-      bounded ? reachableLayers : new Map(),
+-      () => !bounded,
+-      true,
+-    )
++      terminalLayers: bounded ? reachableLayers : new Map(),
++      enableTerminalReservations: () => !bounded,
++      deferRetainedSelfClearance: true,
++    })
+     let state = route.next(),
+       steps = 0
+     try {

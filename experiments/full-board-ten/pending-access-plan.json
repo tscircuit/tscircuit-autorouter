@@ -1,0 +1,222 @@
+{
+  "schemaVersion": 1,
+  "qualificationReady": true,
+  "experiment": "pending-package-access-protection",
+  "baselineController": "500b7b89a7e748e601285e349e3266086c6b2614",
+  "baselineRun": 44380970575,
+  "branch": "bench/pending-access-3236-20261118",
+  "workflow": ".github/workflows/pending-access-screen.yml",
+  "runner": "blacksmith-8vcpu-ubuntu-2404-arm",
+  "jobs": 1,
+  "laneOrder": [
+    "base",
+    "candidate"
+  ],
+  "cases": [
+    {
+      "board": "butterstick",
+      "cohort": "spaced",
+      "expectedRoutableNets": 317
+    }
+  ],
+  "expectedRoutableNetsPerLane": 317,
+  "fullTenCoverage": false,
+  "finalAllTenExpectedRoutableNetsPerLane": 2856,
+  "budgetsMs": {
+    "capture": 900000,
+    "hardKill": 960000,
+    "assessment": 180000
+  },
+  "jobTimeoutMinutes": 60,
+  "runtime": {
+    "main": "0.0.3236",
+    "core": "0.0.2418",
+    "eval": "0.0.1811",
+    "autorouter": "0.0.1129",
+    "bus": "0.0.62",
+    "publishedCoreSha256": "25f088d42671b5efbf026c70a1216d754c01179e7d767f37e83bef11a0e79fd9",
+    "candidateCoreSha256": "a02e5e4378214bd37bb0bdb2a59ec681b0ef400a58d553038755250f08875176"
+  },
+  "source": {
+    "repository": "tscircuit/bus-lanes-solver",
+    "baseCommit": "202b034659fb96bad44d11b8190f4044b675116f",
+    "candidateCommit": "520dd0fb4f7264ffa597782aff7f91313f5a78b9",
+    "patchSha256": "53b225dd293b9e24ca1a63df92fa9f86723ab4d9ed88c32b95d9a7c047c4a5b4",
+    "files": {
+      "lib/bus-lanes-solver.ts": {
+        "beforeSha256": "69bb7847371b05e0d81d5da16eda0493e52cc59a943df3a4e782e480e75651a5",
+        "afterSha256": "746a06de86e0bc172512bb60074ae0e13a16db9a7feeaf2b909c15f85cad2a78"
+      },
+      "lib/negotiate-lanes.ts": {
+        "beforeSha256": "ebf73c9affdfcd4283639358fd3d529d15c7fe2cedfb8a7552fd9e472e80a464",
+        "afterSha256": "e88031fea901892c5f444cdccf044724fef69edc383109f13f874f30389194d5"
+      },
+      "lib/pending-lane-certificates.ts": {
+        "beforeSha256": "ab32366c4bd3e96e36bda20d7eeec4df2cbf2e013dea43d60e6e64ce4538d912",
+        "afterSha256": "31eae1f1d682decf97b49b4f305943ac917eb80cd1e5ec42a2a3324ec6f51ef3"
+      },
+      "lib/repair-bus-dogbones.ts": {
+        "beforeSha256": "702700d47fa5e30f03fa1331fff3cb557536f65d99dd3361c41ccdcd17c5d391",
+        "afterSha256": "a53d4e65fe8c4c8de0aac7fbb31b4b7245c88bc89288dc475d302a7fbe4b7444"
+      },
+      "lib/route-backward-package-buses.ts": {
+        "beforeSha256": "147e55b75bd9e4497236dffb7741c80fd0802dbc20441e35463a39a025a5776b",
+        "afterSha256": "80e1045f694110ffcce60a80248717f66ab4ffe0178a67ab49ba492dbc002725"
+      },
+      "lib/route-fresh-shared-buses.ts": {
+        "beforeSha256": "d82a1ffa6ca999565e4ef8a996ef8eeacc3fb5cd1b854ede4bf7365982d61eba",
+        "afterSha256": "762ce8a2e6107bca9e93359412cf62bafff057f925369dded088e3ff6f1ccda0"
+      },
+      "lib/route-independent-buses.ts": {
+        "beforeSha256": "ed31bf665e4674773ecb80d94523cb1981577c9036ad3f297abbe3af0afb1f6e",
+        "afterSha256": "42af973d618d71509a494fb92817aef94a3b4a2181bca29e5d06451b27664893"
+      },
+      "lib/route-paired-network.ts": {
+        "beforeSha256": "7ecf50d6da7dcbf71ebd07fc221a278c3c1500ec45711efbc7f61296c02525c8",
+        "afterSha256": "9d7faf77352ee4fdfe1fb7e946b077e9a4920c8bdd943e4fcf11f78ee70391b3"
+      },
+      "lib/route-shared-layer-buses.ts": {
+        "beforeSha256": "3f8d4a49e9fbfcb0a56992d4bf41efece200d511e911f105fdd1ab192477baa7",
+        "afterSha256": "6f5f632e2a26366b3fb894a0694e747f2202e5ebe83d2ad3e769894298719fe2"
+      },
+      "lib/negotiate-signal-sites.ts": {
+        "beforeSha256": "20af04956eb4f9b9c7d46c8c33ef83cc42bc09957044a92b1d204794009e321e",
+        "afterSha256": "fd25c665e3cae28a3e811ac45b056de1cd1adeb20a01c153e6ade4cc7641319b"
+      },
+      "lib/route-generated-signal-sites.ts": {
+        "beforeSha256": "438d7c85d7e5c8ae8df9f0a1ff58e54eef918fd3ccb6e9a8ec310eed4824b69e",
+        "afterSha256": "6a01fe239bea290d68eef56117b39ccf4f8601209e7d0b1e5fd46d218db98810"
+      }
+    },
+    "candidateLibTree": "9d184f5ab67c296fb7f429f06576c3d8c6474c31",
+    "pendingExitPatchIncluded": true,
+    "expandedSiteBoundsPatchIncluded": false,
+    "branchPadEligibilityPatchIncluded": false,
+    "physicalBranchViaPatchIncluded": false,
+    "scope": "Only the reviewed pending-access Bus62 production patch in published Core2418:14 existing declarations and2 helper insertions, including active future branch guides and generated-copper costs. No physical branch-via, eligibility-gate or expanded-site bounds patch.",
+    "existingTestOnlyMigrationExcludedFromRuntimeOverlay": true
+  },
+  "overlay": {
+    "schemaVersion": 2,
+    "replace": [
+      "BusLanesSolver",
+      "negotiateLanes",
+      "pendingPackageExits",
+      "pendingLaneCertificates",
+      "repairBusDogbones",
+      "routeBackwardPackageBuses",
+      "routeFreshSharedBuses",
+      "routeIndependentBuses",
+      "routePairedNetwork",
+      "routeSharedLayerBuses",
+      "negotiateSignalSites",
+      "routeGeneratedSignalSites",
+      "completeGeneratedSignalSites",
+      "negotiateGeneratedSignalSites"
+    ],
+    "insert": [
+      "getPendingExitPathCost",
+      "getPendingExitCopperCost"
+    ],
+    "unchanged": []
+  },
+  "sourceMappingToolSha256": "fffe911a60e69c5ef1f8d527a8e3b33d45148726dc52b39ae018d5cf71f9f32b",
+  "sourceMappingSha256": "2360dcc29d123f85ec3ae33bf1aaccef4be9752432879040a23656adb9b902b2",
+  "frozenHarnessFiles": {
+    "bootstrap.py": "23de25ac8960be89afc57ba27b0d3fddb6e65dba593024be59ec5073d266164d",
+    "prepare-cases.ts": "b72e632e9c9152c9e5daedf1bb60daa5d86c33fdcc454f2a7825827d24124330",
+    "render-published.tsx": "a5c379d0682f8e72e4c54c4710e797836b71fbe779e5430e33f62286694057f9",
+    "run-one.ts": "ec8a529060577fd51d1718634d54fc061c9629080b2a710308000cb8c2f18ebc",
+    "calibrate-assessment.tsx": "efeb820cf34239465df53ce4c7932293e41a14dcab4bedb823c3bc60cc9627a0",
+    "createCoarseRoutingDiagnostics.ts": "dea45bba3386a9b55b7709834dff65468c421992808b406f54c6f9e556e8b618",
+    "source-provenance.json": "bd24be29c5fdd5ae68ce15c5b2bc50f172ecdd325dcc1b57a80ec653d12570fb",
+    "release.json": "02acd9d4eea8e583d506c7f43be119c9aa5f6e740496bc0032ce85febb43f738",
+    "published-release-provenance.json": "1ec33d4dc1d1dcaf5986366823edd77b261f60a9e4826d4f7f8f92cba8f52ea8",
+    "harness-provenance.json": "43a9318c8c3a8fa5e5a3a4a5549bf678e7172c4311d0d0d84c6752eac1d595c6",
+    "runtime/package.json": "15215d5cd97fd8b6ce7b5070902bbeccb212c124e9899d1255d46aa9cb703d1d",
+    "runtime/bun.lock": "06d711c1fec0d9098a68ca0fa233c3cac41cddbda5b1b7ee0238f459dbf6a5e0",
+    "autorouter-dependencies/package.json": "7b4c1ecf979432e472a4f0589ed49976a8a1323ff7bf651a5938ee7006b61360",
+    "autorouter-dependencies/bun.lock": "ec313c582c29c1e35bb31190151a5649198c177119d32fe311746c06e94e8c4e",
+    "createPendingAccessOverlay.ts": "fffe911a60e69c5ef1f8d527a8e3b33d45148726dc52b39ae018d5cf71f9f32b",
+    "pending-access-production.patch": "53b225dd293b9e24ca1a63df92fa9f86723ab4d9ed88c32b95d9a7c047c4a5b4",
+    "pending-access-source-mapping.json": "2360dcc29d123f85ec3ae33bf1aaccef4be9752432879040a23656adb9b902b2",
+    "prepare-pending-access.py": "0f40bb1a7f05b91b15bc10dcd1eb8c4869ec8f0d2e82db89e6ee3d6738df32b6",
+    "compare-pending-access.py": "c6055967f9f07ed09558e1a685873dca6cf3a59bd83bd6c58d85c7015f338c1e",
+    "package.json": "469e1861d1259cd1307bca324fb0d8ba0a67ea0323d4e728a35c90a2bc92bdf3",
+    "tsconfig.json": "2e881577c63bb6b62d14abd319240bbc6ae5e206ecb007dae80ab3ec922293c7"
+  },
+  "frozenFiles": {
+    "experiments/full-board-ten/bootstrap.py": "23de25ac8960be89afc57ba27b0d3fddb6e65dba593024be59ec5073d266164d",
+    "experiments/full-board-ten/prepare-cases.ts": "b72e632e9c9152c9e5daedf1bb60daa5d86c33fdcc454f2a7825827d24124330",
+    "experiments/full-board-ten/render-published.tsx": "a5c379d0682f8e72e4c54c4710e797836b71fbe779e5430e33f62286694057f9",
+    "experiments/full-board-ten/run-one.ts": "ec8a529060577fd51d1718634d54fc061c9629080b2a710308000cb8c2f18ebc",
+    "experiments/full-board-ten/calibrate-assessment.tsx": "efeb820cf34239465df53ce4c7932293e41a14dcab4bedb823c3bc60cc9627a0",
+    "experiments/full-board-ten/createCoarseRoutingDiagnostics.ts": "dea45bba3386a9b55b7709834dff65468c421992808b406f54c6f9e556e8b618",
+    "experiments/full-board-ten/source-provenance.json": "bd24be29c5fdd5ae68ce15c5b2bc50f172ecdd325dcc1b57a80ec653d12570fb",
+    "experiments/full-board-ten/release.json": "02acd9d4eea8e583d506c7f43be119c9aa5f6e740496bc0032ce85febb43f738",
+    "experiments/full-board-ten/published-release-provenance.json": "1ec33d4dc1d1dcaf5986366823edd77b261f60a9e4826d4f7f8f92cba8f52ea8",
+    "experiments/full-board-ten/harness-provenance.json": "43a9318c8c3a8fa5e5a3a4a5549bf678e7172c4311d0d0d84c6752eac1d595c6",
+    "experiments/full-board-ten/runtime/package.json": "15215d5cd97fd8b6ce7b5070902bbeccb212c124e9899d1255d46aa9cb703d1d",
+    "experiments/full-board-ten/runtime/bun.lock": "06d711c1fec0d9098a68ca0fa233c3cac41cddbda5b1b7ee0238f459dbf6a5e0",
+    "experiments/full-board-ten/autorouter-dependencies/package.json": "7b4c1ecf979432e472a4f0589ed49976a8a1323ff7bf651a5938ee7006b61360",
+    "experiments/full-board-ten/autorouter-dependencies/bun.lock": "ec313c582c29c1e35bb31190151a5649198c177119d32fe311746c06e94e8c4e",
+    "experiments/full-board-ten/createPendingAccessOverlay.ts": "fffe911a60e69c5ef1f8d527a8e3b33d45148726dc52b39ae018d5cf71f9f32b",
+    "experiments/full-board-ten/pending-access-production.patch": "53b225dd293b9e24ca1a63df92fa9f86723ab4d9ed88c32b95d9a7c047c4a5b4",
+    "experiments/full-board-ten/pending-access-source-mapping.json": "2360dcc29d123f85ec3ae33bf1aaccef4be9752432879040a23656adb9b902b2",
+    "experiments/full-board-ten/prepare-pending-access.py": "0f40bb1a7f05b91b15bc10dcd1eb8c4869ec8f0d2e82db89e6ee3d6738df32b6",
+    "experiments/full-board-ten/compare-pending-access.py": "c6055967f9f07ed09558e1a685873dca6cf3a59bd83bd6c58d85c7015f338c1e",
+    "experiments/full-board-ten/package.json": "469e1861d1259cd1307bca324fb0d8ba0a67ea0323d4e728a35c90a2bc92bdf3",
+    "experiments/full-board-ten/tsconfig.json": "2e881577c63bb6b62d14abd319240bbc6ae5e206ecb007dae80ab3ec922293c7",
+    ".github/workflows/pending-access-screen.yml": "e367eed8b6137229ae25f6025469854d7dab3d47f6080523e8f156b6ce162166"
+  },
+  "acceptance": "Actual connected native net names without lost previous nets or physical regressions. Stage progress/timing alone is not completion; a valid comparison does not imply candidate acceptance.",
+  "nativePolicies": "Unchanged full components, geometry and net names; phased routing, fanout false; original planes true and spaced planes false; no routing WASM.",
+  "integrationLimit": "Core AST overlay is causal screening evidence, not actual packaged Bus/Core integration qualification.",
+  "requiredHarnessFiles": [
+    "bootstrap.py",
+    "prepare-cases.ts",
+    "render-published.tsx",
+    "run-one.ts",
+    "calibrate-assessment.tsx",
+    "createCoarseRoutingDiagnostics.ts",
+    "source-provenance.json",
+    "release.json",
+    "published-release-provenance.json",
+    "harness-provenance.json",
+    "runtime/package.json",
+    "runtime/bun.lock",
+    "autorouter-dependencies/package.json",
+    "autorouter-dependencies/bun.lock",
+    "createPendingAccessOverlay.ts",
+    "pending-access-production.patch",
+    "pending-access-source-mapping.json",
+    "prepare-pending-access.py",
+    "compare-pending-access.py",
+    "package.json",
+    "tsconfig.json"
+  ],
+  "selectionStatus": "HELD source proposal; native completion gain on published baseline required before selection.",
+  "observerContext": "Published byte0 first-child trunks seal future DQ13 pad access. Earlier isolated branch-via and eligibility changes do not remove that upstream barrier.",
+  "qualification": {
+    "sourceReview": "PASS root and independent bus_phase2_observer; final production libtree and mechanical existing test migration reviewed",
+    "mapping": "PASS exact16spans,3 rejection guards and independent byte reconstruction",
+    "controllerReview": "PASS independent bus_phase2_observer: exact source/Core outside-byte mapping, all22frozen files, paired policies, contracts and workflow push scope",
+    "installerContract": "PASS authentic Core/source, synthetic other package entries,11file patch/libtree and16span overlay, AR/runtime drift rejection and published restore",
+    "comparatorContract": "PASS ButterStick317 native-name schema and5 rejection guards; synthetic reports only",
+    "sourceSelectedForPR": false,
+    "agentPushed": false,
+    "contractScope": "No native routing/physical completion/performance claim; exact authentic source/Core bytes and native-name metadata with synthetic harness outcomes"
+  },
+  "externalAliases": {
+    "BaseSolver": "BaseSolver9",
+    "getCopperLayerNames": "getCopperLayerNames3",
+    "getRouteViaSpanLayers": "getRouteViaSpanLayers3",
+    "distance": "distance16",
+    "applyToPoint": "applyToPoint36"
+  },
+  "pendingInputs": [
+    "Root verification of committed frozen files and push",
+    "Fresh paired native physical completion results; gain not assumed"
+  ],
+  "holdReason": "Ready for root committed-file verification; push/dispatch held pending root verification."
+}

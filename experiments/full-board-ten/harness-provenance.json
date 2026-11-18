@@ -18,8 +18,8 @@
     },
     {
       "name": "run-one.ts",
-      "bytes": 11175,
-      "sha256": "9c1c94cc5430eb9d391f46898a2618787d054befe6913af1c2ad6392beb62c3c"
+      "bytes": 11179,
+      "sha256": "ec8a529060577fd51d1718634d54fc061c9629080b2a710308000cb8c2f18ebc"
     },
     {
       "name": "calibrate-assessment.tsx",
@@ -47,7 +47,7 @@
     "basedOn": "500b7b89a7e748e601285e349e3266086c6b2614",
     "renderChanges": "Declared source-overlay metadata and native package/class identity checks only; same rendering calls, inputs and routing policies.",
     "assessmentChanges": "After candidate render process exits, restore authenticated published Core aliases before starting the unchanged assessor in a fresh process.",
-    "sourceChangeScope": "Only the reviewed Bus62 createBranchVia insertion and selectBranchAttachment/routeMultiTerminalBuses replacements in published Core2418. No eligibility-gate, pending-package-exit or expanded-site bounds change.",
+    "sourceChangeScope": "Only the reviewed pending-access Bus62 production patch in published Core2418:14 existing declarations and2 helper insertions, including active future branch guides and generated-copper costs. No physical branch-via, eligibility-gate or expanded-site bounds patch.",
     "limitsMs": [
       900000,
       960000,
@@ -55,11 +55,11 @@
     ],
     "coverage": "Initial ButterStick spaced screen; not all-ten qualification."
   },
-  "branchViaPreparation": {
-    "inheritedController": "592a0c0802778e528917556730c04d3e74fb9947",
-    "sourceChangeScope": "Only the reviewed Bus62 createBranchVia insertion and selectBranchAttachment/routeMultiTerminalBuses replacements in published Core2418. No eligibility-gate, pending-package-exit or expanded-site bounds change.",
+  "pendingAccessPreparation": {
+    "inheritedController": "c32db53eb5998f7877afe0eb3f68c9fb408dce6e",
+    "sourceChangeScope": "Only the reviewed pending-access Bus62 production patch in published Core2418:14 existing declarations and2 helper insertions, including active future branch guides and generated-copper costs. No physical branch-via, eligibility-gate or expanded-site bounds patch.",
     "qualificationReady": true,
     "routingExecuted": false,
-    "sourceCandidateCommit": "d3f7465b3aadab26f4f11b086b726fc7674d5a1c"
+    "sourceCandidateCommit": "520dd0fb4f7264ffa597782aff7f91313f5a78b9"
   }
 }
