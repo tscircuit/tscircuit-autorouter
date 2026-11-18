@@ -1,0 +1,46 @@
+name: Bus clean declared-dependency qualification
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - bench/bus-clean-build-3236-20261118
+
+permissions:
+  contents: read
+
+jobs:
+  qualify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 130
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: controller
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/bus-lanes-solver
+          ref: 202b034659fb96bad44d11b8190f4044b675116f
+          path: upstream
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Qualify exact source trees with one clean frozen dependency install
+        env:
+          QUALIFICATION_WORK: ${{ runner.temp }}/bus-clean-qualification
+          QUALIFICATION_RESULTS: ${{ github.workspace }}/qualification-results
+        run: |
+          python3 controller/experiments/bus-clean-qualification/run-qualification.py "$GITHUB_WORKSPACE/upstream" "$QUALIFICATION_WORK" "$QUALIFICATION_RESULTS"
+      - name: Retain logs, dependency proof and build hashes
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: bus-clean-qualification
+          path: qualification-results
+          retention-days: 14
+          if-no-files-found: error

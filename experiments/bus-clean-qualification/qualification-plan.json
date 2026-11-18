@@ -1,0 +1,140 @@
+{
+  "schemaVersion": 1,
+  "repository": "tscircuit/bus-lanes-solver",
+  "upstreamCommit": "202b034659fb96bad44d11b8190f4044b675116f",
+  "bunVersion": "1.3.2",
+  "nodeMajor": 22,
+  "runner": "ubuntu-latest",
+  "stages": [
+    {
+      "name": "format",
+      "command": [
+        "bun",
+        "run",
+        "format:check"
+      ],
+      "timeoutSeconds": 180
+    },
+    {
+      "name": "typecheck",
+      "command": [
+        "bun",
+        "run",
+        "typecheck"
+      ],
+      "timeoutSeconds": 900
+    },
+    {
+      "name": "package",
+      "command": [
+        "bun",
+        "run",
+        "test:package"
+      ],
+      "timeoutSeconds": 1200
+    }
+  ],
+  "source": {
+    "base": {
+      "commit": "898b8c6cb6ce9f3fce9e88259baa2f08d69f29b3",
+      "tree": "7b1dfe19aee9411374529fe1f7f96cb7c97d614b",
+      "patch": "base.patch.gz",
+      "patchSha256": "a54de80eeaedb053b61ae7f7aef042f91df9811b6051793410ab8162dec9a9ac",
+      "compressedPatchSha256": "aff602d031624209f4aaebdf8086f159194d2d5b0c9a8a04299d41f89d6907d2",
+      "patchBytes": 150977,
+      "compressedPatchBytes": 26274
+    },
+    "head": {
+      "commit": "2c43e8162568da6efee2992c75d09753ca1396c8",
+      "tree": "7cd2f2eae8c721b8c48ccad3ed095ad1cbf8c70d",
+      "patch": "head.patch.gz",
+      "patchSha256": "dec02dce14c02e0eb5d15ba8a6581469554a5a5a09297edd87dbaeaa32884986",
+      "compressedPatchSha256": "6f9066c92f3ad955062314e4a1c0fb8244c6ca2b9cf49d39fde461130cb6fa67",
+      "patchBytes": 179576,
+      "compressedPatchBytes": 33236
+    }
+  },
+  "routingBenchmarksEnabled": false,
+  "dependencyPolicy": "One clean install from byte-identical declared package.json with only lock persistence enabled in an external Bun config. Save exact lock, install frozen, share the same node_modules directory across both full source trees, hash files before/after each lane. No inherited cache/dependency tree or source overrides.",
+  "packageSha256": "20445e0a1416e641b6e7bcddf7d13eb198756bb19e1b6e1df1d9110382fd7d35",
+  "declaredPackage": {
+    "name": "@tscircuit/bus-lanes-solver",
+    "version": "0.0.62",
+    "type": "module",
+    "module": "dist/index.js",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "files": [
+      "dist"
+    ],
+    "scripts": {
+      "test": "bun test",
+      "typecheck": "tsc --noEmit",
+      "format": "biome format --write .",
+      "format:check": "biome format .",
+      "start": "cosmos",
+      "build:site": "cosmos-export",
+      "build": "tsup && dts-bundle-generator --config dts-bundle.config.json",
+      "test:package": "bun run build && bun scripts/check-package.ts",
+      "benchmark:shared-pairs": "bun scripts/benchmark-am3352-shared-pairs.ts"
+    },
+    "devDependencies": {
+      "@biomejs/biome": "2.5.15",
+      "@flatten-js/core": "1.6.2",
+      "@tscircuit/alphabet": "0.0.25",
+      "@tscircuit/am3352-fanout-generator": "github:tscircuit/fanout-solver#e202cef0a97f59bb9a72357e8eeb5e9f1349529e",
+      "@tscircuit/checks": "0.0.264",
+      "@tscircuit/circuit-json-util": "0.0.119",
+      "@tscircuit/fanout-solver": "github:tscircuit/fanout-solver#1c726cc7cfdd2ce0c93b928a133b918d301dcdf4",
+      "@tscircuit/math-utils": "^0.0.38",
+      "@tscircuit/solver-utils": "^0.0.21",
+      "@types/bun": "latest",
+      "@types/react": "^19",
+      "@types/react-dom": "^19",
+      "bun-match-svg": "0.0.17",
+      "circuit-json": "0.0.538",
+      "circuit-json-to-connectivity-map": "^0.0.30",
+      "circuit-to-svg": "0.0.453",
+      "dts-bundle-generator": "^9.5.1",
+      "format-si-unit": "^0.0.14",
+      "graphics-debug": "^0.0.95",
+      "react": "^19",
+      "react-cosmos": "^7.0.0",
+      "react-cosmos-plugin-vite": "^7.0.0",
+      "react-dom": "^19",
+      "schematic-symbols": "0.0.248",
+      "transformation-matrix": "^3.1.0",
+      "tsup": "^8.5.0",
+      "typescript": "5.9.3",
+      "vite": "^7.3.0",
+      "yalps": "0.6.4"
+    },
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/tscircuit/bus-lanes-solver.git"
+    },
+    "publishConfig": {
+      "registry": "https://npm.pkg.github.com"
+    },
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "import": "./dist/index.js",
+        "default": "./dist/index.js"
+      },
+      "./package.json": "./package.json"
+    },
+    "overrides": {
+      "typescript": "5.9.3"
+    }
+  },
+  "unchangedBuildContracts": [
+    "package.json",
+    "bunfig.toml",
+    "tsconfig.json",
+    "tsconfig.build.json",
+    "tsup.config.ts",
+    "dts-bundle.config.json",
+    "scripts/check-package.ts"
+  ]
+}
