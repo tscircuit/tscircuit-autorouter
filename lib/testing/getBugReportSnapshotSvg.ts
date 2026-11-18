@@ -14,6 +14,7 @@ import {
  */
 export const getBugReportSnapshotSvg = (
   input: EvaluateRelaxedDrcInput,
+  options: { bounds?: EvaluateRelaxedDrcInput["inputSrj"]["bounds"] } = {},
 ): string => {
   const { errors } = evaluateRelaxedDrc(input)
   const graphics = convertSrjToGraphicsObject({
@@ -25,6 +26,17 @@ export const getBugReportSnapshotSvg = (
   })
   // Connection debug dots obscure fine-pitch pads and escape traces.
   graphics.points = []
+  // An explicit frame keeps before/after cutouts at the same scale.
+  if (options.bounds) {
+    const { minX, minY, maxX, maxY } = options.bounds
+    graphics.rects.push({
+      center: { x: (minX + maxX) / 2, y: (minY + maxY) / 2 },
+      width: maxX - minX,
+      height: maxY - minY,
+      fill: "none",
+      stroke: "#94a3b8",
+    })
+  }
   const svg = getSvgFromGraphicsObject(graphics, {
     backgroundColor: "white",
   })

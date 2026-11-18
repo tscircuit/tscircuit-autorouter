@@ -5,12 +5,14 @@ import {
   PointId,
   SimpleRouteConnection,
   SimpleRouteJson,
+  getConnectionPointLayers,
 } from "lib/types"
 import { seededRandom } from "lib/utils/cloneAndShuffleArray"
 import { BaseSolver } from "../BaseSolver"
 import { buildMinimumSpanningTree } from "./buildMinimumSpanningTree"
 import { getInitiallyConnectedStateForConnection } from "./get-initially-connected-state-for-connection"
 import { mergeConnections } from "./mergeConnections"
+import { orderMstEdgesForStablePairNames } from "./orderMstEdgesForStablePairNames"
 
 type ConnectionName = SimpleRouteConnection["name"]
 interface PathHop {
@@ -165,8 +167,27 @@ export class NetToPointPairsSolver extends BaseSolver {
       return
     }
 
-    const edges = buildMinimumSpanningTree(connection.pointsToConnect, {
+    // Break nearly equal XY choices without buying fewer vias with long detours.
+    const layerChangeCost = this.ogSrj.minTraceWidth * 0.05
+    const originalEdges = buildMinimumSpanningTree(connection.pointsToConnect, {
       extraEdges: [...pathEdges, ...zeroWeightEdges],
+    })
+    const optimizedEdges = buildMinimumSpanningTree(
+      connection.pointsToConnect,
+      {
+        extraEdges: [...pathEdges, ...zeroWeightEdges],
+        getAdditionalEdgeCost: (from, to): number =>
+          getConnectionPointLayers(from).some((layer) =>
+            getConnectionPointLayers(to).includes(layer),
+          )
+            ? 0
+            : layerChangeCost,
+      },
+    )
+    const edges = orderMstEdgesForStablePairNames({
+      points: connection.pointsToConnect,
+      originalEdges,
+      optimizedEdges,
     })
 
     let mstIdx = 0

@@ -226,7 +226,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     let priorityEligible = false
     if (this.constructorParams.priorityDagSearch) {
       this.precomputedIntraNodeRouteParams ??= precomputeIntraNodeRouteParams(
-        this.nodeWithPortPoints,
+        this.constructorParams,
       )
       const groups = [
         ...this.precomputedIntraNodeRouteParams.connectionPointsByName.entries(),
@@ -616,7 +616,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     // Each grow/shrink attempt owns a distinct node and portfolio. Keep this
     // shared data local so later attempts and caller edits are recomputed.
     this.precomputedIntraNodeRouteParams ??= precomputeIntraNodeRouteParams(
-      this.nodeWithPortPoints,
+      this.constructorParams,
     )
     if (hyperParameters.SINGLE_LAYER_NO_DIFFERENT_ROOT_INTERSECTIONS) {
       if (

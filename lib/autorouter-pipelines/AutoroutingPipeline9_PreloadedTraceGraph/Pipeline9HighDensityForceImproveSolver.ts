@@ -87,25 +87,25 @@ export class Pipeline9HighDensityForceImproveSolver extends HighDensityForceImpr
       if (!route) throw new Error("Force improvement lost a node's candidate")
       return route
     })
-    // Existing via conflicts belong to repair; preserve previously clear pairs.
-    const originalViolationKeys = new Set<ViaClearanceViolationKey>(
+    // Leave existing via conflicts to repair without worsening their clearance.
+    const originalSeverityByKey = new Map<ViaClearanceViolationKey, number>(
       this.evaluateFixedObstacles(originalRoutes)
         .filter(
           (violation) =>
             violation.kind === "via" &&
             this.fixedViaObstacleIndexes.has(violation.obstacleIndex),
         )
-        .map((violation) => violation.key),
+        .map((violation) => [violation.key, violation.severity]),
     )
-    const introducesViaClearanceViolation = this.evaluateFixedObstacles(
+    const worsensViaClearance = this.evaluateFixedObstacles(
       candidateRoutes,
     ).some(
       (violation) =>
         violation.kind === "via" &&
         this.fixedViaObstacleIndexes.has(violation.obstacleIndex) &&
-        !originalViolationKeys.has(violation.key),
+        violation.severity > (originalSeverityByKey.get(violation.key) ?? 0),
     )
-    if (!introducesViaClearanceViolation) return
+    if (!worsensViaClearance) return
     // A node's routes move together; accepting only some can introduce peer shorts.
     for (const routeIndex of routeIndexes) {
       this.improvedRoutesByIndex.delete(routeIndex)

@@ -1,4 +1,8 @@
-import { distance, doSegmentsIntersect } from "@tscircuit/math-utils"
+import {
+  distance,
+  doSegmentsIntersect,
+  type Point3,
+} from "@tscircuit/math-utils"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import Flatbush from "flatbush"
 import type { GraphicsObject } from "graphics-debug"
@@ -7,7 +11,10 @@ import {
   SingleRouteCandidatePriorityQueue,
 } from "lib/data-structures/SingleRouteCandidatePriorityQueue"
 import type { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
+import type { Obstacle } from "lib/types/srj-types"
+import { getSegmentToObstacleDistance } from "lib/utils/getSegmentToObstacleDistance"
 import { BaseSolver } from "../BaseSolver"
+import { isObstacleConnectedToRoute } from "../TraceWidthSolver/isObstacleConnectedToRoute"
 import { HighDensityHyperParameters } from "./HighDensityHyperParameters"
 
 export type FutureConnection = {
@@ -38,6 +45,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
   }
 
   obstacleRoutes: HighDensityIntraNodeRoute[]
+  padObstacles: (Obstacle & { __zLayers: number[] })[]
   bounds: { minX: number; maxX: number; minY: number; maxY: number }
   boundsSize: { width: number; height: number }
   boundsCenter: { x: number; y: number }
@@ -108,6 +116,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     rootConnectionName?: string
     regionId?: string
     obstacleRoutes: HighDensityIntraNodeRoute[]
+    padObstacles?: SingleHighDensityRouteSolver["padObstacles"]
     minDistBetweenEnteringPoints: number
     bounds: { minX: number; maxX: number; minY: number; maxY: number }
     A: { x: number; y: number; z: number }
@@ -161,6 +170,21 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     this.debug_nodesTooCloseToObstacle = new Set()
     this.debug_nodePathToParentIntersectsObstacle = new Set()
     this.numRoutes = this.obstacleRoutes.length + this.futureConnections.length
+    const rootConnectionName = this.rootConnectionName ?? this.connectionName
+    let padObstacles = opts.padObstacles ?? []
+    // Multi-route regions apply pad checks in their candidate cleanup.
+    // This context constrains the shortcut and the search replacing it.
+    if (this.numRoutes > 0) padObstacles = []
+    this.padObstacles = padObstacles.filter((obstacle): boolean => {
+      if (isObstacleConnectedToRoute(obstacle, this, this.connMap)) return false
+      if (
+        obstacle.obstacleId &&
+        this.connMap?.areIdsConnected(rootConnectionName, obstacle.obstacleId)
+      ) {
+        return false
+      }
+      return true
+    })
     this.buildObstacleIndexes()
     const bestRowOrColumnCount = Math.ceil(5 * (this.numRoutes + 1))
     let numXCells = this.boundsSize.width / this.cellStep
@@ -246,21 +270,88 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     ])
   }
 
-  handleSimpleCases() {
-    this.solved = true
+  private doesSegmentIntersectPad(
+    segment: { start: Point3; end: Point3 },
+    isVia = false,
+  ): boolean {
+    let copperRadius = this.traceThickness / 2
+    if (isVia) copperRadius = this.viaDiameter / 2
+    for (const obstacle of this.padObstacles) {
+      if (!isVia && !obstacle.__zLayers.includes(segment.start.z)) continue
+      const distanceToObstacle = getSegmentToObstacleDistance({
+        ...segment,
+        obstacle,
+      })
+      if (distanceToObstacle < copperRadius - 1e-6) return true
+    }
+    return false
+  }
+
+  private isRouteClear(route: Point3[]): boolean {
+    let parent: Node | null = null
+    for (const point of route) {
+      const node: Node = { ...point, g: 0, h: 0, f: 0, parent }
+      const isVia = parent !== null && parent.z !== point.z
+      if (isVia && parent && (point.x !== parent.x || point.y !== parent.y)) {
+        return false
+      }
+      let margin: number | undefined
+      if (isVia) margin = this.viaDiameter / 2 + this.obstacleMargin / 2
+      if (
+        this.isNodeTooCloseToObstacle(node, margin, isVia) ||
+        this.doesPathToParentIntersectObstacle(node)
+      ) {
+        return false
+      }
+      parent = node
+    }
+    return true
+  }
+
+  handleSimpleCases(): void {
     const { A, B } = this
-    const route =
-      A.z === B.z
-        ? [A, B]
-        : [
-            A,
-            { ...this.boundsCenter, z: this.A.z },
-            {
-              ...this.boundsCenter,
-              z: B.z,
-            },
-            B,
-          ]
+    let route = [A, B]
+    const vias: { x: number; y: number }[] = []
+    if (A.z !== B.z) {
+      route = [
+        A,
+        { ...this.boundsCenter, z: A.z },
+        { ...this.boundsCenter, z: B.z },
+        B,
+      ]
+      vias.push(this.boundsCenter)
+    }
+
+    if (!this.isRouteClear(route)) {
+      const inset = Math.min(
+        this.obstacleMargin / 2,
+        this.boundsSize.width / 2,
+        this.boundsSize.height / 2,
+      )
+      const minX = this.bounds.minX + inset
+      const maxX = this.bounds.maxX - inset
+      const minY = this.bounds.minY + inset
+      const maxY = this.bounds.maxY - inset
+      route = [
+        A,
+        ...route.map((point) => ({
+          x: clamp(point.x, minX, maxX),
+          y: clamp(point.y, minY, maxY),
+          z: point.z,
+        })),
+        B,
+      ].filter((point, index, points): boolean => {
+        const previous = points[index - 1]
+        return (
+          !previous ||
+          point.x !== previous.x ||
+          point.y !== previous.y ||
+          point.z !== previous.z
+        )
+      })
+      if (!this.isRouteClear(route)) return
+    }
+
     this.solvedPath = {
       connectionName: this.connectionName,
       rootConnectionName: this.rootConnectionName,
@@ -268,8 +359,9 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       route,
       traceThickness: this.traceThickness,
       viaDiameter: this.viaDiameter,
-      vias: this.A.z === this.B.z ? [] : [this.boundsCenter],
+      vias,
     }
+    this.solved = true
   }
 
   get viaPenaltyDistance() {
@@ -281,7 +373,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     margin?: number,
     isVia?: boolean,
     planarObstacleQuery?: PlanarObstacleQuery,
-  ) {
+  ): boolean {
     margin ??= this.obstacleMargin
 
     if (isVia && node.parent) {
@@ -399,6 +491,13 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       }
     }
 
+    if (
+      this.numRoutes === 0 &&
+      this.doesSegmentIntersectPad({ start: node, end: node }, isVia)
+    ) {
+      return true
+    }
+
     if (pointKey !== undefined) {
       this.freePlanarObstaclePoints.set(pointKey, {
         x: node.x,
@@ -409,7 +508,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     return false
   }
 
-  isNodeTooCloseToEdge(node: Node, isVia?: boolean) {
+  isNodeTooCloseToEdge(node: Pick<Node, "x" | "y">, isVia?: boolean): boolean {
     const margin = isVia
       ? this.viaDiameter / 2 + this.obstacleMargin / 2
       : this.obstacleMargin / 2
@@ -433,8 +532,17 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
   doesPathToParentIntersectObstacle(
     node: Node,
     planarObstacleQuery?: PlanarObstacleQuery,
-  ) {
+  ): boolean {
     const parent = node.parent
+    if (
+      this.numRoutes === 0 &&
+      this.doesSegmentIntersectPad(
+        { start: parent ?? node, end: node },
+        parent !== null && parent.z !== node.z,
+      )
+    ) {
+      return true
+    }
     if (!parent) return false
     const indexedSegments =
       planarObstacleQuery?.segments ?? this.obstacleSegmentsByLayer.get(node.z)

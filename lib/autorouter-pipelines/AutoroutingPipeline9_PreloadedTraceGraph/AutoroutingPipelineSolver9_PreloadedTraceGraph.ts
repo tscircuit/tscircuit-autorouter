@@ -21,7 +21,7 @@ import {
 } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver"
 import { MultiGraphTopologyPlannerSolver } from "lib/solvers/TopologyPlanningSolver/MultiGraphTopologyPlannerSolver"
 import { TopologyMergingSolver } from "lib/solvers/TopologyMergingSolver/TopologyMergingSolver"
-import { createPreloadedInnerLayerPortValidator } from "./createPreloadedInnerLayerPortValidator"
+import { createPreloadedPortValidator } from "./createPreloadedPortValidator"
 import { UniformPortDistributionSolver } from "lib/solvers/UniformPortDistributionSolver/UniformPortDistributionSolver"
 import { getColorMap } from "lib/solvers/colors"
 import {
@@ -52,6 +52,7 @@ import {
 import { getPresuppliedTraceVisualization } from "lib/utils/getPresuppliedTraceVisualization"
 import { calculateOptimalCapacityDepth } from "lib/utils/getTunedTotalCapacity1"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
+import { getExistingViaInPadByPcbPortId } from "lib/utils/getExistingViaInPadByPcbPortId"
 import {
   AvailableSegmentPointSolver,
   type SharedEdgeSegment,
@@ -339,6 +340,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       (cms) => [
         cms.srj,
         {
+          connMap: cms.connMap,
           viaDiameter: cms.viaDiameter,
           minTraceWidth: cms.minTraceWidth,
           obstacleMargin: cms.srj.defaultObstacleMargin ?? 0.15,
@@ -538,6 +540,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             (seg) => seg.portPoints,
           ),
           simpleRouteJsonConnections: cms.srjWithPointPairs!.connections,
+          existingViaInPadByPcbPortId: getExistingViaInPadByPcbPortId(
+            cms.srjWithPointPairs!,
+          ),
         })
 
         return [
@@ -595,7 +600,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           layerCount: cms.srj.layerCount,
           useLayerAwareGeometry: cms.srj.layerCount > 2,
           preserveSolitaryPorts: Boolean(cms.srj.traces?.length),
-          isPortPointClear: createPreloadedInnerLayerPortValidator({
+          isPortPointClear: createPreloadedPortValidator({
             srj: cms.srj,
             connMap: cms.connMap,
             traceWidth: cms.minTraceWidth,
@@ -779,8 +784,11 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             .getChangedPreloadedTraceSections()
             .map((section) => section.connectionName),
         )
-        const newHdRoutes = cms.highDensityStitchSolver!.mergedHdRoutes.filter(
-          (route) => !materializedConnectionNames.has(route.connectionName),
+        // Via merging requires exactly co-located layer transitions.
+        const newHdRoutes = canonicalizePipeline9HdRoutes(
+          cms.highDensityStitchSolver!.mergedHdRoutes.filter(
+            (route) => !materializedConnectionNames.has(route.connectionName),
+          ),
         )
         const netByConnectionName = getPipeline9NetByConnectionName(
           [...newHdRoutes, ...preloadedHdRoutes],

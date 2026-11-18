@@ -1,0 +1,47 @@
+<svg width="640" height="640" viewBox="0 0 640 640" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="white"/><g><polyline data-points="14.05,0.35 14.052408,0.364908" data-type="line" data-label="GND_mst0" points="258.75,328.75 259.1713999999997,326.1411" fill="none" stroke="blue" stroke-linejoin="round" stroke-width="1px"/></g><g><polyline data-points="14.05,0.35 14.7,0.35" data-type="line" data-label="GND_mst1" points="258.75,328.75 372.5,328.75" fill="none" stroke="blue" stroke-linejoin="round" stroke-width="1px"/></g><g><rect data-type="rect" data-label="top
+GND" data-x="14.05" data-y="0.35" x="237.75" y="307.75" width="42" height="42" fill="rgba(255,0,0,0.5)" stroke="black" stroke-width="0.005714285714285713"/></g><g><rect data-type="rect" data-label="top
+GND" data-x="14.7" data-y="0.35" x="351.5000000000002" y="307.75" width="41.999999999999545" height="42" fill="rgba(255,0,0,0.5)" stroke="black" stroke-width="0.005714285714285713"/></g><g><rect data-type="rect" data-label="bottom
+GND" data-x="14.052408" data-y="0.364908" x="210.17139999999995" y="271.89109999999994" width="97.99999999999955" height="108.50000000000006" fill="rgba(0,0,255,0.5)" stroke="black" stroke-width="0.005714285714285713"/></g><g><rect data-type="rect" data-label="" data-x="14.4" data-y="0.4" x="40" y="75" width="560" height="490" fill="none" stroke="#94a3b8" stroke-width="0.005714285714285713"/></g><text data-type="text" data-label="iCE/Pi GND: 1 layer changes" data-x="14.4" data-y="1.4" x="320" y="144.99999999999997" fill="black" font-size="14.000000000000002" font-family="sans-serif" text-anchor="middle" dominant-baseline="central">iCE/Pi GND: 1 layer changes</text><text data-type="text" data-label="U1.P13 (top)" data-x="14.05" data-y="0.75" x="258.75" y="258.75" fill="black" font-size="10.500000000000002" font-family="sans-serif" text-anchor="middle" dominant-baseline="central">U1.P13 (top)</text><text data-type="text" data-label="U1.R13 (top)" data-x="14.7" data-y="0.75" x="372.5" y="258.75" fill="black" font-size="10.500000000000002" font-family="sans-serif" text-anchor="middle" dominant-baseline="central">U1.R13 (top)</text><text data-type="text" data-label="C38.1 (bottom)" data-x="14.05" data-y="-0.15" x="258.75" y="416.25" fill="black" font-size="10.500000000000002" font-family="sans-serif" text-anchor="middle" dominant-baseline="central">C38.1 (bottom)</text><g><circle data-type="point" data-label="U1.P13" data-x="14.05" data-y="0.35" cx="258.75" cy="328.75" r="3" fill="blue"/></g><g><circle data-type="point" data-label="C38.1" data-x="14.052408" data-y="0.364908" cx="259.1713999999997" cy="326.1411" r="3" fill="blue"/></g><g><circle data-type="point" data-label="U1.P13" data-x="14.05" data-y="0.35" cx="258.75" cy="328.75" r="3" fill="blue"/></g><g><circle data-type="point" data-label="U1.R13" data-x="14.7" data-y="0.35" cx="372.5" cy="328.75" r="3" fill="blue"/></g><g id="crosshair" style="display: none"><line id="crosshair-h" y1="0" y2="640" stroke="#666" stroke-width="0.5"/><line id="crosshair-v" x1="0" x2="640" stroke="#666" stroke-width="0.5"/><text id="coordinates" font-family="monospace" font-size="12" fill="#666"></text></g><script><![CDATA[
+              document.currentScript.parentElement.addEventListener('mousemove', (e) => {
+                const svg = e.currentTarget;
+                const rect = svg.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const crosshair = svg.getElementById('crosshair');
+                const h = svg.getElementById('crosshair-h');
+                const v = svg.getElementById('crosshair-v');
+                const coords = svg.getElementById('coordinates');
+                
+                crosshair.style.display = 'block';
+                h.setAttribute('x1', '0');
+                h.setAttribute('x2', '640');
+                h.setAttribute('y1', y);
+                h.setAttribute('y2', y);
+                v.setAttribute('x1', x);
+                v.setAttribute('x2', x);
+                v.setAttribute('y1', '0');
+                v.setAttribute('y2', '640');
+
+                // Calculate real coordinates using inverse transformation
+                const matrix = {"a":175.00000000000003,"c":0,"e":-2200.0000000000005,"b":0,"d":-175.00000000000003,"f":390};
+                // Manually invert and apply the affine transform
+                // Since we only use translate and scale, we can directly compute:
+                // x' = (x - tx) / sx
+                // y' = (y - ty) / sy
+                const sx = matrix.a;
+                const sy = matrix.d;
+                const tx = matrix.e; 
+                const ty = matrix.f;
+                const realPoint = {
+                  x: (x - tx) / sx,
+                  y: (y - ty) / sy // Flip y back since we used negative scale
+                }
+                
+                coords.textContent = `(${realPoint.x.toFixed(2)}, ${realPoint.y.toFixed(2)})`;
+                coords.setAttribute('x', (x + 5).toString());
+                coords.setAttribute('y', (y - 5).toString());
+              });
+              document.currentScript.parentElement.addEventListener('mouseleave', () => {
+                document.currentScript.parentElement.getElementById('crosshair').style.display = 'none';
+              });
+            ]]></script></svg>
