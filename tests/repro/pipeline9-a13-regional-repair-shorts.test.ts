@@ -42,7 +42,7 @@ test("route the native A13 remaining signals after the four data phases", async 
     }),
   ).toMatchSvgSnapshot(import.meta.path)
 
-  // Render the physical round pad at RAM BALL_C3, not its SRJ bounding box.
+  // Show the physical RAM pad column and its routing gaps.
   const { circuitJson } = evaluateRelaxedDrc(snapshotInput)
   expect(
     checkEachPcbTraceNonOverlapping(circuitJson, { minClearance: 0 }),
@@ -52,9 +52,9 @@ test("route the native A13 remaining signals after the four data phases", async 
       ...circuitJson,
       {
         ...createPcbBoardElement(input),
-        center: { x: -5.6, y: 3.464194 },
+        center: { x: -5.6, y: 0.264194 },
         width: 2.4,
-        height: 2.4,
+        height: 8,
         outline: undefined,
       },
     ],
