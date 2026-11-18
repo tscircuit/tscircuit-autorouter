@@ -139,7 +139,7 @@ test("keeps i.MX6 DDR vias clear of the full native board copper", async (): Pro
     ...checkViasOffBoard(circuitJson),
     ...checkViasInPads(circuitJson),
   ]
-  expect(findings).toHaveLength(2)
+  expect(findings).toHaveLength(0)
   const originalError = checkViaTraceClearance(
     nativeBoard.circuitJson,
     clearanceOptions,

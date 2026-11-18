@@ -41,6 +41,7 @@ import {
   convertSrjToGraphicsObject,
   type TraceColorMode,
 } from "lib/utils/convertSrjToGraphicsObject"
+import { convertToCircuitJson } from "lib/utils/convertToCircuitJson"
 import { createSrjWithBoardValidObstacleLayers } from "lib/utils/create-srj-with-board-valid-obstacle-layers"
 import { createObstacleLabelFormatter } from "lib/utils/formatObstacleLabel"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
@@ -74,6 +75,7 @@ import { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolve
 import { LengthMatchingPostProcessingSolver } from "../../solvers/length-matching-post-processing-solver"
 import { applyFixedRouteReplacementsToPreloadedTraces } from "./applyFixedRouteReplacementsToPreloadedTraces"
 import { assignUniquePcbTraceIdsToNewTraces } from "./assignUniquePcbTraceIdsToNewTraces"
+import { getFixedCopperObstacleIndexes } from "./getFixedCopperObstacleIndexes"
 import { getTerminalLayerIndicesByPcbPortId } from "./getTerminalLayerIndicesByPcbPortId"
 import { getPipeline9NetByConnectionName } from "./getPipeline9NetByConnectionName"
 import {
@@ -638,6 +640,18 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           fixedHdRoutes: originalFixedHdRoutes,
           sections: cms.getChangedPreloadedTraceSections(),
         })
+        const representedPadObstacleIndexes = new Set<number>()
+        convertToCircuitJson(cms.originalSrj, [], {
+          originalSrj: cms.originalSrj,
+          representedPadObstacleIndexes,
+        })
+        const fixedCopperObstacleIndexes = getFixedCopperObstacleIndexes({
+          inputSrj: cms.originalSrj,
+          representedPadObstacleIndexes,
+        })
+        const fixedCopperObstacles = [...fixedCopperObstacleIndexes].map(
+          (obstacleIndex) => cms.originalSrj.obstacles[obstacleIndex]!,
+        )
         const hasImmutablePreloadedCopper = fixedHdRoutes.some(
           (route) => route.isFixed === true,
         )
@@ -658,6 +672,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
               minBoardEdgeClearance: cms.originalSrj.minBoardEdgeClearance,
             },
             fixedHdRoutes,
+            fixedCopperObstacles,
             connMap: cms.connMap,
             colorMap: cms.colorMap,
             obstacles: cms.srj.obstacles,

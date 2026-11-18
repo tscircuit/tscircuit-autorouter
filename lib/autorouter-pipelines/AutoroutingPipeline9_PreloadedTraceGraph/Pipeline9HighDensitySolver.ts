@@ -58,6 +58,7 @@ export type Pipeline9HighDensitySolverParams = {
     | Record<string, number | null>
   preserveTerminalPcbPortIds?: boolean
   includeBoardObstacles?: boolean
+  fixedCopperObstacles?: Obstacle[]
   enableRegionalFallback?: boolean
   maxB01Rips?: number
   b01RepairOptions?: Pick<
@@ -236,6 +237,7 @@ const convertObstacleToB01Obstacle = ({
     `pipeline9_obstacle_${obstacle.center.x}_${obstacle.center.y}`
   return {
     type: "rect",
+    shape: obstacle.shape,
     connectionName,
     rootConnectionName:
       connMap.getNetConnectedToId(connectionName) ?? connectionName,
@@ -1248,7 +1250,22 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       .flatMap((route) => convertFixedRouteToB01Obstacles(route, node, this))
     this.stats.fixedObstacleUses =
       Number(this.stats.fixedObstacleUses ?? 0) + fixedObstacles.length
-    if (fixedObstacles.length === 0 && !this.params.b01RepairOptions) {
+    const requiresLayerChange = node.portPoints.some((start) =>
+      node.portPoints.some(
+        (end) =>
+          start.connectionName === end.connectionName && start.z !== end.z,
+      ),
+    )
+    const viaNeedsFixedCopperConstraints =
+      requiresLayerChange &&
+      this.params.fixedCopperObstacles?.some((obstacle) =>
+        obstacleOverlapsNode(obstacle, nodeBounds),
+      ) === true
+    if (
+      fixedObstacles.length === 0 &&
+      !this.params.b01RepairOptions &&
+      !viaNeedsFixedCopperConstraints
+    ) {
       this.startRegularSolver(node)
       return
     }
@@ -1281,10 +1298,8 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       node,
       this.connMap,
     )
-    let obstacleClearanceMargin = 0.15
-    if (this.fixedHdRoutes.some((route) => route.isFixed === true)) {
-      obstacleClearanceMargin = this.obstacleMargin
-    }
+    const obstacleClearanceMargin =
+      this.params.minClearance ?? this.obstacleMargin
     this.stats.b01NodeCount = Number(this.stats.b01NodeCount ?? 0) + 1
     this.activeB01Solver = new HighDensitySolverB01({
       ...defaultB01Params,
