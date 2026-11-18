@@ -1,0 +1,31 @@
+name: Generate native ButterStick repro snapshots
+on:
+  push:
+    branches: [analysis/butterstick-before-snapshots]
+    paths: [.github/workflows/butterstick-before-snapshots.yml]
+permissions:
+  contents: write
+jobs:
+  snapshot:
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {arch: x64, runner: ubuntu-24.04}
+          - {arch: arm64, runner: ubuntu-24.04-arm}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.4.3'
+      - name: Render the unchanged native board
+        run: |
+          bun install
+          BUN_UPDATE_SNAPSHOTS=1 bun test tests/repro/pipeline9-butterstick-fixed-via-force.test.ts --timeout 1500000
+          git config user.name "tscircuit bot"
+          git config user.email "githubbot@tscircuit.com"
+          git add tests/repro/__snapshots__/pipeline9-butterstick-fixed-via-force*
+          git commit -m "Render ButterStick before fixed-via clamp constraints"
+          git push origin HEAD:analysis/butterstick-before-${{ matrix.arch }}
