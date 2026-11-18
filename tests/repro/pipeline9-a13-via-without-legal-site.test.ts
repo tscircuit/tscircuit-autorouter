@@ -178,7 +178,7 @@ test("A13 vias sit closer to pads than the declared via clearance", async (): Pr
       error.center!.y >= frame.minY &&
       error.center!.y <= frame.maxY,
   )
-  expect(frameFindings.length).toBeGreaterThan(0)
+  expect(frameFindings).toEqual([])
   const frameGraphics = getFrameGraphics(graphics, frame)
   frameGraphics.rects = [
     ...(frameGraphics.rects ?? []),

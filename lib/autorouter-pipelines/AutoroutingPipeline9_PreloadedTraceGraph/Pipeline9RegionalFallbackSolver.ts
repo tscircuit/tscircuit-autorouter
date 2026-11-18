@@ -37,7 +37,7 @@ type Pipeline9RegionalFallbackSolverParams = {
   captureSearchDebug?: boolean
 }
 
-const getPointToObstacleDistance = (
+export const getPointToObstacleDistance = (
   point: { x: number; y: number },
   obstacle: Obstacle,
 ): number => {
@@ -61,7 +61,7 @@ const getPointToObstacleDistance = (
   return Math.hypot(outsideX, outsideY)
 }
 
-const getObstacleZLayers = (
+export const getObstacleZLayers = (
   obstacle: Obstacle,
   layerCount: number,
 ): number[] => {
