@@ -231,6 +231,15 @@ for (const eventName of ["autorouting:start", "autorouting:end", "autorouting:er
 circuit.on("asyncEffect:end", (event: any) => {
   if (event.error) { progress.errors.push(String(event.error)); save() }
 })
+let fanoutCaptureIndex = 0
+circuit.on("solver:started", (event) => {
+  if (event.solverName !== "FanoutSolver") return
+  fanoutCaptureIndex++
+  writeFileSync(join(output, `fanout-${fanoutCaptureIndex}-input.json.gz`), Bun.gzipSync(JSON.stringify({
+    solverParams: event.solverParams,
+    solverOptions: event.solverConstructorArgs?.[1],
+  })))
+})
 const heartbeat = setInterval(() => save(), 2000)
 try {
   circuit.add(<NativeFullBoard source={source} algorithmFn={algorithmFn} geometryOnly={mode === "geometry"} fanout={mode === "fanout"} planes={mode !== "legacy"} />)
