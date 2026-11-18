@@ -1,0 +1,230 @@
+name: Benchmark fixed-via clamp constraints
+on:
+  push:
+    branches: [analysis/butterstick-fixed-via-final-dataset18]
+    paths: [.github/workflows/benchmark-fixed-via-final.yml]
+permissions:
+  contents: read
+jobs:
+  forward:
+    name: forward paired dataset18 comparison
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 35bdfb2daa3235ce7152ece219d50031f274da17
+          path: base
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: 5a86812e3eaef29b22205223633efaeee967c05f
+          path: head
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.4.3'
+      - name: Install identical dependencies and capture output digests
+        run: |
+          python3 - <<'PY'
+          import json,pathlib
+          b=json.loads(pathlib.Path("base/package.json").read_text())
+          h=json.loads(pathlib.Path("head/package.json").read_text())
+          assert b==h,"Dependency manifests differ"
+          h["overrides"]={**h.get("overrides",{}),"csstype":"3.1.3"}
+          pathlib.Path("head/package.json").write_text(json.dumps(h,indent=2)+"\n")
+          pathlib.Path("base/package.json").write_text(json.dumps(h,indent=2)+"\n")
+          PY
+          (cd head && bun install)
+          (cd base && bun install)
+          dependency_path=$(readlink -f head/node_modules/high-density-repair01)
+          mkdir -p head/fixed-via-dependency
+          cp -a "$dependency_path/." head/fixed-via-dependency/
+          mv head/node_modules/high-density-repair01 head/original-force-dependency
+          ln -s ../fixed-via-dependency head/node_modules/high-density-repair01
+          curl -fsSL https://raw.githubusercontent.com/tscircuit/high-density-repair01/c975085e8059de99d46c707e1cb17d7e125b227a/lib/HighDensityForceImproveSolver.ts -o head/fixed-via-dependency/lib/HighDensityForceImproveSolver.ts
+          python3 - <<'PY'
+          import pathlib,hashlib
+          base=pathlib.Path("base/node_modules/high-density-repair01/lib/HighDensityForceImproveSolver.ts").read_bytes()
+          head=pathlib.Path("head/node_modules/high-density-repair01/lib/HighDensityForceImproveSolver.ts").read_bytes()
+          assert base!=head,"The baseline must not use the candidate dependency"
+          assert b"fixedViaObstacles" not in base and b"fixedViaObstacles" in head
+          print("FORCE_DEPENDENCY_HASHES="+str({"base":hashlib.sha256(base).hexdigest(),"head":hashlib.sha256(head).hexdigest()}))
+          PY
+          cat > /tmp/collect-pad-preparation.py <<'PY'
+          import json,pathlib,sys
+          label,root,outdir=sys.argv[1:]
+          report=json.loads((pathlib.Path(root)/"benchmark-result.json").read_text())
+          fields=["sampleNumber","didSolve","didTimeout","relaxedDrcPassed","drcErrorCount","elapsedTimeMs","peakRssBytes","viaCount","stageTiming","routingDigest"]
+          rows=sorted([{k:t.get(k) for k in fields} for t in report["tests"]],key=lambda t:t["sampleNumber"])
+          result={"label":label,"runtime":report.get("runtime"),"summary":report["summary"],"tests":rows}
+          pathlib.Path(outdir).mkdir(parents=True,exist_ok=True)
+          (pathlib.Path(outdir)/(label+".json")).write_text(json.dumps(result,separators=(",",":")))
+          print("PAD_CLEARANCE_DATASET18="+json.dumps(result,separators=(",",":")))
+          if not all(t["didSolve"] and t["relaxedDrcPassed"] and not t["didTimeout"] and t["routingDigest"] for t in rows):
+           raise SystemExit("Unexpected routing outcome or missing digest")
+          
+          PY
+          cat > /tmp/copper-digest.js <<'JS'
+          import { createHash } from "node:crypto"
+          import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "../../lib"
+          const prototype=AutoroutingPipelineSolver9_PreloadedTraceGraph.prototype
+          const output=prototype.getOutputSimplifiedPcbTraces
+          prototype.getOutputSimplifiedPcbTraces=function(...args) {
+           const traces=output.apply(this,args)
+           globalThis.__routingDigest=createHash("sha256").update(JSON.stringify(traces)).digest("hex")
+           return traces
+          }
+          
+          JS
+          python3 - <<'PY'
+          import pathlib
+          for label in ["base","head"]:
+           root=pathlib.Path(label)
+           (root/"scripts/benchmark/copper-digest.private.js").write_text(pathlib.Path("/tmp/copper-digest.js").read_text())
+           p=root/"scripts/benchmark/benchmark.child.ts"
+           s=p.read_text().replace("#!/usr/bin/env bun",'#!/usr/bin/env bun\nimport "./copper-digest.private.js"')
+           s=s.replace("    process.stdout.write(", '    if ("result" in payload) Object.assign(payload.result,{routingDigest:globalThis.__routingDigest})\n    process.stdout.write(')
+           if "routingDigest" not in s: raise RuntimeError("Digest capture not installed")
+           p.write_text(s)
+          
+          PY
+      - name: Warm both source trees
+        run: |
+          (cd base && bun scripts/benchmark/index.ts --dataset srj18 --solver AutoroutingPipelineSolver9_PreloadedTraceGraph --concurrency 1 --sample-numbers 3 --sample-timeout 300s --exclude-assignable)
+          (cd head && bun scripts/benchmark/index.ts --dataset srj18 --solver AutoroutingPipelineSolver9_PreloadedTraceGraph --concurrency 1 --sample-numbers 3 --sample-timeout 300s --exclude-assignable)
+      - name: Dataset18 base-1
+        run: |
+          (cd base && bun scripts/benchmark/index.ts --dataset srj18 --solver AutoroutingPipelineSolver9_PreloadedTraceGraph --concurrency 3 --sample-timeout 300s --exclude-assignable)
+          python3 /tmp/collect-pad-preparation.py base-1 base metrics
+      - name: Dataset18 head-1
+        run: |
+          (cd head && bun scripts/benchmark/index.ts --dataset srj18 --solver AutoroutingPipelineSolver9_PreloadedTraceGraph --concurrency 3 --sample-timeout 300s --exclude-assignable)
+          python3 /tmp/collect-pad-preparation.py head-1 head metrics
+      - name: Verify no connectivity or DRC regression
+        run: |
+          python3 - <<'PY'
+          import json,pathlib
+          reports=[json.loads(p.read_text()) for p in pathlib.Path("metrics").glob("*.json")]
+          assert len(reports)==2
+          assert all(len(r["tests"])==16 for r in reports)
+          assert all(t["didSolve"] and t["relaxedDrcPassed"] and not t["didTimeout"] and t["drcErrorCount"]==0 for r in reports for t in r["tests"])
+          print("DATASET18_QUALITY=16/16 solved, zero relaxed DRC on both revisions")
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pad-preparation-forward-metrics
+          path: metrics/*.json
+          if-no-files-found: warn
+  reverse:
+    name: reverse paired dataset18 comparison
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 35bdfb2daa3235ce7152ece219d50031f274da17
+          path: base
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: 5a86812e3eaef29b22205223633efaeee967c05f
+          path: head
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.4.3'
+      - name: Install identical dependencies and capture output digests
+        run: |
+          python3 - <<'PY'
+          import json,pathlib
+          b=json.loads(pathlib.Path("base/package.json").read_text())
+          h=json.loads(pathlib.Path("head/package.json").read_text())
+          assert b==h,"Dependency manifests differ"
+          h["overrides"]={**h.get("overrides",{}),"csstype":"3.1.3"}
+          pathlib.Path("head/package.json").write_text(json.dumps(h,indent=2)+"\n")
+          pathlib.Path("base/package.json").write_text(json.dumps(h,indent=2)+"\n")
+          PY
+          (cd head && bun install)
+          (cd base && bun install)
+          dependency_path=$(readlink -f head/node_modules/high-density-repair01)
+          mkdir -p head/fixed-via-dependency
+          cp -a "$dependency_path/." head/fixed-via-dependency/
+          mv head/node_modules/high-density-repair01 head/original-force-dependency
+          ln -s ../fixed-via-dependency head/node_modules/high-density-repair01
+          curl -fsSL https://raw.githubusercontent.com/tscircuit/high-density-repair01/c975085e8059de99d46c707e1cb17d7e125b227a/lib/HighDensityForceImproveSolver.ts -o head/fixed-via-dependency/lib/HighDensityForceImproveSolver.ts
+          python3 - <<'PY'
+          import pathlib,hashlib
+          base=pathlib.Path("base/node_modules/high-density-repair01/lib/HighDensityForceImproveSolver.ts").read_bytes()
+          head=pathlib.Path("head/node_modules/high-density-repair01/lib/HighDensityForceImproveSolver.ts").read_bytes()
+          assert base!=head,"The baseline must not use the candidate dependency"
+          assert b"fixedViaObstacles" not in base and b"fixedViaObstacles" in head
+          print("FORCE_DEPENDENCY_HASHES="+str({"base":hashlib.sha256(base).hexdigest(),"head":hashlib.sha256(head).hexdigest()}))
+          PY
+          cat > /tmp/collect-pad-preparation.py <<'PY'
+          import json,pathlib,sys
+          label,root,outdir=sys.argv[1:]
+          report=json.loads((pathlib.Path(root)/"benchmark-result.json").read_text())
+          fields=["sampleNumber","didSolve","didTimeout","relaxedDrcPassed","drcErrorCount","elapsedTimeMs","peakRssBytes","viaCount","stageTiming","routingDigest"]
+          rows=sorted([{k:t.get(k) for k in fields} for t in report["tests"]],key=lambda t:t["sampleNumber"])
+          result={"label":label,"runtime":report.get("runtime"),"summary":report["summary"],"tests":rows}
+          pathlib.Path(outdir).mkdir(parents=True,exist_ok=True)
+          (pathlib.Path(outdir)/(label+".json")).write_text(json.dumps(result,separators=(",",":")))
+          print("PAD_CLEARANCE_DATASET18="+json.dumps(result,separators=(",",":")))
+          if not all(t["didSolve"] and t["relaxedDrcPassed"] and not t["didTimeout"] and t["routingDigest"] for t in rows):
+           raise SystemExit("Unexpected routing outcome or missing digest")
+          
+          PY
+          cat > /tmp/copper-digest.js <<'JS'
+          import { createHash } from "node:crypto"
+          import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "../../lib"
+          const prototype=AutoroutingPipelineSolver9_PreloadedTraceGraph.prototype
+          const output=prototype.getOutputSimplifiedPcbTraces
+          prototype.getOutputSimplifiedPcbTraces=function(...args) {
+           const traces=output.apply(this,args)
+           globalThis.__routingDigest=createHash("sha256").update(JSON.stringify(traces)).digest("hex")
+           return traces
+          }
+          
+          JS
+          python3 - <<'PY'
+          import pathlib
+          for label in ["base","head"]:
+           root=pathlib.Path(label)
+           (root/"scripts/benchmark/copper-digest.private.js").write_text(pathlib.Path("/tmp/copper-digest.js").read_text())
+           p=root/"scripts/benchmark/benchmark.child.ts"
+           s=p.read_text().replace("#!/usr/bin/env bun",'#!/usr/bin/env bun\nimport "./copper-digest.private.js"')
+           s=s.replace("    process.stdout.write(", '    if ("result" in payload) Object.assign(payload.result,{routingDigest:globalThis.__routingDigest})\n    process.stdout.write(')
+           if "routingDigest" not in s: raise RuntimeError("Digest capture not installed")
+           p.write_text(s)
+          
+          PY
+      - name: Warm both source trees
+        run: |
+          (cd base && bun scripts/benchmark/index.ts --dataset srj18 --solver AutoroutingPipelineSolver9_PreloadedTraceGraph --concurrency 1 --sample-numbers 3 --sample-timeout 300s --exclude-assignable)
+          (cd head && bun scripts/benchmark/index.ts --dataset srj18 --solver AutoroutingPipelineSolver9_PreloadedTraceGraph --concurrency 1 --sample-numbers 3 --sample-timeout 300s --exclude-assignable)
+      - name: Dataset18 head-2
+        run: |
+          (cd head && bun scripts/benchmark/index.ts --dataset srj18 --solver AutoroutingPipelineSolver9_PreloadedTraceGraph --concurrency 3 --sample-timeout 300s --exclude-assignable)
+          python3 /tmp/collect-pad-preparation.py head-2 head metrics
+      - name: Dataset18 base-2
+        run: |
+          (cd base && bun scripts/benchmark/index.ts --dataset srj18 --solver AutoroutingPipelineSolver9_PreloadedTraceGraph --concurrency 3 --sample-timeout 300s --exclude-assignable)
+          python3 /tmp/collect-pad-preparation.py base-2 base metrics
+      - name: Verify no connectivity or DRC regression
+        run: |
+          python3 - <<'PY'
+          import json,pathlib
+          reports=[json.loads(p.read_text()) for p in pathlib.Path("metrics").glob("*.json")]
+          assert len(reports)==2
+          assert all(len(r["tests"])==16 for r in reports)
+          assert all(t["didSolve"] and t["relaxedDrcPassed"] and not t["didTimeout"] and t["drcErrorCount"]==0 for r in reports for t in r["tests"])
+          print("DATASET18_QUALITY=16/16 solved, zero relaxed DRC on both revisions")
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pad-preparation-reverse-metrics
+          path: metrics/*.json
+          if-no-files-found: warn
