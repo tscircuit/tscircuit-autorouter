@@ -1,12 +1,12 @@
 import { expect, test } from "bun:test"
-import { HighDensityForceImproveSolver } from "high-density-repair01/lib/HighDensityForceImproveSolver"
+import { Pipeline9RegionalForceImproveSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9RegionalForceImproveSolver"
 import { applyH616RegionalRoutes } from "tests/fixtures/applyH616RegionalRoutes"
 import { getH616PhysicalDrcErrors } from "tests/fixtures/getH616PhysicalDrcErrors"
 import { getH616PowerRoutingPcbSvg } from "tests/fixtures/getH616PowerRoutingPcbSvg"
 import { getNativeRoutedCircuitContinuityErrors } from "tests/fixtures/getNativeRoutedCircuitContinuityErrors"
 import { loadH616PowerRoutingFixture } from "tests/fixtures/loadH616PowerRoutingFixture"
 
-test("captures force improvement moving H616's signal via into a DDR pad", async (): Promise<void> => {
+test("preserves H616 signal copper when force improvement violates pad clearance", async (): Promise<void> => {
   const fixture = loadH616PowerRoutingFixture()
   const originalFixture = structuredClone(fixture)
   const { params } = fixture.regionalProblem
@@ -18,12 +18,17 @@ test("captures force improvement moving H616's signal via into a DDR pad", async
   expect(
     getH616PhysicalDrcErrors({ circuitJson: inputCircuit, minClearance }),
   ).toEqual([])
-  const solver = new HighDensityForceImproveSolver({
+  const solver = new Pipeline9RegionalForceImproveSolver({
     nodeWithPortPoints: [params.nodeWithPortPoints],
     hdRoutes: fixture.regionalRoutes,
     colorMap: params.colorMap,
     totalStepsPerNode: Math.max(12, Math.round(20 * params.effort)),
     nodeAssignmentMargin: params.obstacleMargin,
+    isViaClearanceValid: (routes): boolean =>
+      getH616PhysicalDrcErrors({
+        circuitJson: applyH616RegionalRoutes({ fixture, routes }),
+        minClearance,
+      }).length === 0,
   })
   solver.solve()
   expect(solver.solved).toBeTrue()
@@ -35,7 +40,7 @@ test("captures force improvement moving H616's signal via into a DDR pad", async
   })
   expect(getNativeRoutedCircuitContinuityErrors(circuitJson)).toEqual([])
   const findings = getH616PhysicalDrcErrors({ circuitJson, minClearance })
-  expect(findings).toHaveLength(4)
+  expect(findings).toHaveLength(0)
   const connectedNetCount = new Set(
     circuitJson.flatMap((element) =>
       element.type === "pcb_trace" && element.source_trace_id
