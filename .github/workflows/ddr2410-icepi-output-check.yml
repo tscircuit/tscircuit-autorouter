@@ -1,0 +1,78 @@
+name: Compare newly published iCE/Pi phase against complete baseline
+on:
+  push:
+    branches: [codex/ddr2410-icepi-output-check]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  paired:
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          ref: d88899c9ac79cf48491a402b5e3643b3efabe373
+          path: before
+      - uses: actions/checkout@v4
+        with:
+          ref: e62071afed73548d412c70cd1676262065a9cab4
+          path: after
+      - uses: actions/download-artifact@v4
+        with:
+          name: refresh2410-icepi
+          run-id: 44260589530
+          github-token: ${{ github.token }}
+          path: captured-before
+      - uses: actions/download-artifact@v4
+        with:
+          name: connectivity2410-icepi
+          run-id: 44265378769
+          github-token: ${{ github.token }}
+          path: captured-after
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Install both frozen runtimes
+        run: |
+          for variant in before after; do
+            (cd "$variant" && bun install --ignore-scripts)
+            cp experiments/full-board-priority-analysis/check-phase-output.ts "$variant/check-phase-output.ts"
+          done
+          mkdir -p results
+          cp captured-before/latest/full/icepi-phased/phase-1-input.srj.json results/input.srj.json
+          python3 - <<'PYINPUT'
+          import json
+          from pathlib import Path
+          a=json.loads(Path('results/input.srj.json').read_text())
+          b=json.loads(Path('captured-after/candidate/full/icepi-phased/phase-1-input.srj.json').read_text())
+          assert a==b,'Native iCE/Pi phase inputs changed'
+          PYINPUT
+      - name: Complete the same iCE/Pi input on both revisions
+        run: |
+          for round in 0; do
+            variants="before after"
+            if [ "$round" = 1 ]; then variants="after before"; fi
+            for variant in $variants; do
+              (cd "$variant" && bun check-phase-output.ts "$GITHUB_WORKSPACE/results/input.srj.json" "$GITHUB_WORKSPACE/results/$round-$variant")
+            done
+          done
+      - name: Export paired phases and assert copper equivalence
+        run: |
+          python3 - <<'PYREPORT'
+          import json
+          from pathlib import Path
+          rows=[{'round':r,'variant':v,**json.loads((Path('results')/f'{r}-{v}'/'report.json').read_text())} for r in [0] for v in ['before','after']]
+          assert len({r['inputSha256'] for r in rows})==1
+          assert len({r['tracesSha256'] for r in rows})==1
+          assert all(r['solved'] and r['traceCount']==559 for r in rows)
+          Path('results/paired-phases.json').write_text(json.dumps(rows,indent=2))
+          print('CONNECTIVITY2410_ICEPI_PHASE_RESULTS',json.dumps(rows,separators=(',',':')))
+          PYREPORT
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: connectivity2410-icepi-complete-phases
+          path: results
+          retention-days: 14
