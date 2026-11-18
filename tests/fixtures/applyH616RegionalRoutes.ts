@@ -34,27 +34,28 @@ export function applyH616RegionalRoutes({
       ),
   )
   const replacedConnectionNames = new Set<string>()
-  const replacements = Object.entries(
-    regionalProblem.fixedRouteSections,
-  ).map(([connectionName, section]): PreloadedHighDensityRoute => {
-    const replacement = routes.find(
-      (route): boolean => route.connectionName === connectionName,
-    )
-    if (!replacement) {
-      throw new Error(`Missing regional replacement for ${connectionName}`)
-    }
-    for (const route of section.sourceRoutes) {
-      replacedConnectionNames.add(route.connectionName)
-    }
-    return spliceFixedRouteSection(section, replacement)
-  })
+  const replacements = Object.entries(regionalProblem.fixedRouteSections).map(
+    ([connectionName, section]): PreloadedHighDensityRoute => {
+      const replacement = routes.find(
+        (route): boolean => route.connectionName === connectionName,
+      )
+      if (!replacement) {
+        throw new Error(`Missing regional replacement for ${connectionName}`)
+      }
+      for (const route of section.sourceRoutes) {
+        replacedConnectionNames.add(route.connectionName)
+      }
+      return spliceFixedRouteSection(section, replacement)
+    },
+  )
   const { updatedPreloadedTraces } =
     applyFixedRouteReplacementsToPreloadedTraces({
       originalTraces,
       originalFixedRoutes,
       updatedFixedRoutes: [
         ...originalFixedRoutes.filter(
-          (route): boolean => !replacedConnectionNames.has(route.connectionName),
+          (route): boolean =>
+            !replacedConnectionNames.has(route.connectionName),
         ),
         ...replacements,
       ],
