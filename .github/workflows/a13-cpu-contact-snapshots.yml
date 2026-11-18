@@ -12,7 +12,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: 27b1eae7cbcc427fe01314c0f8620d59d9967558
+          ref: ff49717f5e5bd37740c6c010bf233358a2d43fcf
           persist-credentials: false
       - uses: oven-sh/setup-bun@v2
         with:
@@ -56,7 +56,7 @@ jobs:
       - name: Generate the existing board snapshots with the corrected fix
         env:
           BUN_UPDATE_SNAPSHOTS: 1
-        run: bun test ./tests/repro/pipeline9-a13-regional-repair-shorts.test.ts --timeout 9999999
+        run: bun test ./tests/repro/pipeline9-a13-regional-repair-shorts.test.ts ./tests/repro/pipeline9-a13-declared-trace-clearance.test.ts ./tests/repro/pipeline9-a13-fixed-copper-checks.test.ts --timeout 9999999
       - name: Record only generated SVGs on the experiment branch
         uses: actions/github-script@v7
         with:
@@ -64,6 +64,9 @@ jobs:
             const fs = require("fs")
             const branch = "experiments/a13-physical-shortcut"
             for(const path of [
+              "tests/repro/__snapshots__/pipeline9-a13-declared-trace-clearance.snap.svg",
+              "tests/repro/__snapshots__/pipeline9-a13-declared-trace-clearance-close-trace-pairs.snap.svg",
+              "tests/repro/__snapshots__/pipeline9-a13-fixed-copper-checks.snap.svg",
               "tests/repro/__snapshots__/pipeline9-a13-regional-repair-shorts.snap.svg",
               "tests/repro/__snapshots__/pipeline9-a13-regional-repair-shorts-copper-contacts.snap.svg",
             ]) {
