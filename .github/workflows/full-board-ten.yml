@@ -1,105 +1,102 @@
-name: Core effect source build and test validation
+name: Core stacked fix type and class export validation
 
 on:
   push:
-    branches: [bench/core-effect-source-ci-3230]
+    branches: [bench/core-effect-stack-checks-3230]
 
 permissions:
   contents: read
 
 jobs:
-  source:
-    name: Actual Core source before and after
-    runs-on: ubuntu-latest
-    timeout-minutes: 45
-    env:
-      CORE_SOURCE: ${{ github.workspace }}/.core-source
-      CORE_PROOF: ${{ github.workspace }}/.core-proof
-      BUN_INSTALL_CACHE_DIR: ${{ github.workspace }}/.bun-cache
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          persist-credentials: false
-          sparse-checkout: experiments/full-board-ten
-      - uses: actions/checkout@v4
-        with:
-          repository: tscircuit/core
-          ref: f8f2ed3273cea45e70e78ddc7470ba9fc47a1e73
-          path: .core-source
-          persist-credentials: false
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: 1.4.3
-      - name: Verify source and install one frozen graph
-        run: python3 experiments/full-board-ten/check-core-effect-source.py install
-      - name: Run original Core build, typecheck, repro and relevant tests
-        run: python3 experiments/full-board-ten/check-core-effect-source.py pair
-      - name: Preserve actual source snapshots, logs and package builds
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: core-effect-source-pair-${{ github.run_attempt }}
-          include-hidden-files: true
-          path: .core-proof
-          if-no-files-found: error
-          retention-days: 7
-
-  full-tests:
-    name: Core complete suite shard ${{ matrix.node }}
-    needs: source
+  checks:
+    name: Exact Core fix type and class export checks
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    strategy:
-      fail-fast: false
-      matrix:
-        node: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
     env:
-      CORE_SOURCE: ${{ github.workspace }}/.core-source
+      CORE_SOURCE_SHA: af05d673fb66094abd0f82671eae34d6b001eec7
       CORE_PROOF: ${{ github.workspace }}/.core-proof
-      BUN_INSTALL_CACHE_DIR: ${{ github.workspace }}/.bun-cache
-      TEST_PLAN_NODE_COUNT: 10
     steps:
       - uses: actions/checkout@v4
         with:
-          persist-credentials: false
-          sparse-checkout: experiments/full-board-ten
-      - uses: actions/checkout@v4
-        with:
           repository: tscircuit/core
-          ref: f8f2ed3273cea45e70e78ddc7470ba9fc47a1e73
+          ref: af05d673fb66094abd0f82671eae34d6b001eec7
           path: .core-source
           persist-credentials: false
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: 1.4.3
-      - uses: actions/download-artifact@v4
-        with:
-          name: core-effect-source-pair-${{ github.run_attempt }}
-          path: .core-pair-proof
-      - name: Verify source and install same frozen graph
-        run: python3 experiments/full-board-ten/check-core-effect-source.py install
-      - name: Prepare exact validated candidate and its generated snapshot
-        run: python3 experiments/full-board-ten/check-core-effect-source.py candidate
-      - name: Run standard ten-shard Core test planner
-        working-directory: .core-source
-        run: bun run scripts/generate-test-plan.ts
-      - name: Run shard without snapshot updates
+          bun-version: latest
+      - name: Install once and run standard Core checks
         working-directory: .core-source
         shell: bash
         run: |
-          set -euo pipefail
-          mapfile -t test_files < .github/test-plans/node${{ matrix.node }}-testplan.txt
-          test "${#test_files[@]}" -gt 0
-          bun test "${test_files[@]}" --timeout 30000 2>&1 | tee "$CORE_PROOF/shard-${{ matrix.node }}.log"
-      - name: Preserve test logs and failed snapshots
+          python3 - <<'PY'
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
+          import shutil
+          import subprocess
+          import sys
+          import time
+
+          proof = Path(os.environ["CORE_PROOF"])
+          proof.mkdir(parents=True, exist_ok=True)
+          source_sha = subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip()
+          (proof / "source-head.txt").write_text(source_sha + "\n")
+          shutil.copyfile("package.json", proof / "package.json")
+          report = {
+              "sourceRepository": "tscircuit/core",
+              "sourceCommit": source_sha,
+              "expectedSourceCommit": os.environ["CORE_SOURCE_SHA"],
+              "controllerCommit": os.environ["GITHUB_SHA"],
+              "packageJsonSha256": hashlib.sha256(Path("package.json").read_bytes()).hexdigest(),
+              "status": "running",
+              "checks": {},
+          }
+
+          def run_check(name, command):
+              print(f"Running {name}: {command}", flush=True)
+              started = time.monotonic()
+              log = proof / f"{name}.log"
+              with log.open("w") as output:
+                  result = subprocess.run(command, stdout=output, stderr=subprocess.STDOUT)
+              report["checks"][name] = {
+                  "command": command,
+                  "exitCode": result.returncode,
+                  "durationSeconds": round(time.monotonic() - started, 3),
+                  "logSha256": hashlib.sha256(log.read_bytes()).hexdigest(),
+              }
+              (proof / "result.json").write_text(json.dumps(report, indent=2) + "\n")
+              print(log.read_text(errors="replace")[-4000:], flush=True)
+              print(f"{name}: exit {result.returncode}", flush=True)
+              return result.returncode
+
+          (proof / "result.json").write_text(json.dumps(report, indent=2) + "\n")
+          assert source_sha == report["expectedSourceCommit"], "Wrong Core source commit"
+          assert not subprocess.check_output(["git", "status", "--porcelain"], text=True).strip(), "Core checkout is not clean"
+          run_check("bun-version", ["bun", "--version"])
+          run_check("node-version", ["node", "--version"])
+          if run_check("install", ["bun", "install"]) == 0:
+              run_check("dependency-inventory", ["bun", "pm", "ls", "--all"])
+              run_check("typecheck", ["bunx", "tsc", "--noEmit"])
+              run_check("class-export-tests", ["bun", "test", "tests/scripts/"])
+              run_check("class-exports", ["bun", "run", "check:class-exports"])
+          report["trackedChanges"] = subprocess.check_output(
+              ["git", "status", "--porcelain", "--untracked-files=no"], text=True
+          ).splitlines()
+          report["failedChecks"] = [name for name, check in report["checks"].items() if check["exitCode"] != 0]
+          report["passed"] = not report["failedChecks"] and not report["trackedChanges"]
+          report["status"] = "complete"
+          (proof / "result.json").write_text(json.dumps(report, indent=2) + "\n")
+          print(json.dumps(report, indent=2), flush=True)
+          sys.exit(0 if report["passed"] else 1)
+          PY
+      - name: Preserve source identity, dependency versions and all check logs
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: core-effect-suite-${{ matrix.node }}-${{ github.run_attempt }}
+          name: core-stacked-fix-checks-${{ github.run_attempt }}
           include-hidden-files: true
-          path: |
-            .core-proof
-            .core-source/.github/test-plans
-            .core-source/tests/**/__snapshots__/*.diff.png
+          path: .core-proof
           if-no-files-found: error
           retention-days: 7
