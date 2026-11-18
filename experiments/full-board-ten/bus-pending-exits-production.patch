@@ -1,0 +1,157 @@
+diff --git a/lib/bus-lanes-solver.ts b/lib/bus-lanes-solver.ts
+index 7140697..735f6b4 100644
+--- a/lib/bus-lanes-solver.ts
++++ b/lib/bus-lanes-solver.ts
+@@ -424,17 +424,13 @@ export class BusLanesSolver extends BaseSolver {
+     this.startLane()
+   }
+   private route() {
+-    if (
+-      !this.useNegotiation &&
+-      this.input.buses?.length &&
+-      this.pendingExits === undefined
+-    ) {
++    if (this.input.buses?.length && this.pendingExits === undefined) {
+       this.pendingExitSearch ??= pendingPackageExits(this.input, this.fixed)
+       const step = this.pendingExitSearch.next()
+       if (!step.done) return
+       this.pendingExits = step.value
+       this.pendingExitSearch = undefined
+-      this.startLane()
++      if (!this.useNegotiation) this.startLane()
+     }
+     if (this.useNegotiation) {
+       // Dense negotiation owns its searches; the initial lane search is unused.
+@@ -523,6 +519,9 @@ export class BusLanesSolver extends BaseSolver {
+         },
+         this.terminalLayers,
+         () => this.reservePackageExits!,
++        false,
++        false,
++        this.pendingExits,
+       )
+       const step = this.negotiated.next()
+       if (!step.done) {
+diff --git a/lib/negotiate-lanes.ts b/lib/negotiate-lanes.ts
+index fff945e..584bca3 100644
+--- a/lib/negotiate-lanes.ts
++++ b/lib/negotiate-lanes.ts
+@@ -6,11 +6,11 @@ import { RouteCandidatePool } from "./select-route-candidates"
+ import { routeCoupledPair } from "./coupled-pair-routing"
+ import { GridHistoryProjector, GridVisibilitySearch } from "./grid-visibility"
+ import { VectorScene, routeCopper, type Copper } from "./vector-scene"
+-import { length } from "./geometry"
++import { distance, length } from "./geometry"
+ import { RouteConflictIndex } from "./route-conflict-index"
+ import { reduceOrdinaryTurns } from "./reduce-ordinary-turns"
+ import { repairLaneClosures } from "./repair-lane-closures"
+-import type { SimpleRouteJson, Connection, Trace, Wire } from "./types"
++import type { SimpleRouteJson, Connection, Point, Trace, Wire } from "./types"
+ 
+ /** Queue-based rip-up routing adapted from the reference's negotiate-fine.ts.
+  * Supplied copper and generated paired corridors remain fixed. Runtime candidate
+@@ -27,6 +27,7 @@ export function* negotiateLanes(
+   enableTerminalReservations: () => boolean = () => true,
+   deferRetainedSelfClearance = false,
+   checkReachability = false,
++  pendingExits: Copper[] = [],
+ ): Generator<Trace[], Trace[] | null> {
+   const flexibleTerminals = connections.some(
+     (connection) => (terminalLayers.get(connection.name)?.length ?? 1) > 1,
+@@ -36,6 +37,23 @@ export function* negotiateLanes(
+   const searches = new Map<string, GridHistoryProjector>()
+   const clearance =
+     input.minTraceToPadEdgeClearance ?? input.defaultObstacleMargin ?? 0.075
++  const exitPathCost = (
++    connection: Connection,
++    width: number,
++  ): ((path: Point[]) => number) => {
++    if (!pendingExits.length) return length
++    const scene = new VectorScene(input, connection, width, pendingExits)
++    return (path: Point[]): number =>
++      path
++        .slice(1)
++        .reduce(
++          (cost, point, index) =>
++            cost +
++            distance(path[index], point) +
++            (scene.visible(path[index], point) ? 0 : 10 * input.minTraceWidth),
++          0,
++        )
++  }
+   const pairs = (input.differentialPairs ?? []).filter(
+     (p) =>
+       (p.traceGap !== undefined || p.maxUncoupledLength !== undefined) &&
+@@ -295,7 +313,7 @@ export function* negotiateLanes(
+         scene,
+         connection.pointsToConnect[0],
+         connection.pointsToConnect[1],
+-        [...routedCopper, ...pendingCopper],
++        [...routedCopper, ...pendingCopper, ...pendingExits],
+         congestionPenalty,
+         histories.get(layer),
+         {
+@@ -326,7 +344,7 @@ export function* negotiateLanes(
+                 candidateScene,
+                 connection.pointsToConnect[0],
+                 connection.pointsToConnect[1],
+-                [...routedCopper, ...pendingCopper],
++                [...routedCopper, ...pendingCopper, ...pendingExits],
+                 congestionPenalty,
+                 histories.get(candidateLayer),
+                 {
+@@ -433,7 +451,7 @@ export function* negotiateLanes(
+           const generator = routeViaWaypoint(
+             candidateScene,
+             waypoint,
+-            routedCopper,
++            [...routedCopper, ...pendingExits],
+             congestionPenalty,
+             histories.get(candidateLayer),
+             limits.get(connection.name)!,
+@@ -449,6 +467,7 @@ export function* negotiateLanes(
+           }
+           if (step.value) paths.push(step.value)
+         }
++        const pathCost = exitPathCost(connection, width)
+         for (const path of paths) {
+           if (
+             length(path) >
+@@ -465,7 +484,8 @@ export function* negotiateLanes(
+             )
+             if (hit) hits++
+           }
+-          const score = length(path) + hits * length(connection.pointsToConnect)
++          const score =
++            pathCost(path) + hits * length(connection.pointsToConnect)
+           const choice: { score: number; trace: Trace } = {
+             score,
+             trace: {
+@@ -676,7 +696,13 @@ export function* negotiateLanes(
+         ...fixed,
+         ...result.flatMap(routeCopper),
+       ])
+-      trace.route = reduceOrdinaryTurns(trace.route, scene).map((p) => ({
++      trace.route = reduceOrdinaryTurns(
++        trace.route,
++        scene,
++        0,
++        false,
++        exitPathCost(connection, width),
++      ).map((p) => ({
+         ...p,
+         route_type: "wire",
+         layer: connection.pointsToConnect[0].layer,
+diff --git a/lib/pending-lane-certificates.ts b/lib/pending-lane-certificates.ts
+index 1b1c990..a4f89d1 100644
+--- a/lib/pending-lane-certificates.ts
++++ b/lib/pending-lane-certificates.ts
+@@ -12,7 +12,7 @@ const certificates = new WeakMap<SimpleRouteJson, Map<string, Trace[]>>()
+  * route. A request needs no completed trunk to receive them: a first bus
+  * between two packages can close the last exit of a neighboring pad as easily
+  * as a branch added to an existing trunk. The ordered lane search asks for
+- * them for every input with buses; dense negotiation does not use them. Each
++ * them for every input with buses, as does dense negotiation. Each
+  * guide runs from its pad to the nearest side of the package's pad field,
+  * measured in the package's own frame so that a rotated package is not given
+  * guides across the open board beside it. These soft guides retain native

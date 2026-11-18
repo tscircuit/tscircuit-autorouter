@@ -1,0 +1,79 @@
+{
+  "schemaVersion": 1,
+  "experiment": "bus-pending-exits",
+  "status": "held for review; no native benefit established",
+  "source": {
+    "repository": "tscircuit/bus-lanes-solver",
+    "baseCommit": "202b034659fb96bad44d11b8190f4044b675116f",
+    "baseVersion": "0.0.62",
+    "candidateCommit": null,
+    "candidateIdentity": "exact frozen source patch, not a published version",
+    "patchSha256": "98a69f112357549b6a9835b4ed9c1cd89097385f2cb3ad6808ff56d8ac0f99a0",
+    "files": {
+      "lib/bus-lanes-solver.ts": {
+        "beforeSha256": "69bb7847371b05e0d81d5da16eda0493e52cc59a943df3a4e782e480e75651a5",
+        "afterSha256": "e298e2a0c9242da0bbfde784fa24092fc656840f80050a5fd4c980d7b68f7964"
+      },
+      "lib/negotiate-lanes.ts": {
+        "beforeSha256": "ebf73c9affdfcd4283639358fd3d529d15c7fe2cedfb8a7552fd9e472e80a464",
+        "afterSha256": "e1ef9dc92e2cffe0daa6280c9ac736436b52471355d32fd5186bc224fc21d62f"
+      },
+      "lib/pending-lane-certificates.ts": {
+        "beforeSha256": "ab32366c4bd3e96e36bda20d7eeec4df2cbf2e013dea43d60e6e64ce4538d912",
+        "afterSha256": "716ff5f336a6b4977fd094abb797ac1d0d00bcdbb02028d91813ce03df4e7728"
+      }
+    }
+  },
+  "runtime": {
+    "main": "0.0.3234",
+    "core": "0.0.2414",
+    "eval": "0.0.1807",
+    "autorouter": "0.0.1127",
+    "bus": "0.0.62",
+    "publishedCoreSha256": "f8a561fdb5f796e6590524bde049412a9e43310416d00ff3b78e33558a65b49d",
+    "candidateCoreSha256": "4bc30a21e83b48e5397764a10fc073bb4f423fd87d2952dcfe21382984b132ef",
+    "noAutorouterOverride": true
+  },
+  "sourceMappingSha256": "be4f07562c82752584e780ec598311995a8dae6ce068ed9f88e43533293622c2",
+  "sourceMappingToolSha256": "fbb443286f55db316df79ba20b5e17f544383c068c05faaa1b159d9cbb09c614",
+  "limitsMs": {
+    "capture": 900000,
+    "hardKill": 960000,
+    "assessment": 180000
+  },
+  "cohorts": [
+    "original",
+    "spaced"
+  ],
+  "physicalQualification": {
+    "requestedNets": 317,
+    "historicalConnectedNets": {
+      "original": 9,
+      "spaced": 8
+    },
+    "requiresMoreConnectedNamesWithoutLoss": true,
+    "requiresUnchangedComponentsPadsAndPolicies": true,
+    "stageCompletionAloneIsNotGain": true
+  },
+  "frozenHarnessFiles": {
+    "bootstrap.py": "23de25ac8960be89afc57ba27b0d3fddb6e65dba593024be59ec5073d266164d",
+    "prepare-cases.ts": "b72e632e9c9152c9e5daedf1bb60daa5d86c33fdcc454f2a7825827d24124330",
+    "render-published.tsx": "a5c379d0682f8e72e4c54c4710e797836b71fbe779e5430e33f62286694057f9",
+    "run-one.ts": "64eaa0440df0ac81c91d401ec8ae41e9e6f4478c7af1b3cb09680b9cf13807a9",
+    "createCoarseRoutingDiagnostics.ts": "dea45bba3386a9b55b7709834dff65468c421992808b406f54c6f9e556e8b618",
+    "prepare-bus-pending-exits.py": "940f3539f003df66cb13c9d42ac2e980f2e21358486a73d1baac5adbb0cb0d2b",
+    "compare-bus-pair.py": "1f2b3b36c5d916bdd5af665fb761cd0982f56955c56ae8457ed0ad44967f2e84",
+    "createPendingExitsOverlay.ts": "fbb443286f55db316df79ba20b5e17f544383c068c05faaa1b159d9cbb09c614",
+    "bus-pending-exits-production.patch": "98a69f112357549b6a9835b4ed9c1cd89097385f2cb3ad6808ff56d8ac0f99a0",
+    "bus-pending-exits-source-mapping.json": "be4f07562c82752584e780ec598311995a8dae6ce068ed9f88e43533293622c2",
+    "harness-provenance.json": "61bef6297e0a6e775c1a12a41585e68d17cf591afb5d75b1921fd5a914fef13c",
+    "source-provenance.json": "bd24be29c5fdd5ae68ce15c5b2bc50f172ecdd325dcc1b57a80ec653d12570fb",
+    "release.json": "c0eff975aace810785244e5ec7a5b4e2e3a244997082961b314d6aa87aa78843",
+    "runtime/package.json": "dffb5537110196fdbe5b3d0c7273e9ffceadc3adf7ca512f3ec45471b930ee75",
+    "runtime/bun.lock": "5cdf30af093b08897eac49539333d42fc4a2058a3998fb1e1ce6027be3ad813b",
+    "autorouter-dependencies/package.json": "7b4c1ecf979432e472a4f0589ed49976a8a1323ff7bf651a5938ee7006b61360",
+    "autorouter-dependencies/bun.lock": "ec313c582c29c1e35bb31190151a5649198c177119d32fe311746c06e94e8c4e",
+    "../../.github/workflows/bus-pending-exits-screen.yml": "1f4216e9fa459f6daf8caac6fb722657b2038311acae60252371835d322f5b98"
+  },
+  "frozen": true
+}

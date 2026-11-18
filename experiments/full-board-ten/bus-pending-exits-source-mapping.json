@@ -1,0 +1,125 @@
+{
+  "passed": true,
+  "bun": "1.4.3",
+  "typescript": "5.9.3",
+  "sourceFiles": {
+    "lib/bus-lanes-solver.ts": {
+      "beforeSha256": "69bb7847371b05e0d81d5da16eda0493e52cc59a943df3a4e782e480e75651a5",
+      "afterSha256": "e298e2a0c9242da0bbfde784fa24092fc656840f80050a5fd4c980d7b68f7964"
+    },
+    "lib/negotiate-lanes.ts": {
+      "beforeSha256": "ebf73c9affdfcd4283639358fd3d529d15c7fe2cedfb8a7552fd9e472e80a464",
+      "afterSha256": "e1ef9dc92e2cffe0daa6280c9ac736436b52471355d32fd5186bc224fc21d62f"
+    },
+    "lib/pending-lane-certificates.ts": {
+      "beforeSha256": "ab32366c4bd3e96e36bda20d7eeec4df2cbf2e013dea43d60e6e64ce4538d912",
+      "afterSha256": "716ff5f336a6b4977fd094abb797ac1d0d00bcdbb02028d91813ce03df4e7728"
+    }
+  },
+  "originalCoreSha256": "f8a561fdb5f796e6590524bde049412a9e43310416d00ff3b78e33558a65b49d",
+  "originalBusModuleSha256": "b0ba29b5b2db66be7218ea0896b179281aba3ddc39fbe7eeb472e4de1959f249",
+  "candidateCoreSha256": "4bc30a21e83b48e5397764a10fc073bb4f423fd87d2952dcfe21382984b132ef",
+  "bundledAliases": {
+    "BaseSolver9": "BaseSolver",
+    "i2": "i",
+    "point52": "point",
+    "j2": "j",
+    "r2": "r",
+    "c2": "c",
+    "getCopperLayerNames3": "getCopperLayerNames",
+    "getRouteViaSpanLayers3": "getRouteViaSpanLayers",
+    "b2": "b",
+    "l2": "l",
+    "p2": "p",
+    "g2": "g",
+    "n2": "n",
+    "a2": "a",
+    "buses2": "buses",
+    "o2": "o",
+    "cross42": "cross",
+    "q2": "q",
+    "s2": "s",
+    "t48": "t",
+    "t49": "t",
+    "_BusLanesSolver": "BusLanesSolver",
+    "c3": "c",
+    "cost2": "cost",
+    "index2": "index",
+    "current2": "current",
+    "fixed2": "fixed",
+    "e2": "e",
+    "dx2": "dx",
+    "dy2": "dy",
+    "x2": "x",
+    "y2": "y",
+    "distance16": "distance",
+    "pairs3": "pairs",
+    "layer2": "layer",
+    "along2": "along",
+    "hits2": "hits",
+    "applyToPoint36": "applyToPoint"
+  },
+  "externalAliases": {
+    "BaseSolver": "BaseSolver9",
+    "getCopperLayerNames": "getCopperLayerNames3",
+    "getRouteViaSpanLayers": "getRouteViaSpanLayers3",
+    "distance": "distance16",
+    "applyToPoint": "applyToPoint36"
+  },
+  "unchangedSegments": [
+    {
+      "start": 0,
+      "end": 2537217,
+      "sha256": "ae51d01bf7da2342dd21f55d4bbc3bfa64f8afefd65236c6e85239eafa4ab403"
+    },
+    {
+      "start": 2557837,
+      "end": 2678172,
+      "sha256": "06d3949fd61b0ac2dafec0679e6e008ad4dff502182aaeb444a4437e9f7521da"
+    },
+    {
+      "start": 2707330,
+      "end": 7225261,
+      "sha256": "77826a01f516ef760af49569307f44331dae509b24a11bc8616e8d103294d3ae"
+    }
+  ],
+  "unchangedDeclarations": [
+    {
+      "name": "pendingPackageExits",
+      "relative": "lib/pending-lane-certificates.ts",
+      "publishedFragmentSha256": "37f27f454395d7db8ebd19de7a54e29f54002263fe1e427bfb059c3a585c0414",
+      "tokenSha256": "fb93859cadd591ae39749427204e10318a6fb991cfdeccc29e0c83e9f18ad242"
+    },
+    {
+      "name": "pendingLaneCertificates",
+      "relative": "lib/pending-lane-certificates.ts",
+      "publishedFragmentSha256": "d0fb9b18502b6046538217b17507f00aafc4f7c4c41111d80c2123c84000a588",
+      "tokenSha256": "852ddacb6ece7b9ac08b5055c76be499161cb8d930ac971d9ae485a4cda9f84d"
+    }
+  ],
+  "replacedDeclarations": [
+    {
+      "name": "BusLanesSolver",
+      "relative": "lib/bus-lanes-solver.ts",
+      "characterOffset": 2678172,
+      "byteOffset": 2678172,
+      "oldBlockSha256": "742b3eb454c68e41499d6fece4579cc4e69c034d442631eb8ed1834a266e45cc",
+      "newBlockSha256": "d5d7b02ca3d4b27e1c3709b2791f8a2e92fd0f695883a7f3363251fb65be19db",
+      "beforeTokenSha256": "0a631f5d3e3980cf88739b241a23dba5207e7487b8cf54b53b2f785ddc99c37a",
+      "afterTokenSha256": "7cc5d19e22c6d93a4a19ad72e6b30262958a82b55c04f57d6c796b8e2b679c81"
+    },
+    {
+      "name": "negotiateLanes",
+      "relative": "lib/negotiate-lanes.ts",
+      "characterOffset": 2537217,
+      "byteOffset": 2537217,
+      "oldBlockSha256": "efb5b186061d4c788879dd432d22d39011ecf0aa51828028b080f78c9f3b2b3a",
+      "newBlockSha256": "1cfb9d2e9af01344487df6c593021bbe7a61f176107e7e2081b79c1d1694ccde",
+      "beforeTokenSha256": "d9312cbb52489b6150286127aabc7eee01162c9069be0b7283efdf0a109a275a",
+      "afterTokenSha256": "688c6903697a897b6084f92afda1f5bb86d5dddd7d4d319efcc8ebef68c71615"
+    }
+  ],
+  "nativeRoutingExecuted": false,
+  "moduleImported": false,
+  "normalization": "Same Bun syntax transformation and parser-aware leaf-token comparison; class constructors move to the front without changing field order, named class bindings are retained, and shorthand properties normalize to explicit equivalent keys. Explicit bundled aliases are checked against lexical bindings. Candidate source keeps local names and maps only the verified imported bindings."
+}
