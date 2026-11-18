@@ -7,28 +7,39 @@
   },
   "source": {
     "repository": "tscircuit/core",
-    "baseCommit": "f8f2ed3273cea45e70e78ddc7470ba9fc47a1e73",
-    "path": "lib/components/base-components/Renderable.ts",
-    "beforeSha256": "278273dbcb4f24d86bd2c362f6c6cd11402e340428166f0e54b79239a81eb6ee",
-    "afterSha256": "312c7cabf299881c18a41afb19661ff2de337058a6185142bd8db18c17a4869e",
-    "patchSha256": "0f551dfc6f54ef043eb055b3676de307f84f54921ed1243250bfb78af4c881eb",
+    "baseCommit": "fb77fad92dd4197eab9934a5ebbb5dfcbffc7eaf",
+    "candidateCommit": "bef5b1308ea2a670026cba1f64ffc26551014d42",
+    "patchSha256": "74b3d53b31745efa5c9d5e305391caa8c1448523769f5e8068a70cfea318aded",
+    "files": [
+      {
+        "path": "lib/components/base-components/Renderable.ts",
+        "beforeSha256": "278273dbcb4f24d86bd2c362f6c6cd11402e340428166f0e54b79239a81eb6ee",
+        "afterSha256": "50e8f7cbfc48c20142a97a08d273ceafd07cdcdc7a3f6959a23eb17306e8a67b"
+      },
+      {
+        "path": "lib/components/primitive-components/Group/Group.ts",
+        "beforeSha256": "9ddb264132ddc6642a655ea2d42c5a631ba5c5805224f34a33718944b905e560",
+        "afterSha256": "fb5b6ad919807e1ce1f77df277affdc66a23ed870d8bf094b29193d048bc4848"
+      },
+      {
+        "path": "lib/components/primitive-components/CopperPour/CopperPour.ts",
+        "beforeSha256": "69e8fefdce0f0ef9fd141b62b737efe4cc629f98165584b7bc30296b769097e6",
+        "afterSha256": "673b03c13f83b48ae18c09403ca91d5e89fbdbe192a64cb1af8c682349c636e9"
+      },
+      {
+        "path": "lib/components/primitive-components/CopperPour/CopperPour_doInitialPcbCopperPourRender.ts",
+        "beforeSha256": "8192548a7da9ec8e22b8244534416b6b96cd5d97844d1a4393c9eb9c29592049",
+        "afterSha256": "75c45ed099cb1e9c4a51ad81ec3b23b68d9d19f9b823ab6fdc273a3c4658e895"
+      }
+    ],
     "testPath": "tests/repros/repro-routing-event-copper-pour.test.tsx",
-    "testSha256": "0c49c4b7599fca4120cf37b18e4fefd115f9a33f75044b77e155744bcd432656"
+    "testSha256": "63e591d1b396a8a6ac861749ff78b53d4cdb658c7851b6b0f2c0d06ee0bd3ad9"
   },
-  "runtimeChange": {
-    "path": "dist/chunk-MS7QPCOY.js",
-    "beforeSha256": "7ac2d30da88918e7faa8fcfb7770e25321bbbec3edcf7b2e4cdc21713e54a24a",
-    "afterSha256": "fb661adcfd013c84f0b65e0663b13ef05a58e5dcb3bf5b7659c083f7e91e923e",
-    "before": "promise: effect(),",
-    "after": "promise: Promise.resolve().then(effect),",
-    "count": 1,
-    "unchangedCoreEntrySha256": "53798b0d37ae966acca93e503de4d20e6bb98086d9ec27313646030c364ec519"
-  },
-  "acceptance": "Report accepted phase SRJ equality, native connected names, exact final trace/via geometry and accepted-phase materialization independently. Require authenticated runtime/source/neutral assessment, authored geometry, routing policy and unchanged shared findings. Any native connected-name loss remains a failed connectivity gate, even when pours are correctly delayed. Label deferred pours only with preserved accepted routing and positive materialization evidence. Removed pours are never repaired contacts. Original H616 retains its own 146-to-zero gate; no such target applies to other cases.",
+  "acceptance": "Require every baseline native connected name and baseline pour net/layer group, exact phase SRJ and emitted trace/via geometry, authored geometry, routing policy, and neutral shared findings. Added pour groups are reported separately. Pending previews are never counted as final clearance repairs. H616 alone must remove its 146 actual contacts with the same 221 traces and 140 vias. Mixed-zone absolute audit coverage may remain incomplete only when exact unchanged copper geometry proves no regression; expose that coverage limitation.",
   "audit": {
     "path": "audit-via-pour.py",
     "sha256": "39e01ab31ab7a3c56aa603634f64c52480f5b11f68d6b284b44ad7026f47374e",
-    "physicalContactGate": "zero candidate actual annular-copper contacts, including conservative tangencies; positive-gap authored clearance deficits reported separately",
+    "physicalContactGate": "H616 requires zero actual annular-copper contacts with preserved geometry; other boards require no new contacts/near contacts. Existing positive-gap clearance deficits remain reported separately. The mixed-zone auditor limitation permits preservation-only evidence from exact unchanged relevant copper geometry.",
     "requiredAuthoredPourClearanceMm": 0.254
   },
   "baselineHarnessFiles": {
@@ -47,7 +58,7 @@
   "frozenHarnessFiles": {
     "bootstrap.py": "23de25ac8960be89afc57ba27b0d3fddb6e65dba593024be59ec5073d266164d",
     "prepare-cases.ts": "b72e632e9c9152c9e5daedf1bb60daa5d86c33fdcc454f2a7825827d24124330",
-    "render-published.tsx": "a1ba84e7975e7fb6fbc2c6484e5cc99c669188df35b03d23ba1cf27589e22f4c",
+    "render-published.tsx": "a80eedceb4056c5f04a5285086d646eac7461dd62acd937c6c62b9626c701be6",
     "run-one.ts": "762bcd7e24eb1b00ac2a28a1cc2d15aa7be89dc856b50279e9c6fe173926f0ac",
     "createCoarseRoutingDiagnostics.ts": "dea45bba3386a9b55b7709834dff65468c421992808b406f54c6f9e556e8b618",
     "release.json": "96e08807976db44ebaa50d577434017e65f26f377f19cd24c6fd0be37a21a257",
@@ -56,17 +67,17 @@
     "runtime/bun.lock": "48d6176171adaa6a6f2a0704b562d6e80d773a43a5ac511fc124411cd50e79ba",
     "autorouter-dependencies/package.json": "7b4c1ecf979432e472a4f0589ed49976a8a1323ff7bf651a5938ee7006b61360",
     "autorouter-dependencies/bun.lock": "ec313c582c29c1e35bb31190151a5649198c177119d32fe311746c06e94e8c4e",
-    "prepare-core-reentrancy.py": "104ea5ccdd1c8ae80173ceeb0d98cf3677da000eeade357a0d36994abc696d33",
-    "qualifyCoreReentrancy.mjs": "a9605e3dc21b5cc045149913e9794572d3c68e1bd90177e47ed1287eb47ab887",
+    "prepare-core-reentrancy.py": "c6b86f884be5af2f90427cdd980e71da3d0d3499e34998e3bbcfc47b66b150ad",
+    "qualifyCoreReentrancy.mjs": "4e3f03784ba3f13f98c3001c55604320c3109e9590edd9937fd589f35edd542b",
     "core-reentrancy-wasm-preload.ts": "434f872bea27da61c46e255a3723734fb97880e96f3cd3b5e6502a5b211489fd",
-    "verify-core-reentrancy.py": "33f2c44bdffbbebab14e0e8dcb07d834b32f47d0b7039e76e1f74b8b6183c4a0",
-    "core-reentrancy-repro.test.tsx": "0c49c4b7599fca4120cf37b18e4fefd115f9a33f75044b77e155744bcd432656",
-    "core-reentrancy-production.patch": "0f551dfc6f54ef043eb055b3676de307f84f54921ed1243250bfb78af4c881eb",
+    "verify-core-reentrancy.py": "631588abc637b4a3f0ce725ef410ca4604b664abe09b4dae294900c488887e4f",
+    "core-reentrancy-repro.test.tsx": "63e591d1b396a8a6ac861749ff78b53d4cdb658c7851b6b0f2c0d06ee0bd3ad9",
+    "core-reentrancy-production.patch": "74b3d53b31745efa5c9d5e305391caa8c1448523769f5e8068a70cfea318aded",
     "audit-via-pour.py": "39e01ab31ab7a3c56aa603634f64c52480f5b11f68d6b284b44ad7026f47374e",
     "core-reentrancy-materialization.py": "9d899d2354c9be139d7f58c7d9ef719457b90b3c6cdc8ac93b01ce6f02068d78",
-    "report-core-reentrancy.py": "9def40a18e2b9c253bcb58cee9d4fd5c75037a860ca141495b619903699abb43"
+    "report-core-reentrancy.py": "fcf03ba8a59f4187d18d70e424f5b9be659d67728f306ec039a5fc073fdfeb4e"
   },
-  "status": "Frozen local review packet; root review and explicit launch remain pending. Actual source build/Core-preview equivalence separately pending.",
+  "status": "Frozen after passed actual source pair, exact compiled-to-published mapping and independent controller review; each native worker must still pass the real focused published-runtime pair and physical audit before routing.",
   "cases": [
     {
       "key": "glider-original",
@@ -1262,15 +1273,359 @@
     "allFifteenArtifactProofsVerified": true
   },
   "finalSourceBuildPreviewEquivalence": {
-    "status": "pending",
-    "requiredBeforePrOrGlobalClaim": true,
-    "scope": "Actual source build and Core preview equivalence; method AST identity and exact published chunk proof alone do not complete this gate."
-  },
-  "publicationPolicySource": {
-    "path": "lib/components/primitive-components/Group/Group.ts",
-    "sha256": "9ddb264132ddc6642a655ea2d42c5a631ba5c5805224f34a33718944b905e560",
-    "purpose": "Authenticate existing authored-pour intermediate publication policy; no production change."
+    "actualSourcePair": {
+      "passed": true,
+      "runId": 44244982670,
+      "artifactId": 14401606835,
+      "sourceCommit": "bef5b1308ea2a670026cba1f64ffc26551014d42"
+    },
+    "publishedRuntimeMapping": {
+      "passed": true,
+      "proofSha256": "c20388415a4202b30ff10351636ace5ac636b394245d893e97e8eea95fa5c432"
+    },
+    "prPreview": "pending",
+    "requiredBeforePrOrGlobalClaim": true
   },
   "initialGeometryComparison": "Initial Circuit JSON is an unordered flat record collection: compare complete canonical record multisets including multiplicity; retain array-order equality as a separate diagnostic. Phase SRJ array payloads remain byte-exact.",
-  "traceGeometryComparison": "Compare every physical/unknown route field, through-pad coordinates and layers, thickness mode and curvedSegments. Normalize only endpoint port annotations verified against authored port coordinates/layers and derived pour flags/IDs referencing an existing same-layer pour. Preserve annotation counts, records and digests separately; do not claim annotation identity or independently prove polygon membership."
+  "traceGeometryComparison": "Compare every physical/unknown route field, through-pad coordinates and layers, thickness mode and curvedSegments. Normalize only endpoint port annotations verified against authored port coordinates/layers and derived pour flags/IDs referencing an existing same-layer pour. Preserve annotation counts, records and digests separately; do not claim annotation identity or independently prove polygon membership.",
+  "runtimeChanges": [
+    {
+      "path": "dist/index.js",
+      "beforeSha256": "53798b0d37ae966acca93e503de4d20e6bb98086d9ec27313646030c364ec519",
+      "afterSha256": "5362e084d8a9e1b8becb1489a4ed4d0d47e35f782e9ac84031de772acd65b6b3",
+      "bytes": 7203493
+    },
+    {
+      "path": "dist/chunk-MS7QPCOY.js",
+      "beforeSha256": "7ac2d30da88918e7faa8fcfb7770e25321bbbec3edcf7b2e4cdc21713e54a24a",
+      "afterSha256": "a95ff96c9fb1304b511520e72a94f46fe210feceadabed5af64b5f2db799441e",
+      "bytes": 88369
+    }
+  ],
+  "sourceQualification": {
+    "artifact": {
+      "id": 14401606835,
+      "node_id": "MDg6QXJ0aWZhY3QxNDQwMTYwNjgzNQ==",
+      "name": "core-pour-source-pair-1",
+      "size_in_bytes": 4176427,
+      "url": "https://api.github.com/repos/tscircuit/tscircuit-autorouter/actions/artifacts/14401606835",
+      "archive_download_url": "https://api.github.com/repos/tscircuit/tscircuit-autorouter/actions/artifacts/14401606835/zip",
+      "expired": false,
+      "digest": "sha256:7d71fc49a3d0c0cd27c982aa43a09cfc1d8e7a9162142e2cf97c4bdf348522ac",
+      "created_at": "2026-11-18T05:38:14Z",
+      "updated_at": "2026-11-18T05:38:14Z",
+      "expires_at": "2026-11-25T05:38:12Z",
+      "workflow_run": {
+        "id": 44244982670,
+        "repository_id": 924883209,
+        "head_repository_id": 924883209,
+        "head_branch": "bench/core-pour-dependency-source-ci-3230",
+        "head_sha": "260159bf5b5a6484e6227ede41a203d2ade02cf7"
+      }
+    },
+    "sourcePlanSha256": "dff7d5c916e59ea7c1ecdff9972eef26228e5c1bd703bbe2b06b937767a545a1",
+    "resultSha256": "1c0ac3c0ba04a249ab2ded3e2094b3ccf65b3a242a7fd62c3850335ad75823c1",
+    "files": [
+      {
+        "name": "base/dist/check-circuit-json-assembly-explosion-collisions-CDCU43YZ.js",
+        "bytes": 173,
+        "sha256": "f5fef8250e71f5388970b277cbecbf27a474ca4ed231f99670bd6c2017cdcc89"
+      },
+      {
+        "name": "base/dist/chunk-MS7QPCOY.js",
+        "bytes": 88037,
+        "sha256": "7ac2d30da88918e7faa8fcfb7770e25321bbbec3edcf7b2e4cdc21713e54a24a"
+      },
+      {
+        "name": "base/dist/chunk-CE5AIPIV.js",
+        "bytes": 27645,
+        "sha256": "438d4fb83cd96e792535af6f2c5d0c3edd5a9c7f4f73ef98ec45d5c9acc9a9a3"
+      },
+      {
+        "name": "base/dist/chunk-VWT4VTBG.js",
+        "bytes": 72166,
+        "sha256": "4fe5422980d895376edf75dd3d317bbd04df6bc298404b07c46992226bfbbed9"
+      },
+      {
+        "name": "base/dist/index.d.ts",
+        "bytes": 11839921,
+        "sha256": "afb8b5f7a2b322a7353f08364b2c2121757a115c4e8dc488cf4cba32019b69cf"
+      },
+      {
+        "name": "base/dist/index.js",
+        "bytes": 7225082,
+        "sha256": "7e9156073ee564f2f96a46b54d73269d985016bf420a4e20aa88624932f9b8b6"
+      },
+      {
+        "name": "base/dist/resolve-drawing-dimensions-B5HVZ7YJ.js",
+        "bytes": 17991,
+        "sha256": "f74ea1e66b46192518905179c67c0aadb35c8d89a33e07fc8701824712212a62"
+      },
+      {
+        "name": "base/tests/repros/__snapshots__/repro-routing-event-copper-pour-pcb.snap.svg",
+        "bytes": 30869,
+        "sha256": "5791afa96d798d6ecbfb9187fbe2b5866dc3d844ef12e4ebbcf97f0bff4fcd67"
+      },
+      {
+        "name": "base/tests/repros/repro-routing-event-copper-pour.test.tsx",
+        "bytes": 2672,
+        "sha256": "8ad354cff4ed6b29b2a9fbe4487ecc262f8945c8ab929502ddbb602bf9bf737a"
+      },
+      {
+        "name": "base-build.log",
+        "bytes": 880,
+        "sha256": "7206645538ce6def9772b719f421bf458a42bee1324c032ef93d925ef25d6ea6"
+      },
+      {
+        "name": "base-class-exports.log",
+        "bytes": 68,
+        "sha256": "e7dc6640eab1c06be92486ae8bed123ab304a9d178e0d35a288b8eb8b745e944"
+      },
+      {
+        "name": "base-dist-smoke.log",
+        "bytes": 1186,
+        "sha256": "06b4f872af23297701a6745e5829b36d8663f968f6f900f991573faff565dd9e"
+      },
+      {
+        "name": "base-format.log",
+        "bytes": 43,
+        "sha256": "86d35cb9209438f1e483897d609887fa8b88e96c6f26944d9734493e92448e1a"
+      },
+      {
+        "name": "base-regression.log",
+        "bytes": 1070,
+        "sha256": "727ea6c5cf68f66bae930c702b1022ba264c1851e229879edc38270d90537a1f"
+      },
+      {
+        "name": "base-related-tests.log",
+        "bytes": 6870,
+        "sha256": "fe09ddd5071314d36b74e5a52e10f341b91f5f61999a5a4bb4214aea5fa6458b"
+      },
+      {
+        "name": "base-repro-create.log",
+        "bytes": 433,
+        "sha256": "e4bd730b60704d47009d2e3db0a563d6e2953eced6ecdd790183494d686273cd"
+      },
+      {
+        "name": "base-repro-repeat.log",
+        "bytes": 263,
+        "sha256": "8cfebb9dd3f26728e2e0aee02398e5c1500fb94ea88eb38d3391bb4db510a2bb"
+      },
+      {
+        "name": "base-typescript.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "name": "base-unchanged-timing-tests.log",
+        "bytes": 1465,
+        "sha256": "70e9c30c65bf2732e972c8fb0626b1cdf7db0cca3368539ac77c59ba91b0aae6"
+      },
+      {
+        "name": "bun.lock",
+        "bytes": 203519,
+        "sha256": "daca50e342bd3ed156ee05da35def79620c89897d9ba1a560b27cbf69dfbc4a7"
+      },
+      {
+        "name": "candidate/dist/check-circuit-json-assembly-explosion-collisions-CDCU43YZ.js",
+        "bytes": 173,
+        "sha256": "f5fef8250e71f5388970b277cbecbf27a474ca4ed231f99670bd6c2017cdcc89"
+      },
+      {
+        "name": "candidate/dist/chunk-CE5AIPIV.js",
+        "bytes": 27645,
+        "sha256": "438d4fb83cd96e792535af6f2c5d0c3edd5a9c7f4f73ef98ec45d5c9acc9a9a3"
+      },
+      {
+        "name": "candidate/dist/chunk-JF7HKV4Y.js",
+        "bytes": 88369,
+        "sha256": "a95ff96c9fb1304b511520e72a94f46fe210feceadabed5af64b5f2db799441e"
+      },
+      {
+        "name": "candidate/dist/chunk-VWT4VTBG.js",
+        "bytes": 72166,
+        "sha256": "4fe5422980d895376edf75dd3d317bbd04df6bc298404b07c46992226bfbbed9"
+      },
+      {
+        "name": "candidate/dist/index.d.ts",
+        "bytes": 11840031,
+        "sha256": "4a13e07919f3848228030378485434fc5cc2586370d637782d17dd5181221e8f"
+      },
+      {
+        "name": "candidate/dist/index.js",
+        "bytes": 7227128,
+        "sha256": "966368caaddcedf2ae861afe8c0c9b882996e91b0cb35925ed301737ffc3376f"
+      },
+      {
+        "name": "candidate/dist/resolve-drawing-dimensions-CTHJGTPO.js",
+        "bytes": 17991,
+        "sha256": "af9987f18c9fad1310bf6810e45f8601ee765e61f30d3e07eb51cf4c14d0312f"
+      },
+      {
+        "name": "candidate/tests/repros/repro-routing-event-copper-pour.test.tsx",
+        "bytes": 2703,
+        "sha256": "63e591d1b396a8a6ac861749ff78b53d4cdb658c7851b6b0f2c0d06ee0bd3ad9"
+      },
+      {
+        "name": "candidate/tests/repros/__snapshots__/repro-routing-event-copper-pour-pcb.snap.svg",
+        "bytes": 32123,
+        "sha256": "31c82543b953b740c271e8fd90d358ac229491dbd76026cef6cefe7534852b65"
+      },
+      {
+        "name": "candidate-build.log",
+        "bytes": 880,
+        "sha256": "2d4ee3b49c4235d8b9a419a224814a26911f5203e0051939d92be9d9b030c045"
+      },
+      {
+        "name": "candidate-class-exports.log",
+        "bytes": 68,
+        "sha256": "e7dc6640eab1c06be92486ae8bed123ab304a9d178e0d35a288b8eb8b745e944"
+      },
+      {
+        "name": "candidate-dist-smoke.log",
+        "bytes": 1186,
+        "sha256": "06b4f872af23297701a6745e5829b36d8663f968f6f900f991573faff565dd9e"
+      },
+      {
+        "name": "candidate-format.log",
+        "bytes": 43,
+        "sha256": "f871b70f8e3502f34125b5677e2585f74666aa95a38f5ab2662c551b4cd52596"
+      },
+      {
+        "name": "candidate-related-tests.log",
+        "bytes": 6552,
+        "sha256": "4bcab0eb2932a3c3b6f40cc501f3c05ab5540b5b585ea7ac5cf891249bb52e9a"
+      },
+      {
+        "name": "candidate-repro-create.log",
+        "bytes": 433,
+        "sha256": "58586614c76912c6ca8468123b1059dce782266c80befdab7ba61005e99061cb"
+      },
+      {
+        "name": "candidate-repro-repeat.log",
+        "bytes": 267,
+        "sha256": "de385b20923ff5f4c1ecc72949ce82b7380f7a3a31db6c8846f4f4c3296ed04d"
+      },
+      {
+        "name": "candidate-typescript.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "name": "candidate-unchanged-timing-tests.log",
+        "bytes": 1465,
+        "sha256": "40c3a14896ca1835a25c1f52f1aead3bfa2b8d93c56a69d579690011d96b5d4f"
+      },
+      {
+        "name": "checks.json",
+        "bytes": 11538,
+        "sha256": "cd1ee2bfbcf11326f0f18a0e4988e3fef87bc3e4c9785e6679dc211c9d4d53b7"
+      },
+      {
+        "name": "dependency-graph.json.gz",
+        "bytes": 35428,
+        "sha256": "fc783f2c70c14a16fda58e2d7f989dfc3f8da15c852a7c9c261d8cc500445c61"
+      },
+      {
+        "name": "files/base/lib/components/base-components/Renderable.ts",
+        "bytes": 19301,
+        "sha256": "278273dbcb4f24d86bd2c362f6c6cd11402e340428166f0e54b79239a81eb6ee"
+      },
+      {
+        "name": "files/base/lib/components/primitive-components/CopperPour/CopperPour_doInitialPcbCopperPourRender.ts",
+        "bytes": 5527,
+        "sha256": "8192548a7da9ec8e22b8244534416b6b96cd5d97844d1a4393c9eb9c29592049"
+      },
+      {
+        "name": "files/base/lib/components/primitive-components/Group/Group.ts",
+        "bytes": 120610,
+        "sha256": "9ddb264132ddc6642a655ea2d42c5a631ba5c5805224f34a33718944b905e560"
+      },
+      {
+        "name": "files/base/lib/components/primitive-components/CopperPour/CopperPour.ts",
+        "bytes": 1125,
+        "sha256": "69e8fefdce0f0ef9fd141b62b737efe4cc629f98165584b7bc30296b769097e6"
+      },
+      {
+        "name": "files/base/tests/repros/repro-routing-event-copper-pour.test.tsx",
+        "bytes": 1349,
+        "sha256": "1e538048e84171de607c3b876d279bfb1d0daaae78b1aa48dc1d8a6df2f5cbde"
+      },
+      {
+        "name": "files/candidate/lib/components/primitive-components/CopperPour/CopperPour.ts",
+        "bytes": 1314,
+        "sha256": "673b03c13f83b48ae18c09403ca91d5e89fbdbe192a64cb1af8c682349c636e9"
+      },
+      {
+        "name": "files/candidate/lib/components/primitive-components/CopperPour/CopperPour_doInitialPcbCopperPourRender.ts",
+        "bytes": 7845,
+        "sha256": "75c45ed099cb1e9c4a51ad81ec3b23b68d9d19f9b823ab6fdc273a3c4658e895"
+      },
+      {
+        "name": "files/candidate/lib/components/base-components/Renderable.ts",
+        "bytes": 19634,
+        "sha256": "50e8f7cbfc48c20142a97a08d273ceafd07cdcdc7a3f6959a23eb17306e8a67b"
+      },
+      {
+        "name": "files/candidate/lib/components/primitive-components/Group/Group.ts",
+        "bytes": 120857,
+        "sha256": "fb5b6ad919807e1ce1f77df277affdc66a23ed870d8bf094b29193d048bc4848"
+      },
+      {
+        "name": "files/candidate/tests/repros/repro-routing-event-copper-pour.test.tsx",
+        "bytes": 2703,
+        "sha256": "63e591d1b396a8a6ac861749ff78b53d4cdb658c7851b6b0f2c0d06ee0bd3ad9"
+      },
+      {
+        "name": "install.bunfig.toml",
+        "bytes": 31,
+        "sha256": "dd971fd2b2405f75aeecc03afa5cb599079953746b358f7f7cda328b16517024"
+      },
+      {
+        "name": "install.log",
+        "bytes": 5658,
+        "sha256": "60c047f72dd654220f7aa4b259ada5d588eb0421f4e39e57f71ff7c2f6d737f5"
+      },
+      {
+        "name": "original-repro-snapshot.svg",
+        "bytes": 30869,
+        "sha256": "dd1bce2861313667cdbdbd42d42cf2d84b77dfbf143a11c5703d2ddb681ef1da"
+      },
+      {
+        "name": "package.json",
+        "bytes": 8216,
+        "sha256": "68fe69beb0f33bb8d7d23aaf732350613482e92952f08601a43e17ff62fa855e"
+      },
+      {
+        "name": "production-build-equivalence.json",
+        "bytes": 6531,
+        "sha256": "114b6b028497f96e7ff241e2b5621ba240b49fd30afa8237878dc3c02871a35e"
+      },
+      {
+        "name": "production-build-equivalence.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "name": "production.patch",
+        "bytes": 10419,
+        "sha256": "74b3d53b31745efa5c9d5e305391caa8c1448523769f5e8068a70cfea318aded"
+      },
+      {
+        "name": "result.json",
+        "bytes": 13241,
+        "sha256": "1c0ac3c0ba04a249ab2ded3e2094b3ccf65b3a242a7fd62c3850335ad75823c1"
+      },
+      {
+        "name": "source-plan.json",
+        "bytes": 6313,
+        "sha256": "dff7d5c916e59ea7c1ecdff9972eef26228e5c1bd703bbe2b06b937767a545a1"
+      },
+      {
+        "name": "tool-versions.log",
+        "bytes": 14,
+        "sha256": "4985b444236c5acdb5b850e5d754975e130eed5b033c53f201cdf471e83d7f13"
+      }
+    ]
+  }
 }

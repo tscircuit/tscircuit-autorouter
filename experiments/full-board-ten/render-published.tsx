@@ -59,7 +59,7 @@ globalThis.WebAssembly = new Proxy(nativeWasm, {
     return wrapped
   },
 })
-// No custom Core module, algorithmFn, SOLVERS injection or source package.
+// The published main package resolves Core through the verified runtime manifest.
 if (!task.runtimeManifestPath) throw new Error("Explicit published runtime identity manifest required")
 const expectedRuntime = JSON.parse(readFileSync(task.runtimeManifestPath, "utf8")).packages
 const expectedNames = ["tscircuit", "@tscircuit/core", "@tscircuit/eval", "@tscircuit/capacity-autorouter"]
@@ -82,15 +82,27 @@ function readablePackage(folder: string, name: string): boolean {
 const { RootCircuit, SOLVERS } = await import("tscircuit")
 let coreChunkBinding: any = null
 let reviewedRenderable: any = null
+let reviewedGroup: any = null
+let reviewedCopperPour: any = null
 if (task.runtimeChunkProof) {
   const core = expectedRuntime.find((row: any) => row.name === "@tscircuit/core")
   const main = runtime.find((row: any) => row.name === "tscircuit")!
   const actualEntry = Bun.resolveSync("@tscircuit/core", dirname(main.entry))
   const actualChunk = join(dirname(actualEntry), "chunk-MS7QPCOY.js")
-  if (realpathSync(actualEntry) !== realpathSync(core.entry) || sha(readFileSync(actualChunk)) !== task.runtimeChunkProof.afterSha256) throw new Error("Main package did not load the reviewed Core chunk")
+  const reviewedFiles = task.runtimeChunkProof.changedFiles.map((change: any) => {
+    const file = join(dirname(actualEntry), change.path.replace(/^dist\//, ""))
+    const sha256 = sha(readFileSync(file))
+    if (sha256 !== change.afterSha256) throw new Error(`Main package did not load reviewed Core file ${change.path}`)
+    return { path: change.path, sha256 }
+  })
+  if (realpathSync(actualEntry) !== realpathSync(core.entry)) throw new Error("Main package did not resolve the reviewed Core entry")
   if (RootCircuit !== (await import("@tscircuit/core")).RootCircuit) throw new Error("Main and Core resolved different circuit classes")
   reviewedRenderable = (await import(pathToFileURL(actualChunk).href)).Renderable
-  coreChunkBinding = { actualEntry, actualChunk, sha256: sha(readFileSync(actualChunk)), mainAndCoreClassIdentical: true }
+  const reviewedCore = await import(pathToFileURL(actualEntry).href)
+  reviewedGroup = reviewedCore.Group
+  reviewedCopperPour = reviewedCore.CopperPour
+  if (typeof reviewedCopperPour.prototype.doInitialPcbCopperPourPreviewRender !== "function") throw new Error("Reviewed CopperPour preview phase is absent")
+  coreChunkBinding = { actualEntry, actualChunk, reviewedFiles, sha256: sha(readFileSync(actualChunk)), mainAndCoreClassIdentical: true }
 }
 importingPublishedMain = false
 const { AutoroutingPipelineSolver9_PreloadedTraceGraph: PublishedPipeline9 } = await import("@tscircuit/capacity-autorouter")
@@ -144,8 +156,14 @@ for (const eventName of ["autorouting:start", "autorouting:end", "autorouting:er
       if (progress.phases.length === 0) {
         if (reviewedRenderable) {
           if ((circuit as any).firstChild?._queueAsyncEffect !== reviewedRenderable.prototype._queueAsyncEffect) throw new Error("Native board does not inherit the reviewed Renderable method")
+          if ((circuit as any).firstChild?._startAsyncAutorouting !== reviewedGroup.prototype._startAsyncAutorouting) throw new Error("Native board does not inherit the reviewed Group routing method")
+          const authoredPours = (circuit as any).firstChild.selectAll("copperpour")
+          if (authoredPours.some((pour: any) => pour.doInitialPcbCopperPourPreviewRender !== reviewedCopperPour.prototype.doInitialPcbCopperPourPreviewRender || pour.doInitialPcbCopperPourRender !== reviewedCopperPour.prototype.doInitialPcbCopperPourRender)) throw new Error("Native pours do not inherit the reviewed preview/final methods")
           if ((circuit as any).firstChild?._parsedProps.enableViaStitching !== false) throw new Error("Authentic full-board via-stitching policy changed")
           coreChunkBinding.nativeBoardMethodIdentical = true
+          coreChunkBinding.nativeGroupMethodIdentical = true
+          coreChunkBinding.nativePourMethodsIdentical = true
+          coreChunkBinding.authoredPourInstances = authoredPours.length
           coreChunkBinding.viaStitchingEnabled = false
         }
         const json = circuit.getCircuitJson()

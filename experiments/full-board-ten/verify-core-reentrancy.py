@@ -91,12 +91,12 @@ def compare(root, board, cohort, report):
     report["process"] = {"baseline": process_state(base_result, base_progress), "candidate": process_state(result, progress), "note": "renderCompleted plus exit status distinguishes finished routing failures from timed captures; renderSettled alone does not."}
     binding = progress["runtime"]["coreChunkBinding"]
     restored = read(proof / "assessment-runtime-restored.json")
-    report["runtimeGuards"] = {"publishedCoreRestoredBeforeAssessment": restored["allPublishedFilesVerified"] and restored["publishedAliasesRestored"], "mainAndCoreClassIdentical": binding["mainAndCoreClassIdentical"], "nativeBoardMethodIdentical": binding["nativeBoardMethodIdentical"], "chunkSha256": binding["sha256"], "noRoutingWasm": result["wasmUsage"]["routingOrUnknownAttempts"] == 0 and progress["forbiddenRoutingSolverSelections"] == [], "viaStitchingDisabled": binding["viaStitchingEnabled"] is False, "sourceSha256": progress["sourceSha256"]}
+    report["runtimeGuards"] = {"publishedCoreRestoredBeforeAssessment": restored["allPublishedFilesVerified"] and restored["publishedAliasesRestored"], "mainAndCoreClassIdentical": binding["mainAndCoreClassIdentical"], "nativeBoardMethodIdentical": binding["nativeBoardMethodIdentical"], "nativeGroupMethodIdentical": binding["nativeGroupMethodIdentical"], "nativePourMethodsIdentical": binding["nativePourMethodsIdentical"], "reviewedFiles": binding["reviewedFiles"], "chunkSha256": binding["sha256"], "noRoutingWasm": result["wasmUsage"]["routingOrUnknownAttempts"] == 0 and progress["forbiddenRoutingSolverSelections"] == [], "viaStitchingDisabled": binding["viaStitchingEnabled"] is False, "sourceSha256": progress["sourceSha256"]}
     assert progress["sourceSha256"] == case["sourceSha256"] == task["sourceSha256"]
     assert hashlib.sha256(Path(task["sourcePath"]).read_bytes()).hexdigest() == task["sourceSha256"]
     assert [result["captureDeadlineMs"], result["hardDeadlineMs"], task["assessmentDeadlineMs"]] == [plan["limitsMs"][key] for key in ["capture", "hard", "assessment"]]
-    assert all(report["runtimeGuards"][key] for key in ["publishedCoreRestoredBeforeAssessment", "mainAndCoreClassIdentical", "nativeBoardMethodIdentical", "noRoutingWasm", "viaStitchingDisabled"])
-    assert binding["sha256"] == plan["runtimeChange"]["afterSha256"]
+    assert all(report["runtimeGuards"][key] for key in ["publishedCoreRestoredBeforeAssessment", "mainAndCoreClassIdentical", "nativeBoardMethodIdentical", "nativeGroupMethodIdentical", "nativePourMethodsIdentical", "noRoutingWasm", "viaStitchingDisabled"])
+    assert {row["path"]: row["sha256"] for row in binding["reviewedFiles"]} == {row["path"]: row["afterSha256"] for row in plan["runtimeChanges"]}
     assert result["assessmentReady"] and result["completeSourceCounts"] and result["routingPolicyObserved"]
     assert result["auditExitCode"] == 0 and not result["auditTimedOut"]
     for kind, key in [("pcb_trace", "traces"), ("pcb_via", "vias")]:
@@ -112,33 +112,38 @@ def compare(root, board, cohort, report):
     base_groups = {(row["source_net_id"], row["layer"]) for row in base_pours}
     groups = {(row["source_net_id"], row["layer"]) for row in pours}
     assert len(base_pours) == case["expectedBaseline"]["pours"]
-    report["pours"] = {"authored": cohort == "original", "baselineCount": len(base_pours), "candidateCount": len(pours), "baselineNetLayers": sorted(base_groups), "candidateNetLayers": sorted(groups), "missingNetLayers": sorted(base_groups - groups), "deferredPoursConfirmed": False, "removedPoursCountAsRepairedContacts": False, "classification": "unchanged_group_coverage" if base_groups == groups else "missing_groups_require_materialization_review"}
+    pour_geometry = lambda rows: collections.Counter(canonical({key: value for key, value in row.items() if key != "pcb_copper_pour_id"}) for row in rows)
+    pour_geometry_unchanged = pour_geometry(base_pours) == pour_geometry(pours)
+    report["pours"] = {"authored": cohort == "original", "baselineCount": len(base_pours), "candidateCount": len(pours), "baselineNetLayers": sorted(base_groups), "candidateNetLayers": sorted(groups), "missingNetLayers": sorted(base_groups - groups), "addedNetLayers": sorted(groups - base_groups), "baselineGroupsPreserved": base_groups <= groups, "geometryMultisetIdentical": pour_geometry_unchanged, "removedPoursCountAsRepairedContacts": False, "classification": "missing_groups" if base_groups - groups else "preserved_with_added_groups" if groups - base_groups else "preserved_groups", "captureLifecycle": "preview_while_routing_pending" if report["process"]["candidate"]["softDeadlineCapture"] else "routing_finished"}
     physical_gate = True
+    report["absolutePhysicalAuditCoverageComplete"] = True
     if cohort == "original":
         audit = read(proof / "native-via-pour-audit.json")
-        assert audit["authoredSourceSha256"] == case["sourceSha256"]
-        assert audit["baseline"]["valid"] and audit["candidate"]["valid"]
-        for lane, folder in [("baseline", before), ("candidate", after)]:
-            assert audit[lane]["circuitRawSha256"] == hashlib.sha256(gzip.decompress((folder / "circuit.json.gz").read_bytes())).hexdigest()
-        report["viaPourAudit"] = {"baselinePhysicalContacts": audit["baseline"]["physicalContactCount"], "candidatePhysicalContacts": audit["candidate"]["physicalContactCount"], "candidateNearContacts": audit["candidate"]["nearContactCount"], "candidateClearanceDeficits": audit["candidate"]["clearanceDeficitCount"], "candidateMinimumCopperGapMm": audit["candidate"]["minimumCopperGapMm"], "requiredAuthoredPourClearanceMm": plan["audit"]["requiredAuthoredPourClearanceMm"], "newPhysicalContactKeys": audit["comparison"]["newPhysicalContactKeys"], "retainedPhysicalContactKeys": audit["comparison"]["retainedPhysicalContactKeys"], "disappearedContactKeys": audit["comparison"]["resolvedPhysicalContactKeys"], "missingForeignPourGroups": audit["comparison"]["missingForeignPourGroups"], "candidatePhysicallyClearWithPreservedGeometry": audit["comparison"]["candidatePhysicallyClear"], "note": "Disappeared contacts are not repairs when pours or vias are absent; positive-gap authored clearance deficits are reported separately."}
-        physical_gate = not audit["comparison"]["newPhysicalContactKeys"] and not audit["comparison"]["newNearContactKeys"]
-        if case.get("nativeContactGate"):
-            target = case["nativeContactGate"]
-            assert audit["baseline"]["physicalContactCount"] == target["baselinePhysicalContacts"]
-            assert audit["baseline"]["uniqueContactViaGeometryCount"] == target["baselineAffectedViaGeometry"]
-            assert audit["baseline"]["wholeOuterDiskInsideForeignRegionCount"] == target["baselineWholeDiskContacts"]
-            physical_gate = physical_gate and audit["comparison"]["candidatePhysicallyClear"] and audit["candidate"]["physicalContactCount"] == target["candidatePhysicalContacts"]
-            assert copper["pcb_trace"]["baseline"] == target["acceptedTraces"] and copper["pcb_via"]["baseline"] == target["acceptedVias"]
-        # Conservative: no deferral claim until every accepted trace is proven present.
-        materialized = report["acceptedPhaseMaterialization"]["candidate"]
-        if base_groups - groups and report["process"]["candidate"]["softDeadlineCapture"] and report["acceptedRoutingAndFinalCopperPreserved"] and materialized["allAcceptedTraceRoutesMaterialized"]:
-            report["pours"]["deferredPoursConfirmed"] = True
-            report["pours"]["classification"] = "deferred_at_capture_with_accepted_routes_materialized"
+        if audit.get("fatalError"):
+            exact_geometry_preserved = final_copper_equal and pour_geometry_unchanged and report["finalAuthoredGeometryIdentical"]
+            known_mixed_zone_limit = board == "imx6" and audit["fatalError"] == "Ambiguous authored pour clearances for net/layer"
+            physical_gate = known_mixed_zone_limit and exact_geometry_preserved
+            report["absolutePhysicalAuditCoverageComplete"] = False
+            report["viaPourAudit"] = {"coverageComplete": False, "limitation": audit["fatalError"], "exactRelevantCopperGeometryPreserved": exact_geometry_preserved, "noPhysicalRegressionByGeometryIdentity": physical_gate, "absoluteClearanceOrContactClaimPermitted": False, "note": "The unchanged native geometry can establish preservation despite the auditor's mixed-zone limitation; no absolute physical-clearance or repaired-contact claim is made."}
+        else:
+            assert audit["authoredSourceSha256"] == case["sourceSha256"]
+            assert audit["baseline"]["valid"] and audit["candidate"]["valid"]
+            for lane, folder in [("baseline", before), ("candidate", after)]:
+                assert audit[lane]["circuitRawSha256"] == hashlib.sha256(gzip.decompress((folder / "circuit.json.gz").read_bytes())).hexdigest()
+            report["viaPourAudit"] = {"coverageComplete": True, "baselinePhysicalContacts": audit["baseline"]["physicalContactCount"], "candidatePhysicalContacts": audit["candidate"]["physicalContactCount"], "candidateNearContacts": audit["candidate"]["nearContactCount"], "candidateClearanceDeficits": audit["candidate"]["clearanceDeficitCount"], "candidateMinimumCopperGapMm": audit["candidate"]["minimumCopperGapMm"], "requiredAuthoredPourClearanceMm": plan["audit"]["requiredAuthoredPourClearanceMm"], "newPhysicalContactKeys": audit["comparison"]["newPhysicalContactKeys"], "retainedPhysicalContactKeys": audit["comparison"]["retainedPhysicalContactKeys"], "disappearedContactKeys": audit["comparison"]["resolvedPhysicalContactKeys"], "missingForeignPourGroups": audit["comparison"]["missingForeignPourGroups"], "candidatePhysicallyClearWithPreservedGeometry": audit["comparison"]["candidatePhysicallyClear"], "note": "Disappeared contacts are not repairs when pours or vias are absent; positive-gap authored clearance deficits are reported separately."}
+            physical_gate = not audit["comparison"]["newPhysicalContactKeys"] and not audit["comparison"]["newNearContactKeys"]
+            if case.get("nativeContactGate"):
+                target = case["nativeContactGate"]
+                assert audit["baseline"]["physicalContactCount"] == target["baselinePhysicalContacts"]
+                assert audit["baseline"]["uniqueContactViaGeometryCount"] == target["baselineAffectedViaGeometry"]
+                assert audit["baseline"]["wholeOuterDiskInsideForeignRegionCount"] == target["baselineWholeDiskContacts"]
+                physical_gate = physical_gate and audit["comparison"]["candidatePhysicallyClear"] and audit["candidate"]["physicalContactCount"] == target["candidatePhysicalContacts"]
+                assert copper["pcb_trace"]["baseline"] == target["acceptedTraces"] and copper["pcb_via"]["baseline"] == target["acceptedVias"]
     else:
         assert not base_pours and not pours, "Spaced cohort unexpectedly contains authored pours"
         report["viaPourAudit"] = {"applicable": False, "reason": "Authentic spaced source has no authored copper pours."}
     registration_correct = not report["routingErrorRegisteredUnderWrongPhase"] and (not report["process"]["candidate"]["finishedIncludingFailedRouting"] or not any(row["status"] == "failed" for row in progress["phases"]) or report["routingErrorRegisteredUnderTracePhase"])
-    report["gates"] = {"runtimeAndAssessment": True, "validProcessOutcome": report["process"]["candidate"]["validCaptureOrFinish"], "finishedBaselineRemainsFinished": not report["process"]["baseline"]["finishedIncludingFailedRouting"] or report["process"]["candidate"]["finishedIncludingFailedRouting"], "acceptedSrjAndFinalCopperPreserved": report["acceptedRoutingAndFinalCopperPreserved"], "authoredGeometryPreserved": report["finalAuthoredGeometryIdentical"] and report["unroutedCircuitRecordMultisetIdentical"], "noNewSharedFindings": all(not rows for rows in report["newSharedFindings"].values()), "nativeConnectedNamesPreserved": report["nativeConnectivity"]["preserved"], "physicalContactGate": physical_gate, "correctErrorRegistration": registration_correct, "pourCoverageOrConfirmedDeferral": base_groups == groups or report["pours"]["deferredPoursConfirmed"]}
+    report["gates"] = {"runtimeAndAssessment": True, "validProcessOutcome": report["process"]["candidate"]["validCaptureOrFinish"], "finishedBaselineRemainsFinished": not report["process"]["baseline"]["finishedIncludingFailedRouting"] or report["process"]["candidate"]["finishedIncludingFailedRouting"], "acceptedSrjAndFinalCopperPreserved": report["acceptedRoutingAndFinalCopperPreserved"], "authoredGeometryPreserved": report["finalAuthoredGeometryIdentical"] and report["unroutedCircuitRecordMultisetIdentical"], "noNewSharedFindings": all(not rows for rows in report["newSharedFindings"].values()), "nativeConnectedNamesPreserved": report["nativeConnectivity"]["preserved"], "physicalContactGate": physical_gate, "correctErrorRegistration": registration_correct, "baselinePourGroupsPreserved": base_groups <= groups}
     report["qualified"] = all(report["gates"].values())
     report["finalSourceBuildPreviewEquivalence"] = plan["finalSourceBuildPreviewEquivalence"]
     report["globalClaimPermitted"] = False

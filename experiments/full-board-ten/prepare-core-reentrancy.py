@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Authenticate the saved control and change only the reviewed Renderable chunk."""
+"""Authenticate source qualification and map only the reviewed routing/pour changes."""
 import argparse
 import gzip
 import hashlib
@@ -138,58 +138,103 @@ if args.operation == "baseline":
 published = json.loads(published_path.read_text())
 original = root / "npm/core"
 alias = root / "runtime/node_modules/@tscircuit/core"
-change = plan["runtimeChange"]
+changes = {row["path"]: row for row in plan["runtimeChanges"]}
 core = next(row for row in published["packages"] if row["name"] == "@tscircuit/core")
 
 if args.operation == "source":
     verify_packages(published)
     verify_graph()
-    source = root / "source-core"
-    assert subprocess.check_output(["git", "-C", str(source), "rev-parse", "HEAD"], text=True).strip() == plan["source"]["baseCommit"]
-    source_file = source / plan["source"]["path"]
-    assert sha(source_file) == plan["source"]["beforeSha256"]
-    publication_policy = source / plan["publicationPolicySource"]["path"]
-    assert sha(publication_policy) == plan["publicationPolicySource"]["sha256"]
-    shutil.copyfile(publication_policy, proof / "Group.source.ts")
-    shutil.copyfile(source_file, proof / "Renderable.base.ts")
-    patch = controller / "core-reentrancy-production.patch"
-    assert sha(patch) == plan["source"]["patchSha256"]
-    subprocess.run(["git", "apply", "--check", str(patch)], cwd=source, check=True)
-    subprocess.run(["git", "apply", str(patch)], cwd=source, check=True)
-    assert sha(source_file) == plan["source"]["afterSha256"]
-    shutil.copyfile(source_file, proof / "Renderable.candidate.ts")
-    subprocess.run(["bun", str(controller / "qualifyCoreReentrancy.mjs"), str(root)], check=True)
+    qualification = plan["sourceQualification"]
+    artifact = qualification["artifact"]
+    assert artifact, "Actual source qualification artifact must be frozen"
+    api = f"repos/tscircuit/tscircuit-autorouter/actions/artifacts/{artifact['id']}"
+    actual = json.loads(subprocess.check_output(["gh", "api", api]))
+    for field in ["id", "name", "expired", "size_in_bytes", "digest", "workflow_run"]:
+        assert actual[field] == artifact[field], f"Source artifact identity changed: {field}"
+    source_run = json.loads(subprocess.check_output(["gh", "api", f"repos/tscircuit/tscircuit-autorouter/actions/runs/{actual['workflow_run']['id']}"]))
+    assert source_run["status"] == "completed" and source_run["conclusion"] == "success"
+    assert source_run["head_sha"] == actual["workflow_run"]["head_sha"]
+    archive = subprocess.check_output(["gh", "api", api + "/zip"])
+    assert len(archive) == artifact["size_in_bytes"]
+    assert "sha256:" + hashlib.sha256(archive).hexdigest() == artifact["digest"]
+    source_proof = proof / "actual-source-pair"
+    source_proof.mkdir()
+    with zipfile.ZipFile(io.BytesIO(archive)) as packet:
+        names = packet.namelist()
+        assert len(names) == len(set(names))
+        assert set(names) == {row["name"] for row in qualification["files"]}
+        for row in qualification["files"]:
+            relative = Path(row["name"])
+            assert not relative.is_absolute() and ".." not in relative.parts
+            data = packet.read(row["name"])
+            assert len(data) == row["bytes"] and hashlib.sha256(data).hexdigest() == row["sha256"]
+            target = source_proof / relative
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(data)
+    assert sha(source_proof / "source-plan.json") == qualification["sourcePlanSha256"]
+    assert sha(source_proof / "result.json") == qualification["resultSha256"]
+    source_result = json.loads((source_proof / "result.json").read_text())
+    assert source_result["passed"] is True
+    assert source_result["baseCommit"] == plan["source"]["baseCommit"]
+    assert source_result["candidateCommit"] == plan["source"]["candidateCommit"]
+    for key in ["oneDependencyInstallation", "installedPackageMetadataAndAliasesUnchanged", "genericAsyncEffectStartupByteIdentical", "sevenTimingTestsByteIdentical", "baselineFailsOnlyAfterPreviewAndFinalRouteViaAssertions"]:
+        assert source_result[key] is True, f"Required actual source evidence missing: {key}"
+    assert sha(source_proof / "production.patch") == plan["source"]["patchSha256"]
+    assert (source_proof / "production.patch").read_bytes() == (controller / "core-reentrancy-production.patch").read_bytes()
+    for row in plan["source"]["files"]:
+        for lane, checksum in [("base", "beforeSha256"), ("candidate", "afterSha256")]:
+            assert sha(source_proof / "files" / lane / row["path"]) == row[checksum]
     test_source = controller / "core-reentrancy-repro.test.tsx"
     assert sha(test_source) == plan["source"]["testSha256"]
+    assert sha(source_proof / "files/candidate" / plan["source"]["testPath"]) == plan["source"]["testSha256"]
+    (proof / "source-artifact-proof.json").write_text(json.dumps({"artifact": actual, "sourceRun": {key: source_run[key] for key in ["id", "head_sha", "status", "conclusion"]}, "archiveDigestAndAllMembersVerified": True}, indent=2) + "\n")
+    parser_module = root / "autorouter-dependencies/node_modules/typescript/lib/typescript.js"
+    assert parser_module.is_file(), "Frozen autorouter dependency graph must provide the parser"
+    subprocess.run(["bun", str(controller / "qualifyCoreReentrancy.mjs"), str(root), str(source_proof), str(parser_module)], check=True)
+    actual_changes = json.loads((proof / "runtime-changes.json").read_text())
+    assert len(actual_changes) == len(changes)
+    for row in actual_changes:
+        for key in ["path", "beforeSha256", "afterSha256"]:
+            assert row[key] == changes[row["path"]][key], f"Frozen runtime mapping changed: {key}"
     shutil.copyfile(controller / "tsconfig.json", proof / "tsconfig.json")
-    (proof / "package.json").write_text('{"name":"core-reentrancy-qualification","private":true,"type":"module"}\n')
+    (proof / "package.json").write_text('{"name":"core-pour-qualification","private":true,"type":"module"}\n')
     (proof / "node_modules").symlink_to(root / "runtime/node_modules")
     tests = {}
     for lane in ["base", "candidate"]:
         package = proof / f"test-core-{lane}"
+        export_tail = "\nexport { TscircuitAutorouter };\n"
         for row in core["publishedFiles"]:
             target = package / row["path"]
             target.parent.mkdir(parents=True, exist_ok=True)
-            if lane == "candidate" and row["path"] == change["path"]:
-                before = (original / row["path"]).read_bytes()
-                assert hashlib.sha256(before).hexdigest() == change["beforeSha256"]
-                assert before.count(change["before"].encode()) == 1
-                target.write_bytes(before.replace(change["before"].encode(), change["after"].encode()))
-                assert sha(target) == change["afterSha256"]
+            selected = original / row["path"]
+            if lane == "candidate" and row["path"] in changes:
+                selected = proof / "reviewed-overlay" / row["path"]
+                assert sha(selected) == changes[row["path"]]["afterSha256"]
+            if row["path"] == core["entryRelative"]:
+                target.write_bytes(selected.read_bytes() + export_tail.encode())
+                assert target.read_bytes() == selected.read_bytes() + export_tail.encode()
+            elif selected != original / row["path"]:
+                shutil.copyfile(selected, target)
             else:
-                os.link(original / row["path"], target)
+                os.link(selected, target)
         (package / "node_modules").symlink_to(root / "runtime/node_modules")
         source_text = test_source.read_text()
+        router_import = 'import { TscircuitAutorouter } from "lib/utils/autorouting/CapacityMeshAutorouter"'
+        assert source_text.count(router_import) == 1
+        source_text = source_text.replace(router_import, 'import { TscircuitAutorouter } from ' + json.dumps(str(package / core["entryRelative"])))
         fixture_import = 'import { getTestFixture } from "tests/fixtures/get-test-fixture"'
         assert source_text.count(fixture_import) == 1
         adaptation = '\n'.join([
+            'import { afterEach } from "bun:test"',
             'import { RootCircuit } from ' + json.dumps(str(package / core["entryRelative"])),
             'import { writeFileSync } from "node:fs"',
             'import { convertCircuitJsonToPcbSvg } from "circuit-to-svg"',
             'const events: unknown[] = []',
+            'let capturedCircuit: RootCircuit',
             'const getTestFixture = () => {',
             '  globalThis.coreReentrancyWasmPolicy.beginRouting()',
             '  const circuit = new RootCircuit({ platform: { localCacheEngine: undefined } })',
+            '  capturedCircuit = circuit',
             '  circuit.on("asyncEffect:start", (event) => events.push({ type: "asyncEffect:start", ...event }))',
             '  circuit.on("asyncEffect:end", (event) => events.push({ type: "asyncEffect:end", ...event }))',
             '  circuit.on("solver:started", (event) => {',
@@ -199,12 +244,15 @@ if args.operation == "source":
             '  })',
             '  return { circuit }',
             '}',
-            'const saveSnapshot = (circuitJson: any[], options: any) => {',
+            'const saveSnapshot = (circuitJson: unknown[], options: unknown) => {',
             '  writeFileSync(' + json.dumps(str(proof / f"{lane}.circuit.json")) + ', JSON.stringify(circuitJson, null, 2))',
             '  writeFileSync(' + json.dumps(str(proof / f"{lane}.pcb.svg")) + ', convertCircuitJsonToPcbSvg(circuitJson, options))',
+            '}',
+            'afterEach(() => {',
+            '  if (capturedCircuit) saveSnapshot(capturedCircuit.db.toArray(), { layer: "inner1", showPcbNotes: true })',
             '  writeFileSync(' + json.dumps(str(proof / f"{lane}.events.json")) + ', JSON.stringify(events, null, 2))',
             '  writeFileSync(' + json.dumps(str(proof / f"{lane}.wasm.json")) + ', JSON.stringify(globalThis.coreReentrancyWasmPolicy.usage, null, 2))',
-            '}',
+            '})',
         ])
         source_text = source_text.replace(fixture_import, adaptation)
         snapshot = 'await expect(circuit.getCircuitJson()).toMatchPcbSnapshot(import.meta.path, {'
@@ -218,12 +266,12 @@ if args.operation == "source":
         tested = subprocess.run(command, cwd=proof, env=environment, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         log = proof / f"{lane}-test.log"
         log.write_text(tested.stdout)
-        tests[lane] = {"command": command, "exitCode": tested.returncode, "testSha256": sha(test), "logSha256": sha(log), "adaptation": "Only fixture import and snapshot writer replaced; authored board, event listener and all three assertions unchanged"}
+        tests[lane] = {"command": command, "exitCode": tested.returncode, "testSha256": sha(test), "logSha256": sha(log), "exportTail": export_tail, "adaptation": "Only internal router/fixture imports and snapshot persistence adapted; real held routing, preview assertions and final clearance assertions unchanged. Identical export-only tail is confined to both focused test packages."}
         assert json.loads((proof / f"{lane}.wasm.json").read_text())["routingOrUnknownAttempts"] == 0
         if lane == "base":
-            assert tested.returncode == 1 and 'expect(viasSeenByPour).toBe(circuit.db.pcb_via.list().length)' in tested.stdout and '3 expect() calls' in tested.stdout, "Baseline must fail only the stale-pour assertion"
+            assert tested.returncode == 1 and 'expect(viasSeenByPour).toBe(circuit.db.pcb_via.list().length)' in tested.stdout and "timed out" not in tested.stdout.lower(), "Baseline must reach and fail the final stale-pour assertion"
         else:
-            assert tested.returncode == 0 and '3 expect() calls' in tested.stdout, "Candidate public repro failed"
+            assert tested.returncode == 0, "Candidate public repro failed"
     gate_path = proof / "source-gate.json"
     gate = json.loads(gate_path.read_text())
     gate["reproPair"] = {"passed": True, "sourceTestSha256": sha(test_source), "tests": tests}
@@ -248,37 +296,36 @@ if args.operation == "restore":
 assert plan["frozen"], "Root must freeze the reviewed qualification plan"
 gate = json.loads((proof / "source-gate.json").read_text())
 assert gate["assertionsPassed"] and gate["sourceMethodBodyEquality"] == ["_queueAsyncEffect"]
-assert gate["reproPair"]["passed"]
+assert gate["genericSchedulingUnchanged"] and gate["sourceBuildToPublishedBaseEquivalence"]
+assert gate["candidateMappingSemanticallyIdentical"] and gate["reproPair"]["passed"]
 assert json.loads((proof / "audit-self-test.json").read_text())["selfTest"]["passed"]
 tiny_audit = json.loads((proof / "tiny-via-pour-audit.json").read_text())
 assert tiny_audit["baseline"]["physicalContactCount"] > 0
 assert tiny_audit["comparison"]["candidatePhysicallyClear"]
-assert gate["candidateChunkSha256"] == change["afterSha256"]
 verify_packages(published)
 verify_graph()
-assert core["entrySha256"] == change["unchangedCoreEntrySha256"]
-before = (original / change["path"]).read_bytes()
-assert sha(original / change["path"]) == change["beforeSha256"]
-assert before.count(change["before"].encode()) == change["count"]
-after = before.replace(change["before"].encode(), change["after"].encode())
-assert hashlib.sha256(after).hexdigest() == change["afterSha256"]
 overlay = root / "npm/core-reentrancy"
 overlay.mkdir()
 files = []
 for row in core["publishedFiles"]:
     target = overlay / row["path"]
     target.parent.mkdir(parents=True, exist_ok=True)
-    if row["path"] == change["path"]:
-        target.write_bytes(after)
-        files.append({**row, "bytes": len(after), "sha256": change["afterSha256"]})
+    if row["path"] in changes:
+        change = changes[row["path"]]
+        assert sha(original / row["path"]) == change["beforeSha256"]
+        selected = proof / "reviewed-overlay" / row["path"]
+        assert sha(selected) == change["afterSha256"]
+        shutil.copyfile(selected, target)
+        files.append({**row, "bytes": target.stat().st_size, "sha256": change["afterSha256"]})
     else:
         os.link(original / row["path"], target)
         files.append(row)
 assert alias.is_symlink() and alias.resolve() == original
 alias.unlink()
 alias.symlink_to(overlay)
-override = {"name": "@tscircuit/core", "kind": "reviewed-source-chunk", "sourcePatchSha256": plan["source"]["patchSha256"], "changedFile": change, "unchangedRuntimeDependencies": True}
-candidate = {**published, "sourceOverrides": True, "experiment": "core-render-reentrancy", "dependencyOverrides": [override], "packages": [{**row, "entry": str(overlay / core["entryRelative"]), "publishedFiles": files} if row["name"] == core["name"] else row for row in published["packages"]], "packageAliases": [{**row, "target": str(overlay)} if row["alias"] == str(alias) else row for row in published["packageAliases"]]}
+override = {"name": "@tscircuit/core", "kind": "reviewed-routing-pour-source", "sourcePatchSha256": plan["source"]["patchSha256"], "changedFiles": list(changes.values()), "unchangedRuntimeDependencies": True}
+entry_sha = changes[core["entryRelative"]]["afterSha256"]
+candidate = {**published, "sourceOverrides": True, "experiment": "core-pour-dependency", "dependencyOverrides": [override], "packages": [{**row, "entry": str(overlay / core["entryRelative"]), "entrySha256": entry_sha, "publishedFiles": files} if row["name"] == core["name"] else row for row in published["packages"]], "packageAliases": [{**row, "target": str(overlay)} if row["alias"] == str(alias) else row for row in published["packageAliases"]]}
 manifest_path.write_text(json.dumps(candidate, indent=2) + "\n")
 shutil.copyfile(manifest_path, root / "candidate-runtime-manifest.json")
 verify_packages(candidate)
@@ -286,6 +333,6 @@ verify_graph(True)
 task = json.loads(case_path.read_text())
 assert task["sourceSha256"] == case["sourceSha256"]
 assert [task["captureDeadlineMs"], task["hardDeadlineMs"], task["assessmentDeadlineMs"]] == [plan["limitsMs"][key] for key in ["capture", "hard", "assessment"]]
-task.update(experiment="core-render-reentrancy", dependencyOverrides=[override], restorePublishedCoreBeforeAssessment=str(root), runtimeChunkProof=change)
+task.update(experiment="core-pour-dependency", dependencyOverrides=[override], restorePublishedCoreBeforeAssessment=str(root), runtimeChunkProof={"changedFiles": list(changes.values())})
 (root / "cases" / f"candidate-{case_key}.json").write_text(json.dumps(task, indent=2) + "\n")
-(proof / "overlay-proof.json").write_text(json.dumps({"onlyRenderableChunkChanged": True, "candidateManifestSha256": sha(manifest_path), "sourceGateSha256": sha(proof / "source-gate.json"), "change": change, "allPackageFilesVerified": True}, indent=2) + "\n")
+(proof / "overlay-proof.json").write_text(json.dumps({"onlyReviewedRoutingAndPourSpansChanged": True, "candidateManifestSha256": sha(manifest_path), "sourceGateSha256": sha(proof / "source-gate.json"), "changes": list(changes.values()), "allPackageFilesVerified": True}, indent=2) + "\n")

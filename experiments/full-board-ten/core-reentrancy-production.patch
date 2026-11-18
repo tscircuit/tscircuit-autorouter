@@ -1,14 +1,260 @@
 diff --git a/lib/components/base-components/Renderable.ts b/lib/components/base-components/Renderable.ts
-index f3d054889031b79d9cbf4a2f2094e854b66d8acd..17aa509acfbe164805fd17ff25cfcf0854fc25fb 100644
+index f3d0548..10b6b72 100644
 --- a/lib/components/base-components/Renderable.ts
 +++ b/lib/components/base-components/Renderable.ts
-@@ -375,7 +375,8 @@ export abstract class Renderable implements IRenderable {
-     const asyncEffectId = `${this._renderId}:${globalAsyncEffectCounter++}`
-     const asyncEffect: AsyncEffect = {
-       asyncEffectId,
--      promise: effect(), // TODO don't start effects until end of render cycle
-+      // Register the effect before its callbacks can inspect the circuit.
-+      promise: Promise.resolve().then(effect),
-       phase: this._currentRenderPhase!,
-       effectName,
-       complete: false,
+@@ -71,6 +71,7 @@ export const orderedRenderPhases = [
+   "PcbTraceRender",
+   "PcbRouteNetIslands",
+   "PcbTraceTeardropRender",
++  "PcbCopperPourPreviewRender",
+   "PcbCopperPourRender",
+   "PcbViaStitchRender",
+   "PcbCopperPourCleanup",
+@@ -148,6 +149,11 @@ const asyncPhaseDependencies: Partial<Record<RenderPhase, RenderPhase[]>> = {
+   PcbTraceHintRender: ["PcbFootprintStringRender", "FetchPartFootprint"],
+   PcbManualTraceRender: ["PcbFootprintStringRender", "FetchPartFootprint"],
+   PcbTraceTeardropRender: ["PcbTraceRender", "PcbRouteNetIslands"],
++  PcbCopperPourPreviewRender: [
++    "PcbFootprintStringRender",
++    "FetchPartFootprint",
++    "PcbPlacementDesignRuleChecks",
++  ],
+   PcbCopperPourRender: [
+     "PcbFootprintStringRender",
+     "FetchPartFootprint",
+@@ -155,6 +161,7 @@ const asyncPhaseDependencies: Partial<Record<RenderPhase, RenderPhase[]>> = {
+     "PcbTraceRender",
+     "PcbRouteNetIslands",
+     "PcbTraceTeardropRender",
++    "PcbCopperPourPreviewRender",
+   ],
+   PcbViaStitchRender: [
+     "PcbFootprintStringRender",
+@@ -162,6 +169,7 @@ const asyncPhaseDependencies: Partial<Record<RenderPhase, RenderPhase[]>> = {
+     "PcbPlacementDesignRuleChecks",
+     "PcbTraceRender",
+     "PcbRouteNetIslands",
++    "PcbCopperPourPreviewRender",
+     "PcbCopperPourRender",
+   ],
+   PcbPlacementDesignRuleChecks: [
+@@ -174,6 +182,7 @@ const asyncPhaseDependencies: Partial<Record<RenderPhase, RenderPhase[]>> = {
+     "PcbPlacementDesignRuleChecks",
+     "PcbTraceRender",
+     "PcbRouteNetIslands",
++    "PcbCopperPourPreviewRender",
+     "PcbCopperPourRender",
+     "PcbViaStitchRender",
+   ],
+@@ -188,6 +197,7 @@ const asyncPhaseDependencies: Partial<Record<RenderPhase, RenderPhase[]>> = {
+     "FetchPartFootprint",
+     "PcbPlacementDesignRuleChecks",
+     "PcbTraceRender",
++    "PcbCopperPourPreviewRender",
+     "PcbCopperPourRender",
+     "PcbViaStitchRender",
+     "PcbCopperPourCleanup",
+@@ -198,6 +208,7 @@ const asyncPhaseDependencies: Partial<Record<RenderPhase, RenderPhase[]>> = {
+     "PcbPlacementDesignRuleChecks",
+     "PcbTraceRender",
+     "PcbRouteNetIslands",
++    "PcbCopperPourPreviewRender",
+     "PcbCopperPourRender",
+     "PcbViaStitchRender",
+     "PcbCopperPourCleanup",
+diff --git a/lib/components/primitive-components/CopperPour/CopperPour.ts b/lib/components/primitive-components/CopperPour/CopperPour.ts
+index b6aeea8..1b10ff5 100644
+--- a/lib/components/primitive-components/CopperPour/CopperPour.ts
++++ b/lib/components/primitive-components/CopperPour/CopperPour.ts
+@@ -26,6 +26,11 @@ export class CopperPour extends PrimitiveComponent<typeof copperPourProps> {
+     createNetsFromProps(this, [props.connectsTo])
+   }
+ 
++  doInitialPcbCopperPourPreviewRender(): void {
++    if (!this._hasIncompleteAsyncEffectsForPhase("PcbTraceRender")) return
++    CopperPour_doInitialPcbCopperPourRender(this, "preview")
++  }
++
+   doInitialPcbCopperPourRender(): void {
+     CopperPour_doInitialPcbCopperPourRender(this)
+   }
+diff --git a/lib/components/primitive-components/CopperPour/CopperPour_doInitialPcbCopperPourRender.ts b/lib/components/primitive-components/CopperPour/CopperPour_doInitialPcbCopperPourRender.ts
+index 9fbfd37..7a7c99c 100644
+--- a/lib/components/primitive-components/CopperPour/CopperPour_doInitialPcbCopperPourRender.ts
++++ b/lib/components/primitive-components/CopperPour/CopperPour_doInitialPcbCopperPourRender.ts
+@@ -3,6 +3,7 @@ import {
+   convertCircuitJsonToInputProblem,
+   initializeManifoldGeometry,
+ } from "@tscircuit/copper-pour-solver"
++import type { PcbCopperPour, PcbTrace } from "circuit-json"
+ import type { ISubcircuit } from "../Group/Subcircuit/ISubcircuit"
+ import type { Net } from "../Net"
+ import type { CopperPour } from "./CopperPour"
+@@ -11,9 +12,45 @@ import { markTraceSegmentsInsideCopperPour } from "./utils/mark-trace-segments-i
+ // Each CopperPour queues this phase, but the solver processes every pour in a
+ // subcircuit together. Share that batch across the component-owned effects.
+ const pendingCopperPourRenders = new WeakMap<ISubcircuit, Promise<void>>()
++const previewCopperPours = new WeakMap<ISubcircuit, PcbCopperPour[]>()
+ const DEFAULT_THERMAL_RELIEF_SPOKE_WIDTH_MM = 0.3
+ 
+-const renderAllCopperPoursForSubcircuit = async (subcircuit: ISubcircuit) => {
++type CopperPourRenderMode = "preview" | "final"
++type PcbCopperPourId = PcbCopperPour["pcb_copper_pour_id"]
++
++const removePreviewPourReferences = (
++  trace: PcbTrace,
++  previewPourIds: Set<PcbCopperPourId>,
++): PcbTrace => {
++  if (
++    !trace.route.some(
++      (point) =>
++        "copper_pour_id" in point &&
++        point.copper_pour_id &&
++        previewPourIds.has(point.copper_pour_id),
++    )
++  )
++    return trace
++
++  return {
++    ...trace,
++    route: trace.route.map((point) => {
++      if (
++        !("copper_pour_id" in point) ||
++        !point.copper_pour_id ||
++        !previewPourIds.has(point.copper_pour_id)
++      )
++        return point
++      const { copper_pour_id, is_inside_copper_pour, ...wireOrVia } = point
++      return wireOrVia
++    }),
++  }
++}
++
++const renderAllCopperPoursForSubcircuit = async (
++  subcircuit: ISubcircuit,
++  mode: CopperPourRenderMode,
++) => {
+   if (!subcircuit.root) return
+ 
+   const { db } = subcircuit.root
+@@ -40,7 +77,22 @@ const renderAllCopperPoursForSubcircuit = async (subcircuit: ISubcircuit) => {
+ 
+   if (resolvedCopperPours.length === 0) return
+ 
+-  const circuitJson = db.toArray()
++  const previewPours = previewCopperPours.get(subcircuit) ?? []
++  const previewPourIds = new Set(
++    previewPours.map((pour) => pour.pcb_copper_pour_id),
++  )
++  // Rebuild from routed copper without provisional pours or their annotations.
++  const circuitJson = db
++    .toArray()
++    .filter(
++      (circuitElement) =>
++        circuitElement.type !== "pcb_copper_pour" ||
++        !previewPourIds.has(circuitElement.pcb_copper_pour_id),
++    )
++    .map((circuitElement) => {
++      if (circuitElement.type !== "pcb_trace") return circuitElement
++      return removePreviewPourReferences(circuitElement, previewPourIds)
++    })
+   const boardComponent = subcircuit._getBoard()
+   const pcbBoard = boardComponent?.pcb_board_id
+     ? db.pcb_board.get(boardComponent.pcb_board_id)
+@@ -107,6 +159,22 @@ const renderAllCopperPoursForSubcircuit = async (subcircuit: ISubcircuit) => {
+ 
+   const { brep_shapes_by_region } = solver.getOutput()
+ 
++  // Keep the preview until replacement geometry is ready, including on failure.
++  for (const pour of previewPours) {
++    db.pcb_copper_pour.delete(pour.pcb_copper_pour_id)
++  }
++  for (const trace of db.pcb_trace.list()) {
++    const updatedTrace = removePreviewPourReferences(trace, previewPourIds)
++    if (updatedTrace !== trace) {
++      db.pcb_trace.update(trace.pcb_trace_id, { route: updatedTrace.route })
++    }
++  }
++  previewCopperPours.delete(subcircuit)
++  const renderedPreviewPours: PcbCopperPour[] = []
++  if (mode === "preview") {
++    previewCopperPours.set(subcircuit, renderedPreviewPours)
++  }
++
+   for (const [
+     regionIndex,
+     { copperPour, sourceNetId },
+@@ -128,6 +196,7 @@ const renderAllCopperPoursForSubcircuit = async (subcircuit: ISubcircuit) => {
+         subcircuit_id: subcircuit.subcircuit_id ?? undefined,
+         covered_with_solder_mask: coveredWithSolderMask,
+       })
++      if (mode === "preview") renderedPreviewPours.push(insertedPour)
+ 
+       markTraceSegmentsInsideCopperPour({
+         db,
+@@ -139,10 +208,13 @@ const renderAllCopperPoursForSubcircuit = async (subcircuit: ISubcircuit) => {
+ 
+ export function CopperPour_doInitialPcbCopperPourRender(
+   copperPour: CopperPour,
++  mode: CopperPourRenderMode = "final",
+ ): void {
+   if (copperPour.root?.pcbDisabled) return
+ 
+-  copperPour._queueAsyncEffect("PcbCopperPourRender", async () => {
++  const effectName =
++    mode === "preview" ? "PcbCopperPourPreviewRender" : "PcbCopperPourRender"
++  copperPour._queueAsyncEffect(effectName, async () => {
+     const subcircuit = copperPour.getSubcircuit()
+     const pendingRender = pendingCopperPourRenders.get(subcircuit)
+     if (pendingRender) {
+@@ -150,7 +222,7 @@ export function CopperPour_doInitialPcbCopperPourRender(
+       return
+     }
+ 
+-    const renderPromise = renderAllCopperPoursForSubcircuit(subcircuit)
++    const renderPromise = renderAllCopperPoursForSubcircuit(subcircuit, mode)
+     pendingCopperPourRenders.set(subcircuit, renderPromise)
+     try {
+       await renderPromise
+diff --git a/lib/components/primitive-components/Group/Group.ts b/lib/components/primitive-components/Group/Group.ts
+index f258492..f0e012c 100644
+--- a/lib/components/primitive-components/Group/Group.ts
++++ b/lib/components/primitive-components/Group/Group.ts
+@@ -2254,11 +2254,12 @@ export class Group<Props extends z.ZodType<any, any, any> = typeof groupProps>
+   _startAsyncAutorouting() {
+     if (this._hasStartedAsyncAutorouting) return
+     this._hasStartedAsyncAutorouting = true
++    const routing = Promise.withResolvers<void>()
+     if (this._getAutorouterConfig().local) {
+-      this._queueAsyncEffect("autorouting", async () => {
+-        try {
+-          await this._runLocalAutorouting()
+-        } catch (error) {
++      // Register the routing dependency before its events can render the circuit.
++      this._queueAsyncEffect("autorouting", () => routing.promise)
++      this._runLocalAutorouting()
++        .catch((error) => {
+           if (!(error instanceof RoutingPhasePreparationError)) throw error
+ 
+           // Matching constraints can fail before the per-stage solver catch.
+@@ -2286,11 +2287,16 @@ export class Group<Props extends z.ZodType<any, any, any> = typeof groupProps>
+             })
+           }
+           throw error
+-        }
+-      })
++        })
++        .then(routing.resolve, routing.reject)
+     } else {
+-      this._queueAsyncEffect("make-http-autorouting-request", async () =>
+-        this._runEffectMakeHttpAutoroutingRequest(),
++      this._queueAsyncEffect(
++        "make-http-autorouting-request",
++        () => routing.promise,
++      )
++      this._runEffectMakeHttpAutoroutingRequest().then(
++        routing.resolve,
++        routing.reject,
+       )
+     }
+   }
