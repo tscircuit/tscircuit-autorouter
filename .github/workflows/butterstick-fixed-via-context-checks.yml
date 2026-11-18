@@ -1,0 +1,51 @@
+name: Check fixed-via context against unchanged routing controls
+on:
+  push:
+    branches: [analysis/butterstick-fixed-via-context-checks]
+    paths: [.github/workflows/butterstick-fixed-via-context-checks.yml]
+permissions:
+  contents: read
+jobs:
+  upstream:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/high-density-repair01
+          ref: c729e682f12603118bbe0a11c3703c6059efb032
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.4.3'
+      - run: bun install
+      - name: Check existing upstream behavior and types
+        run: |
+          bun test --timeout 600000
+          bunx tsc --noEmit
+  imx6:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.4.3'
+      - name: Install the unchanged integration dependencies
+        run: |
+          python3 - <<'PY'
+          import json,pathlib
+          p=pathlib.Path("package.json");m=json.loads(p.read_text())
+          m["overrides"]={**m.get("overrides",{}),"csstype":"3.1.3"}
+          p.write_text(json.dumps(m,indent=2)+"\n")
+          PY
+          bun install
+      - name: Check the exact upstream candidate on the real i.MX6 board
+        run: |
+          force_source_path=$(bun -e 'console.log(Bun.resolveSync("high-density-repair01/lib/HighDensityForceImproveSolver",process.cwd()))')
+          curl -fsSL https://raw.githubusercontent.com/tscircuit/high-density-repair01/c729e682f12603118bbe0a11c3703c6059efb032/lib/HighDensityForceImproveSolver.ts -o "$force_source_path.private"
+          mv "$force_source_path.private" "$force_source_path"
+          bunx tsc --noEmit
+          bun test tests/repro/pipeline9-imx6-fixed-via-force-full-board.test.ts --timeout 600000
