@@ -27,7 +27,9 @@ function readCompressedFixture<T>(filename: string): T {
   return JSON.parse(gunzipSync(contents).toString("utf8")) as T
 }
 
-function getFixedPcbGeometry(elements: AnyCircuitElement[]): AnyCircuitElement[] {
+function getFixedPcbGeometry(
+  elements: AnyCircuitElement[],
+): AnyCircuitElement[] {
   return elements.filter(
     (element) => element.type !== "pcb_trace" && element.type !== "pcb_via",
   )
@@ -39,9 +41,9 @@ test("keeps i.MX6 DDR vias clear of the full native board copper", async (): Pro
   const srj = readCompressedFixture<SimpleRouteJson>(
     "imx6-full-board-via-phase.srj.json.gz",
   )
-  const nativeBoard = readCompressedFixture<{ circuitJson: AnyCircuitElement[] }>(
-    "imx6-pad-safe-via-repair.json.gz",
-  )
+  const nativeBoard = readCompressedFixture<{
+    circuitJson: AnyCircuitElement[]
+  }>("imx6-pad-safe-via-repair.json.gz")
   const originalSrj = structuredClone(srj)
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(srj, {
     cacheProvider: null,
@@ -94,7 +96,9 @@ test("keeps i.MX6 DDR vias clear of the full native board copper", async (): Pro
       ...sourceTrace,
       source_trace_id: netId,
       connected_source_port_ids: [
-        ...new Set(members.flatMap((member) => member.connected_source_port_ids)),
+        ...new Set(
+          members.flatMap((member) => member.connected_source_port_ids),
+        ),
       ],
     }
   })
@@ -120,7 +124,8 @@ test("keeps i.MX6 DDR vias clear of the full native board copper", async (): Pro
   ).toEqual([])
 
   const clearance = srj.minTraceToPadEdgeClearance
-  if (clearance === undefined) throw new Error("Missing native copper clearance")
+  if (clearance === undefined)
+    throw new Error("Missing native copper clearance")
   const clearanceOptions = { minClearance: clearance }
   const findings = [
     ...checkEachPcbTraceNonOverlapping(circuitJson, clearanceOptions),
@@ -140,10 +145,7 @@ test("keeps i.MX6 DDR vias clear of the full native board copper", async (): Pro
     clearanceOptions,
   )[0]
   const focusCenter = originalError?.center
-  if (
-    typeof focusCenter?.x !== "number" ||
-    typeof focusCenter.y !== "number"
-  ) {
+  if (typeof focusCenter?.x !== "number" || typeof focusCenter.y !== "number") {
     throw new Error("Missing native i.MX6 clearance error position")
   }
   const view = {
