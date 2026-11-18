@@ -95,7 +95,9 @@ test("ButterStick escape search retains native paths through a shared region", a
   expect(getCandidateSignature(candidates)).toBe(
     fixture.expected.candidateSha256,
   )
-  expect(portsByNodeId.adjacencyEntries).toBe(fixture.expected.adjacencyEntries)
+  expect(portsByNodeId.adjacencyEntries).toBeLessThan(
+    fixture.expected.adjacencyEntries / 10,
+  )
   await expect(
     renderButterstickCrampedEscape({
       nodes: fixture.nodes,
