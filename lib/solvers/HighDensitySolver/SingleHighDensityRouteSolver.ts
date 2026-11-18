@@ -276,13 +276,14 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
   ): boolean {
     let copperRadius = this.traceThickness / 2
     if (isVia) copperRadius = this.viaDiameter / 2
+    const requiredDistance = copperRadius + this.obstacleMargin
     for (const obstacle of this.padObstacles) {
       if (!isVia && !obstacle.__zLayers.includes(segment.start.z)) continue
       const distanceToObstacle = getSegmentToObstacleDistance({
         ...segment,
         obstacle,
       })
-      if (distanceToObstacle < copperRadius - 1e-6) return true
+      if (distanceToObstacle < requiredDistance - 1e-6) return true
     }
     return false
   }
@@ -324,7 +325,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
 
     if (!this.isRouteClear(route)) {
       const inset = Math.min(
-        this.obstacleMargin / 2,
+        this.traceThickness / 2 + this.obstacleMargin,
         this.boundsSize.width / 2,
         this.boundsSize.height / 2,
       )
