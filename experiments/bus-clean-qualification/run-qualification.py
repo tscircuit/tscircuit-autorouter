@@ -140,16 +140,16 @@ def main():
     dependencies.mkdir()
     shutil.copyfile(sources["base"] / "package.json", dependencies / "package.json")
     # Change lock persistence only; do not change dependency declarations or overrides.
-    config = WORK / "install-bunfig.toml"
+    config = dependencies / "bunfig.toml"
     config.write_text("[install]\nsaveTextLockfile = true\n[install.lockfile]\nsave = true\n")
     os.environ["BUN_INSTALL_CACHE_DIR"] = str(WORK / "bun-cache")
-    resolution = run("dependency-resolution", ["bun", "install", "--config", str(config), "--lockfile-only", "--save-text-lockfile"], dependencies, 900)
+    resolution = run("dependency-resolution", ["bun", "install", "--lockfile-only", "--save-text-lockfile"], dependencies, 900)
     assert resolution["exitCode"] == 0
     lock = (dependencies / "bun.lock").read_bytes()
     shutil.copyfile(dependencies / "bun.lock", RESULTS / "resolved.bun.lock")
     shutil.copyfile(dependencies / "package.json", RESULTS / "declared-package.json")
     assert sha((dependencies / "package.json").read_bytes()) == PLAN["packageSha256"]
-    install = run("dependency-install", ["bun", "install", "--config", str(config), "--frozen-lockfile", "--backend=hardlink"], dependencies, 1200)
+    install = run("dependency-install", ["bun", "install", "--frozen-lockfile", "--backend=hardlink"], dependencies, 1200)
     assert install["exitCode"] == 0
     assert lock == (dependencies / "bun.lock").read_bytes()
     assert sha((dependencies / "package.json").read_bytes()) == PLAN["packageSha256"]
