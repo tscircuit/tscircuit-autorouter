@@ -4,12 +4,12 @@ import {
   HighDensityForceImproveSolver,
   type FixedViaObstacle,
 } from "high-density-repair01/lib/HighDensityForceImproveSolver"
-import type { SimpleRouteJson } from "lib/types"
 import { getObstacleRouteConnectivity } from "lib/solvers/HyperHighDensitySolver/getObstacleRouteConnectivity"
-import { getUniqueValidZLayersFromLayerNames } from "lib/utils/mapLayerNameToZ"
+import type { SimpleRouteJson } from "lib/types"
 import { convertToCircuitJson } from "lib/utils/convertToCircuitJson"
 import { RELAXED_DRC_OPTIONS } from "lib/utils/drcPresets"
 import { getViaToPadClearance } from "lib/utils/getViaToPadClearance"
+import { getUniqueValidZLayersFromLayerNames } from "lib/utils/mapLayerNameToZ"
 import {
   Pipeline9HighDensityForceImproveSampleSolver,
   type Pipeline9HighDensityForceImproveSampleOutput,
@@ -52,9 +52,11 @@ export class Pipeline9HighDensityForceImproveSolver extends HighDensityForceImpr
     const fixedViaObstacles = [...fixedViaObstacleIndexes].map(
       (index) => params.inputSrj.obstacles[index]!,
     )
+    let routesForConnectivity = params.hdRoutes
+    if (fixedViaObstacles.length === 0) routesForConnectivity = []
     const connectivity = getObstacleRouteConnectivity({
       obstacles: fixedViaObstacles,
-      routes: params.hdRoutes,
+      routes: routesForConnectivity,
     })
     const viaClearance =
       getViaToPadClearance(params.inputSrj) ??
