@@ -1,0 +1,115 @@
+{
+  "passed": true,
+  "schemaVersion": 2,
+  "sourceCandidateCommit": "088d6b01de11add161a4917ae5bb0942a6e09f2a",
+  "sourceCommitProvenance": "Revision supplied by the controller; its installer authenticates the exact source patch and before/after file hashes.",
+  "bun": "1.4.3",
+  "typescript": "5.9.3",
+  "sourceFiles": {
+    "lib/expanded-signal-sites.ts": {
+      "beforeSha256": "d7cc650f000963a739eb0bf436a01005b9e87f86c6c35d254cf6e68cfa30392a",
+      "afterSha256": "849bdec04b16ec064890ecb30566a7c8d12cec99a64bded748492cf36c119e66"
+    },
+    "lib/grid-visibility.ts": {
+      "beforeSha256": "ab20bee43e199abc3b98662d83436f2b47b1a45834a71ddc2973bf8f66cfdb99",
+      "afterSha256": "726b35e80359622212458237532fa09aabc62ece46e042117bee0138a113da91"
+    }
+  },
+  "sourceScopeQualification": [
+    {
+      "relative": "lib/expanded-signal-sites.ts",
+      "declaration": "expandedSignalSites",
+      "allOtherStatementsUnchanged": true,
+      "importChanges": [
+        {
+          "module": "./grid-visibility",
+          "added": "routingBounds"
+        }
+      ]
+    },
+    {
+      "relative": "lib/grid-visibility.ts",
+      "declaration": "routingBounds",
+      "allOtherStatementsUnchanged": true,
+      "importChanges": []
+    }
+  ],
+  "publishedCallCoverage": {
+    "function": "expandedSignalSites",
+    "publishedCallCount": 1,
+    "candidateCallCount": 1,
+    "allCallArgumentsAndArityUnchanged": true
+  },
+  "originalCoreSha256": "25f088d42671b5efbf026c70a1216d754c01179e7d767f37e83bef11a0e79fd9",
+  "originalBusModuleSha256": "b0ba29b5b2db66be7218ea0896b179281aba3ddc39fbe7eeb472e4de1959f249",
+  "candidateCoreSha256": "243d567bff8ea59f8eb84046fb70c8c0f5b48651d7c34f84b7785ab7c120315e",
+  "bundledAliases": {
+    "getCopperLayerNames3": "getCopperLayerNames",
+    "distance16": "distance",
+    "targetLayer2": "targetLayer",
+    "t48": "t",
+    "p2": "p",
+    "point52": "point",
+    "o2": "o",
+    "d2": "d",
+    "ix2": "ix",
+    "iy2": "iy",
+    "a2": "a",
+    "b2": "b",
+    "x2": "x",
+    "y2": "y",
+    "index2": "index",
+    "scene2": "scene",
+    "c2": "c",
+    "n2": "n"
+  },
+  "externalAliases": {
+    "getCopperLayerNames": "getCopperLayerNames3",
+    "distance": "distance16"
+  },
+  "unchangedSegments": [
+    {
+      "start": 0,
+      "end": 4755700,
+      "sha256": "8cd54004cd3abd8e70ea52eaa9b1b73e2351c92f2264f168c8d225123eb5637c"
+    },
+    {
+      "start": 4762529,
+      "end": 7227188,
+      "sha256": "549e2638df16840709d1d1976e6ed80be2fbfddfb87b6b381c2565cb66fe523e"
+    }
+  ],
+  "unchangedDeclarations": [
+    {
+      "name": "routingBounds",
+      "relative": "lib/grid-visibility.ts",
+      "publishedFragmentSha256": "fa26f7d9370ab0bb37bf63c67896d468fc3e7f1a8f925176b91fee2b4905e563",
+      "tokenSha256": "6e6174dc95a9edec3ad2e62380f1cf7c27ffdd6bfb3cbda28b99bb1d16edf041",
+      "runtimeUnchanged": true,
+      "sourceExportAdded": true
+    }
+  ],
+  "replacedDeclarations": [
+    {
+      "kind": "replace",
+      "name": "expandedSignalSites",
+      "relative": "lib/expanded-signal-sites.ts",
+      "characterOffset": 4755700,
+      "byteOffset": 4755702,
+      "oldBlockSha256": "597c2f7463f6c0a60bf2a68f819ca88ce424ff9bd52e0a2eb06ed7f74d3c74e3",
+      "newBlockSha256": "21e5aa4c7c11b0f6670c4c395d34a814797b3109a06ffe90bd5239044e296e73",
+      "beforeTokenSha256": "9d691ed09d5fa12d5c8a7412c04139025f8cce58ed2c193f346ae7c7ac731d4d",
+      "afterTokenSha256": "2b6baafa0e761c9a63ebc4381dab717dd9e1ff2afa083768e813341595df2067"
+    }
+  ],
+  "insertedDeclarations": [],
+  "existingHelperBindingQualification": {
+    "name": "routingBounds",
+    "verifiedCalls": 1,
+    "existingPublishedBinding": true,
+    "arityUnchanged": true
+  },
+  "nativeRoutingExecuted": false,
+  "moduleImported": false,
+  "normalization": "Same Bun syntax transformation and parser-aware leaf tokens. Object shorthand and binding patterns retain property keys and defaults; bundled identifier aliases are checked against lexical bindings. Only expandedSignalSites changes. Existing routingBounds runtime and all other source statements remain unchanged; its source export/import merely exposes the same existing bundled binding. Only two imported aliases are rewritten. Mathematical bound coverage is not a claim of byte-identical floating-point search coordinates or output."
+}

@@ -1,0 +1,174 @@
+name: Expanded-site bounds published3236 native paired screen
+
+on:
+  push:
+    branches: [bench/expanded-sites-3236-20261118]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  paired:
+    if: github.ref == 'refs/heads/bench/expanded-sites-3236-20261118'
+    name: Full native (${{ matrix.board }}, ${{ matrix.cohort }}, published then expanded-site bounds)
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        include:
+          - { board: glider, cohort: original }
+          - { board: imx6, cohort: original }
+          - { board: icepi, cohort: original }
+          - { board: butterstick, cohort: spaced }
+    env:
+      FULL_BOARD_ROOT: ${{ github.workspace }}/.full-board-run
+      FULL_BOARD_RUNTIME_MANIFEST: ${{ github.workspace }}/.full-board-run/runtime-manifest.json
+      BUN_INSTALL_CACHE_DIR: ${{ github.workspace }}/.full-board-run/bun-cache
+      FULL_BOARD_EXPERIMENT: published
+      FULL_BOARD_COHORTS: ${{ matrix.cohort }}
+      BOARD: ${{ matrix.board }}
+      COHORT: ${{ matrix.cohort }}
+
+    steps:
+      - name: Checkout reviewed controller
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            experiments/full-board-ten
+            .github/workflows/expanded-sites-screen.yml
+            AGENTS.md
+
+      - name: Require source and controller qualification before setup
+        run: >-
+          python3 -c 'import json; from pathlib import Path;
+          plan=json.loads(Path("experiments/full-board-ten/expanded-sites-plan.json").read_text());
+          assert plan["qualificationReady"] is True, "Source commit and one-span Core mapping are pending; controller held"'
+
+      - name: Checkout immutable original circuits
+        uses: actions/checkout@v4
+        with:
+          repository: tscircuit/tscircuit-autorouter
+          ref: ea398b4023119f65157e876a3101aa6ce3ca5f97
+          path: .full-board-run/sources/original
+          persist-credentials: false
+          sparse-checkout: experiments/full-board-priority-analysis
+
+      - name: Checkout immutable spaced circuits
+        uses: actions/checkout@v4
+        with:
+          repository: ShiboSoftwareDev/core-ddr-benchmark
+          ref: a3679559d6027aea2c441c1078853d58925d3a12
+          path: .full-board-run/sources/spaced
+          persist-credentials: false
+          sparse-checkout: |
+            full-boards
+            circuits
+            scripts
+            licenses
+            provenance
+
+      - name: Checkout exact embedded Bus62 source
+        uses: actions/checkout@v4
+        with:
+          repository: tscircuit/bus-lanes-solver
+          ref: 202b034659fb96bad44d11b8190f4044b675116f
+          path: .full-board-run/source-bus
+          persist-credentials: false
+          sparse-checkout: lib
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+
+      - name: Prepare locked published3236 runtime
+        run: python3 experiments/full-board-ten/bootstrap.py --root "$FULL_BOARD_ROOT"
+
+      - name: Prepare authentic full-component board cases
+        id: prepare
+        run: >-
+          bun experiments/full-board-ten/prepare-cases.ts
+          "$FULL_BOARD_ROOT/sources/original/experiments/full-board-priority-analysis"
+          "$FULL_BOARD_ROOT/sources/spaced"
+          "$FULL_BOARD_ROOT/cases"
+          "$BOARD"
+
+      - name: Freeze published control and qualify exact candidate source
+        id: qualify
+        run: |
+          python3 experiments/full-board-ten/prepare-expanded-sites.py "$FULL_BOARD_ROOT" baseline "$BOARD" "$COHORT"
+          python3 experiments/full-board-ten/prepare-expanded-sites.py "$FULL_BOARD_ROOT" source "$BOARD" "$COHORT"
+
+      - name: Render fresh published full board and assess physical nets
+        id: base
+        if: ${{ !cancelled() && steps.qualify.outcome == 'success' }}
+        continue-on-error: true
+        run: >-
+          bun experiments/full-board-ten/run-one.ts
+          "$FULL_BOARD_ROOT/lanes/base/cases/$BOARD-$COHORT.json"
+          "$FULL_BOARD_ROOT/lanes/base/results/$BOARD/$COHORT"
+
+      - name: Preserve published native result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          include-hidden-files: true
+          name: expanded-sites-${{ matrix.board }}-${{ matrix.cohort }}-base-${{ github.run_attempt }}
+          path: .full-board-run/lanes/base
+          if-no-files-found: warn
+          compression-level: 0
+          retention-days: 7
+
+      - name: Activate only qualified expandedSignalSites declaration
+        id: activate
+        if: ${{ !cancelled() && steps.qualify.outcome == 'success' && steps.base.outcome != 'skipped' }}
+        run: python3 experiments/full-board-ten/prepare-expanded-sites.py "$FULL_BOARD_ROOT" candidate "$BOARD" "$COHORT"
+
+      - name: Render fresh candidate full board and assess with restored published runtime
+        id: candidate
+        if: ${{ !cancelled() && steps.activate.outcome == 'success' }}
+        continue-on-error: true
+        run: >-
+          bun experiments/full-board-ten/run-one.ts
+          "$FULL_BOARD_ROOT/lanes/candidate/cases/$BOARD-$COHORT.json"
+          "$FULL_BOARD_ROOT/lanes/candidate/results/$BOARD/$COHORT"
+
+      - name: Compare physical completion and preserved native geometry
+        id: compare
+        if: ${{ !cancelled() && steps.candidate.outcome != 'skipped' && steps.activate.outcome == 'success' }}
+        run: python3 experiments/full-board-ten/compare-expanded-sites.py "$FULL_BOARD_ROOT" "$BOARD" "$COHORT"
+
+      - name: Preserve candidate native result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          include-hidden-files: true
+          name: expanded-sites-${{ matrix.board }}-${{ matrix.cohort }}-candidate-${{ github.run_attempt }}
+          path: .full-board-run/lanes/candidate
+          if-no-files-found: warn
+          compression-level: 0
+          retention-days: 7
+
+      - name: Preserve source qualification and paired runtime proof
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          include-hidden-files: true
+          name: expanded-sites-${{ matrix.board }}-${{ matrix.cohort }}-proof-${{ github.run_attempt }}
+          path: |
+            .full-board-run/expanded-sites
+            .full-board-run/*runtime-manifest.json
+            .full-board-run/comparison
+            .full-board-run/cases/*.json
+            experiments/full-board-ten/expanded-sites-*
+            experiments/full-board-ten/harness-provenance.json
+            experiments/full-board-ten/release.json
+            experiments/full-board-ten/source-provenance.json
+            experiments/full-board-ten/published-release-provenance.json
+            .github/workflows/expanded-sites-screen.yml
+          if-no-files-found: warn
+          retention-days: 7

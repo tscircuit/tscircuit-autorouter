@@ -1,0 +1,170 @@
+{
+  "schemaVersion": 1,
+  "qualificationReady": true,
+  "experiment": "standalone-expanded-site-bounds",
+  "baselineController": "500b7b89a7e748e601285e349e3266086c6b2614",
+  "baselineRun": 44380970575,
+  "branch": "bench/expanded-sites-3236-20261118",
+  "workflow": ".github/workflows/expanded-sites-screen.yml",
+  "runner": "blacksmith-8vcpu-ubuntu-2404-arm",
+  "jobs": 4,
+  "laneOrder": [
+    "base",
+    "candidate"
+  ],
+  "cases": [
+    {
+      "board": "glider",
+      "cohort": "original",
+      "expectedRoutableNets": 356
+    },
+    {
+      "board": "imx6",
+      "cohort": "original",
+      "expectedRoutableNets": 404
+    },
+    {
+      "board": "icepi",
+      "cohort": "original",
+      "expectedRoutableNets": 230
+    },
+    {
+      "board": "butterstick",
+      "cohort": "spaced",
+      "expectedRoutableNets": 317
+    }
+  ],
+  "expectedRoutableNetsPerLane": 1307,
+  "fullTenCoverage": false,
+  "finalAllTenExpectedRoutableNetsPerLane": 2856,
+  "budgetsMs": {
+    "capture": 900000,
+    "hardKill": 960000,
+    "assessment": 180000
+  },
+  "jobTimeoutMinutes": 60,
+  "runtime": {
+    "main": "0.0.3236",
+    "core": "0.0.2418",
+    "eval": "0.0.1811",
+    "autorouter": "0.0.1129",
+    "bus": "0.0.62",
+    "publishedCoreSha256": "25f088d42671b5efbf026c70a1216d754c01179e7d767f37e83bef11a0e79fd9",
+    "candidateCoreSha256": "243d567bff8ea59f8eb84046fb70c8c0f5b48651d7c34f84b7785ab7c120315e"
+  },
+  "source": {
+    "repository": "tscircuit/bus-lanes-solver",
+    "baseCommit": "202b034659fb96bad44d11b8190f4044b675116f",
+    "candidateCommit": "088d6b01de11add161a4917ae5bb0942a6e09f2a",
+    "patchSha256": "9074eb5a6e7e548b57cfd312a01f33c6afa28a2832e984f5119b8353eaa37ed0",
+    "files": {
+      "lib/expanded-signal-sites.ts": {
+        "beforeSha256": "d7cc650f000963a739eb0bf436a01005b9e87f86c6c35d254cf6e68cfa30392a",
+        "afterSha256": "849bdec04b16ec064890ecb30566a7c8d12cec99a64bded748492cf36c119e66"
+      },
+      "lib/grid-visibility.ts": {
+        "beforeSha256": "ab20bee43e199abc3b98662d83436f2b47b1a45834a71ddc2973bf8f66cfdb99",
+        "afterSha256": "726b35e80359622212458237532fa09aabc62ece46e042117bee0138a113da91"
+      }
+    },
+    "candidateLibTree": "cd4d33e61f6279720e0f440fbb700b8ea697391b",
+    "pendingExitPatchIncluded": false
+  },
+  "overlay": {
+    "schemaVersion": 2,
+    "replace": [
+      "expandedSignalSites"
+    ],
+    "insert": [],
+    "unchanged": [
+      "routingBounds"
+    ]
+  },
+  "sourceMappingToolSha256": "a04ccb41bd958ce3f8257adacfaae4e3c49cf7fe3d8f830ba6b3a522042a8cca",
+  "sourceMappingSha256": "33191855dd684dc597e86a3cb43d1810a46018907ec0719ebca363f94a1e5362",
+  "frozenHarnessFiles": {
+    "bootstrap.py": "23de25ac8960be89afc57ba27b0d3fddb6e65dba593024be59ec5073d266164d",
+    "prepare-cases.ts": "b72e632e9c9152c9e5daedf1bb60daa5d86c33fdcc454f2a7825827d24124330",
+    "render-published.tsx": "a5c379d0682f8e72e4c54c4710e797836b71fbe779e5430e33f62286694057f9",
+    "run-one.ts": "c5a45b592f474b18f34a3c8d5b5c97a5fdc19e2b41a2c0d1cf657ba547e01d1e",
+    "calibrate-assessment.tsx": "efeb820cf34239465df53ce4c7932293e41a14dcab4bedb823c3bc60cc9627a0",
+    "createCoarseRoutingDiagnostics.ts": "dea45bba3386a9b55b7709834dff65468c421992808b406f54c6f9e556e8b618",
+    "source-provenance.json": "bd24be29c5fdd5ae68ce15c5b2bc50f172ecdd325dcc1b57a80ec653d12570fb",
+    "release.json": "02acd9d4eea8e583d506c7f43be119c9aa5f6e740496bc0032ce85febb43f738",
+    "published-release-provenance.json": "1ec33d4dc1d1dcaf5986366823edd77b261f60a9e4826d4f7f8f92cba8f52ea8",
+    "harness-provenance.json": "d14a558891e02a0f7b130f13f8ad798783780b67c8f1f410fd86f0d9acf59366",
+    "runtime/package.json": "15215d5cd97fd8b6ce7b5070902bbeccb212c124e9899d1255d46aa9cb703d1d",
+    "runtime/bun.lock": "06d711c1fec0d9098a68ca0fa233c3cac41cddbda5b1b7ee0238f459dbf6a5e0",
+    "autorouter-dependencies/package.json": "7b4c1ecf979432e472a4f0589ed49976a8a1323ff7bf651a5938ee7006b61360",
+    "autorouter-dependencies/bun.lock": "ec313c582c29c1e35bb31190151a5649198c177119d32fe311746c06e94e8c4e",
+    "createExpandedSitesOverlay.ts": "a04ccb41bd958ce3f8257adacfaae4e3c49cf7fe3d8f830ba6b3a522042a8cca",
+    "expanded-sites-production.patch": "9074eb5a6e7e548b57cfd312a01f33c6afa28a2832e984f5119b8353eaa37ed0",
+    "expanded-sites-source-mapping.json": "33191855dd684dc597e86a3cb43d1810a46018907ec0719ebca363f94a1e5362",
+    "prepare-expanded-sites.py": "6f2aa15dd721fe81f9a56ba9e8fca67565a0dd8853a5583c60d1a5578de9bfc5",
+    "compare-expanded-sites.py": "8513238b6c6db43cb32c5d126aedeede2ecc4394c8a8468845667bc5140ce882",
+    "package.json": "469e1861d1259cd1307bca324fb0d8ba0a67ea0323d4e728a35c90a2bc92bdf3",
+    "tsconfig.json": "2e881577c63bb6b62d14abd319240bbc6ae5e206ecb007dae80ab3ec922293c7"
+  },
+  "frozenFiles": {
+    "experiments/full-board-ten/bootstrap.py": "23de25ac8960be89afc57ba27b0d3fddb6e65dba593024be59ec5073d266164d",
+    "experiments/full-board-ten/prepare-cases.ts": "b72e632e9c9152c9e5daedf1bb60daa5d86c33fdcc454f2a7825827d24124330",
+    "experiments/full-board-ten/render-published.tsx": "a5c379d0682f8e72e4c54c4710e797836b71fbe779e5430e33f62286694057f9",
+    "experiments/full-board-ten/run-one.ts": "c5a45b592f474b18f34a3c8d5b5c97a5fdc19e2b41a2c0d1cf657ba547e01d1e",
+    "experiments/full-board-ten/calibrate-assessment.tsx": "efeb820cf34239465df53ce4c7932293e41a14dcab4bedb823c3bc60cc9627a0",
+    "experiments/full-board-ten/createCoarseRoutingDiagnostics.ts": "dea45bba3386a9b55b7709834dff65468c421992808b406f54c6f9e556e8b618",
+    "experiments/full-board-ten/source-provenance.json": "bd24be29c5fdd5ae68ce15c5b2bc50f172ecdd325dcc1b57a80ec653d12570fb",
+    "experiments/full-board-ten/release.json": "02acd9d4eea8e583d506c7f43be119c9aa5f6e740496bc0032ce85febb43f738",
+    "experiments/full-board-ten/published-release-provenance.json": "1ec33d4dc1d1dcaf5986366823edd77b261f60a9e4826d4f7f8f92cba8f52ea8",
+    "experiments/full-board-ten/harness-provenance.json": "d14a558891e02a0f7b130f13f8ad798783780b67c8f1f410fd86f0d9acf59366",
+    "experiments/full-board-ten/runtime/package.json": "15215d5cd97fd8b6ce7b5070902bbeccb212c124e9899d1255d46aa9cb703d1d",
+    "experiments/full-board-ten/runtime/bun.lock": "06d711c1fec0d9098a68ca0fa233c3cac41cddbda5b1b7ee0238f459dbf6a5e0",
+    "experiments/full-board-ten/autorouter-dependencies/package.json": "7b4c1ecf979432e472a4f0589ed49976a8a1323ff7bf651a5938ee7006b61360",
+    "experiments/full-board-ten/autorouter-dependencies/bun.lock": "ec313c582c29c1e35bb31190151a5649198c177119d32fe311746c06e94e8c4e",
+    "experiments/full-board-ten/createExpandedSitesOverlay.ts": "a04ccb41bd958ce3f8257adacfaae4e3c49cf7fe3d8f830ba6b3a522042a8cca",
+    "experiments/full-board-ten/expanded-sites-production.patch": "9074eb5a6e7e548b57cfd312a01f33c6afa28a2832e984f5119b8353eaa37ed0",
+    "experiments/full-board-ten/expanded-sites-source-mapping.json": "33191855dd684dc597e86a3cb43d1810a46018907ec0719ebca363f94a1e5362",
+    "experiments/full-board-ten/prepare-expanded-sites.py": "6f2aa15dd721fe81f9a56ba9e8fca67565a0dd8853a5583c60d1a5578de9bfc5",
+    "experiments/full-board-ten/compare-expanded-sites.py": "8513238b6c6db43cb32c5d126aedeede2ecc4394c8a8468845667bc5140ce882",
+    "experiments/full-board-ten/package.json": "469e1861d1259cd1307bca324fb0d8ba0a67ea0323d4e728a35c90a2bc92bdf3",
+    "experiments/full-board-ten/tsconfig.json": "2e881577c63bb6b62d14abd319240bbc6ae5e206ecb007dae80ab3ec922293c7",
+    ".github/workflows/expanded-sites-screen.yml": "3a4c05f5cc2490c1214d5293b62f12e33197e020219f3f642660f229e19f4d13"
+  },
+  "acceptance": "Actual connected native net names without lost previous nets or physical regressions. Stage progress/timing alone is not completion; a valid comparison does not imply candidate acceptance.",
+  "nativePolicies": "Unchanged full components, geometry and net names; phased routing, fanout false; original planes true and spaced planes false; no routing WASM.",
+  "integrationLimit": "Core AST overlay is causal screening evidence, not actual packaged Bus/Core integration qualification.",
+  "requiredHarnessFiles": [
+    "bootstrap.py",
+    "prepare-cases.ts",
+    "render-published.tsx",
+    "run-one.ts",
+    "calibrate-assessment.tsx",
+    "createCoarseRoutingDiagnostics.ts",
+    "source-provenance.json",
+    "release.json",
+    "published-release-provenance.json",
+    "harness-provenance.json",
+    "runtime/package.json",
+    "runtime/bun.lock",
+    "autorouter-dependencies/package.json",
+    "autorouter-dependencies/bun.lock",
+    "createExpandedSitesOverlay.ts",
+    "expanded-sites-production.patch",
+    "expanded-sites-source-mapping.json",
+    "prepare-expanded-sites.py",
+    "compare-expanded-sites.py",
+    "package.json",
+    "tsconfig.json"
+  ],
+  "selectionStatus": "Unselected experimental candidate; this four-case screen determines native completion benefit",
+  "observerContext": "ButterStick short expanded-grid construction accounted for47.2s/900s; the three original timeout boards have not been profiled. No gain is assumed.",
+  "qualification": {
+    "sourceReview": "PASS independent source review; clean088d6b01 two-file production commit",
+    "mapping": "PASS one expandedSignalSites replacement with unchanged routingBounds, original/candidate Core hashes and three negative mapper contracts",
+    "controllerReview": "PASS independent comparison_review",
+    "installerContract": "PASS authenticCore/syntheticotherpackages; exact source patch, one-span Core reconstruction, unrelated AR/runtime drift rejection and original Core restoration",
+    "comparatorContract": "PASS allfour selected schemas with authentic native-name membership; five negative guards",
+    "contractScope": "No native routing, physical connectivity or performance claim; controller contracts use synthetic reports and package stubs except authentic Core/source bytes.",
+    "sourceSelectedForPR": false,
+    "agentPushed": false
+  }
+}
