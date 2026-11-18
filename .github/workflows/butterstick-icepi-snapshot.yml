@@ -1,0 +1,32 @@
+name: Inspect the naturally changed iCEPi routing snapshot
+on:
+  push:
+    branches: [analysis/butterstick-icepi-snapshot]
+    paths: [.github/workflows/butterstick-icepi-snapshot.yml]
+permissions:
+  contents: write
+jobs:
+  snapshot:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.4.3'
+      - run: bun install
+      - name: Regenerate the existing board snapshot with unchanged assertions
+        run: |
+          BUN_UPDATE_SNAPSHOTS=1 bun test tests/repro/pipeline9-icepi-retained-vias.test.ts --timeout 600000
+          python3 - <<'PY'
+          import re,subprocess
+          from pathlib import Path
+          p="tests/repro/__snapshots__/pipeline9-icepi-retained-vias.snap.svg"
+          for label,s in [("before",subprocess.check_output(["git","show","HEAD:"+p]).decode()),("after",Path(p).read_text())]:
+            print("ICEPI_DRC_"+label.upper()+"="+str(re.findall(r"Relaxed DRC errors: [0-9]+",s)))
+          PY
+          git config user.name "tscircuit bot"
+          git config user.email "githubbot@tscircuit.com"
+          git add tests/repro/__snapshots__/pipeline9-icepi-retained-vias.snap.svg
+          git commit -m "Render the improved existing iCEPi regression"
+          git push origin HEAD:analysis/butterstick-icepi-rendered
