@@ -76,7 +76,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
   viaDiameter: number
   traceWidth: number
   obstacleMargin: number
-  obstacles: Obstacle[]
+  obstacles: SingleHighDensityRouteSolver["obstacles"]
   captureSearchDebug: boolean
   rerouteAttemptsByConnection: Map<string, number>
 

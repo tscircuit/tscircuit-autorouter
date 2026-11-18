@@ -13,8 +13,9 @@ import {
 } from "lib/data-structures/SingleRouteCandidatePriorityQueue"
 import type { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
 import type { Obstacle } from "lib/types/srj-types"
-import { isObstacleConnectedToRoute } from "../TraceWidthSolver/isObstacleConnectedToRoute"
+import { applyToPoint, compose, rotateDEG, translate } from "transformation-matrix"
 import { BaseSolver } from "../BaseSolver"
+import { isObstacleConnectedToRoute } from "../TraceWidthSolver/isObstacleConnectedToRoute"
 import { HighDensityHyperParameters } from "./HighDensityHyperParameters"
 
 export type FutureConnection = {
@@ -45,7 +46,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
   }
 
   obstacleRoutes: HighDensityIntraNodeRoute[]
-  obstacles: Obstacle[]
+  obstacles: (Obstacle & { __zLayers: number[] })[]
   bounds: { minX: number; maxX: number; minY: number; maxY: number }
   boundsSize: { width: number; height: number }
   boundsCenter: { x: number; y: number }
@@ -116,7 +117,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     rootConnectionName?: string
     regionId?: string
     obstacleRoutes: HighDensityIntraNodeRoute[]
-    obstacles?: Obstacle[]
+    obstacles?: SingleHighDensityRouteSolver["obstacles"]
     minDistBetweenEnteringPoints: number
     bounds: { minX: number; maxX: number; minY: number; maxY: number }
     A: { x: number; y: number; z: number }
@@ -259,7 +260,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
   private doesShortcutOverlapObstacle(): boolean {
     const { A, B } = this
     for (const obstacle of this.obstacles) {
-      if (!obstacle.__zLayers?.includes(A.z)) continue
+      if (!obstacle.__zLayers.includes(A.z)) continue
       if (isObstacleConnectedToRoute(obstacle, this, this.connMap)) continue
       let distanceToObstacle: number
       if (obstacle.shape === "circle") {
@@ -268,17 +269,12 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
           radius: obstacle.width / 2,
         })
       } else {
-        const angle = (-(obstacle.ccwRotationDegrees ?? 0) * Math.PI) / 180
-        const cos = Math.cos(angle)
-        const sin = Math.sin(angle)
-        const localA = {
-          x: (A.x - obstacle.center.x) * cos - (A.y - obstacle.center.y) * sin,
-          y: (A.x - obstacle.center.x) * sin + (A.y - obstacle.center.y) * cos,
-        }
-        const localB = {
-          x: (B.x - obstacle.center.x) * cos - (B.y - obstacle.center.y) * sin,
-          y: (B.x - obstacle.center.x) * sin + (B.y - obstacle.center.y) * cos,
-        }
+        const boardToObstacleTransform = compose(
+          rotateDEG(-(obstacle.ccwRotationDegrees ?? 0)),
+          translate(-obstacle.center.x, -obstacle.center.y),
+        )
+        const localA = applyToPoint(boardToObstacleTransform, A)
+        const localB = applyToPoint(boardToObstacleTransform, B)
         distanceToObstacle = segmentToBoxMinDistance(localA, localB, {
           center: { x: 0, y: 0 },
           width: obstacle.width,
