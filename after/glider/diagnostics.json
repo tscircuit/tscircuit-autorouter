@@ -1,0 +1,72 @@
+{
+  "timeline": [],
+  "busStageMs": {},
+  "busLastState": null,
+  "pipelineLastState": null,
+  "fanoutLastState": {
+    "iterations": 74553,
+    "failed": true,
+    "solved": false,
+    "error": "FanoutSolver: best layer assignment routed 60/95 connections",
+    "stats": {
+      "phase": "complete-assignment",
+      "assignment": 256,
+      "assignmentCount": 256,
+      "routedBuses": "57/95",
+      "routedConnections": "57/95",
+      "failedBuses": "connection:breakout:pcb_breakout_point_49, connection:breakout:pcb_breakout_point_34, connection:breakout:pcb_breakout_point_35, connection:breakout:pcb_breakout_point_26, connection:breakout:pcb_breakout_point_42, connection:breakout:pcb_breakout_point_12, connection:breakout:pcb_breakout_point_27, connection:breakout:pcb_breakout_point_10, connection:breakout:pcb_breakout_point_28, connection:breakout:pcb_breakout_point_43, connection:breakout:pcb_breakout_point_6, connection:breakout:pcb_breakout_point_13, connection:breakout:pcb_breakout_point_14, connection:breakout:pcb_breakout_point_24, connection:breakout:pcb_breakout_point_7, connection:breakout:pcb_breakout_point_15, connection:breakout:pcb_breakout_point_39, connection:breakout:pcb_breakout_point_44, connection:breakout:pcb_breakout_point_9, connection:breakout:pcb_breakout_point_21, connection:breakout:pcb_breakout_point_22, connection:breakout:pcb_breakout_point_23, connection:breakout:pcb_breakout_point_29, connection:breakout:pcb_breakout_point_46, connection:breakout:pcb_breakout_point_16, connection:breakout:pcb_breakout_point_37, connection:breakout:pcb_breakout_point_38, connection:breakout:pcb_breakout_point_45, connection:breakout:pcb_breakout_point_8, connection:breakout:pcb_breakout_point_30, connection:breakout:pcb_breakout_point_31, connection:breakout:pcb_breakout_point_47, connection:breakout:pcb_breakout_point_4, connection:breakout:pcb_breakout_point_32, ESC_U12_pin25, ESC_U12_pin72, ESC_U12_pin84, ESC_U12_pin91",
+      "bestScore": 38500165.402432814
+    },
+    "properties": [
+      "MAX_ITERATIONS",
+      "solved",
+      "failed",
+      "iterations",
+      "progress",
+      "error",
+      "activeSubSolver",
+      "failedSubSolvers",
+      "timeToSolve",
+      "stats",
+      "_setupDone",
+      "inputSrj",
+      "options",
+      "preparedBuses",
+      "attempts",
+      "layerAssignments",
+      "config",
+      "routingSrj",
+      "escapeLayersByBusId",
+      "boundaryBuses",
+      "fixedPlaneAssignments",
+      "evaluatedAssignmentKeys",
+      "queuedAssignmentKeys",
+      "assignmentRepairDepthByKey",
+      "pendingRepairAssignments",
+      "routeStaticClearanceCache",
+      "routingPrefixCache",
+      "layerReservedRoutingEvaluated",
+      "groupedBeamEvaluated",
+      "routingInitialized",
+      "nextCandidateLayerBusIndex",
+      "nextAssignmentIndex",
+      "nextGeneratedAssignmentIndex",
+      "activeOperation",
+      "inProgressPlans",
+      "activeRoutingVisualization",
+      "activeAdaptiveVisualization",
+      "bestAttempt",
+      "lengthMatchingFailure",
+      "endpointCompletion"
+    ]
+  },
+  "phaseInputs": [
+    {
+      "name": "fanout preparation",
+      "connections": 95,
+      "terminals": 147,
+      "obstacles": 2286,
+      "aliases": 1028190
+    }
+  ]
+}

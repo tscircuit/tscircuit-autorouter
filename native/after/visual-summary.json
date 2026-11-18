@@ -1,0 +1,16 @@
+{
+  "routed": 7,
+  "requested": 32,
+  "completedPlanes": 6,
+  "planeRequests": 20,
+  "vias": 7,
+  "acceptedByCore": false,
+  "bounds": {
+    "minX": -3.83,
+    "maxX": 6.34,
+    "minY": 9.48,
+    "maxY": 19.65
+  },
+  "originalGraphics": "fanout.graphics.json",
+  "notes": "Native visualize() renders bestAttempt.outputSrj. Plane connections are removed from that output after successful local termination. Via circles are native trace via glyphs; pads retain label metadata in the original graphics. Only the drawing is cropped; routing input is unchanged."
+}

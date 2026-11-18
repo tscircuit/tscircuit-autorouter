@@ -1,0 +1,56 @@
+diff --git a/lib/route-bus.ts b/lib/route-bus.ts
+index b364791..dbedd6d 100644
+--- a/lib/route-bus.ts
++++ b/lib/route-bus.ts
+@@ -1926,6 +1926,13 @@ function planIsStaticallyClear(params: {
+   }
+   for (const via of getPlanVias(plan)) {
+     for (const obstacle of srj.obstacles) {
++      // Other-layer pour reservations form antipads, as in dogbone matching.
++      if (
++        obstacle.isCopperPour &&
++        !obstacle.layers.includes(plan.sourceLayer)
++      ) {
++        continue
++      }
+       if (
+         allowsViaInPad(srj) &&
+         obstacle === plan.sourceObstacle &&
+diff --git a/lib/validate-routed-copper-drc.ts b/lib/validate-routed-copper-drc.ts
+index 73174b5..9537869 100644
+--- a/lib/validate-routed-copper-drc.ts
++++ b/lib/validate-routed-copper-drc.ts
+@@ -54,6 +54,8 @@ interface RoutedVia {
+   center: Point2D
+   diameter: number
+   spanLayers: string[]
++  fromLayer: string
++  toLayer: string
+ }
+ 
+ interface TraceCopper {
+@@ -158,6 +160,8 @@ function extractTraceCopper(params: {
+         diameter:
+           routePoint.via_diameter ?? srj.minViaPadDiameter ?? srj.minTraceWidth,
+         spanLayers,
++        fromLayer: routePoint.from_layer,
++        toLayer: routePoint.to_layer,
+       })
+       if (
+         !previousWire ||
+@@ -362,6 +366,15 @@ export function validateRoutedCopperDrc(params: {
+         })
+       }
+       for (const obstacle of differentNetObstacles) {
++        // Crossed pour reservations form antipads. Keep both terminal layers
++        // protected, including plane-endpoint dogbones emitted in reverse.
++        if (
++          obstacle.isCopperPour &&
++          !obstacle.layers.includes(via.fromLayer) &&
++          !obstacle.layers.includes(via.toLayer)
++        ) {
++          continue
++        }
+         if (!obstacle.layers.some((layer) => via.spanLayers.includes(layer))) {
+           continue
+         }

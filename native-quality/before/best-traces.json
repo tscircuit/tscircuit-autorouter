@@ -1,0 +1,43 @@
+[
+  {
+    "type": "pcb_trace",
+    "pcb_trace_id": "fanout:breakout:pcb_breakout_point_6:source-0",
+    "connection_name": "breakout:pcb_breakout_point_6",
+    "connectsTo": [
+      "pcb_port_158",
+      "pcb_port_158",
+      "fanout-exit:breakout:pcb_breakout_point_6:source-0"
+    ],
+    "route": [
+      {
+        "route_type": "wire",
+        "x": 2.989999999998758,
+        "y": 11.329999999999984,
+        "width": 0.1,
+        "layer": "top",
+        "start_pcb_port_id": "pcb_port_158"
+      },
+      {
+        "route_type": "wire",
+        "x": 2.989999999998758,
+        "y": 11.028999999999984,
+        "width": 0.1,
+        "layer": "top"
+      },
+      {
+        "route_type": "wire",
+        "x": 2.489999999998758,
+        "y": 10.528999999999984,
+        "width": 0.1,
+        "layer": "top"
+      },
+      {
+        "route_type": "wire",
+        "x": 2.489999999998758,
+        "y": 10.479999999999983,
+        "width": 0.1,
+        "layer": "top"
+      }
+    ]
+  }
+]

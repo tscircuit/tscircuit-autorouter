@@ -1,0 +1,79 @@
+{
+  "source": {
+    "x": 0.48999999999875865,
+    "y": 15.829999999999984,
+    "layer": "top",
+    "pointId": "pcb_port_255",
+    "pcb_port_id": "pcb_port_255"
+  },
+  "via": {
+    "center": {
+      "x": 1.7399999999987577,
+      "y": 15.079999999999984
+    },
+    "diameter": 0.45,
+    "holeDiameter": 0.2,
+    "fromLayer": "top",
+    "toLayer": "inner2",
+    "spanLayers": [
+      "top",
+      "inner1",
+      "inner2",
+      "bottom"
+    ]
+  },
+  "trace": {
+    "type": "pcb_trace",
+    "pcb_trace_id": "fanout:source_trace_0:source-0",
+    "connection_name": "source_trace_0",
+    "connectsTo": [
+      "pcb_port_255",
+      "pcb_port_255",
+      "fanout-exit:source_trace_0:source-0"
+    ],
+    "route": [
+      {
+        "route_type": "wire",
+        "x": 0.48999999999875865,
+        "y": 15.829999999999984,
+        "width": 0.1,
+        "layer": "top",
+        "start_pcb_port_id": "pcb_port_255"
+      },
+      {
+        "route_type": "wire",
+        "x": 1.2399999999987585,
+        "y": 15.079999999999984,
+        "width": 0.1,
+        "layer": "top"
+      },
+      {
+        "route_type": "wire",
+        "x": 1.7399999999987577,
+        "y": 15.079999999999984,
+        "width": 0.1,
+        "layer": "top"
+      },
+      {
+        "route_type": "via",
+        "x": 1.7399999999987577,
+        "y": 15.079999999999984,
+        "from_layer": "top",
+        "to_layer": "inner2",
+        "via_diameter": 0.45,
+        "via_hole_diameter": 0.2
+      },
+      {
+        "route_type": "wire",
+        "x": 1.7399999999987577,
+        "y": 15.079999999999984,
+        "width": 0.1,
+        "layer": "inner2"
+      }
+    ]
+  },
+  "sourceFixRevision": "80f8a8871626fdd470092c2ae9a8e1bb2b0cc731",
+  "captureFile": "raw-results/icepi/fanout-1-input.json.gz",
+  "sourceCaptureSha256": "f2c622bc288faaae5e505f62fe8803b465d1be0bc5752547ea9136438df40279",
+  "measuredFixRevision": "65439fb38d1d86af15495553588cfe21b28a197a"
+}

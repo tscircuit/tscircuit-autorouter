@@ -1,0 +1,74 @@
+{
+  "inputSha256": "f2c622bc288faaae5e505f62fe8803b465d1be0bc5752547ea9136438df40279",
+  "before": {
+    "routed": 1,
+    "planes": 0,
+    "boundary": 1,
+    "vias": 0,
+    "connectionNames": [
+      "breakout:pcb_breakout_point_6"
+    ],
+    "planeBuses": []
+  },
+  "after": {
+    "routed": 7,
+    "planes": 6,
+    "boundary": 1,
+    "vias": 7,
+    "connectionNames": [
+      "breakout:pcb_breakout_point_6",
+      "source_trace_16",
+      "source_trace_3",
+      "source_trace_7",
+      "source_trace_15",
+      "source_trace_17",
+      "source_trace_18"
+    ],
+    "planeBuses": [
+      "ESC_U22_pin6",
+      "ESC_U22_pin142",
+      "ESC_U22_pin65",
+      "ESC_U22_pin55",
+      "ESC_U22_pin73",
+      "ESC_U22_pin82"
+    ]
+  },
+  "copperDrc": {
+    "before": {
+      "valid": true,
+      "checkedTraceCount": 1,
+      "checkedSegmentCount": 3,
+      "checkedViaCount": 0,
+      "issues": []
+    },
+    "after": {
+      "valid": true,
+      "checkedTraceCount": 7,
+      "checkedSegmentCount": 11,
+      "checkedViaCount": 7,
+      "issues": []
+    }
+  },
+  "trials": [
+    {
+      "trial": 1,
+      "beforeElapsedMs": 199968.70455599998,
+      "afterElapsedMs": 154799.434217,
+      "beforeRouted": 1,
+      "afterRouted": 7
+    },
+    {
+      "trial": 2,
+      "beforeElapsedMs": 182189.686714,
+      "afterElapsedMs": 211459.554473,
+      "beforeRouted": 1,
+      "afterRouted": 7
+    }
+  ],
+  "identicalGraphicsAcrossRepeats": {
+    "before": true,
+    "after": true
+  },
+  "acceptedByCore": false,
+  "timingConclusion": "The two worker pairs vary in timing direction. No reliable runtime improvement is established. Routing counts repeat identically."
+}

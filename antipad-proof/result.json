@@ -1,0 +1,73 @@
+{
+  "passed": true,
+  "scope": "Native escape geometry with source-port IDs remapped for the integration board; core materialization and final regenerated pour BREP only, not full-board routing completion",
+  "versions": {
+    "core": "0.0.2410",
+    "props": "0.0.735",
+    "bun": "1.4.3"
+  },
+  "archives": [
+    {
+      "url": "https://registry.npmjs.org/@tscircuit/core/-/core-0.0.2410.tgz",
+      "sha256": "97fee8e1ecfa5ff76f5fd7b0e4568518e3e58beca19b2dd35419e7d4a9b5a920"
+    },
+    {
+      "url": "https://registry.npmjs.org/@tscircuit/props/-/props-0.0.735.tgz",
+      "sha256": "2a2ff7b7ed61e1772855a5dcb0cc0b42454d4d40b817df8932e9802f89ceca64"
+    }
+  ],
+  "sourceFixRevision": "80f8a8871626fdd470092c2ae9a8e1bb2b0cc731",
+  "measuredFixRevision": "65439fb38d1d86af15495553588cfe21b28a197a",
+  "sourceCaptureSha256": "f2c622bc288faaae5e505f62fe8803b465d1be0bc5752547ea9136438df40279",
+  "nativeEscapeSha256": "b48698a173cc7f5f6182eeb26a9415a0aa3701e1c2a323af2b9fcae2e016f844",
+  "coreModuleSha256": "81c2368bd05e08d57a3a85012d112b39024bf2c89a17f1d94b6c66199b354194",
+  "proofScriptSha256": "e13593fb56f32e4493b05d349759888be5f9681ec4b85f7117ec7fa028e3502c",
+  "reproductionScriptSha256": "d02a2cbad9b6ac09d2d7370871fe989ff9839e804c927d2c97174a2ec6cbf0ce",
+  "emittedVia": {
+    "type": "pcb_via",
+    "pcb_via_id": "pcb_via_0",
+    "pcb_trace_id": "fanout:source_trace_0:source-0",
+    "x": 1.7399999999987577,
+    "y": 15.079999999999984,
+    "hole_diameter": 0.2,
+    "outer_diameter": 0.45,
+    "layers": [
+      "top",
+      "inner1",
+      "inner2",
+      "bottom"
+    ],
+    "from_layer": "top",
+    "to_layer": "inner2",
+    "subcircuit_id": "subcircuit_source_group_0",
+    "subcircuit_connectivity_map_key": "unnamedsubcircuitsubcircuit_source_group_0_connectivity_net0"
+  },
+  "foreignPour": {
+    "layer": "inner1",
+    "padMargin": 0.1
+  },
+  "viaPad": {
+    "shape": "circle",
+    "padId": "pcb_via_0",
+    "layer": "inner1",
+    "connectivityKey": "subcircuit:subcircuit_source_group_0:connectivity:unnamedsubcircuitsubcircuit_source_group_0_connectivity_net0",
+    "x": 1.7399999999987577,
+    "y": 15.079999999999984,
+    "radius": 0.225
+  },
+  "antipad": {
+    "vertexCount": 32,
+    "minRadius": 0.32499999999999485,
+    "maxRadius": 0.3250000000000056
+  },
+  "unrelatedConnectivityFindings": [
+    {
+      "type": "pcb_port_not_connected_error",
+      "message": "Port [J1.GND] is not connected to net [GND] by a PCB trace."
+    },
+    {
+      "type": "pcb_trace_error",
+      "message": "Trace [U22.pin1 to J1.pin1] is missing a connection to SMD pad J1.GND"
+    }
+  ]
+}

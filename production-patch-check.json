@@ -1,0 +1,9 @@
+{
+  "byteIdenticalProductionPatch": true,
+  "sha256": "7ea66ec3167d14eb16f3b8d8e4df05e3277e4be1b05f01f86ad9a107a758b19b",
+  "addedProductionLines": 20,
+  "measuredBase": "8c699afbd643652c4923b15b63a56d82eb794833",
+  "measuredFix": "65439fb38d1d86af15495553588cfe21b28a197a",
+  "prBase": "8bdc9a8d9d405af69a522ad99655f77251d9cbe7",
+  "prFix": "80f8a8871626fdd470092c2ae9a8e1bb2b0cc731"
+}

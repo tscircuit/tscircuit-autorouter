@@ -1,0 +1,72 @@
+{
+  "timeline": [],
+  "busStageMs": {},
+  "busLastState": null,
+  "pipelineLastState": null,
+  "fanoutLastState": {
+    "iterations": 60716,
+    "failed": true,
+    "solved": false,
+    "error": "FanoutSolver: best layer assignment routed 62/91 connections",
+    "stats": {
+      "phase": "complete-assignment",
+      "assignment": 256,
+      "assignmentCount": 256,
+      "routedBuses": "51/77",
+      "routedConnections": "58/91",
+      "failedBuses": "DDR_BUS_byte0, connection:breakout:pcb_breakout_point_19, connection:breakout:pcb_breakout_point_40, connection:breakout:pcb_breakout_point_47, connection:breakout:pcb_breakout_point_11, connection:breakout:pcb_breakout_point_5, connection:breakout:pcb_breakout_point_26, connection:breakout:pcb_breakout_point_23, connection:breakout:pcb_breakout_point_38, connection:breakout:pcb_breakout_point_52, connection:breakout:pcb_breakout_point_22, connection:breakout:pcb_breakout_point_37, connection:breakout:pcb_breakout_point_51, connection:breakout:pcb_breakout_point_30, connection:breakout:pcb_breakout_point_14, connection:breakout:pcb_breakout_point_16, connection:breakout:pcb_breakout_point_27, connection:breakout:pcb_breakout_point_28, connection:breakout:pcb_breakout_point_48, connection:breakout:pcb_breakout_point_49, ESC_U11_pin67, ESC_U11_pin73, ESC_U11_pin8, ESC_U11_pin26, ESC_U11_pin19, ESC_U11_pin7",
+      "bestScore": 31200253.26003726
+    },
+    "properties": [
+      "MAX_ITERATIONS",
+      "solved",
+      "failed",
+      "iterations",
+      "progress",
+      "error",
+      "activeSubSolver",
+      "failedSubSolvers",
+      "timeToSolve",
+      "stats",
+      "_setupDone",
+      "inputSrj",
+      "options",
+      "preparedBuses",
+      "attempts",
+      "layerAssignments",
+      "config",
+      "routingSrj",
+      "escapeLayersByBusId",
+      "boundaryBuses",
+      "fixedPlaneAssignments",
+      "evaluatedAssignmentKeys",
+      "queuedAssignmentKeys",
+      "assignmentRepairDepthByKey",
+      "pendingRepairAssignments",
+      "routeStaticClearanceCache",
+      "routingPrefixCache",
+      "layerReservedRoutingEvaluated",
+      "groupedBeamEvaluated",
+      "routingInitialized",
+      "nextCandidateLayerBusIndex",
+      "nextAssignmentIndex",
+      "nextGeneratedAssignmentIndex",
+      "activeOperation",
+      "inProgressPlans",
+      "activeRoutingVisualization",
+      "activeAdaptiveVisualization",
+      "bestAttempt",
+      "lengthMatchingFailure",
+      "endpointCompletion"
+    ]
+  },
+  "phaseInputs": [
+    {
+      "name": "fanout preparation",
+      "connections": 91,
+      "terminals": 144,
+      "obstacles": 2733,
+      "aliases": 1450005
+    }
+  ]
+}
