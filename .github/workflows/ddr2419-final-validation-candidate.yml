@@ -1,0 +1,194 @@
+name: "Validate final fanout antipads against the latest stack"
+on:
+  push:
+    branches: [codex/ddr2419-final-validation-candidate]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  boards:
+    strategy:
+      fail-fast: false
+      matrix:
+        board: [orangecrab, h616, butterstick, glider, imx6, icepi]
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          ref: 9910d3a595fdc3f19c7147ac37e0262a2338d92c
+          path: router
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/core
+          ref: 192976770dca61204aa82ec99e75c49d59e05c16
+          path: core
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Build the frozen latest published stack
+        run: |
+          python3 - <<'PYFANOUT'
+          import json
+          from pathlib import Path
+          path=Path('core/package.json');package=json.loads(path.read_text())
+          assert package['devDependencies']['@tscircuit/fanout-solver']=='0.0.87'
+          package['devDependencies']['@tscircuit/fanout-solver']='https://codeload.github.com/tscircuit/fanout-solver/tar.gz/fcfbbc12189903eaba321c581ed9012266abf4b6'
+          path.write_text(json.dumps(package,indent=2)+'\n')
+          PYFANOUT
+          for folder in router core; do (cd "$folder" && bun install --ignore-scripts); done
+          (cd router && bun build lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts --target bun --packages external --outfile benchmark-runtime/pipeline9.js)
+          cd experiments/full-board-priority-analysis
+          python3 - <<'PYDEPS'
+          import json
+          from pathlib import Path
+          path=Path('package.json');package=json.loads(path.read_text());package['dependencies']['tscircuit']='0.0.3237';path.write_text(json.dumps(package,indent=2)+'\n')
+          PYDEPS
+          bun install --ignore-scripts
+          bun build-core.ts ../../core
+      - name: Verify fanout then buses then remaining nets, and route fresh
+        working-directory: experiments/full-board-priority-analysis
+        env:
+          BOARD_ID: ${{ matrix.board }}
+          FULL_BOARD_CAPTURE_STAGE_INPUTS: "1"
+          FULL_BOARD_FANOUT_VERSION: "0.0.87+fcfbbc1"
+        run: |
+          export FULL_BOARD_CORE_SOURCE="$GITHUB_WORKSPACE/core"
+          export FULL_BOARD_CORE_MODULE="$PWD/patched-core/index.js"
+          export FULL_BOARD_COPPER_MODULE="$PWD/patched-core/find-floating-copper.js"
+          export FULL_BOARD_ROUTER_MODULE="$GITHUB_WORKSPACE/router/benchmark-runtime/pipeline9.js"
+          export FULL_BOARD_ROUTER_COMMIT="9910d3a595fdc3f19c7147ac37e0262a2338d92c"
+          mkdir -p "$GITHUB_WORKSPACE/results/$BOARD_ID"
+          cp patched-core/build.json "$GITHUB_WORKSPACE/results/$BOARD_ID/core-build.json"
+          cp "$GITHUB_WORKSPACE/core/package.json" "$GITHUB_WORKSPACE/results/$BOARD_ID/core-package.json"
+          cp "$GITHUB_WORKSPACE/core/bun.lock" "$GITHUB_WORKSPACE/results/$BOARD_ID/core-bun.lock"
+          cp package.json "$GITHUB_WORKSPACE/results/$BOARD_ID/runtime-package.json"
+          cp bun.lock "$GITHUB_WORKSPACE/results/$BOARD_ID/runtime-bun.lock"
+          bun inspect-routing-workflow.tsx "$BOARD_ID" "$GITHUB_WORKSPACE/results/$BOARD_ID/plan.json"
+          bun run-fanout-bus-first.ts "$BOARD_ID" "$GITHUB_WORKSPACE/results/$BOARD_ID"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: antipads2419-${{ matrix.board }}
+          path: results
+          retention-days: 14
+      - name: Export native PCB output and diagnostics
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import base64,io,zipfile
+          from pathlib import Path
+          stream=io.BytesIO()
+          names={'core-build.json','core-package.json','core-bun.lock','plan.json','progress.json','assessment.json','diagnostics.json','process.json','circuit.json','pcb.svg','worker.log','runtime-package.json','runtime-bun.lock'}
+          with zipfile.ZipFile(stream,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=9) as archive:
+              for path in Path('results').rglob('*'):
+                  if path.is_file() and (path.name in names or path.name.startswith('fanout-') and path.name.endswith('.json.gz')):
+                      archive.writestr(str(path.relative_to('results')),path.read_bytes())
+          print('FANOUT_BUS_FIRST_EVIDENCE_BEGIN')
+          encoded=base64.b64encode(stream.getvalue()).decode()
+          for offset in range(0,len(encoded),8000): print(encoded[offset:offset+8000])
+          print('FANOUT_BUS_FIRST_EVIDENCE_END')
+          PY
+
+  fanout31:
+    runs-on: blacksmith-32vcpu-ubuntu-2404-arm
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: fcfbbc12189903eaba321c581ed9012266abf4b6
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - run: bun install --frozen-lockfile --ignore-scripts
+      - name: Run all 72 fanout31 cases
+        run: ./benchmark.sh --dataset dataset31 --concurrency 16 --sample-timeout-seconds 120 --output-directory benchmark-results
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: antipads2419-fanout31
+          path: benchmark-results
+      - name: Export benchmark outcomes and input checksums
+        if: always()
+        run: |
+          python3 - <<'PYBENCH'
+          import hashlib,json
+          from pathlib import Path
+          report=Path('benchmark-results/benchmark.json')
+          if report.exists(): print('FANOUT31_REPORT',report.read_text().replace('\n',''))
+          checksums={str(path.relative_to('benchmark-results/inputs')):hashlib.sha256(path.read_bytes()).hexdigest() for path in Path('benchmark-results/inputs').rglob('*.json')}
+          print('FANOUT31_INPUT_CHECKSUMS',json.dumps(checksums,separators=(',',':')))
+          PYBENCH
+  isolated-planes:
+    strategy:
+      fail-fast: false
+      matrix:
+        board: [orangecrab, h616, butterstick, glider, imx6, icepi]
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: 9298af270a66d2ebc4c34d5d9217b7e99acaef2e
+          path: before
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: fcfbbc12189903eaba321c581ed9012266abf4b6
+          path: after
+      - uses: actions/download-artifact@v4
+        with:
+          name: published2419-${{ matrix.board }}
+          run-id: 44380848726
+          github-token: ${{ github.token }}
+          path: captured
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Install exact source dependencies
+        run: |
+          for revision in before after; do
+            (cd "$revision" && bun install --frozen-lockfile --ignore-scripts)
+            cp experiments/full-board-priority-analysis/isolated-plane-suite.ts "$revision/isolated-plane-suite.ts"
+          done
+      - name: Solve every declared native plane bus separately, retaining all obstacles
+        env:
+          BOARD_ID: ${{ matrix.board }}
+        run: |
+          for revision in before after; do
+            mkdir -p "$GITHUB_WORKSPACE/isolated/$revision"
+            (cd "$revision" && bun isolated-plane-suite.ts "$GITHUB_WORKSPACE/captured/$BOARD_ID/fanout-1-input.json.gz" "$GITHUB_WORKSPACE/isolated/$revision")
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: antipads2419-isolated-${{ matrix.board }}
+          path: isolated
+      - name: Export paired native plane-bus reports
+        if: always()
+        run: |
+          python3 - <<'PYPLANES'
+          import json
+          from pathlib import Path
+          for revision in ['before','after']:
+              path=Path('isolated')/revision/'report.json'
+              if path.exists(): print('ISOLATED_PLANES_REPORT',json.dumps({'revision':revision,'rows':json.loads(path.read_text())},separators=(',',':')))
+          PYPLANES
+  source-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: fcfbbc12189903eaba321c581ed9012266abf4b6
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - run: bun install --frozen-lockfile --ignore-scripts
+      - run: bun run format:check
+      - if: always()
+        run: bun run typecheck
