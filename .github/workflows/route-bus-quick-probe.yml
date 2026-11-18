@@ -1,0 +1,70 @@
+name: Probe Fanout31 cleanup performance on a matched worker
+on:
+  push:
+    branches: [codex/route-bus-cleanup-checks]
+    paths: [.github/workflows/route-bus-quick-probe.yml]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  quick-probe:
+    runs-on: blacksmith-32vcpu-ubuntu-2404-arm
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: 693c4b54a5b369d6774bb6f82487cfe25730adf1
+          path: original
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: 519393298edc2c68f082f3575877d333a648e4d5
+          path: cleanup
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: ce72347ac145d932370fab6346765b0422f54cfc
+          path: fixed
+      - uses: actions/download-artifact@v4
+        with:
+          name: guard-0
+          run-id: 44415945774
+          github-token: ${{ github.token }}
+          path: frozen
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - run: |
+          for revision in original cleanup fixed; do
+            (cd "$revision" && bun install --frozen-lockfile --ignore-scripts)
+            cp experiments/full-board-priority-analysis/replay-frozen-fanout31.ts "$revision/replay-frozen-fanout31.ts"
+          done
+      - name: Probe the same three fast cases on all revisions and the same worker
+        run: |
+          for trial in 1 2; do
+            if [[ "$trial" == 1 ]]; then order="original cleanup fixed"; else order="fixed cleanup original"; fi
+            for revision in $order; do
+              (cd "$revision" && bun replay-frozen-fanout31.ts "$GITHUB_WORKSPACE/frozen/inputs" "$GITHUB_WORKSPACE/probes/trial-$trial/$revision" 1 04-,05-,06-)
+            done
+          done
+      - name: Export reports and routed SVG hashes
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          for folder in [*Path('matched').glob('*'),*Path('probes').glob('*/*')]:
+              report=folder/'benchmark.json'
+              if not report.exists():continue
+              print('MATCHED_FANOUT31_RESULT',json.dumps({'cohort':str(folder),'report':json.loads(report.read_text()),'svgs':{path.name:hashlib.sha256(path.read_bytes()).hexdigest() for path in folder.glob('*.svg')}},separators=(',',':')))
+          print('FROZEN_INPUT_HASHES',json.dumps({path.name:hashlib.sha256(path.read_bytes()).hexdigest() for path in Path('frozen/inputs').glob('*.json')},separators=(',',':')))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: quick-probe-fanout31
+          path: |
+            matched
+            probes

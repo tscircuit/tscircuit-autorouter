@@ -2,6 +2,7 @@ name: Matched frozen Fanout31 cleanup comparison
 on:
   push:
     branches: [codex/route-bus-cleanup-checks]
+    paths: [.github/workflows/route-bus-cleanup-checks.yml, experiments/full-board-priority-analysis/replay-frozen-fanout31.ts]
 permissions:
   contents: read
   actions: read
