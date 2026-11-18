@@ -4,7 +4,7 @@ import { getBugReportSnapshotSvg } from "lib/testing/getBugReportSnapshotSvg"
 import type { SimpleRouteJson } from "lib/types"
 import inputJson from "../../fixtures/bug-reports/bga-existing-via-escape/bga-existing-via-escape.srj.json"
 
-test("repro: a BGA escape adds a via beside its existing via-in-pad", async (): Promise<void> => {
+test("a BGA escapes through its existing via-in-pad", async (): Promise<void> => {
   const input = structuredClone(inputJson) as SimpleRouteJson
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(input, {
     cacheProvider: null,
@@ -12,10 +12,10 @@ test("repro: a BGA escape adds a via beside its existing via-in-pad", async (): 
   solver.solve()
   expect(solver.solved).toBe(true)
   const routedTraces = solver.getOutputSimplifiedPcbTraces()
-  // Current behavior: two new vias, in addition to the declared in-pad via.
+  // Reuse the declared via; only the resistor end needs a new drill.
   expect(
     routedTraces[0]!.route.filter((point) => point.route_type === "via"),
-  ).toHaveLength(2)
+  ).toHaveLength(1)
   // Use the same 0.2 mm via-to-pad evaluation as the Core regression.
   await expect(
     getBugReportSnapshotSvg({

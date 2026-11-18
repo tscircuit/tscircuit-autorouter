@@ -17,6 +17,8 @@ export function selectConnectionPointRegion({
 }: SelectConnectionPointRegionParams): RegionHg | undefined {
   const pointZLayers = getConnectionPointZLayers({ point, layerCount })
   let firstCandidate: RegionHg | undefined
+  let connectedCandidate: RegionHg | undefined
+  let connectedLayerCount = 0
   for (const region of graph.regions) {
     if (
       !checkIfConnectionPointIsInRegion({
@@ -30,8 +32,16 @@ export function selectConnectionPointRegion({
     }
     firstCandidate ??= region
     if (hasIncidentPortOnConnectionPointLayer({ region, pointZLayers })) {
-      return region
+      const sharedLayerCount = region.d.availableZ.filter((z) =>
+        pointZLayers.includes(z),
+      ).length
+      // Prefer existing multilayer terminal copper over its coincident surface
+      // pad, which would force an unnecessary new escape via.
+      if (sharedLayerCount > connectedLayerCount) {
+        connectedCandidate = region
+        connectedLayerCount = sharedLayerCount
+      }
     }
   }
-  return firstCandidate
+  return connectedCandidate ?? firstCandidate
 }

@@ -760,7 +760,22 @@ export function createPcbPadElements(
     }
     const connectedTo = obstacle.connectedTo
     const circuitJsonMetadata = getCircuitJsonMetadata(obstacle)
-    if (circuitJsonMetadata.pcb_via_id || obstacle.isCopperPour) continue
+    if (obstacle.isCopperPour) continue
+    // A fixed via centered on a terminal is its existing plated connection,
+    // including when its surface layer was absorbed into the SMT-pad obstacle.
+    // Keep that bridge in continuity checks instead of requiring a new via.
+    if (
+      circuitJsonMetadata.pcb_via_id &&
+      !connectedTo.some((pcbPortId) => {
+        const terminal = portPositionMap.get(pcbPortId)
+        return (
+          terminal?.x === obstacle.center.x &&
+          terminal.y === obstacle.center.y
+        )
+      })
+    ) {
+      continue
+    }
 
     // An imported pad can belong to a net outside the current routing task.
     // Its source identity still describes copper that DRC must retain.
@@ -771,7 +786,8 @@ export function createPcbPadElements(
         ? (obstacle.obstacleId ?? `${sourceComponentName}.${sourcePortName}`)
         : undefined
     const smtPadId = circuitJsonMetadata.pcb_smtpad_id ?? sourcePadId
-    const platedHoleId = circuitJsonMetadata.pcb_plated_hole_id
+    const platedHoleId =
+      circuitJsonMetadata.pcb_plated_hole_id ?? circuitJsonMetadata.pcb_via_id
     const candidatePortIds = [
       ...new Set([
         ...(circuitJsonMetadata.pcb_port_id
@@ -875,7 +891,9 @@ export function createPcbPadElements(
           pcb_plated_hole_id: id,
           shape: "circle",
           outer_diameter: Math.max(width, height),
-          hole_diameter: Math.max(Math.min(width, height) * 0.5, 0.1),
+          hole_diameter: circuitJsonMetadata.pcb_via_id
+            ? getViaDimensions(srj).holeDiameter
+            : Math.max(Math.min(width, height) * 0.5, 0.1),
           x,
           y,
           layers,
