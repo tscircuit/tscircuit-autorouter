@@ -1,0 +1,123 @@
+name: Isolate pad digest work
+on:
+  push:
+    branches: [experiments/ddr-3939-pad-preparation]
+    paths: [.github/workflows/isolate-pad-digest-work.yml]
+permissions:
+  contents: read
+jobs:
+  profile:
+    name: Sample15 eager versus lazy pad digest ABBA
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 2656bd06c344f21627f95cb568d81642027d2a1c
+          path: base
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: 5654874b46b3dd194da1c6e04566c3448f0cb1bb
+          path: head
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.4.3'
+      - name: Prepare identical dependencies and count cold setup work
+        run: |
+          python3 - <<'PY'
+          import json,pathlib
+          b=json.loads(pathlib.Path("base/package.json").read_text())
+          h=json.loads(pathlib.Path("head/package.json").read_text())
+          assert b==h
+          h["overrides"]={**h.get("overrides",{}),"csstype":"3.1.3"}
+          pathlib.Path("head/package.json").write_text(json.dumps(h,indent=2)+"\n")
+          PY
+          (cd head && bun install)
+          ln -s ../head/node_modules base/node_modules
+          cat > /tmp/pad-preparation.js <<'JS'
+          import { createHash } from "node:crypto"
+          import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "../../lib"
+          import { CachedIntraNodeRouteSolver } from "../../lib/solvers/HighDensitySolver/CachedIntraNodeRouteSolver"
+          globalThis.__padPreparation={calls:0,ms:0,obstacleVisits:0,padsKept:0,keyCalls:0,keyMs:0,digestMisses:0}
+          const stats=globalThis.__padPreparation
+          const key=CachedIntraNodeRouteSolver.prototype.computeCacheKeyAndTransform
+          CachedIntraNodeRouteSolver.prototype.computeCacheKeyAndTransform=function(...args) {
+           const start=performance.now()
+           if(this.precomputedParams && this.precomputedParams.padObstaclesCacheKey===undefined)stats.digestMisses++
+           try{return key.apply(this,args)}
+           finally{stats.keyCalls++;stats.keyMs+=performance.now()-start}
+          }
+          const prototype=AutoroutingPipelineSolver9_PreloadedTraceGraph.prototype
+          const output=prototype.getOutputSimplifiedPcbTraces
+          prototype.getOutputSimplifiedPcbTraces=function(...args) {
+           const traces=output.apply(this,args)
+           globalThis.__routingDigest=createHash("sha256").update(JSON.stringify(traces)).digest("hex")
+           return traces
+          }
+          JS
+          cat > /tmp/collect-pad.py <<'PY'
+          import json,pathlib,sys
+          label,root,outdir=sys.argv[1:]
+          report=json.loads((pathlib.Path(root)/"benchmark-result.json").read_text())
+          fields=["sampleNumber","didSolve","didTimeout","relaxedDrcPassed","drcErrorCount","elapsedTimeMs","peakRssBytes","viaCount","stageTiming","routingDigest","padPreparation"]
+          rows=sorted([{k:t.get(k) for k in fields} for t in report["tests"]],key=lambda t:t["sampleNumber"])
+          result={"label":label,"runtime":report.get("runtime"),"summary":report["summary"],"tests":rows}
+          pathlib.Path(outdir).mkdir(parents=True,exist_ok=True)
+          (pathlib.Path(outdir)/(label+".json")).write_text(json.dumps(result,separators=(",",":")))
+          print("PAD_PREPARATION_METRICS="+json.dumps(result,separators=(",",":")))
+          if not all(t["didSolve"] and t["relaxedDrcPassed"] and not t["didTimeout"] and t["routingDigest"] for t in rows):
+           raise SystemExit("Unexpected routing outcome or missing digest")
+          PY
+          python3 - <<'PY'
+          import pathlib
+          for label in ["base","head"]:
+           root=pathlib.Path(label)
+           (root/"scripts/benchmark/pad-preparation.private.js").write_text(pathlib.Path("/tmp/pad-preparation.js").read_text())
+           p=root/"scripts/benchmark/benchmark.child.ts"
+           s=p.read_text().replace("#!/usr/bin/env bun",'#!/usr/bin/env bun\nimport "./pad-preparation.private.js"')
+           s=s.replace("    process.stdout.write(", '    if ("result" in payload) Object.assign(payload.result,{routingDigest:globalThis.__routingDigest,padPreparation:globalThis.__padPreparation})\n    process.stdout.write(')
+           p.write_text(s)
+           p=root/"lib/solvers/HighDensitySolver/precomputeIntraNodeRouteParams.ts"
+           s=p.read_text()
+           start="  const bounds = getBoundsFromNodeWithPortPoints(nodeWithPortPoints)"
+           assert start in s
+           s=s.replace(start,"  const __padStart = performance.now()\n"+start,1)
+           end="  return {\n    connectionPointsByName,"
+           assert end in s
+           counter="  Object.assign(globalThis.__padPreparation,{calls:globalThis.__padPreparation.calls+1,ms:globalThis.__padPreparation.ms+performance.now()-__padStart,obstacleVisits:globalThis.__padPreparation.obstacleVisits+obstacles.length,padsKept:globalThis.__padPreparation.padsKept+padObstacles.length})\n"
+           s=s.replace(end,counter+end,1)
+           p.write_text(s)
+          PY
+      - name: Sample15 base-1
+        run: |
+          (cd base && bun scripts/benchmark/index.ts --dataset srj18 --solver AutoroutingPipelineSolver9_PreloadedTraceGraph --concurrency 1 --sample-numbers 15 --sample-timeout 600s --exclude-assignable)
+          python3 /tmp/collect-pad.py base-1 base metrics
+      - name: Sample15 head-1
+        run: |
+          (cd head && bun scripts/benchmark/index.ts --dataset srj18 --solver AutoroutingPipelineSolver9_PreloadedTraceGraph --concurrency 1 --sample-numbers 15 --sample-timeout 600s --exclude-assignable)
+          python3 /tmp/collect-pad.py head-1 head metrics
+      - name: Sample15 head-2
+        run: |
+          (cd head && bun scripts/benchmark/index.ts --dataset srj18 --solver AutoroutingPipelineSolver9_PreloadedTraceGraph --concurrency 1 --sample-numbers 15 --sample-timeout 600s --exclude-assignable)
+          python3 /tmp/collect-pad.py head-2 head metrics
+      - name: Sample15 base-2
+        run: |
+          (cd base && bun scripts/benchmark/index.ts --dataset srj18 --solver AutoroutingPipelineSolver9_PreloadedTraceGraph --concurrency 1 --sample-numbers 15 --sample-timeout 600s --exclude-assignable)
+          python3 /tmp/collect-pad.py base-2 base metrics
+      - name: Verify identical copper
+        run: |
+          python3 - <<'PY'
+          import pathlib,json
+          reports=[json.loads(p.read_text()) for p in pathlib.Path("metrics").glob("*.json")]
+          assert len(reports)==4
+          digests=[r["tests"][0]["routingDigest"] for r in reports]
+          assert len(set(digests))==1,"Copper changed"
+          print("COPPER_PARITY=sample15 identical across all four passes")
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: sample15-pad-digest-work
+          path: metrics/*.json
