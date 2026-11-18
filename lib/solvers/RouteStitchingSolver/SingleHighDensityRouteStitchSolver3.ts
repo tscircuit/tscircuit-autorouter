@@ -71,43 +71,29 @@ const getDistanceToTerminal = ({
   return distance(terminal, point)
 }
 
-function hasRoutedLayerTransition({
-  hdRoutes,
+function canJoinLayerTransition({
+  hdRoute,
   start,
   end,
 }: {
-  hdRoutes: HighDensityIntraNodeRoute[]
+  hdRoute: HighDensityIntraNodeRoute
   start: Point3
   end: Point3
 }): boolean {
-  const pendingEndpoints = [start]
-  const visitedRouteIndexes = new Set<number>()
-  while (pendingEndpoints.length > 0) {
-    const endpoint = pendingEndpoints.pop()!
-    for (const [routeIndex, hdRoute] of hdRoutes.entries()) {
-      if (visitedRouteIndexes.has(routeIndex)) continue
-      const firstPoint = hdRoute.route[0]!
-      const lastPoint = hdRoute.route.at(-1)!
-      for (const [entryPoint, exitPoint] of [
-        [firstPoint, lastPoint],
-        [lastPoint, firstPoint],
-      ]) {
-        if (
-          entryPoint.z !== endpoint.z ||
-          distance(endpoint, entryPoint) > MAX_STITCH_GAP_DISTANCE_3
-        )
-          continue
-        if (
-          exitPoint.z === end.z &&
-          distance(exitPoint, end) <= MAX_STITCH_GAP_DISTANCE_3
-        )
-          return true
-        visitedRouteIndexes.add(routeIndex)
-        pendingEndpoints.push(entryPoint, exitPoint)
-      }
-    }
-  }
-  return false
+  const firstPoint = hdRoute.route[0]!
+  const lastPoint = hdRoute.route.at(-1)!
+  const startsOnCurrentLayer = firstPoint.z === start.z
+  const entryPoint = startsOnCurrentLayer ? firstPoint : lastPoint
+  const exitPoint = startsOnCurrentLayer ? lastPoint : firstPoint
+
+  if (entryPoint.z !== start.z) return false
+  if (exitPoint.z !== end.z) return false
+
+  const maxJoinDistance = Math.max(
+    distance(start, entryPoint),
+    distance(end, exitPoint),
+  )
+  return maxJoinDistance <= MAX_STITCH_GAP_DISTANCE_3
 }
 
 export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
@@ -132,13 +118,11 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
       )
     if (isPlannedTransition) return VIA_PENALTY
 
-    // Prefer an existing chain of routed transitions that can be joined locally.
-    // A route with same-layer endpoints does not expose its internal vias.
-    const hasRoutedTransition = hasRoutedLayerTransition({
-      hdRoutes: this.remainingHdRoutes,
-      start,
-      end,
-    })
+    // Prefer an existing layer transition whose endpoints can be joined locally.
+    // An internal via with same-layer endpoints is not an accessible bridge.
+    const hasRoutedTransition = this.remainingHdRoutes.some((hdRoute) =>
+      canJoinLayerTransition({ hdRoute, start, end }),
+    )
     return hasRoutedTransition ? GAP_PENALTY + VIA_PENALTY : VIA_PENALTY
   }
 
