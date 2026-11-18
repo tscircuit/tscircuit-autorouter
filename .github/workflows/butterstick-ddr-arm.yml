@@ -1,0 +1,26 @@
+name: ButterStick DDR on ARM
+on:
+  pull_request:
+    paths:
+      - lib/**
+      - package.json
+      - bun.lock
+      - tests/repro/pipeline9-butterstick-fixed-via-force.test.ts
+      - tests/repro/__snapshots__/pipeline9-butterstick-fixed-via-force*
+      - tests/fixtures/assets/butterstick-fixed-via-force.json.gz
+      - .github/workflows/butterstick-ddr-arm.yml
+permissions:
+  contents: read
+jobs:
+  native-board:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.4.3'
+      - run: bun install
+      - run: bun test tests/repro/pipeline9-butterstick-fixed-via-force.test.ts --timeout 1500000
