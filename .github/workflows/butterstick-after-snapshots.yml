@@ -26,6 +26,6 @@ jobs:
           BUN_UPDATE_SNAPSHOTS=1 bun test tests/repro/pipeline9-butterstick-fixed-via-force.test.ts --timeout 1500000
           git config user.name "tscircuit bot"
           git config user.email "githubbot@tscircuit.com"
-          git add bun.lock tests/repro/__snapshots__/pipeline9-butterstick-fixed-via-force*
+          git add tests/repro/__snapshots__/pipeline9-butterstick-fixed-via-force*
           git commit -m "Render ButterStick after fixed-via clamp constraints"
           git push origin HEAD:analysis/butterstick-after-${{ matrix.arch }}
