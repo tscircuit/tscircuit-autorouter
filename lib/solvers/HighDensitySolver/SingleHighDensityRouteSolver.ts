@@ -41,7 +41,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
   }
 
   obstacleRoutes: HighDensityIntraNodeRoute[]
-  obstacles: (Obstacle & { __zLayers: number[] })[]
+  padObstacles: (Obstacle & { __zLayers: number[] })[]
   bounds: { minX: number; maxX: number; minY: number; maxY: number }
   boundsSize: { width: number; height: number }
   boundsCenter: { x: number; y: number }
@@ -112,7 +112,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     rootConnectionName?: string
     regionId?: string
     obstacleRoutes: HighDensityIntraNodeRoute[]
-    obstacles?: SingleHighDensityRouteSolver["obstacles"]
+    padObstacles?: SingleHighDensityRouteSolver["padObstacles"]
     minDistBetweenEnteringPoints: number
     bounds: { minX: number; maxX: number; minY: number; maxY: number }
     A: { x: number; y: number; z: number }
@@ -145,7 +145,17 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     this.rootConnectionName = opts.rootConnectionName
     this.regionId = opts.regionId
     this.obstacleRoutes = opts.obstacleRoutes
-    this.obstacles = opts.obstacles ?? []
+    const rootConnectionName = this.rootConnectionName ?? this.connectionName
+    this.padObstacles = (opts.padObstacles ?? []).filter((obstacle): boolean => {
+      if (isObstacleConnectedToRoute(obstacle, this, this.connMap)) return false
+      if (
+        obstacle.obstacleId &&
+        this.connMap?.areIdsConnected(rootConnectionName, obstacle.obstacleId)
+      ) {
+        return false
+      }
+      return true
+    })
     this.A = opts.A
     this.B = opts.B
     this.viaDiameter = opts.viaDiameter ?? 0.3
@@ -252,22 +262,14 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     ])
   }
 
-  private doesSegmentIntersectFixedObstacle(
+  private doesSegmentIntersectPad(
     segment: { start: Point3; end: Point3 },
     isVia = false,
   ): boolean {
     let copperRadius = this.traceThickness / 2
     if (isVia) copperRadius = this.viaDiameter / 2
-    const rootConnectionName = this.rootConnectionName ?? this.connectionName
-    for (const obstacle of this.obstacles) {
+    for (const obstacle of this.padObstacles) {
       if (!isVia && !obstacle.__zLayers.includes(segment.start.z)) continue
-      if (isObstacleConnectedToRoute(obstacle, this, this.connMap)) continue
-      if (
-        obstacle.obstacleId &&
-        this.connMap?.areIdsConnected(rootConnectionName, obstacle.obstacleId)
-      ) {
-        continue
-      }
       const distanceToObstacle = getSegmentToObstacleDistance({
         ...segment,
         obstacle,
@@ -486,7 +488,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     }
 
     if (
-      this.doesSegmentIntersectFixedObstacle(
+      this.doesSegmentIntersectPad(
         { start: node, end: node },
         isVia,
       )
@@ -531,7 +533,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
   ): boolean {
     const parent = node.parent
     if (
-      this.doesSegmentIntersectFixedObstacle(
+      this.doesSegmentIntersectPad(
         { start: parent ?? node, end: node },
         parent !== null && parent.z !== node.z,
       )

@@ -11,7 +11,7 @@ test("checks a diagonal shortcut whose midpoint is far from the node edges", ():
     bounds: { minX: -1, maxX: 1, minY: -1, maxY: 1 },
     minDistBetweenEnteringPoints: 1,
     obstacleRoutes: [],
-    obstacles: [
+    padObstacles: [
       {
         type: "rect",
         shape: "circle",

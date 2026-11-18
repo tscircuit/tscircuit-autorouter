@@ -76,7 +76,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
   viaDiameter: number
   traceWidth: number
   obstacleMargin: number
-  obstacles: SingleHighDensityRouteSolver["obstacles"]
+  padObstacles: SingleHighDensityRouteSolver["padObstacles"]
   captureSearchDebug: boolean
   rerouteAttemptsByConnection: Map<string, number>
 
@@ -128,8 +128,9 @@ export class IntraNodeRouteSolver extends BaseSolver {
     this.obstacleMargin = params.obstacleMargin ?? 0.15
     const bounds = getBoundsFromNodeWithPortPoints(nodeWithPortPoints)
     const copperReach = Math.max(this.traceWidth, this.viaDiameter) / 2
-    this.obstacles = (params.obstacles ?? [])
+    this.padObstacles = (params.obstacles ?? [])
       .filter((obstacle) => {
+        if (!obstacle.componentId || obstacle.isFanoutSourceKeepout) return false
         let halfWidth = obstacle.width / 2
         let halfHeight = obstacle.height / 2
         if (obstacle.ccwRotationDegrees) {
@@ -274,7 +275,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
               !this.connMap!.areIdsConnected(sr.connectionName, connectionName),
           )
         : this.solvedRoutes,
-      obstacles: this.obstacles,
+      padObstacles: this.padObstacles,
       futureConnections: this.unsolvedConnections,
       layerCount: this.nodeWithPortPoints.portPoints.reduce(
         (max, p) => Math.max(max, (p.z ?? 0) + 1),

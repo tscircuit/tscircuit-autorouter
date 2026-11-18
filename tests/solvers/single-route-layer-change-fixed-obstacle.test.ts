@@ -11,7 +11,7 @@ test("rejects a layer-change shortcut whose central via intersects a pad", (): v
     bounds: { minX: -1, maxX: 1, minY: -1, maxY: 1 },
     minDistBetweenEnteringPoints: 1,
     obstacleRoutes: [],
-    obstacles: [
+    padObstacles: [
       {
         type: "rect",
         shape: "circle",

@@ -24,7 +24,7 @@ const cloneValue = <T>(value: T): T =>
 
 setupGlobalCaches()
 
-// Version 8 validates shortcut candidates and grid paths against fixed obstacles.
+// Version 8 validates shortcut candidates and grid paths against fixed pads.
 const INTRA_NODE_CACHE_SCHEMA_VERSION = 8
 
 export class CachedIntraNodeRouteSolver
@@ -167,7 +167,7 @@ export class CachedIntraNodeRouteSolver
           : undefined,
         portPoints: normalizedPortPoints,
       },
-      obstacles: this.obstacles.map((obstacle) => ({
+      padObstacles: this.padObstacles.map((obstacle) => ({
         obstacleId: obstacle.obstacleId,
         center: obstacle.center,
         width: obstacle.width,

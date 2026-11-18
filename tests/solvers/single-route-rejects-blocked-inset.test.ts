@@ -14,7 +14,7 @@ test("uses the search when an inset shortcut still intersects an obstacle", (): 
     bounds: { minX: 0, maxX: 2, minY: 0, maxY: 2 },
     minDistBetweenEnteringPoints: 1,
     obstacleRoutes: [],
-    obstacles: obstacles.map(({ center, diameter }) => ({
+    padObstacles: obstacles.map(({ center, diameter }) => ({
       type: "rect" as const,
       shape: "circle" as const,
       center,

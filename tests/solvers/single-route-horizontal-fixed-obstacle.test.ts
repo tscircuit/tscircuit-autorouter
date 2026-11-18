@@ -2,7 +2,7 @@ import { expect, test } from "bun:test"
 import { segmentToBoxMinDistance } from "@tscircuit/math-utils"
 import { SingleHighDensityRouteSolver } from "lib/solvers/HighDensitySolver/SingleHighDensityRouteSolver"
 
-test("routes an interior horizontal shortcut around an unconnected obstacle", (): void => {
+test("routes an interior horizontal shortcut around an unconnected pad", (): void => {
   const obstacle = {
     type: "rect" as const,
     center: { x: 0, y: 0 },
@@ -19,7 +19,7 @@ test("routes an interior horizontal shortcut around an unconnected obstacle", ()
     bounds: { minX: -1, maxX: 1, minY: -1, maxY: 1 },
     minDistBetweenEnteringPoints: 1,
     obstacleRoutes: [],
-    obstacles: [obstacle],
+    padObstacles: [obstacle],
     availableZ: [0],
     traceThickness: 0.1,
   })
