@@ -1,0 +1,90 @@
+name: Verify native A13 pad clearance
+on:
+  push:
+    branches: [analysis/ddr-3235-gap-probe]
+    paths: [.github/workflows/probe-ddr-trace-gaps.yml]
+permissions:
+  contents: read
+jobs:
+  verify:
+    name: A13 source ${{ matrix.label }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {label: head, ref: 727d1ea907c9dfa24ac800e25068118757ecff16}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.ref }}
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.4.3'
+      - name: Install declared dependencies
+        run: |
+          python3 - <<'PY'
+          import json,pathlib
+          p=pathlib.Path("package.json")
+          m=json.loads(p.read_text())
+          m["overrides"]={**m.get("overrides",{}),"csstype":"3.1.3"}
+          p.write_text(json.dumps(m,indent=2)+"\n")
+          PY
+          bun install
+      - name: Diagnose the existing clearance projection
+        run: |
+          cat > probe.private.js <<'JS'
+          import { Pipeline9JointDrcRepairSolver } from "./lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9JointDrcRepairSolver"
+          import { Pipeline9ClearanceProjectionSolver } from "./lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9ClearanceProjectionSolver"
+          function summarize(result) {
+           const errors=Array.isArray(result)?result:result.errors
+           const counts={}
+           for(const e of errors) {
+            const key=e.type==="pcb_trace_error"&&/gap: /.test(e.message)?"trace_gap":e.type+":"+String(e.drc_source)
+            counts[key]=(counts[key]??0)+1
+           }
+           return counts
+          }
+          const proto=Pipeline9JointDrcRepairSolver.prototype
+          const finish=proto.finishWithTraceContactCheck
+          proto.finishWithTraceContactCheck=function() {
+           const evaluator=this.cachedReferenceDrcEvaluator
+           console.log("GAP_PROBE_REFERENCE="+JSON.stringify(summarize(evaluator({traces:[],routes:this.combinedOutput,hdRoutes:this.combinedOutput}))))
+           const projection=new Pipeline9ClearanceProjectionSolver({originalSrj:this.params.originalSrj,routes:this.combinedOutput,drcEvaluator:evaluator,allowPartialRepair:true,subdivideSegments:true})
+           let phase=""
+           while(!projection.solved&&!projection.failed) {
+            projection.step()
+            const state=projection.state
+            if(state.phase===phase)continue
+            phase=state.phase
+            if(state.candidate)console.log("GAP_PROBE_CANDIDATE="+JSON.stringify({phase,counts:summarize(evaluator({traces:[],routes:state.candidate,hdRoutes:state.candidate}))}))
+           }
+           const output=projection.getOutput()
+           console.log("GAP_PROBE_PUBLISHED="+JSON.stringify({changed:JSON.stringify(output)!==JSON.stringify(this.combinedOutput),counts:summarize(evaluator({traces:[],routes:output,hdRoutes:output}))}))
+           this.combinedOutput=output
+           return finish.call(this)
+          }
+          JS
+      - name: Real A13 board and existing routing assertions
+        run: BUN_UPDATE_SNAPSHOTS=1 bun test --preload ./probe.private.js --timeout 9999999 tests/repro/pipeline9-a13-declared-trace-clearance.test.ts
+      - name: Collect real SVG comparison
+        if: always()
+        env:
+          LABEL: ${{ matrix.label }}
+        run: |
+          python3 - <<'PY'
+          import pathlib,re,json,os
+          for p in pathlib.Path("tests/repro/__snapshots__").glob("pipeline9-a13-*.snap.svg"):
+           if not any(n in p.name for n in ["fixed-copper-checks","regional-repair-shorts","declared-trace-clearance"]):continue
+           count=re.search(r"Relaxed DRC errors: ([0-9]+)",p.read_text())
+           print("SOURCE_A13_SVG="+json.dumps({"release":os.environ["LABEL"],"snapshot":p.name,"findings":int(count[1]) if count else None}))
+          PY
+      - name: Focused shortcut checks
+        run: bun test --timeout 9999999 tests/solvers/single-route-diagonal-fixed-obstacle.test.ts tests/solvers/single-route-horizontal-fixed-obstacle.test.ts tests/solvers/single-route-layer-change-fixed-obstacle.test.ts tests/solvers/single-route-rejects-blocked-inset.test.ts tests/solvers/portfolio-shared-node-topology.test.ts
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: source-a13-pad-${{ matrix.label }}
+          path: tests/repro/__snapshots__/pipeline9-a13-*.snap.svg
