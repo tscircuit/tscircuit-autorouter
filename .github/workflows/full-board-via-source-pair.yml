@@ -1,0 +1,170 @@
+name: Paired source-build H616 full-board qualification
+
+on:
+  push:
+    branches: [bench/full-board-via-topology-source-3234-20261118]
+
+permissions:
+  contents: read
+
+jobs:
+  qualify:
+    name: H616 spaced source control then candidate
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 45
+    env:
+      FULL_BOARD_ROOT: ${{ github.workspace }}/.full-board-run
+      BUN_INSTALL_CACHE_DIR: ${{ github.workspace }}/.full-board-run/bun-cache
+      FULL_BOARD_COHORTS: spaced
+
+    steps:
+      - name: Checkout frozen controller and authenticated source bundles
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            experiments/full-board-ten
+            .github/workflows/full-board-via-source-pair.yml
+            AGENTS.md
+
+      - name: Checkout immutable original circuits
+        uses: actions/checkout@v4
+        with:
+          repository: tscircuit/tscircuit-autorouter
+          ref: ea398b4023119f65157e876a3101aa6ce3ca5f97
+          path: .full-board-run/sources/original
+          persist-credentials: false
+          sparse-checkout: experiments/full-board-priority-analysis
+
+      - name: Checkout immutable spaced circuits
+        uses: actions/checkout@v4
+        with:
+          repository: ShiboSoftwareDev/core-ddr-benchmark
+          ref: a3679559d6027aea2c441c1078853d58925d3a12
+          path: .full-board-run/sources/spaced
+          persist-credentials: false
+          sparse-checkout: |
+            full-boards
+            circuits
+            scripts
+            licenses
+            provenance
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+
+      - name: Prepare unchanged published3234 main package and dependencies
+        env:
+          FULL_BOARD_EXPERIMENT: published
+        run: python3 experiments/full-board-ten/bootstrap.py --root "$FULL_BOARD_ROOT"
+
+      - name: Activate verified source base
+        run: >-
+          python3 experiments/full-board-ten/activate-source-autorouter.py
+          --root "$FULL_BOARD_ROOT" --variant base
+
+      - name: Prepare authentic H616 source base case
+        id: prepare-base
+        env:
+          FULL_BOARD_RUNTIME_MANIFEST: ${{ github.workspace }}/.full-board-run/runtime-manifests/source-base.json
+        run: >-
+          bun experiments/full-board-ten/prepare-cases.ts
+          "$FULL_BOARD_ROOT/sources/original/experiments/full-board-priority-analysis"
+          "$FULL_BOARD_ROOT/sources/spaced"
+          "$FULL_BOARD_ROOT/lanes/source-base/cases" h616
+
+      - name: Run full H616 spaced source base
+        id: run-base
+        continue-on-error: true
+        run: >-
+          bun experiments/full-board-ten/run-one.ts
+          "$FULL_BOARD_ROOT/lanes/source-base/cases/h616-spaced.json"
+          "$FULL_BOARD_ROOT/lanes/source-base/results/h616/spaced"
+
+      - name: Report source base physical assessment
+        if: ${{ !cancelled() && steps.prepare-base.outcome == 'success' }}
+        env:
+          FULL_BOARD_EXPERIMENT: source-base
+        run: python3 experiments/full-board-ten/report.py "$FULL_BOARD_ROOT/lanes/source-base" h616
+
+      - name: Preserve source base native full-board output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          include-hidden-files: true
+          name: full-board-via-source-h616-base-spaced-${{ github.run_attempt }}
+          path: |
+            .full-board-run/lanes/source-base/results/h616
+            .full-board-run/lanes/source-base/cases/h616-spaced.json
+            .full-board-run/lanes/source-base/cases/assessment-helper-proof.json
+            .full-board-run/runtime-manifests/source-base.json
+          if-no-files-found: warn
+          compression-level: 0
+          retention-days: 7
+
+      - name: Activate verified source candidate
+        run: >-
+          python3 experiments/full-board-ten/activate-source-autorouter.py
+          --root "$FULL_BOARD_ROOT" --variant candidate
+
+      - name: Prepare authentic H616 source candidate case
+        id: prepare-candidate
+        env:
+          FULL_BOARD_RUNTIME_MANIFEST: ${{ github.workspace }}/.full-board-run/runtime-manifests/source-candidate.json
+        run: >-
+          bun experiments/full-board-ten/prepare-cases.ts
+          "$FULL_BOARD_ROOT/sources/original/experiments/full-board-priority-analysis"
+          "$FULL_BOARD_ROOT/sources/spaced"
+          "$FULL_BOARD_ROOT/lanes/source-candidate/cases" h616
+
+      - name: Run full H616 spaced source candidate
+        id: run-candidate
+        continue-on-error: true
+        run: >-
+          bun experiments/full-board-ten/run-one.ts
+          "$FULL_BOARD_ROOT/lanes/source-candidate/cases/h616-spaced.json"
+          "$FULL_BOARD_ROOT/lanes/source-candidate/results/h616/spaced"
+
+      - name: Report source candidate physical assessment
+        if: ${{ !cancelled() && steps.prepare-candidate.outcome == 'success' }}
+        env:
+          FULL_BOARD_EXPERIMENT: source-candidate
+        run: python3 experiments/full-board-ten/report.py "$FULL_BOARD_ROOT/lanes/source-candidate" h616
+
+      - name: Preserve source candidate native full-board output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          include-hidden-files: true
+          name: full-board-via-source-h616-candidate-spaced-${{ github.run_attempt }}
+          path: |
+            .full-board-run/lanes/source-candidate/results/h616
+            .full-board-run/lanes/source-candidate/cases/h616-spaced.json
+            .full-board-run/lanes/source-candidate/cases/assessment-helper-proof.json
+            .full-board-run/runtime-manifests/source-candidate.json
+          if-no-files-found: warn
+          compression-level: 0
+          retention-days: 7
+
+      - name: Compare actual full-board net completion and preservation
+        if: always()
+        run: python3 experiments/full-board-ten/compare-source-pair.py "$FULL_BOARD_ROOT"
+
+      - name: Preserve paired source provenance and physical comparison
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          include-hidden-files: true
+          name: full-board-via-source-h616-pair-${{ github.run_attempt }}
+          path: |
+            .full-board-run/source-pair-comparison.json
+            .full-board-run/runtime-manifest.json
+            .full-board-run/runtime-manifests
+            experiments/full-board-ten/source-builds/bundle-manifest.json
+            experiments/full-board-ten/source-builds/provenance
+            experiments/full-board-ten/release.json
+            experiments/full-board-ten/source-provenance.json
+          if-no-files-found: warn
+          retention-days: 7

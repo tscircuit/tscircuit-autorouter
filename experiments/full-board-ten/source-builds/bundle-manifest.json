@@ -1,0 +1,148 @@
+{
+  "schemaVersion": 1,
+  "purpose": "Paired local source builds for a native benchmark. Base source tree equals published1127; candidate is the single topology-only source change. This is not a claim of byte identity to the npm build.",
+  "dependencySnapshotSha256": "483087564dd93cb05570175098daf02eb470b1d4eaafb47934d4d3582e33ec93",
+  "dependencyProvenanceFiles": [
+    {
+      "path": "provenance/provenance.json",
+      "sha256": "0bcab6c72038599c0e79dd85f6b262dfac5dc59fc44d36b2dcb959babef65004",
+      "bytes": 102003
+    },
+    {
+      "path": "provenance/runtime-dependency-provenance.json",
+      "sha256": "9964179649fb0caeb6995949d94ee69e3c3edf9c5363e1003b668ab567723354",
+      "bytes": 27513
+    },
+    {
+      "path": "provenance/declared-dependency-audit.json",
+      "sha256": "2851a5a45e8b61944010534e752e5956469587a93483061bf8d4b604af24231c",
+      "bytes": 25405
+    },
+    {
+      "path": "provenance/runtime-dependency-audit.json",
+      "sha256": "59d27e50a681348596cac776bf593ea1a300f15a4369b0c48cb277f57b5b5188",
+      "bytes": 41813
+    },
+    {
+      "path": "provenance/nested-reuse-ledger.json",
+      "sha256": "3d900fe4a08b02b49596a746eb03a697cc2d713da7fc948a3b9103907fb56694",
+      "bytes": 14466
+    },
+    {
+      "path": "provenance/dependency-snapshot.json",
+      "sha256": "483087564dd93cb05570175098daf02eb470b1d4eaafb47934d4d3582e33ec93",
+      "bytes": 42442
+    },
+    {
+      "path": "provenance/build-base.log",
+      "sha256": "0da215cb4bfca034eff0f87d562587aa62aea5efd679c9a7f16e090a690355b3",
+      "bytes": 1220
+    },
+    {
+      "path": "provenance/build-candidate.log",
+      "sha256": "6914742b3a2f856855925bf58f3f08e0a3b2767227cd243dc160ea82dc8063a4",
+      "bytes": 1225
+    },
+    {
+      "path": "provenance/focused-test.log",
+      "sha256": "86a7b15cadf7d838f24e087167f650ae65feac031aabc9620d69110402fdb66a",
+      "bytes": 250
+    }
+  ],
+  "builds": {
+    "base": {
+      "sourceCommit": "23b8bc8aaf5f9ce984205f14f908bf4e2d82f764",
+      "sourceTree": "6aa92656c137019fff88e23c2bf872aff7face3c",
+      "packageName": "@tscircuit/capacity-autorouter",
+      "packageVersion": "0.0.1127",
+      "archivePath": "/workspace/autorouter-1127-validation-dependencies/bundles/base.tgz",
+      "archiveSha256": "323d13c022c038155373ed9a69ffd4e4e20a53ab337383554fa336edb44502b4",
+      "archiveBytes": 1348697,
+      "files": [
+        {
+          "path": "dist/chunk-G3PMV62Z.js",
+          "sha256": "f56621bcf6948c31eebf5b9b9186b7bd4042af9895b947f0eaedfc40271421c4",
+          "bytes": 666
+        },
+        {
+          "path": "dist/index.js",
+          "sha256": "75378d25386a8b2f0c04718d78d88391201e004aaacc69636e519dac61e44fb9",
+          "bytes": 3232294
+        },
+        {
+          "path": "dist/runtime/bun.js",
+          "sha256": "5af3daad536d5a8d93988aa6d4d7d50c59ec93047d52641dc0f52b3d2378aa26",
+          "bytes": 974860
+        },
+        {
+          "path": "dist/runtime/node.js",
+          "sha256": "c914b52075388f725d7daacb99e870af55ec386c7a0166a092deca8c50356cbc",
+          "bytes": 1050537
+        },
+        {
+          "path": "package.json",
+          "sha256": "d54b5984f512bd9dec2332709a5c17a72f20929b17910c0088c73cdab2cdf077",
+          "bytes": 8245
+        }
+      ],
+      "buildCommand": "bun run build",
+      "buildExitCode": 0,
+      "javascriptBuildPassed": true,
+      "declarationBuildPassed": true,
+      "bunVersion": "1.4.3",
+      "nodeVersion": "24.19.0",
+      "tsupVersion": "8.5.1",
+      "dependencySnapshotSha256": "483087564dd93cb05570175098daf02eb470b1d4eaafb47934d4d3582e33ec93"
+    },
+    "candidate": {
+      "sourceCommit": "9de6985901a1070eaf754b756c9f487428865106",
+      "sourceTree": "183df283c49a7ccc3b2f6823e0edfdd4e4f90f16",
+      "packageName": "@tscircuit/capacity-autorouter",
+      "packageVersion": "0.0.1127",
+      "archivePath": "/workspace/autorouter-1127-validation-dependencies/bundles/candidate.tgz",
+      "archiveSha256": "62fc1fbb0fcd372650cf0eeb9e9661bd9b96910f8fa36497b1a7d6b2f88598ce",
+      "archiveBytes": 1348942,
+      "files": [
+        {
+          "path": "dist/chunk-G3PMV62Z.js",
+          "sha256": "f56621bcf6948c31eebf5b9b9186b7bd4042af9895b947f0eaedfc40271421c4",
+          "bytes": 666
+        },
+        {
+          "path": "dist/index.js",
+          "sha256": "ec361be33359cece58ebc57cab429d28648991a8e6821ce415efeedc2c6e52be",
+          "bytes": 3233086
+        },
+        {
+          "path": "dist/runtime/bun.js",
+          "sha256": "5af3daad536d5a8d93988aa6d4d7d50c59ec93047d52641dc0f52b3d2378aa26",
+          "bytes": 974860
+        },
+        {
+          "path": "dist/runtime/node.js",
+          "sha256": "c914b52075388f725d7daacb99e870af55ec386c7a0166a092deca8c50356cbc",
+          "bytes": 1050537
+        },
+        {
+          "path": "package.json",
+          "sha256": "d54b5984f512bd9dec2332709a5c17a72f20929b17910c0088c73cdab2cdf077",
+          "bytes": 8245
+        }
+      ],
+      "buildCommand": "bun run build",
+      "buildExitCode": 0,
+      "javascriptBuildPassed": true,
+      "declarationBuildPassed": true,
+      "bunVersion": "1.4.3",
+      "nodeVersion": "24.19.0",
+      "tsupVersion": "8.5.1",
+      "dependencySnapshotSha256": "483087564dd93cb05570175098daf02eb470b1d4eaafb47934d4d3582e33ec93"
+    }
+  },
+  "changedSourcePaths": [
+    "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/getSrjWithPreloadedViaObstacles.ts"
+  ],
+  "publishedSourceCommit": "4898fafa61cd2ab5d2445f62a61d0fad30429a4a",
+  "publishedSourceTree": "6aa92656c137019fff88e23c2bf872aff7face3c"
+}

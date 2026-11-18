@@ -1,0 +1,638 @@
+{
+  "scope": "Local source validation. Exact1127 declared changed Git pins; unchanged shared declared packages reused. Not a reconstruction of published transitive dependencies. Repository has no lockfile.",
+  "rows": [
+    {
+      "name": "@tscircuit/solver-utils",
+      "declared": "^0.0.23",
+      "installedVersion": "0.0.23",
+      "satisfies": true,
+      "status": "shared installed npm version satisfies declaration"
+    },
+    {
+      "name": "fast-json-stable-stringify",
+      "declared": "^2.1.0",
+      "installedVersion": "2.1.0",
+      "satisfies": true,
+      "status": "shared installed npm version satisfies declaration"
+    },
+    {
+      "name": "object-hash",
+      "declared": "^3.0.0",
+      "installedVersion": "3.0.0",
+      "satisfies": true,
+      "status": "shared installed npm version satisfies declaration"
+    },
+    {
+      "name": "stack-svgs",
+      "declared": "^0.0.1",
+      "installedVersion": "0.0.1",
+      "satisfies": true,
+      "status": "shared installed npm version satisfies declaration"
+    },
+    {
+      "name": "@biomejs/biome",
+      "declared": "^1.9.4",
+      "installedVersion": "1.9.4",
+      "satisfies": true,
+      "status": "shared installed npm version satisfies declaration"
+    },
+    {
+      "name": "@flatten-js/core",
+      "declared": "^1.6.15",
+      "installedVersion": "1.6.15",
+      "satisfies": true,
+      "status": "shared installed npm version satisfies declaration"
+    },
+    {
+      "name": "@radix-ui/react-icons",
+      "declared": "^1.3.2",
+      "installedVersion": "1.3.2",
+      "satisfies": true,
+      "status": "shared installed npm version satisfies declaration"
+    },
+    {
+      "name": "@radix-ui/react-menubar",
+      "declared": "^1.1.14",
+      "installedVersion": "1.2.1",
+      "satisfies": true,
+      "status": "shared installed npm version satisfies declaration"
+    },
+    {
+      "name": "@react-hook/resize-observer",
+      "declared": "^2.0.2",
+      "installedVersion": "2.0.2",
+      "satisfies": true,
+      "status": "shared installed npm version satisfies declaration"
+    },
+    {
+      "name": "@resvg/resvg-js",
+      "declared": "^2.6.2",
+      "installedVersion": "2.6.2",
+      "satisfies": true,
+      "status": "shared installed npm version satisfies declaration"
+    },
+    {
+      "name": "@tsci/seveibar.dataset-srj13",
+      "declared": "git+https://github.com/tscircuit/dataset-srj13.git#56db70039aeb28a76540fe951b5a96be60f9e949",
+      "baseDeclared": "https://codeload.github.com/tscircuit/dataset-srj13/tar.gz/56db70039aeb28a76540fe951b5a96be60f9e949",
+      "installedVersion": "1.0.0",
+      "status": "unchanged declared Git revision; shared installed source reused"
+    },
+    {
+      "name": "@tsci/dataset-srj23-partially-routed-subcircuits",
+      "declared": "git+https://github.com/tscircuit/dataset-srj23-partially-routed-subcircuits.git#53fc559",
+      "baseDeclared": "https://codeload.github.com/tscircuit/dataset-srj23-partially-routed-subcircuits/tar.gz/53fc559",
+      "installedVersion": "1.0.0",
+      "status": "unchanged declared Git revision; shared installed source reused"
+    },
+    {
+      "name": "@tsci/tscircuit.dataset-srj16-bga-breakouts",
+      "declared": "git+https://github.com/tscircuit/dataset-srj16-bga-breakouts.git#e8b2e70e1f50a0dba3ad977e140766f53b9b75fb",
+      "baseDeclared": "https://codeload.github.com/tscircuit/dataset-srj16-bga-breakouts/tar.gz/e8b2e70e1f50a0dba3ad977e140766f53b9b75fb",
+      "installedVersion": "1.0.0",
+      "status": "unchanged declared Git revision; shared installed source reused"
+    },
+    {
+      "name": "@tsci/tscircuit.dataset-srj19-bga-passive-overlays",
+      "declared": "git+https://github.com/tscircuit/dataset-srj19.git#5104d03ed72a9090d76ea1f42ae9f4bc439f7534",
+      "baseDeclared": "https://codeload.github.com/tscircuit/dataset-srj19/tar.gz/5104d03ed72a9090d76ea1f42ae9f4bc439f7534",
+      "installedVersion": "1.0.0",
+      "status": "unchanged declared Git revision; shared installed source reused"
+    },
+    {
+      "name": "@tsci/tscircuit.dataset-srj20-partial-bga-breakouts",
+      "declared": "git+https://github.com/tscircuit/dataset-srj20.git#9384fb8f45fb479b97178ddfa42fc74c69afbbec",
+      "baseDeclared": "https://codeload.github.com/tscircuit/dataset-srj20/tar.gz/9384fb8f45fb479b97178ddfa42fc74c69afbbec",
+      "installedVersion": "1.0.0",
+      "status": "unchanged declared Git revision; shared installed source reused"
+    },
+    {
+      "name": "@tsci/0hmX.multi-component-dataset-srj01",
+      "declared": "git+https://github.com/tscircuit/multi-component-dataset-srj01.git#abf9d17c966d466b56ac21b735c6bb6f4518919d",
+      "baseDeclared": "https://codeload.github.com/tscircuit/multi-component-dataset-srj01/tar.gz/abf9d17c966d466b56ac21b735c6bb6f4518919d",
+      "installedVersion": "1.0.0",
+      "status": "unchanged declared Git revision; shared installed source reused"
+    },
+    {
+      "name": "@tsci/tscircuit.dataset-srj12-bus-routing",
+      "declared": "git+https://github.com/tscircuit/dataset-srj12-bus-routing.git#ba82f86a7d1288566b7144eb8661ad2549c5f328",
+      "baseDeclared": "https://codeload.github.com/tscircuit/dataset-srj12-bus-routing/tar.gz/ba82f86a7d1288566b7144eb8661ad2549c5f328",
+      "installedVersion": "1.0.0",
+      "status": "unchanged declared Git revision; shared installed source reused"
+    },
+    {
+      "name": "@tscircuit/autorouting-dataset-01",
+      "declared": "git+https://github.com/tscircuit/autorouting-dataset-01.git#b97f5052a2359ab2da3f186765c6a5e839535efb",
+      "baseDeclared": "https://codeload.github.com/tscircuit/autorouting-dataset-01/tar.gz/b97f5052a2359ab2da3f186765c6a5e839535efb",
+      "installedVersion": "1.0.32",
+      "status": "unchanged declared Git revision; shared installed source reused"
+    },
+    {
+      "name": "@tscircuit/checks",
+      "declared": "^0.0.259",
+      "installedVersion": "0.0.259",
+      "satisfies": true,
+      "status": "shared installed npm version satisfies declaration"
+    },
+    {
+      "name": "@tscircuit/circuit-json-util",
+      "declared": "^0.0.114",
+      "installedVersion": "0.0.114",
+      "satisfies": true,
+      "status": "shared installed npm version satisfies declaration"
+    },
+    {
+      "name": "@tscircuit/core",
+      "declared": "0.0.337",
+      "installedVersion": "0.0.337",
+      "satisfies": true,
+      "status": "shared installed npm version satisfies declaration"
+    },
+    {
+      "name": "@tscircuit/curvy-trace-solver",
+      "declared": "^0.0.10",
+      "installedVersion": "0.0.10",
+      "satisfies": true,
+      "status": "shared installed npm version satisfies declaration"
+    },
+    {
+      "name": "@tscircuit/dataset-srj05",
+      "declared": "git+https://github.com/tscircuit/dataset-srj05.git#9a49c126a89c083dc4d2b72cd17184735f637762",
+      "baseDeclared": "https://codeload.github.com/tscircuit/dataset-srj05/tar.gz/9a49c126a89c083dc4d2b72cd17184735f637762",
+      "installedVersion": "0.0.1",
+      "status": "unchanged declared Git revision; shared installed source reused"
+    },
+    {
+      "name": "@tscircuit/dataset-srj24",
+      "declared": "git+https://github.com/tscircuit/dataset-srj24.git#4adde71764520315816b37cd65780aaec898a71a",
+      "baseDeclared": "https://codeload.github.com/tscircuit/dataset-srj24/tar.gz/4adde71764520315816b37cd65780aaec898a71a",
+      "installedVersion": "0.0.2",
+      "status": "unchanged declared Git revision; shared installed source reused"
+    },
+    {
+      "name": "@tscircuit/dataset-srj27-power-traces",
+      "declared": "git+https://github.com/tscircuit/dataset-srj27-power-traces.git#eb24d36",
+      "baseDeclared": "https://codeload.github.com/tscircuit/dataset-srj27-power-traces/tar.gz/eb24d36",
+      "installedVersion": "0.0.1",
+      "status": "unchanged declared Git revision; shared installed source reused"
+    },
+    {
+      "name": "@tscircuit/dataset-srj28-partially-prerouted",
+      "declared": "git+https://github.com/tscircuit/dataset-srj28-partially-prerouted.git#5b1673544b6ade4480612539ba6574ad414fddc0",
+      "baseDeclared": "https://codeload.github.com/tscircuit/dataset-srj28-partially-prerouted/tar.gz/5b1673544b6ade4480612539ba6574ad414fddc0",
+      "installedVersion": "0.0.1",
+      "status": "unchanged declared Git revision; shared installed source reused"
+    },
+    {
+      "name": "@tscircuit/dataset-srj29-ddr3-bga-pairs",
+      "declared": "git+https://github.com/ShiboSoftwareDev/dataset-srj29-ddr3-bga-pairs.git#585c3abd4c6ce4be52bbc430b1d5e6dcc9b4ea30",
+      "baseDeclared": "https://codeload.github.com/ShiboSoftwareDev/dataset-srj29-ddr3-bga-pairs/tar.gz/585c3abd4c6ce4be52bbc430b1d5e6dcc9b4ea30",
+      "installedVersion": "0.5.0",
+      "status": "unchanged declared Git revision; shared installed source reused"
+    },
+    {
+      "name": "@tscircuit/dataset-srj33-drc-failures",
+      "declared": "git+https://github.com/tscircuit/dataset-srj33-drc-failures.git#f566b62be0f83395d9ab63ddc068f9d645b68b16",
+      "baseDeclared": "https://codeload.github.com/tscircuit/dataset-srj33-drc-failures/tar.gz/f566b62be0f83395d9ab63ddc068f9d645b68b16",
+      "installedVersion": "0.0.1",
+      "status": "unchanged declared Git revision; shared installed source reused"
+    },
+    {
+      "name": "@tscircuit/fanout-solver",
+      "declared": "^0.0.29",
+      "installedVersion": "0.0.29",
+      "satisfies": true,
+      "status": "shared installed npm version satisfies declaration"
+    },
+    {
+      "name": "@tscircuit/fanout-for-pipeline9-fixtures",
+      "declared": "npm:@tscircuit/fanout-solver@0.0.66",
+      "installedVersion": "0.0.66",
+      "satisfies": true,
+      "status": "shared installed npm version satisfies declaration"
+    },
+    {
+      "name": "@tscircuit/fixed-via-hypergraph-solver",
+      "declared": "https://codeload.github.com/tscircuit/fixed-via-hypergraph-solver/tar.gz/bed37a6201b5dd07c9cc68b828917ecc20d6d049",
+      "baseDeclared": "https://codeload.github.com/tscircuit/fixed-via-hypergraph-solver/tar.gz/bed37a6201b5dd07c9cc68b828917ecc20d6d049",
+      "installedVersion": "0.0.1",
+      "status": "unchanged declared Git revision; shared installed source reused"
+    },
+    {
+      "name": "@tscircuit/hypergraph",
+      "declared": "^0.0.71",
+      "installedVersion": "0.0.71",
+      "satisfies": true,
+      "status": "shared installed npm version satisfies declaration"
+    },
+    {
+      "name": "@tscircuit/jumper-topology-generator",
+      "declared": "^0.0.4",
+      "installedVersion": "0.0.4",
+      "satisfies": true,
+      "status": "shared installed npm version satisfies declaration"
+    },
+    {
+      "name": "@tscircuit/krt-wasm",
+      "declared": "^0.1.0",
+      "installedVersion": "0.1.9",
+      "satisfies": true,
+      "status": "shared installed npm version satisfies declaration"
+    },
+    {
+      "name": "@tscircuit/length-matching-solver",
+      "declared": "git+https://github.com/tscircuit/length-matching-solver.git#f5455b1112d249ff218bd1bb7bab7b44667c0ce5",
+      "installedVersion": "0.0.1",
+      "status": "exact declared Git revision extracted"
+    },
+    {
+      "name": "@tscircuit/math-utils",
+      "declared": "0.0.39",
+      "installedVersion": "0.0.39",
+      "status": "exact declared npm version with integrity verified"
+    },
+    {
+      "name": "@tscircuit/pcb-trace-linter",
+      "declared": "github:tscircuit/pcb-trace-linter#4c035f9d40ffb03ba547a08975b5e64b20371123",
+      "baseDeclared": "https://codeload.github.com/tscircuit/pcb-trace-linter/tar.gz/4c035f9d40ffb03ba547a08975b5e64b20371123",
+      "installedVersion": "0.0.1",
+      "status": "unchanged declared Git revision; shared installed source reused"
+    },
+    {
+      "name": "@tscircuit/power-trace-expander",
+      "declared": "git+https://github.com/tscircuit/power-trace-expander.git#83eb1bf80e7cd8a3bc91571ee0de8ade0f680448",
+      "installedVersion": "0.0.1",
+      "status": "exact declared Git revision extracted"
+    },
+    {
+      "name": "@tscircuit/power-trace-expander-baseline",
+      "declared": "git+https://github.com/tscircuit/power-trace-expander.git#01ce27085607c0ee22573a39cce232d73580b7c0",
+      "baseDeclared": "https://codeload.github.com/tscircuit/power-trace-expander/tar.gz/01ce27085607c0ee22573a39cce232d73580b7c0",
+      "installedVersion": "0.0.1",
+      "status": "unchanged declared Git revision; shared installed source reused"
+    },
+    {
+      "name": "@tscircuit/rectdiff",
+      "declared": "0.0.56",
+      "installedVersion": "0.0.56",
+      "satisfies": true,
+      "status": "shared installed npm version satisfies declaration"
+    },
+    {
+      "name": "@tscircuit/repair04",
+      "declared": "https://codeload.github.com/tscircuit/repair04/tar.gz/1b33fe703438890adc52abbb7a8f18eb6f88ec70",
+      "installedVersion": "0.0.1",
+      "status": "exact declared Git revision extracted"
+    },
+    {
+      "name": "@tscircuit/trace-simplification-solver",
+      "declared": "github:tscircuit/trace-simplification-solver#8193d693020c4d2c6e89cc919151c39923d4d713",
+      "installedVersion": "0.0.1",
+      "status": "exact declared Git revision extracted"
+    },
+    {
+      "name": "@types/bun",
+      "declared": "^1.2.23",
+      "installedVersion": "1.4.4",
+      "satisfies": true,
+      "status": "shared installed npm version satisfies declaration"
+    },
+    {
+      "name": "@types/fast-json-stable-stringify",
+      "declared": "^2.1.2",
+      "installedVersion": "2.1.2",
+      "satisfies": true,
+      "status": "shared installed npm version satisfies declaration"
+    },
+    {
+      "name": "@types/object-hash",
+      "declared": "^3.0.6",
+      "installedVersion": "3.0.6",
+      "satisfies": true,
+      "status": "shared installed npm version satisfies declaration"
+    },
+    {
+      "name": "@types/rbush",
+      "declared": "^4.0.0",
+      "installedVersion": "4.0.0",
+      "satisfies": true,
+      "status": "shared installed npm version satisfies declaration"
+    },
+    {
+      "name": "@types/react",
+      "declared": "^19.0.8",
+      "installedVersion": "19.3.0",
+      "satisfies": true,
+      "status": "shared installed npm version satisfies declaration"
+    },
+    {
+      "name": "@types/react-dom",
+      "declared": "^19.0.3",
+      "installedVersion": "19.3.0",
+      "satisfies": true,
+      "status": "shared installed npm version satisfies declaration"
+    },
+    {
+      "name": "@vercel/node",
+      "declared": "^5.1.7",
+      "installedVersion": "5.10.2",
+      "satisfies": true,
+      "status": "shared installed npm version satisfies declaration"
+    },
+    {
+      "name": "@vitejs/plugin-react",
+      "declared": "^4.3.4",
+      "installedVersion": "4.7.0",
+      "satisfies": true,
+      "status": "shared installed npm version satisfies declaration"
+    },
+    {
+      "name": "bun-match-svg",
+      "declared": "^0.0.14",
+      "installedVersion": "0.0.14",
+      "satisfies": true,
+      "status": "shared installed npm version satisfies declaration"
+    },
+    {
+      "name": "circuit-json-to-connectivity-map",
+      "declared": "^0.0.36",
+      "installedVersion": "0.0.36",
+      "satisfies": true,
+      "status": "shared installed npm version satisfies declaration"
+    },
+    {
+      "name": "circuit-json",
+      "declared": "^0.0.525",
+      "installedVersion": "0.0.525",
+      "satisfies": true,
+      "status": "shared installed npm version satisfies declaration"
+    },
+    {
+      "name": "circuit-to-svg",
+      "declared": "^0.0.220",
+      "installedVersion": "0.0.220",
+      "satisfies": true,
+      "status": "shared installed npm version satisfies declaration"
+    },
+    {
+      "name": "clsx",
+      "declared": "^2.1.1",
+      "installedVersion": "2.1.1",
+      "satisfies": true,
+      "status": "shared installed npm version satisfies declaration"
+    },
+    {
+      "name": "dataset-srj11-45-degree",
+      "declared": "git+https://github.com/tscircuit/dataset-srj11-45-degree.git#c49dd43c38f85fa2777c7d67393df413ca8d5a75",
+      "baseDeclared": "https://codeload.github.com/tscircuit/dataset-srj11-45-degree/tar.gz/c49dd43c38f85fa2777c7d67393df413ca8d5a75",
+      "installedVersion": "0.1.0",
+      "status": "unchanged declared Git revision; shared installed source reused"
+    },
+    {
+      "name": "dataset-srj18",
+      "declared": "git+https://github.com/tscircuit/dataset-srj18.git#100e8957ce789b5b288e14c476dc83f4efc5214b",
+      "baseDeclared": "https://codeload.github.com/tscircuit/dataset-srj18/tar.gz/100e8957ce789b5b288e14c476dc83f4efc5214b",
+      "installedVersion": "1.0.0",
+      "status": "unchanged declared Git revision; shared installed source reused"
+    },
+    {
+      "name": "flatbush",
+      "declared": "^4.4.0",
+      "installedVersion": "4.7.0",
+      "satisfies": true,
+      "status": "shared installed npm version satisfies declaration"
+    },
+    {
+      "name": "format-si-unit",
+      "declared": "0.0.12",
+      "installedVersion": "0.0.12",
+      "satisfies": true,
+      "status": "shared installed npm version satisfies declaration"
+    },
+    {
+      "name": "graphics-debug",
+      "declared": "0.0.99",
+      "installedVersion": "0.0.99",
+      "satisfies": true,
+      "status": "shared installed npm version satisfies declaration"
+    },
+    {
+      "name": "high-density-dataset-z04",
+      "declared": "git+https://github.com/tscircuit/high-density-dataset-z04.git#b9128ed52f5a50102b6526319be1d4ec33dca2c2",
+      "baseDeclared": "https://codeload.github.com/tscircuit/high-density-dataset-z04/tar.gz/b9128ed52f5a50102b6526319be1d4ec33dca2c2",
+      "installedVersion": "1.0.0",
+      "status": "unchanged declared Git revision; shared installed source reused"
+    },
+    {
+      "name": "kicad-to-circuit-json",
+      "declared": "0.0.77",
+      "installedVersion": "0.0.77",
+      "satisfies": true,
+      "status": "shared installed npm version satisfies declaration"
+    },
+    {
+      "name": "kleur",
+      "declared": "^4.1.5",
+      "installedVersion": "4.1.5",
+      "satisfies": true,
+      "status": "shared installed npm version satisfies declaration"
+    },
+    {
+      "name": "looks-same",
+      "declared": "9",
+      "installedVersion": "9.0.1",
+      "satisfies": true,
+      "status": "shared installed npm version satisfies declaration"
+    },
+    {
+      "name": "pcb-poly-hyper-graph",
+      "declared": "https://codeload.github.com/tscircuit/pcb-poly-hyper-graph/tar.gz/80db1463c4a47506eeda15b2c14d59679de900f8",
+      "baseDeclared": "https://codeload.github.com/tscircuit/pcb-poly-hyper-graph/tar.gz/80db1463c4a47506eeda15b2c14d59679de900f8",
+      "installedVersion": "0.1.3",
+      "status": "unchanged declared Git revision; shared installed source reused"
+    },
+    {
+      "name": "rbush",
+      "declared": "^4.0.1",
+      "installedVersion": "4.0.1",
+      "satisfies": true,
+      "status": "shared installed npm version satisfies declaration"
+    },
+    {
+      "name": "react",
+      "declared": "18",
+      "installedVersion": "18.3.1",
+      "satisfies": true,
+      "status": "shared installed npm version satisfies declaration"
+    },
+    {
+      "name": "react-for-pipeline9-fixtures",
+      "declared": "npm:react@19.2.8",
+      "installedVersion": "19.2.8",
+      "satisfies": true,
+      "status": "shared installed npm version satisfies declaration"
+    },
+    {
+      "name": "react-cosmos",
+      "declared": "^6.2.3",
+      "installedVersion": "6.2.3",
+      "satisfies": true,
+      "status": "shared installed npm version satisfies declaration"
+    },
+    {
+      "name": "react-cosmos-plugin-vite",
+      "declared": "^6.2.0",
+      "installedVersion": "6.2.0",
+      "satisfies": true,
+      "status": "shared installed npm version satisfies declaration"
+    },
+    {
+      "name": "react-dom",
+      "declared": "18",
+      "installedVersion": "18.3.1",
+      "satisfies": true,
+      "status": "shared installed npm version satisfies declaration"
+    },
+    {
+      "name": "react-konva",
+      "declared": "18",
+      "installedVersion": "18.2.16",
+      "satisfies": true,
+      "status": "shared installed npm version satisfies declaration"
+    },
+    {
+      "name": "recharts",
+      "declared": "^2.15.1",
+      "installedVersion": "2.15.4",
+      "satisfies": true,
+      "status": "shared installed npm version satisfies declaration"
+    },
+    {
+      "name": "tailwind-merge",
+      "declared": "^3.2.0",
+      "installedVersion": "3.7.0",
+      "satisfies": true,
+      "status": "shared installed npm version satisfies declaration"
+    },
+    {
+      "name": "terser",
+      "declared": "^5.43.1",
+      "installedVersion": "5.51.2",
+      "satisfies": true,
+      "status": "shared installed npm version satisfies declaration"
+    },
+    {
+      "name": "tiny-hypergraph",
+      "declared": "git+https://github.com/tscircuit/tiny-hypergraph.git#f1fe8edcfb3dfde8fd644d09d81bad18743144b3",
+      "installedVersion": null,
+      "status": "exact declared Git revision extracted"
+    },
+    {
+      "name": "tiny-hypergraph-poly",
+      "declared": "git+https://github.com/tscircuit/tiny-hypergraph.git#7b93b4c",
+      "baseDeclared": "https://codeload.github.com/tscircuit/tiny-hypergraph/tar.gz/7b93b4c",
+      "installedVersion": null,
+      "status": "unchanged declared Git revision; shared installed source reused"
+    },
+    {
+      "name": "tsup",
+      "declared": "^8.3.6",
+      "installedVersion": "8.5.1",
+      "satisfies": true,
+      "status": "shared installed npm version satisfies declaration"
+    },
+    {
+      "name": "tscircuit-for-pipeline9-fixtures",
+      "declared": "npm:tscircuit@0.0.2467",
+      "installedVersion": "0.0.2467",
+      "satisfies": true,
+      "status": "shared installed npm version satisfies declaration"
+    },
+    {
+      "name": "tscircuit-for-sepic-repro",
+      "declared": "npm:tscircuit@0.0.3186",
+      "status": "missing",
+      "scope": "unrelated repro alias intentionally not installed"
+    },
+    {
+      "name": "@tscircuit/props-for-sepic-repro",
+      "declared": "npm:@tscircuit/props@0.0.728",
+      "status": "missing",
+      "scope": "unrelated repro alias intentionally not installed"
+    },
+    {
+      "name": "typescript",
+      "declared": "^5.9.3",
+      "installedVersion": "5.9.3",
+      "satisfies": true,
+      "status": "shared installed npm version satisfies declaration"
+    },
+    {
+      "name": "use-mouse-matrix-transform",
+      "declared": "^1.3.0",
+      "installedVersion": "1.3.5",
+      "satisfies": true,
+      "status": "shared installed npm version satisfies declaration"
+    },
+    {
+      "name": "vite",
+      "declared": "^6.0.11",
+      "installedVersion": "6.4.5",
+      "satisfies": true,
+      "status": "shared installed npm version satisfies declaration"
+    },
+    {
+      "name": "vite-tsconfig-paths",
+      "declared": "^5.1.4",
+      "installedVersion": "5.1.4",
+      "satisfies": true,
+      "status": "shared installed npm version satisfies declaration"
+    },
+    {
+      "name": "zdwiel-dataset",
+      "declared": "git+https://github.com/dwiel/tscircuit-benchmark.git#be36518b5bf51755dae92c230061ab3cf4e3e063",
+      "baseDeclared": "https://codeload.github.com/dwiel/tscircuit-benchmark/tar.gz/be36518b5bf51755dae92c230061ab3cf4e3e063",
+      "installedVersion": "1.0.0",
+      "status": "unchanged declared Git revision; shared installed source reused"
+    },
+    {
+      "name": "high-density-repair01",
+      "declared": "git+https://github.com/tscircuit/high-density-repair01.git#4f4aeb9d1589c913cf34172fdba71dfe1f6dd6ea",
+      "installedVersion": "0.0.0",
+      "status": "exact declared Git revision extracted"
+    },
+    {
+      "name": "high-density-repair02",
+      "declared": "https://codeload.github.com/tscircuit/high-density-repair02/tar.gz/cac656f51535aca0d9c7f09e5860b4e82a78f3cf",
+      "installedVersion": "0.0.0",
+      "status": "exact declared Git revision extracted"
+    },
+    {
+      "name": "high-density-repair03",
+      "declared": "https://codeload.github.com/tscircuit/high-density-repair03/tar.gz/517f0fd443cb878cb2f0e91aea51d5f40b514193",
+      "installedVersion": null,
+      "status": "exact declared Git revision extracted"
+    },
+    {
+      "name": "@tscircuit/high-density-a01",
+      "declared": "git+https://github.com/tscircuit/high-density-a01.git#85ee23a25403bbb79be14b6d0783e592928a85a0",
+      "baseDeclared": "https://codeload.github.com/tscircuit/high-density-a01/tar.gz/85ee23a25403bbb79be14b6d0783e592928a85a0",
+      "installedVersion": "0.0.36",
+      "status": "unchanged declared Git revision; shared installed source reused"
+    },
+    {
+      "name": "@tscircuit/high-density-a13",
+      "declared": "git+https://github.com/tscircuit/high-density-a01.git#c6812cebd44b09f29f2fee929837b313b822f2ae",
+      "baseDeclared": "https://codeload.github.com/tscircuit/high-density-a01/tar.gz/c6812cebd44b09f29f2fee929837b313b822f2ae",
+      "installedVersion": "0.0.36",
+      "status": "unchanged declared Git revision; shared installed source reused"
+    },
+    {
+      "name": "@tscircuit/high-density-b01",
+      "declared": "git+https://github.com/tscircuit/high-density-b01.git#0acce21dc32a279788f88d884618630c82405590",
+      "baseDeclared": "https://codeload.github.com/tscircuit/high-density-b01/tar.gz/0acce21dc32a279788f88d884618630c82405590",
+      "installedVersion": "0.0.1",
+      "status": "unchanged declared Git revision; shared installed source reused"
+    }
+  ]
+}

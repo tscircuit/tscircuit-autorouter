@@ -1,0 +1,908 @@
+{
+  "scope": "Runtime dependency closure of nine exact1127 source overrides; peer/dev dependencies excluded",
+  "packages": 64,
+  "edges": 100,
+  "issues": [],
+  "rows": [
+    {
+      "owner": "@tscircuit/length-matching-solver",
+      "ownerDirectory": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/length-matching-solver",
+      "name": "@tscircuit/math-utils",
+      "declared": "^0.0.36",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/math-utils",
+      "version": "0.0.36",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "@tscircuit/length-matching-solver",
+      "ownerDirectory": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/length-matching-solver",
+      "name": "@tscircuit/solver-utils",
+      "declared": "^0.0.16",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/tscircuit-for-pipeline9-fixtures/node_modules/@tscircuit/solver-utils",
+      "version": "0.0.16",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "@tscircuit/length-matching-solver",
+      "ownerDirectory": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/length-matching-solver",
+      "name": "graphics-debug",
+      "declared": "^0.0.96",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/create-fdm-enclosure/node_modules/graphics-debug",
+      "version": "0.0.96",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "@tscircuit/length-matching-solver",
+      "ownerDirectory": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/length-matching-solver",
+      "name": "polished",
+      "declared": "^4.3.1",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/polished",
+      "version": "4.3.1",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "@tscircuit/power-trace-expander",
+      "ownerDirectory": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/power-trace-expander",
+      "name": "@tscircuit/solver-utils",
+      "declared": "^0.0.19",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/calculate-cell-boundaries/node_modules/@tscircuit/solver-utils",
+      "version": "0.0.19",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "@tscircuit/power-trace-expander",
+      "ownerDirectory": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/power-trace-expander",
+      "name": "flatbush",
+      "declared": "git+https://github.com/seveibar/flatbush.git#420df716eb7ce727162fa22ecef7e1ceb9040f33",
+      "resolved": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/power-trace-expander/node_modules/flatbush",
+      "version": "4.6.3-collides.0",
+      "status": "exact Git revision"
+    },
+    {
+      "owner": "@tscircuit/power-trace-expander",
+      "ownerDirectory": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/power-trace-expander",
+      "name": "graphics-debug",
+      "declared": "^0.0.96",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/create-fdm-enclosure/node_modules/graphics-debug",
+      "version": "0.0.96",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "@tscircuit/repair04",
+      "ownerDirectory": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/repair04",
+      "name": "@tscircuit/solver-utils",
+      "declared": "^0.0.16",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/tscircuit-for-pipeline9-fixtures/node_modules/@tscircuit/solver-utils",
+      "version": "0.0.16",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "@tscircuit/repair04",
+      "ownerDirectory": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/repair04",
+      "name": "high-density-repair03",
+      "declared": "https://codeload.github.com/tscircuit/high-density-repair03/tar.gz/cbbc86a3d6a01a565f2381b6fd01353783f4171a",
+      "resolved": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/repair04/node_modules/high-density-repair03",
+      "version": null,
+      "status": "exact Git revision"
+    },
+    {
+      "owner": "@tscircuit/repair04",
+      "ownerDirectory": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/repair04",
+      "name": "@tscircuit/math-utils",
+      "declared": "^0.0.36",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/math-utils",
+      "version": "0.0.36",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "@tscircuit/repair04",
+      "ownerDirectory": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/repair04",
+      "name": "flatbush",
+      "declared": "4.6.2",
+      "resolved": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/repair04/node_modules/flatbush",
+      "version": "4.6.2",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "@tscircuit/trace-simplification-solver",
+      "ownerDirectory": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/trace-simplification-solver",
+      "name": "@tscircuit/math-utils",
+      "declared": "0.0.36",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/math-utils",
+      "version": "0.0.36",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "@tscircuit/trace-simplification-solver",
+      "ownerDirectory": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/trace-simplification-solver",
+      "name": "circuit-json-to-connectivity-map",
+      "declared": "0.0.19",
+      "resolved": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/trace-simplification-solver/node_modules/circuit-json-to-connectivity-map",
+      "version": "0.0.19",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "@tscircuit/trace-simplification-solver",
+      "ownerDirectory": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/trace-simplification-solver",
+      "name": "flatbush",
+      "declared": "4.6.2",
+      "resolved": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/repair04/node_modules/flatbush",
+      "version": "4.6.2",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "@tscircuit/trace-simplification-solver",
+      "ownerDirectory": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/trace-simplification-solver",
+      "name": "graphics-debug",
+      "declared": "0.0.99",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/graphics-debug",
+      "version": "0.0.99",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "@tscircuit/trace-simplification-solver",
+      "ownerDirectory": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/trace-simplification-solver",
+      "name": "polished",
+      "declared": "4.3.1",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/polished",
+      "version": "4.3.1",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "@tscircuit/trace-simplification-solver",
+      "ownerDirectory": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/trace-simplification-solver",
+      "name": "rbush",
+      "declared": "4.0.1",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/rbush",
+      "version": "4.0.1",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "@tscircuit/trace-simplification-solver",
+      "ownerDirectory": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/trace-simplification-solver",
+      "name": "@types/rbush",
+      "declared": "4.0.0",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/@types/rbush",
+      "version": "4.0.0",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "tiny-hypergraph",
+      "ownerDirectory": "/workspace/autorouter-1127-validation-dependencies/node_modules/tiny-hypergraph",
+      "name": "@tscircuit/solver-utils",
+      "declared": "^0.0.23",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/solver-utils",
+      "version": "0.0.23",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "high-density-repair01",
+      "ownerDirectory": "/workspace/autorouter-1127-validation-dependencies/node_modules/high-density-repair01",
+      "name": "flatbush",
+      "declared": "^4.5.1",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/flatbush",
+      "version": "4.7.0",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "high-density-repair02",
+      "ownerDirectory": "/workspace/autorouter-1127-validation-dependencies/node_modules/high-density-repair02",
+      "name": "flatbush",
+      "declared": "^4.6.2",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/flatbush",
+      "version": "4.7.0",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "high-density-repair03",
+      "ownerDirectory": "/workspace/autorouter-1127-validation-dependencies/node_modules/high-density-repair03",
+      "name": "@tscircuit/checks",
+      "declared": "^0.0.123",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/repair04/node_modules/high-density-repair03/node_modules/@tscircuit/checks",
+      "version": "0.0.123",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "high-density-repair03",
+      "ownerDirectory": "/workspace/autorouter-1127-validation-dependencies/node_modules/high-density-repair03",
+      "name": "@tscircuit/circuit-json-util",
+      "declared": "^0.0.94",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/repair04/node_modules/high-density-repair03/node_modules/@tscircuit/circuit-json-util",
+      "version": "0.0.94",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "high-density-repair03",
+      "ownerDirectory": "/workspace/autorouter-1127-validation-dependencies/node_modules/high-density-repair03",
+      "name": "@tscircuit/math-utils",
+      "declared": "^0.0.36",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/math-utils",
+      "version": "0.0.36",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "high-density-repair03",
+      "ownerDirectory": "/workspace/autorouter-1127-validation-dependencies/node_modules/high-density-repair03",
+      "name": "circuit-json-to-connectivity-map",
+      "declared": "^0.0.25",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/repair04/node_modules/high-density-repair03/node_modules/circuit-json-to-connectivity-map",
+      "version": "0.0.25",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "high-density-repair03",
+      "ownerDirectory": "/workspace/autorouter-1127-validation-dependencies/node_modules/high-density-repair03",
+      "name": "circuit-json",
+      "declared": "^0.0.422",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/repair04/node_modules/high-density-repair03/node_modules/circuit-json",
+      "version": "0.0.422",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "high-density-repair03",
+      "ownerDirectory": "/workspace/autorouter-1127-validation-dependencies/node_modules/high-density-repair03",
+      "name": "graphics-debug",
+      "declared": "^0.0.93",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/repair04/node_modules/high-density-repair03/node_modules/graphics-debug",
+      "version": "0.0.93",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "high-density-repair03",
+      "ownerDirectory": "/workspace/autorouter-1127-validation-dependencies/node_modules/high-density-repair03",
+      "name": "react",
+      "declared": "^19.2.5",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/react-for-pipeline9-fixtures",
+      "version": "19.2.8",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "high-density-repair03",
+      "ownerDirectory": "/workspace/autorouter-1127-validation-dependencies/node_modules/high-density-repair03",
+      "name": "react-dom",
+      "declared": "^19.2.5",
+      "resolved": "/workspace/autorouter-1127-validation-dependencies/node_modules/high-density-repair03/node_modules/react-dom",
+      "version": "19.2.5",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "high-density-repair03",
+      "ownerDirectory": "/workspace/autorouter-1127-validation-dependencies/node_modules/high-density-repair03",
+      "name": "transformation-matrix",
+      "declared": "^3.1.0",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/transformation-matrix",
+      "version": "3.1.0",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "graphics-debug",
+      "ownerDirectory": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/create-fdm-enclosure/node_modules/graphics-debug",
+      "name": "@react-hook/resize-observer",
+      "declared": "^2.0.2",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/@react-hook/resize-observer",
+      "version": "2.0.2",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "graphics-debug",
+      "ownerDirectory": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/create-fdm-enclosure/node_modules/graphics-debug",
+      "name": "@tscircuit/alphabet",
+      "declared": "^0.0.25",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/alphabet",
+      "version": "0.0.25",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "graphics-debug",
+      "ownerDirectory": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/create-fdm-enclosure/node_modules/graphics-debug",
+      "name": "@types/react-router-dom",
+      "declared": "^5.3.3",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/@types/react-router-dom",
+      "version": "5.3.3",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "graphics-debug",
+      "ownerDirectory": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/create-fdm-enclosure/node_modules/graphics-debug",
+      "name": "fast-png",
+      "declared": "^8.0.0",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/fast-png",
+      "version": "8.0.0",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "graphics-debug",
+      "ownerDirectory": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/create-fdm-enclosure/node_modules/graphics-debug",
+      "name": "polished",
+      "declared": "^4.3.1",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/polished",
+      "version": "4.3.1",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "graphics-debug",
+      "ownerDirectory": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/create-fdm-enclosure/node_modules/graphics-debug",
+      "name": "react-router-dom",
+      "declared": "^6.28.0",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/react-router-dom",
+      "version": "6.30.6",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "graphics-debug",
+      "ownerDirectory": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/create-fdm-enclosure/node_modules/graphics-debug",
+      "name": "react-supergrid",
+      "declared": "^1.0.10",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/react-supergrid",
+      "version": "1.0.10",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "graphics-debug",
+      "ownerDirectory": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/create-fdm-enclosure/node_modules/graphics-debug",
+      "name": "svgson",
+      "declared": "^5.3.1",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/svgson",
+      "version": "5.3.1",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "graphics-debug",
+      "ownerDirectory": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/create-fdm-enclosure/node_modules/graphics-debug",
+      "name": "transformation-matrix",
+      "declared": "^3.0.0",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/transformation-matrix",
+      "version": "3.1.0",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "graphics-debug",
+      "ownerDirectory": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/create-fdm-enclosure/node_modules/graphics-debug",
+      "name": "use-mouse-matrix-transform",
+      "declared": "^1.3.0",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/use-mouse-matrix-transform",
+      "version": "1.3.5",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "polished",
+      "ownerDirectory": "/workspace/.tools/autorouter-dependencies/node_modules/polished",
+      "name": "@babel/runtime",
+      "declared": "^7.17.8",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/@babel/runtime",
+      "version": "7.29.13",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "flatbush",
+      "ownerDirectory": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/power-trace-expander/node_modules/flatbush",
+      "name": "flatqueue",
+      "declared": "^3.1.0",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/flatqueue",
+      "version": "3.1.0",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "high-density-repair03",
+      "ownerDirectory": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/repair04/node_modules/high-density-repair03",
+      "name": "@tscircuit/checks",
+      "declared": "^0.0.123",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/repair04/node_modules/high-density-repair03/node_modules/@tscircuit/checks",
+      "version": "0.0.123",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "high-density-repair03",
+      "ownerDirectory": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/repair04/node_modules/high-density-repair03",
+      "name": "@tscircuit/circuit-json-util",
+      "declared": "^0.0.94",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/repair04/node_modules/high-density-repair03/node_modules/@tscircuit/circuit-json-util",
+      "version": "0.0.94",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "high-density-repair03",
+      "ownerDirectory": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/repair04/node_modules/high-density-repair03",
+      "name": "@tscircuit/math-utils",
+      "declared": "^0.0.36",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/math-utils",
+      "version": "0.0.36",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "high-density-repair03",
+      "ownerDirectory": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/repair04/node_modules/high-density-repair03",
+      "name": "circuit-json-to-connectivity-map",
+      "declared": "^0.0.25",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/repair04/node_modules/high-density-repair03/node_modules/circuit-json-to-connectivity-map",
+      "version": "0.0.25",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "high-density-repair03",
+      "ownerDirectory": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/repair04/node_modules/high-density-repair03",
+      "name": "circuit-json",
+      "declared": "^0.0.422",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/repair04/node_modules/high-density-repair03/node_modules/circuit-json",
+      "version": "0.0.422",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "high-density-repair03",
+      "ownerDirectory": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/repair04/node_modules/high-density-repair03",
+      "name": "graphics-debug",
+      "declared": "^0.0.93",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/repair04/node_modules/high-density-repair03/node_modules/graphics-debug",
+      "version": "0.0.93",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "high-density-repair03",
+      "ownerDirectory": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/repair04/node_modules/high-density-repair03",
+      "name": "react",
+      "declared": "^19.2.5",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/react-for-pipeline9-fixtures",
+      "version": "19.2.8",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "high-density-repair03",
+      "ownerDirectory": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/repair04/node_modules/high-density-repair03",
+      "name": "react-dom",
+      "declared": "^19.2.5",
+      "resolved": "/workspace/autorouter-1127-validation-dependencies/node_modules/high-density-repair03/node_modules/react-dom",
+      "version": "19.2.5",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "high-density-repair03",
+      "ownerDirectory": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/repair04/node_modules/high-density-repair03",
+      "name": "transformation-matrix",
+      "declared": "^3.1.0",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/transformation-matrix",
+      "version": "3.1.0",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "flatbush",
+      "ownerDirectory": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/repair04/node_modules/flatbush",
+      "name": "flatqueue",
+      "declared": "^3.1.0",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/flatqueue",
+      "version": "3.1.0",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "circuit-json-to-connectivity-map",
+      "ownerDirectory": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/trace-simplification-solver/node_modules/circuit-json-to-connectivity-map",
+      "name": "@tscircuit/math-utils",
+      "declared": "^0.0.9",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/circuit-json-to-spice/node_modules/circuit-json-to-connectivity-map/node_modules/@tscircuit/math-utils",
+      "version": "0.0.9",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "graphics-debug",
+      "ownerDirectory": "/workspace/.tools/autorouter-dependencies/node_modules/graphics-debug",
+      "name": "@react-hook/resize-observer",
+      "declared": "^2.0.2",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/@react-hook/resize-observer",
+      "version": "2.0.2",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "graphics-debug",
+      "ownerDirectory": "/workspace/.tools/autorouter-dependencies/node_modules/graphics-debug",
+      "name": "@tscircuit/alphabet",
+      "declared": "^0.0.25",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/alphabet",
+      "version": "0.0.25",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "graphics-debug",
+      "ownerDirectory": "/workspace/.tools/autorouter-dependencies/node_modules/graphics-debug",
+      "name": "@types/react-router-dom",
+      "declared": "^5.3.3",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/@types/react-router-dom",
+      "version": "5.3.3",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "graphics-debug",
+      "ownerDirectory": "/workspace/.tools/autorouter-dependencies/node_modules/graphics-debug",
+      "name": "fast-png",
+      "declared": "^8.0.0",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/fast-png",
+      "version": "8.0.0",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "graphics-debug",
+      "ownerDirectory": "/workspace/.tools/autorouter-dependencies/node_modules/graphics-debug",
+      "name": "polished",
+      "declared": "^4.3.1",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/polished",
+      "version": "4.3.1",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "graphics-debug",
+      "ownerDirectory": "/workspace/.tools/autorouter-dependencies/node_modules/graphics-debug",
+      "name": "react-router-dom",
+      "declared": "^6.28.0",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/react-router-dom",
+      "version": "6.30.6",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "graphics-debug",
+      "ownerDirectory": "/workspace/.tools/autorouter-dependencies/node_modules/graphics-debug",
+      "name": "react-supergrid",
+      "declared": "^1.0.10",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/react-supergrid",
+      "version": "1.0.10",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "graphics-debug",
+      "ownerDirectory": "/workspace/.tools/autorouter-dependencies/node_modules/graphics-debug",
+      "name": "svgson",
+      "declared": "^5.3.1",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/svgson",
+      "version": "5.3.1",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "graphics-debug",
+      "ownerDirectory": "/workspace/.tools/autorouter-dependencies/node_modules/graphics-debug",
+      "name": "transformation-matrix",
+      "declared": "^3.0.0",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/transformation-matrix",
+      "version": "3.1.0",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "graphics-debug",
+      "ownerDirectory": "/workspace/.tools/autorouter-dependencies/node_modules/graphics-debug",
+      "name": "use-mouse-matrix-transform",
+      "declared": "^1.3.0",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/use-mouse-matrix-transform",
+      "version": "1.3.5",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "rbush",
+      "ownerDirectory": "/workspace/.tools/autorouter-dependencies/node_modules/rbush",
+      "name": "quickselect",
+      "declared": "^3.0.0",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/quickselect",
+      "version": "3.0.0",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "flatbush",
+      "ownerDirectory": "/workspace/.tools/autorouter-dependencies/node_modules/flatbush",
+      "name": "flatqueue",
+      "declared": "^3.1.0",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/flatqueue",
+      "version": "3.1.0",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "@tscircuit/circuit-json-util",
+      "ownerDirectory": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/repair04/node_modules/high-density-repair03/node_modules/@tscircuit/circuit-json-util",
+      "name": "parsel-js",
+      "declared": "^1.1.2",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/parsel-js",
+      "version": "1.2.3",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "circuit-json-to-connectivity-map",
+      "ownerDirectory": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/repair04/node_modules/high-density-repair03/node_modules/circuit-json-to-connectivity-map",
+      "name": "@tscircuit/math-utils",
+      "declared": "^0.0.9",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/repair04/node_modules/high-density-repair03/node_modules/circuit-json-to-connectivity-map/node_modules/@tscircuit/math-utils",
+      "version": "0.0.9",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "graphics-debug",
+      "ownerDirectory": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/repair04/node_modules/high-density-repair03/node_modules/graphics-debug",
+      "name": "@react-hook/resize-observer",
+      "declared": "^2.0.2",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/@react-hook/resize-observer",
+      "version": "2.0.2",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "graphics-debug",
+      "ownerDirectory": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/repair04/node_modules/high-density-repair03/node_modules/graphics-debug",
+      "name": "@tscircuit/alphabet",
+      "declared": "^0.0.25",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/alphabet",
+      "version": "0.0.25",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "graphics-debug",
+      "ownerDirectory": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/repair04/node_modules/high-density-repair03/node_modules/graphics-debug",
+      "name": "@types/react-router-dom",
+      "declared": "^5.3.3",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/@types/react-router-dom",
+      "version": "5.3.3",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "graphics-debug",
+      "ownerDirectory": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/repair04/node_modules/high-density-repair03/node_modules/graphics-debug",
+      "name": "fast-png",
+      "declared": "^8.0.0",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/fast-png",
+      "version": "8.0.0",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "graphics-debug",
+      "ownerDirectory": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/repair04/node_modules/high-density-repair03/node_modules/graphics-debug",
+      "name": "polished",
+      "declared": "^4.3.1",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/polished",
+      "version": "4.3.1",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "graphics-debug",
+      "ownerDirectory": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/repair04/node_modules/high-density-repair03/node_modules/graphics-debug",
+      "name": "react-router-dom",
+      "declared": "^6.28.0",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/react-router-dom",
+      "version": "6.30.6",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "graphics-debug",
+      "ownerDirectory": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/repair04/node_modules/high-density-repair03/node_modules/graphics-debug",
+      "name": "react-supergrid",
+      "declared": "^1.0.10",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/react-supergrid",
+      "version": "1.0.10",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "graphics-debug",
+      "ownerDirectory": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/repair04/node_modules/high-density-repair03/node_modules/graphics-debug",
+      "name": "svgson",
+      "declared": "^5.3.1",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/svgson",
+      "version": "5.3.1",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "graphics-debug",
+      "ownerDirectory": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/repair04/node_modules/high-density-repair03/node_modules/graphics-debug",
+      "name": "transformation-matrix",
+      "declared": "^3.0.0",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/transformation-matrix",
+      "version": "3.1.0",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "graphics-debug",
+      "ownerDirectory": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/repair04/node_modules/high-density-repair03/node_modules/graphics-debug",
+      "name": "use-mouse-matrix-transform",
+      "declared": "^1.3.0",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/use-mouse-matrix-transform",
+      "version": "1.3.5",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "react-dom",
+      "ownerDirectory": "/workspace/autorouter-1127-validation-dependencies/node_modules/high-density-repair03/node_modules/react-dom",
+      "name": "scheduler",
+      "declared": "^0.27.0",
+      "resolved": "/workspace/autorouter-1127-validation-dependencies/node_modules/high-density-repair03/node_modules/scheduler",
+      "version": "0.27.0",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "@react-hook/resize-observer",
+      "ownerDirectory": "/workspace/.tools/autorouter-dependencies/node_modules/@react-hook/resize-observer",
+      "name": "@react-hook/latest",
+      "declared": "^1.0.2",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/@react-hook/latest",
+      "version": "1.0.3",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "@react-hook/resize-observer",
+      "ownerDirectory": "/workspace/.tools/autorouter-dependencies/node_modules/@react-hook/resize-observer",
+      "name": "@react-hook/passive-layout-effect",
+      "declared": "^1.2.0",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/@react-hook/passive-layout-effect",
+      "version": "1.2.1",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "@types/react-router-dom",
+      "ownerDirectory": "/workspace/.tools/autorouter-dependencies/node_modules/@types/react-router-dom",
+      "name": "@types/history",
+      "declared": "^4.7.11",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/@types/history",
+      "version": "4.7.11",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "@types/react-router-dom",
+      "ownerDirectory": "/workspace/.tools/autorouter-dependencies/node_modules/@types/react-router-dom",
+      "name": "@types/react",
+      "declared": "*",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/@types/react",
+      "version": "19.3.0",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "@types/react-router-dom",
+      "ownerDirectory": "/workspace/.tools/autorouter-dependencies/node_modules/@types/react-router-dom",
+      "name": "@types/react-router",
+      "declared": "*",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/@types/react-router",
+      "version": "5.1.20",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "fast-png",
+      "ownerDirectory": "/workspace/.tools/autorouter-dependencies/node_modules/fast-png",
+      "name": "fflate",
+      "declared": "^0.8.2",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/fflate",
+      "version": "0.8.3",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "fast-png",
+      "ownerDirectory": "/workspace/.tools/autorouter-dependencies/node_modules/fast-png",
+      "name": "iobuffer",
+      "declared": "^6.0.1",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/iobuffer",
+      "version": "6.0.1",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "react-router-dom",
+      "ownerDirectory": "/workspace/.tools/autorouter-dependencies/node_modules/react-router-dom",
+      "name": "react-router",
+      "declared": "6.30.6",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/react-router",
+      "version": "6.30.6",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "react-router-dom",
+      "ownerDirectory": "/workspace/.tools/autorouter-dependencies/node_modules/react-router-dom",
+      "name": "@remix-run/router",
+      "declared": "1.23.4",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/@remix-run/router",
+      "version": "1.23.4",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "svgson",
+      "ownerDirectory": "/workspace/.tools/autorouter-dependencies/node_modules/svgson",
+      "name": "deep-rename-keys",
+      "declared": "^0.2.1",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/deep-rename-keys",
+      "version": "0.2.1",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "svgson",
+      "ownerDirectory": "/workspace/.tools/autorouter-dependencies/node_modules/svgson",
+      "name": "xml-reader",
+      "declared": "2.4.3",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/xml-reader",
+      "version": "2.4.3",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "use-mouse-matrix-transform",
+      "ownerDirectory": "/workspace/.tools/autorouter-dependencies/node_modules/use-mouse-matrix-transform",
+      "name": "transformation-matrix",
+      "declared": "^3.0.0",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/transformation-matrix",
+      "version": "3.1.0",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "@types/react",
+      "ownerDirectory": "/workspace/.tools/autorouter-dependencies/node_modules/@types/react",
+      "name": "csstype",
+      "declared": "^3.2.2",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/csstype",
+      "version": "3.2.3",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "@types/react-router",
+      "ownerDirectory": "/workspace/.tools/autorouter-dependencies/node_modules/@types/react-router",
+      "name": "@types/history",
+      "declared": "^4.7.11",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/@types/history",
+      "version": "4.7.11",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "@types/react-router",
+      "ownerDirectory": "/workspace/.tools/autorouter-dependencies/node_modules/@types/react-router",
+      "name": "@types/react",
+      "declared": "*",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/@types/react",
+      "version": "19.3.0",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "react-router",
+      "ownerDirectory": "/workspace/.tools/autorouter-dependencies/node_modules/react-router",
+      "name": "@remix-run/router",
+      "declared": "1.23.4",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/@remix-run/router",
+      "version": "1.23.4",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "deep-rename-keys",
+      "ownerDirectory": "/workspace/.tools/autorouter-dependencies/node_modules/deep-rename-keys",
+      "name": "kind-of",
+      "declared": "^3.0.2",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/kind-of",
+      "version": "3.2.2",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "deep-rename-keys",
+      "ownerDirectory": "/workspace/.tools/autorouter-dependencies/node_modules/deep-rename-keys",
+      "name": "rename-keys",
+      "declared": "^1.1.2",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/rename-keys",
+      "version": "1.2.0",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "xml-reader",
+      "ownerDirectory": "/workspace/.tools/autorouter-dependencies/node_modules/xml-reader",
+      "name": "eventemitter3",
+      "declared": "^2.0.0",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/xml-reader/node_modules/eventemitter3",
+      "version": "2.0.3",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "xml-reader",
+      "ownerDirectory": "/workspace/.tools/autorouter-dependencies/node_modules/xml-reader",
+      "name": "xml-lexer",
+      "declared": "^0.2.2",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/xml-lexer",
+      "version": "0.2.2",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "kind-of",
+      "ownerDirectory": "/workspace/.tools/autorouter-dependencies/node_modules/kind-of",
+      "name": "is-buffer",
+      "declared": "^1.1.5",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/is-buffer",
+      "version": "1.1.6",
+      "status": "npm declaration satisfied"
+    },
+    {
+      "owner": "xml-lexer",
+      "ownerDirectory": "/workspace/.tools/autorouter-dependencies/node_modules/xml-lexer",
+      "name": "eventemitter3",
+      "declared": "^2.0.0",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/xml-lexer/node_modules/eventemitter3",
+      "version": "2.0.3",
+      "status": "npm declaration satisfied"
+    }
+  ]
+}

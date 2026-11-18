@@ -1,0 +1,225 @@
+{
+  "ledger": [
+    {
+      "owner": "@tscircuit/length-matching-solver",
+      "ownerDirectory": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/length-matching-solver",
+      "name": "@tscircuit/math-utils",
+      "declared": "^0.0.36",
+      "resolved": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/math-utils",
+      "version": "0.0.36",
+      "status": "npm declaration mismatch",
+      "target": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/length-matching-solver/node_modules/@tscircuit/math-utils",
+      "source": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/math-utils"
+    },
+    {
+      "owner": "@tscircuit/length-matching-solver",
+      "ownerDirectory": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/length-matching-solver",
+      "name": "@tscircuit/solver-utils",
+      "declared": "^0.0.16",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/solver-utils",
+      "version": "0.0.16",
+      "status": "npm declaration mismatch",
+      "target": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/length-matching-solver/node_modules/@tscircuit/solver-utils",
+      "source": "/workspace/.tools/autorouter-dependencies/node_modules/tscircuit-for-pipeline9-fixtures/node_modules/@tscircuit/solver-utils"
+    },
+    {
+      "owner": "@tscircuit/length-matching-solver",
+      "ownerDirectory": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/length-matching-solver",
+      "name": "graphics-debug",
+      "declared": "^0.0.96",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/graphics-debug",
+      "version": "0.0.96",
+      "status": "npm declaration mismatch",
+      "target": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/length-matching-solver/node_modules/graphics-debug",
+      "source": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/create-fdm-enclosure/node_modules/graphics-debug"
+    },
+    {
+      "owner": "@tscircuit/power-trace-expander",
+      "ownerDirectory": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/power-trace-expander",
+      "name": "@tscircuit/solver-utils",
+      "declared": "^0.0.19",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/solver-utils",
+      "version": "0.0.19",
+      "status": "npm declaration mismatch",
+      "target": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/power-trace-expander/node_modules/@tscircuit/solver-utils",
+      "source": "/workspace/.tools/autorouter-dependencies/node_modules/calculate-cell-boundaries/node_modules/@tscircuit/solver-utils"
+    },
+    {
+      "owner": "@tscircuit/power-trace-expander",
+      "ownerDirectory": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/power-trace-expander",
+      "name": "graphics-debug",
+      "declared": "^0.0.96",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/graphics-debug",
+      "version": "0.0.96",
+      "status": "npm declaration mismatch",
+      "target": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/power-trace-expander/node_modules/graphics-debug",
+      "source": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/create-fdm-enclosure/node_modules/graphics-debug"
+    },
+    {
+      "owner": "@tscircuit/repair04",
+      "ownerDirectory": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/repair04",
+      "name": "@tscircuit/solver-utils",
+      "declared": "^0.0.16",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/solver-utils",
+      "version": "0.0.16",
+      "status": "npm declaration mismatch",
+      "target": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/repair04/node_modules/@tscircuit/solver-utils",
+      "source": "/workspace/.tools/autorouter-dependencies/node_modules/tscircuit-for-pipeline9-fixtures/node_modules/@tscircuit/solver-utils"
+    },
+    {
+      "owner": "@tscircuit/repair04",
+      "ownerDirectory": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/repair04",
+      "name": "@tscircuit/math-utils",
+      "declared": "^0.0.36",
+      "resolved": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/math-utils",
+      "version": "0.0.36",
+      "status": "npm declaration mismatch",
+      "target": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/repair04/node_modules/@tscircuit/math-utils",
+      "source": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/math-utils"
+    },
+    {
+      "owner": "high-density-repair03",
+      "ownerDirectory": "/workspace/autorouter-1127-validation-dependencies/node_modules/high-density-repair03",
+      "name": "@tscircuit/math-utils",
+      "declared": "^0.0.36",
+      "resolved": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/math-utils",
+      "version": "0.0.36",
+      "status": "npm declaration mismatch",
+      "target": "/workspace/autorouter-1127-validation-dependencies/node_modules/high-density-repair03/node_modules/@tscircuit/math-utils",
+      "source": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/math-utils"
+    },
+    {
+      "owner": "high-density-repair03",
+      "ownerDirectory": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/repair04/node_modules/high-density-repair03",
+      "name": "@tscircuit/math-utils",
+      "declared": "^0.0.36",
+      "resolved": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/math-utils",
+      "version": "0.0.36",
+      "status": "npm declaration mismatch",
+      "target": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/repair04/node_modules/high-density-repair03/node_modules/@tscircuit/math-utils",
+      "source": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/math-utils"
+    },
+    {
+      "owner": "circuit-json-to-connectivity-map",
+      "ownerDirectory": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/trace-simplification-solver/node_modules/circuit-json-to-connectivity-map",
+      "name": "@tscircuit/math-utils",
+      "declared": "^0.0.9",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/math-utils",
+      "version": "0.0.9",
+      "status": "npm declaration mismatch",
+      "target": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/trace-simplification-solver/node_modules/circuit-json-to-connectivity-map/node_modules/@tscircuit/math-utils",
+      "source": "/workspace/.tools/autorouter-dependencies/node_modules/circuit-json-to-spice/node_modules/circuit-json-to-connectivity-map/node_modules/@tscircuit/math-utils"
+    },
+    {
+      "owner": "high-density-repair03",
+      "ownerDirectory": "/workspace/autorouter-1127-validation-dependencies/node_modules/high-density-repair03",
+      "name": "@tscircuit/checks",
+      "declared": "^0.0.123",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/checks",
+      "version": "0.0.123",
+      "status": "npm declaration mismatch",
+      "target": "/workspace/autorouter-1127-validation-dependencies/node_modules/high-density-repair03/node_modules/@tscircuit/checks",
+      "source": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/repair04/node_modules/high-density-repair03/node_modules/@tscircuit/checks"
+    },
+    {
+      "owner": "high-density-repair03",
+      "ownerDirectory": "/workspace/autorouter-1127-validation-dependencies/node_modules/high-density-repair03",
+      "name": "@tscircuit/circuit-json-util",
+      "declared": "^0.0.94",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/circuit-json-util",
+      "version": "0.0.94",
+      "status": "npm declaration mismatch",
+      "target": "/workspace/autorouter-1127-validation-dependencies/node_modules/high-density-repair03/node_modules/@tscircuit/circuit-json-util",
+      "source": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/repair04/node_modules/high-density-repair03/node_modules/@tscircuit/circuit-json-util"
+    },
+    {
+      "owner": "high-density-repair03",
+      "ownerDirectory": "/workspace/autorouter-1127-validation-dependencies/node_modules/high-density-repair03",
+      "name": "circuit-json-to-connectivity-map",
+      "declared": "^0.0.25",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/circuit-json-to-connectivity-map",
+      "version": "0.0.25",
+      "status": "npm declaration mismatch",
+      "target": "/workspace/autorouter-1127-validation-dependencies/node_modules/high-density-repair03/node_modules/circuit-json-to-connectivity-map",
+      "source": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/repair04/node_modules/high-density-repair03/node_modules/circuit-json-to-connectivity-map"
+    },
+    {
+      "owner": "high-density-repair03",
+      "ownerDirectory": "/workspace/autorouter-1127-validation-dependencies/node_modules/high-density-repair03",
+      "name": "circuit-json",
+      "declared": "^0.0.422",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/circuit-json",
+      "version": "0.0.422",
+      "status": "npm declaration mismatch",
+      "target": "/workspace/autorouter-1127-validation-dependencies/node_modules/high-density-repair03/node_modules/circuit-json",
+      "source": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/repair04/node_modules/high-density-repair03/node_modules/circuit-json"
+    },
+    {
+      "owner": "high-density-repair03",
+      "ownerDirectory": "/workspace/autorouter-1127-validation-dependencies/node_modules/high-density-repair03",
+      "name": "graphics-debug",
+      "declared": "^0.0.93",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/graphics-debug",
+      "version": "0.0.93",
+      "status": "npm declaration mismatch",
+      "target": "/workspace/autorouter-1127-validation-dependencies/node_modules/high-density-repair03/node_modules/graphics-debug",
+      "source": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/repair04/node_modules/high-density-repair03/node_modules/graphics-debug"
+    },
+    {
+      "owner": "high-density-repair03",
+      "ownerDirectory": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/repair04/node_modules/high-density-repair03",
+      "name": "@tscircuit/checks",
+      "declared": "^0.0.123",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/checks",
+      "version": "0.0.123",
+      "status": "npm declaration mismatch",
+      "target": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/repair04/node_modules/high-density-repair03/node_modules/@tscircuit/checks",
+      "source": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/repair04/node_modules/high-density-repair03/node_modules/@tscircuit/checks"
+    },
+    {
+      "owner": "high-density-repair03",
+      "ownerDirectory": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/repair04/node_modules/high-density-repair03",
+      "name": "@tscircuit/circuit-json-util",
+      "declared": "^0.0.94",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/circuit-json-util",
+      "version": "0.0.94",
+      "status": "npm declaration mismatch",
+      "target": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/repair04/node_modules/high-density-repair03/node_modules/@tscircuit/circuit-json-util",
+      "source": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/repair04/node_modules/high-density-repair03/node_modules/@tscircuit/circuit-json-util"
+    },
+    {
+      "owner": "high-density-repair03",
+      "ownerDirectory": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/repair04/node_modules/high-density-repair03",
+      "name": "circuit-json-to-connectivity-map",
+      "declared": "^0.0.25",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/circuit-json-to-connectivity-map",
+      "version": "0.0.25",
+      "status": "npm declaration mismatch",
+      "target": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/repair04/node_modules/high-density-repair03/node_modules/circuit-json-to-connectivity-map",
+      "source": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/repair04/node_modules/high-density-repair03/node_modules/circuit-json-to-connectivity-map"
+    },
+    {
+      "owner": "high-density-repair03",
+      "ownerDirectory": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/repair04/node_modules/high-density-repair03",
+      "name": "circuit-json",
+      "declared": "^0.0.422",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/circuit-json",
+      "version": "0.0.422",
+      "status": "npm declaration mismatch",
+      "target": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/repair04/node_modules/high-density-repair03/node_modules/circuit-json",
+      "source": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/repair04/node_modules/high-density-repair03/node_modules/circuit-json"
+    },
+    {
+      "owner": "high-density-repair03",
+      "ownerDirectory": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/repair04/node_modules/high-density-repair03",
+      "name": "graphics-debug",
+      "declared": "^0.0.93",
+      "resolved": "/workspace/.tools/autorouter-dependencies/node_modules/graphics-debug",
+      "version": "0.0.93",
+      "status": "npm declaration mismatch",
+      "target": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/repair04/node_modules/high-density-repair03/node_modules/graphics-debug",
+      "source": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/repair04/node_modules/high-density-repair03/node_modules/graphics-debug"
+    }
+  ],
+  "unresolved": []
+}

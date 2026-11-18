@@ -1,0 +1,2605 @@
+{
+  "scope": "Local source validation. Exact1127 declared changed Git pins; unchanged shared declared packages reused. Not a reconstruction of published transitive dependencies. Repository has no lockfile.",
+  "sourcePackageSha256": "d54b5984f512bd9dec2332709a5c17a72f20929b17910c0088c73cdab2cdf077",
+  "overrides": [
+    {
+      "name": "@tscircuit/length-matching-solver",
+      "url": "https://codeload.github.com/tscircuit/length-matching-solver/tar.gz/f5455b1112d249ff218bd1bb7bab7b44667c0ce5",
+      "gitCommit": "f5455b1112d249ff218bd1bb7bab7b44667c0ce5",
+      "version": "0.0.1",
+      "archiveSha256": "8328a0776bba2e36468ccc8208dcdf9f96134d632d1622fbd3009fa6f1eac2ad",
+      "archiveBytes": 880821,
+      "extractedBytes": 406781,
+      "files": [
+        {
+          "path": "lib/PostProcessingSolver.ts",
+          "bytes": 15110,
+          "sha256": "506e5a79cdb0a251667421acf44402c0a525763234052040369c6263f7837d24"
+        },
+        {
+          "path": "lib/differential-pair-post-processing/DifferentialPairInputError.ts",
+          "bytes": 453,
+          "sha256": "ad93affcf26e1f775ef0d4293a676a3fcb2cda0d3b6e8fbe4935f8c215c3615b"
+        },
+        {
+          "path": "lib/differential-pair-post-processing/DifferentialPairPostProcessingSolver.ts",
+          "bytes": 8191,
+          "sha256": "02d503b16dfb68847ee44a7f649a7760bf82888a05b42e2b79e30ffa201409f5"
+        },
+        {
+          "path": "lib/differential-pair-post-processing/constants.ts",
+          "bytes": 359,
+          "sha256": "809a1dbd4bfe7f49d6a636ea71b97c1b7f5afb6553263d7a74bf154938c0afbd"
+        },
+        {
+          "path": "lib/differential-pair-post-processing/routing/CoupledPathSearchQueue.ts",
+          "bytes": 1564,
+          "sha256": "c74c952e4386b140563905c1a04f29c857fe9bb1e2d4011f0ea572fb75f0c7d6"
+        },
+        {
+          "path": "lib/differential-pair-post-processing/routing/correctLengthSkew.ts",
+          "bytes": 5219,
+          "sha256": "4e961464b86ce9e6afffa9f764deb412813971cf9073e2428bb6bad484460902"
+        },
+        {
+          "path": "lib/differential-pair-post-processing/routing/createRoutedPairCandidate.ts",
+          "bytes": 9069,
+          "sha256": "4f062bc19dab5a6e565498af99a8ede3aa317916299e1ee7ff0eb158f71f92e0"
+        },
+        {
+          "path": "lib/differential-pair-post-processing/routing/findCoupledPath.ts",
+          "bytes": 14333,
+          "sha256": "44773879fca214942299dad785f7e8668a50c7c5d9b42f2bc0470a4b134d92e5"
+        },
+        {
+          "path": "lib/differential-pair-post-processing/routing/getPlanarRouteLength.ts",
+          "bytes": 634,
+          "sha256": "82dfefaeac004cf418ce4f75687e116ef7134e63a67e5d5f0594290c39a3fe1f"
+        },
+        {
+          "path": "lib/differential-pair-post-processing/routing/types.ts",
+          "bytes": 1195,
+          "sha256": "1008da08dfb0b320d0f2a772434bf985d919e5c434773b5bb410cbe9a53cd76a"
+        },
+        {
+          "path": "lib/differential-pair-post-processing/solveDifferentialPair.ts",
+          "bytes": 12492,
+          "sha256": "b70cff8eb53750c21ec3fe1b2712e0a702fe1a5a83594b20368d0ef4c25732c6"
+        },
+        {
+          "path": "lib/differential-pair-post-processing/types.ts",
+          "bytes": 4525,
+          "sha256": "3e7608641f9c22a6fb20223fe02a6665f0f2d7962a8476390a5b80edc61b39e8"
+        },
+        {
+          "path": "lib/differential-pair-post-processing/validateDifferentialPairCandidate.ts",
+          "bytes": 8934,
+          "sha256": "a61eab65d3260b98ce36aaee2bd40530e0482c70f5e55df974b674775188e37e"
+        },
+        {
+          "path": "lib/differential-pair-post-processing/validateDifferentialPairPostProcessingParams.ts",
+          "bytes": 9179,
+          "sha256": "1d988bc556e4b1c5f62042872e154ab297d01c322ab17190e6b9f0df1b7a58f8"
+        },
+        {
+          "path": "lib/differential-pair-post-processing/validation/DifferentialPairDrcChecker.ts",
+          "bytes": 12150,
+          "sha256": "671b4317024639b345c62f4502f79b3584f509b26de2041127d084c4482a3f0b"
+        },
+        {
+          "path": "lib/index.ts",
+          "bytes": 1993,
+          "sha256": "92dfc0bf8525a379af1a2b26173ae0cb24d8546af82ee21b8c9b516b49a2e27c"
+        },
+        {
+          "path": "lib/length-matching-solver.ts",
+          "bytes": 17298,
+          "sha256": "ae92d91dbb82196c533dfc2cba30f1f40abdf7ba0beb08199e29f39a74835fe7"
+        },
+        {
+          "path": "lib/length-matching/README.md",
+          "bytes": 5508,
+          "sha256": "ad905b45a6531af290519ea3b310e9e44be5ea9ba904214ec85db1b5242abd10"
+        },
+        {
+          "path": "lib/length-matching/candidate/createMeanderCandidates.ts",
+          "bytes": 3251,
+          "sha256": "9f20394439edd3774de08de21eda09a626efd44dc04c85469f3b2f25626229f4"
+        },
+        {
+          "path": "lib/length-matching/candidate/createMeanderReplacement.ts",
+          "bytes": 4936,
+          "sha256": "b95a53cb9c6e5f233eef487ed78667eb09b9517bfc7ca8dafefb497f6d20fe5e"
+        },
+        {
+          "path": "lib/length-matching/candidate/evaluateMeanderCandidate.ts",
+          "bytes": 9512,
+          "sha256": "b5716053f682690cf00bcdc56318d1940538a1dc1e8c73c304bbcd105ebc8382"
+        },
+        {
+          "path": "lib/length-matching/candidate/evaluateMinimumMeanderCandidate.ts",
+          "bytes": 2650,
+          "sha256": "edc279f160f3f044b6e6acbaf59255535000acd603b596aea926bac762a21a77"
+        },
+        {
+          "path": "lib/length-matching/candidate/getMeanderCenterlineDistanceCost.ts",
+          "bytes": 2292,
+          "sha256": "4e2265cb2b973568f443e819ee4c1f7b5052fcfc42738dfd84955fd54663749c"
+        },
+        {
+          "path": "lib/length-matching/candidate/replaceSegmentWithMeander.ts",
+          "bytes": 467,
+          "sha256": "ab26fdc6d5bbd148a2bd59b46720ce73219c3a1576de711e5df492ad0c6ec732"
+        },
+        {
+          "path": "lib/length-matching/config.ts",
+          "bytes": 138,
+          "sha256": "9f417e9665db43b26ed6911cc88437cb24c5fa349a8dc389520167d145a8b374"
+        },
+        {
+          "path": "lib/length-matching/connection-routes.ts",
+          "bytes": 237,
+          "sha256": "d32473c0a17326bf28f6ba92c7b7f53f6a2b759d3d2339b010abab7334d69cf1"
+        },
+        {
+          "path": "lib/length-matching/connection/findConnectionRouteIndexes.ts",
+          "bytes": 909,
+          "sha256": "21dd6d56550ae07fa2b5572a4d2a2be2e87708d7dbf4519e2bfadbd7eb57415c"
+        },
+        {
+          "path": "lib/length-matching/connection/getConnectionLength.ts",
+          "bytes": 385,
+          "sha256": "e748d221b9e40b74b0c019961f47fe1bf634761b9898f373e44117d6ba63804f"
+        },
+        {
+          "path": "lib/length-matching/connection/getLogicalConnectionName.ts",
+          "bytes": 267,
+          "sha256": "63a0fe10e3a1cdbf50b6e093e8ff9e03aa29684a1e3d851d57b7554bfc39e1bc"
+        },
+        {
+          "path": "lib/length-matching/dual-meander-plan.ts",
+          "bytes": 14774,
+          "sha256": "c7daa2c90b9b368b9a2c171f375e88ad6858d9f27ee868027b2f9022bab1c5d0"
+        },
+        {
+          "path": "lib/length-matching/errors/LengthMatchingNoSolutionError.ts",
+          "bytes": 543,
+          "sha256": "4b27f7261325f9d30da568a2767c89eb54583e24abe60cb002b85c8b166a5abf"
+        },
+        {
+          "path": "lib/length-matching/geometry-validation.ts",
+          "bytes": 81,
+          "sha256": "b44b005adef23a6bfe38574ccc4641c2330d2499b6f318c76cbc172742094e52"
+        },
+        {
+          "path": "lib/length-matching/internal-types.ts",
+          "bytes": 2753,
+          "sha256": "17b50f9795dea544e1a6d5e006583f3814ad208fae38179d2fd9836c5d25c54b"
+        },
+        {
+          "path": "lib/length-matching/meander-candidate.ts",
+          "bytes": 430,
+          "sha256": "ebbf748a854eb53e696ba229aeaeec92717f9dfc104859d3cd691ad1a2f39bd3"
+        },
+        {
+          "path": "lib/length-matching/meander-geometry.ts",
+          "bytes": 243,
+          "sha256": "3ac8a1aa34906c7f7700f999b6e8d5fa2c19ab2d9f67ce5c03b1fc50aa484551"
+        },
+        {
+          "path": "lib/length-matching/meander-quality.ts",
+          "bytes": 2959,
+          "sha256": "087943129de88e46987464ae9da35a01f8c32b98824cc40a088f5f8314d56a7f"
+        },
+        {
+          "path": "lib/length-matching/multi-segment-plan.ts",
+          "bytes": 348,
+          "sha256": "122f11dfde514b377a37174d9f43cf2ba619e73f8e44fc59329a1055a356d8f6"
+        },
+        {
+          "path": "lib/length-matching/planning/fitDualMeanderAttemptPlan.ts",
+          "bytes": 5527,
+          "sha256": "167f661e7eac7e2d49494747e27586884fda62e11e87a51ff956c2a2c8b1d697"
+        },
+        {
+          "path": "lib/length-matching/planning/getDualMeanderAttemptPlans.ts",
+          "bytes": 3114,
+          "sha256": "76555f45c290d2e1f62a27c32189be460fd66d4a2d5a297546028e56b68dc9d1"
+        },
+        {
+          "path": "lib/length-matching/planning/getMeanderPlanQualityScore.ts",
+          "bytes": 594,
+          "sha256": "0a8d86964ed3e38afdca7c803c2a177c506435441e8409f377b823a1e6c4f5f8"
+        },
+        {
+          "path": "lib/length-matching/planning/getPlannedAttemptTargets.ts",
+          "bytes": 1034,
+          "sha256": "7ec665f3a921b6220d01eac14840b2e3af188e7c3adef410520476adaf726253"
+        },
+        {
+          "path": "lib/length-matching/planning/getRegressionAttemptKey.ts",
+          "bytes": 612,
+          "sha256": "591565debb3781f25a6f9c1a7993b701c51fccf0a9ad5537a8b79ae5ab396108"
+        },
+        {
+          "path": "lib/length-matching/planning/selectPartialMeanderPlan.ts",
+          "bytes": 4498,
+          "sha256": "d88b4931bccb8b69b8fe362dce20cd024559109c91df561d5118ddcfacc64d37"
+        },
+        {
+          "path": "lib/length-matching/types.ts",
+          "bytes": 1584,
+          "sha256": "87343f3dc349650f98a749ba54f34a12c792d56238db76f1ce9f609e7e7231bd"
+        },
+        {
+          "path": "lib/length-matching/validation/isCandidateGeometryValid.ts",
+          "bytes": 8508,
+          "sha256": "71b18c355914a0278dcaf43527565684f2ee01545d496aad4ad3d21b31be1aee"
+        },
+        {
+          "path": "lib/length-matching/validation/validateAndResolveParams.ts",
+          "bytes": 2436,
+          "sha256": "20ea7a826437db4f8734b31bfa4318204edac10b910565d6decce370a81e448a"
+        },
+        {
+          "path": "lib/length-matching/validation/validatePair.ts",
+          "bytes": 2406,
+          "sha256": "7adb006140e8a3b9e688d1639524bec47e4f669e0452801178846cb4b93a25d1"
+        },
+        {
+          "path": "lib/length-matching/visualization/README.md",
+          "bytes": 751,
+          "sha256": "bc95521f79cb248973aab26384783cd0e6e38d59c85e158daf46c2881661fd73"
+        },
+        {
+          "path": "lib/length-matching/visualization/build-attempt-graphics.ts",
+          "bytes": 2926,
+          "sha256": "d0eea0eedeb69f8c1e215e9d02b9df12f6c0377889b68b585b4f8ae342145809"
+        },
+        {
+          "path": "lib/length-matching/visualization/build-obstacle-graphics.ts",
+          "bytes": 1340,
+          "sha256": "64b1a95b8697379d7b867dbb127c58bb81a02860517eb73fc9784040f243d39e"
+        },
+        {
+          "path": "lib/length-matching/visualization/build-route-graphics.ts",
+          "bytes": 1664,
+          "sha256": "a2e8dd40ff401e9e6c5db224f99d64026e137b1ea1d40d3d0d4eec41288f6d75"
+        },
+        {
+          "path": "lib/length-matching/visualization/color-theme.ts",
+          "bytes": 1843,
+          "sha256": "ed7350a46985aa6848a7dcc448cec6a689274948dbda7d61ef5839c63dc78c50"
+        },
+        {
+          "path": "lib/length-matching/visualization/graphics-layers.ts",
+          "bytes": 160,
+          "sha256": "84b0299ec93766c57f3c3f561912a14b7af6c6e7ae3fbfb22c9983050415986f"
+        },
+        {
+          "path": "lib/length-matching/visualization/index.ts",
+          "bytes": 1205,
+          "sha256": "a252906a155b2a3464e0ae917d987aa4da4130891e0c4ca1db77aa72ff26b106"
+        },
+        {
+          "path": "lib/length-matching/visualization/layers/getGraphicsLayerForObstacle.ts",
+          "bytes": 414,
+          "sha256": "09694fb5b1b166635c2178c7dc25fe8f4168b8261a2bc605061341c1322b2b62"
+        },
+        {
+          "path": "lib/length-matching/visualization/layers/getGraphicsLayerForRoute.ts",
+          "bytes": 225,
+          "sha256": "266594f9ce447258e5245d5d079d70901df55c6b41db72982a3e6783302f7492"
+        },
+        {
+          "path": "lib/length-matching/visualization/types.ts",
+          "bytes": 704,
+          "sha256": "adcb41853d8b1cb13205fdd6190a8c29a9e6ce37b23f52cb15c333dfe408197a"
+        },
+        {
+          "path": "lib/obstacles/getObstacleLayerIndexes.ts",
+          "bytes": 1225,
+          "sha256": "7f982e7c03ebfa6421b3b2e4b9dd78181e16aa3f6884bc2d9871d95b6669629e"
+        },
+        {
+          "path": "lib/post-processing/binding/createLengthMatchingBinding.ts",
+          "bytes": 7901,
+          "sha256": "76f5855325cea8ba6c847b28f03814fe1b3d05dda1988d0aa2f2b36254d9ec65"
+        },
+        {
+          "path": "lib/post-processing/binding/createPostProcessingModel.ts",
+          "bytes": 9983,
+          "sha256": "0c8e228dd4593d1e6757e5914f5f6b8e1a96123f457a17d5f46e1f806e29c3c1"
+        },
+        {
+          "path": "lib/post-processing/binding/getLengthMatchingPairs.ts",
+          "bytes": 1709,
+          "sha256": "25d9441ae5481e8482b1811d61c33dedab1bcf080473414da69339ffd37c484d"
+        },
+        {
+          "path": "lib/post-processing/binding/reconstructHdRoutesFromMatchingOutput.ts",
+          "bytes": 2316,
+          "sha256": "1df92378a22a999fd6144fd8f486f96cae9055e3f67c713325642e17c5f621b9"
+        },
+        {
+          "path": "lib/post-processing/binding/reconstructSimplifiedPcbTraces.ts",
+          "bytes": 8670,
+          "sha256": "61d015822a041d0633d0369890266970f2fff9a992a9015f4539c13e6476c38a"
+        },
+        {
+          "path": "lib/post-processing/errors/DifferentialPairRoutingError.ts",
+          "bytes": 867,
+          "sha256": "0c73cc3599987759f154f057675db46b1fac934ec97e8a2ec4163019c9f261f9"
+        },
+        {
+          "path": "lib/post-processing/errors/PostProcessingConstraintError.ts",
+          "bytes": 588,
+          "sha256": "ccac4ba24e2795436dcbf5e2e45980d5f742a4d7483529187e61dde00e3ecaca"
+        },
+        {
+          "path": "lib/post-processing/errors/PostProcessingGridCapacityError.ts",
+          "bytes": 294,
+          "sha256": "d7638f579b843b2bef5ef710fc8860c5d81b1b66688d293ded370b8ab1590f20"
+        },
+        {
+          "path": "lib/post-processing/geometry/createSearchGeometryValidator.ts",
+          "bytes": 15368,
+          "sha256": "b087a3273fdb8d3f745b1b8f5bec983a2c09eee6d764589763f36a73d8b3e056"
+        },
+        {
+          "path": "lib/post-processing/geometry/getAddedPairCopper.ts",
+          "bytes": 1094,
+          "sha256": "07a83346872651af2eb2542fc812b33ffc9b116c40463f632a6c995a9c20bf01"
+        },
+        {
+          "path": "lib/post-processing/geometry/getLayerIndex.ts",
+          "bytes": 393,
+          "sha256": "199ed14f3fda55b44aac8e2d8553b57f9aa76e17ae1ca6a3dfc35831f1359f1e"
+        },
+        {
+          "path": "lib/post-processing/geometry/getLayerName.ts",
+          "bytes": 262,
+          "sha256": "99df3c9d81ca18f778d2937523ef68acb5e6a617bcb6c085ed9bb903039dce16"
+        },
+        {
+          "path": "lib/post-processing/geometry/getMinimumPairEdgeGap.ts",
+          "bytes": 1002,
+          "sha256": "929434282959d2af0b821d83982dd33e87856ba6885069a74812a0385639cd42"
+        },
+        {
+          "path": "lib/post-processing/geometry/getTransitionLayers.ts",
+          "bytes": 620,
+          "sha256": "d8e1a82b739f046b8ffb68af6e29a4de6d8a65dd7d6b7a3b186d43455077b6a5"
+        },
+        {
+          "path": "lib/post-processing/geometry/nearlyEqualCopperDimension.ts",
+          "bytes": 174,
+          "sha256": "c534884995c46474b493be1a840d4e913579a3190d1908f30ac8e80cde7307ee"
+        },
+        {
+          "path": "lib/post-processing/geometry/sameCopperPoint.ts",
+          "bytes": 271,
+          "sha256": "39ddec3e9531f28948f7bae505051463006abaa5d93d44268f8c3eb27473ef9f"
+        },
+        {
+          "path": "lib/post-processing/geometry/sameCopperSegment.ts",
+          "bytes": 507,
+          "sha256": "760c99667ed65d4b355792ad05ef87a6679544373bca5e24b5913322943f360f"
+        },
+        {
+          "path": "lib/post-processing/geometry/sameCopperVia.ts",
+          "bytes": 516,
+          "sha256": "3efd26b4d3cd674d5546ab0ee272a18a075e8882412241f988013bbbdf80fe34"
+        },
+        {
+          "path": "lib/post-processing/geometry/segmentTouchesInflatedObstacle.ts",
+          "bytes": 1493,
+          "sha256": "921a70df60ed162b75453a2a2c94e455d9e0839d5a9159b320c205dcf418ca79"
+        },
+        {
+          "path": "lib/post-processing/geometry/validateCandidateGeometry.ts",
+          "bytes": 11304,
+          "sha256": "329a08dfd3a3ad114cc1b85db6d5f0767dea61be57ea6d05182fbfb42dc48312"
+        },
+        {
+          "path": "lib/post-processing/length-matching/getSimplifiedTraceLength.ts",
+          "bytes": 399,
+          "sha256": "50c9bad6da7e5200283ed75c4ca57aedf0d507d5904c08c03fe22fe436e2dae0"
+        },
+        {
+          "path": "lib/post-processing/model/cloneSimplifiedPcbTraces.ts",
+          "bytes": 305,
+          "sha256": "f12ce6bc662f30bc37c15e75a98c0327e0563e4d6a336ede8157ca8699934ddb"
+        },
+        {
+          "path": "lib/post-processing/model/getTraceCopperGeometry.ts",
+          "bytes": 6846,
+          "sha256": "6d2f554e0ea41ce7080a5a1424adebcf122b68269692d62f67a4fc657a50547f"
+        },
+        {
+          "path": "lib/post-processing/model/internal-types.ts",
+          "bytes": 1092,
+          "sha256": "0315a732b61358eb8f5421bbfed50cd61205ac7ac9620db71631e2d3c3af35ac"
+        },
+        {
+          "path": "lib/post-processing/model/parseSimplifiedPcbTrace.ts",
+          "bytes": 6673,
+          "sha256": "33a1d911603685ef348a783c5aec193e96c15fb26adbce6552b3e9bad783f793"
+        },
+        {
+          "path": "lib/post-processing/routing/CompositeRoutingGrid.ts",
+          "bytes": 10590,
+          "sha256": "b7d790981b401d33a4921e9db1739f94fb8288c17ed2f37ba80fa7d9a51d28fc"
+        },
+        {
+          "path": "lib/post-processing/routing/DifferentialPairRoutingSession.ts",
+          "bytes": 17761,
+          "sha256": "2dfaafdd49af6743da1498a77c6e3c84554f028e368f9e7f4b7dd354ae221b2f"
+        },
+        {
+          "path": "lib/post-processing/routing/IncrementalCoupledPathSearch.ts",
+          "bytes": 9724,
+          "sha256": "2374aaf1bfb6d7f15c46e58df074c4c3973b6760732d84849d497b266851475c"
+        },
+        {
+          "path": "lib/post-processing/routing/createCoupledPairCandidate.ts",
+          "bytes": 10257,
+          "sha256": "187fd4fdb981b64779ae0af719b5fc59509fbf31bf8fed4c6e0315a48bce6315"
+        },
+        {
+          "path": "lib/post-processing/routing/findCoupledPath.ts",
+          "bytes": 463,
+          "sha256": "59df33e275c6c85a1062918aad8ee2b743e7915e652a5b06163c80ce5ebec81b"
+        },
+        {
+          "path": "lib/post-processing/routing/getCenterlineDistanceSamples.ts",
+          "bytes": 1294,
+          "sha256": "8ee6265d3b9f0caa3e2f2d91db161592f0f3f0efb4dbebf31434eb55dc675a32"
+        },
+        {
+          "path": "lib/post-processing/routing/getDifferentialPairReroutingIterationLimit.ts",
+          "bytes": 779,
+          "sha256": "ced7391e12d063ff01120804238c2635c37c7205fb9d7ed239ae43d438e0136d"
+        },
+        {
+          "path": "lib/post-processing/routing/resolvePostProcessingGridConfig.ts",
+          "bytes": 2380,
+          "sha256": "c58a87672a2c9fbd0f994d84ef52275e4fc98bb14a727778ed453bb2e2a121a2"
+        },
+        {
+          "path": "lib/post-processing/routing/resolveTerminalFanoutStation.ts",
+          "bytes": 2832,
+          "sha256": "e829feb146f6f86baea6314e06ff7a3f79511cb0f5f224cfaefe192b8623d43d"
+        },
+        {
+          "path": "lib/post-processing/routing/solveDifferentialPair.ts",
+          "bytes": 486,
+          "sha256": "a415ee85e8bbaddf6df966d4dcd262dc51338f7bb90e59a91129d3013b0dfc77"
+        },
+        {
+          "path": "lib/post-processing/routing/types.ts",
+          "bytes": 616,
+          "sha256": "4c10781892f13d0a6a703f5c1c6ee536d37f1f8280b149be622397995fa29c75"
+        },
+        {
+          "path": "lib/post-processing/smoothing/simplifyDifferentialPairTo45Degrees.ts",
+          "bytes": 15142,
+          "sha256": "9ede5ee8186bc278b9c932962c0518e986266affcdcd37ef309b02be81d28833"
+        },
+        {
+          "path": "lib/post-processing/solvers/DifferentialPairReroutingSolver.ts",
+          "bytes": 6401,
+          "sha256": "fe368deac631a6c987e5085fbf1c22122579daef3d0e640f02021d903fb3f297"
+        },
+        {
+          "path": "lib/post-processing/solvers/FortyFiveDegreeSimplificationSolver.ts",
+          "bytes": 3520,
+          "sha256": "f3b0643cddc0ac4db52cec47f3286e9839af94d94c1df9d1fe39c4bbdc60736f"
+        },
+        {
+          "path": "lib/post-processing/solvers/HdRouteReconstructionSolver.ts",
+          "bytes": 2569,
+          "sha256": "e185fe0789b3823f776a752ed077d998a1a32411631361de327633f342e2cf78"
+        },
+        {
+          "path": "lib/post-processing/types.ts",
+          "bytes": 2084,
+          "sha256": "5b487b75f6c3f1e8e5583892ce668dbc50e0d130de0de67540382af41a51e57e"
+        },
+        {
+          "path": "lib/post-processing/validation/validatePostProcessingParams.ts",
+          "bytes": 7806,
+          "sha256": "8717a8c1847d964de02008045cb661917dab3f4c3285fb31ffe0d67124ef56ec"
+        },
+        {
+          "path": "lib/post-processing/visualization/createPostProcessingVisualization.ts",
+          "bytes": 3658,
+          "sha256": "fb3a375977d4d618b247d54fd2f9d5502e5ce5d0d6227ef32858627ce237ed9d"
+        },
+        {
+          "path": "lib/route-geometry.ts",
+          "bytes": 221,
+          "sha256": "a1aa1b5f9beeda98f895e3e94156068238cf2255e82544493868dbd864996d7e"
+        },
+        {
+          "path": "lib/route-geometry/getMinimumSegmentDistance.ts",
+          "bytes": 3240,
+          "sha256": "f28d815a0cfc875062395513627202dcf64ad36f07013801ce4275fc8d81bf3b"
+        },
+        {
+          "path": "lib/route-geometry/getRouteLength.ts",
+          "bytes": 437,
+          "sha256": "8c01bf593629d63799c228eee58e52791b8f9cd028ed9e14e9c4fb120bbdd14d"
+        },
+        {
+          "path": "lib/route-geometry/getSegmentLength.ts",
+          "bytes": 243,
+          "sha256": "5d722eaeae671f89c3e6db2141687dd6656e3dfc5126693f75eb0e091c18a8c0"
+        },
+        {
+          "path": "lib/types.ts",
+          "bytes": 3410,
+          "sha256": "a0eef69cd8b9a44fead26055de5b677e7d22ee932d5e4ddaf9ed5e0075d7822b"
+        },
+        {
+          "path": "package.json",
+          "bytes": 1715,
+          "sha256": "21d86eac388ac29e0d3faade742fb1b3fc17a8155e49ce8254e204cc3ca0a52d"
+        },
+        {
+          "path": "tsconfig.json",
+          "bytes": 355,
+          "sha256": "6783e0bf5e89e62c59df62b9ac3c7dc974e8dd74e9dea7255686f47a60f7a444"
+        }
+      ]
+    },
+    {
+      "name": "@tscircuit/power-trace-expander",
+      "url": "https://codeload.github.com/tscircuit/power-trace-expander/tar.gz/83eb1bf80e7cd8a3bc91571ee0de8ade0f680448",
+      "gitCommit": "83eb1bf80e7cd8a3bc91571ee0de8ade0f680448",
+      "version": "0.0.1",
+      "archiveSha256": "7ab55fed8cc26083a73c9c34d9b4e25bb511033829c1bfc6c1cc211ea0e93c14",
+      "archiveBytes": 642802,
+      "extractedBytes": 398509,
+      "files": [
+        {
+          "path": "package.json",
+          "bytes": 1677,
+          "sha256": "84345056dc121f52261c0add1bea98fee848c45f7eb5aa74bb4007cba0a2089f"
+        },
+        {
+          "path": "src/ConnectionNameResolver.ts",
+          "bytes": 5416,
+          "sha256": "57be6e0100f5981593fc7868ba8879978d7d6a796b5b580244c0e6be02e226dd"
+        },
+        {
+          "path": "src/ElasticTracePushSolver.ts",
+          "bytes": 9181,
+          "sha256": "cb0d89e0dc7789ea64bf5294ea0ea564582981cfde2783f30c892986a48c212a"
+        },
+        {
+          "path": "src/LayerAwareGridRouteSolver.ts",
+          "bytes": 27900,
+          "sha256": "79ae5cf5d61c9ca227ec37b8612802a59a953f0678ddf45902303d00718efc5f"
+        },
+        {
+          "path": "src/LocalTraceInflationSolver.ts",
+          "bytes": 18955,
+          "sha256": "19e2cb6b0b79491ce08b00afa14403492632e1b8514c6bdc907391f1ebeaa570"
+        },
+        {
+          "path": "src/ObstacleAwareGridRouteSolver.ts",
+          "bytes": 15095,
+          "sha256": "151c86a161280aa200d666994f33623ea025178fb680c415b185ecfc3ca28ff5"
+        },
+        {
+          "path": "src/PhysicalConnectivityInvariant.ts",
+          "bytes": 34507,
+          "sha256": "133abc739fa36d99a6bf8ee56467711dade19c09827aa48a8c6fe265f6a4ebf7"
+        },
+        {
+          "path": "src/PowerTraceCleanupSolver.ts",
+          "bytes": 82671,
+          "sha256": "103fd16f136896f7ead88c09a54e67e97ac05c377f8b34157f6098d14cb1c78d"
+        },
+        {
+          "path": "src/PowerTraceClearanceRepairSolver.ts",
+          "bytes": 20557,
+          "sha256": "db8027770755322f8b92b41ae97fdc530e7b40cb7f64fb00fc857e440b1848a2"
+        },
+        {
+          "path": "src/PowerTraceExpanderSolver.ts",
+          "bytes": 106022,
+          "sha256": "e752838f74c304ad2d9cb2b977a5364de0ebd31ee0f769684d4908fd39b4c6cf"
+        },
+        {
+          "path": "src/SpatialObstacleIndex.ts",
+          "bytes": 33960,
+          "sha256": "ea36b0096c67ea25d9d2d66535302f444e4cd1c5f0bf9c971f8b69b3f03b71c6"
+        },
+        {
+          "path": "src/createPowerTraceExpanderAutorouter.ts",
+          "bytes": 5476,
+          "sha256": "87e470e91463e2b9eb625f13b131d35edfd9de2809ae9aa4564803223b3b2097"
+        },
+        {
+          "path": "src/geometry.ts",
+          "bytes": 13865,
+          "sha256": "8125975fc1acc31ab7c73be80c06e077258efebb990216bd1ba316406ef98752"
+        },
+        {
+          "path": "src/index.ts",
+          "bytes": 1466,
+          "sha256": "3c5b8e06dba60e5b2eb8464654e243fa1390eaf4036ca60737c117a860502ab2"
+        },
+        {
+          "path": "src/measureTraceWidths.ts",
+          "bytes": 7196,
+          "sha256": "f92be0e8c9016fb60ce614489f883dc19cfdaa99ea828fe4c7377bb2d43f0f88"
+        },
+        {
+          "path": "src/octilinear.ts",
+          "bytes": 5340,
+          "sha256": "057064c4c2085bc65801d4590436b9c6a28f389ed459bdea20bb606f661323be"
+        },
+        {
+          "path": "src/types.ts",
+          "bytes": 8892,
+          "sha256": "f4ca5f36a010bd5fa6d5d34e0ea7f9b08f52f5f7763683b89340fce134eab42e"
+        },
+        {
+          "path": "tsconfig.json",
+          "bytes": 333,
+          "sha256": "68d7344a2a52169746c1a1d3689e66a7ee85ebfb67ebd7702e6a28cb101a4520"
+        }
+      ]
+    },
+    {
+      "name": "@tscircuit/repair04",
+      "url": "https://codeload.github.com/tscircuit/repair04/tar.gz/1b33fe703438890adc52abbb7a8f18eb6f88ec70",
+      "gitCommit": "1b33fe703438890adc52abbb7a8f18eb6f88ec70",
+      "version": "0.0.1",
+      "archiveSha256": "7d8fe38e14428004013b410a0bcdfa6c8b15f5c2b877bc336796ff99a8bd8231",
+      "archiveBytes": 1433376,
+      "extractedBytes": 377579,
+      "files": [
+        {
+          "path": "lib/ClearancePathConnectivity.ts",
+          "bytes": 1956,
+          "sha256": "40de3acb861981bcda737270d7e722f1bdfd34d81f97e8769b769c18c99b93dc"
+        },
+        {
+          "path": "lib/ClearancePathHeap.ts",
+          "bytes": 3923,
+          "sha256": "a3b4fce0e53c7f7344a71f11af854d431f4b83fae057071ef33efdd7d3e5021c"
+        },
+        {
+          "path": "lib/FindClearancePathSolver.ts",
+          "bytes": 32505,
+          "sha256": "f685f59c0e388401d350fe83d590e9e58f226154c3404b379e864b0c3c3e7419"
+        },
+        {
+          "path": "lib/NegotiateTraceClearanceSolver.ts",
+          "bytes": 30396,
+          "sha256": "a335efe95d5ef49cde7e5bff9e68464670b1d5b366c0e476189b13b191cb05ee"
+        },
+        {
+          "path": "lib/PairedClearancePathSolver.ts",
+          "bytes": 7527,
+          "sha256": "b081a1fef56e0ff5ed392c590dacb2ff175161221359967a0d23a3b1162c9e3c"
+        },
+        {
+          "path": "lib/RelaxTraceClearanceSolver.ts",
+          "bytes": 35551,
+          "sha256": "cbe5ef9af542887634b437d4efb52edb61906e5494eafc503b0f21b08f26a078"
+        },
+        {
+          "path": "lib/Repair04Solver.ts",
+          "bytes": 68854,
+          "sha256": "0ed1830bff47f762f8321489a610b7cef247d249f8c65e1d171f04327e091ac5"
+        },
+        {
+          "path": "lib/areExpandedBoundsSeparated.ts",
+          "bytes": 492,
+          "sha256": "22c1e3088bb8fa3874c1e05997ef77e91d143799e71f829a9fec4165d89ba92b"
+        },
+        {
+          "path": "lib/convertRepairRoutesToTraces.ts",
+          "bytes": 1947,
+          "sha256": "06559c7f2536158f23aedf28acc068a74edfd06d1a71ba94dc90637587dc38e5"
+        },
+        {
+          "path": "lib/extractFixedTraceContext.ts",
+          "bytes": 4124,
+          "sha256": "e7c5c17f364d444fbf384f21764fd0ee6910ce0ff76f88e4bff537db5d21b6d1"
+        },
+        {
+          "path": "lib/extractRepairRegion.ts",
+          "bytes": 18110,
+          "sha256": "59f404849e19b2b7f07ab8dd6de918383162eccec5a1bba32e88d1d94ee03b0f"
+        },
+        {
+          "path": "lib/findClearancePath.ts",
+          "bytes": 24362,
+          "sha256": "bb6c8701d22da94eec9a04b497ffe97530661065f28309dc5763d38e3204beac"
+        },
+        {
+          "path": "lib/generateThreeRouteCandidates.ts",
+          "bytes": 7488,
+          "sha256": "3d5cc128d624bf9337fac3f3b21d5834cf6a3449864c58773f3d45de4fc6379d"
+        },
+        {
+          "path": "lib/getClearanceGridAxes.ts",
+          "bytes": 4488,
+          "sha256": "6738b5e3d5fed09ceee7f2bf0844b6b2001d0bbd42fea0397d3cbf915d5594fd"
+        },
+        {
+          "path": "lib/getConservativeRectBarrierBounds.ts",
+          "bytes": 1914,
+          "sha256": "78eeab042335b6e8a22cc36743307f2856beb461f47fa7e764b73ca24b597022"
+        },
+        {
+          "path": "lib/getFixedObstacleViolations.ts",
+          "bytes": 15277,
+          "sha256": "7145b92cf9f7f7fb0aa35369a462eab890c9592ac72e24ea7505a3948eda85a7"
+        },
+        {
+          "path": "lib/getNewViaPadViolations.ts",
+          "bytes": 12970,
+          "sha256": "dbbf9efb3f99731e03f7b00763a5840869516ea3dedde3015a4b208ad6dfbfe6"
+        },
+        {
+          "path": "lib/getRepairCopperLayerSpan.ts",
+          "bytes": 562,
+          "sha256": "a88ab4fab5990f52e61e52e284359b4419deb1d98275d5d0c0f2dc0541311d62"
+        },
+        {
+          "path": "lib/getRepairJunctionAnchors.ts",
+          "bytes": 20614,
+          "sha256": "7ec6869dcaa87647903988e7d9a0b98cebc8ef6105d2a17f624966bc06845560"
+        },
+        {
+          "path": "lib/getRepairRouteVias.ts",
+          "bytes": 1287,
+          "sha256": "9f5a75d0f621d115268de844bf9dc5228884ab2c7de0e18503bf9abaa3ba7468"
+        },
+        {
+          "path": "lib/getRepairViaGeometry.ts",
+          "bytes": 2309,
+          "sha256": "35adfd2947a15628ebae2fc6518603109accd1ab7a51dad67eae59aab7223b0e"
+        },
+        {
+          "path": "lib/getSegmentToSegmentMinDistance.ts",
+          "bytes": 1291,
+          "sha256": "af083b4e7497efa42b5d7cbcb0c5e965e438ad4e045664e1236ef3e851a8bee8"
+        },
+        {
+          "path": "lib/getVectorLength.ts",
+          "bytes": 446,
+          "sha256": "b19266c26768662aa830c18b77accc27cbe271952a2c2c016e9a14f153b31960"
+        },
+        {
+          "path": "lib/getViaPadClearance.ts",
+          "bytes": 633,
+          "sha256": "b80a2be3d90964a9b57fc590588b69794d55098a0dd32a2dae7d5c872a7e99da"
+        },
+        {
+          "path": "lib/index.ts",
+          "bytes": 1838,
+          "sha256": "98e55acadf01e795f87ec9cabaa4e73481b9e1d48c5a9d1f906b82eeaeee33c8"
+        },
+        {
+          "path": "lib/mergeRepairRegion.ts",
+          "bytes": 14043,
+          "sha256": "4a23ba4a5bf9145e549f0fe23e8d711a11df7cf209afc4be227a2bdd3860a876"
+        },
+        {
+          "path": "lib/negotiateTraceClearance.ts",
+          "bytes": 20281,
+          "sha256": "3b4e2c7cfac837ee869ff792a81cf3386d62a52b09c6201e74f8f97163d8e16f"
+        },
+        {
+          "path": "lib/negotiatedClearanceSearchKernel.ts",
+          "bytes": 10803,
+          "sha256": "c9ab7d3654724ee2a11e18fbb74fa97b3d03db8c2211462388c385bcc4f9225d"
+        },
+        {
+          "path": "lib/normalizeRepairTrace.ts",
+          "bytes": 1616,
+          "sha256": "f0bbfb36320156c824d13157ee3240f29df61a09ec8af95e645aeb312fffea33"
+        },
+        {
+          "path": "lib/obstacleDistanceGeometry.ts",
+          "bytes": 2086,
+          "sha256": "4ed4ce51aadcf75ea8a8eb6576c55eefef7c90ba2d8a5cbfca6e189fd41591d5"
+        },
+        {
+          "path": "lib/relaxTraceClearance.ts",
+          "bytes": 19874,
+          "sha256": "1b3f057a1254639f87bae74bcb2ce0741cc9f3987a19a33b318fa865edba606e"
+        },
+        {
+          "path": "lib/repairRegionGeometry.ts",
+          "bytes": 4263,
+          "sha256": "f3fd65ddbf0db93d3bdb7e22518aa46a89498bfc7786fff35782d859b272a884"
+        },
+        {
+          "path": "lib/repairRegionTypes.ts",
+          "bytes": 1562,
+          "sha256": "5757f18843bfb37a9dcf6916a133acf2034ec04aa0796bae50c921b4f6a32c52"
+        },
+        {
+          "path": "package.json",
+          "bytes": 1292,
+          "sha256": "951f97159528cdcf879b8e19134df2fe113094ca61ac3bdf3c8b74cbec41b475"
+        },
+        {
+          "path": "tsconfig.json",
+          "bytes": 895,
+          "sha256": "ba2b9ccba0ca73ee6281e4495e8d67ef138a7bdb1e0507beb1573c666a74d808"
+        }
+      ]
+    },
+    {
+      "name": "@tscircuit/trace-simplification-solver",
+      "url": "https://codeload.github.com/tscircuit/trace-simplification-solver/tar.gz/8193d693020c4d2c6e89cc919151c39923d4d713",
+      "gitCommit": "8193d693020c4d2c6e89cc919151c39923d4d713",
+      "version": "0.0.1",
+      "archiveSha256": "2db0d902b57b52f18a13445a576abe59f698aa2c6359833640938a81a5d6c709",
+      "archiveBytes": 3631852,
+      "extractedBytes": 266007,
+      "files": [
+        {
+          "path": "index.ts",
+          "bytes": 1611,
+          "sha256": "cb3d294aee275b5d6c5c339c73b4804926203fd32585f2bb3a6bf73b095fe5dd"
+        },
+        {
+          "path": "lib/data-structures/FlatbushIndex.ts",
+          "bytes": 1031,
+          "sha256": "50e43a79ff67b871335c429918baba9f127afe96b2fc9952cbdaf63a0268de86"
+        },
+        {
+          "path": "lib/data-structures/HighDensityRouteSpatialIndex.ts",
+          "bytes": 24438,
+          "sha256": "d73bd4aa811fc02c7240809f61f95c8c45a0d4399af0093692df3410519f4e90"
+        },
+        {
+          "path": "lib/data-structures/ObstacleTree.ts",
+          "bytes": 4956,
+          "sha256": "9cfb1423d4103dd4999a0ad63456d89b3d2d028c665fdaf219332bc14d31f026"
+        },
+        {
+          "path": "lib/data-structures/PathSimplificationGeometryIndex.ts",
+          "bytes": 7841,
+          "sha256": "5943acd33e8490a5d8df3cc42e7236c70a5a145d8fafa4b66ac2738f76761f0c"
+        },
+        {
+          "path": "lib/data-structures/RbushIndex.ts",
+          "bytes": 959,
+          "sha256": "e7477ee149baf3c9df6e0be2de65c0c8d7d2f620e2b1f9174fe41d693fb6c5fb"
+        },
+        {
+          "path": "lib/data-structures/SegmentTree.ts",
+          "bytes": 3999,
+          "sha256": "a53cc703979f5ae8ab65d24906a8044e95c091c6fe6543bc65c5dece3cbaed67"
+        },
+        {
+          "path": "lib/data-structures/SpatialIndex.ts",
+          "bytes": 362,
+          "sha256": "c3f30a7494d3635eafbc265f0152932026b84cdfe62936a57f434ac9f15c2d48"
+        },
+        {
+          "path": "lib/solvers/BaseSolver.ts",
+          "bytes": 2266,
+          "sha256": "6590c6cb00483c448d58ac0ccb158a2845157aa1efadf71bbaec78397c21c80b"
+        },
+        {
+          "path": "lib/solvers/CrossingViaReductionSolver/crossing-via-reduction-solver.ts",
+          "bytes": 45251,
+          "sha256": "22a6314c25fa86f4bdf91dc57d1c36646b152936824feb11771164a53a941400"
+        },
+        {
+          "path": "lib/solvers/SameNetViaMergerSolver/SameNetViaMergerSolver.ts",
+          "bytes": 22323,
+          "sha256": "1fe01b2ae7f156a9cee9f0b51de5a98df3f8205c30be26d09e7b2fcfcd45ed8e"
+        },
+        {
+          "path": "lib/solvers/SimplifiedPathSolver/MultiSimplifiedPathSolver.ts",
+          "bytes": 9657,
+          "sha256": "09d839df0e6380a4a850b5fab9374acde36f917e4c23540c6785af86cc6926cc"
+        },
+        {
+          "path": "lib/solvers/SimplifiedPathSolver/SingleSimplifiedPathSolver.ts",
+          "bytes": 6645,
+          "sha256": "a3999d31d905cd29eaea75b16d9c89f2d1780d74aab8bf1ae20a59557d018bd7"
+        },
+        {
+          "path": "lib/solvers/SimplifiedPathSolver/SingleSimplifiedPathSolver5_Deg45.ts",
+          "bytes": 36173,
+          "sha256": "0add3c79612da4e81d23484c1af91482440b1f9e1f69b03422c5edf54868e5bb"
+        },
+        {
+          "path": "lib/solvers/SimplifiedPathSolver/VertexShortcutPathSolver.ts",
+          "bytes": 3415,
+          "sha256": "ec4682effdc0de6122000322ea35ae3f3d24346e3afa24b8560ca0f1e2d1c0b5"
+        },
+        {
+          "path": "lib/solvers/TraceSimplificationSolver/TraceSimplificationSolver.ts",
+          "bytes": 21128,
+          "sha256": "f5f996e98d2b4450876687459ebc8a5399d1b89d78f25fb0281f5ca235545891"
+        },
+        {
+          "path": "lib/solvers/UselessViaRemovalSolver/SingleRouteUselessViaRemovalSolver.ts",
+          "bytes": 33126,
+          "sha256": "99accc1b7f2f37499c4c74afcb4bd31b931ed23f7caa04dcdaed3afb4a2f5e47"
+        },
+        {
+          "path": "lib/solvers/UselessViaRemovalSolver/UselessViaRemovalSolver.ts",
+          "bytes": 7403,
+          "sha256": "ebfcf5061b414773689d209404d149eb49d9d9b37c12e259805a08fe8572da89"
+        },
+        {
+          "path": "lib/solvers/UselessViaRemovalSolver/break-route-into-sections.ts",
+          "bytes": 973,
+          "sha256": "c316bde188fe9e1dcc7f5d5250558c2cff5a5ad1483ed8eaa81ccf82d98ef199"
+        },
+        {
+          "path": "lib/solvers/UselessViaRemovalSolver/can-endpoint-connect-on-layer.ts",
+          "bytes": 2091,
+          "sha256": "ef2285254cfeeb4042461b0d1c5516f9f6f1d478414c5cbaf2ab15cee0a6f419"
+        },
+        {
+          "path": "lib/solvers/UselessViaRemovalSolver/can-section-move-to-layer.ts",
+          "bytes": 4092,
+          "sha256": "6f76d94b11dddb246d67311ce9233a7d3f8187ac900232d7fdf8000359f491b7"
+        },
+        {
+          "path": "lib/solvers/UselessViaRemovalSolver/create-obstacle-detour-path-validator.ts",
+          "bytes": 6617,
+          "sha256": "ebc68d4c18540bb9cdd65b7d310ce70b0cad7544393b8a925dfad095eda8dd63"
+        },
+        {
+          "path": "lib/solvers/UselessViaRemovalSolver/route-section.ts",
+          "bytes": 194,
+          "sha256": "4f7c583fbaa2936b9dc8b8c5a0020c1136d9c870d28e6b0c2a3066d015fa4497"
+        },
+        {
+          "path": "lib/solvers/colors.ts",
+          "bytes": 223,
+          "sha256": "2ccdc7d08fc5d87c11c41ddabd4d9b31e70e4b75442c020c63b603c7a469b13e"
+        },
+        {
+          "path": "lib/types/high-density-types.ts",
+          "bytes": 1655,
+          "sha256": "dbc05ef850bcf61a9f0a331cb56abb6ae5feb17360c6518a1b1cb0176b3389de"
+        },
+        {
+          "path": "lib/types/index.ts",
+          "bytes": 28,
+          "sha256": "e1e901ba5ccc453c62cc68edeb1b8e97ba6cbbb957e5ddc0eee27dc3335bef33"
+        },
+        {
+          "path": "lib/types/srj-types.ts",
+          "bytes": 1273,
+          "sha256": "8583393c3569461bd60899cedc9f385b08d110d5c4c831e376d7be5b35935b09"
+        },
+        {
+          "path": "lib/utils/calculate45DegreePaths.ts",
+          "bytes": 1552,
+          "sha256": "182eb1ba17b047775b7a787958d2efb196ee3b3ca4d4258e2ed0dc329d5ebaa4"
+        },
+        {
+          "path": "lib/utils/combineVisualizations.ts",
+          "bytes": 1669,
+          "sha256": "8253c8b6635d2c6f4b4d25a1d34f13fc51e581772fd25bc6d06795ccbcb6fb59"
+        },
+        {
+          "path": "lib/utils/createObjectsWithZLayers.ts",
+          "bytes": 1123,
+          "sha256": "202bcbaf00f16267bf8f6666ab4597f699fe0b9182246276f4e7a8b6dee69dbf"
+        },
+        {
+          "path": "lib/utils/getJumperGraphics.ts",
+          "bytes": 2378,
+          "sha256": "a7baf4345cb86e1ce2e907fae8aecf26c2020aa2b0d6689564a6cfd3f23de626"
+        },
+        {
+          "path": "lib/utils/getVectorLength.ts",
+          "bytes": 456,
+          "sha256": "6498934513814e2619f2ca2a722c2ecb9b6788e7d3f7df9095d0f9a918887b13"
+        },
+        {
+          "path": "lib/utils/jumperSizes.ts",
+          "bytes": 1157,
+          "sha256": "9315f085a3bbfaf90e7a21d5fdda9807324cab144b93af6ba33c42b629bc7f8c"
+        },
+        {
+          "path": "lib/utils/mapLayerNameToZ.ts",
+          "bytes": 690,
+          "sha256": "39f65025d71f81bc0c6c49b969c8792893a67aeb8f180111c2c15aa4ef8412b2"
+        },
+        {
+          "path": "lib/utils/mapZToLayerName.ts",
+          "bytes": 494,
+          "sha256": "c8b4a19387c96368dde4f04df603405e8c5a904a89519fd834229666f7cc1bd2"
+        },
+        {
+          "path": "lib/utils/minimumDistanceBetweenSegments.ts",
+          "bytes": 2246,
+          "sha256": "84c1440e22cf9a4279066d443c4f36eea855739bebaca71fa576927daf10773a"
+        },
+        {
+          "path": "lib/utils/polygonContainment.ts",
+          "bytes": 3007,
+          "sha256": "be1eade90662d276884f6ad2f6fe29e55b280ce7dc972047903dca7819479038"
+        },
+        {
+          "path": "package.json",
+          "bytes": 1085,
+          "sha256": "314d7e609c54d75ae45b3ae1595c22a105661e8f9e23e7f2544470c6600d7923"
+        },
+        {
+          "path": "tsconfig.json",
+          "bytes": 420,
+          "sha256": "c4ab5c00fd56b15e8883aa2e476a9173a132d0b7a0d8b8b46b7ab15db81142fb"
+        }
+      ]
+    },
+    {
+      "name": "tiny-hypergraph",
+      "url": "https://codeload.github.com/tscircuit/tiny-hypergraph/tar.gz/f1fe8edcfb3dfde8fd644d09d81bad18743144b3",
+      "gitCommit": "f1fe8edcfb3dfde8fd644d09d81bad18743144b3",
+      "version": null,
+      "archiveSha256": "c6bdf06f722c146bb6172bde61fc02941472bd656b143aa0e677f4543335b8db",
+      "archiveBytes": 12855269,
+      "extractedBytes": 563028,
+      "files": [
+        {
+          "path": "lib/DuplicateCongestedPortSolver.ts",
+          "bytes": 15494,
+          "sha256": "12801e8d12f34b93c0f4b78a551b2bb567a29df9f99d6831ce0c8ee2d2a86b65"
+        },
+        {
+          "path": "lib/MinHeap.ts",
+          "bytes": 1922,
+          "sha256": "9bcf57bca5d2e7e2efa671dbe78a25cabd2de21de410c3622ed95419aedc6c91"
+        },
+        {
+          "path": "lib/bus-solver/BusBoundaryPlanner.ts",
+          "bytes": 16929,
+          "sha256": "4bbab6a0f5a96d7199039a868af81e723efde9c33534f6b3d5d6caf402ac9d7f"
+        },
+        {
+          "path": "lib/bus-solver/BusTraceInferencePlanner.ts",
+          "bytes": 23739,
+          "sha256": "f2621ffbe2dee3226652cf6c13bbb23d45d2415766d52e9f62e56eb15cc760c0"
+        },
+        {
+          "path": "lib/bus-solver/TinyHyperGraphBusSolver.ts",
+          "bytes": 68757,
+          "sha256": "d1becec5a495801c5b95b35cb807215c340622bac744b2b6dedc04e19f4d3133"
+        },
+        {
+          "path": "lib/bus-solver/busGoalSearch.ts",
+          "bytes": 2960,
+          "sha256": "68280a9a7cb94bc22cb9a41f794996f690c65a3546d7ef2294934d7e61a982ae"
+        },
+        {
+          "path": "lib/bus-solver/busPathHelpers.ts",
+          "bytes": 3279,
+          "sha256": "5e7bb7c7ec87a5cf14419f95dc22d594825a99c632ba66aa702eb0f4736e4f5d"
+        },
+        {
+          "path": "lib/bus-solver/busSolverTypes.ts",
+          "bytes": 2688,
+          "sha256": "0bef28d3844e3ed1f7562bd6b4f485853b60f9cd85c218fb2bbad912cec6c3cc"
+        },
+        {
+          "path": "lib/bus-solver/deriveBusTraceOrder.ts",
+          "bytes": 3722,
+          "sha256": "37d2cc2199fd87950dae76cee2d4b16ca71a4ce7ca6e92af6cb987a32a271d26"
+        },
+        {
+          "path": "lib/bus-solver/geometry.ts",
+          "bytes": 3617,
+          "sha256": "70831eb170eafabcb976423e3e68ef91ffed32f966b3a41c6246f02c6f02d792"
+        },
+        {
+          "path": "lib/bus-solver/index.ts",
+          "bytes": 219,
+          "sha256": "cd54b63dd071a9d006c0840d4883f220455cb269f9a96bc5aa08e9fa4b6aede3"
+        },
+        {
+          "path": "lib/bus-solver/previewRoutingState.ts",
+          "bytes": 3281,
+          "sha256": "e22df541f0f4ab8a2bae1bde00cc1a475a546b0767b779b27126ff86234eed73"
+        },
+        {
+          "path": "lib/compat/convertPortPointPathingSolverInputToSerializedHyperGraph.ts",
+          "bytes": 1991,
+          "sha256": "8a12d99036b86c9244d05bc91bd966ffb63a10656f29d1490012208a84cd7e7d"
+        },
+        {
+          "path": "lib/compat/convertToSerializedHyperGraph.ts",
+          "bytes": 12816,
+          "sha256": "12690bd62b717a9066166651b17abce24fb6747b28410d155b79ec5856292bd5"
+        },
+        {
+          "path": "lib/compat/loadSerializedHyperGraph.ts",
+          "bytes": 20420,
+          "sha256": "83a771ae576ac98db9a11f78e6aa50ce06b291a245a40aaef9efd9b4b37b6d93"
+        },
+        {
+          "path": "lib/computeRegionCost.ts",
+          "bytes": 2302,
+          "sha256": "92cf3311f42bdcb8daeee3c9628d0157fc5c0ee0ccc12c860da94fb5fbd3afe9"
+        },
+        {
+          "path": "lib/core.ts",
+          "bytes": 76674,
+          "sha256": "dc4400b61c2feacd74560687b582706055fbe4808ef156865cd63016b7b9692b"
+        },
+        {
+          "path": "lib/countIntersectionsFromAnglePairsDynamic.ts",
+          "bytes": 1190,
+          "sha256": "356afa69a8add0b5fd49ccd64eee3275b088c6ce0e6afe53c92eecb0e08fc5e8"
+        },
+        {
+          "path": "lib/countNewIntersections.ts",
+          "bytes": 3290,
+          "sha256": "e30c4e1b84f45e5c928428f867fa24c687dc58b3d439d64ce2ca1435f9587959"
+        },
+        {
+          "path": "lib/distance-aware-tiny-hypergraph-solver.ts",
+          "bytes": 2016,
+          "sha256": "68465bf106dbaecbc8f64d2615d2de9a785c77f3e337fbe19f51630e6dd3d3e0"
+        },
+        {
+          "path": "lib/find-distinct-owner-blocker-path.ts",
+          "bytes": 12503,
+          "sha256": "73a0659ca08f0d73ae69af4e08d4d9b94900ae11f99ac80643f120236a6ff11e"
+        },
+        {
+          "path": "lib/index.ts",
+          "bytes": 1672,
+          "sha256": "53aba8e00b6dbe894c0c2eb42c88655a9f443c24d08546e7f3b65586bca3548c"
+        },
+        {
+          "path": "lib/indexed-candidate-heap.ts",
+          "bytes": 6696,
+          "sha256": "76512ee7d18511d1fbf05b8d3dbb1f8f2c4108a3bbeb60e8e6766bae49a3d09a"
+        },
+        {
+          "path": "lib/initialAssignments.ts",
+          "bytes": 5757,
+          "sha256": "e408714ea710fb274c04db2b2c03c25b0ec9a7359274fec7aa513df7e4af4808"
+        },
+        {
+          "path": "lib/layerLabels.ts",
+          "bytes": 664,
+          "sha256": "de7bc9d7b3e24d773ca3fb18e37d1696337430b75fa3ae50e8161d2ffcf61d4a"
+        },
+        {
+          "path": "lib/mapPortsToAnglePairs.ts",
+          "bytes": 860,
+          "sha256": "233da5d4d00148c3a59941fb705cec956966c8c9fd360a796b9a0a08c50e01af"
+        },
+        {
+          "path": "lib/outside-in-partial-rip-tiny-hypergraph-solver.ts",
+          "bytes": 41580,
+          "sha256": "b6da53cd07d86a4509d088e48dcf0aa0982c52c1643da9651b7a095330b54d2a"
+        },
+        {
+          "path": "lib/poly-types.ts",
+          "bytes": 3200,
+          "sha256": "b3aa6a5c23e934d65a130956a4272ee3081832cadc9058d60e50c9a0196b1bd3"
+        },
+        {
+          "path": "lib/poly.ts",
+          "bytes": 34122,
+          "sha256": "944e857237562d9aa42289c149f709f3c2824b470d07f60ab58c9a27a7d553ff"
+        },
+        {
+          "path": "lib/prepared/DenseRoutingWorkspace.ts",
+          "bytes": 8236,
+          "sha256": "63752a8cfc8647d440e3a48906a5d7e8505847a6fa1169eebd7c462cf0965aa3"
+        },
+        {
+          "path": "lib/prepared/PreparedPortPointRoutingSolver.ts",
+          "bytes": 3160,
+          "sha256": "a948055c7f1f9a026b1bb7dbb03793bb73ebb2b19b015cc18c63b31e05867f79"
+        },
+        {
+          "path": "lib/prepared/PreparedRoutingGeometry.ts",
+          "bytes": 2780,
+          "sha256": "5ceb7ca0de0e79dc09617abfb5166b4a454f3454d0c750fc7f7024f51f9243b8"
+        },
+        {
+          "path": "lib/prepared/RegionDistancePreparationSolver.ts",
+          "bytes": 1276,
+          "sha256": "e15a56311284a50f0354cd8ecfa9969b88bf1d0d0e328b9d32e900b936ccbbc5"
+        },
+        {
+          "path": "lib/prepared/SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments.ts",
+          "bytes": 1565,
+          "sha256": "d846dbf8da90d0a03a38e2beda59de9fa6a18ef3a34d7df8cf26baa20110a608"
+        },
+        {
+          "path": "lib/region-graph/filterPortPointPathingSolverInputByConnectionPatches.ts",
+          "bytes": 1713,
+          "sha256": "eb256422906445a90d640db06377251dbf9e47af96d59df139437c55ed20a736"
+        },
+        {
+          "path": "lib/region-graph/graph.ts",
+          "bytes": 6703,
+          "sha256": "ea9e8e8089ba16645e5825b4c038bd1e63777b870915effaaf81242ae24e4d1f"
+        },
+        {
+          "path": "lib/region-graph/index.ts",
+          "bytes": 277,
+          "sha256": "3653809a3e4c882f84478e3914dec414f150d8871d25b0d3e80a6639bfbcd6ff"
+        },
+        {
+          "path": "lib/region-graph/region-path-solver.ts",
+          "bytes": 10692,
+          "sha256": "3e76e3709b458dcbfa9c456519925a7d995e7796576110317d014a530caab1e6"
+        },
+        {
+          "path": "lib/region-graph/visualizeRegionGraph.ts",
+          "bytes": 9557,
+          "sha256": "11aaa65f8708386e60a091ed38f740b213be884c87a55210149db39e8d910970"
+        },
+        {
+          "path": "lib/section-solver/TinyHyperGraphSectionPipelineSolver.ts",
+          "bytes": 16908,
+          "sha256": "8d8391f89ac747869734c2f2c4ae5d6bd2996d60c08e3d04d4c1b5a4961cb7bf"
+        },
+        {
+          "path": "lib/section-solver/index.ts",
+          "bytes": 33857,
+          "sha256": "209f6638abbaec500f2d9e0188ffcfb1a86ec87c717f64b241543a2ae1919b38"
+        },
+        {
+          "path": "lib/section-solver/sectionCandidateFamilies.ts",
+          "bytes": 3482,
+          "sha256": "98c5a7052286281f703afbe3ef45d0b1c34c99696906ec3f75817a4a52f9495c"
+        },
+        {
+          "path": "lib/selective-rerip-tiny-hyper-graph-solver.ts",
+          "bytes": 33264,
+          "sha256": "0cb3bbc6219861b71e1cbd6a46f3d9de89d31f7803953c727b2780f1ef204da5"
+        },
+        {
+          "path": "lib/selective-rerip/inspectRelaxedBlockerReachability.ts",
+          "bytes": 6059,
+          "sha256": "ec052f55f7ae0502f0e9ee27b3e2d56b2e1da40cadb77bea97d1b1d3ec73c2d7"
+        },
+        {
+          "path": "lib/selective-rerip/relaxedBlockerSearchTypes.ts",
+          "bytes": 720,
+          "sha256": "1a3c2d5d79103ede2a810bace0fef3a0a0509e6263d33ee1f0d8a6b232ffb43f"
+        },
+        {
+          "path": "lib/shuffle.ts",
+          "bytes": 597,
+          "sha256": "ebd57c93f11b8c7f68d5988930fe81553ecbcb0cb57febc283dc3e53572d8ac4"
+        },
+        {
+          "path": "lib/static-reachability.ts",
+          "bytes": 8425,
+          "sha256": "00e86e59a6fd781b06cb71a57aefb9255aaa57794de40e546a808631cb588fae"
+        },
+        {
+          "path": "lib/types.ts",
+          "bytes": 1162,
+          "sha256": "06e853251f4ab990e316bda4e21c8cf6788eae7cc6626e8a33f5290a0123f72a"
+        },
+        {
+          "path": "lib/utils.ts",
+          "bytes": 144,
+          "sha256": "e1cdfb51609ee3a4c7b04807ddd1a002179f8c30c5f201d3fd110a082e5cbc85"
+        },
+        {
+          "path": "lib/visualizeStaticReachabilityFailure.ts",
+          "bytes": 4587,
+          "sha256": "0e67ed6f7b148c195cde0d3ca10a6d3500ffc7bc138fcea06dc227b44d3510f5"
+        },
+        {
+          "path": "lib/visualizeTinyGraph.ts",
+          "bytes": 30634,
+          "sha256": "f9ae01e9862c1231d841087cd00e8e593eb35a393d3575a268b495fd97fa0c55"
+        },
+        {
+          "path": "package.json",
+          "bytes": 1826,
+          "sha256": "6dc61235a4ea4c794cfa435c46dfefd20373dbf76ca1870965dac2e3b7db70df"
+        },
+        {
+          "path": "tsconfig.json",
+          "bytes": 1044,
+          "sha256": "fabe72fb7215838d9aac80d30a9a965d432e0d68ecb74efe9f5c3204303131ed"
+        }
+      ]
+    },
+    {
+      "name": "high-density-repair01",
+      "url": "https://codeload.github.com/tscircuit/high-density-repair01/tar.gz/4f4aeb9d1589c913cf34172fdba71dfe1f6dd6ea",
+      "gitCommit": "4f4aeb9d1589c913cf34172fdba71dfe1f6dd6ea",
+      "version": "0.0.0",
+      "archiveSha256": "9f9d4cecf593b3f25656cc1b385351b41a30f3fe3261007539f05a2e937b3dcb",
+      "archiveBytes": 3974291,
+      "extractedBytes": 178675,
+      "files": [
+        {
+          "path": "lib/BaseSolver.ts",
+          "bytes": 2266,
+          "sha256": "6590c6cb00483c448d58ac0ccb158a2845157aa1efadf71bbaec78397c21c80b"
+        },
+        {
+          "path": "lib/HighDensityForceImproveSolver.ts",
+          "bytes": 67026,
+          "sha256": "68a170294caf007d759720d9c428e9bb621458cab1a3e7694cb512785c7dcb58"
+        },
+        {
+          "path": "lib/colors.ts",
+          "bytes": 1675,
+          "sha256": "9591119dc2b26605b1a182b42114be01a1bbcd5d69233782726bffafd294c25c"
+        },
+        {
+          "path": "lib/connection-point-utils.ts",
+          "bytes": 1126,
+          "sha256": "12390000a156f3c4629b48be24c8cde146f30cb18ee88a157f0970ce210e0e01"
+        },
+        {
+          "path": "lib/drc-check.ts",
+          "bytes": 24528,
+          "sha256": "c8cfec5d1b3b1fdb8389569a99ae3d474852e6e64a43ee7c06d1b5f6b45668ab"
+        },
+        {
+          "path": "lib/high-density-types.ts",
+          "bytes": 2148,
+          "sha256": "d9a92d2d0e75a4b89d23430840b022e22602b21b5758dad97a155560b155e6be"
+        },
+        {
+          "path": "lib/index.ts",
+          "bytes": 210,
+          "sha256": "48213e840efe027aa385db97cd85dd6a2f47d59115aba12f19a0f12fc2f1874b"
+        },
+        {
+          "path": "lib/repair.ts",
+          "bytes": 5504,
+          "sha256": "c7d8b555b84ae3bdc2930c5fd9b8b73a99e14e221351021b043b91029904037e"
+        },
+        {
+          "path": "lib/srj-types.ts",
+          "bytes": 3004,
+          "sha256": "7f9d99773e0065c9b4d949985197d3bba76e14a791d312189f269e985ea37a4c"
+        },
+        {
+          "path": "lib/types/high-density-types.ts",
+          "bytes": 2343,
+          "sha256": "4f16d1842cb0f349a67f4bd2757fe09e658202a478d87d22c0589abe9e55bdc7"
+        },
+        {
+          "path": "lib/types/srj-types.ts",
+          "bytes": 3011,
+          "sha256": "1a1075a9b3d7b7c811af3137deefc58d8eea9de101fec4435d0917f068fd89ad"
+        },
+        {
+          "path": "lib/types/types.ts",
+          "bytes": 1451,
+          "sha256": "453be5fc35970f62e04243cf20f578d0af43ce3628e6ceef8f08a7531b577a4c"
+        },
+        {
+          "path": "lib/utils/color-parser.ts",
+          "bytes": 3413,
+          "sha256": "105f14dde437552feab2d38431358038c32c87946ecb18f2a417b838bcfbbafd"
+        },
+        {
+          "path": "lib/utils/colors.ts",
+          "bytes": 1676,
+          "sha256": "7aeca3adf99a56ca0d94e737f58bc4136e81f56a25458c61eaa574e98c6ea92b"
+        },
+        {
+          "path": "lib/utils/connection-point-utils.ts",
+          "bytes": 1133,
+          "sha256": "34224996d260fdcb79aea79788c828e5b9daec81b43218b0a5a72ecf37282121"
+        },
+        {
+          "path": "lib/utils/force-improve-route-helpers.ts",
+          "bytes": 2305,
+          "sha256": "9f4ae1ca35a8b87f4fc287426857f6a9b7a721eff2bda80a8f63b36a2d553180"
+        },
+        {
+          "path": "lib/utils/force-improve-segment-helpers.ts",
+          "bytes": 6059,
+          "sha256": "580f96d12f06b3b12a1a3325d5d0db728c547f548cc4d47865bee624c3b1856b"
+        },
+        {
+          "path": "lib/utils/getVectorLength.ts",
+          "bytes": 550,
+          "sha256": "d03a5918f39b0bee13e5147809d909b61aac28f688facc8a30b4578a84d77298"
+        },
+        {
+          "path": "lib/utils/high-density-force-improve-topology.ts",
+          "bytes": 18893,
+          "sha256": "ff163f187db111d71e326656d5944f031f575da0780e40b0efdf3cf42fcccced"
+        },
+        {
+          "path": "lib/utils/normalize-routes.ts",
+          "bytes": 11200,
+          "sha256": "88931049db9d2aac3a02cd479650cfd26dbede1d5793cab2785c76b069d619ed"
+        },
+        {
+          "path": "lib/utils/simplify.ts",
+          "bytes": 9371,
+          "sha256": "601a87350da37ce019fcd537e2a65f0caea1c721d34422a2849e8fc9ac0d100b"
+        },
+        {
+          "path": "lib/visualizeHighDensityRepair.ts",
+          "bytes": 7106,
+          "sha256": "187bf37d1d4552595b18fe0659e52dd2396fed3ce7d0601424e043f2116790eb"
+        },
+        {
+          "path": "package.json",
+          "bytes": 1575,
+          "sha256": "c864499e9061b7edfd4073aced2419fa256fc76262331b29ba3afa7e5e488cab"
+        },
+        {
+          "path": "tsconfig.json",
+          "bytes": 996,
+          "sha256": "81b32b52d23c920170691d6be45cee0c6b90d9582bd9b7b94355518aed5ffcfd"
+        },
+        {
+          "path": "types/graphics-debug-matcher.d.ts",
+          "bytes": 32,
+          "sha256": "c12d7080dab94ac8dde8216a98046af90d8ed3b127c801a76b0ea5d5bc3b2497"
+        },
+        {
+          "path": "types/json.d.ts",
+          "bytes": 74,
+          "sha256": "dbfd98aaa156b1aeea5ddb3883bc474a7966b83a64838ffb5a01082d6893f2c2"
+        }
+      ]
+    },
+    {
+      "name": "high-density-repair02",
+      "url": "https://codeload.github.com/tscircuit/high-density-repair02/tar.gz/cac656f51535aca0d9c7f09e5860b4e82a78f3cf",
+      "gitCommit": "cac656f51535aca0d9c7f09e5860b4e82a78f3cf",
+      "version": "0.0.0",
+      "archiveSha256": "79cf59facf3cd2a3c6c2a187a0e5164edadd6682e101e06af56ef2f4f1d4eb84",
+      "archiveBytes": 1867969,
+      "extractedBytes": 182218,
+      "files": [
+        {
+          "path": "lib/high-density-repair-solver.ts",
+          "bytes": 10247,
+          "sha256": "90dcb725d2611070ff12606a6f8dfea1050c67ccc3a7f08f2f679e9e41ea4232"
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/FixedCopperClearanceGuard.ts",
+          "bytes": 5867,
+          "sha256": "1f50bd2a41e195a99a9b999806043f40e647c4d48faa6c2ec2babffa474e4093"
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/clamp.ts",
+          "bytes": 104,
+          "sha256": "f2b80c613d8d68da17806fd17e2f7ec91d5c298db7fc3258f5e627341838c88d"
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/clamp01.ts",
+          "bytes": 74,
+          "sha256": "3e86d34ff89831de347865c7ad230b065e7f92a57cf8a5b2fc333b2ff7526138"
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/clampRoutePointsToBoundary.ts",
+          "bytes": 1441,
+          "sha256": "3b3b2471ae63a00e35e7e3f26e910e3aee556ae5350d2c7c5dbe2021ca87555b"
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/clonePoint.ts",
+          "bytes": 127,
+          "sha256": "9994bdd286d29639080f9017d5ac78794154cac72e8d72e4aa994bf7f339fc3c"
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/cloneRoute.ts",
+          "bytes": 250,
+          "sha256": "06dc10c3e20368ec7e1fa72f89c5363faa79461d90262df67df8af368b7831c9"
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/cloneRoutes.ts",
+          "bytes": 163,
+          "sha256": "1d7f92f1c1555623f0ea21fee158172942090039e11def92a83e8f113e4ee2cf"
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/createBoundryViolationRects.ts",
+          "bytes": 1160,
+          "sha256": "ef7c05d1f58202f3adb46ab836c41152d25617d5e6744e090d9107e0311a21ce"
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/createCandidateFrame.ts",
+          "bytes": 1459,
+          "sha256": "099e53c9266b43925aa5d5be301c5afe574b58887494e11c45d5a2feb176e59b"
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/createFinalFrame.ts",
+          "bytes": 292,
+          "sha256": "b23f78dde75ce9a4e3a493fe055e87058213632dee1f089d74c70bd3d1a35dc0"
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/createInitialFrame.ts",
+          "bytes": 249,
+          "sha256": "a261c7df5e4390642e3ad2214dade35a55c45c28e52aadf5a7a008fd397f8021"
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/createMovedRoute.ts",
+          "bytes": 3870,
+          "sha256": "27a20588004e03f28be9a068832cff0c1a812b966c20e5eaac3b9f4100cd6438"
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/createMovementArrow.ts",
+          "bytes": 1386,
+          "sha256": "42ba730557108bab692e5d7434e61d55d8e5f685b5c1d48ba51434f82ad7f7ec"
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/createOverlayLinesForRoutes.ts",
+          "bytes": 546,
+          "sha256": "74b030ca36e6dbd18dd123b645a94b447fcd65c07596af7781fece2257f99436"
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/createSideAnalysisFrame.ts",
+          "bytes": 716,
+          "sha256": "725d043f662aa82f5a59aaff5b34a9cbf1b7c6354edd41aff9fbdc55d4b5aa77"
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/createSideStripRect.ts",
+          "bytes": 1117,
+          "sha256": "33f8ed8107b946cb90da9bb01716accc1056882782ec38d0fb37f98c82f596ad"
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/createTraceViolationCircles.ts",
+          "bytes": 9406,
+          "sha256": "94fe29a6304b3e41acb2dd04319a954cca9d0fc99bd0f573cd60e984832b1dca"
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/dedupeRoutePoints.ts",
+          "bytes": 424,
+          "sha256": "5200c0d45c8ebdc34a96cdf8edbd58e0b2832d24ba61f81a2e9db6bd0199e1c3"
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/distancePointToSegment.ts",
+          "bytes": 705,
+          "sha256": "c7e65c2d5d60086344c124b71bd90e4a7ed7487fed23c23d74a61a6becf5a71c"
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/distanceToSide.ts",
+          "bytes": 413,
+          "sha256": "9df5fc5dc8f93d47bf12200d23cceec286ea32877420f49b50edd791065558dc"
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/dot.ts",
+          "bytes": 102,
+          "sha256": "ddfa7994f7d38c10df1376aa3af6cd3346177a8f09afb6af1cbd09742fb3bc43"
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/findBoundaryTouchRegressions.ts",
+          "bytes": 1526,
+          "sha256": "7209fcb6697c6a32170cd91267f4cad7839ab042257f6f50d306de9922913079"
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/findBufferZoneSegmentsNotStraightFromBoundary.ts",
+          "bytes": 4012,
+          "sha256": "3279fb7fdd02a4b518df54b3c7ef860295bf5f97561e600083a2bd2a613b4975"
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/findClearanceConflictPairs.ts",
+          "bytes": 443,
+          "sha256": "5ab965263bd5b19764a016d5b2a60366ae70a5069a143f52af9e54b08cb3240b"
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/findClearanceConflicts.ts",
+          "bytes": 15652,
+          "sha256": "0ce83d75c80a80bde6fe33284b1eddcdd163566147dece364118920696d3af78"
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/findConflictingRouteIndexes.ts",
+          "bytes": 1522,
+          "sha256": "1fb925c80f806c0ee5de7cee1c6fa10893a0eda0b43bf2f19c7d06f5c6b16c6a"
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/findInteriorDiagonalSegmentsInBufferZone.ts",
+          "bytes": 5432,
+          "sha256": "eb3435d43e92c13532270a46d27834e979910ed50dfd3c2f8c32e8a990562e09"
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/findNewUnpushableZeroClearanceConflicts.ts",
+          "bytes": 1936,
+          "sha256": "c9da2db503172ed39d286285c8d9c2a7dc97ebfd4b7ce15fd2baa2e1b70cb02a"
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/findTraceClearanceRegressions.ts",
+          "bytes": 4251,
+          "sha256": "df4fe8eadda4e1356360fd6776b7f53f9f55582c009aa0b77e8ceb7107902344"
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/getBoundaryRect.ts",
+          "bytes": 501,
+          "sha256": "8fdf979c14cdf69352753afd0bcb0590c48e09259ea525417fe7eae0e8ad9f7f"
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/getMoveAmountForSide.ts",
+          "bytes": 539,
+          "sha256": "89bea0211cd246dc350229cb1230c95d642db6fcbf684c4ef0a156e5957c841b"
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/getObstacleBounds.ts",
+          "bytes": 402,
+          "sha256": "f05fa53df4f31ab4b1fa42ae9d5dbaa4ba65add1db14b9e4d447b8380787aa24"
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/getRouteBoundaryOverflow.ts",
+          "bytes": 393,
+          "sha256": "1e24c7ec2a20fa09b1681399e85e534f8d1a3d77f0a0b576e520d0815941193a"
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/getRouteGeometry.ts",
+          "bytes": 3502,
+          "sha256": "a4612816da287b081fa8a06add4c0c83f982c218e979678e1c5b3b686d4fabce"
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/getRouteInteriorSamplePoints.ts",
+          "bytes": 713,
+          "sha256": "314c5b476e6e03479884f8a25b933ea45e00ca1bf69ba21c8488571e900caf5c"
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/getRouteInteriorSideClearance.ts",
+          "bytes": 598,
+          "sha256": "43926eb361a5d1bd8120db3ec62477f5fa3bf58d27a6d6b4a0147aaa7dacc4e8"
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/getRouteMovableIndexes.ts",
+          "bytes": 1974,
+          "sha256": "0f0160fa2eabafde36adb6956bfaf7b999060446969290db39e2744f251a1949"
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/getRoutePointLayer.ts",
+          "bytes": 163,
+          "sha256": "47d9c7ef0e695dc311253aaa308fe75fa0b875007601d9c882042b6af7980b48"
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/getRoutePushableIndexes.ts",
+          "bytes": 1903,
+          "sha256": "3bec28256ac7662ba4edee1024f4aa2cd4fdc9e2ac9bf1f636f4d4bdb57f658a"
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/getRouteSegments.ts",
+          "bytes": 316,
+          "sha256": "fbe1c97e27f1d9be9b5a69e40eeec9cce0533186559bc30c3bc39dfc64436294"
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/getRouteSideContactState.ts",
+          "bytes": 1310,
+          "sha256": "c90ca49dbce54631b97ccdf9ef53d3dfcae4a437ba27eeb201bd7c052273530e"
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/getRouteSideExposure.ts",
+          "bytes": 730,
+          "sha256": "f3d52c0b18e21056b6d2449fa981acbd8294789f8b067ff75957286189f19506"
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/getRouteStrokeColor.ts",
+          "bytes": 199,
+          "sha256": "9b10390b2d47aca6d7d566afb9634d5d2a5ec00a3532a5132e5f6ae97a3638e0"
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/getSegmentLength.ts",
+          "bytes": 146,
+          "sha256": "339490e5d642f7b3cf25de18523bdf37aa061ed0ed7e6f6ab28657f0046baaa1"
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/isObstacleNearSide.ts",
+          "bytes": 994,
+          "sha256": "9339ffcb9c33a442c8d157f8764156e9cee6474393b851bd2c12b9d178979134"
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/isPointInsideBoundary.ts",
+          "bytes": 336,
+          "sha256": "4e4720c64d2dc3fa89883418242b797e8394a87130151bff549bd50da8db54f2"
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/isPointNearSide.ts",
+          "bytes": 342,
+          "sha256": "400eaf92f8b623a0703600bc8c265a1d6aff796efb1858dcceacac1f7141f275"
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/lengthSquared.ts",
+          "bytes": 127,
+          "sha256": "cfccbeb657781f5584d9a5c72effe80fd493e45e870e1be7ce28eca109bd71e4"
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/normalizeBoundaryAnchoredRoutes.ts",
+          "bytes": 1217,
+          "sha256": "debca149a4802d998c6df3c9fb91750ee6f929a7abb5f9b64c20a04010d2d47c"
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/onSegment.ts",
+          "bytes": 300,
+          "sha256": "6d222f4ac333e0b7cfcfa3c2fdeb271e03533eed5085eda2bfaed49cb9ab3368"
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/orientation.ts",
+          "bytes": 151,
+          "sha256": "d0f1ebfd182defeb22cd09e981604247b27c0e40da01f7809d4626890443aef1"
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/pointsCoincide.ts",
+          "bytes": 204,
+          "sha256": "5c93ab28c72b67015b93de25d2355df11bd6acd575f35d7815837a5829eb2858"
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/repairNodeClearance.ts",
+          "bytes": 31373,
+          "sha256": "0a39a88e658136f13f857b7dcab3924206d203c3173b29b9d865dc7692032439"
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/routeEndpointsStayOnBoundarySides.ts",
+          "bytes": 1398,
+          "sha256": "807f2e24d7fa5aa066a25aa117e3844c8efe631af9a710d3e29e4523dd926b13"
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/routeStaysInsideBoundary.ts",
+          "bytes": 296,
+          "sha256": "6320a841111f4e957ba6623b2d5745bf114fe5ae0cc1eb97652eb64435f8410c"
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/segmentDistance.ts",
+          "bytes": 470,
+          "sha256": "d3fe6f5197b697a9fceb88372a13d4b1e6c5bc61f8f39d3595976617bb780cd0"
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/segmentsIntersect.ts",
+          "bytes": 716,
+          "sha256": "65480d111580d14d5d8a1a6ca58de871b1294dc87463f9eb6c07d6bfea0a568b"
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/segmentsShareEndpoint.ts",
+          "bytes": 304,
+          "sha256": "4e546e7c7631ebc0e88682e9201632b2a4d75ecf68b1c9c74356b217bb5e76f3"
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/sideDirection.ts",
+          "bytes": 360,
+          "sha256": "1f2ea7e53f164ec29e778bba98b1e242dcf497774134e12a0097a8432b7d6219"
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/snapToGrid.ts",
+          "bytes": 496,
+          "sha256": "8e14b3805f1c23c47ed15f188fb4e95ba6e8bff0d77ca9d43744c3c0d3c3b31c"
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/splitRouteIntoLayerSegments.ts",
+          "bytes": 1510,
+          "sha256": "76306a083221edfadbe71c875a114beee2e404e9d372368f005240e50987c685"
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/subtract.ts",
+          "bytes": 122,
+          "sha256": "b6561faa7775064289f8d05f9632c7f9851b7492faaa7f4a1c91878387e73747"
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/synchronizeRouteVias.ts",
+          "bytes": 1298,
+          "sha256": "b72472fa4f23a8f598d82f037abe24a494f6478ce0cfbd1dc26aadfde5681572"
+        },
+        {
+          "path": "lib/high-density-repair-solver/functions/wouldIncreaseExposureOnOtherSides.ts",
+          "bytes": 1061,
+          "sha256": "53a839de11ce421d5a27fc1f8e3b747af917cbf7314ac7a472c7ea70b2e931ce"
+        },
+        {
+          "path": "lib/high-density-repair-solver/shared/constants.ts",
+          "bytes": 526,
+          "sha256": "9e644ee9811cb87801b5e62ea26ee730fca7f587640faac20d6019a3405f0ef4"
+        },
+        {
+          "path": "lib/high-density-repair-solver/shared/types.ts",
+          "bytes": 3678,
+          "sha256": "dc9c1a8f16639809717249b0f2c331037a464f285930b462b2ebe750fe56391d"
+        },
+        {
+          "path": "lib/high-density-repair-solver/steps/buildRepairFrames.ts",
+          "bytes": 11915,
+          "sha256": "88c73ce0ed0010e78882c864003655f9841d12ab52caa74384b5a2536bd39a6e"
+        },
+        {
+          "path": "lib/high-density-repair-solver/steps/evaluateRouteMove.ts",
+          "bytes": 12708,
+          "sha256": "0472344317549524930f8bbb4c0eacfbe61f83f275b134404012583f22a748c7"
+        },
+        {
+          "path": "lib/high-density-repair-solver/steps/processBoundarySide.ts",
+          "bytes": 4992,
+          "sha256": "01b9cee6eca265bb7a97be9a6d89180e40d981226dc6dea79f4646d9ca0435aa"
+        },
+        {
+          "path": "lib/high-density-repair-solver/steps/targetedBoundaryCleanup.ts",
+          "bytes": 14970,
+          "sha256": "0cbb2fd11ca7089a291cff7b322f555214eadd1ca82cb83f7554dcbb01bbdd52"
+        },
+        {
+          "path": "lib/index.ts",
+          "bytes": 45,
+          "sha256": "bc0cbae94522a153ba3dc5480e3b6e2da7e7cabdf9f046ee3b8f758507a00f34"
+        },
+        {
+          "path": "package.json",
+          "bytes": 1246,
+          "sha256": "47be9d3049b68281236b947a12bfbbc81616a3dcda153fe03039e20af4d418b5"
+        },
+        {
+          "path": "tsconfig.json",
+          "bytes": 782,
+          "sha256": "af4ffdc5d331f4ddf8ed862716ead430587c43c198ed7e02ad5b332940920422"
+        }
+      ]
+    },
+    {
+      "name": "high-density-repair03",
+      "url": "https://codeload.github.com/tscircuit/high-density-repair03/tar.gz/517f0fd443cb878cb2f0e91aea51d5f40b514193",
+      "gitCommit": "517f0fd443cb878cb2f0e91aea51d5f40b514193",
+      "version": null,
+      "archiveSha256": "f988e784adb25a3b3e1e424a58ce8f5f7dc21f9ba7478d3cc0f396d028cd4903",
+      "archiveBytes": 3023001,
+      "extractedBytes": 482203,
+      "files": [
+        {
+          "path": "lib/drc/AutoroutingDrcEngine.ts",
+          "bytes": 48979,
+          "sha256": "b813a291e53b4dab1be262a1612339396bd708278e05cef64238db856aaa4ef7"
+        },
+        {
+          "path": "lib/drc/index.ts",
+          "bytes": 218,
+          "sha256": "ece1dca836fe1d2c1f0245d55af64bf97b277b3954fe3c9192f694b7dd129adb"
+        },
+        {
+          "path": "lib/index.ts",
+          "bytes": 1071,
+          "sha256": "e629c157510808659a5f6c12d712f89422bcb9c1fd645da5d4568fcd69278d5b"
+        },
+        {
+          "path": "lib/solvers/BaseSolver.ts",
+          "bytes": 53,
+          "sha256": "5efa6ddfb99c6c974f1f79c4e1b85b7bcae06688d6b75bc2ba6c6034884cc6d3"
+        },
+        {
+          "path": "lib/solvers/GlobalDrcForceImproveSolver/GlobalDrcBranchPortfolioSolver.ts",
+          "bytes": 31922,
+          "sha256": "038a9351d9254535d6f40538337e4b8598f7e99aeec6601b909ec2b2628fb721"
+        },
+        {
+          "path": "lib/solvers/GlobalDrcForceImproveSolver/GlobalDrcForceImproveSolver.ts",
+          "bytes": 64384,
+          "sha256": "daeb0bf2be17528d7012925f925ef683a6e52d5835ed14e28fd1b9c4004aaf2c"
+        },
+        {
+          "path": "lib/solvers/GlobalDrcForceImproveSolver/TraceContactGuard.ts",
+          "bytes": 11167,
+          "sha256": "f4bca4eeaed656677c4c74bb3955401eed62540aa27a97efcc4e5a201c1d3f6a"
+        },
+        {
+          "path": "lib/solvers/GlobalDrcForceImproveSolver/TraceContactRepairSolver.ts",
+          "bytes": 22538,
+          "sha256": "904d86e388253ebe2ccbb6cfe10e90574b0834b116e91bac78e180c1fe531f33"
+        },
+        {
+          "path": "lib/solvers/GlobalDrcForceImproveSolver/broadNetMatchers.ts",
+          "bytes": 2183,
+          "sha256": "3c5b34bd7d089922471d54c5da29154b01df282248e948e55f06b7fabb1d1e99"
+        },
+        {
+          "path": "lib/solvers/GlobalDrcForceImproveSolver/createReferenceTraceClearanceGuard.ts",
+          "bytes": 1391,
+          "sha256": "25f8503beb970096dd515e73fdfb61c62fb5b5fae9815e61fc6c95ed18c25eb2"
+        },
+        {
+          "path": "lib/solvers/GlobalDrcForceImproveSolver/drc-snapshot.ts",
+          "bytes": 49,
+          "sha256": "43e43bf3fcdacd5ada4cdfb78ecbf24273d8ffac08444d88616d651a54f18a76"
+        },
+        {
+          "path": "lib/solvers/GlobalDrcForceImproveSolver/drcPresets.ts",
+          "bytes": 242,
+          "sha256": "28676dfc06a0ce9c31139d7e5745d872c8d27fe0c5f3972360a4fd1ce73518bf"
+        },
+        {
+          "path": "lib/solvers/GlobalDrcForceImproveSolver/findPadClearanceViaPosition.ts",
+          "bytes": 12509,
+          "sha256": "42b073f6230dd9280c1a68378802c80629a4514e282e4bb573f09d432dcd5a19"
+        },
+        {
+          "path": "lib/solvers/GlobalDrcForceImproveSolver/findTraceClearanceViaPositions.ts",
+          "bytes": 3682,
+          "sha256": "f647d70dbf4478e6fb89881195b8a26b3c234d180f021bcdfbc933a219a14c81"
+        },
+        {
+          "path": "lib/solvers/GlobalDrcForceImproveSolver/getDrcErrors.ts",
+          "bytes": 4083,
+          "sha256": "435a0e3de56922b3d1a33cebfec8f858ff2ec9d0fcfa9468c680609884ad7c4c"
+        },
+        {
+          "path": "lib/solvers/GlobalDrcForceImproveSolver/getDrcInvolvedRouteIndexes.ts",
+          "bytes": 1739,
+          "sha256": "67489b2955961d41bd17455b821fe4227dae5eedcf944d4b14afc7bd0d4dde3a"
+        },
+        {
+          "path": "lib/solvers/GlobalDrcForceImproveSolver/getPeerTraceRepairCandidates.ts",
+          "bytes": 11755,
+          "sha256": "489ad34c4ecc3dccabd373bba9e4a7ed42cc097b3ccf16176b4978d8af2d55e1"
+        },
+        {
+          "path": "lib/solvers/GlobalDrcForceImproveSolver/getPeerTraceViaCandidates.ts",
+          "bytes": 2998,
+          "sha256": "4f8c0194f0d2ab813db8bd6f898aae8807e4ff3b6e54d91639116a95f20db2a6"
+        },
+        {
+          "path": "lib/solvers/GlobalDrcForceImproveSolver/getTraceViaContactRepairCandidates.ts",
+          "bytes": 6010,
+          "sha256": "132527c5a56a9fb999e9c65ef84077a849d587012665dc6c24bdb69c725a711f"
+        },
+        {
+          "path": "lib/solvers/GlobalDrcForceImproveSolver/getTraceViaSimplificationCandidates.ts",
+          "bytes": 2029,
+          "sha256": "e2860b08874585f43fe1488bd509648bd5caf6ce9fa8bb5cf36f839e6951b707"
+        },
+        {
+          "path": "lib/solvers/GlobalDrcForceImproveSolver/getTraceViaWireRepairCandidates.ts",
+          "bytes": 3932,
+          "sha256": "222c9021f76a5da3ee2a2769cb690199b7db21ae57fb8d846fcb3fb7e8c24951"
+        },
+        {
+          "path": "lib/solvers/GlobalDrcForceImproveSolver/haveSameForceCandidateGeometry.ts",
+          "bytes": 1474,
+          "sha256": "152ccff0b6a48ce556c69e1662fdbd4a01fa57e0272772e46dac40339819e2f0"
+        },
+        {
+          "path": "lib/solvers/GlobalDrcForceImproveSolver/index.ts",
+          "bytes": 697,
+          "sha256": "c5889cb864674e32da0d3841925b97e2907de8f6e08f88bcf951170042a7535d"
+        },
+        {
+          "path": "lib/solvers/GlobalDrcForceImproveSolver/internalTypes.ts",
+          "bytes": 737,
+          "sha256": "6abd6039be2c48782787a85c031eb61738229cc4e75fec6c401eb7ad39650637"
+        },
+        {
+          "path": "lib/solvers/GlobalDrcForceImproveSolver/netUtils.ts",
+          "bytes": 2129,
+          "sha256": "c1d32dc327eb8fb3cf5d5e00c860d62f278b1bb94fd751fd804a75cb50a999c2"
+        },
+        {
+          "path": "lib/solvers/GlobalDrcForceImproveSolver/repairNewTraceContacts.ts",
+          "bytes": 5430,
+          "sha256": "64ac8bcb6b2998534da126566124fbf6a7297e3cd02e65ad2df7e4f445cf9350"
+        },
+        {
+          "path": "lib/solvers/GlobalDrcForceImproveSolver/restoreOverlappingConnections.ts",
+          "bytes": 2445,
+          "sha256": "b1c1da678a830989674d7d3d67f0b453239c506bdab91f81468f6fa229498c6b"
+        },
+        {
+          "path": "lib/solvers/GlobalDrcForceImproveSolver/solverConfig.ts",
+          "bytes": 2956,
+          "sha256": "aa75848eecdd7dbfd61188421efd42c62921c88bde4d5fe15631c982ba2de9ce"
+        },
+        {
+          "path": "lib/solvers/GlobalDrcForceImproveSolver/solverHelpers.ts",
+          "bytes": 159534,
+          "sha256": "eb5ee2e8bebd117bf299f9cb4af59ad5e3193c9d1e878b5e1f1335e64dbb4186"
+        },
+        {
+          "path": "lib/solvers/GlobalDrcForceImproveSolver/spatialIndex.ts",
+          "bytes": 4913,
+          "sha256": "96f07ecece397cdd48c3a84eddbaa0547b1a034a93376bd5756727cefe9c837b"
+        },
+        {
+          "path": "lib/solvers/GlobalDrcForceImproveSolver/traceToPadClearanceRelaxation.ts",
+          "bytes": 18442,
+          "sha256": "522778fdbf30e400b625e82346b72c7a97fb24eff9adf3865be09427ed603dc4"
+        },
+        {
+          "path": "lib/solvers/GlobalDrcForceImproveSolver/types.ts",
+          "bytes": 4249,
+          "sha256": "2e2e2e086fac569fe1c6f3f2d0bef499b05dbc5941d2d102f33e28d0b7e8fbd0"
+        },
+        {
+          "path": "lib/solvers/GlobalDrcForceImproveSolver/viaToPadClearanceRelaxation.ts",
+          "bytes": 8006,
+          "sha256": "e0339511c49ff68f957ad3aaf899a87029f79e6728d03166913278fe53147410"
+        },
+        {
+          "path": "lib/solvers/utils/convertToCircuitJson.ts",
+          "bytes": 72,
+          "sha256": "e89479af96d9f3a0fbf0f774a9b2334f2b1684a9710f0446d2c937757b9b0c6a"
+        },
+        {
+          "path": "lib/types.ts",
+          "bytes": 30,
+          "sha256": "6fccc0b0aaa46b20e1ad62d9b4f0d6161b6f9da8a62b7765bf1b73b797145be6"
+        },
+        {
+          "path": "lib/types/high-density-types.ts",
+          "bytes": 217,
+          "sha256": "b314e92503c38a5bf719126be148d97621702bf8f4ba42e56421c7938ddccee4"
+        },
+        {
+          "path": "lib/types/index.ts",
+          "bytes": 224,
+          "sha256": "833c0f48e61f07f2cc0be62acec394092fe22a744f380d890470c1ae262c3815"
+        },
+        {
+          "path": "lib/types/srj-types.ts",
+          "bytes": 965,
+          "sha256": "1097425aa735c3c1a548050ae0d838f2a62b4791eea2307a707a51e903827dab"
+        },
+        {
+          "path": "lib/utils/convertHdRouteToSimplifiedRoute.ts",
+          "bytes": 3131,
+          "sha256": "37ab7ee1fae75781b147e249cf8b1f6e19dde70a14060cc8dd2cacdee320f5d8"
+        },
+        {
+          "path": "lib/utils/convertToCircuitJson.ts",
+          "bytes": 20787,
+          "sha256": "e662c01943284f0c625c7ddc4b70b8bf164a5d4629660883e2b6a15e8c31146b"
+        },
+        {
+          "path": "lib/utils/getViaLayers.ts",
+          "bytes": 1405,
+          "sha256": "fa4d3843d00c670e667588f68b6f0aec4f2ed3be911e1b22c777c1c88b3655c4"
+        },
+        {
+          "path": "lib/utils/mapZToLayerName.ts",
+          "bytes": 224,
+          "sha256": "80f9dcba54c3560fdbf5e5ec2e15c76c4c303474ee53b5a6e919cd3446e3ae88"
+        },
+        {
+          "path": "package.json",
+          "bytes": 1606,
+          "sha256": "53b763d229d5feeaf8fe2640be345b798c3455cac05b4baf622c2690e66cb039"
+        },
+        {
+          "path": "tsconfig.json",
+          "bytes": 1034,
+          "sha256": "62ebb1cb842df5c9b5a853be7e8f68995a47d3f0251ed84ddaf7f254c88201d5"
+        },
+        {
+          "path": "types/capacity-edges-to-port-segments-types.ts",
+          "bytes": 245,
+          "sha256": "2f3a46b94ccaf593e8eada17f8ea6dbe8ce19123ca42ab352299d9dae40fbb9d"
+        },
+        {
+          "path": "types/capacity-mesh-types.ts",
+          "bytes": 935,
+          "sha256": "18c867a261559c309af158795c742e6fd2008d270cfd8b16b8645f2f6155e3f2"
+        },
+        {
+          "path": "types/capacity-pathing-types.ts",
+          "bytes": 445,
+          "sha256": "ba24f5823d856ae49411ff592c8e74041a2368ef19215db4b96c32b872b384b9"
+        },
+        {
+          "path": "types/capacity-segment-to-point-types.ts",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "types/graphics-debug-types.ts",
+          "bytes": 744,
+          "sha256": "aa9cba2f0fce825fd08ff1056e6e4620646c710ddbaae9974cd9fb1176e40185"
+        },
+        {
+          "path": "types/high-density-router-types.ts",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "types/high-density-types.ts",
+          "bytes": 2231,
+          "sha256": "460e9a133473bd9379d1b970d0947083f230a6d1da70a9f4b6ae35642fdeb6bc"
+        },
+        {
+          "path": "types/index.ts",
+          "bytes": 201,
+          "sha256": "17a20eb20289145df7751ebf46fd061c7a87a2418d5b39541dd0b21325b236a7"
+        },
+        {
+          "path": "types/srj-types.ts",
+          "bytes": 3761,
+          "sha256": "9f79ccc4ce3442f0653ada17b8b203604725b42b94f46619f69dc3ea29893fc1"
+        }
+      ]
+    },
+    {
+      "name": "@tscircuit/math-utils",
+      "url": "https://registry.npmjs.org/@tscircuit/math-utils/-/math-utils-0.0.39.tgz",
+      "gitCommit": null,
+      "version": "0.0.39",
+      "archiveSha256": "c11d628261ec1062e905426bcd01c4a80b0b48155287e4bba03ce71ecd432886",
+      "archiveBytes": 22596,
+      "extractedBytes": 88354,
+      "files": [
+        {
+          "path": "dist/bounds-area-overlap.js",
+          "bytes": 138,
+          "sha256": "66730520205ce0cf0f4044da6de062321a7aaacae7e985868d2072b0991ed428"
+        },
+        {
+          "path": "dist/bounds-distance.js",
+          "bytes": 128,
+          "sha256": "532b78a9a47fb9249292581b94293e7e87f5cb0c662068f40c017628ad062296"
+        },
+        {
+          "path": "dist/bounds-intersection.js",
+          "bytes": 140,
+          "sha256": "106154561bd71f515991cc380c216c0b616e3bcf5d816d311d737b5d4d870e40"
+        },
+        {
+          "path": "dist/bounds-overlap.js",
+          "bytes": 129,
+          "sha256": "223f309c06069289d9b59436afac9c6e6a8c6ff10dff83134be2a0ecf8ea68f4"
+        },
+        {
+          "path": "dist/chunk-2TIYJVPZ.js",
+          "bytes": 1275,
+          "sha256": "5e1aff07c6a6deabf570f93c557658f282f6b887306a7c29aa2d0ec9a2c5583f"
+        },
+        {
+          "path": "dist/chunk-3WCUPG5S.js",
+          "bytes": 217,
+          "sha256": "51ebce3f191744f1a66dde89a20875c08a65a69f452c64ccc3f0876ef965a57d"
+        },
+        {
+          "path": "dist/chunk-5N7UJNVK.js",
+          "bytes": 581,
+          "sha256": "456000a356c08bc59cf055af5fcaf349be8e22007311a268ed7ad2a0428b3bc8"
+        },
+        {
+          "path": "dist/chunk-BXYWMMYY.js",
+          "bytes": 3949,
+          "sha256": "c638592d20f2a23c5e6dda316abf792239d3ee557274200a4379b7f826a2b5fc"
+        },
+        {
+          "path": "dist/chunk-CA5ORSO4.js",
+          "bytes": 281,
+          "sha256": "cf6cf517d62a8c3d07092c56cbcace683f45009e0fb04a9ff4657c09f3a7966d"
+        },
+        {
+          "path": "dist/chunk-DRDDWFOS.js",
+          "bytes": 2339,
+          "sha256": "bf456e3b1facc9a9dabe7e5cbf9989a9d66ea8b3de4769b9d2e35b7a80450ca8"
+        },
+        {
+          "path": "dist/chunk-GIGMPRPV.js",
+          "bytes": 642,
+          "sha256": "8b38e69a923139066d6c13d1bad1210dcc1927a9ae02e00c5b1a92d762e894c8"
+        },
+        {
+          "path": "dist/chunk-GYQ2KZV6.js",
+          "bytes": 42,
+          "sha256": "1282d2905c32e6079da7530a79d7495d73a31343e2380b0903178c533376a7ea"
+        },
+        {
+          "path": "dist/chunk-HS7CQHU3.js",
+          "bytes": 3873,
+          "sha256": "a731bcf2cb241b69031c1be8015d8e28c8f5835f82597d4a87ddefc51ba0a6d8"
+        },
+        {
+          "path": "dist/chunk-KVGAXIWH.js",
+          "bytes": 457,
+          "sha256": "cad47868bea5e07b247696134e7a18da9ae3be0f6a9912c53a72fea2fda3eaf3"
+        },
+        {
+          "path": "dist/chunk-KY53E6CT.js",
+          "bytes": 533,
+          "sha256": "e1d2762365cb3f60ab7ff448fe872551206c19aa38ce44de36dcc6a64e5c925a"
+        },
+        {
+          "path": "dist/chunk-LKX2ITST.js",
+          "bytes": 3810,
+          "sha256": "515f9e6cf700cf68d61bc32975ef9a27cae1fe2b3659af361dc490bed35fdbfe"
+        },
+        {
+          "path": "dist/chunk-MIHKSXJY.js",
+          "bytes": 422,
+          "sha256": "5f6490fadcea23828d184fc3365e8b12b0e0f4b6fe261edd460bb0d1f727a210"
+        },
+        {
+          "path": "dist/chunk-MTORG67J.js",
+          "bytes": 42,
+          "sha256": "03909bcb624f2696634d82fc76ef695b1c0f9b097e58441a368616e7a8485d3f"
+        },
+        {
+          "path": "dist/chunk-P6GW5PWY.js",
+          "bytes": 208,
+          "sha256": "c417326e25562f21607370ba28d6209f524258dd06d8dc0cdaece503efebb1f8"
+        },
+        {
+          "path": "dist/chunk-S7H7MIDL.js",
+          "bytes": 464,
+          "sha256": "24f4e2480393fdf07c3c42ec7975ccc12408b26438a394c37fe8f1c9fdbe8557"
+        },
+        {
+          "path": "dist/chunk-U45EKA3R.js",
+          "bytes": 1525,
+          "sha256": "85706ff3362d1cd8adb8d9dd2e05d5030c8476b82134c5cd7b4d11a0cafe988f"
+        },
+        {
+          "path": "dist/chunk-YA3GC5BB.js",
+          "bytes": 428,
+          "sha256": "d476b6054ed53fb46a1fc73690f46500faa3569da37e8a6ae2f24ba944131acb"
+        },
+        {
+          "path": "dist/common.js",
+          "bytes": 64,
+          "sha256": "18978bc10600c5e0668433d791aa497e68c3425b0bb0a333b8173c9c184cbbcd"
+        },
+        {
+          "path": "dist/get-bound-from-centered-rect.js",
+          "bytes": 161,
+          "sha256": "d1b2b3be250eeaf9a09fb6e633b7b21e50a6ce24daa597b1b77a6aa92a028680"
+        },
+        {
+          "path": "dist/get-bounds-center.js",
+          "bytes": 132,
+          "sha256": "e0399faa19c45fb41cbd609f4e800c6eec3f46ea2a19fdcae5b6e0a1399001e6"
+        },
+        {
+          "path": "dist/get-bounds-from-points.js",
+          "bytes": 145,
+          "sha256": "7be905e166148d6e3918ef2e30863d02392f67dd05e828394a3f41b5fdcda000"
+        },
+        {
+          "path": "dist/get-unit-vector.js",
+          "bytes": 212,
+          "sha256": "420e8a99d66bfef1d10bc84819eb799927a83f6c6ffbbc86067a0371599137c4"
+        },
+        {
+          "path": "dist/grid.js",
+          "bytes": 97,
+          "sha256": "2c3a5a903e71044c5ee01863ee342e37a93bca402bddb8c73fe1bf1f3727ebc2"
+        },
+        {
+          "path": "dist/index.js",
+          "bytes": 2644,
+          "sha256": "4cc77b4d0dfdb7f7d842cf1940c9d83e77e55d6f347d8c29f381017bef318157"
+        },
+        {
+          "path": "dist/line-intersections.js",
+          "bytes": 431,
+          "sha256": "d89be1c5a917b759b4ca689acf69d3b6133432cc1eb566fc667a6fb66e4e2ee6"
+        },
+        {
+          "path": "dist/nearest-box.js",
+          "bytes": 406,
+          "sha256": "e924dd212651a0ea44e5183f5796b214c7f8717d88267fe40e3e38a4734f085a"
+        },
+        {
+          "path": "dist/normalize-degrees.js",
+          "bytes": 134,
+          "sha256": "20b37a756687bab8e2bc0655fe5df943b7870bda261bc061af9666f6db022d9b"
+        },
+        {
+          "path": "dist/point-distance.js",
+          "bytes": 289,
+          "sha256": "5ae88ca6d17434331dd80f170e3bbba666733a3aac87a690bea58b6224c1b848"
+        },
+        {
+          "path": "dist/point3.js",
+          "bytes": 64,
+          "sha256": "a747ad202785186aa6d94e4482291994e26d8e31c4d4105a6c35e2afffe1060d"
+        },
+        {
+          "path": "dist/polygon.js",
+          "bytes": 464,
+          "sha256": "89e3b5fd2d84629ab6754056d2f836d14b9258a1221e06707e4a99331747a09f"
+        },
+        {
+          "path": "dist/range.js",
+          "bytes": 100,
+          "sha256": "32742a5001a6e41d5072b7142e45c398f752b2353fcee9226f85dd9dd86127ce"
+        },
+        {
+          "path": "dist/segment-distance.js",
+          "bytes": 449,
+          "sha256": "52cfa83739a282ec3e65c2e79e288b27eda9b94fbfa0778208343da64f379b91"
+        },
+        {
+          "path": "package.json",
+          "bytes": 979,
+          "sha256": "96d36b3752c97ad1ad7cfb0288b472a836edf36233f1d70d476814dddf4e8234"
+        },
+        {
+          "path": "dist/bounds-area-overlap.js.map",
+          "bytes": 71,
+          "sha256": "cba81f7ad4d5b1b629bf43823f1082e73a10d0c3114c937515e7f8c1047629b3"
+        },
+        {
+          "path": "dist/bounds-distance.js.map",
+          "bytes": 71,
+          "sha256": "cba81f7ad4d5b1b629bf43823f1082e73a10d0c3114c937515e7f8c1047629b3"
+        },
+        {
+          "path": "dist/bounds-intersection.js.map",
+          "bytes": 71,
+          "sha256": "cba81f7ad4d5b1b629bf43823f1082e73a10d0c3114c937515e7f8c1047629b3"
+        },
+        {
+          "path": "dist/bounds-overlap.js.map",
+          "bytes": 71,
+          "sha256": "cba81f7ad4d5b1b629bf43823f1082e73a10d0c3114c937515e7f8c1047629b3"
+        },
+        {
+          "path": "dist/chunk-2TIYJVPZ.js.map",
+          "bytes": 3017,
+          "sha256": "7e473bb7b1a39141c9371eada976b802937a9934fee8120213783142444c66b1"
+        },
+        {
+          "path": "dist/chunk-3WCUPG5S.js.map",
+          "bytes": 575,
+          "sha256": "08eef1bbe83e881d915ce29ed7e5289bcde593f456614f2378a17d816fc833fd"
+        },
+        {
+          "path": "dist/chunk-5N7UJNVK.js.map",
+          "bytes": 1354,
+          "sha256": "8f20845424ec93a32c74b4da51965d5c44fc594e49af4df79d6c5a3ef61bb8af"
+        },
+        {
+          "path": "dist/chunk-BXYWMMYY.js.map",
+          "bytes": 9505,
+          "sha256": "baeda646f8024eec511101efe42f9ed84c891ccb1dfcf56bdd664a2caddf4bb5"
+        },
+        {
+          "path": "dist/chunk-CA5ORSO4.js.map",
+          "bytes": 727,
+          "sha256": "36f455ed8295123b41b2f3589ed415ed3ea6585118680bd720cb6e866531b897"
+        },
+        {
+          "path": "dist/chunk-DRDDWFOS.js.map",
+          "bytes": 4724,
+          "sha256": "58ba91648d45e09913b0d7dbac5792e0e4c340f13615e73b2f34762fa5ab5a7b"
+        },
+        {
+          "path": "dist/chunk-GIGMPRPV.js.map",
+          "bytes": 1284,
+          "sha256": "bf2535c38caf0ef68ef5905f714a338fd4de2700c5c429e80f227cb63218151c"
+        },
+        {
+          "path": "dist/chunk-GYQ2KZV6.js.map",
+          "bytes": 71,
+          "sha256": "cba81f7ad4d5b1b629bf43823f1082e73a10d0c3114c937515e7f8c1047629b3"
+        },
+        {
+          "path": "dist/chunk-HS7CQHU3.js.map",
+          "bytes": 7395,
+          "sha256": "6e33f4026f5e9facfe71a150b7caa7143862fda6b226c62ae6904849fce2ae52"
+        },
+        {
+          "path": "dist/chunk-KVGAXIWH.js.map",
+          "bytes": 1136,
+          "sha256": "08c9d9b8130a78155666ff5a0c77cf77caa38be90f87700717d79ca3abc705d7"
+        },
+        {
+          "path": "dist/chunk-KY53E6CT.js.map",
+          "bytes": 1037,
+          "sha256": "392013a190ce8e5cf10f398803d68521a5cf81f9b89ac247649af0ce85f16051"
+        },
+        {
+          "path": "dist/chunk-LKX2ITST.js.map",
+          "bytes": 9787,
+          "sha256": "f3f21567cec63d4af4b2574a4c26b89ce55363715a14b1f8512369ba1e5f370f"
+        },
+        {
+          "path": "dist/chunk-MIHKSXJY.js.map",
+          "bytes": 1032,
+          "sha256": "72e97f925691b71f132ddb92563e328331f2fbb62fbe57bb6b5ad9ada6d158cb"
+        },
+        {
+          "path": "dist/chunk-MTORG67J.js.map",
+          "bytes": 71,
+          "sha256": "cba81f7ad4d5b1b629bf43823f1082e73a10d0c3114c937515e7f8c1047629b3"
+        },
+        {
+          "path": "dist/chunk-P6GW5PWY.js.map",
+          "bytes": 306,
+          "sha256": "1445c686fb7171f33fce3bce518983f5f90b1e21f5ea8bffa17816bd9433b2b7"
+        },
+        {
+          "path": "dist/chunk-S7H7MIDL.js.map",
+          "bytes": 1097,
+          "sha256": "de27a50a83432f3b7ef3a8a740c53947c4e56f7dca15d344a87b3863a0aeb304"
+        },
+        {
+          "path": "dist/chunk-U45EKA3R.js.map",
+          "bytes": 3385,
+          "sha256": "0c6eed9cd7e7cade019d05fc790e8664507e06a1f366330e740099781b5c5760"
+        },
+        {
+          "path": "dist/chunk-YA3GC5BB.js.map",
+          "bytes": 1042,
+          "sha256": "a9d587e25ffc376cf9dd1ff406247f5d7c6ef4e0e02a2cdcc153c2a05572d22b"
+        },
+        {
+          "path": "dist/common.js.map",
+          "bytes": 71,
+          "sha256": "cba81f7ad4d5b1b629bf43823f1082e73a10d0c3114c937515e7f8c1047629b3"
+        },
+        {
+          "path": "dist/get-bound-from-centered-rect.js.map",
+          "bytes": 71,
+          "sha256": "cba81f7ad4d5b1b629bf43823f1082e73a10d0c3114c937515e7f8c1047629b3"
+        },
+        {
+          "path": "dist/get-bounds-center.js.map",
+          "bytes": 71,
+          "sha256": "cba81f7ad4d5b1b629bf43823f1082e73a10d0c3114c937515e7f8c1047629b3"
+        },
+        {
+          "path": "dist/get-bounds-from-points.js.map",
+          "bytes": 71,
+          "sha256": "cba81f7ad4d5b1b629bf43823f1082e73a10d0c3114c937515e7f8c1047629b3"
+        },
+        {
+          "path": "dist/get-unit-vector.js.map",
+          "bytes": 71,
+          "sha256": "cba81f7ad4d5b1b629bf43823f1082e73a10d0c3114c937515e7f8c1047629b3"
+        },
+        {
+          "path": "dist/grid.js.map",
+          "bytes": 71,
+          "sha256": "cba81f7ad4d5b1b629bf43823f1082e73a10d0c3114c937515e7f8c1047629b3"
+        },
+        {
+          "path": "dist/index.js.map",
+          "bytes": 71,
+          "sha256": "cba81f7ad4d5b1b629bf43823f1082e73a10d0c3114c937515e7f8c1047629b3"
+        },
+        {
+          "path": "dist/line-intersections.js.map",
+          "bytes": 71,
+          "sha256": "cba81f7ad4d5b1b629bf43823f1082e73a10d0c3114c937515e7f8c1047629b3"
+        },
+        {
+          "path": "dist/nearest-box.js.map",
+          "bytes": 71,
+          "sha256": "cba81f7ad4d5b1b629bf43823f1082e73a10d0c3114c937515e7f8c1047629b3"
+        },
+        {
+          "path": "dist/normalize-degrees.js.map",
+          "bytes": 71,
+          "sha256": "cba81f7ad4d5b1b629bf43823f1082e73a10d0c3114c937515e7f8c1047629b3"
+        },
+        {
+          "path": "dist/point-distance.js.map",
+          "bytes": 71,
+          "sha256": "cba81f7ad4d5b1b629bf43823f1082e73a10d0c3114c937515e7f8c1047629b3"
+        },
+        {
+          "path": "dist/point3.js.map",
+          "bytes": 71,
+          "sha256": "cba81f7ad4d5b1b629bf43823f1082e73a10d0c3114c937515e7f8c1047629b3"
+        },
+        {
+          "path": "dist/polygon.js.map",
+          "bytes": 71,
+          "sha256": "cba81f7ad4d5b1b629bf43823f1082e73a10d0c3114c937515e7f8c1047629b3"
+        },
+        {
+          "path": "dist/range.js.map",
+          "bytes": 71,
+          "sha256": "cba81f7ad4d5b1b629bf43823f1082e73a10d0c3114c937515e7f8c1047629b3"
+        },
+        {
+          "path": "dist/segment-distance.js.map",
+          "bytes": 71,
+          "sha256": "cba81f7ad4d5b1b629bf43823f1082e73a10d0c3114c937515e7f8c1047629b3"
+        },
+        {
+          "path": "dist/bounds-area-overlap.d.ts",
+          "bytes": 381,
+          "sha256": "9c54ef2965b67508e9b15f0070d5b7c2801fa7709884c28fb07462c0437f8f7b"
+        },
+        {
+          "path": "dist/bounds-distance.d.ts",
+          "bytes": 378,
+          "sha256": "4a0d4e221170264db333f98a98a6dbbd01771fe39429e3dfb69d8c8d78c10aaa"
+        },
+        {
+          "path": "dist/bounds-intersection.d.ts",
+          "bytes": 374,
+          "sha256": "a6b6726d25f2f27b79f9aed61100de13750e9cfc294b53e8a743c1cb6ae6ea5a"
+        },
+        {
+          "path": "dist/bounds-overlap.d.ts",
+          "bytes": 346,
+          "sha256": "84f1609eab8a35010e944c21df859da36653189f32ef4cf289a6425d544911be"
+        },
+        {
+          "path": "dist/common.d.ts",
+          "bytes": 371,
+          "sha256": "59bebb73fe9183b7777b821013dfa35fabae211c28e9cbf57faf753f8f67d42e"
+        },
+        {
+          "path": "dist/get-bound-from-centered-rect.d.ts",
+          "bytes": 449,
+          "sha256": "eee0de55a908c3c641c128fccc84d01da61403e6633b0082608b8c9195b093c7"
+        },
+        {
+          "path": "dist/get-bounds-center.d.ts",
+          "bytes": 299,
+          "sha256": "4eee84c32bd639a0ebfc5611e0322673d9ebe23a51fda40ada1d491ade3e6c77"
+        },
+        {
+          "path": "dist/get-bounds-from-points.d.ts",
+          "bytes": 364,
+          "sha256": "b31f8c3c539e30343cb8f758e4516da8cbad9a2c2478ef77734ed3e786912683"
+        },
+        {
+          "path": "dist/get-unit-vector.d.ts",
+          "bytes": 277,
+          "sha256": "d10650fece7606abf41745022c331c210e3251c163f14657d63a1c17ffacff0c"
+        },
+        {
+          "path": "dist/grid.d.ts",
+          "bytes": 657,
+          "sha256": "2f3d3a749b2bf85d4fae77f114977f9e91117665c02aef279d4a19af8209d0ff"
+        },
+        {
+          "path": "dist/index.d.ts",
+          "bytes": 1677,
+          "sha256": "92ee6dc84a0669f888595a70ae9b063fd15f06581dbc63c60742d830181ad4fc"
+        },
+        {
+          "path": "dist/line-intersections.d.ts",
+          "bytes": 1521,
+          "sha256": "a34730100b2cbee7b5c12acab043c90c03a6a8395b4743029fb356a833305d11"
+        },
+        {
+          "path": "dist/nearest-box.d.ts",
+          "bytes": 1138,
+          "sha256": "0b702447276ba89df7555bfbc81d0f6ce0c789cbeaa44e175f4ca23d046d5a15"
+        },
+        {
+          "path": "dist/normalize-degrees.d.ts",
+          "bytes": 88,
+          "sha256": "a9950a8a348d0d616802910c531e261cce05321c469f2ec5ad35a8d9b7f53e44"
+        },
+        {
+          "path": "dist/point-distance.d.ts",
+          "bytes": 659,
+          "sha256": "c9de01483deaa26b4f2823b72d0e5e9b13bac6b873e81e586696de2027070c0c"
+        },
+        {
+          "path": "dist/point3.d.ts",
+          "bytes": 89,
+          "sha256": "9336c47dc76606a4bfcd359fbb7c6cd44738a61cf0926852bddcdf118c756ab7"
+        },
+        {
+          "path": "dist/polygon.d.ts",
+          "bytes": 816,
+          "sha256": "139609672e8caa6ee50e5930d963060230238a123aa426f9719f31d6a848d8f3"
+        },
+        {
+          "path": "dist/range.d.ts",
+          "bytes": 97,
+          "sha256": "d09fed125a6e2c799d5726f58139955786fff216c21257e555e319b922492194"
+        },
+        {
+          "path": "dist/segment-distance.d.ts",
+          "bytes": 1085,
+          "sha256": "0f855a9040dd224bab6c8c3f5b56194c5669bd29b88422d0859a9498e903b7a0"
+        }
+      ]
+    }
+  ]
+}

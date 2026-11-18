@@ -59,9 +59,12 @@ globalThis.WebAssembly = new Proxy(nativeWasm, {
     return wrapped
   },
 })
-// No custom Core module, algorithmFn, SOLVERS injection or source package.
+// Source experiments replace only the verified package alias; Core stays native.
 if (!task.runtimeManifestPath) throw new Error("Explicit published runtime identity manifest required")
-const expectedRuntime = JSON.parse(readFileSync(task.runtimeManifestPath, "utf8")).packages
+const runtimeManifest = JSON.parse(readFileSync(task.runtimeManifestPath, "utf8"))
+const expectedRuntime = runtimeManifest.packages
+if (JSON.stringify(task.routingSourceOverride ?? null) !== JSON.stringify(runtimeManifest.routingSourceOverride ?? null)) throw new Error("Task source override differs from its immutable runtime manifest")
+if (Boolean(runtimeManifest.sourceOverrides) !== Boolean(task.routingSourceOverride)) throw new Error("Source runtime provenance must be explicit")
 const expectedNames = ["tscircuit", "@tscircuit/core", "@tscircuit/eval", "@tscircuit/capacity-autorouter"]
 if (expectedRuntime.length !== 4 || expectedNames.some(name => !expectedRuntime.some((row: any) => row.name === name))) throw new Error("Runtime manifest must identify the complete compatible four-package chain")
 const runtime = expectedRuntime.map(({ name, version, entrySha256 }: { name: string; version: string; entrySha256: string }) => {
@@ -82,6 +85,7 @@ function readablePackage(folder: string, name: string): boolean {
 const { RootCircuit, SOLVERS } = await import("tscircuit")
 importingPublishedMain = false
 const { AutoroutingPipelineSolver9_PreloadedTraceGraph: PublishedPipeline9 } = await import("@tscircuit/capacity-autorouter")
+if (SOLVERS.AutoroutingPipelineSolver9_PreloadedTraceGraph !== PublishedPipeline9) throw new Error("Native Core solver registration does not use the verified autorouter package")
 const { default: SourceBoard } = await import(pathToFileURL(resolve(task.boardModule)).href)
 const { convertCircuitJsonToPcbSvg } = await import("circuit-to-svg")
 const circuit = new RootCircuit({ platform: { localCacheEngine: undefined, routingDisabled: executionMode === "geometry" } })
@@ -90,7 +94,7 @@ const progress: any = {
   ...task, executionMode, status: "running", renderCompleted: false, errors: [], phases: [], solvers: [],
   forbiddenRoutingSolverSelections: [],
   elapsedMs: 0, expectedGroups: task.cohort === "original" ? [...new Set(source.nets.map(net => net.group))] : ["byte0", "byte1", "remaining", "other_signals", "power"],
-  runtime: { packages: runtime, candidateOverride: (task.dependencyOverrides?.length ?? 0) > 0, routingSourceOverride: false, cacheEngine: false },
+  runtime: { packages: runtime, candidateOverride: Boolean(task.routingSourceOverride) || (task.dependencyOverrides?.length ?? 0) > 0, routingSourceOverride: task.routingSourceOverride ?? null, cacheEngine: false },
   planeIntent: { enabled: task.cohort === "original", authoredZones: task.cohort === "original" ? source.planeIntent.zones.length : 0, savedCopperImported: false },
 }
 const atomic = (name: string, value: Uint8Array | string): void => {

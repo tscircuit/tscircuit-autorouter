@@ -1,0 +1,1093 @@
+{
+  "scope": "Actual file-tree digests for all installed top-level declared dependencies and the corrected runtime closure of changed source pins. Each tree excludes nested node_modules/.git; runtime nested packages are listed separately.",
+  "packages": [
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/@babel/runtime",
+      "name": "@babel/runtime",
+      "version": "7.29.13",
+      "fileCount": 249,
+      "bytes": 247213,
+      "treeSha256": "7b85c66deb1f0e8cd05498e4a6c70dbbc125e5bbd2eca18c23b8a20eccf58730"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/@biomejs/biome",
+      "name": "@biomejs/biome",
+      "version": "1.9.4",
+      "fileCount": 14,
+      "bytes": 210081,
+      "treeSha256": "a339f7bab73b625a008208fd3fecf568ace3b6fa00006de71aeab6914a02bef2"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/@flatten-js/core",
+      "name": "@flatten-js/core",
+      "version": "1.6.15",
+      "fileCount": 46,
+      "bytes": 1285290,
+      "treeSha256": "eca49dc6ccb5fb8546b0ad21c4c2fd089304319d7d206733e7c0e8375f21800f"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/@radix-ui/react-icons",
+      "name": "@radix-ui/react-icons",
+      "version": "1.3.2",
+      "fileCount": 332,
+      "bytes": 3442784,
+      "treeSha256": "bac65a10a212b2f8204878554ac02b99c6de66fce267901357a34552f7e375cd"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/@radix-ui/react-menubar",
+      "name": "@radix-ui/react-menubar",
+      "version": "1.2.1",
+      "fileCount": 9,
+      "bytes": 136443,
+      "treeSha256": "627dad1e22be885d9aa94b2955441e4dc7d6b00749aaa443f5831dcdfbc3cc30"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/@react-hook/latest",
+      "name": "@react-hook/latest",
+      "version": "1.0.3",
+      "fileCount": 16,
+      "bytes": 12935,
+      "treeSha256": "13ad06aa24596ad690e0430f11a094cd68c2f0d7e42b0f888d9de47e7057e7ac"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/@react-hook/passive-layout-effect",
+      "name": "@react-hook/passive-layout-effect",
+      "version": "1.2.1",
+      "fileCount": 17,
+      "bytes": 11237,
+      "treeSha256": "0be389ce36a0aac2c839d23b254bbd8e669ae105b4d83ecd3e2eafc0999d26fc"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/@react-hook/resize-observer",
+      "name": "@react-hook/resize-observer",
+      "version": "2.0.2",
+      "fileCount": 16,
+      "bytes": 57783,
+      "treeSha256": "4b7783b08dd25553c855af8d4237f1a301fe2afe24161a3f611f51e65bd8234e"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/@remix-run/router",
+      "name": "@remix-run/router",
+      "version": "1.23.4",
+      "fileCount": 20,
+      "bytes": 2759859,
+      "treeSha256": "66ffa47984dc7f8cfa1bf0068f4423174bdc23f634d3b839b9fec75077a859f9"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/@resvg/resvg-js",
+      "name": "@resvg/resvg-js",
+      "version": "2.6.2",
+      "fileCount": 7,
+      "bytes": 44489,
+      "treeSha256": "b8e1a1a767a34af6c7e94e6e0c34314f336d8c4edc84769743ff7d99b0d5c1eb"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/@tsci/0hmX.multi-component-dataset-srj01",
+      "name": "@tsci/0hmX.multi-component-dataset-srj01",
+      "version": "1.0.0",
+      "fileCount": 37,
+      "bytes": 452845,
+      "treeSha256": "ca409c0b0c4f641f265573ec0e16129576cba3401c42a6eff46e4878a57228e1"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/@tsci/dataset-srj23-partially-routed-subcircuits",
+      "name": "@tsci/dataset-srj23-partially-routed-subcircuits",
+      "version": "1.0.0",
+      "fileCount": 409,
+      "bytes": 7358322,
+      "treeSha256": "4ed9e7d13b1b266e122f899fc66be77d23425a07da6b6c4e6d084ca50592bd0e"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/@tsci/seveibar.dataset-srj13",
+      "name": "@tsci/seveibar.dataset-srj13",
+      "version": "1.0.0",
+      "fileCount": 230,
+      "bytes": 170683448,
+      "treeSha256": "0885d3dbf72d9095fdaf3704dd53a382d365babeb95e4a6fcdb611dd289a9a64"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/@tsci/tscircuit.dataset-srj12-bus-routing",
+      "name": "@tsci/tscircuit.dataset-srj12-bus-routing",
+      "version": "1.0.0",
+      "fileCount": 30,
+      "bytes": 393087,
+      "treeSha256": "9717cbb12a5e146c1c483e760295e00c0ffe5b4df1cab2df7b34693075811b29"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/@tsci/tscircuit.dataset-srj16-bga-breakouts",
+      "name": "@tsci/tscircuit.dataset-srj16-bga-breakouts",
+      "version": "1.0.0",
+      "fileCount": 419,
+      "bytes": 13697996,
+      "treeSha256": "56733c15853e77c9c5aed5b035729a2208212a8222ed33fe82eabe2bf145269b"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/@tsci/tscircuit.dataset-srj19-bga-passive-overlays",
+      "name": "@tsci/tscircuit.dataset-srj19-bga-passive-overlays",
+      "version": "1.0.0",
+      "fileCount": 431,
+      "bytes": 22708564,
+      "treeSha256": "0a5e4cce23784ac3f7a8298e8c55173be8a063898d3dfe283c684aecab99cd30"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/@tsci/tscircuit.dataset-srj20-partial-bga-breakouts",
+      "name": "@tsci/tscircuit.dataset-srj20-partial-bga-breakouts",
+      "version": "1.0.0",
+      "fileCount": 428,
+      "bytes": 22180929,
+      "treeSha256": "bbb2b107a57fdb43b96f3c3b3c84ad796e0ed79eaf887abc29d2eaf7fceb5948"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/alphabet",
+      "name": "@tscircuit/alphabet",
+      "version": "0.0.25",
+      "fileCount": 10,
+      "bytes": 863119,
+      "treeSha256": "df9311526588d966c5b004edee5d7b045d2dc0e492d6c0171db9906eac6a39ff"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/autorouting-dataset-01",
+      "name": "@tscircuit/autorouting-dataset-01",
+      "version": "1.0.32",
+      "fileCount": 332,
+      "bytes": 4582684,
+      "treeSha256": "61151ea2fcdae5ce0277c56e31cfc622f31f1d62482f1acffd9a9dcaad2a296b"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/checks",
+      "name": "@tscircuit/checks",
+      "version": "0.0.259",
+      "fileCount": 6,
+      "bytes": 2100231,
+      "treeSha256": "b571b32dd39c15d80f5766280e242d254c26b81e6d4bc9cf0bd4d7893e1d90b9"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/circuit-json-util",
+      "name": "@tscircuit/circuit-json-util",
+      "version": "0.0.114",
+      "fileCount": 6,
+      "bytes": 1124693,
+      "treeSha256": "bbd086d0dc61f6640e1713d25b7386941af8cb696e13dcef9b28d4c920ba2209"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/core",
+      "name": "@tscircuit/core",
+      "version": "0.0.337",
+      "fileCount": 5,
+      "bytes": 790065,
+      "treeSha256": "807a50ff97ac9b8bdf0e8fc23355d961429c321313b43bbf22e09c718a819e4c"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/create-fdm-enclosure/node_modules/graphics-debug",
+      "name": "graphics-debug",
+      "version": "0.0.96",
+      "fileCount": 94,
+      "bytes": 590666,
+      "treeSha256": "58bfc873af034c91f250874cfa96d83af6de3199aee70a0275b7bfa1b4d5839f"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/curvy-trace-solver",
+      "name": "@tscircuit/curvy-trace-solver",
+      "version": "0.0.10",
+      "fileCount": 4,
+      "bytes": 67892,
+      "treeSha256": "7c9e02f9f578ec115ef8d95daccb1e216aa3511459ebb8a136e33b3257b9f4eb"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/dataset-srj05",
+      "name": "@tscircuit/dataset-srj05",
+      "version": "0.0.1",
+      "fileCount": 183,
+      "bytes": 6327693,
+      "treeSha256": "309d01c05a2e571787e76937ffc781412bece0cd30abe9b38bd020660f06f758"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/dataset-srj24",
+      "name": "@tscircuit/dataset-srj24",
+      "version": "0.0.2",
+      "fileCount": 94,
+      "bytes": 509385995,
+      "treeSha256": "10a9b9edbd5217b67fe4122ad5b981971a35552fbac04f5f91f932f7c0a5d433"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/dataset-srj27-power-traces",
+      "name": "@tscircuit/dataset-srj27-power-traces",
+      "version": "0.0.1",
+      "fileCount": 50,
+      "bytes": 806894,
+      "treeSha256": "bac332bec3ed13882bc18de3e268fa50a8d9a24d72506a4595520ac3840abba1"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/dataset-srj28-partially-prerouted",
+      "name": "@tscircuit/dataset-srj28-partially-prerouted",
+      "version": "0.0.1",
+      "fileCount": 99,
+      "bytes": 6809433,
+      "treeSha256": "a9897e40585c0123609b3bee0fddbfe298dc50ffa14b22e24e593938f0241eff"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/dataset-srj29-ddr3-bga-pairs",
+      "name": "@tscircuit/dataset-srj29-ddr3-bga-pairs",
+      "version": "0.5.0",
+      "fileCount": 111,
+      "bytes": 16255667,
+      "treeSha256": "e187935d545c0cf11cb9e56fdf84a1d22690fa6f9f259e3aeb361d7b20367b57"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/dataset-srj33-drc-failures",
+      "name": "@tscircuit/dataset-srj33-drc-failures",
+      "version": "0.0.1",
+      "fileCount": 137,
+      "bytes": 68760920,
+      "treeSha256": "c061aacc85ba3e3652d80459f320e9588d733d6f1d32a9b44b578b0a7126ea2a"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/fanout-for-pipeline9-fixtures",
+      "name": "@tscircuit/fanout-solver",
+      "version": "0.0.66",
+      "fileCount": 49,
+      "bytes": 976347,
+      "treeSha256": "a146ad3220e77cd44029cba436baf61c5c36157bb71e16bf58fb7255ba9a6350"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/fanout-solver",
+      "name": "@tscircuit/fanout-solver",
+      "version": "0.0.29",
+      "fileCount": 21,
+      "bytes": 353772,
+      "treeSha256": "3d502155ae6f3fdc7ea6c2ca31bb71842e8c422ba3ec63c347c9b379402b325b"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/fixed-via-hypergraph-solver",
+      "name": "@tscircuit/fixed-via-hypergraph-solver",
+      "version": "0.0.1",
+      "fileCount": 71,
+      "bytes": 14092759,
+      "treeSha256": "08aaad111acf4a1b60d273459d8b94f395e78272a8f453aac186740924d40504"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/high-density-a01",
+      "name": "@tscircuit/high-density-a01",
+      "version": "0.0.36",
+      "fileCount": 202,
+      "bytes": 2288238,
+      "treeSha256": "50c62bbe1897d12d07ff188ba876386a68bfe5213899c16805959973e5386227"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/high-density-a13",
+      "name": "@tscircuit/high-density-a01",
+      "version": "0.0.36",
+      "fileCount": 195,
+      "bytes": 2274859,
+      "treeSha256": "6657c068ba4ca5412a999a8dee614b65d4f642809e5eb6d596b28b023862d78a"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/high-density-b01",
+      "name": "@tscircuit/high-density-b01",
+      "version": "0.0.1",
+      "fileCount": 176,
+      "bytes": 4212129,
+      "treeSha256": "37c326cba7591a48001c9dce0bd8f56fe5b4d079f719ae7b3c4194c13dc9aa96"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/hypergraph",
+      "name": "@tscircuit/hypergraph",
+      "version": "0.0.71",
+      "fileCount": 5,
+      "bytes": 819715,
+      "treeSha256": "73b6af89dc428c08978a5084653b964f320cbfd532007c71cbdf0f1a74e2c9e3"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/jumper-topology-generator",
+      "name": "@tscircuit/jumper-topology-generator",
+      "version": "0.0.4",
+      "fileCount": 5,
+      "bytes": 39772,
+      "treeSha256": "1d705f442aed27d443d66f8b38d4d3acad5bebcd172986b3f3d4e9229f2e3bc7"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/krt-wasm",
+      "name": "@tscircuit/krt-wasm",
+      "version": "0.1.9",
+      "fileCount": 11,
+      "bytes": 669810,
+      "treeSha256": "c4156984495a5d0b92a38e06585c7654c8349e670f60ce89902a23cc1efe5dae"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/math-utils",
+      "name": "@tscircuit/math-utils",
+      "version": "0.0.36",
+      "fileCount": 96,
+      "bytes": 93781,
+      "treeSha256": "f5c5f4c2f342e6df8f19763227d7336db6b5e6d9dffe93da5f3f536a7224c8bb"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/pcb-trace-linter",
+      "name": "@tscircuit/pcb-trace-linter",
+      "version": "0.0.1",
+      "fileCount": 358,
+      "bytes": 3528641,
+      "treeSha256": "1a8d2db13a441b7eb957b47a007ad0ec3fbaf160a62d9de4e9599c6a247998f6"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/power-trace-expander-baseline",
+      "name": "@tscircuit/power-trace-expander",
+      "version": "0.0.1",
+      "fileCount": 114,
+      "bytes": 5700757,
+      "treeSha256": "5ef09dc11663a72fdc202d343e0399debabac421368621b9f052c1a1de5fb855"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/rectdiff",
+      "name": "@tscircuit/rectdiff",
+      "version": "0.0.56",
+      "fileCount": 275,
+      "bytes": 13930035,
+      "treeSha256": "f4beea99bbabe102fcd1e3b4537e4a571e270662ab5d3777e24ffb74594ce21d"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/repair04/node_modules/high-density-repair03/node_modules/@tscircuit/checks",
+      "name": "@tscircuit/checks",
+      "version": "0.0.123",
+      "fileCount": 5,
+      "bytes": 290439,
+      "treeSha256": "fe62bd1be9c9d6808a16e6c6e5e4975c73287dca90c548138dd73be7c0eae7da"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/repair04/node_modules/high-density-repair03/node_modules/@tscircuit/circuit-json-util",
+      "name": "@tscircuit/circuit-json-util",
+      "version": "0.0.94",
+      "fileCount": 6,
+      "bytes": 983379,
+      "treeSha256": "1bef569e5b8a92f929ba4026be194eceae88bffb465a98d8fcb9f95ad514ccd4"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/repair04/node_modules/high-density-repair03/node_modules/circuit-json",
+      "name": "circuit-json",
+      "version": "0.0.422",
+      "fileCount": 5,
+      "bytes": 3589832,
+      "treeSha256": "8acc1d6d57c4da7fbf431c76a03180d53356933fc92c02f00cf0dbed862fc6d3"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/repair04/node_modules/high-density-repair03/node_modules/circuit-json-to-connectivity-map",
+      "name": "circuit-json-to-connectivity-map",
+      "version": "0.0.25",
+      "fileCount": 6,
+      "bytes": 38716,
+      "treeSha256": "0e064d3c77d74f4fae8a7bfe8a88bc7ed4e9618153f16c77e9cd104dd04c7729"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/repair04/node_modules/high-density-repair03/node_modules/circuit-json-to-connectivity-map/node_modules/@tscircuit/math-utils",
+      "name": "@tscircuit/math-utils",
+      "version": "0.0.9",
+      "fileCount": 31,
+      "bytes": 29312,
+      "treeSha256": "ef3d4dbf19875f0588532a0601ec08732e72ff5193af6458ea6b41d2a4c3091c"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/repair04/node_modules/high-density-repair03/node_modules/graphics-debug",
+      "name": "graphics-debug",
+      "version": "0.0.93",
+      "fileCount": 94,
+      "bytes": 584247,
+      "treeSha256": "1ca9a8afcf305bd548dc84216ed7b8b793ce47f2684bdc9b21762dbee026e476"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/solver-utils",
+      "name": "@tscircuit/solver-utils",
+      "version": "0.0.23",
+      "fileCount": 14,
+      "bytes": 106719,
+      "treeSha256": "d345375c82e68971ee394f89b25423f08fe82e7d2e06467626aa5c173cc9bb58"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/@types/bun",
+      "name": "@types/bun",
+      "version": "1.4.4",
+      "fileCount": 4,
+      "bytes": 3646,
+      "treeSha256": "274236ffd9824ae0f975f63e6c320a30c4096b18aa84b120dc982dfaf6fa05ed"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/@types/fast-json-stable-stringify",
+      "name": "@types/fast-json-stable-stringify",
+      "version": "2.1.2",
+      "fileCount": 3,
+      "bytes": 1880,
+      "treeSha256": "d90b7d4582bc77252ed820fda2671949896a3402ac293bbc0c5d7c96b79c908c"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/@types/history",
+      "name": "@types/history",
+      "version": "4.7.11",
+      "fileCount": 12,
+      "bytes": 11214,
+      "treeSha256": "eb7c49ae09d3054c7bbc77cb7de2b9a0e0eb3a3d68531dcba2442b95e33c11e2"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/@types/object-hash",
+      "name": "@types/object-hash",
+      "version": "3.0.6",
+      "fileCount": 4,
+      "bytes": 6674,
+      "treeSha256": "2413d37775720a9e4032708b63987df02d6d72c355e8d9770f14e97212a0b1ea"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/@types/rbush",
+      "name": "@types/rbush",
+      "version": "4.0.0",
+      "fileCount": 4,
+      "bytes": 9227,
+      "treeSha256": "9f8ecc63b6ea5792d268d6397c8068e11d0fd5932b3a2720d72e2d40b9c5c24e"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/@types/react",
+      "name": "@types/react",
+      "version": "19.3.0",
+      "fileCount": 16,
+      "bytes": 408108,
+      "treeSha256": "df28d8855f57f77c228f14f5b25f437d7abf1f70a4f2ec9541b8cc20ecc04c8a"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/@types/react-dom",
+      "name": "@types/react-dom",
+      "version": "19.3.0",
+      "fileCount": 17,
+      "bytes": 32862,
+      "treeSha256": "edf1afa18a5bf0101c279516e5b9488446340b20e804fda2c792d5805b6bf3d5"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/@types/react-router",
+      "name": "@types/react-router",
+      "version": "5.1.20",
+      "fileCount": 5,
+      "bytes": 21708,
+      "treeSha256": "c832eaab72815a5a0ad259a84469bbd31450668d81073b81d7b91bc310e1a79b"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/@types/react-router-dom",
+      "name": "@types/react-router-dom",
+      "version": "5.3.3",
+      "fileCount": 4,
+      "bytes": 7638,
+      "treeSha256": "4c50c7bf6a040e98f01525a788e5aff8000faab1cacb3a51aa9006e99af25391"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/@vercel/node",
+      "name": "@vercel/node",
+      "version": "5.10.2",
+      "fileCount": 7,
+      "bytes": 2972697,
+      "treeSha256": "dceb70ad3f33927725df6702c0e13c150d37a466a176117a98ecc2524cc42aa9"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/@vitejs/plugin-react",
+      "name": "@vitejs/plugin-react",
+      "version": "4.7.0",
+      "fileCount": 8,
+      "bytes": 60271,
+      "treeSha256": "27824f7803dd80547e68eb726a500fe6fc5a994c329dd6949ecec9796e8ee5c3"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/bun-match-svg",
+      "name": "bun-match-svg",
+      "version": "0.0.14",
+      "fileCount": 14,
+      "bytes": 86019,
+      "treeSha256": "348ad24fa577965f86261e262e2cece7b491514a67d22ba6aade8b85a310f9a0"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/calculate-cell-boundaries/node_modules/@tscircuit/solver-utils",
+      "name": "@tscircuit/solver-utils",
+      "version": "0.0.19",
+      "fileCount": 7,
+      "bytes": 82713,
+      "treeSha256": "1a7712b4d63d0b5d34cca35fe4d577d4bdffae4e82c2817e32b86bd7c63dca03"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/circuit-json",
+      "name": "circuit-json",
+      "version": "0.0.525",
+      "fileCount": 5,
+      "bytes": 4841783,
+      "treeSha256": "9c473a6a3352f929557442c12d36b2a68c9a868e7091ef0749f15f0fc0578a3b"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/circuit-json-to-connectivity-map",
+      "name": "circuit-json-to-connectivity-map",
+      "version": "0.0.36",
+      "fileCount": 6,
+      "bytes": 46273,
+      "treeSha256": "f31553f5f17975d7d4dc5a3b4aaef0bab94306528de7c460c60615947f6873c1"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/circuit-json-to-spice/node_modules/circuit-json-to-connectivity-map/node_modules/@tscircuit/math-utils",
+      "name": "@tscircuit/math-utils",
+      "version": "0.0.9",
+      "fileCount": 31,
+      "bytes": 29312,
+      "treeSha256": "ef3d4dbf19875f0588532a0601ec08732e72ff5193af6458ea6b41d2a4c3091c"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/circuit-to-svg",
+      "name": "circuit-to-svg",
+      "version": "0.0.220",
+      "fileCount": 5,
+      "bytes": 840817,
+      "treeSha256": "ecf6aedf9d58ce08e405a914022175f50fb4094a54d71377e241be77641b8716"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/clsx",
+      "name": "clsx",
+      "version": "2.1.1",
+      "fileCount": 10,
+      "bytes": 8555,
+      "treeSha256": "2f508cec196a80a521a00383d0e22453074cc691077c99127b11f1ff4b5c739e"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/csstype",
+      "name": "csstype",
+      "version": "3.2.3",
+      "fileCount": 5,
+      "bytes": 1253449,
+      "treeSha256": "fb3b037ae426dcb8dc675926c7cc35bb304a27898bc5638065b7e880071b34a6"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/dataset-srj11-45-degree",
+      "name": "dataset-srj11-45-degree",
+      "version": "0.1.0",
+      "fileCount": 59,
+      "bytes": 133119,
+      "treeSha256": "6b50b7dc96875e48d570e76ab1b1073a29c3a156bdd7f2a7bf1da2caf5d7efa0"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/dataset-srj18",
+      "name": "dataset-srj18",
+      "version": "1.0.0",
+      "fileCount": 60,
+      "bytes": 143415498,
+      "treeSha256": "67bfae21080769104f0852d81749bbd839afb5caa989d1d7297f01e3b8ea8505"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/deep-rename-keys",
+      "name": "deep-rename-keys",
+      "version": "0.2.1",
+      "fileCount": 4,
+      "bytes": 5866,
+      "treeSha256": "178ff5bf12836d8674fb1c2766a6f3b772f159f7bb12568c609bd236e11a492d"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/fast-json-stable-stringify",
+      "name": "fast-json-stable-stringify",
+      "version": "2.1.0",
+      "fileCount": 18,
+      "bytes": 16959,
+      "treeSha256": "8a97775170de1ec94d4119140eb77737038ab7c7dbf139bd635db1accdc9f606"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/fast-png",
+      "name": "fast-png",
+      "version": "8.0.0",
+      "fileCount": 68,
+      "bytes": 162913,
+      "treeSha256": "88043eebca3a48387912359824c5d752be7b18c5a32d6cfdadbf032a4ddd7a46"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/fflate",
+      "name": "fflate",
+      "version": "0.8.3",
+      "fileCount": 17,
+      "bytes": 796742,
+      "treeSha256": "06e3ef7ecaf2c0d567c1f085f5e1120cc4a50e40f0819dc93035ae7317a1adb0"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/flatbush",
+      "name": "flatbush",
+      "version": "4.7.0",
+      "fileCount": 6,
+      "bytes": 58619,
+      "treeSha256": "70bca28674f4b3fd4cea2f8c6cd02ee63109300278730b664f79d26365f0e5ac"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/flatqueue",
+      "name": "flatqueue",
+      "version": "3.1.0",
+      "fileCount": 5,
+      "bytes": 13062,
+      "treeSha256": "ae752c4ba7e0765734f9c579f827139c276864a4f4189f10b9901df0a05dbc2e"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/format-si-unit",
+      "name": "format-si-unit",
+      "version": "0.0.12",
+      "fileCount": 6,
+      "bytes": 28744,
+      "treeSha256": "e284e6dc8b48062a3341e5543a80739741a4a50e96e49103d36bd15cb3f1f4ce"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/graphics-debug",
+      "name": "graphics-debug",
+      "version": "0.0.99",
+      "fileCount": 99,
+      "bytes": 598073,
+      "treeSha256": "3cf6081fdf8b8ff9701e8bfdf72ca9122e1dead6c856abd10c0de9b3de2de244"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/high-density-dataset-z04",
+      "name": "high-density-dataset-z04",
+      "version": "1.0.0",
+      "fileCount": 6863,
+      "bytes": 8796414,
+      "treeSha256": "387f9a2b0190e1879b41a1bca3e3a1d4ab9e420d1b6c28a7c44f439461c8701e"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/iobuffer",
+      "name": "iobuffer",
+      "version": "6.0.1",
+      "fileCount": 13,
+      "bytes": 70697,
+      "treeSha256": "067a58021279a4e0572c53b19381e46a90008a6afdf488ec78071984687b1bb0"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/is-buffer",
+      "name": "is-buffer",
+      "version": "1.1.6",
+      "fileCount": 5,
+      "bytes": 5575,
+      "treeSha256": "1cae34b7a7dc9ecda61654ef251e2097620c637d2ab291340e8781c34248958d"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/kicad-to-circuit-json",
+      "name": "kicad-to-circuit-json",
+      "version": "0.0.77",
+      "fileCount": 5,
+      "bytes": 143230,
+      "treeSha256": "fb3ab8fe122eb18e9b42c25a5ef9b810cfcb367b2bc6d15a1e37943f8662cb53"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/kind-of",
+      "name": "kind-of",
+      "version": "3.2.2",
+      "fileCount": 4,
+      "bytes": 13416,
+      "treeSha256": "03b03bd046057520e3a9333787bd6325bac5f646fcb424f14755586c8b39bddf"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/kleur",
+      "name": "kleur",
+      "version": "4.1.5",
+      "fileCount": 9,
+      "bytes": 20250,
+      "treeSha256": "a432b21d756f09fe33368a791b61f1696964e9574950d4c24fc769a2a04768ed"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/looks-same",
+      "name": "looks-same",
+      "version": "9.0.1",
+      "fileCount": 28,
+      "bytes": 56150,
+      "treeSha256": "6ec52dda18908922dda689e26dedf8bbcd36d20624a4981911d8046d398ceba5"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/object-hash",
+      "name": "object-hash",
+      "version": "3.0.0",
+      "fileCount": 5,
+      "bytes": 58857,
+      "treeSha256": "eb54fc0b9ab0039bb855e9feb27161f9f5f432b4368868ebadb765f7e6f6af96"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/parsel-js",
+      "name": "parsel-js",
+      "version": "1.2.3",
+      "fileCount": 27,
+      "bytes": 158357,
+      "treeSha256": "140e6dcef21ea291858996d63d181730fd39f33b2e3927579c5107e1b97f8549"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/pcb-poly-hyper-graph",
+      "name": "pcb-poly-hyper-graph",
+      "version": "0.1.3",
+      "fileCount": 93,
+      "bytes": 732826,
+      "treeSha256": "850a4babe81ff4498127502eb881ca215e8f2e50cd9af58f32d2328f52f9c113"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/polished",
+      "name": "polished",
+      "version": "4.3.1",
+      "fileCount": 330,
+      "bytes": 2795612,
+      "treeSha256": "b33b924f106e4ff922d1be68ef9a20c47c0a57606ac8b14da602fd4ac1ce5e15"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/quickselect",
+      "name": "quickselect",
+      "version": "3.0.0",
+      "fileCount": 5,
+      "bytes": 5287,
+      "treeSha256": "05fb4a456b7ddb0f5fdb6189403999fd46b3d14fbb2c94993736bfc4b537c009"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/rbush",
+      "name": "rbush",
+      "version": "4.0.1",
+      "fileCount": 6,
+      "bytes": 48823,
+      "treeSha256": "768ffb0fb2ae792e7b34de693a274d0b02e552d26adda006d34d84199a4406bc"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/react",
+      "name": "react",
+      "version": "18.3.1",
+      "fileCount": 20,
+      "bytes": 318101,
+      "treeSha256": "41d97e7e2b05f45bc6cfb32724496c4a0aa2b676310f0059d53cd674962be64f"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/react-cosmos",
+      "name": "react-cosmos",
+      "version": "6.2.3",
+      "fileCount": 130,
+      "bytes": 108176,
+      "treeSha256": "23823078f4432d211d7281fc479af1b0e862a2ec006090adea355f40115e8fad"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/react-cosmos-plugin-vite",
+      "name": "react-cosmos-plugin-vite",
+      "version": "6.2.0",
+      "fileCount": 22,
+      "bytes": 12264,
+      "treeSha256": "697bf5d4c809445cd0d8b7ca743af32e2a41353acc71cb68134037ba2b440e1e"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/react-dom",
+      "name": "react-dom",
+      "version": "18.3.1",
+      "fileCount": 32,
+      "bytes": 4513549,
+      "treeSha256": "a75629ca65d80d7e9d18466b4ccf0730089d870cfe9b6fc91504ef702e75f85c"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/react-for-pipeline9-fixtures",
+      "name": "react",
+      "version": "19.2.8",
+      "fileCount": 27,
+      "bytes": 171598,
+      "treeSha256": "b59a5c26fe0fb9e867139629e400a925c16aaa463d38193243758d7b04944ca5"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/react-konva",
+      "name": "react-konva",
+      "version": "18.2.16",
+      "fileCount": 15,
+      "bytes": 64251,
+      "treeSha256": "b30011c7f622341ce01c8923b34c8a6288ce0bfc323163d006bf74b2bdb8a2fa"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/react-router",
+      "name": "react-router",
+      "version": "6.30.6",
+      "fileCount": 20,
+      "bytes": 858280,
+      "treeSha256": "0150526d0df66b08c172d3a410bd45aab8662d195e1e076312eac7aa08874a72"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/react-router-dom",
+      "name": "react-router-dom",
+      "version": "6.30.6",
+      "fileCount": 23,
+      "bytes": 902176,
+      "treeSha256": "9c74cbe3082658a49f0371bb8fb051c82c67559a36338d4c07dc2789b7efa9bd"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/react-supergrid",
+      "name": "react-supergrid",
+      "version": "1.0.10",
+      "fileCount": 11,
+      "bytes": 44037,
+      "treeSha256": "4c6006c4794157e8f4e678cbb54fec49a11951325a5d8e6679f66f7370b970c6"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/recharts",
+      "name": "recharts",
+      "version": "2.15.4",
+      "fileCount": 291,
+      "bytes": 4650058,
+      "treeSha256": "2b9efba8eaf3b6d31faf76a8dd309127b8f8748e348a3cb5e4200ed1b0a8091b"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/rename-keys",
+      "name": "rename-keys",
+      "version": "1.2.0",
+      "fileCount": 4,
+      "bytes": 4428,
+      "treeSha256": "ce5219128a4d7b62ab707cf83b39f9e718be8a4a31e24a05d5e9799fed29e4b1"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/stack-svgs",
+      "name": "stack-svgs",
+      "version": "0.0.1",
+      "fileCount": 16,
+      "bytes": 45689,
+      "treeSha256": "6ec35002b27d0e19ecf337ac3a1cc5aa49d159d984a95f7682331799141bd06b"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/svgson",
+      "name": "svgson",
+      "version": "5.3.1",
+      "fileCount": 7,
+      "bytes": 49181,
+      "treeSha256": "03a96418c87c7388406fe298c7242ecd3ce1837e1b1f30a9af5898c326c859a8"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/tailwind-merge",
+      "name": "tailwind-merge",
+      "version": "3.7.0",
+      "fileCount": 36,
+      "bytes": 1052654,
+      "treeSha256": "f038f8eba045c59cf6a2a08a0c2377c365e5f86c8e489366d03b47a326b7f3cf"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/terser",
+      "name": "terser",
+      "version": "5.51.2",
+      "fileCount": 43,
+      "bytes": 2354204,
+      "treeSha256": "410d21c76b9f5daff2904056d72b0ea99bee65f1040a5b099568e1eba1aaf016"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/tiny-hypergraph-poly",
+      "name": "tiny-hypergraph",
+      "version": null,
+      "fileCount": 111,
+      "bytes": 12321947,
+      "treeSha256": "e86c96eb7fff3f53b4dac2b624f4e777cdb039019387d1f6592e6edb76b483ad"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/transformation-matrix",
+      "name": "transformation-matrix",
+      "version": "3.1.0",
+      "fileCount": 56,
+      "bytes": 458028,
+      "treeSha256": "61e59d08a4f2c831b351fbc987fc63f0ab4678708518baa50d07238cd4cf47d6"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/tscircuit-for-pipeline9-fixtures",
+      "name": "tscircuit",
+      "version": "0.0.2467",
+      "fileCount": 10,
+      "bytes": 41346135,
+      "treeSha256": "6c24ea88937090414591aa0380585921fc7ec160e1b266f9cbaf9025579d9d80"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/tscircuit-for-pipeline9-fixtures/node_modules/@tscircuit/solver-utils",
+      "name": "@tscircuit/solver-utils",
+      "version": "0.0.16",
+      "fileCount": 7,
+      "bytes": 73566,
+      "treeSha256": "37566a93f3852bd69870df9a0a4d0a8e0f78a8ef51cf3e799290a42daf52e65b"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/tsup",
+      "name": "tsup",
+      "version": "8.5.1",
+      "fileCount": 18,
+      "bytes": 389734,
+      "treeSha256": "98d693b8898177517476f4262a7d3c4ac478c4cee329caa52943adbe979a661e"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/typescript",
+      "name": "typescript",
+      "version": "5.9.3",
+      "fileCount": 132,
+      "bytes": 23625066,
+      "treeSha256": "66cfc2ef5c030052c988a78d1354db71f9b883c1e3fb3b6b0680da5afba9fb36"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/use-mouse-matrix-transform",
+      "name": "use-mouse-matrix-transform",
+      "version": "1.3.5",
+      "fileCount": 25,
+      "bytes": 235212,
+      "treeSha256": "d91471ab8c5ef7bab0ee3f8c5fcdd8fda91a5717dd4f6d762e0a598cae155c83"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/vite",
+      "name": "vite",
+      "version": "6.4.5",
+      "fileCount": 35,
+      "bytes": 2663493,
+      "treeSha256": "6ee7a59eee91d23350b3214fe0a01c1f6e6bbca07d9a8f34f26e888b82c581cd"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/vite-tsconfig-paths",
+      "name": "vite-tsconfig-paths",
+      "version": "5.1.4",
+      "fileCount": 12,
+      "bytes": 68932,
+      "treeSha256": "c3a915ecb7fdd7487217200102c5b39ee5aed0cf7135b18b15342a58908a9255"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/xml-lexer",
+      "name": "xml-lexer",
+      "version": "0.2.2",
+      "fileCount": 6,
+      "bytes": 14771,
+      "treeSha256": "9dfe897fbf7e646102a6c4ddfd9bfe6aaf82714804f80b805dbed575c83b8182"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/xml-lexer/node_modules/eventemitter3",
+      "name": "eventemitter3",
+      "version": "2.0.3",
+      "fileCount": 6,
+      "bytes": 20642,
+      "treeSha256": "e03337f3c684073ef9708d16f94f02e23753bd9180ddb51871ea0bb761fd6743"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/xml-reader",
+      "name": "xml-reader",
+      "version": "2.4.3",
+      "fileCount": 5,
+      "bytes": 12720,
+      "treeSha256": "573052ddbaf54ea7d311f14877e026cab01baa8056eac902aa74164753139545"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/xml-reader/node_modules/eventemitter3",
+      "name": "eventemitter3",
+      "version": "2.0.3",
+      "fileCount": 6,
+      "bytes": 20642,
+      "treeSha256": "e03337f3c684073ef9708d16f94f02e23753bd9180ddb51871ea0bb761fd6743"
+    },
+    {
+      "path": "/workspace/.tools/autorouter-dependencies/node_modules/zdwiel-dataset",
+      "name": "tscircuit-benchmark",
+      "version": "1.0.0",
+      "fileCount": 42,
+      "bytes": 1511662,
+      "treeSha256": "ccb88e6195d3300863589341177656efd1b80efb3ec3d7b4d8adff0b3842f7f4"
+    },
+    {
+      "path": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/length-matching-solver",
+      "name": "@tscircuit/length-matching-solver",
+      "version": "0.0.1",
+      "fileCount": 108,
+      "bytes": 406781,
+      "treeSha256": "5f7fc7403d9e25a4787e9a07c4e931d5f37d5dc317f1586f508389ac939eabb4"
+    },
+    {
+      "path": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/math-utils",
+      "name": "@tscircuit/math-utils",
+      "version": "0.0.39",
+      "fileCount": 94,
+      "bytes": 88354,
+      "treeSha256": "f17ee207a11fb56b9e55448aa898dbc5122458f337cbb9f25ba5788fd6f566c4"
+    },
+    {
+      "path": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/power-trace-expander",
+      "name": "@tscircuit/power-trace-expander",
+      "version": "0.0.1",
+      "fileCount": 18,
+      "bytes": 398509,
+      "treeSha256": "c5839aee63aee3dd2538d226290a53b0538ea072f5d458ce62c66445175adbff"
+    },
+    {
+      "path": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/power-trace-expander/node_modules/flatbush",
+      "name": "flatbush",
+      "version": "4.6.3-collides.0",
+      "fileCount": 11,
+      "bytes": 104113,
+      "treeSha256": "2274fbc2c6acbc76ae30e36388074dad51aafbb24bd14a717f692b6dc62411fb"
+    },
+    {
+      "path": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/repair04",
+      "name": "@tscircuit/repair04",
+      "version": "0.0.1",
+      "fileCount": 35,
+      "bytes": 377579,
+      "treeSha256": "5eb95459d600a08ee158772827a1622b6e2fe9f95747a04021ede0b6e1b28b29"
+    },
+    {
+      "path": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/repair04/node_modules/flatbush",
+      "name": "flatbush",
+      "version": "4.6.2",
+      "fileCount": 6,
+      "bytes": 53919,
+      "treeSha256": "d513fb2613526bc4bfc75b4127fca2053e2c6ab52ee7783d5042b46e86a36cbe"
+    },
+    {
+      "path": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/repair04/node_modules/high-density-repair03",
+      "name": "high-density-repair03",
+      "version": null,
+      "fileCount": 49,
+      "bytes": 380678,
+      "treeSha256": "203a83310c745a830a98ceafd098bc34eeccb2e09916747ceb33a0bbd39283d4"
+    },
+    {
+      "path": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/trace-simplification-solver",
+      "name": "@tscircuit/trace-simplification-solver",
+      "version": "0.0.1",
+      "fileCount": 39,
+      "bytes": 266007,
+      "treeSha256": "498510eaa6f95c41644576e2c1a65af3feb89e6460722b8beaba21f5fbfd2a5e"
+    },
+    {
+      "path": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/trace-simplification-solver/node_modules/circuit-json-to-connectivity-map",
+      "name": "circuit-json-to-connectivity-map",
+      "version": "0.0.19",
+      "fileCount": 6,
+      "bytes": 35228,
+      "treeSha256": "19694a06ad290f7b9850645c7df416daa67d1dd37120a2d8aa8945b6e71a9189"
+    },
+    {
+      "path": "/workspace/autorouter-1127-validation-dependencies/node_modules/high-density-repair01",
+      "name": "high-density-repair01",
+      "version": "0.0.0",
+      "fileCount": 26,
+      "bytes": 178675,
+      "treeSha256": "20565b795819c92e3e82d0f6c1ae28f668e5bfda5da2fa7d78acc3f4c46bc122"
+    },
+    {
+      "path": "/workspace/autorouter-1127-validation-dependencies/node_modules/high-density-repair02",
+      "name": "high-density-repair02",
+      "version": "0.0.0",
+      "fileCount": 74,
+      "bytes": 182218,
+      "treeSha256": "e17a5341f580ec1f0f038addfdb5dfbaa880c7d664290a97bded12588ec6d6e5"
+    },
+    {
+      "path": "/workspace/autorouter-1127-validation-dependencies/node_modules/high-density-repair03",
+      "name": "high-density-repair03",
+      "version": null,
+      "fileCount": 53,
+      "bytes": 482203,
+      "treeSha256": "8887c5dab2ed68b6da6470c5fa5871469b08586233a4d8d9e0a7435273141bf2"
+    },
+    {
+      "path": "/workspace/autorouter-1127-validation-dependencies/node_modules/high-density-repair03/node_modules/react-dom",
+      "name": "react-dom",
+      "version": "19.2.5",
+      "fileCount": 43,
+      "bytes": 7319413,
+      "treeSha256": "00e7be968c96f5fe473f2f04efc375f2ef3986f808c2d3a67f9625c611e3c935"
+    },
+    {
+      "path": "/workspace/autorouter-1127-validation-dependencies/node_modules/high-density-repair03/node_modules/scheduler",
+      "name": "scheduler",
+      "version": "0.27.0",
+      "fileCount": 15,
+      "bytes": 82665,
+      "treeSha256": "c534a275b22cbd91753474509f92837b1262860ec18a68ad88ecbab0ced52781"
+    },
+    {
+      "path": "/workspace/autorouter-1127-validation-dependencies/node_modules/tiny-hypergraph",
+      "name": "tiny-hypergraph",
+      "version": null,
+      "fileCount": 53,
+      "bytes": 563028,
+      "treeSha256": "aaf8b44a16270ea885ce1175e66a024d7a320554d73e3b2e80b63a2fa594d555"
+    }
+  ]
+}

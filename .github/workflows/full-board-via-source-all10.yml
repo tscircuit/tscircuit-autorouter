@@ -1,0 +1,159 @@
+name: Verified source candidate full-board ten-case benchmark
+
+on:
+  push:
+    branches: [bench/full-board-via-topology-source-all10-3234-20261118]
+
+permissions:
+  contents: read
+
+jobs:
+  route:
+    name: Full board (${{ matrix.board }}, ${{ matrix.experiment }})
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      max-parallel: 5
+      matrix:
+        include:
+          - { board: h616, experiment: source-candidate, cohorts: "original,spaced" }
+          - { board: butterstick, experiment: source-candidate, cohorts: "original,spaced" }
+          - { board: glider, experiment: source-candidate, cohorts: "original,spaced" }
+          - { board: imx6, experiment: source-candidate, cohorts: "original,spaced" }
+          - { board: icepi, experiment: source-candidate, cohorts: "original,spaced" }
+    env:
+      FULL_BOARD_ROOT: ${{ github.workspace }}/.full-board-run
+      FULL_BOARD_RUNTIME_MANIFEST: ${{ github.workspace }}/.full-board-run/runtime-manifests/source-candidate.json
+      BUN_INSTALL_CACHE_DIR: ${{ github.workspace }}/.full-board-run/bun-cache
+      BOARD: ${{ matrix.board }}
+      FULL_BOARD_COHORTS: ${{ matrix.cohorts }}
+      FULL_BOARD_EXPERIMENT: ${{ matrix.experiment }}
+
+    steps:
+      - name: Checkout benchmark controller
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            experiments/full-board-ten
+            .github/workflows/full-board-via-source-all10.yml
+            AGENTS.md
+
+      - name: Checkout immutable original circuits
+        uses: actions/checkout@v4
+        with:
+          repository: tscircuit/tscircuit-autorouter
+          ref: ea398b4023119f65157e876a3101aa6ce3ca5f97
+          path: .full-board-run/sources/original
+          persist-credentials: false
+          sparse-checkout: experiments/full-board-priority-analysis
+
+      - name: Checkout immutable spaced circuits
+        uses: actions/checkout@v4
+        with:
+          repository: ShiboSoftwareDev/core-ddr-benchmark
+          ref: a3679559d6027aea2c441c1078853d58925d3a12
+          path: .full-board-run/sources/spaced
+          persist-credentials: false
+          sparse-checkout: |
+            full-boards
+            circuits
+            scripts
+            licenses
+            provenance
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+
+      - name: Prepare unchanged published3234 main package and dependencies
+        env:
+          FULL_BOARD_EXPERIMENT: published
+        run: python3 experiments/full-board-ten/bootstrap.py --root "$FULL_BOARD_ROOT"
+
+      - name: Activate the qualified source candidate package
+        run: >-
+          python3 experiments/full-board-ten/activate-source-autorouter.py
+          --root "$FULL_BOARD_ROOT" --variant candidate
+
+      - name: Prepare authentic paired cases
+        id: prepare
+        run: >-
+          bun experiments/full-board-ten/prepare-cases.ts
+          "$FULL_BOARD_ROOT/sources/original/experiments/full-board-priority-analysis"
+          "$FULL_BOARD_ROOT/sources/spaced"
+          "$FULL_BOARD_ROOT/cases"
+          "$BOARD"
+
+      - name: Run original full circuit
+        id: original
+        if: contains(matrix.cohorts, 'original')
+        continue-on-error: true
+        run: >-
+          bun experiments/full-board-ten/run-one.ts
+          "$FULL_BOARD_ROOT/cases/$BOARD-original.json"
+          "$FULL_BOARD_ROOT/results/$BOARD/original"
+
+      - name: Preserve original geometry and diagnostics
+        if: ${{ always() && contains(matrix.cohorts, 'original') }}
+        uses: actions/upload-artifact@v4
+        with:
+          include-hidden-files: true
+          name: full-board-${{ matrix.board }}-${{ matrix.experiment }}-original-${{ github.run_attempt }}
+          path: .full-board-run/results/${{ matrix.board }}/original
+          if-no-files-found: warn
+          compression-level: 0
+          retention-days: 7
+
+      - name: Run spaced full circuit
+        id: spaced
+        if: ${{ !cancelled() && steps.prepare.outcome == 'success' }}
+        continue-on-error: true
+        run: >-
+          bun experiments/full-board-ten/run-one.ts
+          "$FULL_BOARD_ROOT/cases/$BOARD-spaced.json"
+          "$FULL_BOARD_ROOT/results/$BOARD/spaced"
+
+      - name: Preserve spaced geometry and diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          include-hidden-files: true
+          name: full-board-${{ matrix.board }}-${{ matrix.experiment }}-spaced-${{ github.run_attempt }}
+          path: .full-board-run/results/${{ matrix.board }}/spaced
+          if-no-files-found: warn
+          compression-level: 0
+          retention-days: 7
+
+      - name: Publish compact result notices and summary
+        id: report
+        if: always()
+        run: python3 experiments/full-board-ten/report.py "$FULL_BOARD_ROOT" "$BOARD"
+
+      - name: Preserve small reports and provenance
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          include-hidden-files: true
+          name: full-board-${{ matrix.board }}-${{ matrix.experiment }}-summary-${{ github.run_attempt }}
+          path: |
+            .full-board-run/results/${{ matrix.board }}/summary.json
+            .full-board-run/results/${{ matrix.board }}/*/result.json
+            .full-board-run/results/${{ matrix.board }}/*/assessment.json
+            .full-board-run/results/${{ matrix.board }}/*/process.json
+            .full-board-run/results/${{ matrix.board }}/*/progress.json
+            .full-board-run/runtime-manifest.json
+            .full-board-run/runtime-manifests/source-candidate.json
+            experiments/full-board-ten/source-builds/bundle-manifest.json
+            experiments/full-board-ten/source-builds/provenance
+            .full-board-run/cases/assessment-helper-proof.json
+            experiments/full-board-ten/release.json
+            experiments/full-board-ten/source-provenance.json
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Require selected full circuits to be complete and clean
+        if: always()
+        run: test "${{ steps.report.outputs.all_clean }}" = true

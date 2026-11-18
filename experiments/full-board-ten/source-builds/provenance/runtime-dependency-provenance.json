@@ -1,0 +1,725 @@
+{
+  "scope": "Nested runtime dependencies required by exact1127 changed source pins. npm versions satisfy declared constraints; Git requirements use exact revisions.",
+  "packages": [
+    {
+      "target": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/repair04/node_modules/high-density-repair03",
+      "url": "https://codeload.github.com/tscircuit/high-density-repair03/tar.gz/cbbc86a3d6a01a565f2381b6fd01353783f4171a",
+      "archiveSha256": "01aa8a606fd9697be81aee9fec2203ceb799b09fa1caaa080da97a776e5c3e6f",
+      "archiveBytes": 1668031,
+      "files": [
+        {
+          "path": ".gitignore",
+          "bytes": 463,
+          "sha256": "9a11237b5535a698afdf1a359a98c165de368ed8dffa847137c9b4d1776f493e"
+        },
+        {
+          "path": "LICENSE",
+          "bytes": 1071,
+          "sha256": "ff4eead76c52710447cd34266add1eb2ff193cdd153623a2d379173e08a77551"
+        },
+        {
+          "path": "README.md",
+          "bytes": 9003,
+          "sha256": "3dd6563912d4fcec53b17ee5d1cbb0e0515673fecdac9131a2ff5f3ab8bd004f"
+        },
+        {
+          "path": "benchmark.sh",
+          "bytes": 3207,
+          "sha256": "5be072875ce6392757c73776ee1056a08845ff9f4fa63a8325885629bbe3c640"
+        },
+        {
+          "path": "biome.json",
+          "bytes": 284,
+          "sha256": "cac38c2e4ff9ce79029a9e3a9309759bcdc82403b1d0b72a91a716c2f1f96278"
+        },
+        {
+          "path": "cosmos.config.json",
+          "bytes": 158,
+          "sha256": "c6f001bd33e8cde967c32798805cd138544cb69a99e1457f8e48d52a5838e50e"
+        },
+        {
+          "path": "cosmos.decorator.tsx",
+          "bytes": 194,
+          "sha256": "823b0949a028ee6ae5aa79c5edbfc460202ef733af3dcd55240a35fed4f2f639"
+        },
+        {
+          "path": "index.html",
+          "bytes": 313,
+          "sha256": "45b1921412a5f567a5e4b4f79dde2b47dd47e728378983dce9e1811300c3f0e9"
+        },
+        {
+          "path": "lib/drc/AutoroutingDrcEngine.ts",
+          "bytes": 50004,
+          "sha256": "f640375c92e900ac9a3d43d6c6f764a5cbc6ee4a3a52db4037f58d34a2d12f00"
+        },
+        {
+          "path": "lib/drc/index.ts",
+          "bytes": 218,
+          "sha256": "ece1dca836fe1d2c1f0245d55af64bf97b277b3954fe3c9192f694b7dd129adb"
+        },
+        {
+          "path": "lib/index.ts",
+          "bytes": 756,
+          "sha256": "403bc0e6f6dd445e03b25f24148c5723b0eec6be5f7ccd23244f7946b93d7176"
+        },
+        {
+          "path": "lib/solvers/BaseSolver.ts",
+          "bytes": 53,
+          "sha256": "5efa6ddfb99c6c974f1f79c4e1b85b7bcae06688d6b75bc2ba6c6034884cc6d3"
+        },
+        {
+          "path": "lib/solvers/GlobalDrcForceImproveSolver/GlobalDrcBranchPortfolioSolver.ts",
+          "bytes": 21647,
+          "sha256": "3980b4e388057ed6a32f76a345e713e7942efadb4d34ab94b1a9464ddc9f6464"
+        },
+        {
+          "path": "lib/solvers/GlobalDrcForceImproveSolver/GlobalDrcForceImproveSolver.ts",
+          "bytes": 56995,
+          "sha256": "7e4f7b96c764db9a3e3d3a87c85e308f2682e4779108b79488a323e6423b5bb0"
+        },
+        {
+          "path": "lib/solvers/GlobalDrcForceImproveSolver/drc-snapshot.ts",
+          "bytes": 49,
+          "sha256": "43e43bf3fcdacd5ada4cdfb78ecbf24273d8ffac08444d88616d651a54f18a76"
+        },
+        {
+          "path": "lib/solvers/GlobalDrcForceImproveSolver/drcPresets.ts",
+          "bytes": 242,
+          "sha256": "28676dfc06a0ce9c31139d7e5745d872c8d27fe0c5f3972360a4fd1ce73518bf"
+        },
+        {
+          "path": "lib/solvers/GlobalDrcForceImproveSolver/findPadClearanceViaPosition.ts",
+          "bytes": 11392,
+          "sha256": "e083772a57a5d14cc69829a0d97fdfb9a3233af5b2ad4b425262ac8b866be4ef"
+        },
+        {
+          "path": "lib/solvers/GlobalDrcForceImproveSolver/findTraceClearanceViaPositions.ts",
+          "bytes": 3114,
+          "sha256": "d602e6f8961bbee47b9f1a6d38e3b2c704944881100b26d6060518d96d0527d6"
+        },
+        {
+          "path": "lib/solvers/GlobalDrcForceImproveSolver/getDrcErrors.ts",
+          "bytes": 4083,
+          "sha256": "435a0e3de56922b3d1a33cebfec8f858ff2ec9d0fcfa9468c680609884ad7c4c"
+        },
+        {
+          "path": "lib/solvers/GlobalDrcForceImproveSolver/index.ts",
+          "bytes": 697,
+          "sha256": "c5889cb864674e32da0d3841925b97e2907de8f6e08f88bcf951170042a7535d"
+        },
+        {
+          "path": "lib/solvers/GlobalDrcForceImproveSolver/internalTypes.ts",
+          "bytes": 737,
+          "sha256": "6abd6039be2c48782787a85c031eb61738229cc4e75fec6c401eb7ad39650637"
+        },
+        {
+          "path": "lib/solvers/GlobalDrcForceImproveSolver/netUtils.ts",
+          "bytes": 2129,
+          "sha256": "c1d32dc327eb8fb3cf5d5e00c860d62f278b1bb94fd751fd804a75cb50a999c2"
+        },
+        {
+          "path": "lib/solvers/GlobalDrcForceImproveSolver/solverConfig.ts",
+          "bytes": 2956,
+          "sha256": "aa75848eecdd7dbfd61188421efd42c62921c88bde4d5fe15631c982ba2de9ce"
+        },
+        {
+          "path": "lib/solvers/GlobalDrcForceImproveSolver/solverHelpers.ts",
+          "bytes": 141812,
+          "sha256": "e94cf39d674b2cd68317823e171cfde8b313f18458a02cb8bae992c15c05d8d1"
+        },
+        {
+          "path": "lib/solvers/GlobalDrcForceImproveSolver/spatialIndex.ts",
+          "bytes": 2573,
+          "sha256": "2e9981809bf3ffd7a26aef2d830e679d4d2a8688ccb5638740bd9620675398d9"
+        },
+        {
+          "path": "lib/solvers/GlobalDrcForceImproveSolver/traceToPadClearanceRelaxation.ts",
+          "bytes": 18442,
+          "sha256": "522778fdbf30e400b625e82346b72c7a97fb24eff9adf3865be09427ed603dc4"
+        },
+        {
+          "path": "lib/solvers/GlobalDrcForceImproveSolver/types.ts",
+          "bytes": 2819,
+          "sha256": "6b4585edffd719bd3be40b4b5fd95de3bc668958b7bb29fa2908f456c2e106a2"
+        },
+        {
+          "path": "lib/solvers/GlobalDrcForceImproveSolver/viaToPadClearanceRelaxation.ts",
+          "bytes": 8051,
+          "sha256": "878098004c0a89d78441db493b8522a673c00e57a06d1f802adb6d4eb3f088e4"
+        },
+        {
+          "path": "lib/solvers/utils/convertToCircuitJson.ts",
+          "bytes": 72,
+          "sha256": "e89479af96d9f3a0fbf0f774a9b2334f2b1684a9710f0446d2c937757b9b0c6a"
+        },
+        {
+          "path": "lib/types.ts",
+          "bytes": 30,
+          "sha256": "6fccc0b0aaa46b20e1ad62d9b4f0d6161b6f9da8a62b7765bf1b73b797145be6"
+        },
+        {
+          "path": "lib/types/high-density-types.ts",
+          "bytes": 217,
+          "sha256": "b314e92503c38a5bf719126be148d97621702bf8f4ba42e56421c7938ddccee4"
+        },
+        {
+          "path": "lib/types/index.ts",
+          "bytes": 224,
+          "sha256": "833c0f48e61f07f2cc0be62acec394092fe22a744f380d890470c1ae262c3815"
+        },
+        {
+          "path": "lib/types/srj-types.ts",
+          "bytes": 965,
+          "sha256": "1097425aa735c3c1a548050ae0d838f2a62b4791eea2307a707a51e903827dab"
+        },
+        {
+          "path": "lib/utils/convertHdRouteToSimplifiedRoute.ts",
+          "bytes": 3011,
+          "sha256": "3a9c54b79082498ea8523904e99b77e60fd622f2327e3a1889e40b7f27e26a53"
+        },
+        {
+          "path": "lib/utils/convertToCircuitJson.ts",
+          "bytes": 20479,
+          "sha256": "17609bcd7726bd1a0cf1ac967b425a70fec31fd82ade42364c2d90a53c404250"
+        },
+        {
+          "path": "lib/utils/getViaLayers.ts",
+          "bytes": 844,
+          "sha256": "f8781fafad242170a58244368105a9f6827421fcc7260240ecf779a274f3ac16"
+        },
+        {
+          "path": "lib/utils/mapZToLayerName.ts",
+          "bytes": 224,
+          "sha256": "80f9dcba54c3560fdbf5e5ec2e15c76c4c303474ee53b5a6e919cd3446e3ae88"
+        },
+        {
+          "path": "package.json",
+          "bytes": 1350,
+          "sha256": "ecb2dd038d9417041c7447d7e57c52c6c9321b6053ae1b2c811d3527d094e5a7"
+        },
+        {
+          "path": "tsconfig.json",
+          "bytes": 815,
+          "sha256": "6357b4862edfbd3241b6d0432eb207e9c6f84455fb019a0cc55f687ba07f71ee"
+        },
+        {
+          "path": "types/capacity-edges-to-port-segments-types.ts",
+          "bytes": 245,
+          "sha256": "2f3a46b94ccaf593e8eada17f8ea6dbe8ce19123ca42ab352299d9dae40fbb9d"
+        },
+        {
+          "path": "types/capacity-mesh-types.ts",
+          "bytes": 935,
+          "sha256": "18c867a261559c309af158795c742e6fd2008d270cfd8b16b8645f2f6155e3f2"
+        },
+        {
+          "path": "types/capacity-pathing-types.ts",
+          "bytes": 445,
+          "sha256": "ba24f5823d856ae49411ff592c8e74041a2368ef19215db4b96c32b872b384b9"
+        },
+        {
+          "path": "types/capacity-segment-to-point-types.ts",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "types/graphics-debug-types.ts",
+          "bytes": 744,
+          "sha256": "aa9cba2f0fce825fd08ff1056e6e4620646c710ddbaae9974cd9fb1176e40185"
+        },
+        {
+          "path": "types/high-density-router-types.ts",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "types/high-density-types.ts",
+          "bytes": 2231,
+          "sha256": "460e9a133473bd9379d1b970d0947083f230a6d1da70a9f4b6ae35642fdeb6bc"
+        },
+        {
+          "path": "types/index.ts",
+          "bytes": 201,
+          "sha256": "17a20eb20289145df7751ebf46fd061c7a87a2418d5b39541dd0b21325b236a7"
+        },
+        {
+          "path": "types/srj-types.ts",
+          "bytes": 3488,
+          "sha256": "9188e372505dff43487f47c61f4078c49a5b40dda0cc8d7b558a50136c4bacaf"
+        },
+        {
+          "path": "vite.config.ts",
+          "bytes": 696,
+          "sha256": "b60bfe270127c9ec128c8d0a855191348f964660d88d409572ef59c14d0117b9"
+        }
+      ]
+    },
+    {
+      "target": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/power-trace-expander/node_modules/flatbush",
+      "url": "https://codeload.github.com/seveibar/flatbush/tar.gz/420df716eb7ce727162fa22ecef7e1ceb9040f33",
+      "archiveSha256": "a3e3b4566f03e7d8fe6d7f0311c563389a035b63cfc710369ff04bde56c9611e",
+      "archiveBytes": 27388,
+      "files": [
+        {
+          "path": ".gitignore",
+          "bytes": 61,
+          "sha256": "762bdb832c11805b568613a535f0a2c4529e16756d73242040d7eda0b4711054"
+        },
+        {
+          "path": "LICENSE",
+          "bytes": 750,
+          "sha256": "08a9d45b1300baf1925a966bcbec26cf9bd4137883d96b79089cba2c72d872bc"
+        },
+        {
+          "path": "README.md",
+          "bytes": 7049,
+          "sha256": "65e8cc0ed25fe6a9b16d82cb98fbcbc8f45ba9147b9b7bf7d50c3640c57c3dc9"
+        },
+        {
+          "path": "bench.js",
+          "bytes": 4483,
+          "sha256": "94942753fe573677d5e3279207157c38793130537f61b5d73f0b75ac36e30446"
+        },
+        {
+          "path": "eslint.config.js",
+          "bytes": 145,
+          "sha256": "b55e3a60a1cf3ece25483431f49cf4013f0c24abd1e7a5b99864a98c6f1400e0"
+        },
+        {
+          "path": "index.d.ts",
+          "bytes": 5598,
+          "sha256": "a0be71bc2f3d033c7c57634fb9a294497ff9de031dac5f42d45a3c7ebc0b3c5f"
+        },
+        {
+          "path": "index.js",
+          "bytes": 22063,
+          "sha256": "f8b95418dccadd360becd9045e0435eaf90c0a89186ce3f0296187570a447b4a"
+        },
+        {
+          "path": "package-lock.json",
+          "bytes": 51335,
+          "sha256": "04dbc3dfcc7a79b999d4cb0a7a0c425581ac84ccc6914ddb97ee825bc1ea3791"
+        },
+        {
+          "path": "package.json",
+          "bytes": 1045,
+          "sha256": "c8c40c286a0f97b50e68cfa731588bd806befba7d3b762a6b14e2960824d1d24"
+        },
+        {
+          "path": "test.js",
+          "bytes": 11271,
+          "sha256": "306897c9295969856560d0a3f7ab4d6acfef422c257ff866a831c5d8bf404329"
+        },
+        {
+          "path": "tsconfig.json",
+          "bytes": 313,
+          "sha256": "53c39dfdc8f4b2d8346675975df9cd92f38958589e785fe42bdfa6b19f1baddf"
+        }
+      ]
+    },
+    {
+      "target": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/repair04/node_modules/flatbush",
+      "url": "https://registry.npmjs.org/flatbush/-/flatbush-4.6.2.tgz",
+      "archiveSha256": "0796ab2d79963f4e2060ecae80601d3dad4cba9433bbef6ef276c56c3e9d631b",
+      "archiveBytes": 12874,
+      "files": [
+        {
+          "path": "LICENSE",
+          "bytes": 750,
+          "sha256": "08a9d45b1300baf1925a966bcbec26cf9bd4137883d96b79089cba2c72d872bc"
+        },
+        {
+          "path": "flatbush.js",
+          "bytes": 19973,
+          "sha256": "918d03a3572f0e210ea6b26cf8d2f54aec134afb23e38b114389c29de0be4c29"
+        },
+        {
+          "path": "index.js",
+          "bytes": 20103,
+          "sha256": "03a0292b03e580efe4b5f42b506ed766ad6a868180751837e4360b6ca4e3b850"
+        },
+        {
+          "path": "package.json",
+          "bytes": 1034,
+          "sha256": "bba765e651b5323964c7368911c047a7c57d7120c59089c5c393db0d782a6d79"
+        },
+        {
+          "path": "README.md",
+          "bytes": 7049,
+          "sha256": "65e8cc0ed25fe6a9b16d82cb98fbcbc8f45ba9147b9b7bf7d50c3640c57c3dc9"
+        },
+        {
+          "path": "index.d.ts",
+          "bytes": 5010,
+          "sha256": "707a4214c28a3730cb4bcf0895cf7333b9bae17ec1964e5def0af67d2c0e9ff0"
+        }
+      ]
+    },
+    {
+      "target": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/trace-simplification-solver/node_modules/circuit-json-to-connectivity-map",
+      "url": "https://registry.npmjs.org/circuit-json-to-connectivity-map/-/circuit-json-to-connectivity-map-0.0.19.tgz",
+      "archiveSha256": "9c1aec563cbeb932e1eab88f81add8fb6b4e14eb2d67e1c4445aafa460c93af5",
+      "archiveBytes": 8030,
+      "files": [
+        {
+          "path": "LICENSE",
+          "bytes": 1071,
+          "sha256": "a5f5fb24026081322e48c6de970de4300dbc516fcddf02468d74b3978909f156"
+        },
+        {
+          "path": "dist/index.js",
+          "bytes": 9626,
+          "sha256": "ef18082e9a93c3bc3f6eda1f28a64f1a239d1090be7cfe9a67209d130634b585"
+        },
+        {
+          "path": "package.json",
+          "bytes": 574,
+          "sha256": "a72711e34a064a4f70f9fe252117b98f68bce52cb526a4e1eb0166cc7ded7c5f"
+        },
+        {
+          "path": "dist/index.js.map",
+          "bytes": 18590,
+          "sha256": "37c2df66806c78630baed318739928b77c7017d5ca6ec1cd98a5638137b7a928"
+        },
+        {
+          "path": "README.md",
+          "bytes": 3421,
+          "sha256": "88ca332184dc2ceb20cb0d07d0cfc4bbf270135b2c63e6b7f89875b26961a67d"
+        },
+        {
+          "path": "dist/index.d.ts",
+          "bytes": 1946,
+          "sha256": "5cde7c2c0d8630d9a4b2a815f0c67e497556c23c7ba7165ac66fbd9ea5a71ee4"
+        }
+      ]
+    },
+    {
+      "target": "/workspace/autorouter-1127-validation-dependencies/node_modules/high-density-repair03/node_modules/react-dom",
+      "url": "https://registry.npmjs.org/react-dom/-/react-dom-19.2.5.tgz",
+      "archiveSha256": "635a874f93c830a252a80f821c67bbdaf7cd9d5df29ff8a122bbcdf079f22860",
+      "archiveBytes": 1276388,
+      "files": [
+        {
+          "path": "LICENSE",
+          "bytes": 1088,
+          "sha256": "da6d3703ed11cbe42bd212c725957c98da23cbff1998c05fa4b3d976d1a58e93"
+        },
+        {
+          "path": "client.js",
+          "bytes": 1373,
+          "sha256": "00e348ab3d6bc2eef908345d0bc4e008c95bcfecec060dfda5c4967953761396"
+        },
+        {
+          "path": "client.react-server.js",
+          "bytes": 101,
+          "sha256": "93fc36199826bbc50a5c79944653a6685bd3acfb9f80b587110804e92c1c964b"
+        },
+        {
+          "path": "index.js",
+          "bytes": 1359,
+          "sha256": "ba1a3e33489f868371561777607e3ee5091df0f7ea3f1a10f789d6b86e4c1505"
+        },
+        {
+          "path": "profiling.js",
+          "bytes": 1378,
+          "sha256": "8ce82daa2079581a9127bdcf2947ec4c2c87a0f12aa5db04f80a0de650e12eea"
+        },
+        {
+          "path": "profiling.react-server.js",
+          "bytes": 104,
+          "sha256": "aec5671628a9cd521026187569e2bd33e60783ab5b4b4fe6bb05ee1dbbd921a5"
+        },
+        {
+          "path": "cjs/react-dom-client.development.js",
+          "bytes": 1065698,
+          "sha256": "806b25cf84808a5ae0104e81633caabb1aa11fce71e72ef7afe4c1f8d2ebec08"
+        },
+        {
+          "path": "cjs/react-dom-client.production.js",
+          "bytes": 536016,
+          "sha256": "4931d9b3a01afb23f7e2b8472e1290c67a8a009697926b5a7a7b3d4949ff015f"
+        },
+        {
+          "path": "cjs/react-dom-profiling.development.js",
+          "bytes": 1082082,
+          "sha256": "703cf60f3fc56fdcdd646b1b4a1f7a80d74db416eb06524cff510a14dc11c9f4"
+        },
+        {
+          "path": "cjs/react-dom-profiling.profiling.js",
+          "bytes": 607634,
+          "sha256": "33a7820cdc0113a46a205f2731c30c0de188ff44470e25fbb4ed0e78f298f876"
+        },
+        {
+          "path": "cjs/react-dom-server-legacy.browser.development.js",
+          "bytes": 395197,
+          "sha256": "8c95fd72adecc04f46330c3c0c0679f1ce52dec4b3f8d8938c7f844a6f742cde"
+        },
+        {
+          "path": "cjs/react-dom-server-legacy.browser.production.js",
+          "bytes": 237937,
+          "sha256": "0d0da4e47b5a227a6dae043a1aadf067cc8e7b8d6990543e4e2ca1565c6427ce"
+        },
+        {
+          "path": "cjs/react-dom-server-legacy.node.development.js",
+          "bytes": 395194,
+          "sha256": "e0a591b81f983794366bbc8338df0ebbbc7add48fdcee772870e226eadcda9ce"
+        },
+        {
+          "path": "cjs/react-dom-server-legacy.node.production.js",
+          "bytes": 242793,
+          "sha256": "02ee18a3036d1fc1bc236adbab2424107e5cddc59650559658163179e5dae46f"
+        },
+        {
+          "path": "cjs/react-dom-server.browser.development.js",
+          "bytes": 424658,
+          "sha256": "6ec781c917ccce2aef3455a1c4056239e7792dd1b2e801c87364b1be02bfd91d"
+        },
+        {
+          "path": "cjs/react-dom-server.browser.production.js",
+          "bytes": 268058,
+          "sha256": "309e6ad99f45befc8cc50371e57a6153e2edd60db0d64cb750cbca8037080c5a"
+        },
+        {
+          "path": "cjs/react-dom-server.bun.development.js",
+          "bytes": 354659,
+          "sha256": "bca1c497d084e8f9e16af845fc0e9b6e793503547d0064e16bca6107077cde75"
+        },
+        {
+          "path": "cjs/react-dom-server.bun.production.js",
+          "bytes": 245324,
+          "sha256": "cf5aeecd24e5a14471352c2657e16929736feabb67ccd6fdaa8eb810d6a203bb"
+        },
+        {
+          "path": "cjs/react-dom-server.edge.development.js",
+          "bytes": 425439,
+          "sha256": "fda0a6c8162bd7eb025a7b152613d26a830e61a46b8b85ff4a3c2adf8ec7d4e2"
+        },
+        {
+          "path": "cjs/react-dom-server.edge.production.js",
+          "bytes": 273614,
+          "sha256": "83b48bb26ce97a563843154ee8a997b797aa0cb77c8da07af48eb587d4baa1c9"
+        },
+        {
+          "path": "cjs/react-dom-server.node.development.js",
+          "bytes": 429423,
+          "sha256": "ccc43be805ea6e365bd92d2a8480256a7d2240c5fdd36338691cc37aa3eab911"
+        },
+        {
+          "path": "cjs/react-dom-server.node.production.js",
+          "bytes": 277046,
+          "sha256": "01ed79c292f95d46ea3dbf9f1cb44752e87660a46d2a2a31d15caa0583316da1"
+        },
+        {
+          "path": "cjs/react-dom-test-utils.development.js",
+          "bytes": 793,
+          "sha256": "a691b913756753dd769c1559b8efbd3d8157feb4c9368d2cb4b79eba67441841"
+        },
+        {
+          "path": "cjs/react-dom-test-utils.production.js",
+          "bytes": 686,
+          "sha256": "d41ce0bee80299c8330fc080936da31afa5f307dfe4912bc8a6c68f9f566d344"
+        },
+        {
+          "path": "cjs/react-dom.development.js",
+          "bytes": 17673,
+          "sha256": "6fd03ac5f1f081b08a3f8c3a469bd026b7773759a8ed46f07c03fde7080c122e"
+        },
+        {
+          "path": "cjs/react-dom.production.js",
+          "bytes": 6655,
+          "sha256": "7a5686f7191d3182a90b86f1dbc33d3eed458091c39d248e18280690d57d2b45"
+        },
+        {
+          "path": "cjs/react-dom.react-server.development.js",
+          "bytes": 14211,
+          "sha256": "493ad3c02f612215d9fc77dc184e4c00a98fdfda22551b8d7faead3fa2a7667a"
+        },
+        {
+          "path": "react-dom.react-server.js",
+          "bytes": 220,
+          "sha256": "cdd8a1f284daf7eff271da65863c2e504bda04fd33c3cb89ad17ed952488d811"
+        },
+        {
+          "path": "cjs/react-dom.react-server.production.js",
+          "bytes": 4878,
+          "sha256": "4a622117c4345c3577bc3b5aa8fc0a746cc670f6f9591fe5c3b9461391427bc7"
+        },
+        {
+          "path": "server.browser.js",
+          "bytes": 563,
+          "sha256": "f759460eb3571d5bf1e1a9e5ef7cb033ec5c67f25d64a6bbf5a9ac43bd25831a"
+        },
+        {
+          "path": "server.bun.js",
+          "bytes": 559,
+          "sha256": "66df58720c7b932800151fdcfd6c494c312ca80b18814a2ee4a39389715f9ce2"
+        },
+        {
+          "path": "server.edge.js",
+          "bytes": 561,
+          "sha256": "a631527404b0a7bbe10aa79db04852196fd7fd88a056c1bb84cf1a1885e1e934"
+        },
+        {
+          "path": "server.js",
+          "bytes": 58,
+          "sha256": "8a05db291adfdedb4e9509e524e4f499adec95f6ffb6b8d2e04ea73aa2950684"
+        },
+        {
+          "path": "server.node.js",
+          "bytes": 669,
+          "sha256": "f2dd93f6f91f983cd91232098d4ac55578596d33d680d7cb9438ea3b0a611b4b"
+        },
+        {
+          "path": "server.react-server.js",
+          "bytes": 101,
+          "sha256": "0b18f1c65dae3eed74e6341930d31cc68f946afb75427b1fdc65fce26b5177f3"
+        },
+        {
+          "path": "static.browser.js",
+          "bytes": 319,
+          "sha256": "34433b7ad1306a49a8c34995f505586fe0752acc0d7c94d2f8f53a1654e7cae0"
+        },
+        {
+          "path": "static.edge.js",
+          "bytes": 313,
+          "sha256": "82f7d5be1d84db14a79291edef511d1a008ddbf62822d5969865f203a4fb79dc"
+        },
+        {
+          "path": "static.js",
+          "bytes": 58,
+          "sha256": "2ed52da7c38592c3e0677b6a87ac08c3e74a365597ae7165b79231d446f11c31"
+        },
+        {
+          "path": "static.node.js",
+          "bytes": 445,
+          "sha256": "39e134ed6dc903d8972b3ae5e2aa21a8772c6a53fed34457f4dc07f6b315727b"
+        },
+        {
+          "path": "static.react-server.js",
+          "bytes": 101,
+          "sha256": "53220a11ec9a9212e3372912f4f704c6c6e12dea2ee008ea01f4f4690936892a"
+        },
+        {
+          "path": "test-utils.js",
+          "bytes": 216,
+          "sha256": "9fe1733413e1437d8602ed78ee14e932bebc8b4193657d2430f42ff0fc529cc1"
+        },
+        {
+          "path": "package.json",
+          "bytes": 3063,
+          "sha256": "92aa96480eaab724565c5bb8a4b1dd355114506e5babd36c48c783407ff9937d"
+        },
+        {
+          "path": "README.md",
+          "bytes": 1096,
+          "sha256": "80589e00067a57cb9b4fbc618afe7aff06ff1fec7b2840dda1c1165d8bd35080"
+        }
+      ]
+    },
+    {
+      "target": "/workspace/autorouter-1127-validation-dependencies/node_modules/high-density-repair03/node_modules/scheduler",
+      "url": "https://registry.npmjs.org/scheduler/-/scheduler-0.27.0.tgz",
+      "archiveSha256": "ab26ce35ce4032f04b78cfc5bbb4cfe13358e9fe7a5433a8aa6315c3debc5095",
+      "archiveBytes": 10015,
+      "files": [
+        {
+          "path": "LICENSE",
+          "bytes": 1088,
+          "sha256": "da6d3703ed11cbe42bd212c725957c98da23cbff1998c05fa4b3d976d1a58e93"
+        },
+        {
+          "path": "index.js",
+          "bytes": 194,
+          "sha256": "145965504d60007bc25486ab930b0367867dcd5d579ccd343c148d69349a7cfb"
+        },
+        {
+          "path": "index.native.js",
+          "bytes": 208,
+          "sha256": "f1c2fea33a9252ccba1f7c7a9310ea7c0e82f3cff1bc7c693ff153bd54175b25"
+        },
+        {
+          "path": "cjs/scheduler-unstable_mock.development.js",
+          "bytes": 13687,
+          "sha256": "de31e2407f585fd6ba00efd420485bff8b84aa6ea3ebcb870289214d27ca34b8"
+        },
+        {
+          "path": "cjs/scheduler-unstable_mock.production.js",
+          "bytes": 11990,
+          "sha256": "d49069c9cfea586989b09fe16fa2b7ebdf064fd60fb7c932e9a3799f7e95cabf"
+        },
+        {
+          "path": "cjs/scheduler-unstable_post_task.development.js",
+          "bytes": 4639,
+          "sha256": "34171513f5d7662f42d42c479445c2536cc02161c245b0f5083ef595f88f0e20"
+        },
+        {
+          "path": "cjs/scheduler-unstable_post_task.production.js",
+          "bytes": 3974,
+          "sha256": "88e667020933b71752478d18e3f94271e9e8eb44d6dfff95ba014b06b47329be"
+        },
+        {
+          "path": "cjs/scheduler.development.js",
+          "bytes": 12144,
+          "sha256": "646eb671c8585382baff16daf92fe16a4cdd10dcf1a363c58b2ae1f6bf3a2b8d"
+        },
+        {
+          "path": "cjs/scheduler.native.development.js",
+          "bytes": 12327,
+          "sha256": "26401a9da7b51e0db1f506c5d1e8579081302460212d007593acdd8c5968570b"
+        },
+        {
+          "path": "cjs/scheduler.native.production.js",
+          "bytes": 10869,
+          "sha256": "f6e15b1a0f7912a8dbae536f037b9c059026742f3dfe740b37bd03fc7d816d65"
+        },
+        {
+          "path": "cjs/scheduler.production.js",
+          "bytes": 10181,
+          "sha256": "679adff761d31e9426604f80c0e99be44a3e6f4c6834b0218ecf0312a67c171f"
+        },
+        {
+          "path": "unstable_mock.js",
+          "bytes": 222,
+          "sha256": "152be57d0705d6043d06bda4a5b35e7c03e4cbb2b4caf3d4ae6592db3f4c5bf8"
+        },
+        {
+          "path": "unstable_post_task.js",
+          "bytes": 232,
+          "sha256": "2aa725364b0efa1772c01cd978ac888b655711645768bdcf5e885a0c4e435ef2"
+        },
+        {
+          "path": "package.json",
+          "bytes": 564,
+          "sha256": "393bb96b7e481bf50189a1a02c7e0e7f4d01acba5abc6fbe7d214638624462fc"
+        },
+        {
+          "path": "README.md",
+          "bytes": 346,
+          "sha256": "e2f3a22fb7e2e18f19e9ba386b925ad23b30db03caa031c3059941367a097225"
+        }
+      ]
+    }
+  ],
+  "links": [
+    {
+      "target": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/trace-simplification-solver/node_modules/flatbush",
+      "source": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/repair04/node_modules/flatbush"
+    },
+    {
+      "target": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/trace-simplification-solver/node_modules/@tscircuit/math-utils",
+      "source": "/workspace/.tools/autorouter-dependencies/node_modules/@tscircuit/math-utils"
+    },
+    {
+      "target": "/workspace/autorouter-1127-validation-dependencies/node_modules/high-density-repair03/node_modules/react",
+      "source": "/workspace/.tools/autorouter-dependencies/node_modules/react-for-pipeline9-fixtures"
+    },
+    {
+      "target": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/repair04/node_modules/react",
+      "source": "/workspace/autorouter-1127-validation-dependencies/node_modules/high-density-repair03/node_modules/react"
+    },
+    {
+      "target": "/workspace/autorouter-1127-validation-dependencies/node_modules/@tscircuit/repair04/node_modules/react-dom",
+      "source": "/workspace/autorouter-1127-validation-dependencies/node_modules/high-density-repair03/node_modules/react-dom"
+    }
+  ]
+}
