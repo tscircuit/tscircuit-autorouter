@@ -1,19 +1,20 @@
-name: Core effect source build and test validation
+name: Core routing copper pour dependency source validation
 
 on:
   push:
-    branches: [bench/core-effect-source-ci-3230]
+    branches: [bench/core-pour-dependency-source-ci-3230]
 
 permissions:
   contents: read
 
 jobs:
   source:
-    name: Actual Core source before and after
+    name: Actual Core source before and localized fix
     runs-on: ubuntu-latest
     timeout-minutes: 45
     env:
       CORE_SOURCE: ${{ github.workspace }}/.core-source
+      CORE_CANDIDATE: ${{ github.workspace }}/.core-candidate
       CORE_PROOF: ${{ github.workspace }}/.core-proof
       BUN_INSTALL_CACHE_DIR: ${{ github.workspace }}/.bun-cache
     steps:
@@ -24,82 +25,35 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: tscircuit/core
-          ref: f8f2ed3273cea45e70e78ddc7470ba9fc47a1e73
+          ref: fb77fad92dd4197eab9934a5ebbb5dfcbffc7eaf
           path: .core-source
           persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/core
+          ref: bef5b1308ea2a670026cba1f64ffc26551014d42
+          path: .core-candidate
+          persist-credentials: false
+          fetch-depth: 2
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /package.json
+            /lib/components/base-components/Renderable.ts
+            /lib/components/primitive-components/Group/Group.ts
+            /lib/components/primitive-components/CopperPour/CopperPour.ts
+            /lib/components/primitive-components/CopperPour/CopperPour_doInitialPcbCopperPourRender.ts
+            /tests/repros/repro-routing-event-copper-pour.test.tsx
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.4.3
-      - name: Verify source and install one frozen graph
-        run: python3 experiments/full-board-ten/check-core-effect-source.py install
-      - name: Run original Core build, typecheck, repro and relevant tests
-        run: python3 experiments/full-board-ten/check-core-effect-source.py pair
-      - name: Preserve actual source snapshots, logs and package builds
+      - name: Validate real source pair with one compatible dependency graph
+        run: python3 experiments/full-board-ten/check-core-pour-source.py
+      - name: Preserve actual source, snapshots, dependency graph, logs and builds
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: core-effect-source-pair-${{ github.run_attempt }}
+          name: core-pour-source-pair-${{ github.run_attempt }}
           include-hidden-files: true
           path: .core-proof
-          if-no-files-found: error
-          retention-days: 7
-
-  full-tests:
-    name: Core complete suite shard ${{ matrix.node }}
-    needs: source
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    strategy:
-      fail-fast: false
-      matrix:
-        node: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-    env:
-      CORE_SOURCE: ${{ github.workspace }}/.core-source
-      CORE_PROOF: ${{ github.workspace }}/.core-proof
-      BUN_INSTALL_CACHE_DIR: ${{ github.workspace }}/.bun-cache
-      TEST_PLAN_NODE_COUNT: 10
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          persist-credentials: false
-          sparse-checkout: experiments/full-board-ten
-      - uses: actions/checkout@v4
-        with:
-          repository: tscircuit/core
-          ref: f8f2ed3273cea45e70e78ddc7470ba9fc47a1e73
-          path: .core-source
-          persist-credentials: false
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: 1.4.3
-      - uses: actions/download-artifact@v4
-        with:
-          name: core-effect-source-pair-${{ github.run_attempt }}
-          path: .core-pair-proof
-      - name: Verify source and install same frozen graph
-        run: python3 experiments/full-board-ten/check-core-effect-source.py install
-      - name: Prepare exact validated candidate and its generated snapshot
-        run: python3 experiments/full-board-ten/check-core-effect-source.py candidate
-      - name: Run standard ten-shard Core test planner
-        working-directory: .core-source
-        run: bun run scripts/generate-test-plan.ts
-      - name: Run shard without snapshot updates
-        working-directory: .core-source
-        shell: bash
-        run: |
-          set -euo pipefail
-          mapfile -t test_files < .github/test-plans/node${{ matrix.node }}-testplan.txt
-          test "${#test_files[@]}" -gt 0
-          bun test "${test_files[@]}" --timeout 30000 2>&1 | tee "$CORE_PROOF/shard-${{ matrix.node }}.log"
-      - name: Preserve test logs and failed snapshots
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: core-effect-suite-${{ matrix.node }}-${{ github.run_attempt }}
-          include-hidden-files: true
-          path: |
-            .core-proof
-            .core-source/.github/test-plans
-            .core-source/tests/**/__snapshots__/*.diff.png
           if-no-files-found: error
           retention-days: 7

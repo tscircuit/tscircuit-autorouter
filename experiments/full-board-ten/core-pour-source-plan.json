@@ -1,0 +1,91 @@
+{
+  "source": {
+    "repository": "tscircuit/core",
+    "baseCommit": "fb77fad92dd4197eab9934a5ebbb5dfcbffc7eaf",
+    "candidateCommit": "bef5b1308ea2a670026cba1f64ffc26551014d42",
+    "productionFiles": {
+      "lib/components/base-components/Renderable.ts": {
+        "beforeSha256": "278273dbcb4f24d86bd2c362f6c6cd11402e340428166f0e54b79239a81eb6ee",
+        "afterSha256": "50e8f7cbfc48c20142a97a08d273ceafd07cdcdc7a3f6959a23eb17306e8a67b"
+      },
+      "lib/components/primitive-components/Group/Group.ts": {
+        "beforeSha256": "9ddb264132ddc6642a655ea2d42c5a631ba5c5805224f34a33718944b905e560",
+        "afterSha256": "fb5b6ad919807e1ce1f77df277affdc66a23ed870d8bf094b29193d048bc4848"
+      },
+      "lib/components/primitive-components/CopperPour/CopperPour.ts": {
+        "beforeSha256": "69e8fefdce0f0ef9fd141b62b737efe4cc629f98165584b7bc30296b769097e6",
+        "afterSha256": "673b03c13f83b48ae18c09403ca91d5e89fbdbe192a64cb1af8c682349c636e9"
+      },
+      "lib/components/primitive-components/CopperPour/CopperPour_doInitialPcbCopperPourRender.ts": {
+        "beforeSha256": "8192548a7da9ec8e22b8244534416b6b96cd5d97844d1a4393c9eb9c29592049",
+        "afterSha256": "75c45ed099cb1e9c4a51ad81ec3b23b68d9d19f9b823ab6fdc273a3c4658e895"
+      }
+    },
+    "patchSha256": "74b3d53b31745efa5c9d5e305391caa8c1448523769f5e8068a70cfea318aded",
+    "testPath": "tests/repros/repro-routing-event-copper-pour.test.tsx",
+    "testBeforeSha256": "1e538048e84171de607c3b876d279bfb1d0daaae78b1aa48dc1d8a6df2f5cbde",
+    "testSha256": "63e591d1b396a8a6ac861749ff78b53d4cdb658c7851b6b0f2c0d06ee0bd3ad9",
+    "snapshotPath": "tests/repros/__snapshots__/repro-routing-event-copper-pour-pcb.snap.svg",
+    "snapshotBeforeSha256": "dd1bce2861313667cdbdbd42d42cf2d84b77dfbf143a11c5703d2ddb681ef1da",
+    "packageSha256": "68fe69beb0f33bb8d7d23aaf732350613482e92952f08601a43e17ff62fa855e"
+  },
+  "bunVersion": "1.4.3",
+  "timingTests": [
+    "tests/assembly/assembly-explosion-async-cad.test.tsx",
+    "tests/assembly/assembly-explosion-collision-async.test.tsx",
+    "tests/components/base-components/compact-phase-state-async.test.ts",
+    "tests/components/base-components/compact-phase-state-subtree-async.test.ts",
+    "tests/components/base-components/schematic-label-nets-with-conflicting-names-phase.test.ts",
+    "tests/components/normal-components/component-availability-warning-update.test.tsx",
+    "tests/components/normal-components/chip-pin-attributes-shared-fetch-success.test.tsx"
+  ],
+  "timingTestSha256": {
+    "tests/assembly/assembly-explosion-async-cad.test.tsx": "20e131ba0bc0ac45bfe0c7fba1b4b4c19067bbd3108c2dc5ad61edda11d93b66",
+    "tests/assembly/assembly-explosion-collision-async.test.tsx": "1ce3fdd76a6f884d49d7ab574555d5e511f90da92ed983accf4aa17c6fa1fe9a",
+    "tests/components/base-components/compact-phase-state-async.test.ts": "dc5c02fc7c26f60e4d60d09e47aafecb837ae49922c6e6c02bd293302362d26b",
+    "tests/components/base-components/compact-phase-state-subtree-async.test.ts": "970fde5f3dccf97f6c259dcb871320a30ff0aa54ee48bba72a66ca0f93920454",
+    "tests/components/base-components/schematic-label-nets-with-conflicting-names-phase.test.ts": "af8804efec8e3c818b616a5368efbed9e7576b12acbe1d88633d3326019d6709",
+    "tests/components/normal-components/component-availability-warning-update.test.tsx": "c4be1ac4cf6a8c16903ecdc0940acac9ec10becb73b96b98e1967cfb255a4ccf",
+    "tests/components/normal-components/chip-pin-attributes-shared-fetch-success.test.tsx": "adfffcc5f7ac7cb00d0759c0a6e45efa331ef52ff6cfda85aa4beeef2f6146a8"
+  },
+  "relatedTests": [
+    "tests/components/base-components/renderable-dirty-pattern.test.tsx",
+    "tests/components/base-components/disabled-drc-no-async-effect.test.tsx",
+    "tests/components/base-components/board-render-phase-start-order.test.tsx",
+    "tests/footprint/render-until-settled-skips-idle-polls.test.tsx",
+    "tests/features/autoroutingphase-publishes-accepted-traces.test.tsx",
+    "tests/features/autoroutingphase-event-error-index.test.tsx",
+    "tests/features/autorouting-compute-cost-error.test.tsx",
+    "tests/features/remote-ordinary-copper-pour.test.tsx",
+    "tests/features/remote-autorouting-7-preset-config.test.tsx",
+    "tests/features/skip-autorouting-on-placement-errors1.test.tsx",
+    "tests/features/skip-autorouting-on-placement-errors2.test.tsx",
+    "tests/features/board-via-tenting-stitching.test.tsx",
+    "tests/subcircuits/subcircuit3-dependent-autorouting.test.tsx",
+    "tests/components/normal-components/board-routing-disabled.test.tsx",
+    "tests/components/primitive-components/copperpour-connectsto-net.test.tsx",
+    "tests/components/primitive-components/copperpour-crosshatch-sizing.test.tsx",
+    "tests/components/primitive-components/copperpour-crosshatch.test.tsx",
+    "tests/components/primitive-components/copperpour-multiple-outlines.test.tsx",
+    "tests/components/primitive-components/copperpour-respects-keepouts.test.tsx",
+    "tests/components/primitive-components/copperpour-thermal-reliefs-smtpad-shapes.test.tsx",
+    "tests/components/primitive-components/copperpour-thermal-reliefs.test.tsx",
+    "tests/components/primitive-components/copperpour-trace-visibility.test.ts",
+    "tests/components/primitive-components/copperpour-with-via.test.tsx",
+    "tests/repros/repro-copper-pour-terminal-other-layer.test.tsx",
+    "tests/repros/repro-panel-copper-pour-owning-board.test.tsx",
+    "tests/repros/repro-copper-pour-discarded-bridge.test.tsx",
+    "tests/repros/repro-copper-pour-retained-bridge.test.tsx",
+    "tests/drc/copper-pour-isolated-warning.test.tsx",
+    "tests/scripts/"
+  ],
+  "sourceChangesPermitted": [
+    "lib/components/base-components/Renderable.ts",
+    "lib/components/primitive-components/CopperPour/CopperPour.ts",
+    "lib/components/primitive-components/CopperPour/CopperPour_doInitialPcbCopperPourRender.ts",
+    "lib/components/primitive-components/Group/Group.ts",
+    "tests/repros/__snapshots__/repro-routing-event-copper-pour-pcb.snap.svg",
+    "tests/repros/repro-routing-event-copper-pour.test.tsx"
+  ],
+  "purpose": "Validate localized routing/copper-pour ordering with synchronous generic effect startup, deterministic preview regression, unchanged timing tests, shared dependency installation, actual source builds and matcher SVGs."
+}
