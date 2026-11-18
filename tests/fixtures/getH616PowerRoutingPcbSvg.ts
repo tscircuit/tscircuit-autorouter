@@ -8,6 +8,7 @@ type H616PowerRoutingPcbView = {
   errorCount: number
   focusCenter: { x: number; y: number }
   focused?: boolean
+  title?: string
 }
 
 export function getH616PowerRoutingPcbSvg({
@@ -17,8 +18,9 @@ export function getH616PowerRoutingPcbSvg({
   errorCount,
   focusCenter,
   focused = false,
+  title = focused ? "H616 ground routing" : "H616 full PCB",
 }: H616PowerRoutingPcbView): string {
-  const focusedViewSizeMm = 6
+  const focusedViewSizeMm = 3
   const view = circuitJson.flatMap((element): AnyCircuitElement[] => {
     if (focused && element.type === "pcb_fabrication_note_text") return []
     if (!focused || element.type !== "pcb_board") return [element]
@@ -52,7 +54,6 @@ export function getH616PowerRoutingPcbSvg({
       boardOutline: "#475569",
     },
   })
-  const title = focused ? "H616 ground routing" : "H616 full PCB"
   return svg.replace(
     "</svg>",
     `<rect x="15" y="15" width="970" height="54" rx="6" fill="white" stroke="#475569"/><text x="30" y="51" font-family="sans-serif" font-size="20" fill="#0f172a">${title}: ${connectedNetCount}/${requestedNetCount} connected nets; ${errorCount} physical DRC errors</text></svg>`,
