@@ -1,0 +1,53 @@
+<svg width="800" height="560" viewBox="0 0 800 560" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="white"/><g><rect data-type="rect" data-label="top
+inner1
+inner2
+inner3
+inner4
+bottom" data-x="0" data-y="0" x="348.2014388489209" y="98.70503597122303" width="103.59712230215825" height="345.32374100719426" fill="rgba(255,0,0,0.9843999999999999)" stroke="black" stroke-width="0.028958333333333336"/></g><text data-type="text" data-label="Six-layer board: signal blocked on every copper layer" data-x="0" data-y="6.5" x="400" y="46.9064748201439" fill="black" font-size="13.81294964028777" font-family="sans-serif" text-anchor="middle" dominant-baseline="central">Six-layer board: signal blocked on every copper layer</text><text data-type="text" data-label="Terminal steps attempted: 1" data-x="0" data-y="-6" x="400" y="478.5611510791367" fill="black" font-size="13.81294964028777" font-family="sans-serif" text-anchor="middle" dominant-baseline="central">Terminal steps attempted: 1</text><text data-type="text" data-label="Caller receives solver error: false" data-x="0" data-y="-7" x="400" y="513.0935251798561" fill="black" font-size="13.81294964028777" font-family="sans-serif" text-anchor="middle" dominant-baseline="central">Caller receives solver error: false</text><g><circle data-type="point" data-label="signal
+signal
+top" data-x="-5" data-y="0" cx="227.33812949640287" cy="271.36690647482015" r="3" fill="hsl(0, 100%, 50%)"/></g><g><circle data-type="point" data-label="signal
+signal
+top" data-x="5" data-y="0" cx="572.6618705035971" cy="271.36690647482015" r="3" fill="hsl(0, 100%, 50%)"/></g><g id="crosshair" style="display: none"><line id="crosshair-h" y1="0" y2="560" stroke="#666" stroke-width="0.5"/><line id="crosshair-v" x1="0" x2="800" stroke="#666" stroke-width="0.5"/><text id="coordinates" font-family="monospace" font-size="12" fill="#666"></text></g><script><![CDATA[
+              document.currentScript.parentElement.addEventListener('mousemove', (e) => {
+                const svg = e.currentTarget;
+                const rect = svg.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const crosshair = svg.getElementById('crosshair');
+                const h = svg.getElementById('crosshair-h');
+                const v = svg.getElementById('crosshair-v');
+                const coords = svg.getElementById('coordinates');
+                
+                crosshair.style.display = 'block';
+                h.setAttribute('x1', '0');
+                h.setAttribute('x2', '800');
+                h.setAttribute('y1', y);
+                h.setAttribute('y2', y);
+                v.setAttribute('x1', x);
+                v.setAttribute('x2', x);
+                v.setAttribute('y1', '0');
+                v.setAttribute('y2', '560');
+
+                // Calculate real coordinates using inverse transformation
+                const matrix = {"a":34.53237410071942,"c":0,"e":400,"b":0,"d":-34.53237410071942,"f":271.36690647482015};
+                // Manually invert and apply the affine transform
+                // Since we only use translate and scale, we can directly compute:
+                // x' = (x - tx) / sx
+                // y' = (y - ty) / sy
+                const sx = matrix.a;
+                const sy = matrix.d;
+                const tx = matrix.e; 
+                const ty = matrix.f;
+                const realPoint = {
+                  x: (x - tx) / sx,
+                  y: (y - ty) / sy // Flip y back since we used negative scale
+                }
+                
+                coords.textContent = `(${realPoint.x.toFixed(2)}, ${realPoint.y.toFixed(2)})`;
+                coords.setAttribute('x', (x + 5).toString());
+                coords.setAttribute('y', (y - 5).toString());
+              });
+              document.currentScript.parentElement.addEventListener('mouseleave', () => {
+                document.currentScript.parentElement.getElementById('crosshair').style.display = 'none';
+              });
+            ]]></script></svg>
