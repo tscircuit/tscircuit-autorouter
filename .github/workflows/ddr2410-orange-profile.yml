@@ -1,0 +1,89 @@
+name: Profile latest OrangeCrab complete plane-escape phase
+on:
+  push:
+    branches: [codex/ddr2410-orange-profile]
+permissions:
+  contents: read
+jobs:
+  profile:
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          ref: d88899c9ac79cf48491a402b5e3643b3efabe373
+          path: router
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/core
+          ref: 5d9e4a0630bebe77003ee31e0dfa5993ee22e394
+          path: core
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Build the frozen latest stack
+        run: |
+          for folder in router core; do (cd "$folder" && bun install --ignore-scripts); done
+          (cd router && bun build lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts --target bun --packages external --outfile benchmark-runtime/pipeline9.js)
+          cd experiments/full-board-priority-analysis
+          bun install --frozen-lockfile --ignore-scripts
+          bun build-core.ts ../../core
+      - name: Capture fresh native first-phase input
+        working-directory: experiments/full-board-priority-analysis
+        run: |
+          export FULL_BOARD_CORE_SOURCE="$GITHUB_WORKSPACE/core"
+          export FULL_BOARD_CORE_MODULE="$PWD/patched-core/index.js"
+          export FULL_BOARD_ROUTER_MODULE="$GITHUB_WORKSPACE/router/benchmark-runtime/pipeline9.js"
+          export FULL_BOARD_ROUTER_COMMIT="d88899c9ac79cf48491a402b5e3643b3efabe373"
+          export FULL_BOARD_ROUTING_BUDGET_MS=1
+          set +e
+          bun render.tsx orangecrab "$GITHUB_WORKSPACE/fresh-input" phased
+          capture_status=$?
+          set -e
+          python3 - <<'PY'
+          import json,os
+          from pathlib import Path
+          root=Path(os.environ['GITHUB_WORKSPACE'])/'fresh-input'
+          progress=json.loads((root/'progress.json').read_text())
+          assert 'Full-board routing budget exhausted' in progress['errors'],progress['errors']
+          assert (root/'phase-1-input.srj.json').is_file()
+          assert progress['initialCopperElements']==0
+          PY
+      - name: Profile the existing pipeline through completion
+        run: |
+          mkdir -p profile
+          cp experiments/full-board-priority-analysis/check-phase-output.ts router/check-phase-output.ts
+          cd router
+          bun --cpu-prof --cpu-prof-dir "$GITHUB_WORKSPACE/profile" --cpu-prof-name orange-plane.cpuprofile check-phase-output.ts "$GITHUB_WORKSPACE/fresh-input/phase-1-input.srj.json" "$GITHUB_WORKSPACE/profile"
+      - name: Export compact sampled CPU measurements
+        run: |
+          python3 - <<'PY'
+          import collections,json
+          from pathlib import Path
+          root=Path('profile')
+          p=json.loads((root/'orange-plane.cpuprofile').read_text())
+          nodes={n['id']:n for n in p['nodes']}
+          parents={c:n['id'] for n in p['nodes'] for c in n.get('children',[])}
+          own=collections.Counter();inclusive=collections.Counter()
+          for sample,delta in zip(p['samples'],p['timeDeltas']):
+              own[sample]+=delta
+              current=sample
+              while current is not None:
+                  inclusive[current]+=delta
+                  current=parents.get(current)
+          def rows(counter):
+              return [{'ms':round(t/1000,2),**nodes[n]['callFrame']} for n,t in counter.most_common(60)]
+          report={'self':rows(own),'inclusive':rows(inclusive)}
+          (root/'cpu-summary.json').write_text(json.dumps(report,indent=2))
+          print('PROFILE2410_CPU_SUMMARY',json.dumps(report,separators=(',',':')))
+          print('PROFILE2410_PHASE_RESULT',json.dumps(json.loads((root/'report.json').read_text()),separators=(',',':')))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: orange-2410-complete-phase-profile
+          path: |
+            profile
+            fresh-input/phase-1-input.srj.json
+          retention-days: 14
