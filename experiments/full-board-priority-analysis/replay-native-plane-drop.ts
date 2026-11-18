@@ -24,7 +24,7 @@ const report = {
   iterations: solver.iterations,
   stats: solver.stats,
   options: captured.solverOptions,
-  inputConnections: captured.solverParams.simpleRouteJson.connections.length,
+  inputConnections: captured.solverParams.connections.length,
 }
 writeFileSync(`${output}/report.json`, JSON.stringify(report, null, 2))
 writeFileSync(`${output}/fanout.graphics.json`, JSON.stringify(graphics))
