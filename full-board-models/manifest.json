@@ -1,0 +1,80 @@
+[
+  {
+    "id": "orangecrab",
+    "title": "OrangeCrab rev 0.2.1 ECP5 DDR3",
+    "parts": 163,
+    "pads": 893,
+    "nets": 170,
+    "routableNets": 152,
+    "removedCopper": {
+      "segments": 7280,
+      "vias": 441,
+      "zones": 40
+    }
+  },
+  {
+    "id": "h616",
+    "title": "Allwinner H616 Devboard DDR3",
+    "parts": 125,
+    "pads": 760,
+    "nets": 264,
+    "routableNets": 121,
+    "removedCopper": {
+      "segments": 3122,
+      "vias": 406,
+      "zones": 469
+    }
+  },
+  {
+    "id": "butterstick",
+    "title": "ButterStick r1.0",
+    "parts": 350,
+    "pads": 1623,
+    "nets": 349,
+    "routableNets": 317,
+    "removedCopper": {
+      "segments": 19487,
+      "vias": 1163,
+      "zones": 53
+    }
+  },
+  {
+    "id": "glider",
+    "title": "Glider mainboard",
+    "parts": 379,
+    "pads": 1700,
+    "nets": 459,
+    "routableNets": 356,
+    "removedCopper": {
+      "segments": 8883,
+      "vias": 900,
+      "zones": 5
+    }
+  },
+  {
+    "id": "imx6",
+    "title": "i.MX6 Demo Board",
+    "parts": 498,
+    "pads": 1904,
+    "nets": 588,
+    "routableNets": 404,
+    "removedCopper": {
+      "segments": 6350,
+      "vias": 973,
+      "zones": 64
+    }
+  },
+  {
+    "id": "icepi",
+    "title": "iCE/Pi CM0 SBC",
+    "parts": 280,
+    "pads": 1426,
+    "nets": 466,
+    "routableNets": 230,
+    "removedCopper": {
+      "segments": 4461,
+      "vias": 823,
+      "zones": 54
+    }
+  }
+]

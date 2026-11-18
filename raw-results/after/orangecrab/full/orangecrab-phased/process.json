@@ -1,0 +1,9 @@
+{
+  "id": "orangecrab",
+  "mode": "phased",
+  "variant": "candidate",
+  "exitCode": 0,
+  "timedOut": false,
+  "wallMs": 605677.789616,
+  "peakRssMb": 4136.5625
+}

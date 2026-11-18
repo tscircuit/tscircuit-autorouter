@@ -1,0 +1,98 @@
+{
+  "searchesPerTrial": 25,
+  "measurements": [
+    {
+      "variant": "before",
+      "trial": 0,
+      "elapsedMs": 741.423452,
+      "outputSha256": "f2f7e3fdfb1f173bce53c45a5313cfa42bdb7cfaed67b562226a28c50e0412a4"
+    },
+    {
+      "variant": "after",
+      "trial": 0,
+      "elapsedMs": 80.73974000000021,
+      "outputSha256": "f2f7e3fdfb1f173bce53c45a5313cfa42bdb7cfaed67b562226a28c50e0412a4"
+    },
+    {
+      "variant": "after",
+      "trial": 1,
+      "elapsedMs": 76.17276400000014,
+      "outputSha256": "f2f7e3fdfb1f173bce53c45a5313cfa42bdb7cfaed67b562226a28c50e0412a4"
+    },
+    {
+      "variant": "before",
+      "trial": 1,
+      "elapsedMs": 736.242561,
+      "outputSha256": "f2f7e3fdfb1f173bce53c45a5313cfa42bdb7cfaed67b562226a28c50e0412a4"
+    },
+    {
+      "variant": "before",
+      "trial": 2,
+      "elapsedMs": 744.8327169999998,
+      "outputSha256": "f2f7e3fdfb1f173bce53c45a5313cfa42bdb7cfaed67b562226a28c50e0412a4"
+    },
+    {
+      "variant": "after",
+      "trial": 2,
+      "elapsedMs": 75.22058100000004,
+      "outputSha256": "f2f7e3fdfb1f173bce53c45a5313cfa42bdb7cfaed67b562226a28c50e0412a4"
+    },
+    {
+      "variant": "after",
+      "trial": 3,
+      "elapsedMs": 74.30493800000022,
+      "outputSha256": "f2f7e3fdfb1f173bce53c45a5313cfa42bdb7cfaed67b562226a28c50e0412a4"
+    },
+    {
+      "variant": "before",
+      "trial": 3,
+      "elapsedMs": 736.1034970000001,
+      "outputSha256": "f2f7e3fdfb1f173bce53c45a5313cfa42bdb7cfaed67b562226a28c50e0412a4"
+    },
+    {
+      "variant": "before",
+      "trial": 4,
+      "elapsedMs": 730.6950809999998,
+      "outputSha256": "f2f7e3fdfb1f173bce53c45a5313cfa42bdb7cfaed67b562226a28c50e0412a4"
+    },
+    {
+      "variant": "after",
+      "trial": 4,
+      "elapsedMs": 73.23528999999962,
+      "outputSha256": "f2f7e3fdfb1f173bce53c45a5313cfa42bdb7cfaed67b562226a28c50e0412a4"
+    },
+    {
+      "variant": "after",
+      "trial": 5,
+      "elapsedMs": 72.25022600000011,
+      "outputSha256": "f2f7e3fdfb1f173bce53c45a5313cfa42bdb7cfaed67b562226a28c50e0412a4"
+    },
+    {
+      "variant": "before",
+      "trial": 5,
+      "elapsedMs": 766.3630620000004,
+      "outputSha256": "f2f7e3fdfb1f173bce53c45a5313cfa42bdb7cfaed67b562226a28c50e0412a4"
+    },
+    {
+      "variant": "before",
+      "trial": 6,
+      "elapsedMs": 735.711628,
+      "outputSha256": "f2f7e3fdfb1f173bce53c45a5313cfa42bdb7cfaed67b562226a28c50e0412a4"
+    },
+    {
+      "variant": "after",
+      "trial": 6,
+      "elapsedMs": 69.47589500000049,
+      "outputSha256": "f2f7e3fdfb1f173bce53c45a5313cfa42bdb7cfaed67b562226a28c50e0412a4"
+    }
+  ],
+  "sourceFileSha256": "a44bcf322b2eaa1755d5e2f2bb755d418b87eac880112d18595cc5f206e1862d",
+  "effectiveInputSha256": "00099d5d815444fa6d4a89fcdeb42ea8472c9a3bd8eec85ff73266dc34d8f714",
+  "effectiveSearchBounds": {
+    "minX": -8,
+    "maxX": 12,
+    "minY": -11,
+    "maxY": 9
+  },
+  "note": "The raw kernel report names the source-file hash inputSha256. Both runtimes benchmark the same effective input after applying these bounds."
+}

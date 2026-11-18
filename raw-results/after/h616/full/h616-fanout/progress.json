@@ -1,0 +1,37 @@
+{
+  "id": "h616",
+  "mode": "fanout",
+  "status": "failed",
+  "renderCompleted": true,
+  "elapsedMs": 604161.98598,
+  "phases": [
+    {
+      "name": "fanout preparation",
+      "solver": "FanoutSolver",
+      "status": "failed",
+      "connections": 174,
+      "startedMs": 15531.579847,
+      "elapsedMs": 584484.5293640001
+    }
+  ],
+  "errors": [
+    "Full-board routing budget exhausted",
+    "Error: Full-board routing budget exhausted",
+    "Full-board routing budget exhausted"
+  ],
+  "stage": "initializing",
+  "initialCopperElements": 0,
+  "runtime": {
+    "tscircuit": "0.0.3231",
+    "core": "0.0.2410",
+    "fanout": "0.0.84",
+    "busLanes": "0.0.62",
+    "autorouter": "workspace Pipeline 9",
+    "routerCommit": "e62071afed73548d412c70cd1676262065a9cab4"
+  },
+  "planeIntent": {
+    "enabled": true,
+    "zones": 5,
+    "importedSavedCopper": false
+  }
+}

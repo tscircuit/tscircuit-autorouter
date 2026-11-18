@@ -1,0 +1,10 @@
+{
+  "routerChangedFiles": [
+    "package.json"
+  ],
+  "repairLibraryChangedFiles": [
+    "lib/FindClearancePathSolver.ts"
+  ],
+  "repairDependenciesIdentical": true,
+  "nativeSnapshotGeometryIdenticalAfterCountNormalization": true
+}

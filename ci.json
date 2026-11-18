@@ -1,0 +1,325 @@
+{
+  "pullRequests": [
+    {
+      "repo": "tscircuit/repair04",
+      "pr": 82,
+      "baseRefName": "main",
+      "headRefOid": "920d01f4c0e5b34e417fec214634b0af87d59b98",
+      "mergeable": "MERGEABLE",
+      "statusCheckRollup": [
+        {
+          "__typename": "CheckRun",
+          "completedAt": "2026-11-18T08:12:31Z",
+          "conclusion": "SKIPPED",
+          "detailsUrl": "https://github.com/tscircuit/repair04/actions/runs/44265012009/job/134667257139",
+          "name": "projection",
+          "startedAt": "2026-11-18T08:12:31Z",
+          "status": "COMPLETED",
+          "workflowName": "Bun Test"
+        },
+        {
+          "__typename": "CheckRun",
+          "completedAt": "2026-11-18T08:12:43Z",
+          "conclusion": "SUCCESS",
+          "detailsUrl": "https://github.com/tscircuit/repair04/actions/runs/44265011793/job/134667253502",
+          "name": "format-check",
+          "startedAt": "2026-11-18T08:12:33Z",
+          "status": "COMPLETED",
+          "workflowName": "Format Check"
+        },
+        {
+          "__typename": "CheckRun",
+          "completedAt": "2026-11-18T08:12:46Z",
+          "conclusion": "SUCCESS",
+          "detailsUrl": "https://github.com/tscircuit/repair04/actions/runs/44265011756/job/134667253026",
+          "name": "type-check",
+          "startedAt": "2026-11-18T08:12:32Z",
+          "status": "COMPLETED",
+          "workflowName": "Type Check"
+        },
+        {
+          "__typename": "CheckRun",
+          "completedAt": "2026-11-18T08:12:48Z",
+          "conclusion": "SUCCESS",
+          "detailsUrl": "https://github.com/tscircuit/repair04/actions/runs/44265012009/job/134667254590",
+          "name": "test",
+          "startedAt": "2026-11-18T08:12:33Z",
+          "status": "COMPLETED",
+          "workflowName": "Bun Test"
+        },
+        {
+          "__typename": "CheckRun",
+          "completedAt": "2026-11-18T08:12:31Z",
+          "conclusion": "SKIPPED",
+          "detailsUrl": "https://github.com/tscircuit/repair04/actions/runs/44265012009/job/134667257360",
+          "name": "compare-projection",
+          "startedAt": "2026-11-18T08:12:31Z",
+          "status": "COMPLETED",
+          "workflowName": "Bun Test"
+        }
+      ],
+      "url": "https://github.com/tscircuit/repair04/pull/82"
+    },
+    {
+      "repo": "tscircuit/repair04",
+      "pr": 83,
+      "baseRefName": "repro/orangecrab-clearance-connectivity",
+      "headRefOid": "1b33fe703438890adc52abbb7a8f18eb6f88ec70",
+      "mergeable": "MERGEABLE",
+      "statusCheckRollup": [
+        {
+          "__typename": "CheckRun",
+          "completedAt": "2026-11-18T08:15:33Z",
+          "conclusion": "SKIPPED",
+          "detailsUrl": "https://github.com/tscircuit/repair04/actions/runs/44265439717/job/134668682028",
+          "name": "projection",
+          "startedAt": "2026-11-18T08:15:33Z",
+          "status": "COMPLETED",
+          "workflowName": "Bun Test"
+        },
+        {
+          "__typename": "CheckRun",
+          "completedAt": "2026-11-18T08:15:47Z",
+          "conclusion": "SUCCESS",
+          "detailsUrl": "https://github.com/tscircuit/repair04/actions/runs/44265439717/job/134668678896",
+          "name": "test",
+          "startedAt": "2026-11-18T08:15:34Z",
+          "status": "COMPLETED",
+          "workflowName": "Bun Test"
+        },
+        {
+          "__typename": "CheckRun",
+          "completedAt": "2026-11-18T08:15:33Z",
+          "conclusion": "SKIPPED",
+          "detailsUrl": "https://github.com/tscircuit/repair04/actions/runs/44265439717/job/134668681410",
+          "name": "compare-projection",
+          "startedAt": "2026-11-18T08:15:33Z",
+          "status": "COMPLETED",
+          "workflowName": "Bun Test"
+        }
+      ],
+      "url": "https://github.com/tscircuit/repair04/pull/83"
+    },
+    {
+      "repo": "tscircuit/tscircuit-autorouter",
+      "pr": 3932,
+      "baseRefName": "main",
+      "headRefOid": "e62071afed73548d412c70cd1676262065a9cab4",
+      "mergeable": "MERGEABLE",
+      "statusCheckRollup": [
+        {
+          "__typename": "CheckRun",
+          "completedAt": "2026-11-18T08:15:49Z",
+          "conclusion": "SKIPPED",
+          "detailsUrl": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44265478988/job/134668855782",
+          "name": "effort-comparison",
+          "startedAt": "2026-11-18T08:15:55Z",
+          "status": "COMPLETED",
+          "workflowName": "Autorouting Benchmark"
+        },
+        {
+          "__typename": "CheckRun",
+          "completedAt": "2026-11-18T08:15:55Z",
+          "conclusion": "SUCCESS",
+          "detailsUrl": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44265479183/job/134668815183",
+          "name": "Post benchmark instructions",
+          "startedAt": "2026-11-18T08:15:51Z",
+          "status": "COMPLETED",
+          "workflowName": "Benchmark Instructions"
+        },
+        {
+          "__typename": "CheckRun",
+          "completedAt": "2026-11-18T08:16:48Z",
+          "conclusion": "SUCCESS",
+          "detailsUrl": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44265479093/job/134668810315",
+          "name": "build",
+          "startedAt": "2026-11-18T08:15:51Z",
+          "status": "COMPLETED",
+          "workflowName": "Build"
+        },
+        {
+          "__typename": "CheckRun",
+          "completedAt": "2026-11-18T08:20:55Z",
+          "conclusion": "SUCCESS",
+          "detailsUrl": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44265479173/job/134668810926",
+          "name": "test (1)",
+          "startedAt": "2026-11-18T08:15:51Z",
+          "status": "COMPLETED",
+          "workflowName": "Bun Test"
+        },
+        {
+          "__typename": "CheckRun",
+          "completedAt": "2026-11-18T08:16:19Z",
+          "conclusion": "SUCCESS",
+          "detailsUrl": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44265479090/job/134668810066",
+          "name": "format-check",
+          "startedAt": "2026-11-18T08:15:50Z",
+          "status": "COMPLETED",
+          "workflowName": "Format Check"
+        },
+        {
+          "__typename": "CheckRun",
+          "completedAt": "2026-11-18T08:16:26Z",
+          "conclusion": "SUCCESS",
+          "detailsUrl": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44265479148/job/134668810278",
+          "name": "check-dependency-patches",
+          "startedAt": "2026-11-18T08:15:51Z",
+          "status": "COMPLETED",
+          "workflowName": "No Dependency Patches"
+        },
+        {
+          "__typename": "CheckRun",
+          "completedAt": "2026-11-18T08:16:23Z",
+          "conclusion": "SUCCESS",
+          "detailsUrl": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44265479105/job/134668810194",
+          "name": "check-added-code",
+          "startedAt": "2026-11-18T08:15:51Z",
+          "status": "COMPLETED",
+          "workflowName": "No String ID Hacks"
+        },
+        {
+          "__typename": "CheckRun",
+          "completedAt": "2026-11-18T08:16:57Z",
+          "conclusion": "SUCCESS",
+          "detailsUrl": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44265479003/job/134668810022",
+          "name": "type-check",
+          "startedAt": "2026-11-18T08:15:51Z",
+          "status": "COMPLETED",
+          "workflowName": "Type Check"
+        },
+        {
+          "__typename": "CheckRun",
+          "completedAt": "2026-11-18T08:17:40Z",
+          "conclusion": "SUCCESS",
+          "detailsUrl": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44265478991/job/134668810193",
+          "name": "vercel-build",
+          "startedAt": "2026-11-18T08:15:51Z",
+          "status": "COMPLETED",
+          "workflowName": "Vercel Build"
+        },
+        {
+          "__typename": "CheckRun",
+          "completedAt": "2026-11-18T08:21:06Z",
+          "conclusion": "SUCCESS",
+          "detailsUrl": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44265479173/job/134668811248",
+          "name": "test (2)",
+          "startedAt": "2026-11-18T08:15:52Z",
+          "status": "COMPLETED",
+          "workflowName": "Bun Test"
+        },
+        {
+          "__typename": "CheckRun",
+          "completedAt": "2026-11-18T08:26:26Z",
+          "conclusion": "SUCCESS",
+          "detailsUrl": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44265479173/job/134668811845",
+          "name": "test (3)",
+          "startedAt": "2026-11-18T08:15:51Z",
+          "status": "COMPLETED",
+          "workflowName": "Bun Test"
+        },
+        {
+          "__typename": "CheckRun",
+          "completedAt": "2026-11-18T08:37:45Z",
+          "conclusion": "SUCCESS",
+          "detailsUrl": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44265479173/job/134668811451",
+          "name": "test (4)",
+          "startedAt": "2026-11-18T08:15:51Z",
+          "status": "COMPLETED",
+          "workflowName": "Bun Test"
+        },
+        {
+          "__typename": "CheckRun",
+          "completedAt": "2026-11-18T08:26:03Z",
+          "conclusion": "SUCCESS",
+          "detailsUrl": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44265479173/job/134668811448",
+          "name": "test (5)",
+          "startedAt": "2026-11-18T08:15:51Z",
+          "status": "COMPLETED",
+          "workflowName": "Bun Test"
+        },
+        {
+          "__typename": "CheckRun",
+          "completedAt": "2026-11-18T08:27:05Z",
+          "conclusion": "SUCCESS",
+          "detailsUrl": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44265479173/job/134668811315",
+          "name": "test (6)",
+          "startedAt": "2026-11-18T08:15:52Z",
+          "status": "COMPLETED",
+          "workflowName": "Bun Test"
+        },
+        {
+          "__typename": "CheckRun",
+          "completedAt": "2026-11-18T08:21:52Z",
+          "conclusion": "SUCCESS",
+          "detailsUrl": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44265479173/job/134668811329",
+          "name": "test (7)",
+          "startedAt": "2026-11-18T08:15:51Z",
+          "status": "COMPLETED",
+          "workflowName": "Bun Test"
+        },
+        {
+          "__typename": "CheckRun",
+          "completedAt": "2026-11-18T08:24:35Z",
+          "conclusion": "SUCCESS",
+          "detailsUrl": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44265479173/job/134668811470",
+          "name": "test (8)",
+          "startedAt": "2026-11-18T08:15:51Z",
+          "status": "COMPLETED",
+          "workflowName": "Bun Test"
+        },
+        {
+          "__typename": "CheckRun",
+          "completedAt": "2026-11-18T08:26:23Z",
+          "conclusion": "SUCCESS",
+          "detailsUrl": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44265479173/job/134668811342",
+          "name": "test (9)",
+          "startedAt": "2026-11-18T08:15:51Z",
+          "status": "COMPLETED",
+          "workflowName": "Bun Test"
+        },
+        {
+          "__typename": "CheckRun",
+          "completedAt": "2026-11-18T08:15:49Z",
+          "conclusion": "SKIPPED",
+          "detailsUrl": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44265478988/job/134668872888",
+          "name": "Run benchmark",
+          "startedAt": "2026-11-18T08:15:57Z",
+          "status": "COMPLETED",
+          "workflowName": "Autorouting Benchmark"
+        },
+        {
+          "__typename": "CheckRun",
+          "completedAt": "2026-11-18T08:15:49Z",
+          "conclusion": "SKIPPED",
+          "detailsUrl": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44265478988/job/134668812548",
+          "name": "Same machine benchmark",
+          "startedAt": "2026-11-18T08:15:49Z",
+          "status": "COMPLETED",
+          "workflowName": "Autorouting Benchmark"
+        },
+        {
+          "__typename": "CheckRun",
+          "completedAt": "2026-11-18T08:15:49Z",
+          "conclusion": "SKIPPED",
+          "detailsUrl": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44265478988/job/134668813882",
+          "name": "Build benchmark history dashboard",
+          "startedAt": "2026-11-18T08:15:49Z",
+          "status": "COMPLETED",
+          "workflowName": "Autorouting Benchmark"
+        }
+      ],
+      "url": "https://github.com/tscircuit/tscircuit-autorouter/pull/3932"
+    }
+  ],
+  "repairSourceAdditionalChecks": {
+    "commit": "1b33fe703438890adc52abbb7a8f18eb6f88ec70",
+    "workflow": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44265739930/job/134669685531",
+    "format": "passed",
+    "typecheck": "passed"
+  },
+  "localRepairSuite": {
+    "tests": 192,
+    "failures": 0,
+    "expectations": 614740
+  }
+}

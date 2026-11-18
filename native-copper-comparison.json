@@ -1,0 +1,44 @@
+[
+  {
+    "board": "orangecrab",
+    "copperIdentical": true,
+    "elements": 161
+  },
+  {
+    "board": "h616",
+    "copperIdentical": true,
+    "elements": 152
+  },
+  {
+    "board": "butterstick",
+    "copperIdentical": true,
+    "elements": 284
+  },
+  {
+    "board": "glider",
+    "copperIdentical": true,
+    "elements": 148
+  },
+  {
+    "board": "imx6",
+    "copperIdentical": true,
+    "elements": 201
+  },
+  {
+    "board": "icepi",
+    "copperIdentical": true,
+    "elements": 170
+  },
+  {
+    "board": "orangecrab-phased",
+    "copperIdentical": true,
+    "beforeElements": 701,
+    "afterElements": 701
+  },
+  {
+    "board": "icepi-phased",
+    "copperIdentical": false,
+    "beforeElements": 0,
+    "afterElements": 903
+  }
+]

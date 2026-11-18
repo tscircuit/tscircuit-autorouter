@@ -1,0 +1,966 @@
+{
+  "self": [
+    {
+      "ms": 21021.82,
+      "functionName": "net",
+      "scriptId": "385",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/@tscircuit/repair04/lib/ClearancePathConnectivity.ts",
+      "lineNumber": 17,
+      "columnNumber": 16
+    },
+    {
+      "ms": 20827.93,
+      "functionName": "projectPair",
+      "scriptId": "365",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/@tscircuit/repair04/lib/RelaxTraceClearanceSolver.ts",
+      "lineNumber": 847,
+      "columnNumber": 21
+    },
+    {
+      "ms": 13621.42,
+      "functionName": "clear",
+      "scriptId": "384",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/@tscircuit/repair04/lib/FindClearancePathSolver.ts",
+      "lineNumber": 452,
+      "columnNumber": 18
+    },
+    {
+      "ms": 11366.58,
+      "functionName": "structuredClone",
+      "scriptId": "0",
+      "url": "",
+      "lineNumber": -1,
+      "columnNumber": -1
+    },
+    {
+      "ms": 10870.72,
+      "functionName": "",
+      "scriptId": "384",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/@tscircuit/repair04/lib/FindClearancePathSolver.ts",
+      "lineNumber": 718,
+      "columnNumber": 25
+    },
+    {
+      "ms": 10260.94,
+      "functionName": "query",
+      "scriptId": "386",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/@tscircuit/repair04/lib/negotiatedClearanceSearchKernel.ts",
+      "lineNumber": 86,
+      "columnNumber": 16
+    },
+    {
+      "ms": 10125.1,
+      "functionName": "find",
+      "scriptId": "20",
+      "url": "",
+      "lineNumber": 0,
+      "columnNumber": 10
+    },
+    {
+      "ms": 8755.84,
+      "functionName": "find",
+      "scriptId": "20",
+      "url": "",
+      "lineNumber": 0,
+      "columnNumber": 10
+    },
+    {
+      "ms": 8230.67,
+      "functionName": "getViaPadDistance",
+      "scriptId": "365",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/@tscircuit/repair04/lib/RelaxTraceClearanceSolver.ts",
+      "lineNumber": 641,
+      "columnNumber": 27
+    },
+    {
+      "ms": 5256.27,
+      "functionName": "getSegmentToSegmentMinDistance",
+      "scriptId": "370",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/@tscircuit/repair04/lib/getSegmentToSegmentMinDistance.ts",
+      "lineNumber": 27,
+      "columnNumber": 46
+    },
+    {
+      "ms": 5062.71,
+      "functionName": "projectPad",
+      "scriptId": "365",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/@tscircuit/repair04/lib/RelaxTraceClearanceSolver.ts",
+      "lineNumber": 901,
+      "columnNumber": 20
+    },
+    {
+      "ms": 5024.18,
+      "functionName": "_step",
+      "scriptId": "307",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/lib/solvers/RouteStitchingSolver/SingleHighDensityRouteStitchSolver3.ts",
+      "lineNumber": 413,
+      "columnNumber": 7
+    },
+    {
+      "ms": 4333.28,
+      "functionName": "pointToSegmentDistance",
+      "scriptId": "62",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/@tscircuit/math-utils/dist/chunk-LKX2ITST.js",
+      "lineNumber": 53,
+      "columnNumber": 31
+    },
+    {
+      "ms": 3907.2,
+      "functionName": "getViaPadDistance",
+      "scriptId": "365",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/@tscircuit/repair04/lib/RelaxTraceClearanceSolver.ts",
+      "lineNumber": 641,
+      "columnNumber": 27
+    },
+    {
+      "ms": 3666.02,
+      "functionName": "expand",
+      "scriptId": "171",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/tiny-hypergraph/lib/prepared/DenseRoutingWorkspace.ts",
+      "lineNumber": 109,
+      "columnNumber": 16
+    },
+    {
+      "ms": 3479.64,
+      "functionName": "collides",
+      "scriptId": "447",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/@tscircuit/power-trace-expander/node_modules/flatbush/index.js",
+      "lineNumber": 224,
+      "columnNumber": 12
+    },
+    {
+      "ms": 3442.24,
+      "functionName": "evaluate",
+      "scriptId": "242",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/high-density-repair02/lib/high-density-repair-solver/functions/repairNodeClearance.ts",
+      "lineNumber": 326,
+      "columnNumber": 17
+    },
+    {
+      "ms": 3366.35,
+      "functionName": "Map",
+      "scriptId": "0",
+      "url": "",
+      "lineNumber": -1,
+      "columnNumber": -1
+    },
+    {
+      "ms": 3263.71,
+      "functionName": "",
+      "scriptId": "380",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/@tscircuit/repair04/lib/NegotiateTraceClearanceSolver.ts",
+      "lineNumber": 426,
+      "columnNumber": 29
+    },
+    {
+      "ms": 3026.64,
+      "functionName": "doSegmentsIntersect",
+      "scriptId": "368",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/@tscircuit/repair04/node_modules/@tscircuit/math-utils/dist/chunk-EFLPMB4J.js",
+      "lineNumber": 10,
+      "columnNumber": 28
+    },
+    {
+      "ms": 3005.99,
+      "functionName": "stepSweep",
+      "scriptId": "365",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/@tscircuit/repair04/lib/RelaxTraceClearanceSolver.ts",
+      "lineNumber": 997,
+      "columnNumber": 19
+    },
+    {
+      "ms": 2978.88,
+      "functionName": "doSegmentsIntersect",
+      "scriptId": "368",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/@tscircuit/repair04/node_modules/@tscircuit/math-utils/dist/chunk-EFLPMB4J.js",
+      "lineNumber": 10,
+      "columnNumber": 28
+    },
+    {
+      "ms": 2971.78,
+      "functionName": "canJoinLayerTransition",
+      "scriptId": "307",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/lib/solvers/RouteStitchingSolver/SingleHighDensityRouteStitchSolver3.ts",
+      "lineNumber": 73,
+      "columnNumber": 31
+    },
+    {
+      "ms": 2733.1,
+      "functionName": "getViaPadDistance",
+      "scriptId": "365",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/@tscircuit/repair04/lib/RelaxTraceClearanceSolver.ts",
+      "lineNumber": 641,
+      "columnNumber": 27
+    },
+    {
+      "ms": 2687.49,
+      "functionName": "stringify",
+      "scriptId": "0",
+      "url": "",
+      "lineNumber": -1,
+      "columnNumber": -1
+    },
+    {
+      "ms": 2638.3,
+      "functionName": "getViaPadDistance",
+      "scriptId": "365",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/@tscircuit/repair04/lib/RelaxTraceClearanceSolver.ts",
+      "lineNumber": 641,
+      "columnNumber": 27
+    },
+    {
+      "ms": 2580.57,
+      "functionName": "expand",
+      "scriptId": "171",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/tiny-hypergraph/lib/prepared/DenseRoutingWorkspace.ts",
+      "lineNumber": 109,
+      "columnNumber": 16
+    },
+    {
+      "ms": 2571.56,
+      "functionName": "owner",
+      "scriptId": "380",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/@tscircuit/repair04/lib/NegotiateTraceClearanceSolver.ts",
+      "lineNumber": 320,
+      "columnNumber": 20
+    },
+    {
+      "ms": 2419.81,
+      "functionName": "calculateAdditionalEdgeCost",
+      "scriptId": "386",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/@tscircuit/repair04/lib/negotiatedClearanceSearchKernel.ts",
+      "lineNumber": 221,
+      "columnNumber": 38
+    },
+    {
+      "ms": 2418.23,
+      "functionName": "query",
+      "scriptId": "341",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/high-density-repair03/lib/drc/AutoroutingDrcEngine.ts",
+      "lineNumber": 260,
+      "columnNumber": 7
+    },
+    {
+      "ms": 2302.22,
+      "functionName": "isPointInOrOnPolygon",
+      "scriptId": "61",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/lib/utils/polygonContainment.ts",
+      "lineNumber": 20,
+      "columnNumber": 36
+    },
+    {
+      "ms": 2174.44,
+      "functionName": "",
+      "scriptId": "365",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/@tscircuit/repair04/lib/RelaxTraceClearanceSolver.ts",
+      "lineNumber": 614,
+      "columnNumber": 10
+    },
+    {
+      "ms": 2172.35,
+      "functionName": "some",
+      "scriptId": "20",
+      "url": "",
+      "lineNumber": 0,
+      "columnNumber": 10
+    },
+    {
+      "ms": 2169.79,
+      "functionName": "find",
+      "scriptId": "441",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/@tscircuit/power-trace-expander/src/ConnectionNameResolver.ts",
+      "lineNumber": 149,
+      "columnNumber": 14
+    },
+    {
+      "ms": 2144.4,
+      "functionName": "getViaPadDistance",
+      "scriptId": "365",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/@tscircuit/repair04/lib/RelaxTraceClearanceSolver.ts",
+      "lineNumber": 641,
+      "columnNumber": 27
+    },
+    {
+      "ms": 2140.11,
+      "functionName": "search",
+      "scriptId": "78",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/rbush/index.js",
+      "lineNumber": 14,
+      "columnNumber": 10
+    },
+    {
+      "ms": 2125.39,
+      "functionName": "getSpatialCandidateIndexes",
+      "scriptId": "359",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/high-density-repair03/lib/solvers/GlobalDrcForceImproveSolver/spatialIndex.ts",
+      "lineNumber": 85,
+      "columnNumber": 42
+    },
+    {
+      "ms": 1994.41,
+      "functionName": "net",
+      "scriptId": "385",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/@tscircuit/repair04/lib/ClearancePathConnectivity.ts",
+      "lineNumber": 17,
+      "columnNumber": 16
+    },
+    {
+      "ms": 1988.62,
+      "functionName": "areSameNet",
+      "scriptId": "303",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/lib/solvers/RouteStitchingSolver/route-stitch-clearance-validator.ts",
+      "lineNumber": 196,
+      "columnNumber": 20
+    },
+    {
+      "ms": 1988.36,
+      "functionName": "getCandidatePairs",
+      "scriptId": "242",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/high-density-repair02/lib/high-density-repair-solver/functions/repairNodeClearance.ts",
+      "lineNumber": 44,
+      "columnNumber": 19
+    },
+    {
+      "ms": 1941.44,
+      "functionName": "processCurrentXSlab",
+      "scriptId": "124",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/lib/solvers/TopologyMergingSolver/TopologyMergingSolver.ts",
+      "lineNumber": 217,
+      "columnNumber": 29
+    },
+    {
+      "ms": 1929.91,
+      "functionName": "segmentDistance",
+      "scriptId": "266",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/high-density-repair02/lib/high-density-repair-solver/functions/segmentDistance.ts",
+      "lineNumber": 4,
+      "columnNumber": 31
+    },
+    {
+      "ms": 1886.59,
+      "functionName": "getContact",
+      "scriptId": "365",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/@tscircuit/repair04/lib/RelaxTraceClearanceSolver.ts",
+      "lineNumber": 72,
+      "columnNumber": 19
+    },
+    {
+      "ms": 1851.34,
+      "functionName": "distance",
+      "scriptId": "62",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/@tscircuit/math-utils/dist/chunk-LKX2ITST.js",
+      "lineNumber": 64,
+      "columnNumber": 17
+    },
+    {
+      "ms": 1798.95,
+      "functionName": "_step",
+      "scriptId": "449",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/@tscircuit/power-trace-expander/src/ObstacleAwareGridRouteSolver.ts",
+      "lineNumber": 223,
+      "columnNumber": 16
+    },
+    {
+      "ms": 1736.89,
+      "functionName": "runCachedQuery",
+      "scriptId": "341",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/high-density-repair03/lib/drc/AutoroutingDrcEngine.ts",
+      "lineNumber": 969,
+      "columnNumber": 24
+    },
+    {
+      "ms": 1730.43,
+      "functionName": "map",
+      "scriptId": "20",
+      "url": "",
+      "lineNumber": 0,
+      "columnNumber": 10
+    },
+    {
+      "ms": 1711.92,
+      "functionName": "project",
+      "scriptId": "365",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/@tscircuit/repair04/lib/RelaxTraceClearanceSolver.ts",
+      "lineNumber": 563,
+      "columnNumber": 17
+    },
+    {
+      "ms": 1706.8,
+      "functionName": "_all",
+      "scriptId": "78",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/rbush/index.js",
+      "lineNumber": 169,
+      "columnNumber": 8
+    },
+    {
+      "ms": 1673.24,
+      "functionName": "heuristic",
+      "scriptId": "384",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/@tscircuit/repair04/lib/FindClearancePathSolver.ts",
+      "lineNumber": 633,
+      "columnNumber": 24
+    },
+    {
+      "ms": 1635.74,
+      "functionName": "getEndpointKey",
+      "scriptId": "305",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/lib/solvers/RouteStitchingSolver/routeStitchingEndpointHelpers.ts",
+      "lineNumber": 94,
+      "columnNumber": 16
+    },
+    {
+      "ms": 1632.93,
+      "functionName": "pointToSegmentDistance",
+      "scriptId": "345",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/high-density-repair03/node_modules/@tscircuit/math-utils/dist/chunk-EFLPMB4J.js",
+      "lineNumber": 50,
+      "columnNumber": 31
+    },
+    {
+      "ms": 1625.76,
+      "functionName": "getInteriorPadContact",
+      "scriptId": "365",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/@tscircuit/repair04/lib/RelaxTraceClearanceSolver.ts",
+      "lineNumber": 104,
+      "columnNumber": 30
+    },
+    {
+      "ms": 1615.55,
+      "functionName": "find",
+      "scriptId": "20",
+      "url": "",
+      "lineNumber": 0,
+      "columnNumber": 10
+    },
+    {
+      "ms": 1589.87,
+      "functionName": "sort",
+      "scriptId": "0",
+      "url": "",
+      "lineNumber": -1,
+      "columnNumber": -1
+    },
+    {
+      "ms": 1545.6,
+      "functionName": "some",
+      "scriptId": "20",
+      "url": "",
+      "lineNumber": 0,
+      "columnNumber": 10
+    },
+    {
+      "ms": 1469.08,
+      "functionName": "map",
+      "scriptId": "20",
+      "url": "",
+      "lineNumber": 0,
+      "columnNumber": 10
+    },
+    {
+      "ms": 1429.03,
+      "functionName": "find",
+      "scriptId": "20",
+      "url": "",
+      "lineNumber": 0,
+      "columnNumber": 10
+    },
+    {
+      "ms": 1412.95,
+      "functionName": "segmentToBoundsMinDistance",
+      "scriptId": "265",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/@tscircuit/repair04/node_modules/@tscircuit/math-utils/dist/chunk-Y7G4VXR7.js",
+      "lineNumber": 28,
+      "columnNumber": 35
+    },
+    {
+      "ms": 1351.97,
+      "functionName": "",
+      "scriptId": "365",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/@tscircuit/repair04/lib/RelaxTraceClearanceSolver.ts",
+      "lineNumber": 630,
+      "columnNumber": 10
+    }
+  ],
+  "inclusive": [
+    {
+      "ms": 525700.25,
+      "functionName": "(root)",
+      "scriptId": "0",
+      "url": "",
+      "lineNumber": -1,
+      "columnNumber": -1
+    },
+    {
+      "ms": 525433.06,
+      "functionName": "(module)",
+      "scriptId": "35",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/check-phase-output.ts",
+      "lineNumber": 0,
+      "columnNumber": 0
+    },
+    {
+      "ms": 524964.82,
+      "functionName": "step",
+      "scriptId": "42",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/lib/solvers/BaseSolver.ts",
+      "lineNumber": 32,
+      "columnNumber": 6
+    },
+    {
+      "ms": 524413.93,
+      "functionName": "_step",
+      "scriptId": "36",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts",
+      "lineNumber": 1221,
+      "columnNumber": 7
+    },
+    {
+      "ms": 447496.67,
+      "functionName": "step",
+      "scriptId": "42",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/lib/solvers/BaseSolver.ts",
+      "lineNumber": 32,
+      "columnNumber": 6
+    },
+    {
+      "ms": 322427.5,
+      "functionName": "_step",
+      "scriptId": "348",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9JointDrcRepairSolver.ts",
+      "lineNumber": 1777,
+      "columnNumber": 16
+    },
+    {
+      "ms": 268144.92,
+      "functionName": "step",
+      "scriptId": "42",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/lib/solvers/BaseSolver.ts",
+      "lineNumber": 32,
+      "columnNumber": 6
+    },
+    {
+      "ms": 238295.34,
+      "functionName": "_step",
+      "scriptId": "375",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9BoundedRegionalRepairSolver.ts",
+      "lineNumber": 1002,
+      "columnNumber": 16
+    },
+    {
+      "ms": 122639.47,
+      "functionName": "step",
+      "scriptId": "42",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/lib/solvers/BaseSolver.ts",
+      "lineNumber": 32,
+      "columnNumber": 6
+    },
+    {
+      "ms": 121159.74,
+      "functionName": "_step",
+      "scriptId": "361",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9ClearanceProjectionSolver.ts",
+      "lineNumber": 70,
+      "columnNumber": 16
+    },
+    {
+      "ms": 111035.79,
+      "functionName": "step",
+      "scriptId": "364",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/@tscircuit/repair04/node_modules/@tscircuit/solver-utils/dist/index.js",
+      "lineNumber": 25,
+      "columnNumber": 6
+    },
+    {
+      "ms": 111020.78,
+      "functionName": "_step",
+      "scriptId": "380",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/@tscircuit/repair04/lib/NegotiateTraceClearanceSolver.ts",
+      "lineNumber": 111,
+      "columnNumber": 16
+    },
+    {
+      "ms": 101730.34,
+      "functionName": "step",
+      "scriptId": "364",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/@tscircuit/repair04/node_modules/@tscircuit/solver-utils/dist/index.js",
+      "lineNumber": 25,
+      "columnNumber": 6
+    },
+    {
+      "ms": 101704.04,
+      "functionName": "_step",
+      "scriptId": "382",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/@tscircuit/repair04/lib/PairedClearancePathSolver.ts",
+      "lineNumber": 127,
+      "columnNumber": 16
+    },
+    {
+      "ms": 101465.61,
+      "functionName": "step",
+      "scriptId": "364",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/@tscircuit/repair04/node_modules/@tscircuit/solver-utils/dist/index.js",
+      "lineNumber": 25,
+      "columnNumber": 6
+    },
+    {
+      "ms": 101465.61,
+      "functionName": "stepLane",
+      "scriptId": "382",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/@tscircuit/repair04/lib/PairedClearancePathSolver.ts",
+      "lineNumber": 71,
+      "columnNumber": 18
+    },
+    {
+      "ms": 101418.48,
+      "functionName": "_step",
+      "scriptId": "384",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/@tscircuit/repair04/lib/FindClearancePathSolver.ts",
+      "lineNumber": 107,
+      "columnNumber": 16
+    },
+    {
+      "ms": 79365.54,
+      "functionName": "step",
+      "scriptId": "364",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/@tscircuit/repair04/node_modules/@tscircuit/solver-utils/dist/index.js",
+      "lineNumber": 25,
+      "columnNumber": 6
+    },
+    {
+      "ms": 66265.51,
+      "functionName": "stepSweep",
+      "scriptId": "365",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/@tscircuit/repair04/lib/RelaxTraceClearanceSolver.ts",
+      "lineNumber": 997,
+      "columnNumber": 19
+    },
+    {
+      "ms": 61450.12,
+      "functionName": "",
+      "scriptId": "384",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/@tscircuit/repair04/lib/FindClearancePathSolver.ts",
+      "lineNumber": 718,
+      "columnNumber": 25
+    },
+    {
+      "ms": 55721.61,
+      "functionName": "_step",
+      "scriptId": "442",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/PowerTraceExpansionSolver.ts",
+      "lineNumber": 37,
+      "columnNumber": 16
+    },
+    {
+      "ms": 55719.18,
+      "functionName": "step",
+      "scriptId": "448",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/@tscircuit/power-trace-expander/node_modules/@tscircuit/solver-utils/dist/index.js",
+      "lineNumber": 25,
+      "columnNumber": 6
+    },
+    {
+      "ms": 55711.69,
+      "functionName": "_step",
+      "scriptId": "443",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/@tscircuit/power-trace-expander/src/PowerTraceExpanderSolver.ts",
+      "lineNumber": 319,
+      "columnNumber": 16
+    },
+    {
+      "ms": 55595.43,
+      "functionName": "stepOperation",
+      "scriptId": "443",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/@tscircuit/power-trace-expander/src/PowerTraceExpanderSolver.ts",
+      "lineNumber": 341,
+      "columnNumber": 23
+    },
+    {
+      "ms": 50815.96,
+      "functionName": "projectPair",
+      "scriptId": "365",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/@tscircuit/repair04/lib/RelaxTraceClearanceSolver.ts",
+      "lineNumber": 847,
+      "columnNumber": 21
+    },
+    {
+      "ms": 40149.47,
+      "functionName": "step",
+      "scriptId": "50",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/@tscircuit/solver-utils/dist/index.js",
+      "lineNumber": 29,
+      "columnNumber": 6
+    },
+    {
+      "ms": 38731.74,
+      "functionName": "cachedReferenceDrcEvaluator",
+      "scriptId": "348",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9JointDrcRepairSolver.ts",
+      "lineNumber": 1506,
+      "columnNumber": 54
+    },
+    {
+      "ms": 38584.39,
+      "functionName": "referenceDrcEvaluator",
+      "scriptId": "348",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9JointDrcRepairSolver.ts",
+      "lineNumber": 1447,
+      "columnNumber": 34
+    },
+    {
+      "ms": 38479.82,
+      "functionName": "",
+      "scriptId": "350",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/createPipeline9AutoroutingDrcEvaluator.ts",
+      "lineNumber": 93,
+      "columnNumber": 19
+    },
+    {
+      "ms": 35066.08,
+      "functionName": "_step",
+      "scriptId": "418",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/high-density-repair03/lib/solvers/GlobalDrcForceImproveSolver/TraceContactRepairSolver.ts",
+      "lineNumber": 428,
+      "columnNumber": 16
+    },
+    {
+      "ms": 31452.9,
+      "functionName": "MultipleHighDensityRouteStitchSolver3",
+      "scriptId": "301",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/lib/solvers/RouteStitchingSolver/MultipleHighDensityRouteStitchSolver3.ts",
+      "lineNumber": 149,
+      "columnNumber": 13
+    },
+    {
+      "ms": 29702.67,
+      "functionName": "flatIntoArrayWithCallback",
+      "scriptId": "20",
+      "url": "",
+      "lineNumber": 0,
+      "columnNumber": 10
+    },
+    {
+      "ms": 29695.79,
+      "functionName": "",
+      "scriptId": "301",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/lib/solvers/RouteStitchingSolver/MultipleHighDensityRouteStitchSolver3.ts",
+      "lineNumber": 372,
+      "columnNumber": 14
+    },
+    {
+      "ms": 29294.63,
+      "functionName": "getSharedRootPathRoutes",
+      "scriptId": "301",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/lib/solvers/RouteStitchingSolver/MultipleHighDensityRouteStitchSolver3.ts",
+      "lineNumber": 106,
+      "columnNumber": 33
+    },
+    {
+      "ms": 29266.48,
+      "functionName": "selectRoutesAlongEndpointPath",
+      "scriptId": "305",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/lib/solvers/RouteStitchingSolver/routeStitchingEndpointHelpers.ts",
+      "lineNumber": 280,
+      "columnNumber": 45
+    },
+    {
+      "ms": 28101.44,
+      "functionName": "project",
+      "scriptId": "365",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/@tscircuit/repair04/lib/RelaxTraceClearanceSolver.ts",
+      "lineNumber": 563,
+      "columnNumber": 17
+    },
+    {
+      "ms": 27000.93,
+      "functionName": "",
+      "scriptId": "384",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/@tscircuit/repair04/lib/FindClearancePathSolver.ts",
+      "lineNumber": 329,
+      "columnNumber": 27
+    },
+    {
+      "ms": 25695.1,
+      "functionName": "stepActiveGridSolver",
+      "scriptId": "443",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/@tscircuit/power-trace-expander/src/PowerTraceExpanderSolver.ts",
+      "lineNumber": 1109,
+      "columnNumber": 30
+    },
+    {
+      "ms": 24960.47,
+      "functionName": "extraCost",
+      "scriptId": "384",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/@tscircuit/repair04/lib/FindClearancePathSolver.ts",
+      "lineNumber": 189,
+      "columnNumber": 22
+    },
+    {
+      "ms": 24515.46,
+      "functionName": "calculateAdditionalEdgeCost",
+      "scriptId": "386",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/@tscircuit/repair04/lib/negotiatedClearanceSearchKernel.ts",
+      "lineNumber": 221,
+      "columnNumber": 38
+    },
+    {
+      "ms": 24460.57,
+      "functionName": "",
+      "scriptId": "256",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/lib/utils/autorouting-drc/createTraceObstacleClearanceEvaluator.ts",
+      "lineNumber": 620,
+      "columnNumber": 9
+    },
+    {
+      "ms": 24383.22,
+      "functionName": "some",
+      "scriptId": "20",
+      "url": "",
+      "lineNumber": 0,
+      "columnNumber": 10
+    },
+    {
+      "ms": 22210.87,
+      "functionName": "",
+      "scriptId": "384",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/@tscircuit/repair04/lib/FindClearancePathSolver.ts",
+      "lineNumber": 331,
+      "columnNumber": 48
+    },
+    {
+      "ms": 21719.59,
+      "functionName": "canStitchBetweenTerminals",
+      "scriptId": "301",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/lib/solvers/RouteStitchingSolver/MultipleHighDensityRouteStitchSolver3.ts",
+      "lineNumber": 55,
+      "columnNumber": 35
+    },
+    {
+      "ms": 21683.15,
+      "functionName": "clear",
+      "scriptId": "384",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/@tscircuit/repair04/lib/FindClearancePathSolver.ts",
+      "lineNumber": 452,
+      "columnNumber": 18
+    },
+    {
+      "ms": 21670.43,
+      "functionName": "net",
+      "scriptId": "385",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/@tscircuit/repair04/lib/ClearancePathConnectivity.ts",
+      "lineNumber": 17,
+      "columnNumber": 16
+    },
+    {
+      "ms": 21558.63,
+      "functionName": "query",
+      "scriptId": "386",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/@tscircuit/repair04/lib/negotiatedClearanceSearchKernel.ts",
+      "lineNumber": 86,
+      "columnNumber": 16
+    },
+    {
+      "ms": 21524.98,
+      "functionName": "stepNodeRouting",
+      "scriptId": "187",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver.ts",
+      "lineNumber": 1177,
+      "columnNumber": 25
+    },
+    {
+      "ms": 21524.98,
+      "functionName": "_step",
+      "scriptId": "187",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver.ts",
+      "lineNumber": 1155,
+      "columnNumber": 16
+    },
+    {
+      "ms": 20992.58,
+      "functionName": "step",
+      "scriptId": "42",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/lib/solvers/BaseSolver.ts",
+      "lineNumber": 32,
+      "columnNumber": 6
+    },
+    {
+      "ms": 20977.32,
+      "functionName": "_step",
+      "scriptId": "307",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/lib/solvers/RouteStitchingSolver/SingleHighDensityRouteStitchSolver3.ts",
+      "lineNumber": 413,
+      "columnNumber": 7
+    },
+    {
+      "ms": 19510.32,
+      "functionName": "evaluateNextSegment",
+      "scriptId": "443",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/@tscircuit/power-trace-expander/src/PowerTraceExpanderSolver.ts",
+      "lineNumber": 630,
+      "columnNumber": 29
+    },
+    {
+      "ms": 19302.65,
+      "functionName": "createDrcSnapshot",
+      "scriptId": "340",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/high-density-repair03/lib/solvers/GlobalDrcForceImproveSolver/solverHelpers.ts",
+      "lineNumber": 242,
+      "columnNumber": 26
+    },
+    {
+      "ms": 19036.24,
+      "functionName": "drcEvaluator",
+      "scriptId": "348",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9JointDrcRepairSolver.ts",
+      "lineNumber": 1604,
+      "columnNumber": 39
+    },
+    {
+      "ms": 18497.16,
+      "functionName": "_step",
+      "scriptId": "148",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver.ts",
+      "lineNumber": 1520,
+      "columnNumber": 7
+    },
+    {
+      "ms": 18469.2,
+      "functionName": "startTraceInflation",
+      "scriptId": "443",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/@tscircuit/power-trace-expander/src/PowerTraceExpanderSolver.ts",
+      "lineNumber": 1682,
+      "columnNumber": 29
+    },
+    {
+      "ms": 18438.44,
+      "functionName": "step",
+      "scriptId": "50",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/@tscircuit/solver-utils/dist/index.js",
+      "lineNumber": 29,
+      "columnNumber": 6
+    },
+    {
+      "ms": 18358.59,
+      "functionName": "_step",
+      "scriptId": "148",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver.ts",
+      "lineNumber": 986,
+      "columnNumber": 16
+    },
+    {
+      "ms": 18276.46,
+      "functionName": "_step",
+      "scriptId": "50",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/@tscircuit/solver-utils/dist/index.js",
+      "lineNumber": 129,
+      "columnNumber": 7
+    },
+    {
+      "ms": 17966.25,
+      "functionName": "LocalTraceInflationSolver",
+      "scriptId": "450",
+      "url": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/router/node_modules/@tscircuit/power-trace-expander/src/LocalTraceInflationSolver.ts",
+      "lineNumber": 88,
+      "columnNumber": 13
+    }
+  ]
+}

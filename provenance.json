@@ -1,0 +1,26 @@
+{
+  "tscircuit": "0.0.3231",
+  "core": "0.0.2410",
+  "coreCommit": "5d9e4a0630bebe77003ee31e0dfa5993ee22e394",
+  "autorouter": "0.0.1124",
+  "baselineRouter": "d88899c9ac79cf48491a402b5e3643b3efabe373",
+  "candidateRouter": "e62071afed73548d412c70cd1676262065a9cab4",
+  "baselineRepair04": "be356e322f544def026fcd87b5be2b070dac1c40",
+  "candidateRepair04": "1b33fe703438890adc52abbb7a8f18eb6f88ec70",
+  "fanout": "0.0.84",
+  "busLanes": "0.0.62",
+  "bun": "1.4.3",
+  "baselineRun": 44260589530,
+  "profileRun": 44261032419,
+  "candidateRun": 44265378769,
+  "pairedPhaseRun": 44265378976,
+  "dataset18Run": 44265378770,
+  "sourceCheckRun": 44265739930,
+  "sourceChecks": {
+    "repair04Repro": "https://github.com/tscircuit/repair04/pull/82",
+    "repair04Fix": "https://github.com/tscircuit/repair04/pull/83",
+    "routerIntegration": "https://github.com/tscircuit/tscircuit-autorouter/pull/3932"
+  },
+  "icepiMatchedRun": 44267667356,
+  "nativeCircuitExportRun": 44267806317
+}

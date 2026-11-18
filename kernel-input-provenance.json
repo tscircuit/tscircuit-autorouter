@@ -1,0 +1,11 @@
+{
+  "sourceFileSha256": "a44bcf322b2eaa1755d5e2f2bb755d418b87eac880112d18595cc5f206e1862d",
+  "effectiveInputSha256": "00099d5d815444fa6d4a89fcdeb42ea8472c9a3bd8eec85ff73266dc34d8f714",
+  "effectiveSearchBounds": {
+    "minX": -8,
+    "maxX": 12,
+    "minY": -11,
+    "maxY": 9
+  },
+  "note": "The raw kernel report names the source-file hash inputSha256. Both runtimes benchmark the same effective input after applying these bounds."
+}
