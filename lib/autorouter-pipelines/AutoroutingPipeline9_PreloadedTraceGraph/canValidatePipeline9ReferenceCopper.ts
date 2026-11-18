@@ -13,13 +13,14 @@ export function canValidatePipeline9ReferenceCopper({
   originalSrj: SimpleRouteJson
   connections: SimpleRouteConnection[]
   hasNativePreloadedTraces: boolean
-  referenceCircuitJson: readonly AnyCircuitElement[]
+  referenceCircuitJson?: readonly AnyCircuitElement[]
 }): boolean {
   const externalGroups = connections.flatMap(
     (connection) => connection.externallyConnectedPointIds ?? [],
   )
   if (!hasNativePreloadedTraces && externalGroups.length === 0) {
     // Fresh routes need physical pad attachments for reference continuity.
+    if (!referenceCircuitJson) return false
     const modeledPortIds = new Set<PcbPortId>()
     const padPortIds = new Set<PcbPortId>()
     for (const element of referenceCircuitJson) {

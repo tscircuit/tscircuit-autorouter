@@ -47,20 +47,23 @@ bun scripts/run-sample.ts --pipeline 9 --effort 1 \
   --srj-path fixtures/bug-reports/beagleplay-am6254-ddr4/input.srj.json
 ```
 
-## Baseline snapshots
+## Routing snapshots
 
-Pipeline 9 on autorouter `0.0.1117` (`dd3383c`), Bun `1.3.14`, effort 1,
-and no cache reached joint clearance repair at about 279 seconds. A longer
-run exported all 51 traces in 333 seconds. Rechecking that output with the
-native pad identities gives one bottom-layer clearance violation between
-`DDR_PARITY` and `DDR_A6` at U1 (0.037 mm spacing against a 0.081 mm
-requirement). The original count included 102 false endpoint warnings from
-the earlier fixture's missing pad records. Trace colors identify nets across
-all eight overlaid layers.
+The routed snapshot shows the final Pipeline 9 export with the joint repair
+publication check, based on autorouter `0.0.1124` (`d88899c`). At effort 1
+with Bun `1.3.14` and the cache disabled, it exported 51 connected traces
+and 114 vias. Both the reference and relaxed DRC checks report zero findings
+using all 521 pads, 102 ports, and the fixture's 0.081 mm clearance.
+
+The `d88899c` base run left 0.032 mm between `DDR_PARITY` and `DDR_A7` at
+U1. The routed snapshot measures 0.954 mm for that pair. The original
+`0.0.1117` repro left 0.037 mm between `DDR_PARITY` and `DDR_A6` at U1.
+Its report included 102 false endpoint warnings caused by missing pad
+records. Trace colors identify nets across all eight overlaid layers.
 
 ![AM6254 and Samsung DDR4 before routing](images/unrouted.png)
 
-![AM6254 and Samsung DDR4 with the exported traces](images/routed.png)
+![AM6254 and Samsung DDR4 with 51 routed nets and zero DRC findings](images/routed.png)
 
 [layout]: https://github.com/beagleboard/beagleplay/blob/7a59a98ae27dc4fd9e2bd8975ff90cdb44a366ea/Design/20230215_beagleplayv022_10.brd
 [bom]: https://github.com/beagleboard/beagleplay/blob/7a59a98ae27dc4fd9e2bd8975ff90cdb44a366ea/BeaglePlay_bom.csv

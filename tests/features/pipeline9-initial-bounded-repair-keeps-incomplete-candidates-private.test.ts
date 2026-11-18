@@ -3,7 +3,7 @@ import { Pipeline9JointDrcRepairSolver } from "lib/autorouter-pipelines/Autorout
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 import { createBoundedRegionalRepairFixture } from "../fixtures/pipeline9-bounded-regional-repair-fixture"
 
-test("an incomplete initial bounded result seeds exact repair without publishing", (): void => {
+test("an incomplete initial bounded result seeds exact repair and can win the final DRC comparison", (): void => {
   const fixture = createBoundedRegionalRepairFixture()
   const srj = fixture.originalSrj
   const original = structuredClone(fixture.routes)
@@ -38,16 +38,48 @@ test("an incomplete initial bounded result seeds exact repair without publishing
     expect(solver.stats.initialBoundedRegionalRepairAccepted).toBeFalse()
     expect(getResult().routes).not.toEqual(original)
     const exact = solver.exactRepairSolver!
-    const referenceDrc = exact.params.referenceDrcEvaluator
-    expect(referenceDrc).toBeDefined()
-    const before = referenceDrc!({ traces: [], routes: original })
-    const after = referenceDrc!({
+    const regionalCandidate = exact.params.hdRoutes
+    const before = fixture.drcEvaluator({ traces: [], routes: original })
+    const after = fixture.drcEvaluator({
       traces: [],
-      routes: exact.params.hdRoutes,
+      routes: regionalCandidate,
     })
+    const originalErrors = Array.isArray(before) ? before : before.errors
     expect(Array.isArray(after) ? after : after.errors).toHaveLength(0)
-    expect(Array.isArray(before) ? before : before.errors).not.toHaveLength(0)
+    expect(originalErrors).not.toHaveLength(0)
     expect(fixture.routes).toEqual(original)
+
+    // Exercise publication when later repair produces worse copper than the
+    // checked regional seed.
+    const exactStep = spyOn(exact, "step").mockImplementation((): void => {
+      exact.outputHdRoutes = original
+      exact.solved = true
+    })
+    try {
+      while (!solver.boundedRegionalRepairSolver && !solver.failed) {
+        expect(solver.solved).toBeFalse()
+        solver.step()
+      }
+      const bounded = solver.boundedRegionalRepairSolver!
+      const getFinalResult = bounded.getResult.bind(bounded)
+      const finalResult = spyOn(bounded, "getResult")
+      finalResult.mockImplementation(() => ({
+        ...getFinalResult(),
+        routes: original,
+        publishedDrcIssueCount: originalErrors.length,
+      }))
+      try {
+        solver.solve()
+        expect(solver.failed).toBeFalse()
+        expect(solver.solved).toBeTrue()
+        expect(solver.getOutput()).toEqual(regionalCandidate)
+        expect(solver.stats.finalDrcIssueCount).toBe(0)
+      } finally {
+        finalResult.mockRestore()
+      }
+    } finally {
+      exactStep.mockRestore()
+    }
   } finally {
     resultSpy.mockRestore()
   }

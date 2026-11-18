@@ -11,6 +11,7 @@ test("reference DRC requires modeled ports and pads for fresh route terminals", 
     hasNativePreloadedTraces: false,
   }
   const referenceCircuitJson = convertToCircuitJson(originalSrj, [])
+  expect(canValidatePipeline9ReferenceCopper(context)).toBeFalse()
   expect(
     canValidatePipeline9ReferenceCopper({ ...context, referenceCircuitJson }),
   ).toBeTrue()
