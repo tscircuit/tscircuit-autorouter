@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { RegionalForceImproveSolver } from "lib/solvers/HighDensityRepairSolver/RegionalForceImproveSolver"
+import { RegionalForceImproveSolver } from "high-density-repair01"
 import { applyH616RegionalRoutes } from "tests/fixtures/applyH616RegionalRoutes"
 import { getH616PhysicalDrcErrors } from "tests/fixtures/getH616PhysicalDrcErrors"
 import { getH616PowerRoutingPcbSvg } from "tests/fixtures/getH616PowerRoutingPcbSvg"
