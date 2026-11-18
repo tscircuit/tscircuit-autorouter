@@ -1,0 +1,213 @@
+name: Verify dataset18 performance with balanced order
+on:
+  push:
+    branches: [experiments/ddr-3918-performance-verification]
+    paths: [.github/workflows/verify-ddr-3918-performance.yml]
+permissions:
+  contents: read
+jobs:
+  balanced:
+    name: Unmodified sources, full dataset18, ABBA
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 7a0ff8fd4f44b905d13bea75c50bfa3cb8d6ba0e
+          path: base
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: 7f72c2027f46b5a71d1920ff337e072a032547ed
+          path: head
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.4.3'
+      - name: Use the same dependencies and runtime for both sources
+        run: |
+          python3 - <<'PY'
+          import pathlib,json
+          b=json.loads(pathlib.Path('base/package.json').read_text())
+          h=json.loads(pathlib.Path('head/package.json').read_text())
+          assert b==h, "Manifests differ; review dependencies before comparing"
+          h['overrides']={**h.get('overrides',{}),'csstype':'3.1.3'}
+          pathlib.Path('head/package.json').write_text(json.dumps(h,indent=2)+'\n')
+          PY
+          (cd head && bun install --ignore-scripts)
+          ln -s ../head/node_modules base/node_modules
+          cat > /tmp/collect-perf3918.py <<'PY'
+          import json,pathlib,sys
+          label,root,outdir=sys.argv[1:]
+          report=json.loads((pathlib.Path(root)/"benchmark-result.json").read_text())
+          rows=[]
+          for t in report["tests"]:
+           rows.append({k:t.get(k) for k in ["sampleNumber","didSolve","didTimeout","relaxedDrcPassed","drcErrorCount","elapsedTimeMs","peakRssBytes","viaCount","stageTiming","perfDiagnostics"]})
+          result={"label":label,"runtime":report.get("runtime"),"summary":report["summary"],"tests":sorted(rows,key=lambda t:t["sampleNumber"])}
+          pathlib.Path(outdir).mkdir(parents=True,exist_ok=True)
+          (pathlib.Path(outdir)/(label+".json")).write_text(json.dumps(result,separators=(",",":")))
+          print("CONTROLLED_PERF_METRICS="+json.dumps(result,separators=(",",":")))
+          if not all(t["didSolve"] and t["relaxedDrcPassed"] and not t["didTimeout"] for t in rows): raise SystemExit("Unexpected routing outcome")
+          
+          PY
+      - name: Warm both source trees without recording the warm-up
+        run: |
+          (cd base && bun scripts/benchmark/index.ts --dataset srj18 --solver AutoroutingPipelineSolver9_PreloadedTraceGraph --concurrency 1 --sample-numbers 3 --sample-timeout 300s --exclude-assignable)
+          (cd head && bun scripts/benchmark/index.ts --dataset srj18 --solver AutoroutingPipelineSolver9_PreloadedTraceGraph --concurrency 1 --sample-numbers 3 --sample-timeout 300s --exclude-assignable)
+      - name: Compare base, head, head, base with three fresh sample workers
+        run: |
+          for pass in base-1 head-1 head-2 base-2; do
+            variant="${pass%-*}"
+            echo "CONTROLLED_PASS=$pass"
+            (cd "$variant" && bun scripts/benchmark/index.ts --dataset srj18 --solver AutoroutingPipelineSolver9_PreloadedTraceGraph --concurrency 3 --sample-timeout 300s --exclude-assignable)
+            python3 /tmp/collect-perf3918.py "$pass" "$variant" controlled-metrics
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ddr3918-balanced-metrics
+          path: controlled-metrics/*.json
+          if-no-files-found: warn
+  attribution:
+    name: Private instrumentation and cache-key ablation
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 7a0ff8fd4f44b905d13bea75c50bfa3cb8d6ba0e
+          path: base
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: 7f72c2027f46b5a71d1920ff337e072a032547ed
+          path: head
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.4.3'
+      - name: Use the same dependencies and runtime for both sources
+        run: |
+          python3 - <<'PY'
+          import pathlib,json
+          b=json.loads(pathlib.Path('base/package.json').read_text())
+          h=json.loads(pathlib.Path('head/package.json').read_text())
+          assert b==h, "Manifests differ; review dependencies before comparing"
+          h['overrides']={**h.get('overrides',{}),'csstype':'3.1.3'}
+          pathlib.Path('head/package.json').write_text(json.dumps(h,indent=2)+'\n')
+          PY
+          (cd head && bun install --ignore-scripts)
+          ln -s ../head/node_modules base/node_modules
+          cat > /tmp/collect-perf3918.py <<'PY'
+          import json,pathlib,sys
+          label,root,outdir=sys.argv[1:]
+          report=json.loads((pathlib.Path(root)/"benchmark-result.json").read_text())
+          rows=[]
+          for t in report["tests"]:
+           rows.append({k:t.get(k) for k in ["sampleNumber","didSolve","didTimeout","relaxedDrcPassed","drcErrorCount","elapsedTimeMs","peakRssBytes","viaCount","stageTiming","perfDiagnostics"]})
+          result={"label":label,"runtime":report.get("runtime"),"summary":report["summary"],"tests":sorted(rows,key=lambda t:t["sampleNumber"])}
+          pathlib.Path(outdir).mkdir(parents=True,exist_ok=True)
+          (pathlib.Path(outdir)/(label+".json")).write_text(json.dumps(result,separators=(",",":")))
+          print("CONTROLLED_PERF_METRICS="+json.dumps(result,separators=(",",":")))
+          if not all(t["didSolve"] and t["relaxedDrcPassed"] and not t["didTimeout"] for t in rows): raise SystemExit("Unexpected routing outcome")
+          
+          PY
+      - name: Instrument diagnostic copies only
+        run: |
+          cat > /tmp/perf-preload.js <<'JS'
+          import { createHash } from "node:crypto"
+          import { CachedIntraNodeRouteSolver } from "../../lib/solvers/HighDensitySolver/CachedIntraNodeRouteSolver"
+          import { SingleHighDensityRouteSolver } from "../../lib/solvers/HighDensitySolver/SingleHighDensityRouteSolver"
+          import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "../../lib"
+          globalThis.__routingPerf = {padBuildMs:0,padBuildCalls:0,obstaclesVisited:0,padsKept:0,cacheKeyMs:0,cacheKeyCalls:0,cacheHitCalls:0,cacheAttempts:0,padCheckMs:0,padCheckCalls:0,emptyPadCheckCalls:0,routeClearMs:0,routeClearCalls:0,routeClearRejected:0,gridCalls:0}
+          const stats=globalThis.__routingPerf
+          function timed({prototype,name,ms,calls}) {
+           const original=prototype[name]
+           if(typeof original!=="function")return
+           prototype[name]=function(...args) {
+            const start=performance.now()
+            try{return original.apply(this,args)}
+            finally{stats[ms]+=performance.now()-start;stats[calls]++}
+           }
+          }
+          timed({prototype:CachedIntraNodeRouteSolver.prototype,name:"computeCacheKeyAndTransform",ms:"cacheKeyMs",calls:"cacheKeyCalls"})
+          const originalCache=CachedIntraNodeRouteSolver.prototype.attemptToUseCacheSync
+          CachedIntraNodeRouteSolver.prototype.attemptToUseCacheSync=function(...args) {
+           stats.cacheAttempts++
+           const result=originalCache.apply(this,args)
+           if(result)stats.cacheHitCalls++
+           return result
+          }
+          const originalPad=SingleHighDensityRouteSolver.prototype.doesSegmentIntersectPad
+          if(originalPad)SingleHighDensityRouteSolver.prototype.doesSegmentIntersectPad=function(...args) {
+           if(this.padObstacles.length===0){stats.emptyPadCheckCalls++;return originalPad.apply(this,args)}
+           const start=performance.now()
+           try{return originalPad.apply(this,args)}
+           finally{stats.padCheckMs+=performance.now()-start;stats.padCheckCalls++}
+          }
+          const originalClear=SingleHighDensityRouteSolver.prototype.isRouteClear
+          if(originalClear)SingleHighDensityRouteSolver.prototype.isRouteClear=function(...args) {
+           const start=performance.now()
+           const result=originalClear.apply(this,args)
+           stats.routeClearMs+=performance.now()-start
+           stats.routeClearCalls++
+           if(!result)stats.routeClearRejected++
+           return result
+          }
+          const originalNeighbors=SingleHighDensityRouteSolver.prototype.getNeighbors
+          SingleHighDensityRouteSolver.prototype.getNeighbors=function(...args) {
+           stats.gridCalls++
+           return originalNeighbors.apply(this,args)
+          }
+          const originalOutput=AutoroutingPipelineSolver9_PreloadedTraceGraph.prototype.getOutputSimplifiedPcbTraces
+          AutoroutingPipelineSolver9_PreloadedTraceGraph.prototype.getOutputSimplifiedPcbTraces=function(...args) {
+           const traces=originalOutput.apply(this,args)
+           stats.copperHash=createHash("sha256").update(JSON.stringify(traces)).digest("hex")
+           return traces
+          }
+          
+          JS
+          python3 - <<'PY'
+          import pathlib,shutil
+          for label in ["base","head"]:
+           root=pathlib.Path(label)
+           (root/"scripts/benchmark/perf-preload.private.js").write_text(pathlib.Path("/tmp/perf-preload.js").read_text())
+           child=root/"scripts/benchmark/benchmark.child.ts"
+           s=child.read_text()
+           s=s.replace("#!/usr/bin/env bun","#!/usr/bin/env bun\nimport \"./perf-preload.private.js\"")
+           s=s.replace("    process.stdout.write(", '    if ("result" in payload) Object.assign(payload.result,{perfDiagnostics:globalThis.__routingPerf})\n    process.stdout.write(')
+           if "perfDiagnostics" not in s: raise RuntimeError("child instrumentation not installed")
+           child.write_text(s)
+          root=pathlib.Path("head")
+          p=root/"lib/solvers/HighDensitySolver/IntraNodeSolver.ts"
+          s=p.read_text()
+          start="    const bounds = getBoundsFromNodeWithPortPoints(nodeWithPortPoints)\n    const copperReach"
+          if start not in s: raise RuntimeError("pad scan not found")
+          s=s.replace(start,"    const __padStart = performance.now()\n"+start,1)
+          end="    this.captureSearchDebug = params.captureSearchDebug ?? true"
+          if end not in s: raise RuntimeError("pad scan endpoint not found")
+          s=s.replace(end,"    Object.assign(globalThis.__routingPerf, {padBuildMs:globalThis.__routingPerf.padBuildMs+performance.now()-__padStart,padBuildCalls:globalThis.__routingPerf.padBuildCalls+1,obstaclesVisited:globalThis.__routingPerf.obstaclesVisited+(params.obstacles?.length ?? 0),padsKept:globalThis.__routingPerf.padsKept+this.padObstacles.length})\n"+end,1)
+          p.write_text(s)
+          shutil.copytree("head","head-no-pad-key",ignore=shutil.ignore_patterns(".git","node_modules","benchmark-result*","benchmark-snapshots*"))
+          (pathlib.Path("head-no-pad-key")/"node_modules").symlink_to("../head/node_modules")
+          p=pathlib.Path("head-no-pad-key/lib/solvers/HighDensitySolver/CachedIntraNodeRouteSolver.ts")
+          s=p.read_text()
+          a=s.index("      padObstacles: this.padObstacles.map(")
+          b=s.index("      normalizedConnections,",a)
+          s=s[:a]+s[b:]
+          p.write_text(s)
+          
+          PY
+      - name: Profile samples12 and15 on baseline, head and cache-key ablation
+        run: |
+          for variant in base head head-no-pad-key; do
+            echo "ATTRIBUTION_VARIANT=$variant"
+            (cd "$variant" && bun scripts/benchmark/index.ts --dataset srj18 --solver AutoroutingPipelineSolver9_PreloadedTraceGraph --concurrency 1 --sample-numbers 12,15 --sample-timeout 600s --exclude-assignable)
+            python3 /tmp/collect-perf3918.py "$variant" "$variant" attribution-metrics
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ddr3918-attribution-metrics
+          path: attribution-metrics/*.json
+          if-no-files-found: warn
