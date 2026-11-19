@@ -4,8 +4,6 @@ import { HighDensityForceImproveSolver } from "high-density-repair01/lib/HighDen
 import type { SimpleRouteJson } from "lib/types"
 import { convertToCircuitJson } from "lib/utils/convertToCircuitJson"
 import { RELAXED_DRC_OPTIONS } from "lib/utils/drcPresets"
-import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
-import { convertPreloadedTraceToHdRoutes } from "./convertPreloadedTraceToHdRoutes"
 import { getViaToPadClearance } from "lib/utils/getViaToPadClearance"
 import {
   Pipeline9HighDensityForceImproveSampleSolver,
@@ -31,19 +29,7 @@ export class Pipeline9HighDensityForceImproveSolver extends HighDensityForceImpr
   >
 
   constructor(params: ForceImproveParams) {
-    const connMap = getConnectivityMapFromSimpleRouteJson(params.inputSrj)
-    const fixedHdRoutes = (params.inputSrj.traces ?? [])
-      .filter((trace) => trace.isFixed)
-      .flatMap((trace, index) =>
-        convertPreloadedTraceToHdRoutes(
-          trace,
-          index,
-          params.inputSrj.layerCount,
-          params.inputSrj.minViaPadDiameter ?? params.inputSrj.minViaDiameter ?? 0.3,
-          connMap,
-        ),
-      )
-    super({ ...params, fixedHdRoutes })
+    super(params)
     this.inputSrj = params.inputSrj
     const representedPadObstacleIndexes = new Set<number>()
     convertToCircuitJson(params.inputSrj, [], {
