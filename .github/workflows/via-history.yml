@@ -1,0 +1,101 @@
+name: H616 cramped-guard phase4 via history
+on:
+  push:
+    branches: [bench/h616-cramped-via-history-3242-20261119]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  screen:
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 25
+    env:
+      FULL_BOARD_ROOT: ${{ github.workspace }}/.full-board-run
+      BUN_INSTALL_CACHE_DIR: ${{ github.workspace }}/.full-board-run/bun-cache
+      FULL_BOARD_EXPERIMENT: published
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            experiments/full-board-ten
+            .github/workflows/full-board-ten.yml
+            .github/workflows/via-history.yml
+            AGENTS.md
+      - name: Require reviewed held plan
+        run: python3 experiments/full-board-ten/prepare-via-history.py --verify-plan
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/tscircuit-autorouter
+          ref: ea398b4023119f65157e876a3101aa6ce3ca5f97
+          path: .full-board-run/sources/original
+          persist-credentials: false
+          sparse-checkout: experiments/full-board-priority-analysis
+      - uses: actions/checkout@v4
+        with:
+          repository: ShiboSoftwareDev/core-ddr-benchmark
+          ref: a3679559d6027aea2c441c1078853d58925d3a12
+          path: .full-board-run/sources/spaced
+          persist-credentials: false
+          sparse-checkout: |
+            full-boards
+            circuits
+            scripts
+            licenses
+            provenance
+      - name: Checkout published Tiny source file
+        uses: actions/checkout@v4
+        with:
+          repository: tscircuit/tiny-hypergraph
+          ref: f1fe8edcfb3dfde8fd644d09d81bad18743144b3
+          path: .full-board-run/sources/tiny-base
+          persist-credentials: false
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            lib/DuplicateCongestedPortSolver.ts
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Prepare exact published3242 graph
+        run: python3 experiments/full-board-ten/bootstrap.py --root "$FULL_BOARD_ROOT"
+      - name: Authenticate the successful retained phase and guard runtime
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 experiments/full-board-ten/prepare-via-history.py --prepare-input "$FULL_BOARD_ROOT/via-history-input"
+      - name: Construct the unchanged cramped-guard sibling entry
+        run: python3 experiments/full-board-ten/prepare-via-history.py --prepare-overlay "$FULL_BOARD_ROOT/via-history-input"
+      - name: Reproduce the phase with selected passive observations
+        shell: bash
+        run: |
+          python3 experiments/full-board-ten/prepare-via-history.py --verify-runtime "$FULL_BOARD_ROOT/via-history-input"
+          mkdir -p "$FULL_BOARD_ROOT/via-history"
+          set +e
+          timeout --signal=TERM --kill-after=10s 960s \
+            bun experiments/full-board-ten/run-via-history.ts \
+            --module "$FULL_BOARD_ROOT/npm/autorouter/dist/cramped-port-capacity-candidate.js" \
+            --input "$FULL_BOARD_ROOT/via-history-input/phase-4-input.srj.json.gz" \
+            --output "$FULL_BOARD_ROOT/via-history" \
+            --manifest "$FULL_BOARD_ROOT/runtime-manifest.json" \
+            --plan experiments/full-board-ten/via-history-plan.json \
+            --variant candidate
+          route_status=$?
+          printf '%s\n' "$route_status" > "$FULL_BOARD_ROOT/via-history/process-exit-code.txt"
+          set -e
+          python3 experiments/full-board-ten/prepare-via-history.py --verify-runtime "$FULL_BOARD_ROOT/via-history-input"
+          exit "$route_status"
+      - name: Preserve exact output and selected histories
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          include-hidden-files: true
+          name: h616-cramped-via-history-3242-${{ github.run_attempt }}
+          path: |
+            .full-board-run/via-history
+            .full-board-run/via-history-input
+            .full-board-run/runtime-manifest.json
+            experiments/full-board-ten/via-history-plan.json
+            experiments/full-board-ten/cramped-port-capacity-source-mapping.json
+            experiments/full-board-ten/tiny-cramped-port-capacity-production.patch
+          retention-days: 7
+          compression-level: 0
+          if-no-files-found: warn

@@ -1,0 +1,312 @@
+{
+  "schemaVersion": 2,
+  "mainVersion": "0.0.3242",
+  "runner": "blacksmith-8vcpu-ubuntu-2404-arm",
+  "captureDeadlineMs": 900000,
+  "hardDeadlineSeconds": 960,
+  "sourceOverrides": true,
+  "routingSourceOverrides": true,
+  "dependencyOverrides": [],
+  "solverOptions": {
+    "capacityDepth": null,
+    "targetMinCapacity": null,
+    "cacheProvider": null,
+    "effort": null
+  },
+  "undefinedOptionKeys": [
+    "capacityDepth",
+    "targetMinCapacity",
+    "effort"
+  ],
+  "packages": [
+    {
+      "label": "tscircuit",
+      "name": "tscircuit",
+      "version": "0.0.3242",
+      "gitHead": "31200e03323e6e4573b560eb152d3c625a86edf9",
+      "entryRelative": "dist/index.js",
+      "entrySha256": "cfd669f2d96ac77eb054aab53ff34a80120bcd3db72b87f969b3d8b8d2af78a3",
+      "tarball": "https://registry.npmjs.org/tscircuit/-/tscircuit-0.0.3242.tgz",
+      "integrity": "sha512-SiHpu5DJnSA5MmuMp/Ev4Xu6Dyk0Wu6hSETq9v3HubYT2Z8re2mgcYYhe4y9ZZOooFvDupAzC1jIirmAcCW3MQ=="
+    },
+    {
+      "label": "core",
+      "name": "@tscircuit/core",
+      "version": "0.0.2424",
+      "gitHead": "fb7f456de0a867c7074a9f196597992e0d1253b9",
+      "entryRelative": "dist/index.js",
+      "entrySha256": "f8122fb04b46cb37bf48de0f8642044bc8360937a03630e4655112cc8694471b",
+      "tarball": "https://registry.npmjs.org/@tscircuit/core/-/core-0.0.2424.tgz",
+      "integrity": "sha512-qqc/S8UE7UrMaMEuCMSdNyxhYcnWeNj8bCpnl/fzf7mghcASwuy9ipg2AGSTOOjFr01J7oPtNCNxg9wo6CbDQA=="
+    },
+    {
+      "label": "eval",
+      "name": "@tscircuit/eval",
+      "version": "0.0.1818",
+      "gitHead": "f2a5b80dd2c0bf5436929ac96a9c7bc0993405ff",
+      "entryRelative": "dist/lib/index.js",
+      "entrySha256": "71517bf85bef897c0a658f69fba77e69dc6599f82f701ce966fa6af370991465",
+      "tarball": "https://registry.npmjs.org/@tscircuit/eval/-/eval-0.0.1818.tgz",
+      "integrity": "sha512-ar70mlpktg682FACZ2lxIRtaYKoB97fEcF3TxsBzAQd31Gz8NqkptLDE8vmjMZWyMzmx9k6uaExISHjPCzXUuA=="
+    },
+    {
+      "label": "autorouter",
+      "name": "@tscircuit/capacity-autorouter",
+      "version": "0.0.1132",
+      "gitHead": "c0dcc07ae48b17296a1dc73678e258de62ca8de3",
+      "entryRelative": "dist/index.js",
+      "entrySha256": "5695c6361c0f7a7dc26ddd1b9264b8a8c122e5f7b9610cf24c6af3b99c545df1",
+      "tarball": "https://registry.npmjs.org/@tscircuit/capacity-autorouter/-/capacity-autorouter-0.0.1132.tgz",
+      "integrity": "sha512-giOwlXlzQMsFphclwu0iRjWwRwyokvRDy6F2USnHnxa+ywQbocVmKXRYKPs8e2db5SMoG/Kg3G7nBP6e3cyr6Q=="
+    }
+  ],
+  "frozenBaselinePlan": {
+    "sha256": "3b3d1b99221b1e175eae3f5e6a824b959b9a97f19e67bb2eb3da2ad4704689bf",
+    "bytes": 5489
+  },
+  "sourceCandidate": {
+    "source": {
+      "repositories": [
+        {
+          "repository": "tscircuit/tiny-hypergraph",
+          "sourceBaseCommit": "f1fe8edcfb3dfde8fd644d09d81bad18743144b3",
+          "publishedBaseCommit": "f1fe8edcfb3dfde8fd644d09d81bad18743144b3",
+          "candidateCommit": "a03bb390246ed35a6ebbb4fa6d39350361f9caf0",
+          "productionPatchFile": "tiny-cramped-port-capacity-production.patch",
+          "productionPatchSha256": "5471c0825499ba2d2a873c4172b99fe2d7fb1e076cd09a0c1eb7d490d5ce3863",
+          "changedFiles": [
+            {
+              "relative": "lib/DuplicateCongestedPortSolver.ts",
+              "beforeSha256": "12801e8d12f34b93c0f4b78a551b2bb567a29df9f99d6831ce0c8ee2d2a86b65",
+              "afterSha256": "111fa0262a79c0cd77177f9d046f3bde199dffc01d1ec1ec086b12054a53f22d"
+            }
+          ]
+        }
+      ]
+    },
+    "mappingFile": "cramped-port-capacity-source-mapping.json",
+    "mappingSha256": "7e64ae807660a36567ccf5dc20c37b69bfa0f53431452903126dd2779bac37c3",
+    "candidateAutorouterSha256": "7f9aad1b371eabaf935df6551b01dde711b357140121ab81d03db0e6ba90b251",
+    "siblingEntryRelative": "dist/cramped-port-capacity-candidate.js",
+    "replacementCount": 1,
+    "insertionCount": 0,
+    "scope": "Sole DuplicateCongestedPortSolver.duplicateCongestedPorts method replacement from reviewed Tiny source. No B, A03, Uniform or dependency change."
+  },
+  "publishedRuntimeGraphUnchanged": true,
+  "qualificationReady": false,
+  "status": "HELD_PASSIVE_SUCCESSFUL_PHASE4_VIA_HISTORY",
+  "purpose": "Diagnose the retained invalid vias from the prior cramped-guard H616 spaced phase4. Same saved input/runtime/options; not latest-board gain qualification.",
+  "branch": "bench/h616-cramped-via-history-3242-20261119",
+  "workflow": ".github/workflows/via-history.yml",
+  "inputSha256": "c21ab6df351bd7318501655d927c78f1c7df254bbeaf628f03d53a06d4eb57ee",
+  "expectedOutputSha256": "32ced6782aaa48679f9412c65c6069d1e6130d419c48bb364fbe32d149ceadda",
+  "targetConnectionNames": [
+    "source_net_18",
+    "source_net_53",
+    "source_net_63"
+  ],
+  "maximumCaptureBytes": 8388608,
+  "assessmentPolicy": "No additional physical assessment when final output bytes match the authenticated earlier output. A mismatch is reported and does not establish the same producer.",
+  "frozenFiles": {
+    ".github/workflows/via-history.yml": {
+      "sha256": "f6266e7c2e830f379f6257cbdd27b76cb963326c2f2f44222afe86b0f44210bc",
+      "bytes": 4431
+    },
+    "experiments/full-board-ten/bootstrap.py": {
+      "sha256": "23de25ac8960be89afc57ba27b0d3fddb6e65dba593024be59ec5073d266164d",
+      "bytes": 8903
+    },
+    "experiments/full-board-ten/release.json": {
+      "sha256": "5eece79b055b28bd17e321140949a66f036ceb28573adf108419b5f2f64ddbd4",
+      "bytes": 5677
+    },
+    "experiments/full-board-ten/source-provenance.json": {
+      "sha256": "bd24be29c5fdd5ae68ce15c5b2bc50f172ecdd325dcc1b57a80ec653d12570fb",
+      "bytes": 23139
+    },
+    "experiments/full-board-ten/harness-provenance.json": {
+      "sha256": "fc4b9191002e33b0561d50a2208d38848d81da0735869bb4f563bb9afe1b7405",
+      "bytes": 1479
+    },
+    "experiments/full-board-ten/published-release-provenance.json": {
+      "sha256": "89326fdcc1e99945b98798b0b5b95c60560be6f1f3789184e3bda84464577dc3",
+      "bytes": 19481
+    },
+    "experiments/full-board-ten/runtime/package.json": {
+      "sha256": "c0542a47684ae97ccbe3670fbd2555c3ce0b935e00e8c13aff983442426decda",
+      "bytes": 2804
+    },
+    "experiments/full-board-ten/runtime/bun.lock": {
+      "sha256": "cdf19ae5668a61815a76f9d912b1fbc88907b1f029b2f3dd955f6f81a6cb7b57",
+      "bytes": 72080
+    },
+    "experiments/full-board-ten/autorouter-dependencies/package.json": {
+      "sha256": "7b4c1ecf979432e472a4f0589ed49976a8a1323ff7bf651a5938ee7006b61360",
+      "bytes": 261
+    },
+    "experiments/full-board-ten/autorouter-dependencies/bun.lock": {
+      "sha256": "ec313c582c29c1e35bb31190151a5649198c177119d32fe311746c06e94e8c4e",
+      "bytes": 13144
+    },
+    "experiments/full-board-ten/package.json": {
+      "sha256": "469e1861d1259cd1307bca324fb0d8ba0a67ea0323d4e728a35c90a2bc92bdf3",
+      "bytes": 87
+    },
+    "experiments/full-board-ten/tsconfig.json": {
+      "sha256": "2e881577c63bb6b62d14abd319240bbc6ae5e206ecb007dae80ab3ec922293c7",
+      "bytes": 208
+    },
+    "experiments/full-board-ten/prepare-via-history.py": {
+      "sha256": "a25a3bc9611e3ee697254133bc23d6ba2203392864cc601b510ea089b84f7b74",
+      "bytes": 16826
+    },
+    "experiments/full-board-ten/run-via-history.ts": {
+      "sha256": "5f65dfa835a53c6469f8dbdfe978e56a225f99ef319d951e608bfe395816208f",
+      "bytes": 27045
+    },
+    "experiments/full-board-ten/cramped-port-capacity-source-mapping.json": {
+      "sha256": "7e64ae807660a36567ccf5dc20c37b69bfa0f53431452903126dd2779bac37c3",
+      "bytes": 8551
+    },
+    "experiments/full-board-ten/tiny-cramped-port-capacity-production.patch": {
+      "sha256": "5471c0825499ba2d2a873c4172b99fe2d7fb1e076cd09a0c1eb7d490d5ce3863",
+      "bytes": 552
+    },
+    "experiments/full-board-ten/createCrampedPortCapacityOverlay.ts": {
+      "sha256": "5164e03402b39e930cc13920ad045c2a18a9a90e7dd8d0a1d6478a6e0ef0998a",
+      "bytes": 16218
+    },
+    "experiments/full-board-ten/mapping-source-handoff.json": {
+      "sha256": "2aaf5a9a59ce9e54e4651b18e6405e3e7ac7f58a36ed9d2f0387bc4741af84f8",
+      "bytes": 572
+    }
+  },
+  "case": {
+    "board": "h616",
+    "cohort": "spaced",
+    "phase": "other_signals",
+    "phaseIndex": 4,
+    "artifact": {
+      "id": 14504107430,
+      "name": "cramped-guard-h616-spaced-case-1",
+      "size_in_bytes": 5094275,
+      "url": "https://api.github.com/repos/tscircuit/tscircuit-autorouter/actions/artifacts/14504107430",
+      "archive_download_url": "https://api.github.com/repos/tscircuit/tscircuit-autorouter/actions/artifacts/14504107430/zip",
+      "expired": false,
+      "created_at": "2026-11-19T06:10:22Z",
+      "expires_at": "2026-11-26T06:10:21Z",
+      "updated_at": "2026-11-19T06:10:22Z",
+      "digest": "sha256:73121803e20513e9effd42162b18b3524c758ef14f2425dba667c08b65472b34",
+      "workflow_run": {
+        "id": 44469711388,
+        "repository_id": 924883209,
+        "head_repository_id": 924883209,
+        "head_branch": "bench/full-board-cramped-guard-3242-20261119",
+        "head_sha": "4bf798713c6d2656c34c1e1b9de11a9c3170333f"
+      }
+    },
+    "files": {
+      "phase-4-input.srj.json.gz": {
+        "sha256": "2d5ac1277d68884dc0c65aba0f6d143fe73080e68af0afa247ffcfef51f55c08",
+        "bytes": 472056,
+        "payloadSha256": "c21ab6df351bd7318501655d927c78f1c7df254bbeaf628f03d53a06d4eb57ee",
+        "payloadBytes": 3365039
+      },
+      "phase-4-output.srj.json.gz": {
+        "sha256": "913edcefaa0e2032c7e1d933b7670f410f7f935059f49fbcc8dd099dcbe1ac24",
+        "bytes": 497360,
+        "payloadSha256": "32ced6782aaa48679f9412c65c6069d1e6130d419c48bb364fbe32d149ceadda",
+        "payloadBytes": 3477118
+      },
+      "progress.json": {
+        "sha256": "c7c00f5fca350a13e110ab6f9d273bd02857936a58630c88a135cc4236130d65",
+        "bytes": 14879
+      },
+      "process.json": {
+        "sha256": "151ffb669f52f62cb3ce2fd8d564ef229936679a4910b7e00fe628883e5b10f1",
+        "bytes": 2512
+      }
+    },
+    "sourceSha256": "c8b058094b8346508bb492f7ca71c249cb517fdbe4612c254386821826b99eab",
+    "nativeCounts": {
+      "connections": 56,
+      "terminals": 143,
+      "obstacles": 1695,
+      "traces": 41,
+      "layerCount": 4
+    },
+    "completedPhaseElapsedMs": 68264.206191,
+    "scope": "Earlier3242 cramped-guard run44469711388, not pure published output."
+  },
+  "referenceRuntime": {
+    "artifact": {
+      "id": 14504256578,
+      "name": "cramped-guard-h616-spaced-summary-1",
+      "size_in_bytes": 830505,
+      "url": "https://api.github.com/repos/tscircuit/tscircuit-autorouter/actions/artifacts/14504256578",
+      "archive_download_url": "https://api.github.com/repos/tscircuit/tscircuit-autorouter/actions/artifacts/14504256578/zip",
+      "expired": false,
+      "created_at": "2026-11-19T06:10:24Z",
+      "expires_at": "2026-11-26T06:10:23Z",
+      "updated_at": "2026-11-19T06:10:24Z",
+      "digest": "sha256:6665b0d7c45a0bd2456c44bbb05d023a0b50be86d4fd0e004c4c40587fb40884",
+      "workflow_run": {
+        "id": 44469711388,
+        "repository_id": 924883209,
+        "head_repository_id": 924883209,
+        "head_branch": "bench/full-board-cramped-guard-3242-20261119",
+        "head_sha": "4bf798713c6d2656c34c1e1b9de11a9c3170333f"
+      }
+    },
+    "files": {
+      "candidate-runtime-manifest.json": {
+        "sha256": "088ff6013400d0137e305b5635d104c0e7a37449f0babf23a115e4629fb57139",
+        "bytes": 17588
+      },
+      "cramped-guard/overlay-proof.json": {
+        "sha256": "b4c21b3e45089db529a611172c4aca9eb720591b043bd19ae728b7d134db7e4c",
+        "bytes": 2215
+      }
+    }
+  },
+  "targetVias": [
+    {
+      "connectionName": "source_net_18",
+      "output": {
+        "x": 8.976405824803876,
+        "y": 6.098061099969406
+      }
+    },
+    {
+      "connectionName": "source_net_53",
+      "output": {
+        "x": 8.705022514795585,
+        "y": 6.078738724827453
+      }
+    },
+    {
+      "connectionName": "source_net_63",
+      "preloadedTraceIndex": 27,
+      "pcbTraceId": "source_net_63_0",
+      "input": {
+        "x": -4.6999999999999975,
+        "y": 6.526443020640128
+      },
+      "output": {
+        "x": -4.859992892018127,
+        "y": 6.544522429704688
+      }
+    }
+  ],
+  "qualification": {
+    "scope": "Passive selected via history only; unchanged reviewed cramped guard and native input/options/runtime",
+    "sourceOrRoutingBehaviorChanged": false,
+    "routingExecutedLocally": false,
+    "reviewStatus": "Pending final independent controller review",
+    "localChecks": [
+      "Selected archived case and summary ZIP/member/input/output identities verified",
+      "Python/YAML syntax and three receiver/return/error-preserving wrapper contracts passed"
+    ],
+    "releaseStatus": "HELD; root reviews and pushes only when ready"
+  }
+}
