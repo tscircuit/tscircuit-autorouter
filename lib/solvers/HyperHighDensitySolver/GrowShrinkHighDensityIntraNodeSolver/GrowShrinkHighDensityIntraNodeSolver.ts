@@ -203,17 +203,27 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
   private createActiveSubSolver() {
     const { growShrinkSolutionValidator, ...portfolioParams } =
       this.constructorParams
+    const nodeWithPortPoints = scaleNodeWithPortPoints(
+      this.nodeWithPortPoints,
+      this.scaleFactor,
+    )
+    let coordinateScale = this.scaleFactor
+    if (portfolioParams.fixedHdRoutes?.length) {
+      // Immutable copper uses board-world coordinates. Enlarge the search
+      // bounds while keeping its terminals and physical geometry in place.
+      nodeWithPortPoints.portPoints = this.nodeWithPortPoints.portPoints
+      nodeWithPortPoints.portPointsInPairs =
+        this.nodeWithPortPoints.portPointsInPairs
+      coordinateScale = 1
+    }
     this.activeSubSolver = new PortfolioSingleIntraNodeSolver({
       ...portfolioParams,
       priorityCoordinateScale:
-        (portfolioParams.priorityCoordinateScale ?? 1) * this.scaleFactor,
+        (portfolioParams.priorityCoordinateScale ?? 1) * coordinateScale,
       enableNegotiatedSearch:
         this.scaleFactor === 1 &&
         (portfolioParams.enableNegotiatedSearch ?? true),
-      nodeWithPortPoints: scaleNodeWithPortPoints(
-        this.nodeWithPortPoints,
-        this.scaleFactor,
-      ),
+      nodeWithPortPoints,
       solutionValidator: growShrinkSolutionValidator
         ? (routes): boolean =>
             growShrinkSolutionValidator(this.getUnscaledRoutes(routes))
@@ -228,7 +238,12 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
   private getUnscaledRoutes(
     routes: HighDensityIntraNodeRoute[],
   ): HighDensityIntraNodeRoute[] {
-    if (this.scaleFactor === 1) return routes
+    if (
+      this.scaleFactor === 1 ||
+      this.constructorParams.fixedHdRoutes?.length
+    ) {
+      return routes
+    }
     return routes.map((route) =>
       scaleRoute(route, this.nodeWithPortPoints.center, 1 / this.scaleFactor),
     )

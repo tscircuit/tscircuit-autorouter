@@ -172,6 +172,7 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
       effort: params.effort,
       nodePfById: params.nodePfById,
       obstacles: params.obstacles,
+      fixedHdRoutes: params.fixedHdRoutes,
       layerCount: params.layerCount,
       useGrowShrinkHighDensityIntraNodeSolver: true,
       preserveTerminalPcbPortIds: false,

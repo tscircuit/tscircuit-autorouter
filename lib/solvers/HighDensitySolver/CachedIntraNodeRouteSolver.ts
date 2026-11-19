@@ -177,6 +177,7 @@ export class CachedIntraNodeRouteSolver
     }
     const keyData = {
       cacheSchemaVersion: INTRA_NODE_CACHE_SCHEMA_VERSION,
+      fixedHdRoutes: this.fixedHdRoutes,
       node: {
         width: roundCoord(this.nodeWithPortPoints.width),
         height: roundCoord(this.nodeWithPortPoints.height),

@@ -25,7 +25,6 @@ import type { PreloadedHighDensityRoute } from "./convertPreloadedTraceToHdRoute
 import {
   arePipeline9RoutesOnSameNet,
   doPipeline9RoutesHaveCopperConflict,
-  getPipeline9FixedRouteObstacles,
   getPipeline9RouteCopperGeometry,
 } from "./pipeline9FixedRouteCopper"
 import {
@@ -786,14 +785,6 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
         this,
       ),
     )
-    const fixedRouteObstacles = getPipeline9FixedRouteObstacles({
-      fixedObstacleRoutes: [
-        ...this.activeFallbackFixedObstacleRoutes,
-        ...routedObstacleRoutes,
-      ],
-      layerCount: this.layerCount,
-      allowBlindAndBuriedVias: this.allowBlindAndBuriedVias,
-    })
     this.activeFallbackSolver = new Pipeline9RegionalFallbackSolver({
       captureSearchDebug: this.params.captureSearchDebug,
       nodeWithPortPoints: fallbackProblem.nodeWithPortPoints,
@@ -806,7 +797,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       viaCopperClearance: this.params.viaCopperClearance,
       effort: this.effort,
       nodePfById: this.nodePfById,
-      obstacles: [...this.obstacles, ...fixedRouteObstacles],
+      obstacles: this.obstacles,
       boardObstacles: this.obstacles,
       fixedHdRoutes: [...this.activeFallbackFixedObstacleRoutes, ...routedObstacleRoutes],
       movablePreloadedConnectionNames: movableFixedRouteConnectionNames,
