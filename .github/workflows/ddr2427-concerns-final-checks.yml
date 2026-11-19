@@ -1,0 +1,74 @@
+name: Check all reviewed fanout stack stages
+on:
+  push:
+    branches: [codex/ddr2427-concerns-final-checks]
+permissions:
+  contents: read
+jobs:
+  source:
+    strategy:
+      fail-fast: false
+      matrix:
+        revision:
+          - ae13569eb35dccc74e99708794cb2135a5c3ddc0
+          - 2e7bb70d0206bccaa584ef855855407af21af067
+          - 7bf211eb8930ac64b6dde0159271d5ec6b57a16b
+          - 5ae7763e824b602f2978e9e8300fbebd642a63e3
+          - 5558dafebe92e889d91625304a4c93cf2788c588
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: ${{ matrix.revision }}
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: bun install --frozen-lockfile
+      - run: bun run format:check
+      - if: always()
+        run: bun run typecheck
+  tests:
+    strategy:
+      fail-fast: false
+      matrix:
+        revision:
+          - 7bf211eb8930ac64b6dde0159271d5ec6b57a16b
+          - 5ae7763e824b602f2978e9e8300fbebd642a63e3
+          - 5558dafebe92e889d91625304a4c93cf2788c588
+        shard: [1, 2, 3, 4, 5, 6, 7, 8]
+    runs-on: macos-15
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: ${{ matrix.revision }}
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: bun install --frozen-lockfile
+      - run: bun scripts/run-test-shard.ts ${{ matrix.shard }} 8
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: reviewed-snapshots-${{ matrix.revision }}-${{ matrix.shard }}
+          path: |
+            tests/**/__snapshots__/*.actual.svg
+            tests/**/__snapshots__/*.diff.png
+          if-no-files-found: ignore
+      - name: Export actual snapshot SVGs
+        if: failure()
+        run: |
+          python3 - <<'PY'
+          import base64,io,zipfile
+          from pathlib import Path
+          stream=io.BytesIO()
+          with zipfile.ZipFile(stream,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=9) as archive:
+              for path in Path('tests').rglob('*.actual.svg'):
+                  archive.writestr(str(path),path.read_bytes())
+          print('REVIEWED_TEST_SNAPSHOTS_BEGIN')
+          encoded=base64.b64encode(stream.getvalue()).decode()
+          for offset in range(0,len(encoded),8000):print(encoded[offset:offset+8000])
+          print('REVIEWED_TEST_SNAPSHOTS_END')
+          PY
