@@ -1,0 +1,31 @@
+{
+  "repositories": [
+    {
+      "baseCommit": "c0dcc07ae48b17296a1dc73678e258de62ca8de3",
+      "candidateCommit": "d92a73bd10fca408d5643821b8f5f789f9ae5067",
+      "productionClean": true,
+      "files": [
+        {
+          "path": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9RegionalFallback.ts",
+          "production": true,
+          "sha256": "0725446218946851e500722f1e071ef88337db63784a0846c48cf5cdceaf1eb8"
+        },
+        {
+          "path": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver.ts",
+          "production": true,
+          "sha256": "1e29caf8bd7e52a597f8aace2ed7f837d3977c0d1330d1b166f53e008319895e"
+        },
+        {
+          "path": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/applyPipeline9RegionalB01Repairs.ts",
+          "production": true,
+          "sha256": "48a14087f7beea336d221dab8a70919c1d651b5c2cb3b336f6775cb954404388"
+        }
+      ],
+      "patches": {
+        "production": {
+          "sha256": "4eec98c7208b41fcf3a699f7bd33001609299bb15bcc82e82c2353e001ac6112"
+        }
+      }
+    }
+  ]
+}

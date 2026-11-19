@@ -1,0 +1,274 @@
+diff --git a/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver.ts b/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver.ts
+index 6c0c0754..9bf62a59 100644
+--- a/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver.ts
++++ b/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver.ts
+@@ -18,6 +18,7 @@ import type {
+   NodeWithPortPoints,
+ } from "lib/types/high-density-types"
+ import type { Obstacle, SimpleRouteJson } from "lib/types/srj-types"
++import { BOUNDARY_COORDINATE_TOLERANCE_MM } from "lib/utils/classifyPointInBounds"
+ import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
+ import { BaseSolver } from "../../solvers/BaseSolver"
+ import { HighDensitySolver } from "../../solvers/HighDensitySolver/HighDensitySolver"
+@@ -30,6 +31,7 @@ import {
+ } from "./pipeline9FixedRouteCopper"
+ import {
+   createRegionalFallbackProblem,
++  getFixedRouteSlices,
+   type FixedRouteSection,
+   spliceFixedRouteSectionWithMutationMask,
+ } from "./pipeline9RegionalFallback"
+@@ -1037,75 +1039,66 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
+     // Capture the accepted regional envelope immediately against the
+     // post-splice geometry. Segment masks are carried by later splices, so a
+     // future fallback never has to replay this node's now-stale bounds.
+-    const postSpliceProblem = createRegionalFallbackProblem(
+-      {
+-        ...normalizePipeline9NodeRootConnectionNames(
+-          this.activeFallbackSolver.params.nodeWithPortPoints,
+-          this.connMap,
+-        ),
+-        portPoints: [],
+-        portPointsInPairs: [],
+-        availableZ: Array.from({ length: this.layerCount }, (_, z) => z),
+-      },
+-      this.getUpdatedFixedHdRoutes(),
+-    )
++    const postSpliceNode = this.activeFallbackSolver.params.nodeWithPortPoints
++    const postSpliceSlices = this.getUpdatedFixedHdRoutes()
++      .filter(
++        (route) => route.isFixed !== true && route.isThroughObstacle !== true,
++      )
++      .flatMap((route) => getFixedRouteSlices(route, postSpliceNode))
+     const markedTraceIndexes = new Set<number>()
+-    for (const section of postSpliceProblem.fixedRouteSectionsByConnectionName.values()) {
+-      const firstSourceRoute = section.sourceRoutes[0]
+-      if (!firstSourceRoute) continue
++    for (const slice of postSpliceSlices) {
++      if (
++        slice.start.point.z === slice.end.point.z &&
++        Math.hypot(
++          slice.start.point.x - slice.end.point.x,
++          slice.start.point.y - slice.end.point.y,
++        ) <= BOUNDARY_COORDINATE_TOLERANCE_MM
++      ) {
++        continue
++      }
++      const sourceRoute = slice.sourceRoute
+       const mutationRange = mutationRangeByTraceIndex.get(
+-        firstSourceRoute.preloadedTraceIndex,
++        sourceRoute.preloadedTraceIndex,
+       )
+       if (!mutationRange) continue
+-      for (const [
+-        sourceRouteIndex,
+-        sourceRoute,
+-      ] of section.sourceRoutes.entries()) {
+-        const start =
+-          sourceRoute.preloadedRoutePositionStart ??
+-          sourceRoute.preloadedRouteIndex
+-        const end =
+-          sourceRoute.preloadedRoutePositionEnd ??
+-          sourceRoute.preloadedRouteIndex
+-        const sourceRange = {
+-          start: Math.min(start, end),
+-          end: Math.max(start, end),
+-        }
+-        const sourceIsPoint = sourceRange.start === sourceRange.end
+-        const mutationIsPoint = mutationRange.start === mutationRange.end
+-        const overlapsMutation =
+-          sourceIsPoint || mutationIsPoint
+-            ? sourceRange.start <= mutationRange.end &&
+-              mutationRange.start <= sourceRange.end
+-            : sourceRange.start < mutationRange.end &&
+-              mutationRange.start < sourceRange.end
+-        if (!overlapsMutation) continue
+-        markedTraceIndexes.add(firstSourceRoute.preloadedTraceIndex)
+-        const mask = [
+-          ...(this.preloadedTraceMutationMasks.get(
+-            sourceRoute.connectionName,
+-          ) ?? Array(sourceRoute.route.length - 1).fill(false)),
+-        ]
+-        if (mask.length !== sourceRoute.route.length - 1) {
+-          throw new Error(
+-            `Pipeline9 fixed route mutation mask for "${sourceRoute.connectionName}" has ${mask.length} segments, expected ${sourceRoute.route.length - 1}`,
+-          )
+-        }
+-        const firstSegmentIndex =
+-          sourceRouteIndex === 0 ? section.start.segmentIndex : 0
+-        const lastSegmentIndex =
+-          sourceRouteIndex === section.sourceRoutes.length - 1
+-            ? section.end.segmentIndex
+-            : sourceRoute.route.length - 2
+-        for (
+-          let segmentIndex = firstSegmentIndex;
+-          segmentIndex <= lastSegmentIndex;
+-          segmentIndex++
+-        ) {
+-          mask[segmentIndex] = true
+-        }
+-        this.preloadedTraceMutationMasks.set(sourceRoute.connectionName, mask)
++      const start =
++        sourceRoute.preloadedRoutePositionStart ??
++        sourceRoute.preloadedRouteIndex
++      const end =
++        sourceRoute.preloadedRoutePositionEnd ??
++        sourceRoute.preloadedRouteIndex
++      const sourceRange = {
++        start: Math.min(start, end),
++        end: Math.max(start, end),
++      }
++      const sourceIsPoint = sourceRange.start === sourceRange.end
++      const mutationIsPoint = mutationRange.start === mutationRange.end
++      const overlapsMutation =
++        sourceIsPoint || mutationIsPoint
++          ? sourceRange.start <= mutationRange.end &&
++            mutationRange.start <= sourceRange.end
++          : sourceRange.start < mutationRange.end &&
++            mutationRange.start < sourceRange.end
++      if (!overlapsMutation) continue
++      markedTraceIndexes.add(sourceRoute.preloadedTraceIndex)
++      const mask = [
++        ...(this.preloadedTraceMutationMasks.get(
++          sourceRoute.connectionName,
++        ) ?? Array(sourceRoute.route.length - 1).fill(false)),
++      ]
++      if (mask.length !== sourceRoute.route.length - 1) {
++        throw new Error(
++          `Pipeline9 fixed route mutation mask for "${sourceRoute.connectionName}" has ${mask.length} segments, expected ${sourceRoute.route.length - 1}`,
++        )
++      }
++      for (
++        let segmentIndex = slice.start.segmentIndex;
++        segmentIndex <= slice.end.segmentIndex;
++        segmentIndex++
++      ) {
++        mask[segmentIndex] = true
+       }
++      this.preloadedTraceMutationMasks.set(sourceRoute.connectionName, mask)
+     }
+     for (const preloadedTraceIndex of mutationRangeByTraceIndex.keys()) {
+       if (!markedTraceIndexes.has(preloadedTraceIndex)) {
+diff --git a/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/applyPipeline9RegionalB01Repairs.ts b/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/applyPipeline9RegionalB01Repairs.ts
+index 3ef816d1..75b99544 100644
+--- a/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/applyPipeline9RegionalB01Repairs.ts
++++ b/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/applyPipeline9RegionalB01Repairs.ts
+@@ -559,8 +559,10 @@ export const preparePipeline9RegularRegionalCandidate = ({
+     minY: center.y - regionSize / 2 - obstacleMargin - maxRegionalCopperRadius,
+     maxY: center.y + regionSize / 2 + obstacleMargin + maxRegionalCopperRadius,
+   }
+-  const localFixedObstacleRoutes =
+-    fixedRouteCopperSpatialIndex.getRoutesOverlappingBounds(candidateBounds)
++  const localFixedObstacleRoutes = [
++    ...fixedRouteCopperSpatialIndex.getRoutesOverlappingBounds(candidateBounds),
++    ...problem.fixedObstacleRoutes,
++  ]
+   const fixedRouteObstacles = getPipeline9FixedRouteObstacles({
+     fixedObstacleRoutes: localFixedObstacleRoutes,
+     layerCount: srj.layerCount,
+diff --git a/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9RegionalFallback.ts b/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9RegionalFallback.ts
+index cbd68b7e..75bb6207 100644
+--- a/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9RegionalFallback.ts
++++ b/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9RegionalFallback.ts
+@@ -125,13 +125,12 @@ const clipRouteSegmentToBounds = (
+   }
+ }
+ 
+-const getFixedRouteSlice = (
++export const getFixedRouteSlices = (
+   route: PreloadedHighDensityRoute,
+   node: NodeWithPortPoints,
+-): FixedRouteSlice | null => {
++): FixedRouteSlice[] => {
+   const bounds = getNodeBounds(node)
+-  let start: RouteLocation | undefined
+-  let end: RouteLocation | undefined
++  const slices: FixedRouteSlice[] = []
+ 
+   for (
+     let segmentIndex = 0;
+@@ -145,23 +144,27 @@ const getFixedRouteSlice = (
+     )
+     if (!clippedSegment) continue
+ 
+-    start ??= {
+-      segmentIndex,
+-      point: clippedSegment.start,
+-    }
+-    end = {
++    const end = {
+       segmentIndex,
+       point: clippedSegment.end,
+     }
++    const previous = slices.at(-1)
++    if (
++      previous &&
++      previous.end.segmentIndex === segmentIndex - 1 &&
++      isPointInsideBounds(route.route[segmentIndex]!, bounds)
++    ) {
++      previous.end = end
++    } else {
++      slices.push({
++        sourceRoute: route,
++        start: { segmentIndex, point: clippedSegment.start },
++        end,
++      })
++    }
+   }
+ 
+-  if (!start || !end) return null
+-
+-  return {
+-    sourceRoute: route,
+-    start,
+-    end,
+-  }
++  return slices
+ }
+ 
+ const createFallbackPortPair = (
+@@ -200,7 +203,9 @@ const fixedRouteSlicesAreContiguous = (
+ ): boolean =>
+   previous.sourceRoute.preloadedTraceIndex ===
+     next.sourceRoute.preloadedTraceIndex &&
+-  pointsAreEqual(previous.sourceRoute.route.at(-1)!, next.sourceRoute.route[0]!)
++  pointsAreEqual(previous.end.point, previous.sourceRoute.route.at(-1)!) &&
++  pointsAreEqual(next.start.point, next.sourceRoute.route[0]!) &&
++  pointsAreEqual(previous.end.point, next.start.point)
+ 
+ const fixedRouteSliceTouchesTargetLayer = (
+   slice: FixedRouteSlice,
+@@ -242,12 +247,17 @@ export const createRegionalFallbackProblem = (
+   const fallbackPortPairs: Array<[PortPoint, PortPoint]> = []
+   const targetLayers = new Set(node.portPoints.map((portPoint) => portPoint.z))
+ 
+-  const localSlices = fixedRoutes
+-    .map((fixedRoute) => getFixedRouteSlice(fixedRoute, node))
+-    .filter((slice): slice is FixedRouteSlice => slice !== null)
++  const localSlices: FixedRouteSlice[] = []
++  const routesWithMultipleVisits = new Set<PreloadedHighDensityRoute>()
++  for (const fixedRoute of fixedRoutes) {
++    const routeSlices = getFixedRouteSlices(fixedRoute, node)
++    if (routeSlices.length > 1) routesWithMultipleVisits.add(fixedRoute)
++    localSlices.push(...routeSlices)
++  }
+   const slices = localSlices
+     .filter(
+       (slice) =>
++        !routesWithMultipleVisits.has(slice.sourceRoute) &&
+         slice.sourceRoute.isFixed !== true &&
+         slice.sourceRoute.isThroughObstacle !== true &&
+         (fixedRouteSliceTouchesTargetLayer(slice, targetLayers) ||
+@@ -261,9 +271,9 @@ export const createRegionalFallbackProblem = (
+         a.sourceRoute.preloadedRouteIndex - b.sourceRoute.preloadedRouteIndex,
+     )
+   const movableFixedRoutes = new Set(slices.map((slice) => slice.sourceRoute))
+-  const fixedObstacleRoutes = localSlices
+-    .map((slice) => slice.sourceRoute)
+-    .filter((route) => !movableFixedRoutes.has(route))
++  const fixedObstacleRoutes = [
++    ...new Set(localSlices.map((slice) => slice.sourceRoute)),
++  ].filter((route) => !movableFixedRoutes.has(route))
+   const sections: FixedRouteSection[] = []
+ 
+   for (let sliceIndex = 0; sliceIndex < slices.length; sliceIndex++) {
