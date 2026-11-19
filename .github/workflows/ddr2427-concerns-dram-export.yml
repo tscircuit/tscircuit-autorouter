@@ -1,0 +1,29 @@
+name: Inspect the DRAM actual snapshot from the source check
+on:
+  push:
+    branches: [codex/ddr2427-concerns-dram-export]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  export:
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: reviewed-dram-554e03f4df22fadd2a9a628930052ee46fa948af
+          run-id: 44606010242
+          repository: tscircuit/tscircuit-autorouter
+          github-token: ${{ github.token }}
+          path: actual
+      - run: |
+          python3 - <<'PYEXPORT'
+          import base64,gzip
+          from pathlib import Path
+          actual=list(Path('actual').rglob('*.actual.svg'))
+          assert len(actual)==1
+          print('DRAM_ACTUAL_BEGIN')
+          encoded=base64.b64encode(gzip.compress(actual[0].read_bytes(),mtime=0)).decode()
+          for offset in range(0,len(encoded),8000):print(encoded[offset:offset+8000])
+          print('DRAM_ACTUAL_END')
+          PYEXPORT
