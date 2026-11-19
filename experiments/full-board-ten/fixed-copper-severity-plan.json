@@ -45,8 +45,8 @@
     "dependencyGraphPolicy": "Exact frozen3243 release and lockfiles from baseline14176a10; no independent transitive refresh.",
     "candidateAutorouterSha256": "0340617bfdef78ae86f6ae945b8391a47fae0a8241991e82ceeeda488ac73f90"
   },
-  "qualificationReady": false,
-  "status": "HELD_ROOT_REVIEW",
+  "qualificationReady": true,
+  "status": "RELEASED_SINGLE_H616_NATIVE_SCREEN",
   "branch": "bench/h616-fixed-copper-severity-3243-20261119",
   "workflow": ".github/workflows/full-board-fixed-copper-severity.yml",
   "experiment": "fixed-copper-severity",
@@ -82,11 +82,12 @@
     "strategy": "Only the two fixed-copper wire/via messages append existing gap/required syntax. No other source change, Global callback, validation guard or rejected candidate."
   },
   "qualification": {
-    "scope": "Source304f1d45 and exactlytwo qualified message spans frozen. Static byte activation/syntax/held gate checks passed; root review/release pending.",
+    "scope": "Root reviewed exact two source messages, rebuilt candidate bytes, verified frozen harness, and reviewed real producer-to-published-consumer scoring checks. Native benefit remains unproven.",
     "nativeRoutingExecuted": false,
     "dependencyInstallsExecutedLocally": false,
     "artifactDownloadsExecutedLocally": false,
-    "sourceMappingHandoffSha256": "fa05c92ce6f57220f441593d46289b5687c25155387a77dca2b57b48a68a177e"
+    "sourceMappingHandoffSha256": "fa05c92ce6f57220f441593d46289b5687c25155387a77dca2b57b48a68a177e",
+    "focusedChecksHandoffSha256": "91155724bab6d33fe44c8b4ae4b7ad9bf8cb534edcb62eb338785006e4aa2bc4"
   },
   "reuseController": "1c3150be3eea45d0accf6638b02d52d8a2a4a185",
   "frozenHarnessFiles": {
