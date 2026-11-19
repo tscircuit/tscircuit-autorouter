@@ -29,10 +29,6 @@ export function reservePreloadedCopperPorts({
     viaDiameter,
   })
   for (const port of graph.ports) {
-    // Existing trace crossings already have route-owned reservations.
-    if (port.d._preloadedTracePortAssignments?.some((trace) => trace.isFixed)) {
-      continue
-    }
     const fixedNetIds = new Set<NetId>()
     for (const route of getBlockers(port.d)) {
       if (!route.isFixed) continue
