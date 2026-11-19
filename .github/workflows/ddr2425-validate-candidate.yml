@@ -1,0 +1,83 @@
+name: Validate static plane rejection pruning
+on:
+  push:
+    branches: [codex/ddr2425-validate-candidate]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  source-check:
+    strategy:
+      fail-fast: false
+      matrix:
+        revision: [8eb60029afab1ff418f72e48bb417b33379b07a9, 035f888521731802b169a8816fef1ef41a5b7d76]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: ${{ matrix.revision }}
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - run: bun install --frozen-lockfile --ignore-scripts
+      - run: bun run format:check
+      - if: always()
+        run: bun run typecheck
+  isolated-planes:
+    strategy:
+      fail-fast: false
+      matrix:
+        board: [orangecrab, h616, butterstick, glider, imx6, icepi]
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: 65b4a7f28f1d49e402a37d3b48973f54b32d2004
+          path: before
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: 035f888521731802b169a8816fef1ef41a5b7d76
+          path: after
+      - uses: actions/download-artifact@v4
+        with:
+          name: published2425-${{ matrix.board }}
+          run-id: 44469791389
+          github-token: ${{ github.token }}
+          path: captured
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Install exact source dependencies
+        run: |
+          for revision in before after; do
+            (cd "$revision" && bun install --frozen-lockfile --ignore-scripts)
+            cp experiments/full-board-priority-analysis/isolated-plane-suite.ts "$revision/isolated-plane-suite.ts"
+          done
+      - name: Solve every declared native plane bus separately, retaining all obstacles
+        env:
+          BOARD_ID: ${{ matrix.board }}
+        run: |
+          for revision in before after; do
+            mkdir -p "$GITHUB_WORKSPACE/isolated/$revision"
+            (cd "$revision" && bun isolated-plane-suite.ts "$GITHUB_WORKSPACE/captured/$BOARD_ID/fanout-1-input.json.gz" "$GITHUB_WORKSPACE/isolated/$revision")
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: static2425-isolated-${{ matrix.board }}
+          path: isolated
+      - name: Export paired native plane-bus reports
+        if: always()
+        run: |
+          python3 - <<'PYPLANES'
+          import json
+          from pathlib import Path
+          for revision in ['before','after']:
+              path=Path('isolated')/revision/'report.json'
+              if path.exists(): print('ISOLATED_PLANES_REPORT',json.dumps({'revision':revision,'rows':json.loads(path.read_text())},separators=(',',':')))
+          PYPLANES
