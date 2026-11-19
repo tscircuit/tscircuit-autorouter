@@ -1,0 +1,75 @@
+name: Final comparison of lean fixes and optional candidate expansion
+on:
+  push:
+    branches: [codex/ddr2427-restart-final-candidates]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  matched-frozen:
+    strategy:
+      fail-fast: false
+      matrix:
+        pair: [lean, nearby]
+        include:
+          - pair: lean
+            before: e4edfc8122093bf7c6d67677f4cdc3344ef3983e
+            after: c295fa9517961724de3284e8e896abb7d6f5fec7
+          - pair: nearby
+            before: e4edfc8122093bf7c6d67677f4cdc3344ef3983e
+            after: 0dd0a41dee35e68e34cc6ffaeec913dea810038e
+    runs-on: blacksmith-32vcpu-ubuntu-2404-arm
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: ${{ matrix.before }}
+          path: original
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: ${{ matrix.after }}
+          path: cleanup
+      - uses: actions/download-artifact@v4
+        with:
+          name: guard-0
+          run-id: 44415945774
+          github-token: ${{ github.token }}
+          path: frozen
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - run: |
+          for revision in original cleanup; do
+            (cd "$revision" && bun install --frozen-lockfile --ignore-scripts)
+            cp experiments/full-board-priority-analysis/replay-frozen-fanout31.ts "$revision/replay-frozen-fanout31.ts"
+          done
+          python3 experiments/full-board-priority-analysis/add-frozen-physical-audit.py original cleanup
+      - name: Run all frozen cases before and after the cleanup on the same worker
+        run: |
+          for revision in original cleanup; do
+            (cd "$revision" && bun replay-frozen-fanout31.ts "$GITHUB_WORKSPACE/frozen/inputs" "$GITHUB_WORKSPACE/matched/$revision" 16)
+          done
+      - name: Export reports and routed SVG hashes
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          for folder in [*Path('matched').glob('*'),*Path('probes').glob('*/*')]:
+              report=folder/'benchmark.json'
+              if not report.exists():continue
+              print('MATCHED_FANOUT31_RESULT',json.dumps({'cohort':str(folder),'report':json.loads(report.read_text()),'svgs':{path.name:hashlib.sha256(path.read_bytes()).hexdigest() for path in folder.glob('*.svg')}},separators=(',',':')))
+          print('FROZEN_INPUT_HASHES',json.dumps({path.name:hashlib.sha256(path.read_bytes()).hexdigest() for path in Path('frozen/inputs').glob('*.json')},separators=(',',':')))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: restart-final-${{ matrix.pair }}
+          path: |
+            matched
+            probes
+
+

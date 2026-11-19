@@ -1,0 +1,214 @@
+name: Compare six fresh full circuits before and after the lean fixes
+on:
+  push:
+    branches: [codex/ddr2427-restart-final-candidates]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  boards:
+    strategy:
+      fail-fast: false
+      matrix:
+        board: [orangecrab, h616, butterstick, glider, imx6, icepi]
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          ref: a4a8f3a71dd66c2cae01d6a7ade426efad833ff6
+          path: router
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/core
+          ref: 75ab017cd6852dbe50516ee1f4ca9d1108c29985
+          path: core
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Build main with the frozen stack with the selected fanout revision
+        run: |
+          git -C core restore package.json
+          python3 - <<'PYFANOUT'
+          import json
+          from pathlib import Path
+          path=Path('core/package.json');package=json.loads(path.read_text())
+          assert package['devDependencies']['@tscircuit/fanout-solver']=='0.0.91'
+          package['devDependencies']['@tscircuit/fanout-solver']='https://codeload.github.com/tscircuit/fanout-solver/tar.gz/e4edfc8122093bf7c6d67677f4cdc3344ef3983e'
+          path.write_text(json.dumps(package,indent=2)+'\n')
+          PYFANOUT
+          for folder in router core; do (cd "$folder" && bun install --ignore-scripts); done
+          (cd router && bun build lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts --target bun --packages external --outfile benchmark-runtime/pipeline9.js)
+          cd experiments/full-board-priority-analysis
+          python3 - <<'PYDEPS'
+          import json
+          from pathlib import Path
+          path=Path('package.json');package=json.loads(path.read_text());package['dependencies']['tscircuit']='0.0.3245';path.write_text(json.dumps(package,indent=2)+'\n')
+          PYDEPS
+          bun install --ignore-scripts
+          bun build-core.ts ../../core
+      - name: Route main fresh through fanout then buses then remaining nets
+        working-directory: experiments/full-board-priority-analysis
+        env:
+          BOARD_ID: ${{ matrix.board }}
+          FULL_BOARD_CAPTURE_STAGE_INPUTS: "1"
+          FULL_BOARD_FANOUT_VERSION: "0.0.91+e4edfc8122093bf7c6d67677f4cdc3344ef3983e"
+        run: |
+          export FULL_BOARD_CORE_SOURCE="$GITHUB_WORKSPACE/core"
+          export FULL_BOARD_CORE_MODULE="$PWD/patched-core/index.js"
+          export FULL_BOARD_COPPER_MODULE="$PWD/patched-core/find-floating-copper.js"
+          export FULL_BOARD_ROUTER_MODULE="$GITHUB_WORKSPACE/router/benchmark-runtime/pipeline9.js"
+          export FULL_BOARD_ROUTER_COMMIT="a4a8f3a71dd66c2cae01d6a7ade426efad833ff6"
+          mkdir -p "$GITHUB_WORKSPACE/results/main/$BOARD_ID"
+          cp patched-core/build.json "$GITHUB_WORKSPACE/results/main/$BOARD_ID/core-build.json"
+          cp "$GITHUB_WORKSPACE/core/package.json" "$GITHUB_WORKSPACE/results/main/$BOARD_ID/core-package.json"
+          cp package.json "$GITHUB_WORKSPACE/results/main/$BOARD_ID/runtime-package.json"
+          cp bun.lock "$GITHUB_WORKSPACE/results/main/$BOARD_ID/runtime-bun.lock"
+          python3 - <<'PYPLAN'
+          import hashlib,json,os
+          from pathlib import Path
+          board=os.environ['BOARD_ID']
+          plan=json.loads(Path(f'verified-plans/{board}.json').read_text())
+          source=Path(f'{board}/source.json').read_bytes()
+          assert plan['sourceSha256']==hashlib.sha256(source).hexdigest()
+          assert plan['initialCopperElements']==0
+          plan['provenance']={'kind':'original_verified_schedule','coreSource':'75ab017cd6852dbe50516ee1f4ca9d1108c29985','reason':'Core, board source and scheduling inputs are frozen; route the board directly in the timed worker.'}
+          output=Path(os.environ['GITHUB_WORKSPACE'])/'results'/'main'/board/'plan.json'
+          output.write_text(json.dumps(plan,indent=2)+'\n')
+          PYPLAN
+          bun run-fanout-bus-first.ts "$BOARD_ID" "$GITHUB_WORKSPACE/results/main/$BOARD_ID"
+      - name: Audit main partial copper
+        if: always()
+        env:
+          BOARD_ID: ${{ matrix.board }}
+        run: |
+          python3 - <<'PYAUDIT'
+          import os,subprocess
+          from pathlib import Path
+          root=Path.cwd()
+          source=(root/'core/node_modules/@tscircuit/fanout-solver').resolve()
+          scripts=root/'experiments/full-board-priority-analysis'
+          for name in ['audit-stack-captured.ts','validate-native-request-constraints.ts']:
+              (source/name).write_bytes((scripts/name).read_bytes())
+          output=root/'results'/'main'/os.environ['BOARD_ID']
+          subprocess.run(['bun','audit-stack-captured.ts',str(output/'fanout-1-input.json.gz'),str(output/'fanout-best-output.srj.json.gz'),str(output/'request-audit.json')],cwd=source,check=False)
+          PYAUDIT
+      - name: Build minimal with the frozen stack with the selected fanout revision
+        run: |
+          git -C core restore package.json
+          python3 - <<'PYFANOUT'
+          import json
+          from pathlib import Path
+          path=Path('core/package.json');package=json.loads(path.read_text())
+          assert package['devDependencies']['@tscircuit/fanout-solver']=='0.0.91'
+          package['devDependencies']['@tscircuit/fanout-solver']='https://codeload.github.com/tscircuit/fanout-solver/tar.gz/c295fa9517961724de3284e8e896abb7d6f5fec7'
+          path.write_text(json.dumps(package,indent=2)+'\n')
+          PYFANOUT
+          for folder in router core; do (cd "$folder" && bun install --ignore-scripts); done
+          (cd router && bun build lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts --target bun --packages external --outfile benchmark-runtime/pipeline9.js)
+          cd experiments/full-board-priority-analysis
+          python3 - <<'PYDEPS'
+          import json
+          from pathlib import Path
+          path=Path('package.json');package=json.loads(path.read_text());package['dependencies']['tscircuit']='0.0.3245';path.write_text(json.dumps(package,indent=2)+'\n')
+          PYDEPS
+          bun install --ignore-scripts
+          bun build-core.ts ../../core
+      - name: Route minimal fresh through fanout then buses then remaining nets
+        working-directory: experiments/full-board-priority-analysis
+        env:
+          BOARD_ID: ${{ matrix.board }}
+          FULL_BOARD_CAPTURE_STAGE_INPUTS: "1"
+          FULL_BOARD_FANOUT_VERSION: "0.0.91+c295fa9517961724de3284e8e896abb7d6f5fec7"
+        run: |
+          export FULL_BOARD_CORE_SOURCE="$GITHUB_WORKSPACE/core"
+          export FULL_BOARD_CORE_MODULE="$PWD/patched-core/index.js"
+          export FULL_BOARD_COPPER_MODULE="$PWD/patched-core/find-floating-copper.js"
+          export FULL_BOARD_ROUTER_MODULE="$GITHUB_WORKSPACE/router/benchmark-runtime/pipeline9.js"
+          export FULL_BOARD_ROUTER_COMMIT="a4a8f3a71dd66c2cae01d6a7ade426efad833ff6"
+          mkdir -p "$GITHUB_WORKSPACE/results/minimal/$BOARD_ID"
+          cp patched-core/build.json "$GITHUB_WORKSPACE/results/minimal/$BOARD_ID/core-build.json"
+          cp "$GITHUB_WORKSPACE/core/package.json" "$GITHUB_WORKSPACE/results/minimal/$BOARD_ID/core-package.json"
+          cp package.json "$GITHUB_WORKSPACE/results/minimal/$BOARD_ID/runtime-package.json"
+          cp bun.lock "$GITHUB_WORKSPACE/results/minimal/$BOARD_ID/runtime-bun.lock"
+          python3 - <<'PYPLAN'
+          import hashlib,json,os
+          from pathlib import Path
+          board=os.environ['BOARD_ID']
+          plan=json.loads(Path(f'verified-plans/{board}.json').read_text())
+          source=Path(f'{board}/source.json').read_bytes()
+          assert plan['sourceSha256']==hashlib.sha256(source).hexdigest()
+          assert plan['initialCopperElements']==0
+          plan['provenance']={'kind':'original_verified_schedule','coreSource':'75ab017cd6852dbe50516ee1f4ca9d1108c29985','reason':'Core, board source and scheduling inputs are frozen; route the board directly in the timed worker.'}
+          output=Path(os.environ['GITHUB_WORKSPACE'])/'results'/'minimal'/board/'plan.json'
+          output.write_text(json.dumps(plan,indent=2)+'\n')
+          PYPLAN
+          bun run-fanout-bus-first.ts "$BOARD_ID" "$GITHUB_WORKSPACE/results/minimal/$BOARD_ID"
+      - name: Audit minimal partial copper
+        if: always()
+        env:
+          BOARD_ID: ${{ matrix.board }}
+        run: |
+          python3 - <<'PYAUDIT'
+          import os,subprocess
+          from pathlib import Path
+          root=Path.cwd()
+          source=(root/'core/node_modules/@tscircuit/fanout-solver').resolve()
+          scripts=root/'experiments/full-board-priority-analysis'
+          for name in ['audit-stack-captured.ts','validate-native-request-constraints.ts']:
+              (source/name).write_bytes((scripts/name).read_bytes())
+          output=root/'results'/'minimal'/os.environ['BOARD_ID']
+          subprocess.run(['bun','audit-stack-captured.ts',str(output/'fanout-1-input.json.gz'),str(output/'fanout-best-output.srj.json.gz'),str(output/'request-audit.json')],cwd=source,check=False)
+          PYAUDIT
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: restart-full-pair-${{ matrix.board }}
+          path: results
+          retention-days: 14
+      - name: Export audited summaries and lean reconstruction patches
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import base64,gzip,hashlib,io,json,zipfile
+          from pathlib import Path
+          root=Path('results')
+          summaries=[]
+          for folder in sorted(root.glob('*/*')):
+              captured=folder/'fanout-1-input.json.gz'
+              routed=folder/'fanout-best-output.srj.json.gz'
+              original_bytes=gzip.decompress(captured.read_bytes())
+              inputs=json.loads(original_bytes)
+              output=json.loads(gzip.decompress(routed.read_bytes()))
+              original_obstacles=inputs['solverParams']['obstacles']
+              assert output['obstacles'][:len(original_obstacles)]==original_obstacles
+              output['obstacles']=output['obstacles'][len(original_obstacles):]
+              patch={'inputSha256':hashlib.sha256(original_bytes).hexdigest(),'retainedInputObstacleCount':len(original_obstacles),'outputWithAppendedObstaclesOnly':output,'originalCompressedOutputSha256':hashlib.sha256(routed.read_bytes()).hexdigest()}
+              (folder/'fanout-output-patch.json.gz').write_bytes(gzip.compress(json.dumps(patch,separators=(',',':')).encode(),mtime=0))
+              audit=json.loads((folder/'request-audit.json').read_text())
+              bad={issue['connectionName'] for issue in audit['requestConstraints']['violations']}
+              for issue in audit['copperDrc']['issues']:
+                  bad.update(issue[key] for key in ['connectionName','otherConnectionName'] if issue.get(key))
+              circuit=json.loads((folder/'circuit.json').read_text())
+              physical=[part for part in circuit if not part['type'].endswith('_error')]
+              assessment=json.loads((folder/'assessment.json').read_text())
+              summary={'variant':folder.parent.name,'board':folder.name,'inputRequests':len(inputs['solverParams']['connections']),'inputSha256':patch['inputSha256'],'rawPartialRequests':audit['routedRequests'],'qualifiedPartialRequests':sum(name not in bad for name in audit['connectionNames']),'distinctDrills':audit['distinctDrills'],'copperDrcValid':audit['copperDrc']['valid'],'requestConstraintsValid':audit['requestConstraints']['valid'],'violations':audit['requestConstraints']['violations'],'physicalCircuitSha256':hashlib.sha256(json.dumps(physical,sort_keys=True,separators=(',',':')).encode()).hexdigest(),'pcbSvgSha256':hashlib.sha256((folder/'pcb.svg').read_bytes()).hexdigest(),'committedTraces':assessment['pcbTraces'],'committedVias':assessment['vias'],'geometryErrors':assessment['geometryErrors'],'membershipErrors':assessment['membershipErrors']}
+              (folder/'summary.json').write_text(json.dumps(summary,indent=2)+'\n')
+              summaries.append(summary)
+          before=next(row for row in summaries if row['variant']=='main')
+          after=next(row for row in summaries if row['variant']=='minimal')
+          assert before['inputSha256']==after['inputSha256']
+          print('RESTART_FULL_PAIR_REPORT',json.dumps(summaries,separators=(',',':')))
+          names={'summary.json','core-build.json','core-package.json','plan.json','progress.json','assessment.json','diagnostics.json','process.json','pcb.svg','runtime-package.json','request-audit.json','fanout-output-patch.json.gz'}
+          stream=io.BytesIO()
+          with zipfile.ZipFile(stream,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=9) as archive:
+              for path in root.rglob('*'):
+                  if path.is_file() and path.name in names:archive.writestr(str(path.relative_to(root)),path.read_bytes())
+          print('RESTART_FULL_PAIR_EVIDENCE_BEGIN')
+          encoded=base64.b64encode(stream.getvalue()).decode()
+          for offset in range(0,len(encoded),8000):print(encoded[offset:offset+8000])
+          print('RESTART_FULL_PAIR_EVIDENCE_END')
+          assert after['copperDrcValid'] and after['requestConstraintsValid']
+          assert not after['geometryErrors'] and not after['membershipErrors']
+          PY
