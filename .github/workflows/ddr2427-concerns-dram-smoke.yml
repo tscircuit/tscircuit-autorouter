@@ -1,0 +1,36 @@
+name: Check coordinated DRAM routing around the ordinary repair changes
+on:
+  push:
+    branches: [codex/ddr2427-concerns-dram-smoke]
+permissions:
+  contents: read
+jobs:
+  dram:
+    strategy:
+      fail-fast: false
+      matrix:
+        revision:
+          - 652407c1ad9d246ca16ecf64044cf83eec2e1db3
+          - 554e03f4df22fadd2a9a628930052ee46fa948af
+          - a4519deb764d7888e405898109816deb3226d8e9
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: ${{ matrix.revision }}
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - run: bun install --frozen-lockfile --ignore-scripts
+      - name: Run the unchanged143-connection DRAM test in a separate process
+        run: timeout 360s bun test tests/am62l-core-progressive-dram.test.ts
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: reviewed-dram-${{ matrix.revision }}
+          path: |
+            tests/**/__snapshots__/*.actual.svg
+            tests/**/__snapshots__/*.diff.png
+          if-no-files-found: ignore
