@@ -20,13 +20,14 @@ import { MultiHeadPolyLineIntraNodeSolver3 } from "lib/solvers/HighDensitySolver
 import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 import type { NodeWithPortPoints } from "lib/types/high-density-types"
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
+import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 import nodeFixture from "tests/fixtures/ecp5-vref-fanout-node.json" with {
   type: "json",
 }
 import { getEcp5VrefFanoutPcbSvg } from "tests/fixtures/getEcp5VrefFanoutPcbSvg"
 import { replaceNativePcbTraces } from "tests/fixtures/replaceNativePcbTraces"
 
-test("reproduces the native C2/C3/R1/R2 VREF fanout rejection", async (): Promise<void> => {
+test("routes the native C2/C3/R1/R2 VREF fanout as one connected net", async (): Promise<void> => {
   const node = nodeFixture as NodeWithPortPoints
   const fixture = JSON.parse(
     gunzipSync(
@@ -57,19 +58,30 @@ test("reproduces the native C2/C3/R1/R2 VREF fanout rejection", async (): Promis
   ) {
     throw new Error("Missing the native VREF trace width")
   }
+  // The pipeline hands intra-node solvers the map built from the point-pair
+  // SRJ, where every branch of a net names its root connection.
+  const connMap = getConnectivityMapFromSimpleRouteJson({
+    ...fixture.srj,
+    connections: [
+      ...new Set(node.portPoints.map((port) => port.connectionName)),
+    ].map((name) => ({
+      name,
+      __rootConnectionNames: [rootConnectionName],
+      pointsToConnect: [],
+    })),
+  })
   const solver = new MultiHeadPolyLineIntraNodeSolver3({
     nodeWithPortPoints: node,
+    connMap,
     viaDiameter: fixture.srj.minViaPadDiameter,
   })
   solver.traceWidth = referenceNet.trace_width
   solver.solve()
 
-  expect(solver.error).toBe(
-    "Not possible to solve problem with given SEGMENTS_PER_POLYLINE (3), atleast 6 vias are required",
-  )
-  expect(solver.solved).toBeFalse()
-  expect(solver.failed).toBeTrue()
-  expect(solver.solvedRoutes).toHaveLength(0)
+  expect(solver.error).toBeNull()
+  expect(solver.solved).toBeTrue()
+  expect(solver.failed).toBeFalse()
+  expect(solver.solvedRoutes).toHaveLength(3)
   expect(node).toEqual(original)
   const traces = solver.solvedRoutes.map(
     (route): SimplifiedPcbTrace => ({
