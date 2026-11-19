@@ -249,6 +249,7 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
     const forceImproveSolver = new RegionalForceImproveSolver({
       nodeWithPortPoints: [this.params.nodeWithPortPoints],
       hdRoutes: routedCandidate,
+      fixedHdRoutes: this.params.fixedHdRoutes,
       preserveTopologyPortAnchors: true,
       colorMap: this.params.colorMap,
       totalStepsPerNode: Math.max(12, Math.round(20 * this.params.effort)),
