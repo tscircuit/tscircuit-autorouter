@@ -214,7 +214,7 @@ type LoadedTinyGraph = {
     routeMetadata?: RouteMetadata[]
     routeNet: Int32Array
     regionNetId: Int32Array
-    portNetId?: Int32Array
+    portReservationNetId?: Int32Array
     portPenalty?: Float64Array
     metadataPortPenaltiesApplied?: boolean
   }
@@ -777,24 +777,24 @@ const applyGraphNetReservations = (loaded: LoadedTinyGraph) => {
     loaded.problem.regionNetId[regionIndex] = netIndex
   }
 
-  if (loaded.problem.portNetId) return
-  let portNetId: Int32Array | undefined
+  if (loaded.problem.portReservationNetId) return
+  let portReservationNetId: Int32Array | undefined
   for (let portIndex = 0; portIndex < loaded.topology.portCount; portIndex++) {
     const metadata = loaded.topology.portMetadata?.[portIndex] as
       | TinyPortMetadata
       | undefined
     const fixedNetIds = metadata?._preloadedCopperNetIds
     if (!fixedNetIds?.length) continue
-    portNetId ??= new Int32Array(loaded.topology.portCount).fill(-1)
+    portReservationNetId ??= new Int32Array(loaded.topology.portCount).fill(-1)
     // Different copper nets cannot share this crossing. A net absent from the
     // route list also has no active route that could legally use its copper.
     let reservedNetIndex = -2
     if (fixedNetIds.length === 1) {
       reservedNetIndex = netIndexById.get(fixedNetIds[0]!) ?? -2
     }
-    portNetId[portIndex] = reservedNetIndex
+    portReservationNetId[portIndex] = reservedNetIndex
   }
-  if (portNetId) loaded.problem.portNetId = portNetId
+  if (portReservationNetId) loaded.problem.portReservationNetId = portReservationNetId
 }
 
 const restorePreloadedTraceSectionMetadata = (
