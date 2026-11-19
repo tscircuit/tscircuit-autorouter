@@ -1363,8 +1363,9 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       ...this.params.b01RepairOptions,
       effort: this.effort,
     }
-    const preferredClearanceProps =
-      getB01PreferredPadClearanceProps(minimumClearanceProps)
+    const preferredClearanceProps = getB01PreferredPadClearanceProps(
+      minimumClearanceProps,
+    )
     if (preferredClearanceProps) {
       this.pendingB01MinimumClearanceProps = minimumClearanceProps
     }
