@@ -1,0 +1,59 @@
+name: Verify minimal native route source resolution
+on:
+  push:
+    branches: [analysis/native-complete-cleanup-context]
+    paths: [.github/workflows/native-ownership-minimal.yml]
+permissions:
+  contents: read
+jobs:
+  original:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 767872b7bea7e62b918d6b282d9be12e24af0e54
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.4.3'
+      - name: Resolve an explicit native root through the existing source resolver
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path("lib/utils/convertToCircuitJson.ts")
+          s=p.read_text()
+          old="    resolver.connMap.getNetConnectedToId(srjConnectivityId)\n"
+          assert s.count(old)==1
+          s=s.replace(old,"    resolver.connMap.getNetConnectedToId(srjConnectivityId) ??\n    (resolver.connMap.netMap[srjConnectivityId] ? srjConnectivityId : undefined)\n")
+          old="""        const connectionName =
+                    resolveCircuitJsonSourceTraceId(
+                      routeCircuitJsonSourceTraceIdResolver,
+                      route.connectionName,
+                    ) ?? (route.connectionName as CircuitJsonSourceTraceId)"""
+          new="""        let connectionName = resolveCircuitJsonSourceTraceId(
+                    routeCircuitJsonSourceTraceIdResolver,
+                    route.connectionName,
+                  )
+                  if (
+                    !connectionName &&
+                    !routeCircuitJsonSourceTraceIdResolver.connMap.getNetConnectedToId(route.connectionName) &&
+                    route.rootConnectionName
+                  ) {
+                    connectionName = resolveCircuitJsonSourceTraceId(
+                      routeCircuitJsonSourceTraceIdResolver,
+                      route.rootConnectionName,
+                    )
+                  }
+                  connectionName ??= route.connectionName as CircuitJsonSourceTraceId"""
+          assert s.count(old)==1
+          p.write_text(s.replace(old,new))
+          PY
+      - run: bun install
+      - name: Keep existing H616 and converter assertions
+        env:
+          BUN_UPDATE_SNAPSHOTS: '1'
+        run: bun test --timeout 9999999 tests/repro/pipeline9-h616-portfolio-candidate-clearance.test.ts tests/utils/convertToCircuitJson*.test.ts
+      - name: Check types
+        if: always()
+        run: bunx tsc --noEmit
