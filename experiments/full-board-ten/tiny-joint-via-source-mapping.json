@@ -1,0 +1,88 @@
+{
+  "passed": true,
+  "schemaVersion": 2,
+  "sourceCandidateCommit": "21c7c3d0ecd6b929f0831b495f13e7163187ec55",
+  "bun": "1.4.3",
+  "typescript": "5.9.3",
+  "sourceFiles": {
+    "lib/distance-aware-tiny-hypergraph-solver.ts": {
+      "beforeSha256": "68465bf106dbaecbc8f64d2615d2de9a785c77f3e337fbe19f51630e6dd3d3e0",
+      "afterSha256": "06cb70baab99c198dc6ec1a2c0ded5c746fbbc6392dcb5c748ec169a49f57d27"
+    }
+  },
+  "sourceScopeQualification": {
+    "onlyDeclaredClassAndDistanceHelper": true,
+    "constructorSetupOnPathFoundUnchanged": true,
+    "runtimeImports": [
+      "./computeRegionCost:computeRegionCostForArea",
+      "./core:TinyHyperGraphSolver",
+      "./indexed-candidate-heap:IndexedCandidateHeap"
+    ],
+    "lexicalAliasBindingVerified": true
+  },
+  "originalAutorouterSha256": "5695c6361c0f7a7dc26ddd1b9264b8a8c122e5f7b9610cf24c6af3b99c545df1",
+  "candidateAutorouterSha256": "68f3d22c0dfe1d2627e9ca4d3272221f73a6d5fc02da294322bdd355948d52ee",
+  "sourceMapSha256": "9edff1c06b9a33231e581e2aae1115cfd96213f28df65eb3d56d7d78b078241d",
+  "publishedSourceContentExact": true,
+  "sourceMapGeneratedPositionsUsed": false,
+  "baselineClassBinding": {
+    "sourceSha256": "68465bf106dbaecbc8f64d2615d2de9a785c77f3e337fbe19f51630e6dd3d3e0",
+    "classVariable": "kQ",
+    "classSha256": "ffab303c62075bd1870dae332e07e77f0768b1ad0bb01645cf18bde0684b883a",
+    "qualification": "Published class and existing cost helper independently canonicalized against pinned source; fixed whole-entry/class/helper hashes checked here."
+  },
+  "externalAliases": {
+    "TinyHyperGraphSolver": "PQ",
+    "IndexedCandidateHeap": "yJ",
+    "computeRegionCostForArea": "dJ",
+    "DistanceAwareTinyHyperGraphSolver": "kQ",
+    "distanceToViaRegion": "tinyJointViaDistanceToRegion"
+  },
+  "unchangedSegments": [
+    {
+      "start": 0,
+      "end": 1977796,
+      "sha256": "22bbde8555c3c62ff1062d8bd0ff3e46ec7bb0672e7852164da2beb00dcb900f"
+    },
+    {
+      "start": 1977796,
+      "end": 2040516,
+      "sha256": "be8abe8efdb841af1d186818e0ca6c4edbbb0f9eac441c3b462b60d190f6d03d"
+    },
+    {
+      "start": 2041321,
+      "end": 3344783,
+      "sha256": "b1592980d2ebf629b6327bf6bfda95851126e6bc42a3da4ae6adb1cf1de56990"
+    }
+  ],
+  "unchangedDeclarations": [],
+  "replacedDeclarations": [
+    {
+      "kind": "replace",
+      "name": "DistanceAwareTinyHyperGraphSolver",
+      "relative": "lib/distance-aware-tiny-hypergraph-solver.ts",
+      "characterOffset": 2040516,
+      "byteOffset": 2040575,
+      "oldBlockSha256": "ffab303c62075bd1870dae332e07e77f0768b1ad0bb01645cf18bde0684b883a",
+      "newBlockSha256": "618aac73e9dde92b70b2308151e4d24a4d238d38d6dd6ac6922f737bc7861825"
+    }
+  ],
+  "insertedDeclarations": [
+    {
+      "kind": "insert",
+      "name": "distanceToViaRegion",
+      "relative": "lib/distance-aware-tiny-hypergraph-solver.ts",
+      "characterOffset": 1977796,
+      "byteOffset": 1977855,
+      "oldBlockSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "newBlockSha256": "382e2248641cf8d9eb83ad4faa53d3f20e408dce50a6c2e7bfef6b4f8ff20b38"
+    }
+  ],
+  "publishedCallCoverage": {
+    "classVariable": "kQ",
+    "allBytesOutsideDeclaredSpansUnchanged": true
+  },
+  "nativeRoutingExecuted": false,
+  "moduleImported": false,
+  "normalization": "TypeScript erasure and checker-bound symbol aliases only. Exact reviewed class replaces its one emitted class expression; new source distance helper is inserted before the containing top-level statement. Existing cost/heap/base-class bindings remain unchanged, as do all other AR bytes and all Core files. No hooks, wrappers, cap/cost-law or options changes."
+}

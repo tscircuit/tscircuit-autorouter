@@ -1,0 +1,243 @@
+diff --git a/lib/distance-aware-tiny-hypergraph-solver.ts b/lib/distance-aware-tiny-hypergraph-solver.ts
+index 2aea879..0ce6548 100644
+--- a/lib/distance-aware-tiny-hypergraph-solver.ts
++++ b/lib/distance-aware-tiny-hypergraph-solver.ts
+@@ -1,3 +1,4 @@
++import { computeRegionCostForArea } from "./computeRegionCost"
+ import {
+   type Candidate,
+   TinyHyperGraphSolver,
+@@ -6,6 +7,31 @@ import {
+   type TinyHyperGraphTopology,
+ } from "./core"
+ import { IndexedCandidateHeap } from "./indexed-candidate-heap"
++import type { PortId } from "./types"
++
++type ViaRegion = {
++  area: number
++  minX: number
++  maxX: number
++  minY: number
++  maxY: number
++  minZ: number
++  maxZ: number
++}
++
++type GoalViaRegion = {
++  region: ViaRegion
++  goalCost: number
++}
++
++const distanceToViaRegion = (
++  point: { x: number; y: number },
++  region: ViaRegion,
++): number => {
++  const dx = Math.max(region.minX - point.x, 0, point.x - region.maxX)
++  const dy = Math.max(region.minY - point.y, 0, point.y - region.maxY)
++  return Math.sqrt(dx * dx + dy * dy)
++}
+ 
+ /**
+  * Adds geometric segment distance to the normal dynamic routing cost.
+@@ -15,6 +41,17 @@ import { IndexedCandidateHeap } from "./indexed-candidate-heap"
+  * queued hop from being expanded later.
+  */
+ export class DistanceAwareTinyHyperGraphSolver extends TinyHyperGraphSolver {
++  private readonly initialMinViaPadDiameter = this.minViaPadDiameter
++  private readonly initialTraceDensityCostFactor =
++    this.TRACE_DENSITY_COST_FACTOR
++  private viaRegions?: ViaRegion[]
++  private viaRegionsPrepared = false
++  private goalViaRegions: GoalViaRegion[] = []
++  private goalViaPortId?: PortId
++  private goalViaDistanceToCost = Number.NaN
++  private previousBestViaRegion?: GoalViaRegion
++  private readonly viaHeuristicByPortId = new Map<PortId, number>()
++
+   constructor(
+     topology: TinyHyperGraphTopology,
+     problem: TinyHyperGraphProblem,
+@@ -38,6 +75,183 @@ export class DistanceAwareTinyHyperGraphSolver extends TinyHyperGraphSolver {
+     )
+   }
+ 
++  private prepareViaRegions(): void {
++    this.viaRegionsPrepared = true
++    const { topology, problem, state } = this
++    if (
++      !Number.isInteger(topology.regionCount) ||
++      topology.regionCount < 0 ||
++      !Number.isInteger(topology.portCount) ||
++      topology.portCount < 0 ||
++      problem.portPenalty?.some(
++        (penalty) => !Number.isFinite(penalty) || penalty < 0,
++      ) ||
++      state.regionCongestionCost.some(
++        (cost) => !Number.isFinite(cost) || cost < 0,
++      )
++    )
++      return
++
++    const regions: ViaRegion[] = Array.from(
++      { length: topology.regionCount },
++      (_, regionId) => ({
++        area: topology.regionWidth[regionId] * topology.regionHeight[regionId],
++        minX: Infinity,
++        maxX: -Infinity,
++        minY: Infinity,
++        maxY: -Infinity,
++        minZ: Infinity,
++        maxZ: -Infinity,
++      }),
++    )
++
++    // Entry ports come from incidentPortRegion; exits come from
++    // regionIncidentPorts. The loader does not require reciprocal incidence.
++    for (let portId = 0; portId < topology.portCount; portId++) {
++      const x = topology.portX[portId]
++      const y = topology.portY[portId]
++      const incidentRegions = topology.incidentPortRegion[portId]
++      if (
++        !Number.isFinite(x) ||
++        !Number.isFinite(y) ||
++        !Number.isInteger(topology.portZ[portId]) ||
++        !incidentRegions
++      )
++        return
++      for (const regionId of incidentRegions) {
++        if (
++          !Number.isInteger(regionId) ||
++          regionId < 0 ||
++          regionId >= topology.regionCount
++        )
++          return
++        const region = regions[regionId]
++        region.minX = Math.min(region.minX, x)
++        region.maxX = Math.max(region.maxX, x)
++        region.minY = Math.min(region.minY, y)
++        region.maxY = Math.max(region.maxY, y)
++        region.minZ = Math.min(region.minZ, topology.portZ[portId])
++        region.maxZ = Math.max(region.maxZ, topology.portZ[portId])
++      }
++    }
++    for (let regionId = 0; regionId < topology.regionCount; regionId++) {
++      const region = regions[regionId]
++      const ports = topology.regionIncidentPorts[regionId]
++      if (!ports) return
++      for (const portId of ports) {
++        if (
++          !Number.isInteger(portId) ||
++          portId < 0 ||
++          portId >= topology.portCount
++        )
++          return
++        region.minX = Math.min(region.minX, topology.portX[portId])
++        region.maxX = Math.max(region.maxX, topology.portX[portId])
++        region.minY = Math.min(region.minY, topology.portY[portId])
++        region.maxY = Math.max(region.maxY, topology.portY[portId])
++        region.minZ = Math.min(region.minZ, topology.portZ[portId])
++        region.maxZ = Math.max(region.maxZ, topology.portZ[portId])
++      }
++      if (
++        region.minX !== Infinity &&
++        (!Number.isFinite(region.area) || region.area <= 0)
++      )
++        return
++    }
++    // A layer change needs two different endpoint layers in this union.
++    // Ownership and available-layer masks do not exclude any mixed region.
++    this.viaRegions = regions.filter(
++      (region) => region.minX !== Infinity && region.minZ !== region.maxZ,
++    )
++  }
++
++  override computeH(portId: PortId): number {
++    if (
++      this.computeG !== TinyHyperGraphSolver.prototype.computeG ||
++      this.computeRegionCostForRegion !==
++        DistanceAwareTinyHyperGraphSolver.prototype
++          .computeRegionCostForRegion ||
++      !this.ADD_SEGMENT_DISTANCE_TO_G ||
++      !Number.isFinite(this.DISTANCE_TO_COST) ||
++      this.DISTANCE_TO_COST < 0 ||
++      !Number.isFinite(this.minViaPadDiameter) ||
++      this.minViaPadDiameter < 0 ||
++      this.minViaPadDiameter !== this.initialMinViaPadDiameter ||
++      !Number.isFinite(this.TRACE_DENSITY_COST_FACTOR) ||
++      this.TRACE_DENSITY_COST_FACTOR < 0 ||
++      this.TRACE_DENSITY_COST_FACTOR !== this.initialTraceDensityCostFactor ||
++      !Number.isFinite(this.RIP_CONGESTION_REGION_COST_FACTOR) ||
++      this.RIP_CONGESTION_REGION_COST_FACTOR < 0
++    )
++      return super.computeH(portId)
++
++    const goalPortId = this.getRouteEndPortId(this.state.currentRouteId!)
++    const { portX, portY, portZ } = this.topology
++    const point = { x: portX[portId], y: portY[portId] }
++    const goal = { x: portX[goalPortId], y: portY[goalPortId] }
++    const dx = point.x - goal.x
++    const dy = point.y - goal.y
++    const distanceCost = Math.sqrt(dx * dx + dy * dy) * this.DISTANCE_TO_COST
++    if (portZ[portId] === portZ[goalPortId]) return distanceCost
++
++    if (!this.viaRegionsPrepared) this.prepareViaRegions()
++    if (!this.viaRegions?.length) return super.computeH(portId)
++    if (
++      this.goalViaPortId !== goalPortId ||
++      this.goalViaDistanceToCost !== this.DISTANCE_TO_COST
++    ) {
++      // An empty region's first layer-changing segment is the minimum
++      // possible via charge. Occupancy and nonnegative extra costs add to it.
++      const unitAreaViaCost = computeRegionCostForArea(
++        1,
++        0,
++        0,
++        1,
++        1,
++        0,
++        this.minViaPadDiameter,
++        0,
++      )
++      if (!Number.isFinite(unitAreaViaCost)) return super.computeH(portId)
++      const goalViaRegions = this.viaRegions.map((region) => ({
++        region,
++        goalCost:
++          this.DISTANCE_TO_COST * distanceToViaRegion(goal, region) +
++          unitAreaViaCost / region.area,
++      }))
++      if (goalViaRegions.some((region) => !Number.isFinite(region.goalCost)))
++        return super.computeH(portId)
++      goalViaRegions.sort((left, right) => left.goalCost - right.goalCost)
++      this.goalViaRegions = goalViaRegions
++      this.goalViaPortId = goalPortId
++      this.goalViaDistanceToCost = this.DISTANCE_TO_COST
++      this.previousBestViaRegion = undefined
++      this.viaHeuristicByPortId.clear()
++    }
++    const cachedCost = this.viaHeuristicByPortId.get(portId)
++    if (cachedCost !== undefined) return cachedCost
++
++    let bestCost = this.previousBestViaRegion
++      ? this.previousBestViaRegion.goalCost +
++        this.DISTANCE_TO_COST *
++          distanceToViaRegion(point, this.previousBestViaRegion.region)
++      : Infinity
++    for (const candidate of this.goalViaRegions) {
++      // Every unvisited region costs at least its sorted goal-side term.
++      if (candidate.goalCost >= bestCost) break
++      const cost =
++        candidate.goalCost +
++        this.DISTANCE_TO_COST * distanceToViaRegion(point, candidate.region)
++      if (cost < bestCost) {
++        bestCost = cost
++        this.previousBestViaRegion = candidate
++      }
++    }
++    const heuristic = Math.max(distanceCost, bestCost)
++    this.viaHeuristicByPortId.set(portId, heuristic)
++    return heuristic
++  }
++
+   override onPathFound(finalCandidate: Candidate): void {
+     const goalPortId = this.state.goalPortId
+     if (finalCandidate.portId === goalPortId) {

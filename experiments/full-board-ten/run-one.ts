@@ -46,7 +46,7 @@ const processResult = { id: task.id, cohort: task.cohort, routingSourceOverride:
 writeFileSync(join(output, "process.json"), JSON.stringify(processResult, null, 2))
 
 if (task.restorePublishedCoreBeforeAssessment) {
-  const restore = Bun.spawn(["python3", join(import.meta.dir, "prepare-branch-order.py"), task.restorePublishedCoreBeforeAssessment, "restore", task.id, task.cohort], { stdout: "inherit", stderr: "inherit" })
+  const restore = Bun.spawn(["python3", join(import.meta.dir, "prepare-tiny-joint-via.py"), task.restorePublishedCoreBeforeAssessment, "restore", task.id, task.cohort], { stdout: "inherit", stderr: "inherit" })
   if (await restore.exited !== 0) throw new Error("Could not restore and verify published assessment runtime")
 }
 

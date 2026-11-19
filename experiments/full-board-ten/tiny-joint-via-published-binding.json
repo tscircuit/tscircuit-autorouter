@@ -1,0 +1,48 @@
+{
+  "helperSourceSha256": "92cf3311f42bdcb8daeee3c9628d0157fc5c0ee0ccc12c860da94fb5fbd3afe9",
+  "helperBindings": [
+    {
+      "original": "computeRegionCostForArea",
+      "bundled": "dJ",
+      "characterOffset": 1982570,
+      "characterLength": 98,
+      "publishedFragmentSha256": "b62b05fd880975672dd8bbe2fa215576f31cd2b4f67c5d3a7d14891c75e2f758",
+      "canonicalSha256": "d99fb1a3c1c30bd4a8160c81f1e219b9fda0dbb9b0601ec543720918c857bb6a"
+    },
+    {
+      "original": "isKnownSingleLayerMask",
+      "bundled": "lJ",
+      "characterOffset": 1982497,
+      "characterLength": 16,
+      "publishedFragmentSha256": "5108bf084b3e71abc21dc982c88a4d19ab495b90499bbc20ebf7980b7de25cdf",
+      "canonicalSha256": "b5f8b00cec76072b56fb6482f040c42e2388175863fb06152502ceae3e5843e5"
+    },
+    {
+      "original": "countAvailableLayers",
+      "bundled": "uJ",
+      "characterOffset": 1982672,
+      "characterLength": 73,
+      "publishedFragmentSha256": "021fd8e480de468f4f12926050d1ae03ab6aec63ad5db51ccec2b4d3349627bc",
+      "canonicalSha256": "0b1ba989b853a73a0bde1886fab5790b5a8dd11a260e14267ee5bdf833939c0c"
+    }
+  ],
+  "passed": true,
+  "sourceBase": "f1fe8edcfb3dfde8fd644d09d81bad18743144b3",
+  "sourceFile": "lib/distance-aware-tiny-hypergraph-solver.ts",
+  "sourceSha256": "68465bf106dbaecbc8f64d2615d2de9a785c77f3e337fbe19f51630e6dd3d3e0",
+  "publishedSourceContentExact": true,
+  "sourceMapSha256": "9edff1c06b9a33231e581e2aae1115cfd96213f28df65eb3d56d7d78b078241d",
+  "sourceMapPositionsUsed": false,
+  "autorouterSha256": "5695c6361c0f7a7dc26ddd1b9264b8a8c122e5f7b9610cf24c6af3b99c545df1",
+  "classVariable": "kQ",
+  "classParent": "PQ",
+  "heapBinding": "yJ",
+  "classCharacterOffset": 2040516,
+  "classCharacterLength": 805,
+  "classSha256": "ffab303c62075bd1870dae332e07e77f0768b1ad0bb01645cf18bde0684b883a",
+  "canonicalClassSha256": "39a1fefb49bbee8e91e5b3b0b94a1aa4f69c8c8fb16ce71c20506cea565c4289",
+  "canonicalizer": "Terser5.51.2 three passes with deterministic lexical names, applied to both source and emitted class; TypeScript5.9.3 erases types",
+  "candidateUsed": false,
+  "moduleImported": false,
+  "routingExecuted": false
+}

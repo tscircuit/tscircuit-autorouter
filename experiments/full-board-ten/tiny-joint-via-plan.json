@@ -1,0 +1,188 @@
+{
+  "schemaVersion": 1,
+  "qualificationReady": true,
+  "status": "Qualified and independently reviewed; locally frozen for root verification before push",
+  "branch": "bench/tiny-joint-via-glider-3242-20261119",
+  "workflow": ".github/workflows/tiny-joint-via-screen.yml",
+  "baselineController": "49e9de35db347f94eeeaef9bca48d821ed3be51e",
+  "pairedHarnessController": "7d903076887a82b2d53b149aa04894808f7401a9",
+  "cases": [
+    {
+      "board": "glider",
+      "cohort": "spaced",
+      "expectedRoutableNets": 356
+    }
+  ],
+  "laneOrder": [
+    "base",
+    "candidate"
+  ],
+  "runner": "blacksmith-8vcpu-ubuntu-2404-arm",
+  "jobs": 1,
+  "budgetsMs": {
+    "capture": 900000,
+    "hardKill": 960000,
+    "assessment": 180000
+  },
+  "jobTimeoutMinutes": 60,
+  "runtime": {
+    "main": "0.0.3242",
+    "core": "0.0.2424",
+    "eval": "0.0.1818",
+    "autorouter": "0.0.1132",
+    "publishedCoreSha256": "f8122fb04b46cb37bf48de0f8642044bc8360937a03630e4655112cc8694471b",
+    "publishedAutorouterSha256": "5695c6361c0f7a7dc26ddd1b9264b8a8c122e5f7b9610cf24c6af3b99c545df1",
+    "dependencyGraphPolicy": "Exact frozen3242 release and lockfiles; no independent transitive refresh.",
+    "candidateAutorouterSha256": "68f3d22c0dfe1d2627e9ca4d3272221f73a6d5fc02da294322bdd355948d52ee"
+  },
+  "source": {
+    "repository": "tscircuit/tiny-hypergraph",
+    "baseCommit": "f1fe8edcfb3dfde8fd644d09d81bad18743144b3",
+    "candidateCommit": "21c7c3d0ecd6b929f0831b495f13e7163187ec55",
+    "candidateLibTree": "1c1342cad7600ca09c0031fbaa91e44f65e7d89c",
+    "patchSha256": "0db6b45162d283d2bc1d3facb82b010f8d91c1a9b77c75b373480431023b1564",
+    "declaredFiles": [
+      "lib/distance-aware-tiny-hypergraph-solver.ts"
+    ],
+    "finalReviewedScope": "One existing DistanceAware class gains a joint via-region location/charge lower bound. No search budgets, cost law, solver, routing, benchmark, or source push.",
+    "binding": "AR1132 devDependency tiny-hypergraph pins this exact base; separate tiny-hypergraph-poly remains unchanged.",
+    "files": {
+      "lib/distance-aware-tiny-hypergraph-solver.ts": {
+        "beforeSha256": "68465bf106dbaecbc8f64d2615d2de9a785c77f3e337fbe19f51630e6dd3d3e0",
+        "afterSha256": "06cb70baab99c198dc6ec1a2c0ded5c746fbbc6392dcb5c748ec169a49f57d27"
+      }
+    }
+  },
+  "overlay": {
+    "targetPackage": "@tscircuit/capacity-autorouter",
+    "targetEntry": "dist/index.js",
+    "strategy": "One exact source-derived DistanceAware class replacement and distanceToViaRegion helper insertion in published AR1132; every outside AR byte and all Core2424 bytes unchanged.",
+    "publishedSourceMapSha256": "9edff1c06b9a33231e581e2aae1115cfd96213f28df65eb3d56d7d78b078241d",
+    "sourceMapUse": "Authenticates exact original source content; generated positions are pre-Terser and are not used to locate minified spans.",
+    "schemaVersion": 2,
+    "replace": [
+      "DistanceAwareTinyHyperGraphSolver"
+    ],
+    "insert": [
+      "distanceToViaRegion"
+    ],
+    "unchanged": []
+  },
+  "nativePolicies": "Full356 native demands/all components and geometry, original net identities, native phase ordering. No iteration caps/cost law/options changed. No routing observer hooks or instrumentation. No routing WASM.",
+  "assessmentPolicy": "Restore exact published runtime before independent physical connectivity and geometry assessment; report gained/lost names and partial/deadline states.",
+  "frozenFiles": {
+    "experiments/full-board-ten/bootstrap.py": "23de25ac8960be89afc57ba27b0d3fddb6e65dba593024be59ec5073d266164d",
+    "experiments/full-board-ten/prepare-cases.ts": "b72e632e9c9152c9e5daedf1bb60daa5d86c33fdcc454f2a7825827d24124330",
+    "experiments/full-board-ten/render-published.tsx": "c15936eea06501932e242f8bf4e4d63c93b352246ba520471410ae90a2db0917",
+    "experiments/full-board-ten/run-one.ts": "5eab20baccce2afd0efd7e859e7644b938e8e88ba3595109593f57e2db5a9e17",
+    "experiments/full-board-ten/calibrate-assessment.tsx": "efeb820cf34239465df53ce4c7932293e41a14dcab4bedb823c3bc60cc9627a0",
+    "experiments/full-board-ten/createCoarseRoutingDiagnostics.ts": "dea45bba3386a9b55b7709834dff65468c421992808b406f54c6f9e556e8b618",
+    "experiments/full-board-ten/source-provenance.json": "bd24be29c5fdd5ae68ce15c5b2bc50f172ecdd325dcc1b57a80ec653d12570fb",
+    "experiments/full-board-ten/release.json": "5eece79b055b28bd17e321140949a66f036ceb28573adf108419b5f2f64ddbd4",
+    "experiments/full-board-ten/published-release-provenance.json": "89326fdcc1e99945b98798b0b5b95c60560be6f1f3789184e3bda84464577dc3",
+    "experiments/full-board-ten/harness-provenance.json": "fb1f6c3507df121e8b8dc0eb472222eb8d2ce90f5b899f7aa262f20e3e5aa17f",
+    "experiments/full-board-ten/runtime/package.json": "c0542a47684ae97ccbe3670fbd2555c3ce0b935e00e8c13aff983442426decda",
+    "experiments/full-board-ten/runtime/bun.lock": "cdf19ae5668a61815a76f9d912b1fbc88907b1f029b2f3dd955f6f81a6cb7b57",
+    "experiments/full-board-ten/autorouter-dependencies/package.json": "7b4c1ecf979432e472a4f0589ed49976a8a1323ff7bf651a5938ee7006b61360",
+    "experiments/full-board-ten/autorouter-dependencies/bun.lock": "ec313c582c29c1e35bb31190151a5649198c177119d32fe311746c06e94e8c4e",
+    "experiments/full-board-ten/createTinyJointViaOverlay.ts": "5d58b918fe3dc762344414ea6291c64127d037ce2051e90c1ab4f8cb80d2528a",
+    "experiments/full-board-ten/tiny-joint-via-production.patch": "0db6b45162d283d2bc1d3facb82b010f8d91c1a9b77c75b373480431023b1564",
+    "experiments/full-board-ten/tiny-joint-via-source-mapping.json": "95c3a982a7a42b8010cf1b734d82e825a7386df9fd5f6fb5ff45da5258efe216",
+    "experiments/full-board-ten/prepare-tiny-joint-via.py": "78afd23dacde3ad6b0e25025c15c3b4ddaa6c5b6f8f9857db21b04b72ea7fdff",
+    "experiments/full-board-ten/compare-tiny-joint-via.py": "9f194395fb9ca7ea493823f945709dc5ce30821ca6ec3cfc9e4d6f0b259c4543",
+    "experiments/full-board-ten/package.json": "469e1861d1259cd1307bca324fb0d8ba0a67ea0323d4e728a35c90a2bc92bdf3",
+    "experiments/full-board-ten/tsconfig.json": "2e881577c63bb6b62d14abd319240bbc6ae5e206ecb007dae80ab3ec922293c7",
+    "experiments/full-board-ten/baseline-run-plan.json": "3b3d1b99221b1e175eae3f5e6a824b959b9a97f19e67bb2eb3da2ad4704689bf",
+    "experiments/full-board-ten/tiny-joint-via-published-binding.json": "646143513ce153038650a771adeb3ed2071dfa33b4a4aac288eb815e0743ee7e",
+    ".github/workflows/tiny-joint-via-screen.yml": "29d05dee4718c7068f9d20761a8ffec221996bb28a7df0de1db5c224088e200c"
+  },
+  "pendingInputs": [
+    "Root verification of exact committed controller before push or dispatch"
+  ],
+  "routingExecuted": false,
+  "pushPerformed": false,
+  "experiment": "tiny-joint-via-location-bound",
+  "sourceMappingToolSha256": "5d58b918fe3dc762344414ea6291c64127d037ce2051e90c1ab4f8cb80d2528a",
+  "sourceMappingSha256": "95c3a982a7a42b8010cf1b734d82e825a7386df9fd5f6fb5ff45da5258efe216",
+  "externalAliases": {
+    "TinyHyperGraphSolver": "PQ",
+    "IndexedCandidateHeap": "yJ",
+    "computeRegionCostForArea": "dJ",
+    "DistanceAwareTinyHyperGraphSolver": "kQ",
+    "distanceToViaRegion": "tinyJointViaDistanceToRegion"
+  },
+  "expectedRoutableNetsPerLane": 356,
+  "fullTenCoverage": false,
+  "frozenHarnessFiles": {
+    "bootstrap.py": "23de25ac8960be89afc57ba27b0d3fddb6e65dba593024be59ec5073d266164d",
+    "prepare-cases.ts": "b72e632e9c9152c9e5daedf1bb60daa5d86c33fdcc454f2a7825827d24124330",
+    "render-published.tsx": "c15936eea06501932e242f8bf4e4d63c93b352246ba520471410ae90a2db0917",
+    "run-one.ts": "5eab20baccce2afd0efd7e859e7644b938e8e88ba3595109593f57e2db5a9e17",
+    "calibrate-assessment.tsx": "efeb820cf34239465df53ce4c7932293e41a14dcab4bedb823c3bc60cc9627a0",
+    "createCoarseRoutingDiagnostics.ts": "dea45bba3386a9b55b7709834dff65468c421992808b406f54c6f9e556e8b618",
+    "source-provenance.json": "bd24be29c5fdd5ae68ce15c5b2bc50f172ecdd325dcc1b57a80ec653d12570fb",
+    "release.json": "5eece79b055b28bd17e321140949a66f036ceb28573adf108419b5f2f64ddbd4",
+    "published-release-provenance.json": "89326fdcc1e99945b98798b0b5b95c60560be6f1f3789184e3bda84464577dc3",
+    "harness-provenance.json": "fb1f6c3507df121e8b8dc0eb472222eb8d2ce90f5b899f7aa262f20e3e5aa17f",
+    "runtime/package.json": "c0542a47684ae97ccbe3670fbd2555c3ce0b935e00e8c13aff983442426decda",
+    "runtime/bun.lock": "cdf19ae5668a61815a76f9d912b1fbc88907b1f029b2f3dd955f6f81a6cb7b57",
+    "autorouter-dependencies/package.json": "7b4c1ecf979432e472a4f0589ed49976a8a1323ff7bf651a5938ee7006b61360",
+    "autorouter-dependencies/bun.lock": "ec313c582c29c1e35bb31190151a5649198c177119d32fe311746c06e94e8c4e",
+    "createTinyJointViaOverlay.ts": "5d58b918fe3dc762344414ea6291c64127d037ce2051e90c1ab4f8cb80d2528a",
+    "tiny-joint-via-production.patch": "0db6b45162d283d2bc1d3facb82b010f8d91c1a9b77c75b373480431023b1564",
+    "tiny-joint-via-source-mapping.json": "95c3a982a7a42b8010cf1b734d82e825a7386df9fd5f6fb5ff45da5258efe216",
+    "prepare-tiny-joint-via.py": "78afd23dacde3ad6b0e25025c15c3b4ddaa6c5b6f8f9857db21b04b72ea7fdff",
+    "compare-tiny-joint-via.py": "9f194395fb9ca7ea493823f945709dc5ce30821ca6ec3cfc9e4d6f0b259c4543",
+    "package.json": "469e1861d1259cd1307bca324fb0d8ba0a67ea0323d4e728a35c90a2bc92bdf3",
+    "tsconfig.json": "2e881577c63bb6b62d14abd319240bbc6ae5e206ecb007dae80ab3ec922293c7",
+    "baseline-run-plan.json": "3b3d1b99221b1e175eae3f5e6a824b959b9a97f19e67bb2eb3da2ad4704689bf",
+    "tiny-joint-via-published-binding.json": "646143513ce153038650a771adeb3ed2071dfa33b4a4aac288eb815e0743ee7e"
+  },
+  "requiredHarnessFiles": [
+    "bootstrap.py",
+    "prepare-cases.ts",
+    "render-published.tsx",
+    "run-one.ts",
+    "calibrate-assessment.tsx",
+    "createCoarseRoutingDiagnostics.ts",
+    "source-provenance.json",
+    "release.json",
+    "published-release-provenance.json",
+    "harness-provenance.json",
+    "runtime/package.json",
+    "runtime/bun.lock",
+    "autorouter-dependencies/package.json",
+    "autorouter-dependencies/bun.lock",
+    "createTinyJointViaOverlay.ts",
+    "tiny-joint-via-production.patch",
+    "tiny-joint-via-source-mapping.json",
+    "prepare-tiny-joint-via.py",
+    "compare-tiny-joint-via.py",
+    "package.json",
+    "tsconfig.json",
+    "baseline-run-plan.json",
+    "tiny-joint-via-published-binding.json"
+  ],
+  "observerPolicy": {
+    "enabled": false,
+    "bothLanesDisabled": true,
+    "change": "Only targetPhase is assigned undefined; no production observer hooks, no other routing/capture/options/budget change.",
+    "historicalBaselineRun": 44423458886,
+    "historicalBaselineComparableWithoutFreshControl": false
+  },
+  "acceptance": "Actual native gained/lost net identities and independent physical assessment; no source acceptance based only on progress, fewer iterations or faster partial routing.",
+  "integrationLimit": "Exact AR source overlay screen only, not a published integration or all-ten result.",
+  "publishedBindingSha256": "646143513ce153038650a771adeb3ed2071dfa33b4a4aac288eb815e0743ee7e",
+  "qualification": {
+    "nativeEfficacyKnown": false,
+    "source": "Exact reviewed21c7c3d0 one-file Tiny prototype on publishedf1fe; no budgets/options/cost-law change.",
+    "mapping": "Exact AR1132 class/helper mapping qualified; five negative mapper contracts passed; Core unchanged.",
+    "installer": "PASS isolated synthetic graph with authentic AR/Core/source-map; source patch/mapping, normal package resolutions, dedicated AR dependencies, unrelated Core/graph mutation rejection and published restore. No routing.",
+    "comparator": "PASS synthetic gained/lost/membership/runtime/restoration and zero-observer contracts using authentic nativeGlider356 names. No physical gain claimed.",
+    "heldGates": "PASS all six workflow/installer/comparator entries reject before setup while readinessfalse.",
+    "review": "PASS independent frozen24-file controller review SHA247962823a91794ffb8e8c1bc6df9da7156527c30ac1a5514e7339e2f469353c; final identity refresh follows local commit.",
+    "sourceSelectedForPR": false,
+    "agentPushed": false,
+    "releaseAuthorization": "Root explicitly authorized readiness metadata/local commit after required contracts and independent review; root retains push authorization."
+  }
+}

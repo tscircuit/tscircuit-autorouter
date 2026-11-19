@@ -59,7 +59,7 @@ globalThis.WebAssembly = new Proxy(nativeWasm, {
     return wrapped
   },
 })
-// Both lanes use native package resolution; the candidate declares its Core overlay.
+// Both lanes use native package resolution; the candidate declares its autorouter overlay.
 if (!task.runtimeManifestPath) throw new Error("Explicit published runtime identity manifest required")
 const runtimeManifest = JSON.parse(readFileSync(task.runtimeManifestPath, "utf8"))
 const expectedRuntime = runtimeManifest.packages
@@ -118,7 +118,7 @@ const diagnosticTargets: Record<string, string> = {
   "butterstick-original": "plane_escape", "icepi-original": "plane_escape",
   "glider-spaced": "other_signals", "imx6-spaced": "remaining", "butterstick-spaced": "*",
 }
-const targetPhase = executionMode === "full" ? diagnosticTargets[`${task.id}-${task.cohort}`] : undefined
+const targetPhase: string | undefined = undefined
 progress.coarseRoutingInstrumentation = { enabled: Boolean(targetPhase), targetPhase: targetPhase ?? null, mode: "observational published-instance lifecycle hooks" }
 const coarseReports: Record<string, any>[] = []
 let coarseObserver: ReturnType<typeof createCoarseRoutingDiagnostics> | undefined
