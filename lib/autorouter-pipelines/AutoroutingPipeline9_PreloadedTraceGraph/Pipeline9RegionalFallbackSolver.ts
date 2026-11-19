@@ -2,6 +2,7 @@ import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
 import { RegionalForceImproveSolver } from "high-density-repair01"
 import { BaseSolver } from "lib/solvers/BaseSolver"
+import { areNodePortPointPairsConnectedByRoutes } from "lib/solvers/HyperHighDensitySolver/repairDisconnectedSameRootPortPoints"
 import { Pipeline4HighDensityRepairSolver } from "lib/solvers/HighDensityRepairSolver/Pipeline4HighDensityRepairSolver"
 import { HighDensitySolver } from "lib/solvers/HighDensitySolver/HighDensitySolver"
 import { isObstacleConnectedToRoute } from "lib/solvers/TraceWidthSolver/isObstacleConnectedToRoute"
@@ -192,6 +193,14 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
   }
 
   private validateCandidateRoutes(routes: HighDensityRoute[]): boolean {
+    if (
+      !areNodePortPointPairsConnectedByRoutes(
+        routes,
+        this.params.nodeWithPortPoints,
+      )
+    ) {
+      return false
+    }
     for (const route of routes) {
       for (const fixedRoute of this.params.immutableHdRoutes ?? []) {
         if (
