@@ -7,21 +7,16 @@ import type { SimpleRouteJson } from "lib/types"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 
 test("A64 plans remaining signals without crossing the saved data copper", () => {
+  const fixture = readFileSync(
+    new URL("../fixtures/a64-fixed-trace-handoff.srj.json.gz", import.meta.url),
+  )
   const input: SimpleRouteJson = JSON.parse(
-    gunzipSync(
-      readFileSync(
-        new URL(
-          "../fixtures/a64-fixed-trace-handoff.srj.json.gz",
-          import.meta.url,
-        ),
-      ),
-    ).toString(),
+    gunzipSync(new Uint8Array(fixture)).toString(),
   )
   input.traces = input.traces!.map((trace) => ({ ...trace, isFixed: true }))
   const before = structuredClone(input)
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(input, {
     cacheProvider: null,
-    solverThreads: 1,
   })
   while (!solver.failed && !solver.portPointPathingSolver?.solved) {
     solver.step()
