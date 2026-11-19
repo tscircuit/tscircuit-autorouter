@@ -1,7 +1,6 @@
 import {
   HighDensitySolverA01,
   HighDensitySolverA03 as HighDensityA03Solver,
-  type StaticSegmentValidator,
 } from "@tscircuit/high-density-a01"
 import { HighDensitySolverA13 } from "@tscircuit/high-density-a13"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
@@ -60,7 +59,6 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   >[0] & {
     boardGeometry?: HighDensityBoardGeometry
     preservePhysicalGeometry?: boolean
-    staticSegmentValidator?: StaticSegmentValidator
     solutionValidator?: (routes: HighDensityIntraNodeRoute[]) => boolean
   }
   solvedRoutes: HighDensityIntraNodeRoute[] = []
@@ -135,7 +133,6 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       rejectOverlappingTerminals?: boolean
       boardGeometry?: HighDensityBoardGeometry
       preservePhysicalGeometry?: boolean
-      staticSegmentValidator?: StaticSegmentValidator
       solutionValidator?: (routes: HighDensityIntraNodeRoute[]) => boolean
     },
   ) {
@@ -705,7 +702,6 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       }
       const solver = new HighDensityA03Solver({
         nodeWithPortPoints: this.nodeWithPortPoints,
-        staticSegmentValidator: this.constructorParams.staticSegmentValidator,
         highResolutionCellSize: 0.1,
         highResolutionCellThickness: 8,
         lowResolutionCellSize: 0.4,

@@ -61,10 +61,8 @@ type Bounds = {
   maxY: number
 }
 
-export type FixedRouteCopperSpatialIndex<
-  Route extends HighDensityRoute = PreloadedHighDensityRoute,
-> = {
-  getRoutesOverlappingBounds: (bounds: Bounds) => Route[]
+export type FixedRouteCopperSpatialIndex = {
+  getRoutesOverlappingBounds: (bounds: Bounds) => PreloadedHighDensityRoute[]
 }
 
 export type Pipeline9RegionalB01CandidateProblem = {
@@ -293,12 +291,10 @@ const routeCopperOverlapsBounds = (
   )
 }
 
-export const createFixedRouteCopperSpatialIndex = <
-  Route extends HighDensityRoute,
->(
-  routes: Route[],
-  srj: Pick<SimpleRouteJson, "layerCount" | "allowBlindAndBuriedVias">,
-): FixedRouteCopperSpatialIndex<Route> => {
+export const createFixedRouteCopperSpatialIndex = (
+  routes: PreloadedHighDensityRoute[],
+  srj: SimpleRouteJson,
+): FixedRouteCopperSpatialIndex => {
   const routeIndexesByCell = new Map<string, Set<number>>()
   const addBounds = (routeIndex: number, bounds: Bounds): void => {
     const minCellX = Math.floor(bounds.minX / FIXED_ROUTE_INDEX_CELL_SIZE)

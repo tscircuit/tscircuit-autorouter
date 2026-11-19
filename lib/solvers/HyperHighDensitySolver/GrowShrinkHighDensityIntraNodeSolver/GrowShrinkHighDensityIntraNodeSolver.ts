@@ -206,11 +206,8 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
   }
 
   private createActiveSubSolver(): void {
-    const {
-      growShrinkSolutionValidator,
-      staticSegmentValidator,
-      ...portfolioParams
-    } = this.constructorParams
+    const { growShrinkSolutionValidator, ...portfolioParams } =
+      this.constructorParams
     this.coordinateScale = this.scaleFactor
     if (this.preservePhysicalGeometry) {
       this.coordinateScale = Math.min(2, this.scaleFactor)
@@ -287,24 +284,6 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
       ...portfolioParams,
       preservePhysicalGeometry: this.preservePhysicalGeometry,
       // The search emits local coordinates; copper guards consume board-world mm.
-      staticSegmentValidator: staticSegmentValidator
-        ? (segment): boolean =>
-            staticSegmentValidator({
-              ...segment,
-              start: scalePoint(
-                segment.start,
-                this.nodeWithPortPoints.center,
-                1 / this.coordinateScale,
-              ),
-              end: scalePoint(
-                segment.end,
-                this.nodeWithPortPoints.center,
-                1 / this.coordinateScale,
-              ),
-              traceThickness: segment.traceThickness / metalScale,
-              viaDiameter: segment.viaDiameter / metalScale,
-            })
-        : undefined,
       priorityCoordinateScale:
         (portfolioParams.priorityCoordinateScale ?? 1) * this.coordinateScale,
       enableNegotiatedSearch:

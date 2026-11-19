@@ -1,7 +1,3 @@
-import type {
-  StaticRouteSegment,
-  StaticSegmentValidator,
-} from "@tscircuit/high-density-a01"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
 import { RegionalForceImproveSolver } from "high-density-repair01"
@@ -16,10 +12,6 @@ import type {
 } from "lib/types/high-density-types"
 import type { Obstacle } from "lib/types/srj-types"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
-import {
-  createFixedRouteCopperSpatialIndex,
-  type FixedRouteCopperSpatialIndex,
-} from "./applyPipeline9RegionalB01Repairs"
 import { materializePipeline9HdRouteVias } from "./materializePipeline9HdRouteVias"
 import {
   arePipeline9RoutesOnSameNet,
@@ -162,7 +154,6 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
   forceImproveSolver?: RegionalForceImproveSolver
   repairSolver?: Pipeline4HighDensityRepairSolver
   private validatedRoutes?: HighDensityRoute[]
-  private readonly immutableCopperIndex?: FixedRouteCopperSpatialIndex<HighDensityRoute>
 
   constructor(params: Pipeline9RegionalFallbackSolverParams) {
     super()
@@ -171,15 +162,6 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
       preloadedViaCandidateRejectionCount: 0,
       forceImproveCandidateRejectionCount: 0,
       repairCandidateRejectionCount: 0,
-    }
-    let staticSegmentValidator: StaticSegmentValidator | undefined
-    if (params.immutableHdRoutes?.length) {
-      this.immutableCopperIndex = createFixedRouteCopperSpatialIndex(
-        params.immutableHdRoutes,
-        params,
-      )
-      staticSegmentValidator = (segment): boolean =>
-        this.validateStaticSegment(segment)
     }
     this.highDensitySolver = new HighDensitySolver({
       captureSearchDebug: params.captureSearchDebug,
@@ -194,7 +176,6 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
       obstacles: params.obstacles,
       fixedHdRoutes: params.fixedHdRoutes,
       preservePhysicalGeometry: params.preservePhysicalGeometry,
-      staticSegmentValidator,
       layerCount: params.layerCount,
       useGrowShrinkHighDensityIntraNodeSolver: true,
       preserveTerminalPcbPortIds: false,
@@ -210,41 +191,9 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
     return "Pipeline9RegionalFallbackSolver"
   }
 
-  private validateStaticSegment(segment: StaticRouteSegment): boolean {
-    const vias: HighDensityRoute["vias"] = []
-    if (segment.start.z !== segment.end.z) {
-      vias.push({ x: segment.end.x, y: segment.end.y })
-    }
-    const radius =
-      Math.max(segment.traceThickness, segment.viaDiameter) / 2 +
-      this.params.obstacleMargin
-    const nearbyCopper = this.immutableCopperIndex!.getRoutesOverlappingBounds({
-      minX: Math.min(segment.start.x, segment.end.x) - radius,
-      minY: Math.min(segment.start.y, segment.end.y) - radius,
-      maxX: Math.max(segment.start.x, segment.end.x) + radius,
-      maxY: Math.max(segment.start.y, segment.end.y) + radius,
-    })
-    return this.validateCandidateRoutes(
-      [
-        {
-          connectionName: segment.connectionName,
-          rootConnectionName: segment.rootConnectionName,
-          traceThickness: segment.traceThickness,
-          viaDiameter: segment.viaDiameter,
-          route: [segment.start, segment.end],
-          vias,
-        },
-      ],
-      nearbyCopper,
-    )
-  }
-
-  private validateCandidateRoutes(
-    routes: HighDensityRoute[],
-    immutableRoutes: HighDensityRoute[] = this.params.immutableHdRoutes ?? [],
-  ): boolean {
+  private validateCandidateRoutes(routes: HighDensityRoute[]): boolean {
     for (const route of routes) {
-      for (const fixedRoute of immutableRoutes) {
+      for (const fixedRoute of this.params.immutableHdRoutes ?? []) {
         if (
           arePipeline9RoutesOnSameNet(route, fixedRoute, this.params.connMap)
         ) {

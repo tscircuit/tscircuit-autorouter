@@ -1,4 +1,3 @@
-import type { StaticSegmentValidator } from "@tscircuit/high-density-a01"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
 import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
@@ -48,7 +47,6 @@ export class HighDensitySolver extends BaseSolver {
 
   unsolvedNodePortPoints: NodeWithPortPoints[]
   routes: HighDensityIntraNodeRoute[]
-  readonly staticSegmentValidator?: StaticSegmentValidator
   readonly fixedHdRoutes: HighDensityIntraNodeRoute[]
   readonly preservePhysicalGeometry?: boolean
   colorMap: Record<string, string>
@@ -101,7 +99,6 @@ export class HighDensitySolver extends BaseSolver {
   constructor({
     nodePortPoints,
     fixedHdRoutes = [],
-    staticSegmentValidator,
     preservePhysicalGeometry,
     colorMap,
     connMap,
@@ -131,7 +128,6 @@ export class HighDensitySolver extends BaseSolver {
   }: {
     nodePortPoints: NodeWithPortPoints[]
     fixedHdRoutes?: HighDensityIntraNodeRoute[]
-    staticSegmentValidator?: StaticSegmentValidator
     preservePhysicalGeometry?: boolean
     colorMap?: Record<string, string>
     connMap?: ConnectivityMap
@@ -164,7 +160,6 @@ export class HighDensitySolver extends BaseSolver {
       | Record<string, number | null>
   }) {
     super()
-    this.staticSegmentValidator = staticSegmentValidator
     this.fixedHdRoutes = fixedHdRoutes
     this.preservePhysicalGeometry = preservePhysicalGeometry
     this.unsolvedNodePortPoints = nodePortPoints
@@ -435,7 +430,6 @@ export class HighDensitySolver extends BaseSolver {
     const intraNodeSolverParams = {
       nodeWithPortPoints: node,
       fixedHdRoutes: this.fixedHdRoutes,
-      staticSegmentValidator: this.staticSegmentValidator,
       preservePhysicalGeometry: this.preservePhysicalGeometry,
       ...this.priorityDagOptions,
       priorityDiagnostics: this.benchmarkDiagnosticCounters,
