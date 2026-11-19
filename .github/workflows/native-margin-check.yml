@@ -1,4 +1,4 @@
-name: Verify existing shared-via repair on native circuits
+name: Verify native geometry with complete exported ownership
 on:
   push:
     branches: [analysis/native-complete-cleanup-context]
@@ -7,35 +7,27 @@ permissions:
   contents: read
 jobs:
   routing:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     timeout-minutes: 15
-    strategy:
-      fail-fast: false
-      matrix:
-        source: [1d5168a1411831d5411d93bb01e43da28522bbb9, 896e20783c83a4afb9554e5ab8a81fec203e8ca7]
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ matrix.source }}
-          fetch-depth: 0
+          ref: 896e20783c83a4afb9554e5ab8a81fec203e8ca7
           persist-credentials: false
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: '1.4.3'
-      - run: git checkout 896e20783c83a4afb9554e5ab8a81fec203e8ca7 -- lib/utils/convertToCircuitJson.ts
-      - run: bun install
-      - name: Test the existing one-line repair03 PR 166 on the current dependency
+      - name: Keep all native copper in the same physical frame
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          p=Path("node_modules/high-density-repair03/lib/solvers/GlobalDrcForceImproveSolver/solverHelpers.ts")
+          p=Path("lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver.ts")
           s=p.read_text()
-          a=s.index("const moveViaAwayFromPoint =")
-          b=s.index("\ntype SegmentContact",a)
-          method=s[a:b]
-          assert method.count("return moveVia(")==1
-          p.write_text(s[:a]+method.replace("return moveVia(","return translateSameRootViaSite(",1)+s[b:])
+          old="    const hasImmutablePreload = this.fixedHdRoutes.some(\n      (route) => route.isFixed === true,\n    )"
+          assert s.count(old)==1
+          p.write_text(s.replace(old,"    const hasImmutablePreload = fixedHdRoutes.length > 0",1))
           PY
+      - run: bun install
       - name: Keep original routing, physical-clearance and via-count assertions
         env:
           BUN_UPDATE_SNAPSHOTS: '1'
