@@ -1,0 +1,78 @@
+name: Qualify the reviewed fanout stack and boundary inference
+on:
+  push:
+    branches: [codex/ddr2427-concerns-verified-boundaries]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  native-isolated:
+    strategy:
+      fail-fast: false
+      matrix:
+        board: [orangecrab, h616, butterstick, glider, imx6, icepi]
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: 3258e97a80f0239c0c92de072c4cba5d559935ce
+          path: source
+      - uses: actions/download-artifact@v4
+        with:
+          name: published2427-${{ matrix.board }}
+          run-id: 44519377875
+          github-token: ${{ github.token }}
+          path: captured
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Prepare immutable stages with identical dependencies
+        run: |
+          (cd source && bun install --frozen-lockfile --ignore-scripts)
+          python3 - <<'PYSETUP'
+          import json,subprocess
+          from pathlib import Path
+          root=Path.cwd()
+          revisions={'before':'10fe3fce592c27e4f381894311f3fd65350983b4','after':'9fe3894f921779327313d7a6f02b5d72098658ae'}
+          for name,revision in revisions.items():
+              subprocess.run(['git','fetch','--no-tags','origin',revision],cwd='source',check=True)
+              folder=root/'variants'/name
+              subprocess.run(['git','worktree','add','--detach',str(folder),revision],cwd='source',check=True)
+              (folder/'node_modules').symlink_to(root/'source/node_modules',target_is_directory=True)
+              for script in ['isolated-stack-boundaries.ts','validate-native-request-constraints.ts']:
+                  (folder/script).write_bytes((root/'experiments/full-board-priority-analysis'/script).read_bytes())
+          PYSETUP
+      - name: Route the same original requests separately with every original obstacle
+        env:
+          BOARD_ID: ${{ matrix.board }}
+        run: |
+          for revision in before after; do
+            mkdir -p "$GITHUB_WORKSPACE/results/$revision/boundaries"
+            (cd "variants/$revision" && bun isolated-stack-boundaries.ts "$GITHUB_WORKSPACE/captured/$BOARD_ID/fanout-1-input.json.gz" "$GITHUB_WORKSPACE/results/$revision/boundaries")
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: concerns-qualified-boundary-${{ matrix.board }}
+          path: results
+      - name: Export exact isolated results and accepted copper
+        if: always()
+        run: |
+          python3 - <<'PYEXPORT'
+          import base64,io,json,zipfile
+          from pathlib import Path
+          for path in sorted(Path('results').glob('*/*/report.json')):
+              print('MINIMAL_STACK_ISOLATED_REPORT',json.dumps({'revision':path.parent.parent.name,'kind':path.parent.name,'rows':json.loads(path.read_text())},separators=(',',':')))
+          stream=io.BytesIO()
+          with zipfile.ZipFile(stream,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=9) as archive:
+              for path in Path('results').rglob('*'):
+                  if path.is_file():archive.writestr(str(path.relative_to('results')),path.read_bytes())
+          print('MINIMAL_STACK_ISOLATED_EVIDENCE_BEGIN')
+          encoded=base64.b64encode(stream.getvalue()).decode()
+          for offset in range(0,len(encoded),8000):print(encoded[offset:offset+8000])
+          print('MINIMAL_STACK_ISOLATED_EVIDENCE_END')
+          PYEXPORT
+
