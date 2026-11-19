@@ -25,7 +25,7 @@ jobs:
           persist-credentials: false
       - uses: actions/checkout@v4
         with:
-          ref: ea6eff630cc92813b4817cad3da1ac0f9c820090
+          ref: 2c482cda9c866cec0f98d7e52ae6fc4da9136e7b
           path: same-machine-pr
           persist-credentials: false
       - uses: oven-sh/setup-bun@v2
