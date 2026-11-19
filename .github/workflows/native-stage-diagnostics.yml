@@ -12,8 +12,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        board: [gba, midi]
-        source: [09bd0812beff4b44f03cf5e2e5881b3186655558, 0f98be6237dfa0a852360b07d38f0e2fbee5f92d]
+        board: [midi]
+        source: [0f98be6237dfa0a852360b07d38f0e2fbee5f92d]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -62,6 +62,31 @@ jobs:
            }
           }
           console.log("AGGREGATE_FINISH",JSON.stringify({board,solved:solver.solved,failed:solver.failed,iterations:solver.iterations}))
+          import { collectViaNodes, cloneRoutes, materializeRoutes, applyDrcErrorForces, isViaPadDrcError } from "high-density-repair03/lib/solvers/GlobalDrcForceImproveSolver/solverHelpers"
+          import { getPipeline9RouteIndexByTraceId } from "./lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9JointDrcRepairUtils"
+          if(solver.solved){
+           const joint=solver.pipeline9JointDrcRepairSolver
+           const routes=joint.combinedOutput
+           const evalDrc=joint.cachedReferenceDrcEvaluator
+           const snapshot=evalDrc({routes,hdRoutes:routes,traces:[]})
+           const errors=snapshot.errorsWithCenters.filter(isViaPadDrcError)
+           const map=getPipeline9RouteIndexByTraceId({routes,newConnections:joint.params.newConnections,syntheticConnectionNames:joint.syntheticConnectionNames})
+           const repairSrj=joint.exactRepairParams.srj
+           const vias=collectViaNodes(routes,repairSrj)
+           for(const err of errors){
+            const ownerIndex=map.get(err.pcb_trace_id)
+            const candidates=vias.filter(via=>ownerIndex===undefined||via.routeIndex===ownerIndex)
+            const center=err.center??err.pcb_center
+            const nearest=center?candidates.toSorted((a,b)=>Math.hypot(a.x-center.x,a.y-center.y)-Math.hypot(b.x-center.x,b.y-center.y))[0]:undefined
+            console.log("AGGREGATE_VIA_OWNER",JSON.stringify({remainingErrors:snapshot.errors.length,knownOwner:ownerIndex!==undefined,hasCenter:!!center,ownerViaCount:candidates.length,nearestMovable:nearest?.movable,nearestCanonicalizable:nearest?.canCanonicalize,sameRootViaCount:nearest?vias.filter(v=>v.rootConnectionName===nearest.rootConnectionName&&Math.hypot(v.x-nearest.x,v.y-nearest.y)<1e-6).length:0}))
+           }
+           for(const scale of [0.03,0.1,0.25,1]){
+            const candidate=cloneRoutes(routes)
+            const changed=applyDrcErrorForces(repairSrj,candidate,errors,map,scale,joint.params.connMap)
+            const result=evalDrc({routes:materializeRoutes(candidate),hdRoutes:materializeRoutes(candidate),traces:[]})
+            console.log("AGGREGATE_DIRECT_REPAIR",JSON.stringify({scale,changed,count:result.errors.length,viaPadCount:result.errors.filter(isViaPadDrcError).length}))
+           }
+          }
           if(!solver.solved)process.exitCode=1
           TS
           bun native-stage-diagnostics.ts
