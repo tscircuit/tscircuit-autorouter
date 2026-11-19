@@ -297,10 +297,10 @@ export const convertSrjToGraphicsObject = (
       obstacleZLayers.length === 1
         ? mapZToLayerName(obstacleZLayers[0]!, layerCount)
         : null
-    const obstacleColor =
-      onlyLayerName === "bottom"
-        ? getGraphicsLayerColor("bottom")
-        : getGraphicsLayerColor("top")
+    let obstacleColor = "gray"
+    if (onlyLayerName !== null) {
+      obstacleColor = getGraphicsLayerColor(onlyLayerName)
+    }
 
     // Match stacked 50%-opaque red rectangles without duplicating geometry.
     const obstacleTransparency =
@@ -312,6 +312,7 @@ export const convertSrjToGraphicsObject = (
       height: o.height,
       ccwRotationDegrees: o.ccwRotationDegrees,
       fill: safeTransparentize(obstacleColor, obstacleTransparency),
+      stroke: "none",
       layer: getGraphicsLayerForObstacle(o, layerCount),
       label: formatObstacleLabel(o),
     })

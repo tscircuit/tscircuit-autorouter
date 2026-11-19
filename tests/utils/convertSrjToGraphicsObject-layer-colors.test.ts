@@ -172,15 +172,16 @@ test("colors traces and obstacles by layer and traces by connection in net mode"
     { layer: "z3", fill: "rgba(0,0,255,0.5)" },
   ])
   expect(graphics.rects.filter((rect) => rect.center.y === 2)).toMatchObject([
-    { layer: "z1", fill: "rgba(255,0,0,0.5)" },
+    { layer: "z1", fill: "rgba(0,128,0,0.5)" },
   ])
   expect(graphics.rects.filter((rect) => rect.center.y === 3)).toMatchObject([
-    { layer: "z1,2", fill: "rgba(255,0,0,0.75)" },
+    { layer: "z1,2", fill: "rgba(128,128,128,0.75)" },
   ])
   expect(graphics.rects.filter((rect) => rect.center.y === 4)).toMatchObject([
-    { layer: "z0,1,2", fill: "rgba(255,0,0,0.875)" },
+    { layer: "z0,1,2", fill: "rgba(128,128,128,0.875)" },
   ])
   expect(graphics.rects).toHaveLength(5)
+  expect(graphics.rects.every((rect) => rect.stroke === "none")).toBeTrue()
 
   const netGraphics = convertSrjToGraphicsObject(srj, {
     traceColorMode: "net",
@@ -210,7 +211,16 @@ test("colors traces on inner layers beyond the fixed palette", () => {
   const srj: SimpleRouteJson = {
     layerCount: 20,
     minTraceWidth: 0.1,
-    obstacles: [],
+    obstacles: [
+      {
+        type: "rect",
+        layers: ["inner10"],
+        center: { x: 0.5, y: 0.5 },
+        width: 0.2,
+        height: 0.2,
+        connectedTo: [],
+      },
+    ],
     connections: [
       {
         name: "inner10-net",
@@ -248,6 +258,11 @@ test("colors traces on inner layers beyond the fixed palette", () => {
 
   const graphics = convertSrjToGraphicsObject(srj)
 
+  expect(graphics.rects[0]).toMatchObject({
+    layer: "z10",
+    fill: safeTransparentize("hsl(290, 70%, 45%)", 0.5),
+    stroke: "none",
+  })
   expect(graphics.lines).toHaveLength(1)
   expect(graphics.lines[0]).toMatchObject({
     layer: "z10",
