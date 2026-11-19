@@ -9,6 +9,10 @@ jobs:
   routing:
     runs-on: ubuntu-24.04
     timeout-minutes: 18
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: [pads, peers, all]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -276,6 +280,38 @@ jobs:
           }
           TS
       - run: bun install
+      - name: Verify pad guarding and neighboring-route context independently
+        env:
+          VARIANT: ${{ matrix.variant }}
+        run: |
+          python3 - <<'PY'
+          import os,re
+          from pathlib import Path
+          mode=os.environ["VARIANT"]
+          if mode in ("pads","all"):
+            p=Path("lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensityForceImproveSolver.ts")
+            s=p.read_text()
+            start=s.index("    this.fixedViaObstacleIndexes = new Set(")
+            end=s.index("    this.evaluateFixedObstacles",start)
+            s=s[:start]+"    this.fixedViaObstacleIndexes = new Set(this.inputSrj.obstacles.map((_, index) => index))\n"+s[end:]
+            s,n=re.subn(r'violation.kind === "via" &&\s*',"",s)
+            assert n==2
+            p.write_text(s)
+          if mode in ("peers","all"):
+            p=Path("node_modules/high-density-repair01/lib/HighDensityForceImproveSolver.ts")
+            s=p.read_text()
+            old="    return this.fixedHdRoutes.filter((route) => {"
+            assert s.count(old)==1
+            replacement="""    const entry = this.sampleEntries.find((entry) => entry.node === node)
+            if (!entry) throw new Error("Force improvement lost its current sample")
+            const ownedIndexes = new Set(entry.routeIndexes)
+            const contextRoutes = [
+              ...this.fixedHdRoutes,
+              ...this.originalHdRoutes.filter((_, index) => !ownedIndexes.has(index)),
+            ]
+            return contextRoutes.filter((route) => {"""
+            p.write_text(s.replace(old,replacement,1))
+          PY
       - name: Keep original connectivity, clearance and via-count assertions
         env:
           BUN_UPDATE_SNAPSHOTS: '1'
