@@ -1,4 +1,4 @@
-name: Verify existing fixed-copper guard for all pad interactions
+name: Verify exact pad ownership during existing via repair
 on:
   push:
     branches: [analysis/native-complete-cleanup-context]
@@ -13,6 +13,7 @@ jobs:
       fail-fast: false
       matrix:
         source: [1a2e757a0230bae0e8f915023485978587d7fe14, 0f98be6237dfa0a852360b07d38f0e2fbee5f92d]
+        repair: [identity, finalization]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -21,26 +22,50 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: '1.4.3'
-      - name: Test the existing improvement guard on all pad copper
+      - run: bun install
+      - name: Use existing shared-site translation and exact pad references
+        env:
+          REPAIR: ${{ matrix.repair }}
         run: |
           python3 - <<'PY'
+          import os
           from pathlib import Path
-          import re
-          p=Path("lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensityForceImproveSolver.ts")
+          root=Path("node_modules/high-density-repair03/lib/solvers/GlobalDrcForceImproveSolver")
+          p=root/"solverHelpers.ts"
           s=p.read_text()
-          start=s.index("    this.fixedViaObstacleIndexes = new Set(")
-          end=s.index("    this.evaluateFixedObstacles",start)
-          s=s[:start]+"    this.fixedViaObstacleIndexes = new Set(params.inputSrj.obstacles.map((_, index) => index))\n"+s[end:]
-          s,n=re.subn(r'violation.kind === "via" &&\s*',"",s)
-          assert n==2
+          a=s.index("const moveViaAwayFromPoint = (")
+          b=s.index("\ntype SegmentContact",a)
+          helper=s[a:b]
+          assert "  return moveVia(" in helper
+          s=s[:a]+helper.replace("  return moveVia(","  return translateSameRootViaSite(",1)+s[b:]
+          anchor="  const referencedObstacle = srj.obstacles.find("
+          assert s.count(anchor)==1
+          exact="""  const exactObstacle = srj.obstacles.find(
+            (obstacle) =>
+              referencedPadIds.some((id) =>
+                obstacle.obstacleId === id ||
+                obstacle.circuitJsonMetadata?.pcb_smtpad_id === id ||
+                obstacle.circuitJsonMetadata?.pcb_plated_hole_id === id
+              ) && (obstacleFilter?.(obstacle) ?? true),
+          )
+          if (exactObstacle) return exactObstacle.center
+          
+          """
+          s=s.replace(anchor,exact+anchor,1)
           p.write_text(s)
+          if os.environ["REPAIR"]=="finalization":
+            p=root/"TraceContactRepairSolver.ts"
+            s=p.read_text()
+            s=s.replace("  isForbiddenPadDrillError,","  isForbiddenPadDrillError,\n  isViaPadDrcError,",1)
+            old="      if (isForbiddenPadDrillError(error)) return true"
+            assert s.count(old)==1
+            p.write_text(s.replace(old,"      if (isForbiddenPadDrillError(error) || isViaPadDrcError(error)) return true",1))
           PY
-      - run: bun install
-      - name: Keep original connectivity, clearance and via-count assertions
+      - name: Keep all original routing and clearance assertions
         env:
           BUN_UPDATE_SNAPSHOTS: '1'
         run: bun test --timeout 9999999 tests/bugs/bugreport96-full-gameboy-no-breakout.test.ts tests/bugs/usb-dp-phase-detour.test.ts tests/repro/pipeline9-h616-portfolio-candidate-clearance.test.ts tests/features/pipeline9-orangecrab-native-fixed-traces.test.ts
-      - name: Report actual OrangeCrab DRC count
+      - name: Report actual OrangeCrab findings
         if: always()
         run: |
           python3 - <<'PY'
