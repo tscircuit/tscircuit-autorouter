@@ -1,0 +1,31 @@
+name: Validate constrained fanout stack source
+on:
+  push:
+    branches: [codex/ddr2427-minimal-stack-constrained-source]
+permissions:
+  contents: read
+jobs:
+  source-check:
+    strategy:
+      fail-fast: false
+      matrix:
+        revision: ["280b177f6fda98b63ab1c668b802e188a717081e", "f2969d1223ee3dc272cecac4d24971aca54efcae"]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: ${{ matrix.revision }}
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - run: bun install --frozen-lockfile --ignore-scripts
+      - run: bun run format:check
+      - if: always()
+        run: bun run typecheck
+      - if: always()
+        run: |
+          bun test --timeout 9999999 tests/two-via-windows.test.ts tests/native-boundary-contact.test.ts
+          if [[ -f tests/boundary-contact-direction-overrides.test.ts ]]; then
+            bun test --timeout 9999999 tests/boundary-contact-direction-overrides.test.ts
+          fi
