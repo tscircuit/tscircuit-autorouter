@@ -1,9 +1,8 @@
-import type { StaticSegmentValidator } from "@tscircuit/high-density-a01"
-import type { Obstacle } from "lib/types"
 import { createIntraNodeSegmentValidator } from "./createIntraNodeSegmentValidator"
 import {
   HighDensitySolverA01,
   HighDensitySolverA03 as HighDensityA03Solver,
+  type StaticSegmentValidator,
 } from "@tscircuit/high-density-a01"
 import { HighDensitySolverA13 } from "@tscircuit/high-density-a13"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
@@ -705,14 +704,9 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       }
       let staticSegmentValidator: StaticSegmentValidator | undefined
       const fixedHdRoutes = this.constructorParams.fixedHdRoutes
-      if (fixedHdRoutes?.length) {
-        let obstacles: Obstacle[] = []
-        if (preservePhysicalGeometry) {
-          obstacles = this.constructorParams.obstacles ?? []
-        }
+      if (preservePhysicalGeometry && fixedHdRoutes?.length) {
         staticSegmentValidator = createIntraNodeSegmentValidator({
           fixedHdRoutes,
-          obstacles,
           connMap: this.connMap ?? new ConnectivityMap({}),
           layerCount: this.constructorParams.layerCount ?? 2,
           clearance: this.constructorParams.obstacleMargin ?? 0.1,

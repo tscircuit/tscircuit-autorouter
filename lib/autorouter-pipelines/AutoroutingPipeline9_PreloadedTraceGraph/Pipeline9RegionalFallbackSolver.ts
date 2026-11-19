@@ -250,7 +250,7 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
       nodeWithPortPoints: [this.params.nodeWithPortPoints],
       hdRoutes: routedCandidate,
       fixedHdRoutes: this.params.fixedHdRoutes,
-      preserveTopologyPortAnchors: true,
+      preserveTopologyPortAnchors: this.params.preservePhysicalGeometry,
       colorMap: this.params.colorMap,
       totalStepsPerNode: Math.max(12, Math.round(20 * this.params.effort)),
       nodeAssignmentMargin: this.params.obstacleMargin,
