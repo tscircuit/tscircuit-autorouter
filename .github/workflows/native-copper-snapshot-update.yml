@@ -1,0 +1,33 @@
+name: Update verified native cleanup snapshot
+on:
+  push:
+    branches: [analysis/native-copper-snapshot-update]
+    paths: [.github/workflows/native-copper-snapshot-update.yml]
+permissions:
+  contents: write
+jobs:
+  snapshot:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 9badf68bfd01565af0a2f68c500b9b0ae6859250
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.4.3'
+      - run: bun install
+      - name: Update the existing public regression only after its geometry assertions pass
+        env:
+          BUN_UPDATE_SNAPSHOTS: '1'
+        run: |
+          test "$(git hash-object fixtures/bug-reports/bugreport107-board-1726/bugreport107-board-1726.json)" = "03480046cda96eea97f461fec82ac1f69b928519"
+          bun test --timeout 9999999 tests/bugs/bugreport107-board-1726.test.ts
+      - name: Save only the verified expected SVG
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add tests/bugs/__snapshots__/bugreport107-board-1726-linux.snap.svg
+          git diff --cached --stat
+          git commit -m "Update the clean B107 routing snapshot for native cleanup"
+          git push origin HEAD:refs/heads/analysis/native-copper-b107-snapshot
