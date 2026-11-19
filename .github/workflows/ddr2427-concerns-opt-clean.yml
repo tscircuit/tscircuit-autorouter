@@ -9,7 +9,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        revision: ["ae13569eb35dccc74e99708794cb2135a5c3ddc0", "e4edfc8122093bf7c6d67677f4cdc3344ef3983e", "e36bee5e1767d908dabbfd46d19da60600051046", "55e6041df2df390542848ece0ca3a79ab3714ff6", "18c3dd1d641c1e47dd7c062f59d8b62bfd6324d5"]
+        revision: ["ae13569eb35dccc74e99708794cb2135a5c3ddc0", "e4edfc8122093bf7c6d67677f4cdc3344ef3983e", "e36bee5e1767d908dabbfd46d19da60600051046", "55e6041df2df390542848ece0ca3a79ab3714ff6", "fd93c3584ae2e378816f0e2f3a042d6ca74361fa"]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -23,3 +23,15 @@ jobs:
       - run: bun run format:check
       - if: always()
         run: bun run typecheck
+  small-case-snapshots:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: fd93c3584ae2e378816f0e2f3a042d6ca74361fa
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: bun install --frozen-lockfile
+      - run: bun test tests/fanout-repair-before-grouped-beam.test.ts tests/srj19-sample002.test.ts
