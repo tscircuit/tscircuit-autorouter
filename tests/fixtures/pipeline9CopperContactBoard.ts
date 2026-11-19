@@ -1,10 +1,6 @@
 import { createPipeline9CopperContactEvaluator } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/createPipeline9CopperContactEvaluator"
 import type { Pipeline9CopperPair } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9JointDrcRepairUtils"
-import type {
-  Obstacle,
-  SimpleRouteJson,
-  SimplifiedPcbTrace,
-} from "lib/types"
+import type { Obstacle, SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 
 type TraceRoutePoint = SimplifiedPcbTrace["route"][number]
 
