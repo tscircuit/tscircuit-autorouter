@@ -34,6 +34,13 @@ import {
 } from "./pipeline9RegionalFallback"
 import { Pipeline9RegionalFallbackSolver } from "./Pipeline9RegionalFallbackSolver"
 
+export const DEFAULT_PIPELINE9_OBSTACLE_MARGIN = 0.15
+
+type B01Params = ConstructorParameters<typeof HighDensitySolverB01>[0]
+type MinimumPadClearanceSearch =
+  | { params: B01Params }
+  | { regionalError: string }
+
 export type Pipeline9HighDensitySolverParams = {
   nodePortPoints: NodeWithPortPoints[]
   fixedHdRoutes: PreloadedHighDensityRoute[]
@@ -60,7 +67,7 @@ export type Pipeline9HighDensitySolverParams = {
   enableRegionalFallback?: boolean
   maxB01Rips?: number
   b01RepairOptions?: Pick<
-    ConstructorParameters<typeof HighDensitySolverB01>[0],
+    B01Params,
     "lowResolutionCellSize" | "obstacleClearanceMargin"
   >
   captureSearchDebug?: boolean
@@ -448,8 +455,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   activeNode: NodeWithPortPoints | null = null
 
   private asyncRunning = false
-  private routingAtMinimumPadClearance = false
-  private minimumPadClearanceRoutes?: HighDensityIntraNodeRoute[]
+  private minimumPadClearanceSearch?: MinimumPadClearanceSearch
 
   constructor(private readonly params: Pipeline9HighDensitySolverParams) {
     super()
@@ -678,8 +684,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     )
     this.stats.solvedNodeCount = Number(this.stats.solvedNodeCount ?? 0) + 1
     this.activeB01Solver = null
-    this.routingAtMinimumPadClearance = false
-    this.minimumPadClearanceRoutes = undefined
+    this.minimumPadClearanceSearch = undefined
     this.activeRegularSolver = null
     this.activeFallbackSolver = null
     this.activeFallbackFixedRouteSections.clear()
@@ -714,74 +719,20 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     this.stats.regularNodeCount = Number(this.stats.regularNodeCount ?? 0) + 1
   }
 
-  private startB01Solver(
-    props: ConstructorParameters<typeof HighDensitySolverB01>[0],
-  ): void {
+  private startB01Solver(props: B01Params): void {
     this.activeB01Solver = new HighDensitySolverB01(props)
     if (this.maxB01Rips !== undefined) {
       this.activeB01Solver.MAX_RIPS = this.maxB01Rips
     }
   }
 
-  private getB01BoardObstacles(
-    node: NodeWithPortPoints,
-    preferredClearance?: number,
-  ): HighDensityRectObstacle[] {
-    if (!this.includeBoardObstacles) return []
-    const nodeBounds = getNodeBounds(node, this.obstacleMargin)
-    let traceToPadClearance = this.params.minClearance
-    let viaToPadClearance = this.viaToPadClearance
-    if (preferredClearance !== undefined) {
-      if (
-        traceToPadClearance !== undefined &&
-        traceToPadClearance < preferredClearance
-      ) {
-        traceToPadClearance = undefined
-      }
-      if (
-        viaToPadClearance !== undefined &&
-        viaToPadClearance < preferredClearance
-      ) {
-        viaToPadClearance = undefined
-      }
-    }
-    return this.obstacles
-      .filter((obstacle) => obstacleOverlapsNode(obstacle, nodeBounds))
-      .map((obstacle) =>
-        convertObstacleToB01Obstacle({
-          obstacle,
-          node,
-          connMap: this.connMap,
-          layerCount: this.layerCount,
-          traceToPadClearance,
-          viaToPadClearance,
-        }),
-      )
-      .filter((obstacle) => obstacle !== undefined)
-  }
+  private startB01AtMinimumPadClearance(regionalError: string): boolean {
+    const search = this.minimumPadClearanceSearch
+    if (!search || !("params" in search)) return false
 
-  private tryB01AtMinimumPadClearance(solver: HighDensitySolverB01): boolean {
-    if (!this.activeNode) {
-      throw new Error("B01 pad clearance search requires an active node")
-    }
-    const defaultClearance = solver.obstacleClearanceMargin
-    const boardObstacles = this.getB01BoardObstacles(this.activeNode)
-    const hasLowerPadClearance = boardObstacles.some(
-      ({ traceClearanceMargin, viaClearanceMargin }) =>
-        (traceClearanceMargin ?? defaultClearance) < defaultClearance ||
-        (viaClearanceMargin ?? defaultClearance) < defaultClearance,
-    )
-    if (!hasLowerPadClearance) return false
-
-    const [props] = solver.getConstructorParams()
-    this.routingAtMinimumPadClearance = true
-    this.startB01Solver({
-      ...props,
-      obstacles: [
-        ...props.obstacles.filter((obstacle) => obstacle.type === "route"),
-        ...boardObstacles,
-      ],
-    })
+    this.minimumPadClearanceSearch = { regionalError }
+    this.activeFallbackSolver = null
+    this.startB01Solver(search.params)
     return true
   }
 
@@ -1050,19 +1001,17 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
         promotedConnectionNames.size ===
         this.activeFallbackPromotedFixedRouteConnectionNames.size
       ) {
-        if (this.minimumPadClearanceRoutes) {
-          this.finishActiveNode(this.minimumPadClearanceRoutes)
-          return
-        }
         const immutableThroughObstacleConnectionNames = [
           ...conflictingFixedRoutesByConnectionName,
         ].flatMap(([connectionName, fixedRoute]) =>
           fixedRoute.isThroughObstacle === true ? [connectionName] : [],
         )
-        this.error =
+        const error =
           immutableThroughObstacleConnectionNames.length > 0
             ? `Pipeline9 regional fallback conflicts with immutable through-obstacle route(s): ${immutableThroughObstacleConnectionNames.join(", ")}`
             : `Pipeline9 promoted regional fallback could not resolve immutable fixed route conflict(s): ${conflictingConnectionNames.join(", ")}`
+        if (this.startB01AtMinimumPadClearance(error)) return
+        this.error = error
         this.failed = true
         return
       }
@@ -1273,17 +1222,17 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       this.activeFallbackSolver.step()
       if (this.activeFallbackSolver.failed) {
         this.recordRegionalCandidateRejections()
-        if (
-          this.activeFallbackSolver.highDensitySolver.failed &&
-          this.minimumPadClearanceRoutes
-        ) {
-          this.finishActiveNode(this.minimumPadClearanceRoutes)
-          return
-        }
-        this.error = [
+        const error = [
           `Pipeline9 primary high-density routing failed: ${this.activeFallbackReason ?? "unknown error"}`,
           `regional fallback failed: ${this.activeFallbackSolver.error ?? "unknown error"}`,
         ].join("; ")
+        if (
+          this.activeFallbackSolver.highDensitySolver.failed &&
+          this.startB01AtMinimumPadClearance(error)
+        ) {
+          return
+        }
+        this.error = error
         this.failed = true
         this.activeFallbackSolver = null
         this.activeFallbackFixedRouteSections.clear()
@@ -1315,16 +1264,22 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     if (this.activeB01Solver) {
       this.activeB01Solver.step()
       if (this.activeB01Solver.failed) {
-        this.activeFallbackReason = `B01 failed: ${this.activeB01Solver.error ?? "unknown error"}`
-        if (
-          this.activeB01Solver.failureReason === "no_path" &&
-          !this.routingAtMinimumPadClearance &&
-          this.tryB01AtMinimumPadClearance(this.activeB01Solver)
-        ) {
+        const solver = this.activeB01Solver
+        this.failedSolvers.push(solver)
+        this.activeB01Solver = null
+        const error = solver.error ?? "unknown error"
+        const minimumSearch = this.minimumPadClearanceSearch
+        if (minimumSearch && "regionalError" in minimumSearch) {
+          this.error = `${minimumSearch.regionalError}; B01 at minimum pad clearance failed: ${error}`
+          this.failed = true
+          this.minimumPadClearanceSearch = undefined
+          this.activeNode = null
           return
         }
-        this.failedSolvers.push(this.activeB01Solver)
-        this.activeB01Solver = null
+        this.activeFallbackReason = `B01 failed: ${error}`
+        if (solver.failureReason !== "no_path") {
+          this.minimumPadClearanceSearch = undefined
+        }
         if (!this.enableRegionalFallback) {
           this.error = `Pipeline9 ${this.activeFallbackReason}`
           this.failed = true
@@ -1336,15 +1291,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       }
       if (!this.activeB01Solver.solved) return
 
-      const routes = this.activeB01Solver.getOutput()
-      if (this.routingAtMinimumPadClearance && this.enableRegionalFallback) {
-        // Prefer a valid regional route to keep routing stable elsewhere.
-        this.minimumPadClearanceRoutes = routes
-        this.activeB01Solver = null
-        this.startRegionalFallback()
-        return
-      }
-      this.finishActiveNode(routes)
+      this.finishActiveNode(this.activeB01Solver.getOutput())
       return
     }
 
@@ -1368,19 +1315,22 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       return
     }
 
-    let obstacleClearanceMargin = 0.15
-    if (this.fixedHdRoutes.some((route) => route.isFixed === true)) {
-      obstacleClearanceMargin = this.obstacleMargin
-    }
-    const b01Options = {
-      ...defaultB01Params,
-      obstacleClearanceMargin,
-      ...this.params.b01RepairOptions,
-    }
-    const boardObstacles = this.getB01BoardObstacles(
-      node,
-      b01Options.obstacleClearanceMargin ?? 0,
-    )
+    const boardObstacles = (this.includeBoardObstacles ? this.obstacles : [])
+      .filter((obstacle) => obstacleOverlapsNode(obstacle, nodeBounds))
+      .map((obstacle) =>
+        convertObstacleToB01Obstacle({
+          obstacle,
+          node,
+          connMap: this.connMap,
+          layerCount: this.layerCount,
+          traceToPadClearance: this.params.minClearance,
+          viaToPadClearance: this.viaToPadClearance,
+        }),
+      )
+      .filter(
+        (obstacle): obstacle is HighDensityRectObstacle =>
+          obstacle !== undefined,
+      )
     this.stats.boardObstacleUses =
       Number(this.stats.boardObstacleUses ?? 0) + boardObstacles.length
 
@@ -1396,16 +1346,54 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       this.connMap,
     )
     this.stats.b01NodeCount = Number(this.stats.b01NodeCount ?? 0) + 1
-    this.startB01Solver({
+    const b01Options = {
+      ...defaultB01Params,
+      obstacleClearanceMargin: this.fixedHdRoutes.some((route) => route.isFixed)
+        ? this.obstacleMargin
+        : DEFAULT_PIPELINE9_OBSTACLE_MARGIN,
+      ...this.params.b01RepairOptions,
+    }
+    // Prefer the existing spacing while a regional repair is available.
+    const preferredClearance = b01Options.obstacleClearanceMargin ?? 0
+    let hasLowerPadClearance = false
+    const preferredBoardObstacles = this.enableRegionalFallback
+      ? boardObstacles.map((obstacle) => {
+          const { traceClearanceMargin, viaClearanceMargin } = obstacle
+          const preferWiderTraceClearance =
+            (traceClearanceMargin ?? preferredClearance) < preferredClearance
+          const preferWiderViaClearance =
+            (viaClearanceMargin ?? preferredClearance) < preferredClearance
+          if (!preferWiderTraceClearance && !preferWiderViaClearance) {
+            return obstacle
+          }
+          hasLowerPadClearance = true
+          return {
+            ...obstacle,
+            traceClearanceMargin: preferWiderTraceClearance
+              ? undefined
+              : traceClearanceMargin,
+            viaClearanceMargin: preferWiderViaClearance
+              ? undefined
+              : viaClearanceMargin,
+          }
+        })
+      : boardObstacles
+    const props: B01Params = {
       ...b01Options,
       nodeWithPortPoints: normalizedNode as B01NodeWithPortPoints,
-      obstacles: [...fixedObstacles, ...boardObstacles],
+      obstacles: [...fixedObstacles, ...preferredBoardObstacles],
       viaDiameter: this.viaDiameter,
       viaMinDistFromBorder: this.viaDiameter / 2,
       traceThickness: this.traceWidth,
       traceMargin: this.obstacleMargin,
       effort: this.effort,
-    })
+    }
+    if (hasLowerPadClearance) {
+      this.minimumPadClearanceSearch = {
+        params: { ...props, obstacles: [...fixedObstacles, ...boardObstacles] },
+      }
+    }
+    this.startB01Solver(props)
   }
 
   override visualize(): GraphicsObject {
