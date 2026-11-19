@@ -1,0 +1,137 @@
+name: published3242 H616 A03 via-gate source screen
+on:
+  push:
+    branches: [bench/h616-a03-via-gate-screen-3242-20261119]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  screen:
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 45
+    env:
+      FULL_BOARD_ROOT: ${{ github.workspace }}/.full-board-run
+      BUN_INSTALL_CACHE_DIR: ${{ github.workspace }}/.full-board-run/bun-cache
+      FULL_BOARD_EXPERIMENT: published
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            experiments/full-board-ten
+            .github/workflows/full-board-ten.yml
+            .github/workflows/a03-via-gate-screen.yml
+            AGENTS.md
+      - name: Require reviewed held plan
+        run: python3 experiments/full-board-ten/prepare-a03-via-gate-screen.py --verify-plan
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/tscircuit-autorouter
+          ref: ea398b4023119f65157e876a3101aa6ce3ca5f97
+          path: .full-board-run/sources/original
+          persist-credentials: false
+          sparse-checkout: experiments/full-board-priority-analysis
+      - uses: actions/checkout@v4
+        with:
+          repository: ShiboSoftwareDev/core-ddr-benchmark
+          ref: a3679559d6027aea2c441c1078853d58925d3a12
+          path: .full-board-run/sources/spaced
+          persist-credentials: false
+          sparse-checkout: |
+            full-boards
+            circuits
+            scripts
+            licenses
+            provenance
+      - name: Checkout published A03 source
+        uses: actions/checkout@v4
+        with:
+          repository: tscircuit/high-density-a01
+          ref: 85ee23a25403bbb79be14b6d0783e592928a85a0
+          path: .full-board-run/sources/a03-base
+          persist-credentials: false
+          sparse-checkout-cone-mode: false
+          sparse-checkout: lib/HighDensitySolverA03/HighDensitySolverA03.ts
+      - name: Checkout published autorouter integration sources
+        uses: actions/checkout@v4
+        with:
+          repository: tscircuit/tscircuit-autorouter
+          ref: c0dcc07ae48b17296a1dc73678e258de62ca8de3
+          path: .full-board-run/sources/autorouter-base
+          persist-credentials: false
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9RegionalFallbackSolver.ts
+            lib/solvers/HighDensitySolver/HighDensitySolver.ts
+            lib/solvers/HyperHighDensitySolver/PortfolioSingleIntraNodeSolver.ts
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Prepare exact published3242 graph
+        run: python3 experiments/full-board-ten/bootstrap.py --root "$FULL_BOARD_ROOT"
+      - name: Authenticate original native input and assessment geometry
+        id: input
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 experiments/full-board-ten/prepare-a03-via-gate-screen.py h616 "$FULL_BOARD_ROOT/a03-via-gate-input"
+      - name: Authenticate source and construct the source-qualified sibling entry
+        run: python3 experiments/full-board-ten/prepare-a03-via-gate-screen.py --prepare-overlay "$FULL_BOARD_ROOT/a03-via-gate-input"
+      - name: Qualify baseline materialization and existing physical findings
+        id: calibration
+        run: >-
+          timeout --signal=TERM --kill-after=10s 180s
+          bun experiments/full-board-ten/assess-a03-via-gate-output.ts
+          "$FULL_BOARD_ROOT" "$FULL_BOARD_ROOT/a03-via-gate-input"
+          "$FULL_BOARD_ROOT/a03-via-gate/baseline" baseline
+      - name: Run published base then A03 source candidate in fresh processes
+        id: pair
+        shell: bash
+        run: |
+          for variant in base candidate; do
+            python3 experiments/full-board-ten/prepare-a03-via-gate-screen.py --verify-runtime "$FULL_BOARD_ROOT/a03-via-gate-input"
+            mkdir -p "$FULL_BOARD_ROOT/a03-via-gate/$variant"
+            selected_entry="$FULL_BOARD_ROOT/npm/autorouter/dist/index.js"
+            if [ "$variant" = candidate ]; then selected_entry="$FULL_BOARD_ROOT/npm/autorouter/dist/a03-via-gate-candidate.js"; fi
+            set +e
+            timeout --signal=TERM --kill-after=10s 960s \
+              bun experiments/full-board-ten/run-a03-via-gate-screen.ts \
+              --module "$selected_entry" \
+              --input "$FULL_BOARD_ROOT/a03-via-gate-input/phase-4-input.srj.json.gz" \
+              --output "$FULL_BOARD_ROOT/a03-via-gate/$variant" \
+              --manifest "$FULL_BOARD_ROOT/runtime-manifest.json" \
+              --plan experiments/full-board-ten/a03-via-gate-screen-plan.json \
+              --variant "$variant"
+            route_status=$?
+            printf '%s\n' "$route_status" > "$FULL_BOARD_ROOT/a03-via-gate/$variant/process-exit-code.txt"
+            python3 experiments/full-board-ten/prepare-a03-via-gate-screen.py --verify-runtime "$FULL_BOARD_ROOT/a03-via-gate-input" || exit $?
+            timeout --signal=TERM --kill-after=10s 180s \
+              bun experiments/full-board-ten/assess-a03-via-gate-output.ts \
+              "$FULL_BOARD_ROOT" "$FULL_BOARD_ROOT/a03-via-gate-input" \
+              "$FULL_BOARD_ROOT/a03-via-gate/$variant" "$variant"
+            assessment_status=$?
+            printf '%s\n' "$assessment_status" > "$FULL_BOARD_ROOT/a03-via-gate/$variant/assessment-exit-code.txt"
+            set -e
+          done
+      - name: Verify causal comparison and distinguish unfinished output
+        if: ${{ always() && steps.pair.outcome != 'skipped' }}
+        run: >-
+          python3 experiments/full-board-ten/compare-a03-via-gate-screen.py
+          "$FULL_BOARD_ROOT/a03-via-gate-input" "$FULL_BOARD_ROOT/a03-via-gate"
+      - name: Preserve authenticated diagnostic evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          include-hidden-files: true
+          name: h616-a03-via-gate-screen-3242-${{ github.run_attempt }}
+          path: |
+            .full-board-run/a03-via-gate
+            .full-board-run/a03-via-gate-input/*.json
+            .full-board-run/a03-via-gate-input/*.gz
+            .full-board-run/runtime-manifest.json
+            experiments/full-board-ten/a03-via-gate-screen-plan.json
+            experiments/full-board-ten/a03-via-gate-source-mapping.json
+            experiments/full-board-ten/a03-via-gate-production.patch
+            experiments/full-board-ten/autorouter-a03-via-gate-production.patch
+          retention-days: 7
+          compression-level: 0
+          if-no-files-found: warn

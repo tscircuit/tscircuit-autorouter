@@ -1,0 +1,216 @@
+diff --git a/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9RegionalFallbackSolver.ts b/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9RegionalFallbackSolver.ts
+index fa043fb0..8b233db5 100644
+--- a/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9RegionalFallbackSolver.ts
++++ b/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9RegionalFallbackSolver.ts
+@@ -13,7 +13,10 @@ import type {
+ import type { Obstacle } from "lib/types/srj-types"
+ import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
+ import { materializePipeline9HdRouteVias } from "./materializePipeline9HdRouteVias"
+-import { getPipeline9RouteCopperGeometry } from "./pipeline9FixedRouteCopper"
++import {
++  getPipeline9RouteCopperGeometry,
++  type Pipeline9RouteViaSpan,
++} from "./pipeline9FixedRouteCopper"
+ 
+ type Pipeline9RegionalFallbackSolverParams = {
+   nodeWithPortPoints: NodeWithPortPoints
+@@ -99,6 +102,39 @@ export const isPipeline9ObstacleConnectedToRoute = ({
+   })
+ }
+ 
++const hasViaToBoardObstacleConflict = ({
++  via,
++  route,
++  boardObstacles,
++  connMap,
++  layerCount,
++  viaToPadClearance,
++}: {
++  via: Pipeline9RouteViaSpan
++  route: Pick<HighDensityRoute, "connectionName" | "rootConnectionName">
++  boardObstacles: Obstacle[]
++  connMap: ConnectivityMap
++  layerCount: number
++  viaToPadClearance: number
++}): boolean =>
++  boardObstacles.some((obstacle) => {
++    if (
++      !(
++        getPointToObstacleDistance(via.center, obstacle) <
++        via.diameter / 2 + viaToPadClearance
++      )
++    ) {
++      return false
++    }
++    if (isPipeline9ObstacleConnectedToRoute({ obstacle, route, connMap }))
++      return false
++    const obstacleZLayers = getObstacleZLayers(obstacle, layerCount)
++    if (!obstacleZLayers.some((z) => z >= via.minZ && z <= via.maxZ)) {
++      return false
++    }
++    return true
++  })
++
+ const hasPreloadedViaToBoardObstacleConflict = ({
+   routes,
+   movablePreloadedConnectionNames,
+@@ -125,17 +161,13 @@ const hasPreloadedViaToBoardObstacleConflict = ({
+       allowBlindAndBuriedVias,
+     }).viaSpans
+     return viaSpans.some((via) =>
+-      boardObstacles.some((obstacle) => {
+-        if (isPipeline9ObstacleConnectedToRoute({ obstacle, route, connMap }))
+-          return false
+-        const obstacleZLayers = getObstacleZLayers(obstacle, layerCount)
+-        if (!obstacleZLayers.some((z) => z >= via.minZ && z <= via.maxZ)) {
+-          return false
+-        }
+-        return (
+-          getPointToObstacleDistance(via.center, obstacle) <
+-          via.diameter / 2 + viaToPadClearance
+-        )
++      hasViaToBoardObstacleConflict({
++        via,
++        route,
++        boardObstacles,
++        connMap,
++        layerCount,
++        viaToPadClearance,
+       }),
+     )
+   })
+@@ -151,6 +183,7 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
+   constructor(params: Pipeline9RegionalFallbackSolverParams) {
+     super()
+     this.params = params
++    const { boardObstacles, viaToPadClearance } = params
+     this.stats = {
+       preloadedViaCandidateRejectionCount: 0,
+       forceImproveCandidateRejectionCount: 0,
+@@ -173,6 +206,29 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
+       growShrinkFallbackToInvalidGeometryOnFailure: false,
+       growShrinkSolutionValidator: (routes): boolean =>
+         this.validateCandidateWithCleanup(routes),
++      isViaAllowed:
++        boardObstacles &&
++        boardObstacles.length > 0 &&
++        viaToPadClearance !== undefined
++          ? (position): boolean =>
++              !hasViaToBoardObstacleConflict({
++                route: position,
++                via: {
++                  center: position,
++                  minZ: params.allowBlindAndBuriedVias
++                    ? Math.min(position.fromZ, position.toZ)
++                    : 0,
++                  maxZ: params.allowBlindAndBuriedVias
++                    ? Math.max(position.fromZ, position.toZ)
++                    : params.layerCount - 1,
++                  diameter: params.viaDiameter,
++                },
++                boardObstacles,
++                connMap: params.connMap,
++                layerCount: params.layerCount,
++                viaToPadClearance,
++              })
++          : undefined,
+     })
+     this.activeSubSolver = this.highDensitySolver
+     this.MAX_ITERATIONS = 100e6 * params.effort
+diff --git a/lib/solvers/HighDensitySolver/HighDensitySolver.ts b/lib/solvers/HighDensitySolver/HighDensitySolver.ts
+index ca8c9d92..246db889 100644
+--- a/lib/solvers/HighDensitySolver/HighDensitySolver.ts
++++ b/lib/solvers/HighDensitySolver/HighDensitySolver.ts
+@@ -68,6 +68,9 @@ export class HighDensitySolver extends BaseSolver {
+   growShrinkMaxInnerIterationsPerGrowthAttempt?: number
+   growShrinkFallbackToInvalidGeometryOnFailure: boolean
+   growShrinkSolutionValidator?: (routes: HighDensityIntraNodeRoute[]) => boolean
++  isViaAllowed?: ConstructorParameters<
++    typeof PortfolioSingleIntraNodeSolver
++  >[0]["isViaAllowed"]
+   captureSearchDebug: boolean
+   readonly benchmarkDiagnosticCounters: Record<string, number>
+   readonly priorityDagOptions: {
+@@ -115,6 +118,7 @@ export class HighDensitySolver extends BaseSolver {
+     growShrinkMaxInnerIterationsPerGrowthAttempt,
+     growShrinkFallbackToInvalidGeometryOnFailure,
+     growShrinkSolutionValidator,
++    isViaAllowed,
+     captureSearchDebug,
+     priorityDagSearch = false,
+     priorityDiagnostics,
+@@ -143,6 +147,9 @@ export class HighDensitySolver extends BaseSolver {
+     growShrinkSolutionValidator?: (
+       routes: HighDensityIntraNodeRoute[],
+     ) => boolean
++    isViaAllowed?: ConstructorParameters<
++      typeof PortfolioSingleIntraNodeSolver
++    >[0]["isViaAllowed"]
+     captureSearchDebug?: boolean
+     priorityDagSearch?: boolean
+     priorityDiagnostics?: Record<string, number>
+@@ -178,6 +185,7 @@ export class HighDensitySolver extends BaseSolver {
+     this.growShrinkFallbackToInvalidGeometryOnFailure =
+       growShrinkFallbackToInvalidGeometryOnFailure ?? false
+     this.growShrinkSolutionValidator = growShrinkSolutionValidator
++    this.isViaAllowed = isViaAllowed
+     this.captureSearchDebug = captureSearchDebug ?? true
+     this.benchmarkDiagnosticCounters = priorityDiagnostics ?? {}
+     this.priorityDagOptions = {
+@@ -441,6 +449,7 @@ export class HighDensitySolver extends BaseSolver {
+       fallbackToInvalidGeometryOnFailure:
+         this.growShrinkFallbackToInvalidGeometryOnFailure,
+       growShrinkSolutionValidator: this.growShrinkSolutionValidator,
++      isViaAllowed: this.isViaAllowed,
+       captureSearchDebug: this.captureSearchDebug,
+     }
+     this.activeSubSolver = this.useGrowShrinkHighDensityIntraNodeSolver
+diff --git a/lib/solvers/HyperHighDensitySolver/PortfolioSingleIntraNodeSolver.ts b/lib/solvers/HyperHighDensitySolver/PortfolioSingleIntraNodeSolver.ts
+index f5d35414..56b0e424 100644
+--- a/lib/solvers/HyperHighDensitySolver/PortfolioSingleIntraNodeSolver.ts
++++ b/lib/solvers/HyperHighDensitySolver/PortfolioSingleIntraNodeSolver.ts
+@@ -59,6 +59,9 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
+   >[0] & {
+     boardGeometry?: HighDensityBoardGeometry
+     solutionValidator?: (routes: HighDensityIntraNodeRoute[]) => boolean
++    isViaAllowed?: ConstructorParameters<
++      typeof HighDensityA03Solver
++    >[0]["isViaAllowed"]
+   }
+   solvedRoutes: HighDensityIntraNodeRoute[] = []
+   nodeWithPortPoints: NodeWithPortPoints
+@@ -132,6 +135,9 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
+       rejectOverlappingTerminals?: boolean
+       boardGeometry?: HighDensityBoardGeometry
+       solutionValidator?: (routes: HighDensityIntraNodeRoute[]) => boolean
++      isViaAllowed?: ConstructorParameters<
++        typeof HighDensityA03Solver
++      >[0]["isViaAllowed"]
+     },
+   ) {
+     super()
+@@ -687,6 +693,9 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
+       return solver as any
+     }
+     if (hyperParameters.HIGH_DENSITY_A03) {
++      const { isViaAllowed, priorityCoordinateScale = 1 } = this.constructorParams
++      const { center } = this.nodeWithPortPoints
++      const inverseScale = 1 / priorityCoordinateScale
+       const solver = new HighDensityA03Solver({
+         nodeWithPortPoints: this.nodeWithPortPoints,
+         highResolutionCellSize: 0.1,
+@@ -700,6 +709,14 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
+         // needs more debugging- repro01 in the high-density-a01 repo
+         // has a good reproduction
+         traceThickness: 0.1, // this.constructorParams.traceWidth ?? 0.15,
++        isViaAllowed: isViaAllowed && priorityCoordinateScale !== 1
++          ? (position): boolean =>
++              isViaAllowed({
++                ...position,
++                x: center.x + (position.x - center.x) * inverseScale,
++                y: center.y + (position.y - center.y) * inverseScale,
++              })
++          : isViaAllowed,
+         effort: this.effort,
+         hyperParameters,
+       })
