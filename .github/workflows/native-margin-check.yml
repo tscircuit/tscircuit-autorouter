@@ -1,4 +1,4 @@
-name: Verify native physical frames on the autorouter CI image
+name: Verify repair ownership of mutable saved copper
 on:
   push:
     branches: [analysis/native-complete-cleanup-context]
@@ -12,39 +12,27 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        context: [baseline, physical, frame-only]
+        source: [09bd0812beff4b44f03cf5e2e5881b3186655558, 0f98be6237dfa0a852360b07d38f0e2fbee5f92d]
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: 0f98be6237dfa0a852360b07d38f0e2fbee5f92d
+          ref: ${{ matrix.source }}
           persist-credentials: false
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: '1.4.3'
-      - name: Isolate frame preservation from completed-neighbor context
-        env:
-          CONTEXT: ${{ matrix.context }}
+      - name: Evaluate inherited clearance errors as part of editable board routing
         run: |
           python3 - <<'PY'
-          import os
           from pathlib import Path
-          p=Path("lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver.ts")
+          p=Path("lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9JointDrcRepairSolver.ts")
           s=p.read_text()
-          mode=os.environ["CONTEXT"]
-          if mode=="physical":
-            old="    const hasImmutablePreload = this.fixedHdRoutes.some(\n      (route) => route.isFixed === true,\n    )"
-            assert s.count(old)==1
-            s=s.replace(old,"    const hasImmutablePreload = fixedHdRoutes.length > 0",1)
-            s=s.replace('import { Pipeline9RegionalFallbackSolver } from "./Pipeline9RegionalFallbackSolver"','import { Pipeline9RegionalFallbackSolver } from "./Pipeline9RegionalFallbackSolver"\nimport { materializePipeline9HdRouteVias } from "./materializePipeline9HdRouteVias"')
-            s=s.replace("const routedCopperRoutes = this.routes.filter((route) =>","const routedCopperRoutes = materializePipeline9HdRouteVias(this.routes).filter((route) =>")
-          elif mode=="frame-only":
-            old="        hasImmutablePreload && regionalCopperRoutes.length > 0,"
-            assert s.count(old)==1
-            s=s.replace(old,"        fixedHdRoutes.length > 0 && regionalCopperRoutes.length > 0,",1)
-          p.write_text(s)
+          old="    const baselineDrc = evaluateInitialDrc([])"
+          assert s.count(old)==1
+          p.write_text(s.replace(old,"    const baselineDrc = { ...evaluateInitialDrc([]), errors: [], errorsWithCenters: [] }",1))
           PY
       - run: bun install
-      - name: Run unchanged original regressions
+      - name: Keep original physical-clearance and connectivity assertions
         env:
           BUN_UPDATE_SNAPSHOTS: '1'
         run: bun test --timeout 9999999 tests/bugs/bugreport96-full-gameboy-no-breakout.test.ts tests/bugs/usb-dp-phase-detour.test.ts tests/repro/pipeline9-h616-portfolio-candidate-clearance.test.ts
