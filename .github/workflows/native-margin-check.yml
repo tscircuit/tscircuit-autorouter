@@ -1,4 +1,4 @@
-name: Locate native Game Boy clearance regression by stage
+name: Verify completed neighboring copper remains visible
 on:
   push:
     branches: [analysis/native-complete-cleanup-context]
@@ -12,7 +12,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        source: [8bc7eeee1d42c94eb72f32460dc03f54add143e5, 7b5f98e1785f9fcf3751448de03f58603afbf0d6, 75a6381c6985cd48f91b30516a828f6a771cfce0]
+        source: [7b5f98e1785f9fcf3751448de03f58603afbf0d6, 75a6381c6985cd48f91b30516a828f6a771cfce0]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -21,57 +21,14 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: '1.4.3'
-      - name: Measure counts without exporting route geometry or identifiers
+      - name: Keep the original neighboring copper context without changing coordinate policy
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          p=Path("tests/bugs/bugreport96-full-gameboy-no-breakout.test.ts")
+          p=Path("lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver.ts")
           s=p.read_text()
-          s='import { evaluateRelaxedDrc as evaluateStage } from "lib/testing/evaluate-relaxed-drc"\n'+s
-          s='import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"\nimport { canonicalizePipeline9HdRoutes } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/canonicalizePipeline9HdRoutes"\n'+s
-          old="  solver.solve()"
-          new="""  while (!solver.solved && !solver.failed) {
-              const before = solver.currentPipelineStepIndex
-              const stage = solver.pipelineDef[before]?.solverName
-              solver.step()
-              if (solver.currentPipelineStepIndex === before) continue
-              if (!["highDensityRouteSolver", "highDensityForceImproveSolver", "highDensityRepairSolver", "highDensityStitchSolver", "globalDrcForceImproveSolver", "pipeline9JointDrcRepairSolver"].includes(stage!)) continue
-              const preloaded = solver.getUpdatedPreloadedTraces()
-              let routedTraces = []
-              if (solver.highDensityStitchSolver?.solved) {
-                routedTraces = solver.getNewTracesBeforePowerExpansion()
-              } else {
-                const child = (solver as any)[stage!]
-                const hdRoutes = stage === "highDensityRouteSolver" ? child.routes : child.getOutput()
-                routedTraces = convertPipeline7HdRoutesToSimplifiedPcbTraces({
-                  connections:solver.netToPointPairsSolver!.newConnections,
-                  originalConnections:srj.connections,
-                  hdRoutes:canonicalizePipeline9HdRoutes(hdRoutes),
-                  layerCount:srj.layerCount,
-                  obstacles:srj.obstacles,
-                  defaultViaHoleDiameter:solver.viaHoleDiameter,
-                  connMap:solver.connMap,
-                })
-              }
-              const checked = evaluateStage({
-                inputSrj: {...srj, traces: preloaded},
-                srjWithPointPairs: {...solver.srjWithPointPairs!, traces: preloaded},
-                routedTraces,
-                drcOptions: {includeTraceContinuity:false},
-              })
-              const counts: Record<string, number> = {}
-              for (const error of checked.errors) counts[error.type] = (counts[error.type] ?? 0) + 1
-              const stats = solver.pipeline9JointDrcRepairSolver?.stats ?? {}
-              console.log("STAGE_CLEARANCE_COUNTS", JSON.stringify({stage, count:checked.errors.length, counts,
-                initialJoint:stats.initialJointDrcIssueCount,
-                baselineJoint:stats.baselineJointDrcIssueCount,
-                referenceJoint:stats.postExactReferenceDrcIssueCount,
-                contactChecks:stats.traceContactRepairCandidateChecks,
-                contactAccepted:stats.traceContactRepairAccepted,
-              }))
-            }"""
-          assert s.count(old)==1
-          p.write_text(s.replace(old,new))
+          assert s.count("    if (hasImmutablePreload) {")==1
+          p.write_text(s.replace("    if (hasImmutablePreload) {","    if (true) {",1))
           PY
       - run: bun install
       - name: Keep original completion, clearance and via-count assertions
