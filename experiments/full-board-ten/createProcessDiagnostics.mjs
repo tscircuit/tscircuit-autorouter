@@ -209,9 +209,10 @@ export function createBusDiagnostics({ pipelineClass, phase, onSnapshot }) {
   const started = performance.now()
   const descriptor = Object.getOwnPropertyDescriptor(pipelineClass.prototype, "_step")
   const original = pipelineClass.prototype._step
-  const report = { phase, mode: "passive published bus pipeline observation", transitions: [], observationMs: 0 }
+  const report = { phase, mode: "bounded passive published bus observer", transitions: [], phaseTotals: {}, omittedTransitions: 0, observationMs: 0 }
   let pipeline
   let previous
+  let phaseStarted = started
   let lastSaved = -Infinity
   function snapshot() {
     report.elapsedMs = performance.now() - started
@@ -219,16 +220,20 @@ export function createBusDiagnostics({ pipelineClass, phase, onSnapshot }) {
     return report
   }
   pipelineClass.prototype._step = function (...args) {
-    pipeline = this
+    if (!pipeline) pipeline = this
+    if (this !== pipeline) return Reflect.apply(original, this, args)
     const result = Reflect.apply(original, this, args)
     const tick = performance.now()
-    if (this.phase !== previous || this.failed || this.solved) {
-      snapshot()
-      report.transitions.push({ elapsedMs: performance.now() - started, ...report.pipeline })
+    if (this.phase !== previous) {
+      if (previous !== undefined) report.phaseTotals[previous].elapsedMs += tick - phaseStarted
+      const total = report.phaseTotals[this.phase] ??= { entries: 0, elapsedMs: 0 }
+      total.entries++
+      if (report.transitions.length === 256) { report.transitions.splice(64, 1); report.omittedTransitions++ }
+      report.transitions.push({ elapsedMs: tick - started, phase: this.phase, iterations: this.iterations, layerAttempt: this.stats.layerAttempt, carrierStrategy: this.stats.carrierStrategy, routingStage: this.stats.routingStage, traceCount: this.traces?.length, failed: this.failed, error: this.error })
       previous = this.phase
-      onSnapshot(report)
-      lastSaved = performance.now()
-    } else if (this.iterations % 1024 === 0 && performance.now() - lastSaved > 5000) {
+      phaseStarted = tick
+    }
+    if (tick - lastSaved > 5000 || this.failed || this.solved) {
       onSnapshot(snapshot())
       lastSaved = performance.now()
     }

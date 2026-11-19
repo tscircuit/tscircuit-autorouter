@@ -28,8 +28,8 @@
     },
     {
       "name": "createProcessDiagnostics.mjs",
-      "bytes": 13893,
-      "sha256": "fb5676bf3240e5b721dbd24ca79bed50a72c0e51942be281303f0b448c1de97f"
+      "bytes": 14469,
+      "sha256": "52ce8f91bdc58ab2d25446004ce212087163878a4e013830afee404a72bc42a5"
     },
     {
       "name": "calibrate-assessment.tsx",
@@ -47,5 +47,5 @@
       "sha256": "2e881577c63bb6b62d14abd319240bbc6ae5e206ecb007dae80ab3ec922293c7"
     }
   ],
-  "diagnosticInstrumentation": "Passive published bus and Pipeline9 instance hooks. All phases: stage lifecycles and coarse searches. H616 spaced: bounded regional repair, candidate paths, locked points and intermediate copper. No solver input, options, return values or limits changed. Timings include measured observation overhead."
+  "diagnosticInstrumentation": "Same native3244 routing with bounded TOP-LEVEL bus observation:256 retained transitions,allphasecounters,5secondflush. Nested same-class instances are excluded. Corrects excessive logger overhead and nested-instance mixing in first ButterStick spaced attempt. No routing input/settings/budget/source changes."
 }

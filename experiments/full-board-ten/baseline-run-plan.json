@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "purpose": "New full-native-ten process analysis with passive published solver interception",
+  "purpose": "Qualified bounded top-level logger rerun of only ButterStick spaced after previous observation overhead invalidated completion comparison",
   "mainVersion": "0.0.3244",
   "priorBaseline": {
     "mainVersion": "0.0.3243",
@@ -8,12 +8,11 @@
     "controllerCommit": "14176a107694e38d70afc7e6653cf4bb6755e869"
   },
   "workflow": ".github/workflows/full-board-ten.yml",
-  "branch": "bench/full-board-process-3244-20261119",
+  "branch": "bench/process-bus-light-3244-20261119",
   "runner": "blacksmith-8vcpu-ubuntu-2404-arm",
-  "jobs": 5,
-  "maxParallel": 5,
+  "jobs": 1,
+  "maxParallel": 1,
   "cohortOrder": [
-    "original",
     "spaced"
   ],
   "freshRenderAndAssessmentProcesses": true,
@@ -23,57 +22,12 @@
   "jobTimeoutMinutes": 45,
   "cases": [
     {
-      "id": "h616",
-      "cohort": "original",
-      "expectedRoutableNets": 121
-    },
-    {
-      "id": "h616",
-      "cohort": "spaced",
-      "expectedRoutableNets": 121
-    },
-    {
-      "id": "butterstick",
-      "cohort": "original",
-      "expectedRoutableNets": 317
-    },
-    {
       "id": "butterstick",
       "cohort": "spaced",
       "expectedRoutableNets": 317
-    },
-    {
-      "id": "glider",
-      "cohort": "original",
-      "expectedRoutableNets": 356
-    },
-    {
-      "id": "glider",
-      "cohort": "spaced",
-      "expectedRoutableNets": 356
-    },
-    {
-      "id": "imx6",
-      "cohort": "original",
-      "expectedRoutableNets": 404
-    },
-    {
-      "id": "imx6",
-      "cohort": "spaced",
-      "expectedRoutableNets": 404
-    },
-    {
-      "id": "icepi",
-      "cohort": "original",
-      "expectedRoutableNets": 230
-    },
-    {
-      "id": "icepi",
-      "cohort": "spaced",
-      "expectedRoutableNets": 230
     }
   ],
-  "expectedRoutableNetsTotal": 2856,
+  "expectedRoutableNetsTotal": 317,
   "sourceOverrides": false,
   "routingSourceOverrides": false,
   "dependencyOverrides": [],
@@ -82,8 +36,8 @@
   "assessmentPolicy": "Authentic cohort assessor sources and controller policy are unchanged. Assessors resolve published3243, including unchanged Checks282 and published Core2425 copper helper. All actual package graph changes are recorded; no source overrides.",
   "frozenFiles": {
     ".github/workflows/full-board-ten.yml": {
-      "bytes": 6034,
-      "sha256": "3ec05744c44a6a4e2f49cc256e1d4842e1ffa5b1c73ce1df4683a36465c89147"
+      "bytes": 5650,
+      "sha256": "6a0a3b90afb0f6415e8932646d3c28871219aa09e8f01600585e03e0fa740c0d"
     },
     "experiments/full-board-ten/bootstrap.py": {
       "bytes": 8903,
@@ -114,8 +68,8 @@
       "sha256": "dea45bba3386a9b55b7709834dff65468c421992808b406f54c6f9e556e8b618"
     },
     "experiments/full-board-ten/createProcessDiagnostics.mjs": {
-      "bytes": 13893,
-      "sha256": "fb5676bf3240e5b721dbd24ca79bed50a72c0e51942be281303f0b448c1de97f"
+      "bytes": 14469,
+      "sha256": "52ce8f91bdc58ab2d25446004ce212087163878a4e013830afee404a72bc42a5"
     },
     "experiments/full-board-ten/source-provenance.json": {
       "bytes": 23139,
@@ -126,8 +80,8 @@
       "sha256": "8254b27fb22466c26a0c3d88cbe1abe430e3410b9d302dc3a93dc146b1a21142"
     },
     "experiments/full-board-ten/harness-provenance.json": {
-      "bytes": 1757,
-      "sha256": "e431a2671974e723a2b6083309f12ec5c79334ba2b25c02a311b736dd24c28b1"
+      "bytes": 1764,
+      "sha256": "2d3190a8ded75aa32a7d59e2ca4c8aafbfa0d97ad7c2ac24c384a165e6db3fdf"
     },
     "experiments/full-board-ten/published-release-provenance.json": {
       "bytes": 108648,
@@ -152,5 +106,21 @@
   },
   "comparisonPolicy": "Compare connected identities and raw findings with retained3243. Analyze stage transitions, exhausted searches, locked points, candidate outcomes and first geometry changes. No timing improvement claims.",
   "diagnosticOnly": true,
-  "observationPolicy": "No solver input/options/budget or source changes. Passive method wrappers. Observer time recorded, not subtracted from native deadlines. Capture limits omit diagnostics only, never stop or redirect routing."
+  "observationPolicy": "No solver input/options/budget or source changes. Passive method wrappers. Observer time recorded, not subtracted from native deadlines. Capture limits omit diagnostics only, never stop or redirect routing.",
+  "replacesContaminatedCase": {
+    "runId": 44514077848,
+    "artifactId": 14525319328,
+    "observationMs": 617500,
+    "reason": "Nested bus instances mixed into shared phase history, rewritten on each change;0connected cannotbeusedasreleasecomparison."
+  },
+  "loggerQualification": {
+    "nativeTransitionHistoryReplayed": 7806,
+    "solverIterations": 7806,
+    "retainedTransitions": 256,
+    "omittedTransitions": 7550,
+    "snapshotWrites": 2,
+    "maxSnapshotBytes": 49136,
+    "observationMs": 13.176913000008312,
+    "scope": "bounded logger stress check using recorded bus iterations and forced phase alternation, not a routing replay"
+  }
 }
