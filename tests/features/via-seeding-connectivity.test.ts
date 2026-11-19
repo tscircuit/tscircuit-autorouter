@@ -30,16 +30,33 @@ test("joins same-net terminals while retaining foreign-net via detours", (): voi
     ],
   }
   const original = structuredClone(node)
+  const connMap = new ConnectivityMap({
+    net_a: ["branch_a"],
+    net_b: ["branch_b"],
+  })
   const shared = new ViaPossibilitiesSolver2({
     nodeWithPortPoints: node,
-    connMap: new ConnectivityMap({ rail: ["branch_a", "branch_b"] }),
+    connMap,
   })
+  // Connectivity can change after construction; routing must read connMap.
+  connMap.addConnections([["branch_a", "branch_b"]])
   shared.solve()
   expect(shared.solved).toBeTrue()
   expect(shared.completedPaths.size).toBe(2)
   for (const path of shared.completedPaths.values()) {
     expect(path.every((point) => point.z === 0)).toBeTrue()
   }
+
+  const disconnected = new ViaPossibilitiesSolver2({
+    nodeWithPortPoints: node,
+    connMap: new ConnectivityMap({
+      net_a: ["branch_a"],
+      net_b: ["branch_b"],
+    }),
+  })
+  disconnected.solve()
+  expect(disconnected.solved).toBeFalse()
+  expect(disconnected.failed).toBeTrue()
 
   const crossingNode: NodeWithPortPoints = {
     ...node,

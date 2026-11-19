@@ -23,6 +23,12 @@ export type ConnectionName = string
 
 type ViaPathPoint = Point3 & { pcb_port_id?: string }
 
+type ViaPathIntersection = {
+  point: Point
+  dist: number
+  intersectedSegmentZ: number
+}
+
 const ENDPOINT_CONTACT_TOLERANCE_MM = 1e-6
 
 export interface Segment {
@@ -67,7 +73,7 @@ export class ViaPossibilitiesSolver2 extends BaseSolver {
   PLACEHOLDER_WALL_BUFFER_DISTANCE = 0.1
   NEW_HEAD_WALL_BUFFER_DISTANCE = 0.05
   viaDiameter: number
-  connMap?: ConnectivityMap
+  readonly connMap?: ConnectivityMap
 
   unprocessedConnections: ConnectionName[]
 
@@ -200,7 +206,74 @@ export class ViaPossibilitiesSolver2 extends BaseSolver {
     }
   }
 
-  _step() {
+  private getClosestPathIntersection({
+    pathMap,
+    proposedSegment,
+    targetEnd,
+    closestIntersection,
+  }: {
+    pathMap: Map<ConnectionName, ViaPathPoint[]>
+    proposedSegment: [Point3, Point3]
+    targetEnd: ViaPathPoint
+    closestIntersection: ViaPathIntersection | null
+  }): ViaPathIntersection | null {
+    for (const [connectionName, path] of pathMap) {
+      const sharesTargetPcbPort =
+        targetEnd.pcb_port_id !== undefined &&
+        (path[0]!.pcb_port_id === targetEnd.pcb_port_id ||
+          path.at(-1)!.pcb_port_id === targetEnd.pcb_port_id)
+      for (let i = 0; i < path.length - 1; i++) {
+        const segment: [Point3, Point3] = [path[i], path[i + 1]]
+        // Skip checking intersection if segment is just a via (z change)
+        if (segment[0].x === segment[1].x && segment[0].y === segment[1].y) {
+          continue
+        }
+        // Only check intersections on the same Z plane as the proposed move start
+        // Or if the proposed move itself involves a Z change (handled later)
+        if (segment[0].z !== this.currentHead.z) {
+          continue
+        }
+
+        const intersection = getSegmentIntersection(
+          proposedSegment[0],
+          proposedSegment[1],
+          segment[0],
+          segment[1],
+        )
+        if (intersection) {
+          // A branch already on the destination pad is a valid net contact.
+          if (
+            sharesTargetPcbPort &&
+            this.currentHead.z === targetEnd.z &&
+            distance(intersection, targetEnd) < ENDPOINT_CONTACT_TOLERANCE_MM &&
+            this.connMap?.areIdsConnected(
+              this.currentConnectionName,
+              connectionName,
+            )
+          ) {
+            continue
+          }
+          // Ignore intersection if it's exactly at the start point (currentHead)
+          const distToIntersection = distance(this.currentHead, intersection)
+          if (distToIntersection < ENDPOINT_CONTACT_TOLERANCE_MM) continue
+
+          if (
+            !closestIntersection ||
+            distToIntersection < closestIntersection.dist
+          ) {
+            closestIntersection = {
+              point: intersection,
+              dist: distToIntersection,
+              intersectedSegmentZ: segment[0].z,
+            }
+          }
+        }
+      }
+    }
+    return closestIntersection
+  }
+
+  _step(): void {
     if (this.solved) return
 
     const targetEnd: ViaPathPoint = this.portPairMap.get(
@@ -208,71 +281,19 @@ export class ViaPossibilitiesSolver2 extends BaseSolver {
     )!.end
     const proposedSegment: [Point3, Point3] = [this.currentHead, targetEnd]
 
-    let closestIntersection: any = null
-    let intersectedSegmentZ: number | null = null
-
-    const checkIntersectionsWithPathMap = (
-      pathMap: Map<ConnectionName, ViaPathPoint[]>,
-    ) => {
-      for (const [connectionName, path] of pathMap) {
-        const sharesTargetPcbPort =
-          targetEnd.pcb_port_id !== undefined &&
-          (path[0]!.pcb_port_id === targetEnd.pcb_port_id ||
-            path.at(-1)!.pcb_port_id === targetEnd.pcb_port_id)
-        for (let i = 0; i < path.length - 1; i++) {
-          const segment: [Point3, Point3] = [path[i], path[i + 1]]
-          // Skip checking intersection if segment is just a via (z change)
-          if (segment[0].x === segment[1].x && segment[0].y === segment[1].y) {
-            continue
-          }
-          // Only check intersections on the same Z plane as the proposed move start
-          // Or if the proposed move itself involves a Z change (handled later)
-          if (segment[0].z !== this.currentHead.z) {
-            continue
-          }
-
-          const intersection = getSegmentIntersection(
-            proposedSegment[0],
-            proposedSegment[1],
-            segment[0],
-            segment[1],
-          )
-          if (intersection) {
-            // A branch already on the destination pad is a valid net contact.
-            if (
-              sharesTargetPcbPort &&
-              this.currentHead.z === targetEnd.z &&
-              distance(intersection, targetEnd) <
-                ENDPOINT_CONTACT_TOLERANCE_MM &&
-              this.connMap?.areIdsConnected(
-                this.currentConnectionName,
-                connectionName,
-              )
-            ) {
-              continue
-            }
-            // Ignore intersection if it's exactly at the start point (currentHead)
-            const distToIntersection = distance(this.currentHead, intersection)
-            if (distToIntersection < ENDPOINT_CONTACT_TOLERANCE_MM) continue
-
-            if (
-              !closestIntersection ||
-              distToIntersection < closestIntersection.dist
-            ) {
-              closestIntersection = {
-                point: intersection,
-                dist: distToIntersection,
-              }
-              intersectedSegmentZ = segment[0].z // Z level of the segment we hit
-            }
-          }
-        }
-      }
-    }
-
-    // Check intersections against completed and placeholder paths
-    checkIntersectionsWithPathMap(this.completedPaths)
-    checkIntersectionsWithPathMap(this.placeholderPaths)
+    // Preserve completed-path priority when intersections have equal distances.
+    let closestIntersection = this.getClosestPathIntersection({
+      pathMap: this.completedPaths,
+      proposedSegment,
+      targetEnd,
+      closestIntersection: null,
+    })
+    closestIntersection = this.getClosestPathIntersection({
+      pathMap: this.placeholderPaths,
+      proposedSegment,
+      targetEnd,
+      closestIntersection,
+    })
 
     const needsZChange = this.currentHead.z !== targetEnd.z
 
@@ -311,7 +332,9 @@ export class ViaPossibilitiesSolver2 extends BaseSolver {
       }
 
       // Determine the Z level to switch to (the one NOT occupied by the intersected segment)
-      const nextZ = this.availableZ.find((z) => z !== intersectedSegmentZ)!
+      const nextZ = this.availableZ.find(
+        (z) => z !== closestIntersection.intersectedSegmentZ,
+      )!
       if (nextZ === undefined) {
         this.error = "Could not determine next Z level for via placement!"
         this.failed = true // Mark as failed if Z logic breaks
