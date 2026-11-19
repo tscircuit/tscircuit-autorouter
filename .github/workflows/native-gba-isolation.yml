@@ -12,7 +12,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        variant: [current, old-growth, old-intranode, old-node-repair]
+        variant: [canonical-force, saved-width, both]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -28,13 +28,45 @@ jobs:
         run: |
           python3 - <<'PY'
           import os,subprocess
-          paths={
-            "old-growth":"lib/solvers/HyperHighDensitySolver/GrowShrinkHighDensityIntraNodeSolver/GrowShrinkHighDensityIntraNodeSolver.ts",
-            "old-intranode":"lib/solvers/HighDensitySolver/IntraNodeSolver.ts",
-            "old-node-repair":"lib/solvers/HighDensityRepairSolver/Pipeline4HighDensityRepairSolver.ts",
-          }
-          path=paths.get(os.environ["VARIANT"])
-          if path: subprocess.run(["git","checkout","8bc7eeee1d42c94eb72f32460dc03f54add143e5","--",path],check=True)
+          from pathlib import Path
+          variant=os.environ["VARIANT"]
+          if variant in ["canonical-force","both"]:
+              p=Path("lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts")
+              s=p.read_text()
+              old="materializePipeline9HdRouteVias(cms.highDensityRouteSolver!.routes),\n          ),"
+              new="""materializePipeline9HdRouteVias(cms.highDensityRouteSolver!.routes),
+                        ).map((route) => ({
+                          ...route,
+                          rootConnectionName:
+                            cms.connMap.getNetConnectedToId(route.rootConnectionName ?? route.connectionName) ??
+                            route.rootConnectionName ??
+                            route.connectionName,
+                        })),"""
+              assert s.count(old)==1
+              p.write_text(s.replace(old,new))
+          if variant in ["saved-width","both"]:
+              p=Path("lib/solvers/HighDensityRepairSolver/Pipeline4HighDensityRepairSolver.ts")
+              s=p.read_text()
+              old="""    const repairRoutes = contextRoutes.map((route) =>
+                toRepairRoute({
+                  route,
+                  connMap: params.connMap,
+                  minimumTraceWidth: params.minimumTraceWidth,
+                  viaLayerSpan,
+                }),
+              )"""
+              new="""    const repairRoutes = contextRoutes.map((route, index) => {
+                let minimumTraceWidth = params.minimumTraceWidth
+                if (index >= params.hdRoutes.length) minimumTraceWidth = undefined
+                return toRepairRoute({
+                  route,
+                  connMap: params.connMap,
+                  minimumTraceWidth,
+                  viaLayerSpan,
+                })
+              })"""
+              assert s.count(old)==1
+              p.write_text(s.replace(old,new))
           PY
       - run: bun install
       - name: Run original full-board routing and clearance assertions
