@@ -3,7 +3,6 @@ import type { DrcEvaluator } from "high-density-repair03/lib"
 import type { SimpleRouteConnection, SimpleRouteJson } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import type { PreloadedHighDensityRoute } from "./convertPreloadedTraceToHdRoutes"
-import type { Pipeline9CopperPair } from "./pipeline9JointDrcRepairUtils"
 import {
   arePipeline9RoutesOnSameNet,
   doPipeline9RoutesHaveCopperConflict,
@@ -45,8 +44,6 @@ export type Pipeline9RegionalB01RepairParams = {
   newConnections: SimpleRouteConnection[]
   syntheticConnectionNames: ReadonlySet<string>
   drcEvaluator: DrcEvaluator
-  /** Pairs of copper in contact (zero clearance) for a set of routes. */
-  findCopperContacts: (routes: HighDensityRoute[]) => Pipeline9CopperPair[]
   initialErrors?: Pipeline9DrcError[]
   allowTracePairRepair?: boolean
   preloadRepairTraceIds: ReadonlySet<string>

@@ -5,8 +5,8 @@ import type { AnyCircuitElement } from "circuit-json"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { convertCircuitJsonToPcbSvg } from "circuit-to-svg"
 import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
+import type { Pipeline9DrcError } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9JointDrcRepairUtils"
 import { createPipeline9AutoroutingDrcEvaluator } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/createPipeline9AutoroutingDrcEvaluator"
-import { createPipeline9CopperContactEvaluator } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/createPipeline9CopperContactEvaluator"
 import { Pipeline9JointDrcRepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9JointDrcRepairSolver"
 import type {
   SimpleRouteConnection,
@@ -111,10 +111,6 @@ test("A13 joint repair moves a trace onto pads of other nets", async (): Promise
     inputSrj: fixture.originalSrj,
     srjWithPointPairs: fixture.srj,
   })
-  const findCopperContacts = createPipeline9CopperContactEvaluator({
-    inputSrj: fixture.originalSrj,
-    srjWithPointPairs: fixture.srj,
-  })
   const toTraces = (hdRoutes: HighDensityRoute[]): SimplifiedPcbTrace[] =>
     convertPipeline7HdRoutesToSimplifiedPcbTraces({
       connections: fixture.newConnections,
@@ -125,17 +121,20 @@ test("A13 joint repair moves a trace onto pads of other nets", async (): Promise
       defaultViaHoleDiameter: fixture.defaultViaHoleDiameter,
       connMap,
     })
-  const getContactKeys = (traces: SimplifiedPcbTrace[]): string[] =>
-    findCopperContacts({
-      routedTraces: traces,
-      evaluatedTraceIds: new Set(traces.map((trace) => trace.pcb_trace_id)),
-    }).map(([first, second]) => `${first} touches ${second}`)
+  const getContactKeys = (errors: Pipeline9DrcError[]): string[] => {
+    const contactKeys: string[] = []
+    for (const error of errors) {
+      if (!error.contact_ids) continue
+      contactKeys.push([...error.contact_ids].sort().join(" touches "))
+    }
+    return contactKeys
+  }
   const inputTraces = toTraces(fixture.newHdRoutes)
   const outputTraces = toTraces(joint.getOutput())
   const before = evaluate(inputTraces)
   const after = evaluate(outputTraces)
-  const inputContacts = new Set(getContactKeys(inputTraces))
-  const newContacts = getContactKeys(outputTraces).filter(
+  const inputContacts = new Set(getContactKeys(before.errors))
+  const newContacts = getContactKeys(after.errors).filter(
     (contact) => !inputContacts.has(contact),
   )
 

@@ -169,8 +169,6 @@ test("Pipeline9 regular regional fallback keeps immutable preloads as obstacles"
     newConnections: srj.connections,
     syntheticConnectionNames: new Set(),
     drcEvaluator,
-    // The synthetic evaluator models no copper geometry.
-    findCopperContacts: () => [],
     preloadRepairTraceIds: new Set([
       "immutable_preload_collision",
       "force_regular_fallback_a",
@@ -275,8 +273,6 @@ test("Pipeline9 regular regional fallback keeps immutable preloads as obstacles"
     newConnections: wideSrj.connections,
     syntheticConnectionNames: new Set(),
     drcEvaluator: wideDrcEvaluator,
-    // The synthetic evaluator models no copper geometry.
-    findCopperContacts: () => [],
     preloadRepairTraceIds: new Set([
       "immutable_wide_preload_collision",
       "force_wide_regular_fallback_a",

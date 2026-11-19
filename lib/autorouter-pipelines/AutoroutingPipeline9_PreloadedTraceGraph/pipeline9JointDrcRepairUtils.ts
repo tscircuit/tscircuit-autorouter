@@ -9,6 +9,8 @@ export type Pipeline9CollapsedTraceParticipant = {
 
 export type Pipeline9DrcError = Record<string, unknown> & {
   __collapsed_trace_participants?: Pipeline9CollapsedTraceParticipant[]
+  /** Set when copper touches: the two objects in contact. */
+  contact_ids?: readonly [string, string]
 }
 
 export type Pipeline9PreloadRepairTraceIds = ReadonlySet<string> & {
@@ -86,49 +88,6 @@ export const getPipeline9DrcErrorTraceIds = (
   )
 }
 
-/** Two copper objects in contact, sorted by id. */
-export type Pipeline9CopperPair = readonly [string, string]
-
-const getStringIds = (value: unknown): string[] =>
-  Array.isArray(value)
-    ? value.filter((id): id is string => typeof id === "string")
-    : typeof value === "string"
-      ? [value]
-      : []
-
-/**
- * The two objects a zero-clearance DRC error puts in contact, from its
- * structured ids: the participant traces getPipeline9DrcErrorTraceIds already
- * decodes (including the pad or hole a trace overlap encodes, and the owning
- * trace of a via once addAutoroutingViaTraceIds has tagged it), pads from
- * pcb_pad_id(s) and fixed copper from pcb_obstacle_id. Throws unless the error
- * names exactly two.
- */
-export const getPipeline9DrcErrorCopperPairOrThrow = (
-  error: Pipeline9DrcError,
-): Pipeline9CopperPair => {
-  const viaIds = new Set([
-    ...getStringIds(error.pcb_via_id),
-    ...getStringIds(error.pcb_via_ids),
-  ])
-  const copperIds = [
-    ...new Set(
-      [
-        ...getPipeline9DrcErrorTraceIds(error),
-        ...getStringIds(error.pcb_pad_id),
-        ...getStringIds(error.pcb_pad_ids),
-        ...getStringIds(error.pcb_obstacle_id),
-      ].filter((id) => !viaIds.has(id)),
-    ),
-  ].sort()
-  if (copperIds.length !== 2) {
-    throw new Error(
-      `Pipeline9 contact error ${String(error.type)} must name two copper objects, found ${copperIds.length} (${copperIds.join(", ") || "none"})`,
-    )
-  }
-  return [copperIds[0]!, copperIds[1]!]
-}
-
 export const isPipeline9DrcErrorOwnedByPreloadRepair = ({
   error,
   preloadRepairTraceIds,
@@ -172,14 +131,37 @@ const getDrcIssueScore = (errors: Pipeline9DrcError[]) =>
     return score + 1
   }, 0)
 
+const getContactKeys = (errors: Pipeline9DrcError[]): Set<string> => {
+  const contactKeys = new Set<string>()
+  for (const error of errors) {
+    if (!error.contact_ids) continue
+    const [firstId, secondId] = [...error.contact_ids].sort()
+    contactKeys.add(`${firstId}\n${secondId}`)
+  }
+  return contactKeys
+}
+
+/**
+ * A candidate is better when it has fewer DRC errors, or as many with a lower
+ * score, and it puts no two objects in contact that were not already touching.
+ * Fewer errors never justifies a new short.
+ */
 export const isPipeline9DrcCandidateBetter = (
   candidateErrors: Pipeline9DrcError[],
   currentErrors: Pipeline9DrcError[],
-) =>
-  candidateErrors.length < currentErrors.length ||
-  (candidateErrors.length === currentErrors.length &&
-    getDrcIssueScore(candidateErrors) <
-      getDrcIssueScore(currentErrors) - SCORE_EPSILON)
+): boolean => {
+  const currentContactKeys = getContactKeys(currentErrors)
+  const candidateContactKeys = getContactKeys(candidateErrors)
+  for (const contactKey of candidateContactKeys) {
+    if (!currentContactKeys.has(contactKey)) return false
+  }
+  return (
+    candidateErrors.length < currentErrors.length ||
+    (candidateErrors.length === currentErrors.length &&
+      getDrcIssueScore(candidateErrors) <
+        getDrcIssueScore(currentErrors) - SCORE_EPSILON)
+  )
+}
 
 export const getPipeline9RouteIndexByTraceId = ({
   routes,

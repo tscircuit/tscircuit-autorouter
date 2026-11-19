@@ -29,7 +29,6 @@ import {
   type Pipeline9RegularRegionalCandidateProblem,
 } from "./applyPipeline9RegionalB01Repairs"
 import {
-  type Pipeline9CopperPair,
   getPipeline9DrcErrors,
   getPipeline9RouteIndexByTraceId,
   isPipeline9DrcCandidateBetter,
@@ -65,22 +64,6 @@ type RegionalCleanup = {
   kind: "regular-candidate" | "accepted-routes"
   routes: HighDensityRoute[]
   errors: Pipeline9DrcError[]
-}
-
-/**
- * True when the candidate has copper in contact that is not in contact in the
- * current routes. Fewer DRC errors overall never justifies a new short.
- */
-const hasNewCopperContact = (
-  candidateContacts: Pipeline9CopperPair[],
-  currentContacts: Pipeline9CopperPair[],
-): boolean => {
-  const currentPairs = new Set(
-    currentContacts.map(([first, second]) => `${first}\n${second}`),
-  )
-  return candidateContacts.some(
-    ([first, second]) => !currentPairs.has(`${first}\n${second}`),
-  )
 }
 
 /** Routes one regional candidate at a time through explicit child solver stages. */
@@ -513,11 +496,7 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
         if (
           getViaIssueCount(errors) <= getViaIssueCount(cleanup.errors) &&
           isPipeline9DrcCandidateBetter(errors, cleanup.errors) &&
-          !this.introducesViaInPad(refinedRoutes) &&
-          !hasNewCopperContact(
-            this.params.findCopperContacts(refinedRoutes),
-            this.params.findCopperContacts(cleanup.routes),
-          )
+          !this.introducesViaInPad(refinedRoutes)
         ) {
           cleanup.routes = refinedRoutes
           cleanup.errors = errors

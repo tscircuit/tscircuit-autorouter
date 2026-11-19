@@ -1,12 +1,12 @@
 import { expect, test } from "bun:test"
 import {
-  findBoardCopperContacts,
+  getBoardContactIds,
   trace,
   via,
   wire,
 } from "tests/fixtures/pipeline9CopperContactBoard"
 
-test("pipeline9 copper contacts name a via by its trace, not its per-run via id", () => {
+test("pipeline9 DRC names a via by its trace in contact_ids, not its per-run via id", () => {
   const traceA = trace("tA", "netA", [
     wire(-3, 0),
     wire(0, 0),
@@ -16,7 +16,7 @@ test("pipeline9 copper contacts name a via by its trace, not its per-run via id"
     via(3, 0, "bottom", "top"),
     wire(3, 0),
   ])
-  // netB's top-layer detour clips tA's via barrel at (0, 0) and nothing else.
+  // netB's top-layer detour clips tA's via barrel at (0, 0).
   const traceB = trace("tB", "netB", [
     wire(-3, 1),
     wire(0.2, 1),
@@ -25,8 +25,7 @@ test("pipeline9 copper contacts name a via by its trace, not its per-run via id"
     wire(0.6, 1),
     wire(3, 1),
   ])
-  // netC detours through two vias far from the contact. Listed first, its
-  // vias take the lowest via ids, so tA's via gets a different id.
+  // Listed first, netC's two vias take the lowest via ids.
   const traceC = trace("tC", "netC", [
     wire(0, -2),
     wire(-4, -2),
@@ -38,8 +37,6 @@ test("pipeline9 copper contacts name a via by its trace, not its per-run via id"
     wire(0, 2),
   ])
 
-  expect(findBoardCopperContacts([traceA, traceB])).toEqual([["tA", "tB"]])
-  expect(findBoardCopperContacts([traceC, traceA, traceB])).toEqual([
-    ["tA", "tB"],
-  ])
+  expect(getBoardContactIds([traceA, traceB])).toEqual([["tA", "tB"]])
+  expect(getBoardContactIds([traceC, traceA, traceB])).toEqual([["tA", "tB"]])
 })

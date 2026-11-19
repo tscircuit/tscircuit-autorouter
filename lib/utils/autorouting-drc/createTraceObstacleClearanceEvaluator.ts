@@ -798,13 +798,13 @@ export const createTraceObstacleClearanceEvaluator = (
             ? getReadableNameForElement(circuitJson, otherId)
             : `${item.element.type} "${getReadableNameForElement(circuitJson, otherId)}"`
         const hole = !("trace" in item) && item.element.type === "pcb_hole"
-        overlaps.set(pairId, {
+        const isContact = clearance.gap <= 0
+        const error: DrcError = {
           type: "pcb_trace_error",
           error_type: "pcb_trace_error",
-          message:
-            clearance.gap <= 0
-              ? `PCB trace ${traceName} overlaps with ${otherName} (accidental contact)`
-              : `PCB trace ${traceName} is too close to ${otherName} (gap: ${clearance.gap.toFixed(3)}mm)`,
+          message: isContact
+            ? `PCB trace ${traceName} overlaps with ${otherName} (accidental contact)`
+            : `PCB trace ${traceName} is too close to ${otherName} (gap: ${clearance.gap.toFixed(3)}mm)`,
           pcb_trace_id: trace.pcb_trace_id,
           source_trace_id: hole ? (trace.source_trace_id ?? "") : "",
           pcb_trace_error_id: `overlap_${pairId}`,
@@ -824,7 +824,10 @@ export const createTraceObstacleClearanceEvaluator = (
                     : []),
                 ],
           center: clearance.center,
-        })
+        }
+        // The two objects in contact. A via is named by its trace.
+        if (isContact) error.contact_ids = [trace.pcb_trace_id, connectedId]
+        overlaps.set(pairId, error)
       }
     }
     const typedErrors = new Map<string, { error: DrcError; gap: number }>()

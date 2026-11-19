@@ -1,5 +1,5 @@
-import { createPipeline9CopperContactEvaluator } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/createPipeline9CopperContactEvaluator"
-import type { Pipeline9CopperPair } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9JointDrcRepairUtils"
+import { createPipeline9AutoroutingDrcEvaluator } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/createPipeline9AutoroutingDrcEvaluator"
+import type { Pipeline9DrcError } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9JointDrcRepairUtils"
 import type { Obstacle, SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 
 type TraceRoutePoint = SimplifiedPcbTrace["route"][number]
@@ -74,17 +74,23 @@ export const trace = (
   return { type: "pcb_trace", pcb_trace_id: id, connection_name: net, route }
 }
 
-const evaluateCopperContacts = createPipeline9CopperContactEvaluator({
+const evaluateDrc = createPipeline9AutoroutingDrcEvaluator({
   inputSrj: copperContactBoard,
   srjWithPointPairs: copperContactBoard,
 })
 
-/** The copper pairs in contact once these traces are routed on the board. */
-export const findBoardCopperContacts = (
+/** DRC errors for these traces on the board, as joint repair evaluates them. */
+export const getBoardDrcErrors = (
   traces: SimplifiedPcbTrace[],
-): Pipeline9CopperPair[] => {
-  return evaluateCopperContacts({
-    routedTraces: traces,
-    evaluatedTraceIds: new Set(traces.map((routed) => routed.pcb_trace_id)),
-  })
+): Pipeline9DrcError[] => {
+  return evaluateDrc(traces, { includeTraceContinuity: false }).errors
+}
+
+/** The sorted contact_ids of every error that reports copper touching. */
+export const getBoardContactIds = (traces: SimplifiedPcbTrace[]): string[][] => {
+  const contactIds: string[][] = []
+  for (const error of getBoardDrcErrors(traces)) {
+    if (error.contact_ids) contactIds.push([...error.contact_ids].sort())
+  }
+  return contactIds
 }

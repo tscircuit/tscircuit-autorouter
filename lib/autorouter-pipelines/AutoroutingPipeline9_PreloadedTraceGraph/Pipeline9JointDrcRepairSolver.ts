@@ -50,10 +50,7 @@ import { getPipeline9PreloadedTraceIdsInInitialDrcRegions } from "./getPipeline9
 import { getPipeline9PreloadedViaPairTraceGroups } from "./getPipeline9PreloadedViaPairTraceGroups"
 import { mergePipeline9MovablePreloadedVias } from "./mergePipeline9MovablePreloadedVias"
 import { normalizePipeline9DrcErrorsForRepair } from "./normalizePipeline9DrcErrorsForRepair"
-import { addAutoroutingViaTraceIds } from "./addAutoroutingViaTraceIds"
-import { createPipeline9CopperContactEvaluator } from "./createPipeline9CopperContactEvaluator"
 import {
-  type Pipeline9CopperPair,
   getPipeline9DrcErrors,
   getPipeline9RouteIndexByTraceId,
   type Pipeline9CollapsedTraceParticipant,
@@ -147,6 +144,86 @@ const getAutoroutingViaElements = (
     }
   }
   return vias
+}
+
+export const addAutoroutingViaTraceIds = ({
+  errors,
+  circuitJson,
+  evaluatedTraceIds,
+}: {
+  errors: Array<Record<string, unknown>>
+  circuitJson: AnyCircuitElement[]
+  evaluatedTraceIds: ReadonlySet<string>
+}): Array<Record<string, unknown>> => {
+  const traceIdByViaId = new Map(
+    circuitJson.flatMap((element) =>
+      element.type === "pcb_via" &&
+      typeof element.pcb_via_id === "string" &&
+      typeof element.pcb_trace_id === "string"
+        ? [[element.pcb_via_id, element.pcb_trace_id] as const]
+        : [],
+    ),
+  )
+  return errors.map((error) => {
+    const explicitViaIds = [
+      ...(typeof error.pcb_via_id === "string" ? [error.pcb_via_id] : []),
+      ...(Array.isArray(error.pcb_via_ids)
+        ? error.pcb_via_ids.filter(
+            (viaId): viaId is string => typeof viaId === "string",
+          )
+        : []),
+    ]
+    const primaryTraceId =
+      typeof error.pcb_trace_id === "string" ? error.pcb_trace_id : undefined
+    const pairPrefix = primaryTraceId ? `overlap_${primaryTraceId}_` : undefined
+    const encodedPairTraceId =
+      pairPrefix &&
+      typeof error.pcb_trace_error_id === "string" &&
+      error.pcb_trace_error_id.startsWith(pairPrefix)
+        ? error.pcb_trace_error_id.slice(pairPrefix.length)
+        : undefined
+    const encodedViaIdCandidate =
+      typeof error.pcb_trace_error_id === "string"
+        ? error.pcb_trace_error_id.match(/_(via_\d+)$/)?.[1]
+        : undefined
+    const encodedViaId =
+      explicitViaIds.length === 0 &&
+      encodedViaIdCandidate &&
+      traceIdByViaId.has(encodedViaIdCandidate) &&
+      !(encodedPairTraceId && evaluatedTraceIds.has(encodedPairTraceId))
+        ? encodedViaIdCandidate
+        : undefined
+    const viaIds = [
+      ...explicitViaIds,
+      ...(encodedViaId ? [encodedViaId] : []),
+    ].filter(
+      (viaId, viaIndex, allViaIds) => allViaIds.indexOf(viaId) === viaIndex,
+    )
+    const traceIds = [
+      ...(typeof error.pcb_trace_id === "string" ? [error.pcb_trace_id] : []),
+      ...(Array.isArray(error.pcb_trace_ids)
+        ? error.pcb_trace_ids.filter(
+            (traceId): traceId is string => typeof traceId === "string",
+          )
+        : []),
+      ...viaIds.flatMap((viaId) => {
+        const traceId = traceIdByViaId.get(viaId)
+        return traceId ? [traceId] : []
+      }),
+    ].filter(
+      (traceId, traceIndex, allTraceIds) =>
+        allTraceIds.indexOf(traceId) === traceIndex,
+    )
+    return {
+      ...error,
+      ...(viaIds.length > 0
+        ? { pcb_via_id: viaIds[0], pcb_via_ids: viaIds }
+        : {}),
+      ...(viaIds.length > 0 && traceIds.length > 0
+        ? { pcb_trace_ids: traceIds }
+        : {}),
+    }
+  })
 }
 
 const pointsAreEqual = (
@@ -603,9 +680,6 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
   >[0]
   clearanceProjectionSolver?: Pipeline9ClearanceProjectionSolver
   private drcEvaluator?: DrcEvaluator
-  private findCopperContacts?: (
-    routes: HighDensityRoute[],
-  ) => Pipeline9CopperPair[]
   private cachedReferenceDrcEvaluator?: DrcEvaluator
   private clearancePrecisionDrcEvaluator?: DrcEvaluator
   private clearancePrecisionIndexedDrcEvaluator?: DrcEvaluator
@@ -1371,22 +1445,6 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       srjWithPointPairs: params.srjWithPointPairs,
       drcOptions: { traceClearance, viaClearance: viaHoleClearance },
     })
-    const evaluateCopperContacts = createPipeline9CopperContactEvaluator({
-      connectivityMaps,
-      inputSrj: params.originalSrj,
-      srjWithPointPairs: params.srjWithPointPairs,
-    })
-    this.findCopperContacts = (
-      routes: HighDensityRoute[],
-    ): Pipeline9CopperPair[] => {
-      const candidateDrcInput = prepareCandidateDrcInput(routes)
-      return evaluateCopperContacts({
-        routedTraces: candidateDrcInput.routedTraces,
-        evaluatedTraceIds: new Set(
-          candidateDrcInput.evaluatedTraces.map((trace) => trace.pcb_trace_id),
-        ),
-      })
-    }
     const referenceDrcEvaluator = (
       { routes, hdRoutes }: Parameters<DrcEvaluator>[0],
       includeTraceContinuity = true,
@@ -2050,7 +2108,6 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       newConnections: this.params.newConnections,
       syntheticConnectionNames: this.syntheticConnectionNames,
       drcEvaluator: this.drcEvaluator!,
-      findCopperContacts: this.findCopperContacts!,
       initialErrors: terminalEscapeResult.remainingErrors,
       allowTracePairRepair: true,
       preloadRepairTraceIds,

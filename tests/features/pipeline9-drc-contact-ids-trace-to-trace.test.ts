@@ -1,11 +1,12 @@
 import { expect, test } from "bun:test"
 import {
-  findBoardCopperContacts,
+  getBoardContactIds,
+  getBoardDrcErrors,
   trace,
   wire,
 } from "tests/fixtures/pipeline9CopperContactBoard"
 
-test("pipeline9 copper contacts name both traces when two nets' traces touch", () => {
+test("pipeline9 DRC names both traces in contact_ids when two nets' traces touch", () => {
   const traceA = trace("tA", "netA", [wire(-3, 0), wire(3, 0)])
   const crossingB = trace("tB", "netB", [
     wire(-3, 1),
@@ -15,7 +16,7 @@ test("pipeline9 copper contacts name both traces when two nets' traces touch", (
     wire(1, 1),
     wire(3, 1),
   ])
-  // 0.05mm apart: a clearance violation, but no copper touches.
+  // 0.05mm apart: a clearance error, but no copper touches.
   const nearMissB = trace("tB", "netB", [
     wire(-3, 1),
     wire(-1, 1),
@@ -25,6 +26,7 @@ test("pipeline9 copper contacts name both traces when two nets' traces touch", (
     wire(3, 1),
   ])
 
-  expect(findBoardCopperContacts([traceA, crossingB])).toEqual([["tA", "tB"]])
-  expect(findBoardCopperContacts([traceA, nearMissB])).toEqual([])
+  expect(getBoardContactIds([traceA, crossingB])).toEqual([["tA", "tB"]])
+  expect(getBoardDrcErrors([traceA, nearMissB]).length).toBeGreaterThan(0)
+  expect(getBoardContactIds([traceA, nearMissB])).toEqual([])
 })

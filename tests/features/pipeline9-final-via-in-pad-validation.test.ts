@@ -93,8 +93,6 @@ test("regional repair rejects a forbidden regular candidate and preserves its in
         newConnections: srj.connections,
         syntheticConnectionNames: new Set(),
         drcEvaluator,
-        // The synthetic evaluator models no copper geometry.
-        findCopperContacts: () => [],
         preloadRepairTraceIds: new Set(["signal_0"]),
         connMap: getConnectivityMapFromSimpleRouteJson(srj),
         colorMap: {},
