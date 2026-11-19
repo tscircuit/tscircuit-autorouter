@@ -125,6 +125,7 @@
     "fast-json-stable-stringify": "^2.1.0",
     "object-hash": "^3.0.0",
     "stack-svgs": "^0.0.1",
-    "high-density-repair01": "https://codeload.github.com/tscircuit/high-density-repair01/tar.gz/51671d165ba1f24d75bd03bdd7ee96691e09f004"
+    "high-density-repair01": "https://codeload.github.com/tscircuit/high-density-repair01/tar.gz/51671d165ba1f24d75bd03bdd7ee96691e09f004",
+    "@tscircuit/high-density-b01": "git+https://github.com/tscircuit/high-density-b01.git#d373bddef1c42d0004f6c3bd6ba53b96790ea841"
   }
 }
