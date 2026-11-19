@@ -1,7 +1,7 @@
 name: Validate reviewed fanout source
 on:
   push:
-    branches: [codex/ddr2427-concerns-opt-clean]
+    branches: [codex/ddr2427-concerns-reviewed-clean]
 permissions:
   contents: read
 jobs:
@@ -9,7 +9,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        revision: ["ae13569eb35dccc74e99708794cb2135a5c3ddc0", "e4edfc8122093bf7c6d67677f4cdc3344ef3983e", "e36bee5e1767d908dabbfd46d19da60600051046", "10fe3fce592c27e4f381894311f3fd65350983b4", "9fe3894f921779327313d7a6f02b5d72098658ae"]
+        revision: ["ae13569eb35dccc74e99708794cb2135a5c3ddc0", "e4edfc8122093bf7c6d67677f4cdc3344ef3983e", "e36bee5e1767d908dabbfd46d19da60600051046", "55e6041df2df390542848ece0ca3a79ab3714ff6", "18c3dd1d641c1e47dd7c062f59d8b62bfd6324d5"]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
