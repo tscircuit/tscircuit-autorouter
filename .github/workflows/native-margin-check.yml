@@ -1,4 +1,4 @@
-name: Verify native copper context in clearance projection
+name: Verify existing clearance cleanup for native copper
 on:
   push:
     branches: [analysis/native-complete-cleanup-context]
@@ -13,6 +13,7 @@ jobs:
       fail-fast: false
       matrix:
         source: [09bd0812beff4b44f03cf5e2e5881b3186655558, 0f98be6237dfa0a852360b07d38f0e2fbee5f92d]
+        cleanup: [global, joint, both]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -22,16 +23,25 @@ jobs:
         with:
           bun-version: '1.4.3'
       - name: Enable existing clearance cleanup after native routing
+        env:
+          CLEANUP: ${{ matrix.cleanup }}
         run: |
           python3 - <<'PY'
           import os
           from pathlib import Path
-          p=Path("lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts")
-          s=p.read_text()
-          old="            enablePostSolveClearanceRelaxation: false,"
-          assert s.count(old)==1
-          s=s.replace(old,"            enablePostSolveClearanceRelaxation: true,",1)
-          p.write_text(s)
+          cleanup=os.environ["CLEANUP"]
+          root=Path("lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph")
+          names=[]
+          if cleanup in ("global","both"):
+            names.append("AutoroutingPipelineSolver9_PreloadedTraceGraph.ts")
+          if cleanup in ("joint","both"):
+            names.append("Pipeline9JointDrcRepairSolver.ts")
+          for name in names:
+            p=root/name
+            s=p.read_text()
+            old="enablePostSolveClearanceRelaxation: false,"
+            assert s.count(old)==1
+            p.write_text(s.replace(old,"enablePostSolveClearanceRelaxation: true,",1))
           PY
       - run: bun install
       - name: Keep the existing final connectivity and clearance assertions
