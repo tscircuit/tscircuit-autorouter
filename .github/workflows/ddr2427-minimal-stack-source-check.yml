@@ -1,0 +1,31 @@
+name: Validate minimal fanout source variants
+on:
+  push:
+    branches: [codex/ddr2427-minimal-stack-source-check]
+permissions:
+  contents: read
+jobs:
+  source-check:
+    strategy:
+      fail-fast: false
+      matrix:
+        revision: ["3258e97a80f0239c0c92de072c4cba5d559935ce", "07cfc5682d5e54c837e41b423e1cbb5aae33c65e", "0d16aa5c33c8a302069876941bd89361d4106c0a", "7b2dfec3366655fa386e3fe1a0b236ecc90f79c0", "18b7cb3640a4661203003bfa8a9c9c1572d56976"]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: ${{ matrix.revision }}
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - run: bun install --frozen-lockfile --ignore-scripts
+      - run: bun run format:check
+      - if: always()
+        run: bun run typecheck
+      - if: always()
+        run: |
+          bun test --timeout 9999999 tests/two-via-windows.test.ts tests/native-boundary-contact.test.ts
+          if [[ -f tests/boundary-contact-direction-overrides.test.ts ]]; then
+            bun test --timeout 9999999 tests/boundary-contact-direction-overrides.test.ts
+          fi
