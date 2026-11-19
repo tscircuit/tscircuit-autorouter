@@ -1,0 +1,35 @@
+name: Verify shared native copper identities
+on:
+  push:
+    branches: [analysis/native-shared-copper-identity]
+    paths: [.github/workflows/shared-copper-identities.yml]
+permissions:
+  contents: write
+jobs:
+  focused:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: analysis/native-shared-copper-identity
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.4.3'
+      - run: bun install
+      - name: Run unchanged real-circuit connectivity and DRC checks
+        env:
+          BUN_UPDATE_SNAPSHOTS: '1'
+        run: bun test --timeout 9999999 tests/bugs/t113-linux-exact-pipeline9-root.test.ts tests/bugs/bugreport96-full-gameboy-no-breakout.test.ts tests/repro/pipeline9-h616-staged-regional-clearance.test.ts tests/repro/pipeline9-h616-preload-reachability.test.ts tests/features/pipeline9-srj33-sample37-pair-repair.test.ts tests/bugs/usb-shield-phase-detour.test.ts tests/features/pipeline9-srj23-sample46.test.ts
+      - name: Check types
+        if: always()
+        run: bunx tsc --noEmit
+      - name: Save passing SVG snapshots on analysis branch
+        if: success()
+        run: |
+          git config user.name "tscircuit-bot"
+          git config user.email "actions@github.com"
+          git add -- '*.snap.svg'
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "Regenerate shared-copper routing snapshots"
+          git push origin HEAD:analysis/native-shared-copper-identity
