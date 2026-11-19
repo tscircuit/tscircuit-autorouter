@@ -1,0 +1,29 @@
+{
+  "versions": {
+    "tscircuit": "0.0.3243",
+    "core": "0.0.2425",
+    "capacityAutorouter": "0.0.1133",
+    "fanout": "0.0.89",
+    "busLanes": "0.0.62",
+    "bun": "1.4.3"
+  },
+  "commits": {
+    "tscircuit": "ec0c9778775d4bb816fa100163a697fea0ae4072",
+    "core": "1799ee7e500a4de9d76a308286787307c4face1e",
+    "capacityAutorouter": "a4f2778cb40bbc9c147b95a4e48ef0b32f1dd08f",
+    "fanoutBaseline": "65b4a7f28f1d49e402a37d3b48973f54b32d2004",
+    "measuredFix": "8ea3683f561421c2c24a43d8257edccff7c4a802",
+    "repro": "8eb60029afab1ff418f72e48bb417b33379b07a9",
+    "fix": "035f888521731802b169a8816fef1ef41a5b7d76"
+  },
+  "baselineRun": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44469791389",
+  "candidateAndMatchedBenchmarks": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44471015833",
+  "validationAndIsolatedPlanes": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44473254235",
+  "workflow": "Saved routes removed; fanout \u2192 bus lanes \u2192 remaining routing; exact original footprints/placement and rules.",
+  "nativeProfileInput": "f2c622bc288faaae5e505f62fe8803b465d1be0bc5752547ea9136438df40279",
+  "nativeProfileMatchesFreshInput": true,
+  "renderers": {
+    "pcb": "circuit-to-svg0.0.460 from actual emitted CircuitJson",
+    "solver": "graphics-debug0.0.99 native GraphicsObject, white background"
+  }
+}

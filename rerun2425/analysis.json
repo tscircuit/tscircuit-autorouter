@@ -1,0 +1,688 @@
+{
+  "versions": {
+    "tscircuit": "0.0.3243",
+    "core": "0.0.2425",
+    "capacityAutorouter": "0.0.1133",
+    "fanout": "0.0.89",
+    "busLanes": "0.0.62",
+    "bun": "1.4.3"
+  },
+  "commits": {
+    "tscircuit": "ec0c9778775d4bb816fa100163a697fea0ae4072",
+    "core": "1799ee7e500a4de9d76a308286787307c4face1e",
+    "capacityAutorouter": "a4f2778cb40bbc9c147b95a4e48ef0b32f1dd08f",
+    "fanoutBaseline": "65b4a7f28f1d49e402a37d3b48973f54b32d2004",
+    "measuredFix": "8ea3683f561421c2c24a43d8257edccff7c4a802",
+    "repro": "8eb60029afab1ff418f72e48bb417b33379b07a9",
+    "fix": "035f888521731802b169a8816fef1ef41a5b7d76"
+  },
+  "boards": [
+    {
+      "board": "orangecrab",
+      "title": "OrangeCrab rev 0.2.1 ECP5 DDR3",
+      "before": {
+        "status": "failed",
+        "fullRenderComplete": true,
+        "firstRegionRequestedConnections": 273,
+        "bestPartialConnections": 122,
+        "assignmentsReached": 20,
+        "maximumAssignments": 256,
+        "searchExhausted": false,
+        "searchSolved": false,
+        "elapsedMs": 609038.893266,
+        "firstFanoutMs": 584576.015567,
+        "inputSha256": "727660d7503438a3ab7618e2f8b52dde282f49cafb8b3f26783975dcd8642cc9",
+        "sourceSha256": "96280f37e2d06f628a9834054cc2d0f90ff185f30f12e86347ed0d0d4ebec2f9",
+        "nonErrorCircuitSha256": "aedcafc6ef87b16049819cdea40ccc564cb0a82e2167ff7f18e9dae630abf528",
+        "acceptedTraces": 0,
+        "acceptedVias": 0,
+        "geometryErrors": 0,
+        "membershipErrors": 0,
+        "plannedBusPhases": 2,
+        "busPhasesStarted": 0,
+        "rules": {
+          "minTraceWidth": 0.089,
+          "minViaPadDiameter": 0.28,
+          "minViaHoleDiameter": 0.15,
+          "minViaEdgeToPadEdgeClearance": 0.089,
+          "allowBlindAndBuriedVias": false,
+          "allowViaInPad": false
+        }
+      },
+      "after": {
+        "status": "failed",
+        "fullRenderComplete": true,
+        "firstRegionRequestedConnections": 273,
+        "bestPartialConnections": 118,
+        "assignmentsReached": 19,
+        "maximumAssignments": 256,
+        "searchExhausted": false,
+        "searchSolved": false,
+        "elapsedMs": 609861.9760299999,
+        "firstFanoutMs": 581529.4624419999,
+        "inputSha256": "727660d7503438a3ab7618e2f8b52dde282f49cafb8b3f26783975dcd8642cc9",
+        "sourceSha256": "96280f37e2d06f628a9834054cc2d0f90ff185f30f12e86347ed0d0d4ebec2f9",
+        "nonErrorCircuitSha256": "aedcafc6ef87b16049819cdea40ccc564cb0a82e2167ff7f18e9dae630abf528",
+        "acceptedTraces": 0,
+        "acceptedVias": 0,
+        "geometryErrors": 0,
+        "membershipErrors": 0,
+        "plannedBusPhases": 2,
+        "busPhasesStarted": 0,
+        "rules": {
+          "minTraceWidth": 0.089,
+          "minViaPadDiameter": 0.28,
+          "minViaHoleDiameter": 0.15,
+          "minViaEdgeToPadEdgeClearance": 0.089,
+          "allowBlindAndBuriedVias": false,
+          "allowViaInPad": false
+        }
+      }
+    },
+    {
+      "board": "h616",
+      "title": "Allwinner H616 Devboard DDR3",
+      "before": {
+        "status": "failed",
+        "fullRenderComplete": true,
+        "firstRegionRequestedConnections": 174,
+        "bestPartialConnections": 88,
+        "assignmentsReached": 194,
+        "maximumAssignments": 256,
+        "searchExhausted": false,
+        "searchSolved": false,
+        "elapsedMs": 604409.6171350001,
+        "firstFanoutMs": 588328.481226,
+        "inputSha256": "0aa625dd9c4fe551e6cdcd60574f5d57d0fce74d754a8c91d3b302676c7fa7db",
+        "sourceSha256": "e30e6a40be6ae620b1fce9bc4cb322b97a71992832106655734cb3cc5be22d9c",
+        "nonErrorCircuitSha256": "fcc53826616afc243014aea8274d3160531715b2b380e983d168645f4a079f91",
+        "acceptedTraces": 0,
+        "acceptedVias": 0,
+        "geometryErrors": 0,
+        "membershipErrors": 0,
+        "plannedBusPhases": 2,
+        "busPhasesStarted": 0,
+        "rules": {
+          "minTraceWidth": 0.08,
+          "minViaPadDiameter": 0.35,
+          "minViaHoleDiameter": 0.15,
+          "minViaEdgeToPadEdgeClearance": 0.1,
+          "allowBlindAndBuriedVias": false,
+          "allowViaInPad": false
+        }
+      },
+      "after": {
+        "status": "failed",
+        "fullRenderComplete": true,
+        "firstRegionRequestedConnections": 174,
+        "bestPartialConnections": 88,
+        "assignmentsReached": 221,
+        "maximumAssignments": 256,
+        "searchExhausted": false,
+        "searchSolved": false,
+        "elapsedMs": 604349.0967560001,
+        "firstFanoutMs": 587583.76553,
+        "inputSha256": "0aa625dd9c4fe551e6cdcd60574f5d57d0fce74d754a8c91d3b302676c7fa7db",
+        "sourceSha256": "e30e6a40be6ae620b1fce9bc4cb322b97a71992832106655734cb3cc5be22d9c",
+        "nonErrorCircuitSha256": "fcc53826616afc243014aea8274d3160531715b2b380e983d168645f4a079f91",
+        "acceptedTraces": 0,
+        "acceptedVias": 0,
+        "geometryErrors": 0,
+        "membershipErrors": 0,
+        "plannedBusPhases": 2,
+        "busPhasesStarted": 0,
+        "rules": {
+          "minTraceWidth": 0.08,
+          "minViaPadDiameter": 0.35,
+          "minViaHoleDiameter": 0.15,
+          "minViaEdgeToPadEdgeClearance": 0.1,
+          "allowBlindAndBuriedVias": false,
+          "allowViaInPad": false
+        }
+      }
+    },
+    {
+      "board": "butterstick",
+      "title": "ButterStick r1.0",
+      "before": {
+        "status": "failed",
+        "fullRenderComplete": true,
+        "firstRegionRequestedConnections": 91,
+        "bestPartialConnections": 62,
+        "assignmentsReached": 256,
+        "maximumAssignments": 256,
+        "searchExhausted": true,
+        "searchSolved": false,
+        "elapsedMs": 446299.220723,
+        "firstFanoutMs": 320686.092703,
+        "inputSha256": "0c572408c68a22db9a1e49f1dc6c3a5626d78f431bb6bb095c8a4b18d6c9baf7",
+        "sourceSha256": "faca5e7d7a0356991df589180984b68afd83a4a33998f6f62f7738d2f2d8c844",
+        "nonErrorCircuitSha256": "131eafdf632a09edb56eec866e4ba6be814d340f8f4fbc8d8ac720ff2c2b84ea",
+        "acceptedTraces": 0,
+        "acceptedVias": 0,
+        "geometryErrors": 0,
+        "membershipErrors": 0,
+        "plannedBusPhases": 2,
+        "busPhasesStarted": 0,
+        "rules": {
+          "minTraceWidth": 0.0889,
+          "minViaPadDiameter": 0.4,
+          "minViaHoleDiameter": 0.2,
+          "minViaEdgeToPadEdgeClearance": 0.0889,
+          "allowBlindAndBuriedVias": false,
+          "allowViaInPad": false
+        }
+      },
+      "after": {
+        "status": "failed",
+        "fullRenderComplete": true,
+        "firstRegionRequestedConnections": 91,
+        "bestPartialConnections": 62,
+        "assignmentsReached": 256,
+        "maximumAssignments": 256,
+        "searchExhausted": true,
+        "searchSolved": false,
+        "elapsedMs": 401126.823589,
+        "firstFanoutMs": 292897.901402,
+        "inputSha256": "0c572408c68a22db9a1e49f1dc6c3a5626d78f431bb6bb095c8a4b18d6c9baf7",
+        "sourceSha256": "faca5e7d7a0356991df589180984b68afd83a4a33998f6f62f7738d2f2d8c844",
+        "nonErrorCircuitSha256": "131eafdf632a09edb56eec866e4ba6be814d340f8f4fbc8d8ac720ff2c2b84ea",
+        "acceptedTraces": 0,
+        "acceptedVias": 0,
+        "geometryErrors": 0,
+        "membershipErrors": 0,
+        "plannedBusPhases": 2,
+        "busPhasesStarted": 0,
+        "rules": {
+          "minTraceWidth": 0.0889,
+          "minViaPadDiameter": 0.4,
+          "minViaHoleDiameter": 0.2,
+          "minViaEdgeToPadEdgeClearance": 0.0889,
+          "allowBlindAndBuriedVias": false,
+          "allowViaInPad": false
+        }
+      }
+    },
+    {
+      "board": "glider",
+      "title": "Glider mainboard",
+      "before": {
+        "status": "failed",
+        "fullRenderComplete": true,
+        "firstRegionRequestedConnections": 95,
+        "bestPartialConnections": 60,
+        "assignmentsReached": 256,
+        "maximumAssignments": 256,
+        "searchExhausted": true,
+        "searchSolved": false,
+        "elapsedMs": 337182.599752,
+        "firstFanoutMs": 259496.056719,
+        "inputSha256": "b407978a89550c8835548bd99252b8f042a167f50cd1a81adf8b234e85155f59",
+        "sourceSha256": "a21964b260594e1d88afca54f7b58d7d99b804232d26e3f0b33176c051128935",
+        "nonErrorCircuitSha256": "5d5e7f08b398e49c39846a34a04061063b1f59a9e96c1a86df030b7cced133ae",
+        "acceptedTraces": 0,
+        "acceptedVias": 0,
+        "geometryErrors": 0,
+        "membershipErrors": 0,
+        "plannedBusPhases": 2,
+        "busPhasesStarted": 0,
+        "rules": {
+          "minTraceWidth": 0.11,
+          "minViaPadDiameter": 0.45,
+          "minViaHoleDiameter": 0.3,
+          "minViaEdgeToPadEdgeClearance": 0.11,
+          "allowBlindAndBuriedVias": false,
+          "allowViaInPad": false
+        }
+      },
+      "after": {
+        "status": "failed",
+        "fullRenderComplete": true,
+        "firstRegionRequestedConnections": 95,
+        "bestPartialConnections": 60,
+        "assignmentsReached": 256,
+        "maximumAssignments": 256,
+        "searchExhausted": true,
+        "searchSolved": false,
+        "elapsedMs": 330171.874746,
+        "firstFanoutMs": 235619.484681,
+        "inputSha256": "b407978a89550c8835548bd99252b8f042a167f50cd1a81adf8b234e85155f59",
+        "sourceSha256": "a21964b260594e1d88afca54f7b58d7d99b804232d26e3f0b33176c051128935",
+        "nonErrorCircuitSha256": "5d5e7f08b398e49c39846a34a04061063b1f59a9e96c1a86df030b7cced133ae",
+        "acceptedTraces": 0,
+        "acceptedVias": 0,
+        "geometryErrors": 0,
+        "membershipErrors": 0,
+        "plannedBusPhases": 2,
+        "busPhasesStarted": 0,
+        "rules": {
+          "minTraceWidth": 0.11,
+          "minViaPadDiameter": 0.45,
+          "minViaHoleDiameter": 0.3,
+          "minViaEdgeToPadEdgeClearance": 0.11,
+          "allowBlindAndBuriedVias": false,
+          "allowViaInPad": false
+        }
+      }
+    },
+    {
+      "board": "imx6",
+      "title": "i.MX6 Demo Board",
+      "before": {
+        "status": "failed",
+        "fullRenderComplete": true,
+        "firstRegionRequestedConnections": 32,
+        "bestPartialConnections": 8,
+        "assignmentsReached": 256,
+        "maximumAssignments": 256,
+        "searchExhausted": true,
+        "searchSolved": false,
+        "elapsedMs": 366828.726808,
+        "firstFanoutMs": 116283.71314600002,
+        "inputSha256": "70c8dbdc3c3b66954d47334f6d92353df135ba8eb4a7edf344b40718e6b43fd5",
+        "sourceSha256": "9e5845dc94317c2dfc1ac95d80f84f3a852da4a6649b22dfe6e2f93e75a2a090",
+        "nonErrorCircuitSha256": "4b815e3161ca9b6217fdd65e9663580759c75145a385eccb2e056efaf9475ccd",
+        "acceptedTraces": 0,
+        "acceptedVias": 0,
+        "geometryErrors": 0,
+        "membershipErrors": 0,
+        "plannedBusPhases": 2,
+        "busPhasesStarted": 0,
+        "rules": {
+          "minTraceWidth": 0.119,
+          "minViaPadDiameter": 0.4,
+          "minViaHoleDiameter": 0.2,
+          "minViaEdgeToPadEdgeClearance": 0.119,
+          "allowBlindAndBuriedVias": false,
+          "allowViaInPad": false
+        }
+      },
+      "after": {
+        "status": "failed",
+        "fullRenderComplete": true,
+        "firstRegionRequestedConnections": 32,
+        "bestPartialConnections": 8,
+        "assignmentsReached": 256,
+        "maximumAssignments": 256,
+        "searchExhausted": true,
+        "searchSolved": false,
+        "elapsedMs": 229743.683528,
+        "firstFanoutMs": 48266.42540299997,
+        "inputSha256": "70c8dbdc3c3b66954d47334f6d92353df135ba8eb4a7edf344b40718e6b43fd5",
+        "sourceSha256": "9e5845dc94317c2dfc1ac95d80f84f3a852da4a6649b22dfe6e2f93e75a2a090",
+        "nonErrorCircuitSha256": "4b815e3161ca9b6217fdd65e9663580759c75145a385eccb2e056efaf9475ccd",
+        "acceptedTraces": 0,
+        "acceptedVias": 0,
+        "geometryErrors": 0,
+        "membershipErrors": 0,
+        "plannedBusPhases": 2,
+        "busPhasesStarted": 0,
+        "rules": {
+          "minTraceWidth": 0.119,
+          "minViaPadDiameter": 0.4,
+          "minViaHoleDiameter": 0.2,
+          "minViaEdgeToPadEdgeClearance": 0.119,
+          "allowBlindAndBuriedVias": false,
+          "allowViaInPad": false
+        }
+      }
+    },
+    {
+      "board": "icepi",
+      "title": "iCE/Pi CM0 SBC",
+      "before": {
+        "status": "failed",
+        "fullRenderComplete": true,
+        "firstRegionRequestedConnections": 32,
+        "bestPartialConnections": 7,
+        "assignmentsReached": 256,
+        "maximumAssignments": 256,
+        "searchExhausted": true,
+        "searchSolved": false,
+        "elapsedMs": 209199.97236400002,
+        "firstFanoutMs": 109413.765488,
+        "inputSha256": "f2c622bc288faaae5e505f62fe8803b465d1be0bc5752547ea9136438df40279",
+        "sourceSha256": "5a9800a5bea6fa3278dee1bd1afdaec26bc93e4d593c79093930bb910345ee5b",
+        "nonErrorCircuitSha256": "eff1085ff4ee555ff9911d19b740ab8face212f78aa25a63e40672e00bb94df1",
+        "acceptedTraces": 0,
+        "acceptedVias": 0,
+        "geometryErrors": 0,
+        "membershipErrors": 0,
+        "plannedBusPhases": 2,
+        "busPhasesStarted": 0,
+        "rules": {
+          "minTraceWidth": 0.1,
+          "minViaPadDiameter": 0.45,
+          "minViaHoleDiameter": 0.2,
+          "minViaEdgeToPadEdgeClearance": 0.1,
+          "allowBlindAndBuriedVias": false,
+          "allowViaInPad": false
+        }
+      },
+      "after": {
+        "status": "failed",
+        "fullRenderComplete": true,
+        "firstRegionRequestedConnections": 32,
+        "bestPartialConnections": 7,
+        "assignmentsReached": 256,
+        "maximumAssignments": 256,
+        "searchExhausted": true,
+        "searchSolved": false,
+        "elapsedMs": 150627.72463,
+        "firstFanoutMs": 47874.728390000004,
+        "inputSha256": "f2c622bc288faaae5e505f62fe8803b465d1be0bc5752547ea9136438df40279",
+        "sourceSha256": "5a9800a5bea6fa3278dee1bd1afdaec26bc93e4d593c79093930bb910345ee5b",
+        "nonErrorCircuitSha256": "eff1085ff4ee555ff9911d19b740ab8face212f78aa25a63e40672e00bb94df1",
+        "acceptedTraces": 0,
+        "acceptedVias": 0,
+        "geometryErrors": 0,
+        "membershipErrors": 0,
+        "plannedBusPhases": 2,
+        "busPhasesStarted": 0,
+        "rules": {
+          "minTraceWidth": 0.1,
+          "minViaPadDiameter": 0.45,
+          "minViaHoleDiameter": 0.2,
+          "minViaEdgeToPadEdgeClearance": 0.1,
+          "allowBlindAndBuriedVias": false,
+          "allowViaInPad": false
+        }
+      }
+    }
+  ],
+  "pairedNativeSearches": {
+    "icepi": {
+      "beforeMs": [
+        101026.75328799999,
+        97573.795239,
+        103659.933405
+      ],
+      "afterMs": [
+        41566.838561000004,
+        42971.203705,
+        42755.09430700001
+      ],
+      "beforeMedianMs": 101026.75328799999,
+      "afterMedianMs": 42755.09430700001,
+      "medianReductionPercent": 57.67943350102841,
+      "beforeP95Ms": 103396.6153933,
+      "afterP95Ms": 42949.5927652,
+      "p95ReductionPercent": 58.461316551002795,
+      "beforeMeanMs": 100753.49397733333,
+      "afterMeanMs": 42431.045524333334,
+      "inputSha256": "f2c622bc288faaae5e505f62fe8803b465d1be0bc5752547ea9136438df40279",
+      "copperSha256": "c5e6fec206c3acc8192b3b06ea1998bdeb1b69484f784b5f8db5edc82813ca38",
+      "iterations": 26131,
+      "bestPartialRouted": 7,
+      "requestedConnections": 32,
+      "throughVias": 7,
+      "independentCopperDrcIssues": 0,
+      "fullSolve": false
+    },
+    "imx6": {
+      "beforeMs": [
+        121341.767182,
+        123197.687264,
+        122448.24225000001
+      ],
+      "afterMs": [
+        39904.32264,
+        39135.768249,
+        39172.777622
+      ],
+      "beforeMedianMs": 122448.24225000001,
+      "afterMedianMs": 39172.777622,
+      "medianReductionPercent": 68.00870563578873,
+      "beforeP95Ms": 123122.7427626,
+      "afterP95Ms": 39831.168138199995,
+      "p95ReductionPercent": 67.64921959625221,
+      "beforeMeanMs": 122329.232232,
+      "afterMeanMs": 39404.28950366667,
+      "inputSha256": "70c8dbdc3c3b66954d47334f6d92353df135ba8eb4a7edf344b40718e6b43fd5",
+      "copperSha256": "3e9f3f16c10788016184d4ff5f391e13e68c1acb5667db6f98f80f5eb2a63f51",
+      "iterations": 26131,
+      "bestPartialRouted": 8,
+      "requestedConnections": 32,
+      "throughVias": 7,
+      "independentCopperDrcIssues": 0,
+      "fullSolve": false
+    }
+  },
+  "fanout31": {
+    "cases": 72,
+    "solvedBefore": 30,
+    "solvedAfter": 30,
+    "timedOutBefore": 42,
+    "timedOutAfter": 42,
+    "allOutcomesIdentical": true,
+    "identicalSolvedSvgs": 30
+  },
+  "isolatedNativePlanes": {
+    "cases": 349,
+    "acceptedBefore": 292,
+    "acceptedAfter": 292,
+    "failuresBefore": 57,
+    "failuresAfter": 57,
+    "allAcceptedCopperIdentical": true,
+    "independentDrcIssues": 0
+  },
+  "focused": {
+    "warmSourcePortReadsBefore": 2148,
+    "warmSourcePortReadsAfter": 3,
+    "routeAndViaUnchanged": true
+  },
+  "cpuProfile": {
+    "totalUs": 117541382,
+    "inclusive": [
+      {
+        "function": "(root)",
+        "file": "",
+        "percent": 100.0
+      },
+      {
+        "function": "(module)",
+        "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/replay-native-plane-drop.ts",
+        "percent": 99.70139282520942
+      },
+      {
+        "function": "step",
+        "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/node_modules/.bun/@tscircuit+solver-utils@0.0.19+2f3c14648b61fd7c/node_modules/@tscircuit/solver-utils/dist/index.js",
+        "percent": 99.27262893676033
+      },
+      {
+        "function": "_step",
+        "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/fanout-solver.ts",
+        "percent": 99.23933002591377
+      },
+      {
+        "function": "stepActiveOperation",
+        "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/fanout-solver.ts",
+        "percent": 99.22158223390635
+      },
+      {
+        "function": "generatorResume",
+        "file": "",
+        "percent": 99.13085163487358
+      },
+      {
+        "function": "evaluateAssignmentSteps",
+        "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/fanout-solver.ts",
+        "percent": 98.32299402435136
+      },
+      {
+        "function": "evaluateAssignmentWithStrategySteps",
+        "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/fanout-solver.ts",
+        "percent": 98.28646220953911
+      },
+      {
+        "function": "routeBus",
+        "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/route-bus/route-bus-alternatives.ts",
+        "percent": 95.90644935585324
+      },
+      {
+        "function": "routeBusAlternatives",
+        "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/route-bus/route-bus-alternatives.ts",
+        "percent": 95.89486109666466
+      },
+      {
+        "function": "routeBusAlternativesSteps",
+        "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/route-bus/route-bus-alternatives-steps.ts",
+        "percent": 95.87915684026925
+      },
+      {
+        "function": "routePlaneTerminatedBus",
+        "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/route-bus/route-plane-terminated-bus.ts",
+        "percent": 92.89714749142561
+      },
+      {
+        "function": "next",
+        "file": "",
+        "percent": 61.76418871780834
+      },
+      {
+        "function": "buildPlan",
+        "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/route-bus/build-plan.ts",
+        "percent": 47.58215025921679
+      },
+      {
+        "function": "selectClearPlanePlan",
+        "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/route-bus/route-plane-terminated-bus.ts",
+        "percent": 32.41310366760874
+      },
+      {
+        "function": "isClear",
+        "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/route-bus/route-plane-terminated-bus.ts",
+        "percent": 25.262354836018517
+      },
+      {
+        "function": "planIsClear",
+        "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/route-bus/plan-clearance.ts",
+        "percent": 20.48208434370799
+      },
+      {
+        "function": "hypot",
+        "file": "",
+        "percent": 14.2624671539084
+      },
+      {
+        "function": "map",
+        "file": "",
+        "percent": 10.861448778950038
+      },
+      {
+        "function": "planIsStaticallyClear",
+        "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/route-bus/plan-static-clearance.ts",
+        "percent": 9.294867742834604
+      },
+      {
+        "function": "segmentIsClearOfObstacles",
+        "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/route-bus/plan-static-clearance.ts",
+        "percent": 9.144381167817135
+      },
+      {
+        "function": "distanceSegmentToObstacle",
+        "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/geometry.ts",
+        "percent": 8.47745179650857
+      },
+      {
+        "function": "getPlaneSourceEscapePaths",
+        "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/route-bus/get-plane-source-escape-paths.ts",
+        "percent": 7.330893897436054
+      },
+      {
+        "function": "copyDataProperties",
+        "file": "",
+        "percent": 7.065637530108332
+      }
+    ],
+    "self": [
+      {
+        "function": "buildPlan",
+        "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/route-bus/build-plan.ts",
+        "percent": 13.45809682584811
+      },
+      {
+        "function": "planIsClear",
+        "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/route-bus/plan-clearance.ts",
+        "percent": 7.332377630203463
+      },
+      {
+        "function": "buildPlan",
+        "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/route-bus/build-plan.ts",
+        "percent": 5.82366727660221
+      },
+      {
+        "function": "isClear",
+        "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/route-bus/route-plane-terminated-bus.ts",
+        "percent": 4.912525190489933
+      },
+      {
+        "function": "copyDataProperties",
+        "file": "",
+        "percent": 4.682840125190973
+      },
+      {
+        "function": "hypot",
+        "file": "",
+        "percent": 3.635161444673162
+      },
+      {
+        "function": "planIsClear",
+        "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/route-bus/plan-clearance.ts",
+        "percent": 3.486687777756433
+      },
+      {
+        "function": "map",
+        "file": "",
+        "percent": 3.3699867507087844
+      },
+      {
+        "function": "selectClearPlanePlan",
+        "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/route-bus/route-plane-terminated-bus.ts",
+        "percent": 2.357659024291547
+      },
+      {
+        "function": "copyDataProperties",
+        "file": "",
+        "percent": 2.2028556717156857
+      },
+      {
+        "function": "isClear",
+        "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/route-bus/route-plane-terminated-bus.ts",
+        "percent": 2.1673575354082533
+      },
+      {
+        "function": "createFanoutOutputIds",
+        "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/fanout-output-ids.ts",
+        "percent": 1.9695667692591874
+      },
+      {
+        "function": "routePlaneTerminatedBus",
+        "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/route-bus/route-plane-terminated-bus.ts",
+        "percent": 1.9208494587889056
+      },
+      {
+        "function": "hypot",
+        "file": "",
+        "percent": 1.6331422749478988
+      },
+      {
+        "function": "map",
+        "file": "",
+        "percent": 1.5880585783822077
+      },
+      {
+        "function": "",
+        "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/build-output.ts",
+        "percent": 1.5661599078356931
+      }
+    ]
+  },
+  "limits": [
+    "All six full boards remain blocked in fanout; no DDR bus phase starts.",
+    "First-region best partials are diagnostic search states, not accepted routes or connected full-board nets.",
+    "OrangeCrab and H616 are limited by the 600-second full-board budget; partial scores at that cutoff depend on assignments reached. OrangeCrab reached 20 assignments before and 19 after (122 vs118 partial connections), with zero accepted copper in both runs.",
+    "Paired native timings use three serial before/after pairs on one Blacksmith worker per scene, alternating order. P95 uses linear interpolation over these three runs.",
+    "Warm metadata reads measure candidate construction work; they are not a time measurement."
+  ]
+}

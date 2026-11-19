@@ -1,0 +1,14 @@
+<!doctype html><meta charset="utf-8"><title>DDR full-board rerun2425</title><style>body{font:16px system-ui;max-width:1500px;margin:auto;padding:24px}img{max-width:100%}table{border-collapse:collapse}td,th{padding:8px;border:1px solid #ddd}code{background:#eee}</style>
+<h1>Latest full-board rerun</h1>
+<p>tscircuit 0.0.3243 / core 0.0.2425 / fanout 0.0.89. All six boards still fail fanout; no accepted copper or DDR bus routing. The fix reduces repeated candidate construction.</p>
+<p><a href="analysis.json">Analysis and raw statistics</a> · <a href="all-boards.svg">Full before/after PCB SVG</a> · <a href="circuits-and-results.zip">TSX sources, SVGs and raw results</a></p>
+<table><tr><th>Native search</th><th>Before median</th><th>After median</th><th>Reduction</th></tr>
+<tr><td>iCE/Pi CM0 SBC</td><td>101.0s</td><td>42.8s</td><td>57.7%</td></tr>
+<tr><td>i.MX6 Demo Board</td><td>122.4s</td><td>39.2s</td><td>68.0%</td></tr>
+</table>
+<h2>Native joint U22 search: unchanged partial copper</h2>
+<table><tr><td><img src="paired/icepi/before.svg"></td><td><img src="paired/icepi/after.svg"></td></tr></table>
+<h2>Focused native replay</h2>
+<table><tr><td><img src="focused/before.svg"></td><td><img src="focused/after.svg"></td></tr></table>
+<h2>All boards</h2>
+<img src="all-boards.svg">
