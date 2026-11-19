@@ -1,4 +1,4 @@
-name: Verify existing clearance cleanup for native copper
+name: Verify bounded shared-via clearance repair
 on:
   push:
     branches: [analysis/native-complete-cleanup-context]
@@ -13,7 +13,7 @@ jobs:
       fail-fast: false
       matrix:
         source: [09bd0812beff4b44f03cf5e2e5881b3186655558, 0f98be6237dfa0a852360b07d38f0e2fbee5f92d]
-        cleanup: [global, joint, both]
+        movement: [scaled, deficit]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -22,29 +22,32 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: '1.4.3'
-      - name: Enable existing clearance cleanup after native routing
+      - run: bun install
+      - name: Isolate the existing repair helper's shared-site movement
         env:
-          CLEANUP: ${{ matrix.cleanup }}
+          MOVEMENT: ${{ matrix.movement }}
         run: |
           python3 - <<'PY'
           import os
           from pathlib import Path
-          cleanup=os.environ["CLEANUP"]
-          root=Path("lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph")
-          names=[]
-          if cleanup in ("global","both"):
-            names.append("AutoroutingPipelineSolver9_PreloadedTraceGraph.ts")
-          if cleanup in ("joint","both"):
-            names.append("Pipeline9JointDrcRepairSolver.ts")
-          for name in names:
-            p=root/name
-            s=p.read_text()
-            old="enablePostSolveClearanceRelaxation: false,"
-            assert s.count(old)==1
-            p.write_text(s.replace(old,"enablePostSolveClearanceRelaxation: true,",1))
+          p=Path("node_modules/high-density-repair03/lib/solvers/GlobalDrcForceImproveSolver/solverHelpers.ts")
+          s=p.read_text()
+          start=s.index("const moveViaAwayFromPoint = (")
+          end=s.index("\ntype SegmentContact",start)
+          helper=s[start:end]
+          assert "  return moveVia(" in helper
+          helper=helper.replace("  srj: SimpleRouteJson,\n) =>","  srj: SimpleRouteJson,\n  scale = 1,\n) =>",1)
+          helper=helper.replace("  return moveVia(","  return translateSameRootViaSite(",1).replace("directionX * MAX_ERROR_MOVE,","directionX * MAX_ERROR_MOVE * scale,",1).replace("directionY * MAX_ERROR_MOVE,","directionY * MAX_ERROR_MOVE * scale,",1)
+          s=s[:start]+helper+s[end:]
+          old="moveViaAwayFromPoint(routes, nearestVia, repulsionPoint, srj) ||"
+          assert s.count(old)==2
+          movement="scale"
+          if os.environ["MOVEMENT"]=="deficit":
+            movement="typeof error.minimum_clearance === 'number' && typeof error.actual_clearance === 'number' ? Math.min(1, Math.max(0, error.minimum_clearance - error.actual_clearance + 1e-5) / MAX_ERROR_MOVE) : scale"
+          s=s.replace(old,"moveViaAwayFromPoint(routes, nearestVia, repulsionPoint, srj, "+movement+") ||",1)
+          p.write_text(s)
           PY
-      - run: bun install
-      - name: Keep the existing final connectivity and clearance assertions
+      - name: Keep the original full-board assertions
         env:
           BUN_UPDATE_SNAPSHOTS: '1'
         run: bun test --timeout 9999999 tests/bugs/bugreport96-full-gameboy-no-breakout.test.ts tests/bugs/usb-dp-phase-detour.test.ts tests/repro/pipeline9-h616-portfolio-candidate-clearance.test.ts
