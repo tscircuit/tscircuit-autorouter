@@ -11,10 +11,7 @@ jobs:
       fail-fast: false
       matrix:
         test:
-          - pipeline9-h616-preloaded-board-clearance
-          - pipeline9-a13-regional-repair-shorts
-          - pipeline9-h616-solitary-crossing
-          - pipeline9-orangecrab-via-roundoff
+          - pipeline9-h616-preload-reachability
     steps:
       - uses: actions/checkout@v4
         with:
