@@ -1,7 +1,7 @@
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { HyperGraphHg } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver/types"
 import type { NetId, SimpleRouteJson } from "lib/types"
-import { createPreloadedPortBlockerLookup } from "./createPreloadedPortValidator"
+import { createPreloadedCopperLookup } from "./createPreloadedPortValidator"
 
 /**
  * Reserve graph crossings within immutable copper's clearance envelope.
@@ -22,7 +22,7 @@ export function reservePreloadedCopperPorts({
   viaDiameter: number
 }): void {
   if (!srj.traces?.some((trace) => trace.isFixed)) return
-  const getBlockers = createPreloadedPortBlockerLookup({
+  const { getBlockers } = createPreloadedCopperLookup({
     srj,
     connMap,
     traceWidth,

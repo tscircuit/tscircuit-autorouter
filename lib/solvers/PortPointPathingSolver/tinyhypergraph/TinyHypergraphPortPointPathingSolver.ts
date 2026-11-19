@@ -749,7 +749,7 @@ const buildInputNodesWithPortPoints = (
   })
 }
 
-const applyGraphNetReservations = (loaded: LoadedTinyGraph) => {
+const applyGraphNetReservations = (loaded: LoadedTinyGraph): void => {
   const netIndexById = new Map<SrjNetId, number>()
   for (let routeId = 0; routeId < loaded.problem.routeNet.length; routeId++) {
     const routeMetadata = loaded.problem.routeMetadata?.[routeId]
@@ -780,9 +780,7 @@ const applyGraphNetReservations = (loaded: LoadedTinyGraph) => {
   if (loaded.problem.portReservationNetId) return
   let portReservationNetId: Int32Array | undefined
   for (let portIndex = 0; portIndex < loaded.topology.portCount; portIndex++) {
-    const metadata = loaded.topology.portMetadata?.[portIndex] as
-      | TinyPortMetadata
-      | undefined
+    const metadata = loaded.topology.portMetadata?.[portIndex]
     const fixedNetIds = metadata?._preloadedCopperNetIds
     if (!fixedNetIds?.length) continue
     portReservationNetId ??= new Int32Array(loaded.topology.portCount).fill(-1)
@@ -794,7 +792,9 @@ const applyGraphNetReservations = (loaded: LoadedTinyGraph) => {
     }
     portReservationNetId[portIndex] = reservedNetIndex
   }
-  if (portReservationNetId) loaded.problem.portReservationNetId = portReservationNetId
+  if (portReservationNetId) {
+    loaded.problem.portReservationNetId = portReservationNetId
+  }
 }
 
 const restorePreloadedTraceSectionMetadata = (

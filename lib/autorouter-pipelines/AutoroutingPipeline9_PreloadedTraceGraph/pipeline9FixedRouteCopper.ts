@@ -1,5 +1,5 @@
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import type { Obstacle, SimpleRouteJson } from "lib/types"
+import type { SimpleRouteJson } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { generateApproximatingRects } from "lib/utils/addApproximatingRectsToSrj"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
@@ -38,7 +38,6 @@ export type Pipeline9AxisAlignedRect = {
   height: number
 }
 
-const FIXED_WIRE_MAX_APPROXIMATION_LENGTH = 0.75
 const routeCopperGeometryCache = new WeakMap<
   HighDensityRoute,
   Map<string, Pipeline9RouteCopperGeometry>
@@ -159,59 +158,6 @@ export const getPipeline9AxisAlignedWireApproximations = (
       Math.ceil(segmentLength / maxApproximationLength),
     ),
   )
-}
-
-export const getPipeline9FixedRouteObstacles = ({
-  fixedObstacleRoutes,
-  layerCount,
-  allowBlindAndBuriedVias,
-}: {
-  fixedObstacleRoutes: HighDensityRoute[]
-  layerCount: number
-  allowBlindAndBuriedVias?: boolean
-}): Obstacle[] => {
-  return fixedObstacleRoutes.flatMap((route, routeIndex) => {
-    const connectedTo = [route.connectionName, route.rootConnectionName].filter(
-      (connectedId): connectedId is string => typeof connectedId === "string",
-    )
-    const geometry = getPipeline9RouteCopperGeometry(route, {
-      layerCount,
-      allowBlindAndBuriedVias,
-    })
-    return [
-      ...geometry.wireSegments.flatMap((segment, segmentIndex): Obstacle[] => {
-        const approximatingRects = getPipeline9AxisAlignedWireApproximations(
-          segment,
-          FIXED_WIRE_MAX_APPROXIMATION_LENGTH,
-          2,
-        )
-        return approximatingRects.map((rect, approximationIndex) => ({
-          obstacleId: `pipeline9_fixed_obstacle_${routeIndex}_wire_${segmentIndex}_${approximationIndex}`,
-          type: "rect",
-          layers: [mapZToLayerName(segment.z, layerCount)],
-          center: rect.center,
-          width: rect.width,
-          height: rect.height,
-          connectedTo,
-        }))
-      }),
-      ...geometry.viaSpans.map(
-        (via, viaIndex): Obstacle => ({
-          obstacleId: `pipeline9_fixed_obstacle_${routeIndex}_via_${viaIndex}`,
-          type: "rect",
-          layers: Array.from(
-            { length: via.maxZ - via.minZ + 1 },
-            (_, layerOffset) =>
-              mapZToLayerName(via.minZ + layerOffset, layerCount),
-          ),
-          center: via.center,
-          width: via.diameter,
-          height: via.diameter,
-          connectedTo,
-        }),
-      ),
-    ]
-  })
 }
 
 export const arePipeline9RoutesOnSameNet = (
