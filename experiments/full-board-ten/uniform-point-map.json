@@ -1,0 +1,231 @@
+{
+  "status": "FROZEN_POINT_ONLY_DIAGNOSTIC_PROPOSAL_NOT_IMPLEMENTED_OR_LAUNCHED",
+  "scene": {
+    "path": "/workspace/full-board-ten-20261118-3242/h616-hd-run44439679567/cmn_162-b01-scene.json",
+    "sha256": "cd422b1918ed3e33ce251772997e1cb2f4f0bc3571a30f4b5130e2e48acf537f",
+    "runId": 44439679567,
+    "artifactId": 14490311873,
+    "nativeInputSha256": "948b9a36ed10b2132947dd6d5fe0a2132b99ccb341be1698f8b509fd9a63608c",
+    "completePrimaryConstructor": true,
+    "finalRegionalConstructorComplete": false
+  },
+  "intervalProof": {
+    "path": "/workspace/full-board-ten-20261118-3242/h616-b01-readonly-audit/cmn162-shared-edge-intervals.json",
+    "sha256": "4e955e95ba63daf31b9a8265405c84e13131f70d3332aa55c3d45a89f87661ac",
+    "calculationScript": "/workspace/full-board-ten-20261118-3242/h616-b01-readonly-audit/measure-captured-port-intervals.py",
+    "calculationScriptSha256": "f8f2fb0b9b726d75827b06a097e3f0adb15ac6d5c0513e1397fe65e80ef3183b"
+  },
+  "scope": "Causal diagnostic only: change exactly these two originally native-invalid generated shared-edge point coordinates after the ordinary Uniform result is available and before HD consumes it. Apply by exact portPointId across the entire shared-owner node collection, including paired representations if present. Do not alter the production source, native SRJ, input copper, roots, connections, topology, via placement, solver widths, margins, budgets or other coordinates.",
+  "changes": [
+    {
+      "portPointId": "ce30998_pp0_z3::3",
+      "connectionName": "source_net_1_mst0",
+      "expectedOwnerNodeIds": [
+        "cmn_162",
+        "topology_merge_6925"
+      ],
+      "expectedUniqueOwningNodeCount": 2,
+      "originalCoordinatesExact": {
+        "x": -3.42,
+        "y": 8.939999999999992,
+        "z": 3
+      },
+      "replacementCoordinates": {
+        "x": -3.42,
+        "y": 9.037048501399562,
+        "z": 3
+      },
+      "modifyFields": [
+        "y"
+      ],
+      "preserveFields": "Every other field, including x,z,portPointId,connectionName,rootConnectionName,prevPortPointId,nextPortPointId and pair order.",
+      "capturedOwnerCopies": [
+        {
+          "ownerNodeId": "topology_merge_6925",
+          "connectionName": "source_net_1_mst0",
+          "rootConnectionName": "source_net_1",
+          "coordinate": {
+            "x": -3.42,
+            "y": 8.939999999999992,
+            "z": 3
+          }
+        },
+        {
+          "ownerNodeId": "cmn_162",
+          "connectionName": "source_net_1_mst0",
+          "rootConnectionName": "source_net_1",
+          "coordinate": {
+            "x": -3.42,
+            "y": 8.939999999999992,
+            "z": 3
+          }
+        }
+      ],
+      "sharedEdge": {
+        "ownerNodeIds": [
+          "cmn_162",
+          "topology_merge_6925"
+        ],
+        "ownerPairKey": "cmn_162|topology_merge_6925",
+        "orientation": "vertical",
+        "x1": -3.42,
+        "y1": 8.739999999999991,
+        "x2": -3.42,
+        "y2": 9.139999999999993,
+        "center": {
+          "x": -3.42,
+          "y": 8.939999999999992
+        },
+        "length": 0.40000000000000213,
+        "nodeSideByOwnerId": {
+          "cmn_162": "left",
+          "topology_merge_6925": "right"
+        }
+      },
+      "nativeTraceWidthMm": 0.1,
+      "nativeRequiredMarginMm": 0.1,
+      "nativeOldGapMm": 0.08943472319827893,
+      "nativeReplacementGapMm": 0.158058376641869,
+      "nativeReplacementSlackMm": 0.058058376641869,
+      "nativeLegalInterval": [
+        [
+          8.954941557743211,
+          9.129798765729706
+        ]
+      ],
+      "runtimeTraceWidthMm": 0.08,
+      "runtimeRequiredMarginMm": 0.15,
+      "runtimeReplacementGapMm": 0.16805837664186898,
+      "runtimeReplacementLegal": true,
+      "limitingObstacles": [
+        {
+          "index": 23,
+          "kind": "via",
+          "gapMm": 0.158058376641869,
+          "owner": "source_net_88_fixed_2_17"
+        },
+        {
+          "index": 101,
+          "kind": "wire",
+          "gapMm": 0.15805837664190703,
+          "owner": "source_net_12_fixed_40_8"
+        }
+      ]
+    },
+    {
+      "portPointId": "ce31006_pp0_z3::3",
+      "connectionName": "source_net_116",
+      "expectedOwnerNodeIds": [
+        "cmn_162",
+        "topology_merge_6929"
+      ],
+      "expectedUniqueOwningNodeCount": 2,
+      "originalCoordinatesExact": {
+        "x": -3.42,
+        "y": 9.339999999999993,
+        "z": 3
+      },
+      "replacementCoordinates": {
+        "x": -3.42,
+        "y": 9.525774770477922,
+        "z": 3
+      },
+      "modifyFields": [
+        "y"
+      ],
+      "preserveFields": "Every other field, including x,z,portPointId,connectionName,rootConnectionName,prevPortPointId,nextPortPointId and pair order.",
+      "capturedOwnerCopies": [
+        {
+          "ownerNodeId": "topology_merge_6929",
+          "connectionName": "source_net_116",
+          "rootConnectionName": "source_net_116",
+          "coordinate": {
+            "x": -3.42,
+            "y": 9.339999999999993,
+            "z": 3
+          }
+        },
+        {
+          "ownerNodeId": "cmn_162",
+          "connectionName": "source_net_116",
+          "rootConnectionName": "source_net_116",
+          "coordinate": {
+            "x": -3.42,
+            "y": 9.339999999999993,
+            "z": 3
+          }
+        }
+      ],
+      "sharedEdge": {
+        "ownerNodeIds": [
+          "cmn_162",
+          "topology_merge_6929"
+        ],
+        "ownerPairKey": "cmn_162|topology_merge_6929",
+        "orientation": "vertical",
+        "x1": -3.42,
+        "y1": 9.139999999999993,
+        "x2": -3.42,
+        "y2": 9.539999999999992,
+        "center": {
+          "x": -3.42,
+          "y": 9.339999999999993
+        },
+        "length": 0.3999999999999986,
+        "nodeSideByOwnerId": {
+          "cmn_162": "left",
+          "topology_merge_6929": "right"
+        }
+      },
+      "nativeTraceWidthMm": 0.1,
+      "nativeRequiredMarginMm": 0.1,
+      "nativeOldGapMm": 0.05093569227423743,
+      "nativeReplacementGapMm": 0.12663136044899553,
+      "nativeReplacementSlackMm": 0.026631360448995528,
+      "nativeLegalInterval": [
+        [
+          9.480267938156935,
+          9.539999999999992
+        ]
+      ],
+      "runtimeTraceWidthMm": 0.08,
+      "runtimeRequiredMarginMm": 0.15,
+      "runtimeReplacementGapMm": 0.13663136044899551,
+      "runtimeReplacementLegal": false,
+      "limitingObstacles": [
+        {
+          "index": 23,
+          "kind": "via",
+          "gapMm": 0.12663136044899553,
+          "owner": "source_net_88_fixed_2_17"
+        },
+        {
+          "index": 95,
+          "kind": "via",
+          "gapMm": 0.12663136044937107,
+          "owner": "source_net_13_fixed_36_4"
+        }
+      ]
+    }
+  ],
+  "assertions": [
+    "Authenticate exact native input/runtime and frozen scene provenance.",
+    "Each target portPointId appears in exactly the two recorded owning node IDs; all source coordinates equal the recorded IEEE JSON numbers before mutation.",
+    "Update every occurrence in portPoints and portPointsInPairs consistently; count unique owners separately from duplicated data representations.",
+    "Only four unique owner/port coordinate records change, exactly two port IDs, y only.",
+    "Every other coordinate and all non-coordinate fields remain byte/canonical equal to their original values.",
+    "The remaining seven unique cmn_162 port IDs stay unchanged; they were native-clear in this static audit.",
+    "No native connected-net gain can be inferred from static point feasibility or merely passing this first failure."
+  ],
+  "maxClearanceDerivation": {
+    "source1": "Along x=-3.42, the optimum y9.037048501399562 equalizes original SCKP wire101 and original SCKE0 via23 copper distance. Native width.1 leaves .15805837664 edge gap.",
+    "source116": "Along x=-3.42,y[9.14,9.54], the optimum y9.525774770477922 equalizes original SCKE0 via23 and SCKN via95 copper distance. Native width.1 leaves .12663136045 edge gap."
+  },
+  "criticalRuntimeCaveat": "Source116 replacement is legal under native .1mm clearance but remains geometrically illegal under the observed B01 .15mm clearance: runtime width.08 leaves .13663136045mm edge gap. There is no same-edge position satisfying observed B01 .15. This point-only diagnostic therefore cannot establish that all B01 endpoints are routable or fix the independent margin-policy mismatch; it must keep and report that limitation.",
+  "expectedInterpretation": "Observe whether the original source1 failure disappears or advances, while retaining a complete native outcome. No guarantee of completion and no production fix selected.",
+  "allUniquePortCount": 9,
+  "originallyNativeInvalidCount": 2,
+  "routingExecuted": false,
+  "sourceEdited": false,
+  "controllerPreparedByThisReport": false
+}

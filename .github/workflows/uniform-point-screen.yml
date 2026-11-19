@@ -1,0 +1,109 @@
+name: Published3242 H616 point-placement causal screen
+on:
+  push:
+    branches: [bench/h616-uniform-point-screen-3242-20261119]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  screen:
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 45
+    env:
+      FULL_BOARD_ROOT: ${{ github.workspace }}/.full-board-run
+      BUN_INSTALL_CACHE_DIR: ${{ github.workspace }}/.full-board-run/bun-cache
+      FULL_BOARD_EXPERIMENT: published
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            experiments/full-board-ten
+            .github/workflows/full-board-ten.yml
+            .github/workflows/uniform-point-screen.yml
+            AGENTS.md
+      - name: Require reviewed held plan
+        run: python3 experiments/full-board-ten/prepare-uniform-point-screen.py --verify-plan
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/tscircuit-autorouter
+          ref: ea398b4023119f65157e876a3101aa6ce3ca5f97
+          path: .full-board-run/sources/original
+          persist-credentials: false
+          sparse-checkout: experiments/full-board-priority-analysis
+      - uses: actions/checkout@v4
+        with:
+          repository: ShiboSoftwareDev/core-ddr-benchmark
+          ref: a3679559d6027aea2c441c1078853d58925d3a12
+          path: .full-board-run/sources/spaced
+          persist-credentials: false
+          sparse-checkout: |
+            full-boards
+            circuits
+            scripts
+            licenses
+            provenance
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Prepare exact published3242 graph
+        run: python3 experiments/full-board-ten/bootstrap.py --root "$FULL_BOARD_ROOT"
+      - name: Authenticate original native input and assessment geometry
+        id: input
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 experiments/full-board-ten/prepare-uniform-point-screen.py h616 "$FULL_BOARD_ROOT/uniform-point-input"
+      - name: Qualify baseline materialization and existing physical findings
+        id: calibration
+        run: >-
+          timeout --signal=TERM --kill-after=10s 180s
+          bun experiments/full-board-ten/assess-uniform-point-output.ts
+          "$FULL_BOARD_ROOT" "$FULL_BOARD_ROOT/uniform-point-input"
+          "$FULL_BOARD_ROOT/uniform-point/baseline" baseline
+      - name: Run published base then point-only candidate in fresh processes
+        id: pair
+        shell: bash
+        run: |
+          for variant in base candidate; do
+            python3 experiments/full-board-ten/prepare-uniform-point-screen.py --verify-runtime "$FULL_BOARD_ROOT/uniform-point-input"
+            mkdir -p "$FULL_BOARD_ROOT/uniform-point/$variant"
+            set +e
+            timeout --signal=TERM --kill-after=10s 960s \
+              bun experiments/full-board-ten/run-uniform-point-screen.ts \
+              --module "$FULL_BOARD_ROOT/npm/autorouter/dist/index.js" \
+              --input "$FULL_BOARD_ROOT/uniform-point-input/phase-4-input.srj.json.gz" \
+              --output "$FULL_BOARD_ROOT/uniform-point/$variant" \
+              --manifest "$FULL_BOARD_ROOT/runtime-manifest.json" \
+              --plan experiments/full-board-ten/uniform-point-screen-plan.json \
+              --variant "$variant"
+            route_status=$?
+            printf '%s\n' "$route_status" > "$FULL_BOARD_ROOT/uniform-point/$variant/process-exit-code.txt"
+            timeout --signal=TERM --kill-after=10s 180s \
+              bun experiments/full-board-ten/assess-uniform-point-output.ts \
+              "$FULL_BOARD_ROOT" "$FULL_BOARD_ROOT/uniform-point-input" \
+              "$FULL_BOARD_ROOT/uniform-point/$variant" "$variant"
+            assessment_status=$?
+            printf '%s\n' "$assessment_status" > "$FULL_BOARD_ROOT/uniform-point/$variant/assessment-exit-code.txt"
+            set -e
+          done
+      - name: Verify causal comparison and distinguish unfinished output
+        if: ${{ always() && steps.pair.outcome != 'skipped' }}
+        run: >-
+          python3 experiments/full-board-ten/compare-uniform-point-screen.py
+          "$FULL_BOARD_ROOT/uniform-point-input" "$FULL_BOARD_ROOT/uniform-point"
+      - name: Preserve authenticated diagnostic evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          include-hidden-files: true
+          name: h616-uniform-point-screen-3242-${{ github.run_attempt }}
+          path: |
+            .full-board-run/uniform-point
+            .full-board-run/uniform-point-input/*.json
+            .full-board-run/uniform-point-input/*.gz
+            .full-board-run/runtime-manifest.json
+            experiments/full-board-ten/uniform-point-screen-plan.json
+            experiments/full-board-ten/uniform-point-map.json
+          retention-days: 7
+          compression-level: 0
+          if-no-files-found: warn
