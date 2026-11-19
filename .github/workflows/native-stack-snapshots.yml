@@ -1,4 +1,4 @@
-name: Verify native-stack SVG baselines
+name: Compare current OrangeCrab base and native-force SVGs
 on:
   push:
     branches: [analysis/native-stack-snapshot-verification]
@@ -12,7 +12,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        source: [09bd0812beff4b44f03cf5e2e5881b3186655558, 0f98be6237dfa0a852360b07d38f0e2fbee5f92d]
+        source: [1a2e757a0230bae0e8f915023485978587d7fe14, 0f98be6237dfa0a852360b07d38f0e2fbee5f92d]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -25,7 +25,7 @@ jobs:
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          tests=["tests/repro/pipeline9-h616-preloaded-board-clearance.test.ts","tests/features/pipeline9-srj23-solved-visual.test.ts","tests/features/pipeline9-orangecrab-native-fixed-traces.test.ts","tests/features/pipeline9-srj33-sample37-pair-repair.test.ts","tests/repro/pipeline9-h616-portfolio-candidate-clearance.test.ts","tests/bugs/usb-shield-phase-detour.test.ts","tests/bugs/bugreport102-qfp16-pipeline9-extra-vias.test.ts","tests/repro/pipeline9-sot23-missing-via.test.ts","tests/repro/pipeline9-h616-round-pad-full-circuit.test.ts"]
+          tests=["tests/features/pipeline9-orangecrab-native-fixed-traces.test.ts","tests/repro/pipeline9-h616-preload-reachability.test.ts","tests/repro/pipeline9-h616-solitary-crossing.test.ts"]
           Path("/tmp/native-snapshot-tests").write_text("\n".join(p for p in tests if Path(p).exists())+"\n")
           PY
       - name: Regenerate SVGs while retaining all routing assertions
@@ -38,6 +38,16 @@ jobs:
         run: |
           mapfile -t tests < /tmp/native-snapshot-tests
           bun test --timeout 9999999 "${tests[@]}"
+      - name: Report real OrangeCrab DRC total
+        run: |
+          python3 - <<'PY'
+          import re
+          from pathlib import Path
+          s=Path("tests/features/__snapshots__/pipeline9-orangecrab-native-fixed-traces.snap.svg").read_text()
+          m=re.search(r"Relaxed DRC errors: (\\d+)",s)
+          assert m
+          print("ORANGECRAB_DRC_COUNT",int(m.group(1)))
+          PY
       - name: Save only verified public SVGs
         env:
           SOURCE: ${{ matrix.source }}
@@ -47,4 +57,4 @@ jobs:
           git config user.name "Codex"
           git config user.email "codex@users.noreply.github.com"
           git commit -m "Regenerate verified native-copper SVG baselines"
-          git push origin "HEAD:refs/heads/analysis/verified-native-svg-${SOURCE}"
+          git push origin "HEAD:refs/heads/analysis/verified-native-round5-${SOURCE}"
