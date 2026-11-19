@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "qualificationReady": false,
+  "qualificationReady": true,
   "scope": "Standard Dataset18 source comparison isolating the four via-center bounds corrections. Both lanes include existing PR3906 on published AR1133 plus identical merged Tiny6a00; distinct from native full-board qualification.",
   "publishedCommit": "a4f2778cb40bbc9c147b95a4e48ef0b32f1dd08f",
   "featureBaseCommit": "6dd514c6f8a8624deec3ebc6e6db4f806cd797ca",
@@ -145,5 +145,11 @@
       false
     ],
     "notRepeatedForWrapperPreparation": true
+  },
+  "release": {
+    "at": "2026-11-19T09:30:43.688577+00:00",
+    "nativeRun": 44494718529,
+    "nativeResult": "Feature-base byte-identical published53/121 and3physicalfindings; bounds-fix53/121 preserved,0physicalfindings,0introduced; exactfour-expressionattribution",
+    "review": "One independent wrapper review and root workflow review passed; sharedsourceandTinyfeature,identicallock,standard16sampleprotocol"
   }
 }
