@@ -30,6 +30,22 @@ test("A64 plans remaining signals without crossing the saved data copper", () =>
   expect(solver.portPointPathingSolver?.solved).toBeTrue()
   expect(input).toEqual(before)
 
+  const displacedCrossings = solver.preloadedTraceGraphSolver!
+    .getOutput()
+    .flatMap((segment) =>
+      segment.portPoints.flatMap((port) =>
+        (port._preloadedTracePortAssignments ?? []).filter(
+          (assignment) =>
+            assignment.isFixed &&
+            Math.hypot(
+              port.x - assignment.tracePoint.x,
+              port.y - assignment.tracePoint.y,
+            ) > 1e-6,
+        ),
+      ),
+    )
+  expect(displacedCrossings).toEqual([])
+
   const isClear = createPreloadedPortValidator({
     srj: input,
     connMap: getConnectivityMapFromSimpleRouteJson(input),

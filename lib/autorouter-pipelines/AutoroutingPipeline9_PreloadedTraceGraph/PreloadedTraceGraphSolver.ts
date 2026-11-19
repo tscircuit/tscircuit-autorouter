@@ -1,4 +1,7 @@
-import { pointToSegmentDistance } from "@tscircuit/math-utils"
+import {
+  getSegmentIntersection,
+  pointToSegmentDistance,
+} from "@tscircuit/math-utils"
 import Flatbush from "flatbush"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import type {
@@ -193,6 +196,54 @@ const getClosestPortPoint = (
         ),
     )[0]?.portPoint
 
+const getFixedTracePortPoint = ({
+  segment,
+  primitive,
+  z,
+}: {
+  segment: SharedEdgeSegment
+  primitive: PreloadedTracePrimitive
+  z: number
+}): SegmentPortPoint | undefined => {
+  const crossing = getSegmentIntersection(
+    primitive.start,
+    primitive.end,
+    segment.start,
+    segment.end,
+  )
+  // A collinear trace has no unique crossing along the shared edge.
+  if (!crossing) return getClosestPortPoint(segment, primitive, z)
+
+  const existing = segment.portPoints.find(
+    (candidate) =>
+      candidate.availableZ.includes(z) &&
+      Math.hypot(candidate.x - crossing.x, candidate.y - crossing.y) <
+        GEOMETRIC_TOLERANCE,
+  )
+  if (existing) return existing
+
+  const edgeCenter = {
+    x: (segment.start.x + segment.end.x) / 2,
+    y: (segment.start.y + segment.end.y) / 2,
+  }
+  const portPoint: SegmentPortPoint = {
+    segmentPortPointId: `${segment.edgeId}_fixed${segment.portPoints.length}_z${z}`,
+    x: crossing.x,
+    y: crossing.y,
+    availableZ: [z],
+    nodeIds: segment.nodeIds,
+    edgeId: segment.edgeId,
+    connectionName: null,
+    distToCentermostPortOnZ: Math.hypot(
+      crossing.x - edgeCenter.x,
+      crossing.y - edgeCenter.y,
+    ),
+    cramped: false,
+  }
+  segment.portPoints.push(portPoint)
+  return portPoint
+}
+
 const preloadPort = (
   portPoint: SegmentPortPoint,
   primitive: PreloadedTracePrimitive,
@@ -326,7 +377,12 @@ export class PreloadedTraceGraphSolver extends BaseSolver {
 
         for (const z of primitive.zLayers) {
           if (!segment.availableZ.includes(z)) continue
-          const portPoint = getClosestPortPoint(segment, primitive, z)
+          let portPoint: SegmentPortPoint | undefined
+          if (primitive.isFixed) {
+            portPoint = getFixedTracePortPoint({ segment, primitive, z })
+          } else {
+            portPoint = getClosestPortPoint(segment, primitive, z)
+          }
           if (portPoint) preloadPort(portPoint, primitive, z)
         }
       }

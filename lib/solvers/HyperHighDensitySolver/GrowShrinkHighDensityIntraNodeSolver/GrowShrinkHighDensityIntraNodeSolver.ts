@@ -110,7 +110,6 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
   failedSolvers: PortfolioSingleIntraNodeSolver[] = []
   activeSubSolver: PortfolioSingleIntraNodeSolver | null = null
   winningSolver?: PortfolioSingleIntraNodeSolver
-  coordinateScale = 1
   scaleFactor = 1
   growthAttempts = 0
   maxGrowthAttempts: number
@@ -204,71 +203,23 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
   private createActiveSubSolver(): void {
     const { growShrinkSolutionValidator, ...portfolioParams } =
       this.constructorParams
-    this.coordinateScale = this.scaleFactor
-    if (portfolioParams.fixedHdRoutes?.length) {
-      this.coordinateScale = Math.min(2, this.scaleFactor)
-    }
     const nodeWithPortPoints = scaleNodeWithPortPoints(
       this.nodeWithPortPoints,
-      this.coordinateScale,
+      this.scaleFactor,
     )
+    let coordinateScale = this.scaleFactor
     if (portfolioParams.fixedHdRoutes?.length) {
-      nodeWithPortPoints.width *= this.scaleFactor
-      nodeWithPortPoints.height *= this.scaleFactor
-      // Grow physical bounds while refining the existing search grid once.
-      // Terminals, copper, pads and clearances must use the same search frame.
-      const center = this.nodeWithPortPoints.center
-      const scale = this.coordinateScale
-      portfolioParams.traceWidth = (portfolioParams.traceWidth ?? 0.15) * scale
-      portfolioParams.viaDiameter = (portfolioParams.viaDiameter ?? 0.3) * scale
-      portfolioParams.obstacleMargin =
-        (portfolioParams.obstacleMargin ?? 0.15) * scale
-      portfolioParams.fixedHdRoutes = portfolioParams.fixedHdRoutes.map(
-        (route) => {
-          const transformed = scaleRoute(route, center, scale)
-          return {
-            ...transformed,
-            traceThickness: route.traceThickness * scale,
-            viaDiameter: route.viaDiameter * scale,
-            route: transformed.route.map((point) => {
-              if (point.traceThickness === undefined) return point
-              return { ...point, traceThickness: point.traceThickness * scale }
-            }),
-          }
-        },
-      )
-      portfolioParams.obstacles = portfolioParams.obstacles?.map((obstacle) => ({
-        ...obstacle,
-        center: scalePoint(obstacle.center, center, scale),
-        width: obstacle.width * scale,
-        height: obstacle.height * scale,
-      }))
-      if (portfolioParams.boardGeometry) {
-        const geometry = portfolioParams.boardGeometry
-        const bounds = geometry.bounds
-        portfolioParams.boardGeometry = {
-          ...geometry,
-          bounds: {
-            minX: center.x + (bounds.minX - center.x) * scale,
-            maxX: center.x + (bounds.maxX - center.x) * scale,
-            minY: center.y + (bounds.minY - center.y) * scale,
-            maxY: center.y + (bounds.maxY - center.y) * scale,
-          },
-          outline: geometry.outline?.map((point) =>
-            scalePoint(point, center, scale),
-          ),
-        }
-        if (geometry.minBoardEdgeClearance !== undefined) {
-          portfolioParams.boardGeometry.minBoardEdgeClearance =
-            geometry.minBoardEdgeClearance * scale
-        }
-      }
-      portfolioParams.precomputedIntraNodeRouteParams = undefined
+      // Immutable copper uses board-world coordinates. Enlarge the search
+      // bounds while keeping its terminals and physical geometry in place.
+      nodeWithPortPoints.portPoints = this.nodeWithPortPoints.portPoints
+      nodeWithPortPoints.portPointsInPairs =
+        this.nodeWithPortPoints.portPointsInPairs
+      coordinateScale = 1
     }
     this.activeSubSolver = new PortfolioSingleIntraNodeSolver({
       ...portfolioParams,
       priorityCoordinateScale:
-        (portfolioParams.priorityCoordinateScale ?? 1) * this.coordinateScale,
+        (portfolioParams.priorityCoordinateScale ?? 1) * coordinateScale,
       enableNegotiatedSearch:
         this.scaleFactor === 1 &&
         (portfolioParams.enableNegotiatedSearch ?? true),
@@ -287,27 +238,15 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
   private getUnscaledRoutes(
     routes: HighDensityIntraNodeRoute[],
   ): HighDensityIntraNodeRoute[] {
-    if (this.coordinateScale === 1) return routes
-    return routes.map((route) => {
-      const physical = scaleRoute(
-        route,
-        this.nodeWithPortPoints.center,
-        1 / this.coordinateScale,
-      )
-      if (!this.constructorParams.fixedHdRoutes?.length) return physical
-      return {
-        ...physical,
-        traceThickness: physical.traceThickness / this.coordinateScale,
-        viaDiameter: physical.viaDiameter / this.coordinateScale,
-        route: physical.route.map((point) => {
-          if (point.traceThickness === undefined) return point
-          return {
-            ...point,
-            traceThickness: point.traceThickness / this.coordinateScale,
-          }
-        }),
-      }
-    })
+    if (
+      this.scaleFactor === 1 ||
+      this.constructorParams.fixedHdRoutes?.length
+    ) {
+      return routes
+    }
+    return routes.map((route) =>
+      scaleRoute(route, this.nodeWithPortPoints.center, 1 / this.scaleFactor),
+    )
   }
 
   private acceptSolution(solver: PortfolioSingleIntraNodeSolver): void {
@@ -461,3 +400,4 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
     )
   }
 }
+
