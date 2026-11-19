@@ -241,6 +241,7 @@ function producerSnapshot(hd: any, rawRoutes: any): Data | null {
     beforeRegionalSplice: regional ? selectedRegionalStarts.get(regional) ?? null : null,
     parentSettings: blob(pick(hd, settingsKeys)), fixedSections: blob(targetSections),
     regionalNode: params ? blob(own(params, "nodeWithPortPoints")) : null,
+    constructorNode: blob(own(b01, "nodeWithPortPoints") ?? own(params, "nodeWithPortPoints") ?? own(growth, "nodeWithPortPoints") ?? node),
     constructorSettings: blob(pick(b01 ?? params ?? innerHd, settingsKeys)),
     constructorObstacles: blob(own(b01 ?? params ?? innerHd, "obstacles") ?? []),
     producerMetadata: blob(metadata instanceof Map ? [...metadata.values()] : []),
