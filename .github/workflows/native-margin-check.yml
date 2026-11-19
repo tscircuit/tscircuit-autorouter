@@ -1,4 +1,4 @@
-name: Verify cleanup preserves pad clearance
+name: Inspect accepted via ownership and size consistency
 on:
   push:
     branches: [analysis/native-complete-cleanup-context]
@@ -6,49 +6,43 @@ on:
 permissions:
   contents: read
 jobs:
-  routing:
+  consistency:
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
-    strategy:
-      fail-fast: false
-      matrix:
-        source: [1d5168a1411831d5411d93bb01e43da28522bbb9, 767872b7bea7e62b918d6b282d9be12e24af0e54]
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ matrix.source }}
+          ref: 767872b7bea7e62b918d6b282d9be12e24af0e54
           persist-credentials: false
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: '1.4.3'
-      - name: Include physical pads in the existing no-worsening cleanup guard
+      - name: Compare native validation and emitted copper without exporting geometry or identifiers
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          prefix="lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/"
-          p=Path(prefix+"Pipeline9HighDensityForceImproveSolver.ts")
+          p=Path("tests/repro/pipeline9-h616-portfolio-candidate-clearance.test.ts")
           s=p.read_text()
-          a=s.index("    const representedPadObstacleIndexes")
-          b=s.index("    this.evaluateFixedObstacles",a)
-          s=s[:a]+"""    this.fixedViaObstacleIndexes = new Set(
-                params.inputSrj.obstacles.flatMap((obstacle, index) => {
-                  if (obstacle.isCopperPour || obstacle.isNonPlatedHole) return []
-                  return [index]
-                }),
-              )
-          """+s[b:]
-          p.write_text(s)
-          p=Path(prefix+"Pipeline9RegionalFallbackSolver.ts")
-          s=p.read_text()
-          old="""    if (!movablePreloadedConnectionNames.has(route.connectionName)) {
-                return false
-              }
+          marker="  expect(\n    checkViaPadClearance("
+          assert s.count(marker)==1
+          extra="""  const checked = checkViaPadClearance(circuit, {minClearance:fixture.input.viaToPadClearance})
+            const vias = circuit.filter(element => element.type === "pcb_via")
+            const trace = circuit.find(element => element.type === "pcb_trace")
+            console.log("H616_NATIVE_CONSISTENCY", JSON.stringify({
+              nativeGuardAccepts:(lastRegional as any).validateCandidateRoutes(routes),
+              witnessGapLegal:witness.circularGap + 1e-9 >= fixture.input.viaToPadClearance!,
+              viaSizesMatch:vias.every(via => via.outer_diameter === witness.via.diameter),
+              viaOwnersPresent:vias.every(via => circuit.some(element => element.type === "pcb_trace" && element.pcb_trace_id === via.pcb_trace_id)),
+              traceSourceDeclared:trace?.type === "pcb_trace" && circuit.some(element => element.type === "source_trace" && element.source_trace_id === trace.source_trace_id),
+              routeNameResolved:Boolean(fixture.input.connMap.getNetConnectedToId(witness.route.connectionName)),
+              rootNameDeclared:fixture.srjWithPointPairs.connections.some(connection => connection.name === witness.route.rootConnectionName),
+              errorCount:checked.length,
+            }))
           """
-          assert s.count(old)==1
-          p.write_text(s.replace(old,"",1))
+          p.write_text(s.replace(marker,extra+marker))
           PY
       - run: bun install
-      - name: Keep original completion, clearance and via-count assertions
+      - name: Keep original H616 physical-clearance assertions
         env:
           BUN_UPDATE_SNAPSHOTS: '1'
-        run: bun test --timeout 9999999 tests/bugs/bugreport96-full-gameboy-no-breakout.test.ts tests/bugs/usb-dp-phase-detour.test.ts tests/repro/pipeline9-h616-portfolio-candidate-clearance.test.ts
+        run: bun test --timeout 9999999 tests/repro/pipeline9-h616-portfolio-candidate-clearance.test.ts
