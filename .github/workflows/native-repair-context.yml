@@ -13,7 +13,7 @@ jobs:
       fail-fast: false
       max-parallel: 3
       matrix:
-        variant: [neighbors, physical, all-context]
+        variant: [validate, physical, force]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -39,8 +39,16 @@ jobs:
           source=source.replace(old,"    {")
           if variant=="physical":
               source=source.replace("hasImmutablePreload && regionalCopperRoutes.length > 0","regionalCopperRoutes.length > 0")
+          old='''      immutableHdRoutes: this.activeFallbackFixedObstacleRoutes.filter(
+                  (route) => route.isFixed === true || route.isThroughObstacle === true,
+                ),'''
+          replacement="      immutableHdRoutes: regionalCopperRoutes,"
+          # Match indentation independently of the YAML block's common indent.
+          import re
+          source,n=re.subn(r"immutableHdRoutes: this.activeFallbackFixedObstacleRoutes.filter\(\s*\(route\) => route.isFixed === true \|\| route.isThroughObstacle === true,\s*\),", "immutableHdRoutes: regionalCopperRoutes,", source)
+          assert n==1
           p.write_text(source)
-          if variant=="all-context":
+          if variant=="force":
               for name in ["AutoroutingPipelineSolver9_PreloadedTraceGraph.ts","Pipeline9HighDensityForceImproveSolver.ts","Pipeline9RegionalFallbackSolver.ts"]:
                   url="https://raw.githubusercontent.com/tscircuit/tscircuit-autorouter/3db2cef321fe8821239903945e3bcc5eb1c94fd9/"+prefix+name
                   Path(prefix+name).write_bytes(urllib.request.urlopen(url).read())
