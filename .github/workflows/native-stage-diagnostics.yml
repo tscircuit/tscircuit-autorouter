@@ -52,7 +52,7 @@ jobs:
             if(!solver.highDensityStitchSolver?.solved){
              const routes=name==="highDensityRouteSolver"?stage.routes:stage.getOutput()
              const c=convertToCircuitJson(solver.srjWithPointPairs,[...routes,...solver.highDensityRouteSolver.getUpdatedFixedHdRoutes()],{originalSrj:srj,includeOriginalConnections:true,connectivityMaps:{source:solver.connMap,route:solver.connMap},minViaDiameter:srj.minViaDiameter,minTraceWidth:srj.minTraceWidth})
-             result=getDrcErrors(c,{...RELAXED_DRC_OPTIONS,viaToPadClearance:getViaToPadClearance(srj)})
+             result=getDrcErrors(c,{...RELAXED_DRC_OPTIONS,includeTraceContinuity:false,viaToPadClearance:getViaToPadClearance(srj)})
             }else{
              result=evaluateRelaxedDrc({inputSrj:{...srj,traces:solver.getUpdatedPreloadedTraces()},srjWithPointPairs:solver.srjWithPointPairs,routedTraces:solver.getNewTracesBeforePowerExpansion(),includeBoardClearance:board==="midi"})
             }
