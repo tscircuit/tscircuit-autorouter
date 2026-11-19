@@ -28,7 +28,8 @@
     "boundary300": 44621338299,
     "formatAndTypes": 44626027125,
     "dram143Snapshot": 44609494856,
-    "smallCaseMacValidation": 44626027125
+    "smallCaseMacValidation": 44626027125,
+    "finalBFullRepositoryTests": 44625929339
   },
   "benchmarkLocation": "Blacksmith",
   "pipeline": "Fresh fanout, then bus lanes, then remaining nets. Original routes/vias removed; plane intent retained. No full board reaches the bus-lane phase.",
@@ -356,7 +357,7 @@
       "321": "pass run44604729617",
       "318": "pass run44619256039",
       "305": "pass all eight shards, run44622849733",
-      "322": "pending full eight-shard run44625929339; both audited small-case snapshots pass macOS15/Bun1.4.5 in run44626027125"
+      "322": "pass all eight shards, run44625929339"
     }
   },
   "smallCaseReview": {
