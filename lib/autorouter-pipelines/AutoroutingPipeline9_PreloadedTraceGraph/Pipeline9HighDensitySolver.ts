@@ -21,7 +21,6 @@ import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { BaseSolver } from "../../solvers/BaseSolver"
 import { HighDensitySolver } from "../../solvers/HighDensitySolver/HighDensitySolver"
 import type { PreloadedHighDensityRoute } from "./convertPreloadedTraceToHdRoutes"
-import { getB01PreferredPadClearanceProps } from "./getB01PreferredPadClearanceProps"
 import {
   arePipeline9RoutesOnSameNet,
   doPipeline9RoutesHaveCopperConflict,
@@ -449,9 +448,6 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   activeNode: NodeWithPortPoints | null = null
 
   private asyncRunning = false
-  private pendingB01MinimumClearanceProps?: ConstructorParameters<
-    typeof HighDensitySolverB01
-  >[0]
   private routingAtMinimumPadClearance = false
   private minimumPadClearanceRoutes?: HighDensityIntraNodeRoute[]
 
@@ -682,7 +678,6 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     )
     this.stats.solvedNodeCount = Number(this.stats.solvedNodeCount ?? 0) + 1
     this.activeB01Solver = null
-    this.pendingB01MinimumClearanceProps = undefined
     this.routingAtMinimumPadClearance = false
     this.minimumPadClearanceRoutes = undefined
     this.activeRegularSolver = null
@@ -726,6 +721,68 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     if (this.maxB01Rips !== undefined) {
       this.activeB01Solver.MAX_RIPS = this.maxB01Rips
     }
+  }
+
+  private getB01BoardObstacles(
+    node: NodeWithPortPoints,
+    preferredClearance?: number,
+  ): HighDensityRectObstacle[] {
+    if (!this.includeBoardObstacles) return []
+    const nodeBounds = getNodeBounds(node, this.obstacleMargin)
+    let traceToPadClearance = this.params.minClearance
+    let viaToPadClearance = this.viaToPadClearance
+    if (preferredClearance !== undefined) {
+      if (
+        traceToPadClearance !== undefined &&
+        traceToPadClearance < preferredClearance
+      ) {
+        traceToPadClearance = undefined
+      }
+      if (
+        viaToPadClearance !== undefined &&
+        viaToPadClearance < preferredClearance
+      ) {
+        viaToPadClearance = undefined
+      }
+    }
+    return this.obstacles
+      .filter((obstacle) => obstacleOverlapsNode(obstacle, nodeBounds))
+      .map((obstacle) =>
+        convertObstacleToB01Obstacle({
+          obstacle,
+          node,
+          connMap: this.connMap,
+          layerCount: this.layerCount,
+          traceToPadClearance,
+          viaToPadClearance,
+        }),
+      )
+      .filter((obstacle) => obstacle !== undefined)
+  }
+
+  private tryB01AtMinimumPadClearance(solver: HighDensitySolverB01): boolean {
+    if (!this.activeNode) {
+      throw new Error("B01 pad clearance search requires an active node")
+    }
+    const defaultClearance = solver.obstacleClearanceMargin
+    const boardObstacles = this.getB01BoardObstacles(this.activeNode)
+    const hasLowerPadClearance = boardObstacles.some(
+      ({ traceClearanceMargin, viaClearanceMargin }) =>
+        (traceClearanceMargin ?? defaultClearance) < defaultClearance ||
+        (viaClearanceMargin ?? defaultClearance) < defaultClearance,
+    )
+    if (!hasLowerPadClearance) return false
+
+    const [props] = solver.getConstructorParams()
+    this.routingAtMinimumPadClearance = true
+    this.startB01Solver({
+      ...props,
+      obstacles: [
+        ...props.obstacles.filter((obstacle) => obstacle.type === "route"),
+        ...boardObstacles,
+      ],
+    })
+    return true
   }
 
   private startRegionalFallback(
@@ -1259,14 +1316,11 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       this.activeB01Solver.step()
       if (this.activeB01Solver.failed) {
         this.activeFallbackReason = `B01 failed: ${this.activeB01Solver.error ?? "unknown error"}`
-        const minimumClearanceProps = this.pendingB01MinimumClearanceProps
-        this.pendingB01MinimumClearanceProps = undefined
         if (
           this.activeB01Solver.failureReason === "no_path" &&
-          minimumClearanceProps
+          !this.routingAtMinimumPadClearance &&
+          this.tryB01AtMinimumPadClearance(this.activeB01Solver)
         ) {
-          this.routingAtMinimumPadClearance = true
-          this.startB01Solver(minimumClearanceProps)
           return
         }
         this.failedSolvers.push(this.activeB01Solver)
@@ -1314,22 +1368,19 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       return
     }
 
-    const boardObstacles = (this.includeBoardObstacles ? this.obstacles : [])
-      .filter((obstacle) => obstacleOverlapsNode(obstacle, nodeBounds))
-      .map((obstacle) =>
-        convertObstacleToB01Obstacle({
-          obstacle,
-          node,
-          connMap: this.connMap,
-          layerCount: this.layerCount,
-          traceToPadClearance: this.params.minClearance,
-          viaToPadClearance: this.viaToPadClearance,
-        }),
-      )
-      .filter(
-        (obstacle): obstacle is HighDensityRectObstacle =>
-          obstacle !== undefined,
-      )
+    let obstacleClearanceMargin = 0.15
+    if (this.fixedHdRoutes.some((route) => route.isFixed === true)) {
+      obstacleClearanceMargin = this.obstacleMargin
+    }
+    const b01Options = {
+      ...defaultB01Params,
+      obstacleClearanceMargin,
+      ...this.params.b01RepairOptions,
+    }
+    const boardObstacles = this.getB01BoardObstacles(
+      node,
+      b01Options.obstacleClearanceMargin ?? 0,
+    )
     this.stats.boardObstacleUses =
       Number(this.stats.boardObstacleUses ?? 0) + boardObstacles.length
 
@@ -1344,32 +1395,17 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       node,
       this.connMap,
     )
-    let obstacleClearanceMargin = 0.15
-    if (this.fixedHdRoutes.some((route) => route.isFixed === true)) {
-      obstacleClearanceMargin = this.obstacleMargin
-    }
     this.stats.b01NodeCount = Number(this.stats.b01NodeCount ?? 0) + 1
-    const minimumClearanceProps: ConstructorParameters<
-      typeof HighDensitySolverB01
-    >[0] = {
-      ...defaultB01Params,
+    this.startB01Solver({
+      ...b01Options,
       nodeWithPortPoints: normalizedNode as B01NodeWithPortPoints,
       obstacles: [...fixedObstacles, ...boardObstacles],
       viaDiameter: this.viaDiameter,
       viaMinDistFromBorder: this.viaDiameter / 2,
       traceThickness: this.traceWidth,
       traceMargin: this.obstacleMargin,
-      obstacleClearanceMargin,
-      ...this.params.b01RepairOptions,
       effort: this.effort,
-    }
-    const preferredClearanceProps = getB01PreferredPadClearanceProps(
-      minimumClearanceProps,
-    )
-    if (preferredClearanceProps) {
-      this.pendingB01MinimumClearanceProps = minimumClearanceProps
-    }
-    this.startB01Solver(preferredClearanceProps ?? minimumClearanceProps)
+    })
   }
 
   override visualize(): GraphicsObject {
