@@ -1,0 +1,31 @@
+{
+  "versions": {
+    "tscircuit": "0.0.3244",
+    "core": "0.0.2426",
+    "fanout": "0.0.90",
+    "capacityAutorouter": "0.0.1133",
+    "busLanes": "0.0.62",
+    "bun": "1.4.3"
+  },
+  "commits": {
+    "tscircuit": "0060ee57190e0bf7103d59044c91f527734e381d",
+    "core": "7614f02af40163da1dc2934d2ec5fa4665ae697e",
+    "capacityAutorouter": "a4f2778cb40bbc9c147b95a4e48ef0b32f1dd08f",
+    "fanoutBaseline": "e6fe9d6fbf52e9239d3d3db8626876e082518bbf",
+    "measuredFix": "8efcf81fa69a3c5368c451f74447b16750ea1b16",
+    "repro": "ec4aebf6223827a681aaebd908e903396b774777",
+    "fix": "3ddf9d1a7c8fd863eab9af5af4ba308956ab365c"
+  },
+  "baselineRun": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44504487338",
+  "candidateAndMatchedBenchmarks": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44506414212",
+  "alternativeCandidateRun": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44506652853",
+  "sourceValidation": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44508102142",
+  "workflow": "Saved routes removed; fanout \u2192 bus lanes \u2192 rest. Full original placement, pads, net membership and physical rules.",
+  "nativeProfileMatchesFreshInput": true,
+  "versionAuthority": "Archived runtime-package.json, core-package.json and core-build.json. Baseline progress.runtime labels are stale; actual package pins and source build revisions were verified for every board.",
+  "renderers": {
+    "pcb": "circuit-to-svg0.0.460 from actual emitted CircuitJson",
+    "solver": "graphics-debug0.0.99 native GraphicsObject, white background"
+  },
+  "alternativeFrozenInputAudit": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44509817236"
+}

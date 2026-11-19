@@ -1,0 +1,10 @@
+{
+  "id": "orangecrab",
+  "mode": "fanout-bus-first",
+  "exitCode": 0,
+  "timedOut": false,
+  "wallMs": 611549.55441,
+  "routingBudgetMs": 600000,
+  "hardProcessBudgetMs": 660000,
+  "concurrency": 1
+}

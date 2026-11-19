@@ -1,0 +1,1262 @@
+{
+  "id": "butterstick",
+  "components": 350,
+  "expectedComponents": 350,
+  "pads": 1623,
+  "expectedPads": 1623,
+  "nets": 349,
+  "expectedNets": 349,
+  "routableNets": 317,
+  "connectedNets": 9,
+  "pcbTraces": 0,
+  "vias": 0,
+  "copperPours": 59,
+  "geometryErrors": [],
+  "membershipErrors": [],
+  "missingCopper": [
+    {
+      "name": "+1V2",
+      "members": 21
+    },
+    {
+      "name": "+2V5",
+      "members": 19
+    },
+    {
+      "name": "+3V3",
+      "members": 66
+    },
+    {
+      "name": "+5V",
+      "members": 30
+    },
+    {
+      "name": "/FPGA-DDR3L/A0",
+      "members": 3
+    },
+    {
+      "name": "/FPGA-DDR3L/A1",
+      "members": 3
+    },
+    {
+      "name": "/FPGA-DDR3L/A10",
+      "members": 3
+    },
+    {
+      "name": "/FPGA-DDR3L/A11",
+      "members": 3
+    },
+    {
+      "name": "/FPGA-DDR3L/A12",
+      "members": 3
+    },
+    {
+      "name": "/FPGA-DDR3L/A13",
+      "members": 3
+    },
+    {
+      "name": "/FPGA-DDR3L/A14",
+      "members": 3
+    },
+    {
+      "name": "/FPGA-DDR3L/A15",
+      "members": 3
+    },
+    {
+      "name": "/FPGA-DDR3L/A2",
+      "members": 3
+    },
+    {
+      "name": "/FPGA-DDR3L/A3",
+      "members": 3
+    },
+    {
+      "name": "/FPGA-DDR3L/A4",
+      "members": 3
+    },
+    {
+      "name": "/FPGA-DDR3L/A5",
+      "members": 3
+    },
+    {
+      "name": "/FPGA-DDR3L/A6",
+      "members": 3
+    },
+    {
+      "name": "/FPGA-DDR3L/A7",
+      "members": 3
+    },
+    {
+      "name": "/FPGA-DDR3L/A8",
+      "members": 3
+    },
+    {
+      "name": "/FPGA-DDR3L/A9",
+      "members": 3
+    },
+    {
+      "name": "/FPGA-DDR3L/BA0",
+      "members": 3
+    },
+    {
+      "name": "/FPGA-DDR3L/BA1",
+      "members": 3
+    },
+    {
+      "name": "/FPGA-DDR3L/BA2",
+      "members": 3
+    },
+    {
+      "name": "/FPGA-DDR3L/CAS",
+      "members": 3
+    },
+    {
+      "name": "/FPGA-DDR3L/CK0_N",
+      "members": 3
+    },
+    {
+      "name": "/FPGA-DDR3L/CK0_P",
+      "members": 3
+    },
+    {
+      "name": "/FPGA-DDR3L/CK1_N",
+      "members": 3
+    },
+    {
+      "name": "/FPGA-DDR3L/CK1_P",
+      "members": 3
+    },
+    {
+      "name": "/FPGA-DDR3L/CKE0",
+      "members": 2
+    },
+    {
+      "name": "/FPGA-DDR3L/CKE1",
+      "members": 2
+    },
+    {
+      "name": "/FPGA-DDR3L/CS0",
+      "members": 2
+    },
+    {
+      "name": "/FPGA-DDR3L/CS1",
+      "members": 2
+    },
+    {
+      "name": "/FPGA-DDR3L/DQ0",
+      "members": 3
+    },
+    {
+      "name": "/FPGA-DDR3L/DQ1",
+      "members": 3
+    },
+    {
+      "name": "/FPGA-DDR3L/DQ10",
+      "members": 3
+    },
+    {
+      "name": "/FPGA-DDR3L/DQ11",
+      "members": 3
+    },
+    {
+      "name": "/FPGA-DDR3L/DQ12",
+      "members": 3
+    },
+    {
+      "name": "/FPGA-DDR3L/DQ13",
+      "members": 3
+    },
+    {
+      "name": "/FPGA-DDR3L/DQ14",
+      "members": 3
+    },
+    {
+      "name": "/FPGA-DDR3L/DQ15",
+      "members": 3
+    },
+    {
+      "name": "/FPGA-DDR3L/DQ2",
+      "members": 3
+    },
+    {
+      "name": "/FPGA-DDR3L/DQ3",
+      "members": 3
+    },
+    {
+      "name": "/FPGA-DDR3L/DQ4",
+      "members": 3
+    },
+    {
+      "name": "/FPGA-DDR3L/DQ5",
+      "members": 3
+    },
+    {
+      "name": "/FPGA-DDR3L/DQ6",
+      "members": 3
+    },
+    {
+      "name": "/FPGA-DDR3L/DQ7",
+      "members": 3
+    },
+    {
+      "name": "/FPGA-DDR3L/DQ8",
+      "members": 3
+    },
+    {
+      "name": "/FPGA-DDR3L/DQ9",
+      "members": 3
+    },
+    {
+      "name": "/FPGA-DDR3L/LDM",
+      "members": 3
+    },
+    {
+      "name": "/FPGA-DDR3L/LDQS_N",
+      "members": 3
+    },
+    {
+      "name": "/FPGA-DDR3L/LDQS_P",
+      "members": 3
+    },
+    {
+      "name": "/FPGA-DDR3L/ODT0",
+      "members": 2
+    },
+    {
+      "name": "/FPGA-DDR3L/ODT1",
+      "members": 2
+    },
+    {
+      "name": "/FPGA-DDR3L/RAS",
+      "members": 3
+    },
+    {
+      "name": "/FPGA-DDR3L/RST",
+      "members": 3
+    },
+    {
+      "name": "/FPGA-DDR3L/UDM",
+      "members": 3
+    },
+    {
+      "name": "/FPGA-DDR3L/UDQS_N",
+      "members": 3
+    },
+    {
+      "name": "/FPGA-DDR3L/UDQS_P",
+      "members": 3
+    },
+    {
+      "name": "/FPGA-DDR3L/WE",
+      "members": 3
+    },
+    {
+      "name": "/FPGA-MISC/CLK_IN",
+      "members": 2
+    },
+    {
+      "name": "/FPGA-MISC/ETH0.CLK125",
+      "members": 3
+    },
+    {
+      "name": "/FPGA-MISC/ETH0.INT",
+      "members": 3
+    },
+    {
+      "name": "/FPGA-MISC/ETH0.MDC",
+      "members": 2
+    },
+    {
+      "name": "/FPGA-MISC/ETH0.MDIO",
+      "members": 3
+    },
+    {
+      "name": "/FPGA-MISC/ETH0.RESET",
+      "members": 3
+    },
+    {
+      "name": "/FPGA-MISC/ETH0.RX0",
+      "members": 4
+    },
+    {
+      "name": "/FPGA-MISC/ETH0.RX1",
+      "members": 4
+    },
+    {
+      "name": "/FPGA-MISC/ETH0.RX2",
+      "members": 4
+    },
+    {
+      "name": "/FPGA-MISC/ETH0.RX3",
+      "members": 4
+    },
+    {
+      "name": "/FPGA-MISC/ETH0.RX_CLK",
+      "members": 4
+    },
+    {
+      "name": "/FPGA-MISC/ETH0.RX_CTRL",
+      "members": 4
+    },
+    {
+      "name": "/FPGA-MISC/ETH0.TX0",
+      "members": 2
+    },
+    {
+      "name": "/FPGA-MISC/ETH0.TX1",
+      "members": 2
+    },
+    {
+      "name": "/FPGA-MISC/ETH0.TX2",
+      "members": 2
+    },
+    {
+      "name": "/FPGA-MISC/ETH0.TX3",
+      "members": 2
+    },
+    {
+      "name": "/FPGA-MISC/ETH0.TX_CLK",
+      "members": 4
+    },
+    {
+      "name": "/FPGA-MISC/ETH0.TX_CTRL",
+      "members": 4
+    },
+    {
+      "name": "/FPGA-MISC/I2C0.SCL",
+      "members": 4
+    },
+    {
+      "name": "/FPGA-MISC/I2C0.SDA",
+      "members": 4
+    },
+    {
+      "name": "/FPGA-MISC/LED0",
+      "members": 2
+    },
+    {
+      "name": "/FPGA-MISC/LED1",
+      "members": 2
+    },
+    {
+      "name": "/FPGA-MISC/LED2",
+      "members": 2
+    },
+    {
+      "name": "/FPGA-MISC/LED3",
+      "members": 2
+    },
+    {
+      "name": "/FPGA-MISC/LED4",
+      "members": 2
+    },
+    {
+      "name": "/FPGA-MISC/LED5",
+      "members": 2
+    },
+    {
+      "name": "/FPGA-MISC/LED6",
+      "members": 2
+    },
+    {
+      "name": "/FPGA-MISC/LEDC0",
+      "members": 3
+    },
+    {
+      "name": "/FPGA-MISC/LEDC1",
+      "members": 3
+    },
+    {
+      "name": "/FPGA-MISC/LEDC2",
+      "members": 3
+    },
+    {
+      "name": "/FPGA-MISC/SDMMC0.CD",
+      "members": 2
+    },
+    {
+      "name": "/FPGA-MISC/SDMMC0.CK",
+      "members": 3
+    },
+    {
+      "name": "/FPGA-MISC/SDMMC0.CMD",
+      "members": 3
+    },
+    {
+      "name": "/FPGA-MISC/SDMMC0.DAT0",
+      "members": 3
+    },
+    {
+      "name": "/FPGA-MISC/SDMMC0.DAT1",
+      "members": 3
+    },
+    {
+      "name": "/FPGA-MISC/SDMMC0.DAT2",
+      "members": 3
+    },
+    {
+      "name": "/FPGA-MISC/SDMMC0.DAT3",
+      "members": 3
+    },
+    {
+      "name": "/FPGA-MISC/ULIP_VDDIO",
+      "members": 5
+    },
+    {
+      "name": "/FPGA-MISC/USB0.DATA0",
+      "members": 2
+    },
+    {
+      "name": "/FPGA-MISC/USB0.DATA1",
+      "members": 2
+    },
+    {
+      "name": "/FPGA-MISC/USB0.DATA2",
+      "members": 2
+    },
+    {
+      "name": "/FPGA-MISC/USB0.DATA3",
+      "members": 2
+    },
+    {
+      "name": "/FPGA-MISC/USB0.DATA4",
+      "members": 2
+    },
+    {
+      "name": "/FPGA-MISC/USB0.DATA5",
+      "members": 2
+    },
+    {
+      "name": "/FPGA-MISC/USB0.DATA6",
+      "members": 2
+    },
+    {
+      "name": "/FPGA-MISC/USB0.DATA7",
+      "members": 2
+    },
+    {
+      "name": "/FPGA-MISC/USB0.DIR",
+      "members": 2
+    },
+    {
+      "name": "/FPGA-MISC/USB0.NXT",
+      "members": 2
+    },
+    {
+      "name": "/FPGA-MISC/USB0.REFCLK",
+      "members": 2
+    },
+    {
+      "name": "/FPGA-MISC/USB0.RESET",
+      "members": 3
+    },
+    {
+      "name": "/FPGA-MISC/USB0.STP",
+      "members": 2
+    },
+    {
+      "name": "/FPGA-MISC/VDDIO_EN",
+      "members": 7
+    },
+    {
+      "name": "/GIGABIT-0/ETH_A_N",
+      "members": 2
+    },
+    {
+      "name": "/GIGABIT-0/ETH_A_P",
+      "members": 2
+    },
+    {
+      "name": "/GIGABIT-0/ETH_B_N",
+      "members": 2
+    },
+    {
+      "name": "/GIGABIT-0/ETH_B_P",
+      "members": 2
+    },
+    {
+      "name": "/GIGABIT-0/ETH_C_N",
+      "members": 2
+    },
+    {
+      "name": "/GIGABIT-0/ETH_C_P",
+      "members": 2
+    },
+    {
+      "name": "/GIGABIT-0/ETH_D_N",
+      "members": 2
+    },
+    {
+      "name": "/GIGABIT-0/ETH_D_P",
+      "members": 2
+    },
+    {
+      "name": "/PDM0",
+      "members": 2
+    },
+    {
+      "name": "/PDM1",
+      "members": 2
+    },
+    {
+      "name": "/PDM2",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY-0-STD/VOUT",
+      "members": 7
+    },
+    {
+      "name": "/SYZYGY-1-STD/VOUT",
+      "members": 7
+    },
+    {
+      "name": "/SYZYGY-2-TXR4/VOUT",
+      "members": 7
+    },
+    {
+      "name": "/SYZYGY0.C2P_CLK_N",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY0.C2P_CLK_P",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY0.D0_N",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY0.D0_P",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY0.D1_N",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY0.D1_P",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY0.D2_N",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY0.D2_P",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY0.D3_N",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY0.D3_P",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY0.D4_N",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY0.D4_P",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY0.D5_N",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY0.D5_P",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY0.D6_N",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY0.D6_P",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY0.D7_N",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY0.D7_P",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY0.P2C_CLK_N",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY0.P2C_CLK_P",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY0.R_GA",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY0.S16",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY0.S17",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY0.S18",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY0.S19",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY0.S20",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY0.S21",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY0.S22",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY0.S23",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY0.S24",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY0.S25",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY0.S26",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY0.S27",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY0.VIO1",
+      "members": 10
+    },
+    {
+      "name": "/SYZYGY1.C2P_CLK_N",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY1.C2P_CLK_P",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY1.D0_N",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY1.D0_P",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY1.D1_N",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY1.D1_P",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY1.D2_N",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY1.D2_P",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY1.D3_N",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY1.D3_P",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY1.D4_N",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY1.D4_P",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY1.D5_N",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY1.D5_P",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY1.D6_N",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY1.D6_P",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY1.D7_N",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY1.D7_P",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY1.P2C_CLK_N",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY1.P2C_CLK_P",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY1.R_GA",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY1.S16",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY1.S17",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY1.S18",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY1.S19",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY1.S20",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY1.S21",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY1.S22",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY1.S23",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY1.S24",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY1.S25",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY1.S26",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY1.S27",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY1.VIO1",
+      "members": 10
+    },
+    {
+      "name": "/SYZYGY2.C2P_CLK_N",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY2.C2P_CLK_P",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY2.P2C_CLK_N",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY2.P2C_CLK_P",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY2.REFCLK_N",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY2.REFCLK_P",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY2.RX0_N",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY2.RX0_P",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY2.RX1_N",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY2.RX1_P",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY2.RX2_N",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY2.RX2_P",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY2.RX3_N",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY2.RX3_P",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY2.R_GA",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY2.S0",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY2.S1",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY2.S2",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY2.S3",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY2.S4",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY2.S5",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY2.S6",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY2.S7",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY2.S8",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY2.S9",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY2.TX0_N",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY2.TX0_P",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY2.TX1_N",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY2.TX1_P",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY2.TX2_N",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY2.TX2_P",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY2.TX3_N",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY2.TX3_P",
+      "members": 2
+    },
+    {
+      "name": "/SYZYGY2.VIO1",
+      "members": 10
+    },
+    {
+      "name": "/USB-PHY/ULPI_1V8",
+      "members": 2
+    },
+    {
+      "name": "/USB-PHY/ULPI_3V3",
+      "members": 3
+    },
+    {
+      "name": "/USB-PHY/USBD_N",
+      "members": 3
+    },
+    {
+      "name": "/USB-PHY/USBD_P",
+      "members": 3
+    },
+    {
+      "name": "/sheetFPGA/CFG.CLK",
+      "members": 2
+    },
+    {
+      "name": "/sheetFPGA/CFG.CS",
+      "members": 2
+    },
+    {
+      "name": "/sheetFPGA/CFG.IO0",
+      "members": 2
+    },
+    {
+      "name": "/sheetFPGA/CFG.IO1",
+      "members": 2
+    },
+    {
+      "name": "/sheetFPGA/CFG.IO2",
+      "members": 2
+    },
+    {
+      "name": "/sheetFPGA/CFG.IO3",
+      "members": 2
+    },
+    {
+      "name": "/sheetFPGA/CFG0",
+      "members": 3
+    },
+    {
+      "name": "/sheetFPGA/CFG1",
+      "members": 3
+    },
+    {
+      "name": "/sheetFPGA/CFG2",
+      "members": 3
+    },
+    {
+      "name": "/sheetFPGA/FPGA_RESET",
+      "members": 4
+    },
+    {
+      "name": "/sheetFPGA/TCK",
+      "members": 3
+    },
+    {
+      "name": "/sheetFPGA/TDI",
+      "members": 2
+    },
+    {
+      "name": "/sheetFPGA/TDO",
+      "members": 2
+    },
+    {
+      "name": "/sheetFPGA/TMS",
+      "members": 2
+    },
+    {
+      "name": "/sheetFPGA/VDDA",
+      "members": 11
+    },
+    {
+      "name": "/sheetFPGA/VDDAUXA",
+      "members": 11
+    },
+    {
+      "name": "/sheetFPGA/VDDRX",
+      "members": 11
+    },
+    {
+      "name": "/sheetFPGA/VDDTX",
+      "members": 11
+    },
+    {
+      "name": "/sheetIO/IO-LEDS/CATB",
+      "members": 8
+    },
+    {
+      "name": "/sheetIO/IO-LEDS/CATG",
+      "members": 8
+    },
+    {
+      "name": "/sheetIO/IO-LEDS/CATR",
+      "members": 8
+    },
+    {
+      "name": "BUTTON_A",
+      "members": 3
+    },
+    {
+      "name": "BUTTON_B",
+      "members": 3
+    },
+    {
+      "name": "GND",
+      "members": 372
+    },
+    {
+      "name": "Net-(C10-Pad2)",
+      "members": 5
+    },
+    {
+      "name": "Net-(C100-Pad2)",
+      "members": 5
+    },
+    {
+      "name": "Net-(C106-Pad1)",
+      "members": 3
+    },
+    {
+      "name": "Net-(C107-Pad2)",
+      "members": 5
+    },
+    {
+      "name": "Net-(C113-Pad1)",
+      "members": 3
+    },
+    {
+      "name": "Net-(C114-Pad2)",
+      "members": 5
+    },
+    {
+      "name": "Net-(C143-Pad1)",
+      "members": 5
+    },
+    {
+      "name": "Net-(C144-Pad1)",
+      "members": 2
+    },
+    {
+      "name": "Net-(C145-Pad1)",
+      "members": 3
+    },
+    {
+      "name": "Net-(C146-Pad1)",
+      "members": 3
+    },
+    {
+      "name": "Net-(C166-Pad1)",
+      "members": 6
+    },
+    {
+      "name": "Net-(C167-Pad2)",
+      "members": 2
+    },
+    {
+      "name": "Net-(C18-Pad2)",
+      "members": 3
+    },
+    {
+      "name": "Net-(C19-Pad2)",
+      "members": 3
+    },
+    {
+      "name": "Net-(C54-Pad2)",
+      "members": 4
+    },
+    {
+      "name": "Net-(C64-Pad1)",
+      "members": 4
+    },
+    {
+      "name": "Net-(C73-Pad2)",
+      "members": 4
+    },
+    {
+      "name": "Net-(C79-Pad2)",
+      "members": 4
+    },
+    {
+      "name": "Net-(C80-Pad2)",
+      "members": 4
+    },
+    {
+      "name": "Net-(C81-Pad2)",
+      "members": 4
+    },
+    {
+      "name": "Net-(C99-Pad1)",
+      "members": 3
+    },
+    {
+      "name": "Net-(CON1-Pad1)",
+      "members": 2
+    },
+    {
+      "name": "Net-(CON1-Pad12)",
+      "members": 2
+    },
+    {
+      "name": "Net-(CON1-Pad13)",
+      "members": 2
+    },
+    {
+      "name": "Net-(CON1-Pad14)",
+      "members": 2
+    },
+    {
+      "name": "Net-(CON1-Pad15)",
+      "members": 2
+    },
+    {
+      "name": "Net-(D1-Pad1)",
+      "members": 2
+    },
+    {
+      "name": "Net-(D2-Pad1)",
+      "members": 2
+    },
+    {
+      "name": "Net-(D3-Pad1)",
+      "members": 2
+    },
+    {
+      "name": "Net-(D4-Pad1)",
+      "members": 2
+    },
+    {
+      "name": "Net-(D5-Pad1)",
+      "members": 2
+    },
+    {
+      "name": "Net-(D6-Pad1)",
+      "members": 2
+    },
+    {
+      "name": "Net-(D7-Pad1)",
+      "members": 2
+    },
+    {
+      "name": "Net-(J1-PadA5)",
+      "members": 2
+    },
+    {
+      "name": "Net-(J1-PadB5)",
+      "members": 2
+    },
+    {
+      "name": "Net-(L10-Pad1)",
+      "members": 2
+    },
+    {
+      "name": "Net-(Q4-Pad1)",
+      "members": 2
+    },
+    {
+      "name": "Net-(R30-Pad1)",
+      "members": 2
+    },
+    {
+      "name": "Net-(R4-Pad2)",
+      "members": 2
+    },
+    {
+      "name": "Net-(R5-Pad1)",
+      "members": 2
+    },
+    {
+      "name": "Net-(R52-Pad2)",
+      "members": 2
+    },
+    {
+      "name": "Net-(R54-Pad1)",
+      "members": 2
+    },
+    {
+      "name": "Net-(R60-Pad1)",
+      "members": 3
+    },
+    {
+      "name": "Net-(R68-Pad1)",
+      "members": 2
+    },
+    {
+      "name": "Net-(R72-Pad1)",
+      "members": 2
+    },
+    {
+      "name": "Net-(R74-Pad1)",
+      "members": 3
+    },
+    {
+      "name": "Net-(R91-Pad1)",
+      "members": 3
+    },
+    {
+      "name": "Net-(R95-Pad1)",
+      "members": 3
+    },
+    {
+      "name": "Net-(R97-Pad2)",
+      "members": 2
+    },
+    {
+      "name": "P_1.35_DRAM",
+      "members": 75
+    },
+    {
+      "name": "P_1V2_FPGA",
+      "members": 36
+    },
+    {
+      "name": "VBUS_USB",
+      "members": 8
+    },
+    {
+      "name": "V_DRAMREF",
+      "members": 15
+    }
+  ],
+  "findings": {
+    "routing": 1,
+    "overlap": 0,
+    "padTrace": 0,
+    "viaTrace": 0,
+    "viaPad": 0,
+    "viaSpacing": 0,
+    "contiguous": 0,
+    "viaInPad": 0,
+    "holeTrace": 0
+  },
+  "connectivityPolicy": "Native port continuity through traces, physical via spans and actual same-net pour/pad polygons, including holes and separate islands. Declared zone intent and fanout stubs alone do not count as complete nets."
+}

@@ -1,0 +1,10 @@
+{
+  "id": "glider",
+  "mode": "fanout-bus-first",
+  "exitCode": 0,
+  "timedOut": false,
+  "wallMs": 276201.823798,
+  "routingBudgetMs": 600000,
+  "hardProcessBudgetMs": 660000,
+  "concurrency": 1
+}

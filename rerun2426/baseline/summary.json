@@ -1,0 +1,116 @@
+[
+  {
+    "board": "butterstick",
+    "status": "failed",
+    "bestPartialConnections": 62,
+    "requestedConnections": 91,
+    "assignments": 256,
+    "searchExhausted": true,
+    "acceptedTraces": 0,
+    "acceptedVias": 0,
+    "busPhasesStarted": 0,
+    "inputSha256": "0c572408c68a22db9a1e49f1dc6c3a5626d78f431bb6bb095c8a4b18d6c9baf7",
+    "inputMatchesPrior": true,
+    "coreBuild": {
+      "coreCommit": "7614f02af40163da1dc2934d2ec5fa4665ae697e",
+      "coreVersion": "0.0.2426"
+    },
+    "runtimePinnedTscircuit": "0.0.3244",
+    "fanoutPinnedVersion": "0.0.90"
+  },
+  {
+    "board": "glider",
+    "status": "failed",
+    "bestPartialConnections": 60,
+    "requestedConnections": 95,
+    "assignments": 256,
+    "searchExhausted": true,
+    "acceptedTraces": 0,
+    "acceptedVias": 0,
+    "busPhasesStarted": 0,
+    "inputSha256": "b407978a89550c8835548bd99252b8f042a167f50cd1a81adf8b234e85155f59",
+    "inputMatchesPrior": true,
+    "coreBuild": {
+      "coreCommit": "7614f02af40163da1dc2934d2ec5fa4665ae697e",
+      "coreVersion": "0.0.2426"
+    },
+    "runtimePinnedTscircuit": "0.0.3244",
+    "fanoutPinnedVersion": "0.0.90"
+  },
+  {
+    "board": "h616",
+    "status": "failed",
+    "bestPartialConnections": 88,
+    "requestedConnections": 174,
+    "assignments": 256,
+    "searchExhausted": true,
+    "acceptedTraces": 0,
+    "acceptedVias": 0,
+    "busPhasesStarted": 0,
+    "inputSha256": "0aa625dd9c4fe551e6cdcd60574f5d57d0fce74d754a8c91d3b302676c7fa7db",
+    "inputMatchesPrior": true,
+    "coreBuild": {
+      "coreCommit": "7614f02af40163da1dc2934d2ec5fa4665ae697e",
+      "coreVersion": "0.0.2426"
+    },
+    "runtimePinnedTscircuit": "0.0.3244",
+    "fanoutPinnedVersion": "0.0.90"
+  },
+  {
+    "board": "icepi",
+    "status": "failed",
+    "bestPartialConnections": 7,
+    "requestedConnections": 32,
+    "assignments": 256,
+    "searchExhausted": true,
+    "acceptedTraces": 0,
+    "acceptedVias": 0,
+    "busPhasesStarted": 0,
+    "inputSha256": "f2c622bc288faaae5e505f62fe8803b465d1be0bc5752547ea9136438df40279",
+    "inputMatchesPrior": true,
+    "coreBuild": {
+      "coreCommit": "7614f02af40163da1dc2934d2ec5fa4665ae697e",
+      "coreVersion": "0.0.2426"
+    },
+    "runtimePinnedTscircuit": "0.0.3244",
+    "fanoutPinnedVersion": "0.0.90"
+  },
+  {
+    "board": "imx6",
+    "status": "failed",
+    "bestPartialConnections": 8,
+    "requestedConnections": 32,
+    "assignments": 256,
+    "searchExhausted": true,
+    "acceptedTraces": 0,
+    "acceptedVias": 0,
+    "busPhasesStarted": 0,
+    "inputSha256": "70c8dbdc3c3b66954d47334f6d92353df135ba8eb4a7edf344b40718e6b43fd5",
+    "inputMatchesPrior": true,
+    "coreBuild": {
+      "coreCommit": "7614f02af40163da1dc2934d2ec5fa4665ae697e",
+      "coreVersion": "0.0.2426"
+    },
+    "runtimePinnedTscircuit": "0.0.3244",
+    "fanoutPinnedVersion": "0.0.90"
+  },
+  {
+    "board": "orangecrab",
+    "status": "failed",
+    "bestPartialConnections": 122,
+    "requestedConnections": 273,
+    "assignments": 20,
+    "searchExhausted": false,
+    "acceptedTraces": 0,
+    "acceptedVias": 0,
+    "busPhasesStarted": 0,
+    "inputSha256": "727660d7503438a3ab7618e2f8b52dde282f49cafb8b3f26783975dcd8642cc9",
+    "inputMatchesPrior": true,
+    "coreBuild": {
+      "coreCommit": "7614f02af40163da1dc2934d2ec5fa4665ae697e",
+      "coreVersion": "0.0.2426"
+    },
+    "runtimePinnedTscircuit": "0.0.3244",
+    "fanoutPinnedVersion": "0.0.90"
+  }
+]

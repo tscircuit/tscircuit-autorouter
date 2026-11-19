@@ -1,0 +1,248 @@
+[
+  {
+    "trial": "trial-1",
+    "revision": "after",
+    "elapsedMs": 35045.781462,
+    "inputSha256": "f2c622bc288faaae5e505f62fe8803b465d1be0bc5752547ea9136438df40279",
+    "copperSha256": "c5e6fec206c3acc8192b3b06ea1998bdeb1b69484f784b5f8db5edc82813ca38",
+    "bestPartial": {
+      "routed": 7,
+      "planes": 6,
+      "boundary": 1,
+      "vias": 7,
+      "connectionNames": [
+        "breakout:pcb_breakout_point_6",
+        "source_trace_16",
+        "source_trace_3",
+        "source_trace_7",
+        "source_trace_15",
+        "source_trace_17",
+        "source_trace_18"
+      ],
+      "planeBuses": [
+        "ESC_U22_pin6",
+        "ESC_U22_pin142",
+        "ESC_U22_pin65",
+        "ESC_U22_pin55",
+        "ESC_U22_pin73",
+        "ESC_U22_pin82"
+      ]
+    },
+    "copperDrc": {
+      "valid": true,
+      "checkedTraceCount": 7,
+      "checkedSegmentCount": 11,
+      "checkedViaCount": 7,
+      "issues": []
+    },
+    "failed": true,
+    "solved": false,
+    "error": "FanoutSolver: best layer assignment routed 7/32 connections",
+    "iterations": 26131
+  },
+  {
+    "trial": "trial-1",
+    "revision": "before",
+    "elapsedMs": 43363.432931999996,
+    "inputSha256": "f2c622bc288faaae5e505f62fe8803b465d1be0bc5752547ea9136438df40279",
+    "copperSha256": "c5e6fec206c3acc8192b3b06ea1998bdeb1b69484f784b5f8db5edc82813ca38",
+    "bestPartial": {
+      "routed": 7,
+      "planes": 6,
+      "boundary": 1,
+      "vias": 7,
+      "connectionNames": [
+        "breakout:pcb_breakout_point_6",
+        "source_trace_16",
+        "source_trace_3",
+        "source_trace_7",
+        "source_trace_15",
+        "source_trace_17",
+        "source_trace_18"
+      ],
+      "planeBuses": [
+        "ESC_U22_pin6",
+        "ESC_U22_pin142",
+        "ESC_U22_pin65",
+        "ESC_U22_pin55",
+        "ESC_U22_pin73",
+        "ESC_U22_pin82"
+      ]
+    },
+    "copperDrc": {
+      "valid": true,
+      "checkedTraceCount": 7,
+      "checkedSegmentCount": 11,
+      "checkedViaCount": 7,
+      "issues": []
+    },
+    "failed": true,
+    "solved": false,
+    "error": "FanoutSolver: best layer assignment routed 7/32 connections",
+    "iterations": 26131
+  },
+  {
+    "trial": "trial-2",
+    "revision": "after",
+    "elapsedMs": 34882.076179,
+    "inputSha256": "f2c622bc288faaae5e505f62fe8803b465d1be0bc5752547ea9136438df40279",
+    "copperSha256": "c5e6fec206c3acc8192b3b06ea1998bdeb1b69484f784b5f8db5edc82813ca38",
+    "bestPartial": {
+      "routed": 7,
+      "planes": 6,
+      "boundary": 1,
+      "vias": 7,
+      "connectionNames": [
+        "breakout:pcb_breakout_point_6",
+        "source_trace_16",
+        "source_trace_3",
+        "source_trace_7",
+        "source_trace_15",
+        "source_trace_17",
+        "source_trace_18"
+      ],
+      "planeBuses": [
+        "ESC_U22_pin6",
+        "ESC_U22_pin142",
+        "ESC_U22_pin65",
+        "ESC_U22_pin55",
+        "ESC_U22_pin73",
+        "ESC_U22_pin82"
+      ]
+    },
+    "copperDrc": {
+      "valid": true,
+      "checkedTraceCount": 7,
+      "checkedSegmentCount": 11,
+      "checkedViaCount": 7,
+      "issues": []
+    },
+    "failed": true,
+    "solved": false,
+    "error": "FanoutSolver: best layer assignment routed 7/32 connections",
+    "iterations": 26131
+  },
+  {
+    "trial": "trial-2",
+    "revision": "before",
+    "elapsedMs": 44011.397992000006,
+    "inputSha256": "f2c622bc288faaae5e505f62fe8803b465d1be0bc5752547ea9136438df40279",
+    "copperSha256": "c5e6fec206c3acc8192b3b06ea1998bdeb1b69484f784b5f8db5edc82813ca38",
+    "bestPartial": {
+      "routed": 7,
+      "planes": 6,
+      "boundary": 1,
+      "vias": 7,
+      "connectionNames": [
+        "breakout:pcb_breakout_point_6",
+        "source_trace_16",
+        "source_trace_3",
+        "source_trace_7",
+        "source_trace_15",
+        "source_trace_17",
+        "source_trace_18"
+      ],
+      "planeBuses": [
+        "ESC_U22_pin6",
+        "ESC_U22_pin142",
+        "ESC_U22_pin65",
+        "ESC_U22_pin55",
+        "ESC_U22_pin73",
+        "ESC_U22_pin82"
+      ]
+    },
+    "copperDrc": {
+      "valid": true,
+      "checkedTraceCount": 7,
+      "checkedSegmentCount": 11,
+      "checkedViaCount": 7,
+      "issues": []
+    },
+    "failed": true,
+    "solved": false,
+    "error": "FanoutSolver: best layer assignment routed 7/32 connections",
+    "iterations": 26131
+  },
+  {
+    "trial": "trial-3",
+    "revision": "after",
+    "elapsedMs": 34567.116739,
+    "inputSha256": "f2c622bc288faaae5e505f62fe8803b465d1be0bc5752547ea9136438df40279",
+    "copperSha256": "c5e6fec206c3acc8192b3b06ea1998bdeb1b69484f784b5f8db5edc82813ca38",
+    "bestPartial": {
+      "routed": 7,
+      "planes": 6,
+      "boundary": 1,
+      "vias": 7,
+      "connectionNames": [
+        "breakout:pcb_breakout_point_6",
+        "source_trace_16",
+        "source_trace_3",
+        "source_trace_7",
+        "source_trace_15",
+        "source_trace_17",
+        "source_trace_18"
+      ],
+      "planeBuses": [
+        "ESC_U22_pin6",
+        "ESC_U22_pin142",
+        "ESC_U22_pin65",
+        "ESC_U22_pin55",
+        "ESC_U22_pin73",
+        "ESC_U22_pin82"
+      ]
+    },
+    "copperDrc": {
+      "valid": true,
+      "checkedTraceCount": 7,
+      "checkedSegmentCount": 11,
+      "checkedViaCount": 7,
+      "issues": []
+    },
+    "failed": true,
+    "solved": false,
+    "error": "FanoutSolver: best layer assignment routed 7/32 connections",
+    "iterations": 26131
+  },
+  {
+    "trial": "trial-3",
+    "revision": "before",
+    "elapsedMs": 43440.732721,
+    "inputSha256": "f2c622bc288faaae5e505f62fe8803b465d1be0bc5752547ea9136438df40279",
+    "copperSha256": "c5e6fec206c3acc8192b3b06ea1998bdeb1b69484f784b5f8db5edc82813ca38",
+    "bestPartial": {
+      "routed": 7,
+      "planes": 6,
+      "boundary": 1,
+      "vias": 7,
+      "connectionNames": [
+        "breakout:pcb_breakout_point_6",
+        "source_trace_16",
+        "source_trace_3",
+        "source_trace_7",
+        "source_trace_15",
+        "source_trace_17",
+        "source_trace_18"
+      ],
+      "planeBuses": [
+        "ESC_U22_pin6",
+        "ESC_U22_pin142",
+        "ESC_U22_pin65",
+        "ESC_U22_pin55",
+        "ESC_U22_pin73",
+        "ESC_U22_pin82"
+      ]
+    },
+    "copperDrc": {
+      "valid": true,
+      "checkedTraceCount": 7,
+      "checkedSegmentCount": 11,
+      "checkedViaCount": 7,
+      "issues": []
+    },
+    "failed": true,
+    "solved": false,
+    "error": "FanoutSolver: best layer assignment routed 7/32 connections",
+    "iterations": 26131
+  }
+]

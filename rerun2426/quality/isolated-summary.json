@@ -1,0 +1,15 @@
+{
+  "cases": 349,
+  "acceptedBefore": 292,
+  "acceptedAfter": 293,
+  "changes": [
+    {
+      "board": "h616",
+      "bus": "ESC_U1_pin176",
+      "before": "failed",
+      "after": "solved"
+    }
+  ],
+  "retainedCopperChanged": [],
+  "independentDrcIssues": 0
+}

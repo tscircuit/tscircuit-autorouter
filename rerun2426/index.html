@@ -1,0 +1,11 @@
+<!doctype html><meta charset="utf-8"><title>DDR full-board rerun2426</title><style>body{font:16px system-ui;max-width:1500px;margin:auto;padding:24px}img{max-width:100%}table{border-collapse:collapse}td,th{padding:8px;border:1px solid #ddd}</style>
+<h1>Latest full-board rerun</h1>
+<p>tscircuit 0.0.3244 / core 0.0.2426 / fanout 0.0.90. All six boards still fail fanout; no accepted traces or vias and no DDR bus phase. The fix reduces exact obstacle work.</p>
+<p><a href="analysis.json">Analysis and raw statistics</a> · <a href="all-boards.svg">Full before/after PCB SVG</a> · <a href="circuits-and-results.zip">TSX sources and raw results</a></p>
+<table><tr><th>Native search</th><th>Before median</th><th>After median</th><th>Reduction</th></tr>
+<tr><td>iCE/Pi CM0 SBC</td><td>43.44s</td><td>34.88s</td><td>19.7%</td></tr>
+<tr><td>i.MX6 Demo Board</td><td>45.70s</td><td>36.84s</td><td>19.4%</td></tr>
+</table>
+<h2>Actual native U22 search</h2><p>Identical uncommitted copper; only measured timing labels change.</p><table><tr><td><img src="paired/icepi/before.svg"></td><td><img src="paired/icepi/after.svg"></td></tr></table>
+<h2>Focused exact geometry checks</h2><table><tr><td><img src="focused/before.svg"></td><td><img src="focused/after.svg"></td></tr></table>
+<h2>All boards</h2><img src="all-boards.svg">

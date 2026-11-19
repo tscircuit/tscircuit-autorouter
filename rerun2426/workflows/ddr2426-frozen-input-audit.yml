@@ -1,0 +1,28 @@
+name: Audit the deadline-sensitive frozen fanout31 cases
+on:
+  push:
+    branches: [codex/ddr2426-frozen-input-audit]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  input-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: guard-0
+          run-id: 44415945774
+          github-token: ${{ github.token }}
+          path: frozen
+      - name: Inspect native inputs without running a benchmark
+        run: |
+          python3 - <<'PYAUDIT'
+          import json,hashlib
+          from pathlib import Path
+          for path in sorted(Path('frozen/inputs').glob('*.json')):
+              captured=json.loads(path.read_bytes())
+              srj=captured['simpleRouteJson']
+              buses=captured['solverOptions'].get('buses',[])
+              print('FROZEN_INPUT_AUDIT',json.dumps({'id':captured['id'],'sha256':hashlib.sha256(path.read_bytes()).hexdigest(),'pours':sum(bool(obstacle.get('isCopperPour')) for obstacle in srj['obstacles']),'planeBuses':sum(bus.get('termination',{}).get('type')=='plane' for bus in buses)},separators=(',',':')))
+          PYAUDIT

@@ -1,0 +1,427 @@
+{
+  "totalUs": 47749191,
+  "inclusive": [
+    {
+      "function": "(root)",
+      "file": "",
+      "line": -1,
+      "percent": 100.0
+    },
+    {
+      "function": "(module)",
+      "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/replay-native-plane-drop.ts",
+      "line": 0,
+      "percent": 99.26275818997645
+    },
+    {
+      "function": "step",
+      "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/node_modules/.bun/@tscircuit+solver-utils@0.0.19+2f3c14648b61fd7c/node_modules/@tscircuit/solver-utils/dist/index.js",
+      "line": 25,
+      "percent": 98.26299046616307
+    },
+    {
+      "function": "_step",
+      "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/fanout-solver.ts",
+      "line": 6658,
+      "percent": 98.21121367270914
+    },
+    {
+      "function": "stepActiveOperation",
+      "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/fanout-solver.ts",
+      "line": 1645,
+      "percent": 98.15923373445217
+    },
+    {
+      "function": "step",
+      "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/node_modules/.bun/@tscircuit+solver-utils@0.0.19+2f3c14648b61fd7c/node_modules/@tscircuit/solver-utils/dist/index.js",
+      "line": 25,
+      "percent": 98.06022891571084
+    },
+    {
+      "function": "_step",
+      "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/fanout-solver.ts",
+      "line": 148,
+      "percent": 97.98001813266323
+    },
+    {
+      "function": "next",
+      "file": "",
+      "line": 0,
+      "percent": 51.0740988260932
+    },
+    {
+      "function": "generatorResume",
+      "file": "",
+      "line": 0,
+      "percent": 51.07198570128654
+    },
+    {
+      "function": "evaluateAssignmentSteps",
+      "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/fanout-solver.ts",
+      "line": 6002,
+      "percent": 51.04515383307751
+    },
+    {
+      "function": "generatorResume",
+      "file": "",
+      "line": 0,
+      "percent": 51.016177425917014
+    },
+    {
+      "function": "evaluateAssignmentWithStrategySteps",
+      "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/fanout-solver.ts",
+      "line": 5643,
+      "percent": 51.010826549919976
+    },
+    {
+      "function": "generatorResume",
+      "file": "",
+      "line": 0,
+      "percent": 46.81302977468246
+    },
+    {
+      "function": "routeBus",
+      "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/route-bus/route-bus-alternatives.ts",
+      "line": 14,
+      "percent": 46.15639037737833
+    },
+    {
+      "function": "routeBusAlternatives",
+      "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/route-bus/route-bus-alternatives.ts",
+      "line": 4,
+      "percent": 46.1250914177792
+    },
+    {
+      "function": "generatorResume",
+      "file": "",
+      "line": 0,
+      "percent": 46.122695565669375
+    },
+    {
+      "function": "next",
+      "file": "",
+      "line": 0,
+      "percent": 46.122695565669375
+    },
+    {
+      "function": "routeBusAlternativesSteps",
+      "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/route-bus/route-bus-alternatives-steps.ts",
+      "line": 13,
+      "percent": 46.11739914085665
+    },
+    {
+      "function": "evaluateAssignmentSteps",
+      "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/fanout-solver.ts",
+      "line": 6002,
+      "percent": 44.89657845721407
+    },
+    {
+      "function": "generatorResume",
+      "file": "",
+      "line": 0,
+      "percent": 44.8840358363349
+    },
+    {
+      "function": "evaluateAssignmentWithStrategySteps",
+      "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/fanout-solver.ts",
+      "line": 5643,
+      "percent": 44.881627418567156
+    },
+    {
+      "function": "routeBus",
+      "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/route-bus/route-bus-alternatives.ts",
+      "line": 14,
+      "percent": 42.49123089855072
+    },
+    {
+      "function": "routeBusAlternatives",
+      "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/route-bus/route-bus-alternatives.ts",
+      "line": 4,
+      "percent": 42.481607698861325
+    },
+    {
+      "function": "routeBusAlternativesSteps",
+      "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/route-bus/route-bus-alternatives-steps.ts",
+      "line": 13,
+      "percent": 42.445799762345715
+    },
+    {
+      "function": "generatorResume",
+      "file": "",
+      "line": 0,
+      "percent": 42.445799762345715
+    },
+    {
+      "function": "routePlaneTerminatedBus",
+      "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/route-bus/route-plane-terminated-bus.ts",
+      "line": 22,
+      "percent": 42.337867043653155
+    },
+    {
+      "function": "routePlaneTerminatedBus",
+      "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/route-bus/route-plane-terminated-bus.ts",
+      "line": 22,
+      "percent": 40.90877686283732
+    },
+    {
+      "function": "selectClearPlanePlan",
+      "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/route-bus/route-plane-terminated-bus.ts",
+      "line": 364,
+      "percent": 23.56814170945849
+    },
+    {
+      "function": "planIsClear",
+      "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/route-bus/plan-clearance.ts",
+      "line": 12,
+      "percent": 21.52492803490639
+    },
+    {
+      "function": "planIsStaticallyClear",
+      "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/route-bus/plan-static-clearance.ts",
+      "line": 93,
+      "percent": 21.30979349995689
+    },
+    {
+      "function": "segmentIsClearOfObstacles",
+      "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/route-bus/plan-static-clearance.ts",
+      "line": 27,
+      "percent": 20.90306619016854
+    },
+    {
+      "function": "distanceSegmentToObstacle",
+      "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/geometry.ts",
+      "line": 134,
+      "percent": 19.14858201471937
+    },
+    {
+      "function": "distanceSegmentToSegment",
+      "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/geometry.ts",
+      "line": 68,
+      "percent": 15.599707228547599
+    },
+    {
+      "function": "getPlaneSourceEscapePaths",
+      "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/route-bus/get-plane-source-escape-paths.ts",
+      "line": 17,
+      "percent": 11.31201573655981
+    },
+    {
+      "function": "hypot",
+      "file": "",
+      "line": -1,
+      "percent": 10.491943203812605
+    }
+  ],
+  "self": [
+    {
+      "function": "routePlaneTerminatedBus",
+      "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/route-bus/route-plane-terminated-bus.ts",
+      "line": 22,
+      "percent": 21.825961407388032
+    },
+    {
+      "function": "hypot",
+      "file": "",
+      "line": -1,
+      "percent": 10.491943203812605
+    },
+    {
+      "function": "routePlaneTerminatedBus",
+      "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/route-bus/route-plane-terminated-bus.ts",
+      "line": 22,
+      "percent": 10.196382175354552
+    },
+    {
+      "function": "distanceSegmentToSegment",
+      "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/geometry.ts",
+      "line": 68,
+      "percent": 4.402627470693692
+    },
+    {
+      "function": "",
+      "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/build-output.ts",
+      "line": 168,
+      "percent": 3.6712433515365737
+    },
+    {
+      "function": "chamferOrthogonalCorners",
+      "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/route-bus/source-escape.ts",
+      "line": 19,
+      "percent": 2.9219908668190837
+    },
+    {
+      "function": "distanceSegmentToObstacle",
+      "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/geometry.ts",
+      "line": 134,
+      "percent": 2.7254765426287535
+    },
+    {
+      "function": "hypot",
+      "file": "",
+      "line": -1,
+      "percent": 1.9747392160005393
+    },
+    {
+      "function": "getStraightOr45ConnectorVariants",
+      "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/route-bus/source-escape.ts",
+      "line": 69,
+      "percent": 1.926564577816617
+    },
+    {
+      "function": "segmentIsClearOfObstacles",
+      "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/route-bus/plan-static-clearance.ts",
+      "line": 27,
+      "percent": 1.7395247596969758
+    },
+    {
+      "function": "",
+      "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/build-output.ts",
+      "line": 168,
+      "percent": 1.7297821862573546
+    },
+    {
+      "function": "getPlanVias",
+      "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/route-bus/plan-copper.ts",
+      "line": 9,
+      "percent": 1.4820313919035821
+    },
+    {
+      "function": "hypot",
+      "file": "",
+      "line": -1,
+      "percent": 1.31365157579319
+    },
+    {
+      "function": "",
+      "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/route-bus/source-escape.ts",
+      "line": 65,
+      "percent": 1.2975800993151905
+    },
+    {
+      "function": "buildPlan",
+      "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/route-bus/build-plan.ts",
+      "line": 10,
+      "percent": 1.213984965734812
+    },
+    {
+      "function": "getPlaneSourceEscapePaths",
+      "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/route-bus/get-plane-source-escape-paths.ts",
+      "line": 17,
+      "percent": 1.2103555848726317
+    },
+    {
+      "function": "chamferOrthogonalCorners",
+      "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/route-bus/source-escape.ts",
+      "line": 19,
+      "percent": 1.1915678320078764
+    },
+    {
+      "function": "planIsClearOfPlans",
+      "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/route-bus/plan-mutual-clearance.ts",
+      "line": 8,
+      "percent": 1.066593986901265
+    },
+    {
+      "function": "hypot",
+      "file": "",
+      "line": -1,
+      "percent": 0.8761258384461424
+    },
+    {
+      "function": "getStraightOr45ConnectorVariants",
+      "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/route-bus/source-escape.ts",
+      "line": 69,
+      "percent": 0.8721844104123146
+    },
+    {
+      "function": "hypot",
+      "file": "",
+      "line": -1,
+      "percent": 0.7713868911412551
+    },
+    {
+      "function": "hypot",
+      "file": "",
+      "line": -1,
+      "percent": 0.7313652706702403
+    },
+    {
+      "function": "hypot",
+      "file": "",
+      "line": -1,
+      "percent": 0.7144141981379328
+    },
+    {
+      "function": "segmentsProperlyCross",
+      "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/geometry.ts",
+      "line": 52,
+      "percent": 0.6933625325714943
+    },
+    {
+      "function": "getPlanVias",
+      "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/route-bus/plan-copper.ts",
+      "line": 9,
+      "percent": 0.6646018358719418
+    },
+    {
+      "function": "buildPlan",
+      "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/route-bus/build-plan.ts",
+      "line": 10,
+      "percent": 0.6643693712004461
+    },
+    {
+      "function": "getPlaneEndpointViaCandidates",
+      "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/route-bus/plane-endpoint.ts",
+      "line": 13,
+      "percent": 0.6501471407128133
+    },
+    {
+      "function": "hypot",
+      "file": "",
+      "line": -1,
+      "percent": 0.6179643965067387
+    },
+    {
+      "function": "hypot",
+      "file": "",
+      "line": -1,
+      "percent": 0.6128397023522346
+    },
+    {
+      "function": "getPlaneSourceEscapePaths",
+      "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/route-bus/get-plane-source-escape-paths.ts",
+      "line": 17,
+      "percent": 0.6117925641923441
+    },
+    {
+      "function": "",
+      "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/route-bus/source-escape.ts",
+      "line": 65,
+      "percent": 0.6090951362924661
+    },
+    {
+      "function": "planIsClear",
+      "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/route-bus/plan-clearance.ts",
+      "line": 12,
+      "percent": 0.5899513564533481
+    },
+    {
+      "function": "buildPlan",
+      "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/route-bus/build-plan.ts",
+      "line": 10,
+      "percent": 0.554139231385093
+    },
+    {
+      "function": "map",
+      "file": "",
+      "line": 0,
+      "percent": 0.4905779450797397
+    },
+    {
+      "function": "planIsClearOfPlans",
+      "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/fanout/lib/route-bus/plan-mutual-clearance.ts",
+      "line": 8,
+      "percent": 0.41310856973472077
+    }
+  ]
+}

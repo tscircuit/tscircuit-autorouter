@@ -1,0 +1,12 @@
+trace: `key` is not a prop. Trying to access it will result in `undefined` being returned. If you need to access the same value within the child component, you should pass it as a different prop. (https://react.dev/link/special-props)
+orangecrab autorouting:start fanout preparation
+orangecrab autorouting:error fanout preparation
+Async effect error in PcbTraceRender "autorouting":
+Error: Full-board routing budget exhausted
+    at checkRoutingBudget (/home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/experiments/full-board-priority-analysis/render.tsx:22:62)
+    at <anonymous> (/home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/experiments/full-board-priority-analysis/render.tsx:72:3)
+    at solve (/home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/experiments/full-board-priority-analysis/patched-core/index.js:224355:16)
+    at solveFanout (/home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/experiments/full-board-priority-analysis/patched-core/index.js:240965:23)
+    at startFanout (/home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/experiments/full-board-priority-analysis/patched-core/index.js:240989:90)
+    at <anonymous> (/home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/experiments/full-board-priority-analysis/patched-core/index.js:241019:23)
+{"id":"orangecrab","mode":"fanout","status":"failed","renderCompleted":true,"elapsedMs":610004.15125,"phases":[{"name":"fanout preparation","solver":"FanoutSolver","status":"failed","connections":273,"startedMs":13437.773333000001,"elapsedMs":586617.454934}],"errors":["Full-board routing budget exhausted","Error: Full-board routing budget exhausted","Full-board routing budget exhausted"],"stage":"initializing","initialCopperElements":0,"runtime":{"tscircuit":"0.0.3243","core":"0.0.2425","fanout":"0.0.90","busLanes":"0.0.62","autorouter":"workspace Pipeline 9","routerCommit":"a4f2778cb40bbc9c147b95a4e48ef0b32f1dd08f"},"planeIntent":{"enabled":true,"zones":35,"importedSavedCopper":false}}

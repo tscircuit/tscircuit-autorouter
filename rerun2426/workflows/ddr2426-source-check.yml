@@ -1,0 +1,28 @@
+name: Validate native obstacle repro and pruning fix
+on:
+  push:
+    branches: [codex/ddr2426-source-check]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  source-check:
+    strategy:
+      fail-fast: false
+      matrix:
+        revision: [ec4aebf6223827a681aaebd908e903396b774777, 3ddf9d1a7c8fd863eab9af5af4ba308956ab365c]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: ${{ matrix.revision }}
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - run: bun install --frozen-lockfile --ignore-scripts
+      - run: bun run format:check
+      - if: always()
+        run: bun run typecheck
+      - if: always()
+        run: bun test --timeout 9999999 tests/native-segment-obstacle-broadphase.test.ts tests/segment-obstacle-broadphase-geometry.test.ts tests/near-segment-obstacle-clearance.test.ts tests/native-plane-static-rejections.test.ts tests/plane-endpoint-cache-alternatives.test.ts
