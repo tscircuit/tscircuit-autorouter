@@ -38,8 +38,8 @@
     "publishedAutorouterSha256": "44e2cc5a759e11f3982a876733d0f224dcb901c0ac0840e2ff1ec5be434a4285",
     "dependencyGraphPolicy": "Exact frozen3243 release and lockfiles from baseline14176a10; no independent transitive refresh."
   },
-  "qualificationReady": false,
-  "status": "HELD_ROOT_REVIEW",
+  "qualificationReady": true,
+  "status": "RELEASED_PAIRED_H616_NATIVE_COMPARISON",
   "branch": "bench/h616-via-site-bounds-3243-20261119",
   "workflow": ".github/workflows/full-board-via-site-bounds.yml",
   "laneOrder": [
@@ -270,10 +270,11 @@
   },
   "comparisonPolicy": "Authenticate both independent native lanes against retained published3243 H616spaced and directly against each other. Attribute only feature-base to bounds-fix change to the four-expression correction. Compare exact native names, static geometry, copper and physical findings; no timing-gain claim.",
   "qualification": {
-    "scope": "Frozen paired mappings pass. Existing PR3906 plus merged Tiny6a00 shared; bounds-fix differs only four executable center-bound expressions and source comments. Awaiting root controller review and release.",
+    "scope": "Root reviewed frozen source pair, focused geometric tests and independent review, reconstructed both runtime bundles with exactly four bounds differences, verified actual marker/serializer/Tiny cost smoke checks, frozen harness and published assessment restoration.",
     "nativeRoutingExecuted": false,
     "dependencyInstallsExecutedLocally": false,
-    "artifactDownloadsExecutedLocally": false
+    "artifactDownloadsExecutedLocally": false,
+    "runtimeSmokeSha256": "3fd766175f0eaa26912a035d7c369a9553d77eac75ead6bd25a7449e7af2d9db"
   },
   "reuseController": "a12e3bb46195ab05f14db9af622979963643d0c5",
   "pairedByteProofFile": "paired-byte-proof.json",
