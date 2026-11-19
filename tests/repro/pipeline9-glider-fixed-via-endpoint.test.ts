@@ -45,6 +45,7 @@ test("Glider DDR ADDR6 escape via", (): void => {
   pipeline.highDensityNodePortPoints = [node]
   pipeline.highDensityRouteSolver = {
     routes: [route],
+    getUpdatedFixedHdRoutes: (): [] => [],
   } as Pipeline9HighDensitySolver
   const step = pipeline.pipelineDef.find(
     (entry) => entry.solverName === "highDensityForceImproveSolver",

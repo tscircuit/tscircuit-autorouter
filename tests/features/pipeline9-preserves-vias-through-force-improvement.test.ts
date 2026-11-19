@@ -54,6 +54,7 @@ test("Pipeline9 preserves vias through force improvement", (): void => {
   pipeline9.highDensityNodePortPoints = [nodeWithPortPoints]
   pipeline9.highDensityRouteSolver = {
     routes: [rawRoute],
+    getUpdatedFixedHdRoutes: (): [] => [],
   } as Pipeline9HighDensitySolver
 
   const forceImproveStep = pipeline9.pipelineDef.find(
