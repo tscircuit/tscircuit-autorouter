@@ -19,6 +19,7 @@ jobs:
         with:
           ref: e0641e36e11b35d2d590ccdb8ef6749511493b39
           persist-credentials: false
+          fetch-depth: 0
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: '1.4.3'
@@ -41,7 +42,7 @@ jobs:
               pkg=Path("package.json")
               data=json.loads(pkg.read_text())
               sha="3dfd90b982d749c0bf286be39dd16f776692e101" if variant=="force-api" else "eeca3801e32a6b413a5dbfe6e4b72b5858cf2738"
-              data["dependencies"]["high-density-repair01"]="github:tscircuit/high-density-repair01#"+sha
+              data["devDependencies"]["high-density-repair01"]="github:tscircuit/high-density-repair01#"+sha
               pkg.write_text(json.dumps(data,indent=2)+"\n")
           # Report solver failure, without exporting inputs or route geometry.
           p=Path("tests/bugs/t113-linux-exact-pipeline9-root.test.ts")
