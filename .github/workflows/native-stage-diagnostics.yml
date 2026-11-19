@@ -1,0 +1,67 @@
+name: Inspect native routing aggregate stage counts
+on:
+  push:
+    branches: [analysis/native-copper-stage-diagnostics]
+    paths: [.github/workflows/native-stage-diagnostics.yml]
+permissions:
+  contents: read
+jobs:
+  routing:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    strategy:
+      fail-fast: false
+      matrix:
+        board: [gba, midi]
+        source: [09bd0812beff4b44f03cf5e2e5881b3186655558, 0f98be6237dfa0a852360b07d38f0e2fbee5f92d]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.source }}
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.4.3'
+      - run: bun install
+      - name: Compare aggregate counts without exporting geometry or net identifiers
+        env:
+          BOARD: ${{ matrix.board }}
+        run: |
+          cat > native-stage-diagnostics.ts <<'TS'
+          import { readFileSync } from "node:fs"
+          import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "./lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
+          import { convertToCircuitJson } from "./lib/utils/convertToCircuitJson"
+          import { getDrcErrors } from "./lib/testing/getDrcErrors"
+          import { RELAXED_DRC_OPTIONS } from "./lib/testing/drcPresets"
+          import { evaluateRelaxedDrc } from "./lib/testing/evaluate-relaxed-drc"
+          import { getViaToPadClearance } from "./lib/utils/getViaToPadClearance"
+          const board=process.env.BOARD
+          const path=board==="gba"?"fixtures/bug-reports/bugreport96-full-gameboy-no-breakout/bugreport96-full-gameboy-no-breakout.srj.json":"tests/fixtures/bug-reports/usb-dp-phase-detour/input.json"
+          const srj=JSON.parse(readFileSync(path,"utf8"))
+          if(board==="midi")srj.allowViaInPad=true
+          const solver=new AutoroutingPipelineSolver9_PreloadedTraceGraph(srj,{cacheProvider:null,effort:1})
+          const observed=new Set<string>()
+          const wanted=new Set(["highDensityRouteSolver","highDensityForceImproveSolver","highDensityRepairSolver","highDensityStitchSolver","traceSimplificationSolver","globalDrcForceImproveSolver","pipeline9JointDrcRepairSolver","effortCleanupSolver"])
+          while(!solver.solved&&!solver.failed){
+           solver.step()
+           for(const name of wanted){
+            const stage=solver[name]
+            if(!stage?.solved||observed.has(name))continue
+            observed.add(name)
+            let result
+            if(!solver.highDensityStitchSolver?.solved){
+             const routes=name==="highDensityRouteSolver"?stage.routes:stage.getOutput()
+             const c=convertToCircuitJson(solver.srjWithPointPairs,[...routes,...solver.highDensityRouteSolver.getUpdatedFixedHdRoutes()],{originalSrj:srj,includeOriginalConnections:true,connectivityMaps:{source:solver.connMap,route:solver.connMap},minViaDiameter:srj.minViaDiameter,minTraceWidth:srj.minTraceWidth})
+             result=getDrcErrors(c,{...RELAXED_DRC_OPTIONS,viaToPadClearance:getViaToPadClearance(srj)})
+            }else{
+             result=evaluateRelaxedDrc({inputSrj:{...srj,traces:solver.getUpdatedPreloadedTraces()},srjWithPointPairs:solver.srjWithPointPairs,routedTraces:solver.getNewTracesBeforePowerExpansion(),includeBoardClearance:board==="midi"})
+            }
+            const counts:Record<string,number>={}
+            for(const error of result.errors)counts[error.type]=(counts[error.type]??0)+1
+            console.log("AGGREGATE_STAGE",JSON.stringify({board,stage:name,total:result.errors.length,counts}))
+           }
+          }
+          console.log("AGGREGATE_FINISH",JSON.stringify({board,solved:solver.solved,failed:solver.failed,iterations:solver.iterations}))
+          if(!solver.solved)process.exitCode=1
+          TS
+          bun native-stage-diagnostics.ts
