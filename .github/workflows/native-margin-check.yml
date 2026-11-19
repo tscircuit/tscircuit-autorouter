@@ -1,4 +1,4 @@
-name: Verify repair ownership of mutable saved copper
+name: Verify native copper context in clearance projection
 on:
   push:
     branches: [analysis/native-complete-cleanup-context]
@@ -13,6 +13,7 @@ jobs:
       fail-fast: false
       matrix:
         source: [09bd0812beff4b44f03cf5e2e5881b3186655558, 0f98be6237dfa0a852360b07d38f0e2fbee5f92d]
+        baseline: [preserve, repair]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -21,18 +22,26 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: '1.4.3'
-      - name: Evaluate inherited clearance errors as part of editable board routing
+      - name: Supply read-only native routes to the existing clearance solver
+        env:
+          BASELINE: ${{ matrix.baseline }}
         run: |
           python3 - <<'PY'
+          import os
           from pathlib import Path
           p=Path("lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9JointDrcRepairSolver.ts")
           s=p.read_text()
-          old="    const baselineDrc = evaluateInitialDrc([])"
+          old="            routes: this.exactRepairParams.hdRoutes,\n            drcEvaluator: this.cachedReferenceDrcEvaluator!,"
           assert s.count(old)==1
-          p.write_text(s.replace(old,"    const baselineDrc = { ...evaluateInitialDrc([]), errors: [], errorsWithCenters: [] }",1))
+          s=s.replace(old,"            routes: this.exactRepairParams.hdRoutes,\n            fixedHdRoutes: this.fixedPreloadedObstacleRoutes,\n            drcEvaluator: this.cachedReferenceDrcEvaluator!,",1)
+          if os.environ["BASELINE"]=="repair":
+            old="    const baselineDrc = evaluateInitialDrc([])"
+            assert s.count(old)==1
+            s=s.replace(old,"    const baselineDrc = { ...evaluateInitialDrc([]), errors: [], errorsWithCenters: [] }",1)
+          p.write_text(s)
           PY
       - run: bun install
-      - name: Keep original physical-clearance and connectivity assertions
+      - name: Keep the existing final connectivity and clearance assertions
         env:
           BUN_UPDATE_SNAPSHOTS: '1'
         run: bun test --timeout 9999999 tests/bugs/bugreport96-full-gameboy-no-breakout.test.ts tests/bugs/usb-dp-phase-detour.test.ts tests/repro/pipeline9-h616-portfolio-candidate-clearance.test.ts
