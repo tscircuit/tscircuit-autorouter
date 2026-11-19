@@ -10,7 +10,7 @@
     "finalPrHeads": {
       "318": "e36bee5e1767d908dabbfd46d19da60600051046",
       "305": "55e6041df2df390542848ece0ca3a79ab3714ff6",
-      "322": "18c3dd1d641c1e47dd7c062f59d8b62bfd6324d5"
+      "322": "fd93c3584ae2e378816f0e2f3a042d6ca74361fa"
     },
     "oldCombinedStack": "5e417426368e7d267e3cef930df5a505951a2b1c",
     "benchmarkC": "e352b111ea36431f4e29005b443abaf679f80960",
@@ -26,8 +26,9 @@
     "finalNativeFrozenAndBoards": 44615955065,
     "baselineNative": 44619611886,
     "boundary300": 44621338299,
-    "formatAndTypes": 44622889186,
-    "dram143Snapshot": 44609494856
+    "formatAndTypes": 44626027125,
+    "dram143Snapshot": 44609494856,
+    "smallCaseMacValidation": 44626027125
   },
   "benchmarkLocation": "Blacksmith",
   "pipeline": "Fresh fanout, then bus lanes, then remaining nets. Original routes/vias removed; plane intent retained. No full board reaches the bus-lane phase.",
@@ -77,7 +78,7 @@
     "stages": {
       "afterPr318": "e36bee5e1767d908dabbfd46d19da60600051046",
       "afterPr305": "55e6041df2df390542848ece0ca3a79ab3714ff6",
-      "afterPr322": "18c3dd1d641c1e47dd7c062f59d8b62bfd6324d5"
+      "afterPr322": "fd93c3584ae2e378816f0e2f3a042d6ca74361fa"
     }
   },
   "boundary300": {
@@ -348,14 +349,45 @@
   },
   "fullBoardPlanMetadata": "Core and board source are frozen. The last run uses the original verified schedule metadata, with each source hash checked; actual circuits route fresh in timed workers. Each final plan.json records this provenance.",
   "validation": {
-    "sourceFormatAndAllTypeModes": "pass on all five exact current heads, run44622889186",
+    "sourceFormatAndAllTypeModes": "pass on all five exact current heads, run44626027125",
     "focusedRegressions": "pass; existing raw bottom-corner SVGs unchanged, small SRJ19 case DRC0/15of15/12drills/1.7percent shorter copper",
     "repositoryTests": {
       "304": "pass run44605038398",
       "321": "pass run44604729617",
       "318": "pass run44619256039",
-      "305": "pending run44622849733",
-      "322": "pending run44622847827"
+      "305": "pass all eight shards, run44622849733",
+      "322": "pending full eight-shard run44625929339; both audited small-case snapshots pass macOS15/Bun1.4.5 in run44626027125"
+    }
+  },
+  "smallCaseReview": {
+    "sample": "SRJ19 sample002",
+    "budgets": [
+      17,
+      256
+    ],
+    "sameOutputAcrossBudgets": true,
+    "completeRequestsBeforeAndAfter": 15,
+    "totalRequests": 15,
+    "distinctDrillsBeforeAndAfter": 12,
+    "independentCopperDrcValid": true,
+    "requestedTraceWidthMm": 0.15,
+    "roundedWireLengthMm": {
+      "oldCombinedStack": 113.354,
+      "afterPr305": 111.413,
+      "afterPr322": 112.513
+    },
+    "pr322LengthChangePercent": 0.99,
+    "snapshotUpdate": "Both existing small-case views updated after independent physical audit; all other existing PR322 goldens preserved.",
+    "rendererVersion": "0.0.364",
+    "inputFileSha256": "8996adeef29a091e51145f37bb70fe56347e9cc0fe341064d41c0a3db6a79008",
+    "macValidation": {
+      "runId": 44626027125,
+      "jobId": 135919974090,
+      "os": "macos-15",
+      "bunVersion": "1.4.5",
+      "status": "pass",
+      "testFiles": 2,
+      "assertions": 13
     }
   }
 }
