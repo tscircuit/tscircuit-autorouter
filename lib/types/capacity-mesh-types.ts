@@ -12,6 +12,7 @@ export interface CapacityMeshNode {
   height: number
   layer: string
   availableZ: number[]
+  viaAreaFraction?: number
 
   _depth?: number
 

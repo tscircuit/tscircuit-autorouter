@@ -38,4 +38,32 @@ export function reservePreloadedCopperPorts({
       port.d._preloadedCopperNetIds = [...fixedNetIds]
     }
   }
+  const viaLookup = createPreloadedCopperLookup({
+    srj,
+    connMap,
+    traceWidth: viaDiameter,
+    viaDiameter,
+  })
+  for (const region of graph.regions) {
+    const node = region.d
+    let clearSiteCount = 0
+    for (let i = 0; i < 5; i++) {
+      for (let j = 0; j < 5; j++) {
+        const x = node.center.x + ((i + 0.5) / 5 - 0.5) * node.width
+        const y = node.center.y + ((j + 0.5) / 5 - 0.5) * node.height
+        let blocked = false
+        for (let z = 0; z < srj.layerCount && !blocked; z++) {
+          blocked = viaLookup
+            .getBlockers({ x, y, z })
+            .some((route) => route.isFixed === true)
+        }
+        if (!blocked) clearSiteCount++
+      }
+    }
+    node.viaAreaFraction = Math.min(
+      node.viaAreaFraction ?? 1,
+      Math.max(0.1, clearSiteCount / 25),
+    )
+  }
+
 }
