@@ -105,6 +105,13 @@ jobs:
             const route=owner!==undefined?routes[owner]:undefined
             if(nearest){
              const site=getSameRootViaSite({routes,via:nearest,srj})
+             const padIds=(error.pcb_pad_ids??[]).filter(id=>!(error.pcb_via_ids??[]).includes(id))
+             const byConnection=srj.obstacles.filter(o=>padIds.some(id=>o.connectedTo.includes(id)))
+             const byObstacleId=srj.obstacles.filter(o=>padIds.includes(o.obstacleId))
+             const byMetadata=srj.obstacles.filter(o=>padIds.includes(o.circuitJsonMetadata?.pcb_smtpad_id)||padIds.includes(o.circuitJsonMetadata?.pcb_plated_hole_id))
+             const indexed=joint.drcEvaluator({traces:[],routes,hdRoutes:routes})
+             const indexedErrors=Array.isArray(indexed)?indexed:indexed.errors
+             console.log("AGGREGATE_PAD_RESOLUTION",JSON.stringify({padCount:padIds.length,connectionMatches:byConnection.length,obstacleIdMatches:byObstacleId.length,metadataMatches:byMetadata.length,indexedCount:indexedErrors.length,indexedViaPadCount:indexedErrors.filter(isViaPadDrcError).length,hasSpecificViaRule:srj.minViaEdgeToPadEdgeClearance!==undefined,hasGeneralPadRule:srj.minPadEdgeToPadEdgeClearance!==undefined,hasMessage:typeof error.message==="string",centerCoincidesWithVia:Math.hypot(nearest.x-center.x,nearest.y-center.y)<1e-8}))
              console.log("AGGREGATE_SHARED_SITE",JSON.stringify({count:site.length,movableCount:site.filter(v=>v.movable).length,canonicalCount:site.filter(v=>v.canCanonicalize).length,taggedTerminalCount:site.filter(v=>v.pointIndexes.some(i=>routes[v.routeIndex].route[i].pcb_port_id!==undefined)).length,distinctRadii:new Set(site.map(v=>v.radius)).size,syntheticOwnerCount:site.filter(v=>joint.syntheticConnectionNames.has(routes[v.routeIndex].connectionName)).length}))
             }
             console.log("AGGREGATE_VIA_ELIGIBILITY",JSON.stringify({owned:owner!==undefined,ownedViaCount:ownedVias.length,hasCenter:!!center,nearestFound:!!nearest,movable:nearest?.movable,canCanonicalize:nearest?.canCanonicalize,hasTerminalApproach:nearest?.pointIndexes.some(i=>route.route[i].terminalApproach!==undefined),hasPadPort:nearest?.pointIndexes.some(i=>route.route[i].pcb_port_id!==undefined),touchesRouteEndpoint:nearest?.pointIndexes.some(i=>i===0||i===route.route.length-1)}))
