@@ -234,7 +234,10 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
           viaDiameter: route.viaDiameter * metalScale,
           route: transformed.route.map((point) => {
             if (point.traceThickness === undefined) return point
-            return { ...point, traceThickness: point.traceThickness * metalScale }
+            return {
+              ...point,
+              traceThickness: point.traceThickness * metalScale,
+            }
           }),
         }
       },
@@ -281,6 +284,7 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
     this.activeSubSolver = new PortfolioSingleIntraNodeSolver({
       ...portfolioParams,
       preservePhysicalGeometry: this.preservePhysicalGeometry,
+      // The search emits local coordinates; copper guards consume board-world mm.
       staticSegmentValidator: staticSegmentValidator
         ? (segment): boolean =>
             staticSegmentValidator({
