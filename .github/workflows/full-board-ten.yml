@@ -1,15 +1,15 @@
-name: Published3244 bounded ButterStick bus process analysis
+name: Native DDR port-cost comparison
 
 on:
   push:
-    branches: [bench/process-bus-light-3244-20261119]
+    branches: [bench/native-port-cost-3244-20261119]
 
 permissions:
   contents: read
 
 jobs:
   route:
-    name: Full board (${{ matrix.board }}, ${{ matrix.experiment }})
+    name: Native pair (${{ matrix.board }}, ${{ matrix.cohorts }})
     runs-on: blacksmith-8vcpu-ubuntu-2404-arm
     timeout-minutes: 45
     strategy:
@@ -17,12 +17,15 @@ jobs:
       max-parallel: 5
       matrix:
         include:
-          - { board: butterstick, experiment: published, cohorts: "spaced" }
+          - { board: butterstick, experiment: published, cohorts: "original" }
+          - { board: glider, experiment: published, cohorts: "spaced" }
+          - { board: icepi, experiment: published, cohorts: "spaced" }
     env:
       FULL_BOARD_ROOT: ${{ github.workspace }}/.full-board-run
       FULL_BOARD_RUNTIME_MANIFEST: ${{ github.workspace }}/.full-board-run/runtime-manifest.json
       BUN_INSTALL_CACHE_DIR: ${{ github.workspace }}/.full-board-run/bun-cache
       BOARD: ${{ matrix.board }}
+      COHORT: ${{ matrix.cohorts }}
       FULL_BOARD_COHORTS: ${{ matrix.cohorts }}
       FULL_BOARD_EXPERIMENT: ${{ matrix.experiment }}
 
@@ -59,6 +62,15 @@ jobs:
             licenses
             provenance
 
+      - name: Checkout reviewed search source
+        uses: actions/checkout@v4
+        with:
+          repository: tscircuit/tiny-hypergraph
+          ref: cba224ed2ced6d8ed4184f551740d3e4e62c219f
+          path: .full-board-run/source-tiny
+          persist-credentials: false
+          sparse-checkout: lib
+
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
@@ -76,75 +88,68 @@ jobs:
           "$FULL_BOARD_ROOT/cases"
           "$BOARD"
 
-      - name: Run original full circuit
-        id: original
-        if: ${{ false }}
-        continue-on-error: true
-        run: >-
-          bun experiments/full-board-ten/run-one.ts
-          "$FULL_BOARD_ROOT/cases/$BOARD-original.json"
-          "$FULL_BOARD_ROOT/results/$BOARD/original"
+      - name: Freeze published control
+        run: python3 experiments/full-board-ten/activate-port-cost.py "$FULL_BOARD_ROOT" baseline "$BOARD" "$COHORT"
 
-      - name: Preserve original geometry and diagnostics
-        if: ${{ false }}
+      - name: Run published full board
+        id: base
+        continue-on-error: true
+        run: bun experiments/full-board-ten/run-one.ts "$FULL_BOARD_ROOT/lanes/base/$BOARD-$COHORT.json" "$FULL_BOARD_ROOT/results/$BOARD/$COHORT/base"
+
+      - name: Preserve published control
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           include-hidden-files: true
-          name: full-board-${{ matrix.board }}-${{ matrix.experiment }}-original-${{ github.run_attempt }}
-          path: .full-board-run/results/${{ matrix.board }}/original
-          if-no-files-found: warn
-          compression-level: 0
+          name: port-cost-${{ matrix.board }}-${{ matrix.cohorts }}-base
+          path: .full-board-run/results/${{ matrix.board }}/${{ matrix.cohorts }}/base
+          if-no-files-found: error
           retention-days: 7
 
-      - name: Run spaced full circuit
-        id: spaced
-        if: ${{ !cancelled() && steps.prepare.outcome == 'success' }}
-        continue-on-error: true
-        run: >-
-          bun experiments/full-board-ten/run-one.ts
-          "$FULL_BOARD_ROOT/cases/$BOARD-spaced.json"
-          "$FULL_BOARD_ROOT/results/$BOARD/spaced"
+      - name: Activate qualified source change
+        run: python3 experiments/full-board-ten/activate-port-cost.py "$FULL_BOARD_ROOT" candidate "$BOARD" "$COHORT"
 
-      - name: Preserve spaced geometry and diagnostics
+      - name: Run candidate full board
+        id: candidate
+        continue-on-error: true
+        run: bun experiments/full-board-ten/run-one.ts "$FULL_BOARD_ROOT/lanes/candidate/$BOARD-$COHORT.json" "$FULL_BOARD_ROOT/results/$BOARD/$COHORT/candidate"
+
+      - name: Preserve candidate board
         if: always()
         uses: actions/upload-artifact@v4
         with:
           include-hidden-files: true
-          name: full-board-${{ matrix.board }}-${{ matrix.experiment }}-spaced-${{ github.run_attempt }}
-          path: .full-board-run/results/${{ matrix.board }}/spaced
-          if-no-files-found: warn
-          compression-level: 0
+          name: port-cost-${{ matrix.board }}-${{ matrix.cohorts }}-candidate
+          path: .full-board-run/results/${{ matrix.board }}/${{ matrix.cohorts }}/candidate
+          if-no-files-found: error
           retention-days: 7
 
-      - name: Publish compact result notices and summary
-        id: report
+      - name: Compare completed nets
         if: always()
-        run: python3 experiments/full-board-ten/report.py "$FULL_BOARD_ROOT" "$BOARD"
+        run: |
+          python3 - <<'PYTHON'
+          import json,os
+          from pathlib import Path
+          root=Path(os.environ['FULL_BOARD_ROOT'])/'results'/os.environ['BOARD']/os.environ['COHORT']
+          reports={lane:json.loads((root/lane/'assessment.json').read_text()) for lane in ['base','candidate']}
+          print(json.dumps({lane:{'connectedNets':report['connectedNets'],'findings':report['findings']} for lane,report in reports.items()}))
+          PYTHON
 
-      - name: Preserve small reports and provenance
+      - name: Preserve comparison provenance
         if: always()
         uses: actions/upload-artifact@v4
         with:
           include-hidden-files: true
-          name: full-board-${{ matrix.board }}-${{ matrix.experiment }}-summary-${{ github.run_attempt }}
+          name: port-cost-${{ matrix.board }}-${{ matrix.cohorts }}-proof
           path: |
-            .full-board-run/results/${{ matrix.board }}/summary.json
-            .full-board-run/results/${{ matrix.board }}/*/result.json
-            .full-board-run/results/${{ matrix.board }}/*/assessment.json
-            .full-board-run/results/${{ matrix.board }}/*/process-diagnostics.json
-            .full-board-run/results/${{ matrix.board }}/*/coarse-diagnostics.json
-            .full-board-run/results/${{ matrix.board }}/*/process.json
-            .full-board-run/results/${{ matrix.board }}/*/progress.json
-            .full-board-run/runtime-manifest.json
-            .full-board-run/cases/assessment-helper-proof.json
+            .full-board-run/base-manifest.json
+            .full-board-run/candidate-manifest.json
+            .full-board-run/port-cost-runtime-proof.json
+            .full-board-run/lanes
+            experiments/full-board-ten/port-cost-plan.json
+            experiments/full-board-ten/port-cost/mapping-proof.json
             experiments/full-board-ten/release.json
-            experiments/full-board-ten/source-provenance.json
             experiments/full-board-ten/harness-provenance.json
-            experiments/full-board-ten/published-release-provenance.json
-            experiments/full-board-ten/baseline-run-plan.json
-          if-no-files-found: warn
+            experiments/full-board-ten/source-provenance.json
+          if-no-files-found: error
           retention-days: 7
-
-      - name: Require selected full circuits to be complete and clean
-        if: always()
-        run: test "${{ steps.report.outputs.all_clean }}" = true

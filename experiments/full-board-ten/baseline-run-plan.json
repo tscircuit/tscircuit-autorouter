@@ -1,126 +1,38 @@
 {
-  "schemaVersion": 1,
-  "purpose": "Qualified bounded top-level logger rerun of only ButterStick spaced after previous observation overhead invalidated completion comparison",
-  "mainVersion": "0.0.3244",
-  "priorBaseline": {
-    "mainVersion": "0.0.3243",
-    "runId": 44471059539,
-    "controllerCommit": "14176a107694e38d70afc7e6653cf4bb6755e869"
-  },
-  "workflow": ".github/workflows/full-board-ten.yml",
-  "branch": "bench/process-bus-light-3244-20261119",
-  "runner": "blacksmith-8vcpu-ubuntu-2404-arm",
-  "jobs": 1,
-  "maxParallel": 1,
-  "cohortOrder": [
-    "spaced"
-  ],
-  "freshRenderAndAssessmentProcesses": true,
-  "captureDeadlineMs": 900000,
-  "hardDeadlineMs": 960000,
-  "assessmentDeadlineMs": 180000,
-  "jobTimeoutMinutes": 45,
+  "sourceCommit": "cba224ed2ced6d8ed4184f551740d3e4e62c219f",
+  "sourceRepository": "tscircuit/tiny-hypergraph",
+  "scope": "3 native cases, paired fresh published3244 then source-only candidate; identical900s/960s limits,8ARMcores,Bun1.4.3",
+  "noCompletionClaimBeforeRun": true,
   "cases": [
     {
-      "id": "butterstick",
-      "cohort": "spaced",
+      "board": "butterstick",
+      "cohort": "original",
       "expectedRoutableNets": 317
+    },
+    {
+      "board": "glider",
+      "cohort": "spaced",
+      "expectedRoutableNets": 356
+    },
+    {
+      "board": "icepi",
+      "cohort": "spaced",
+      "expectedRoutableNets": 230
     }
   ],
-  "expectedRoutableNetsTotal": 317,
-  "sourceOverrides": false,
-  "routingSourceOverrides": false,
-  "dependencyOverrides": [],
-  "originalGeometryPolicy": "phased native, fanout false, planes true",
-  "spacedGeometryPolicy": "phased native, fanout false, planes false",
-  "assessmentPolicy": "Authentic cohort assessor sources and controller policy are unchanged. Assessors resolve published3243, including unchanged Checks282 and published Core2425 copper helper. All actual package graph changes are recorded; no source overrides.",
-  "frozenFiles": {
-    ".github/workflows/full-board-ten.yml": {
-      "bytes": 5650,
-      "sha256": "6a0a3b90afb0f6415e8932646d3c28871219aa09e8f01600585e03e0fa740c0d"
-    },
-    "experiments/full-board-ten/bootstrap.py": {
-      "bytes": 8903,
-      "sha256": "23de25ac8960be89afc57ba27b0d3fddb6e65dba593024be59ec5073d266164d"
-    },
-    "experiments/full-board-ten/prepare-cases.ts": {
-      "bytes": 6254,
-      "sha256": "b72e632e9c9152c9e5daedf1bb60daa5d86c33fdcc454f2a7825827d24124330"
-    },
-    "experiments/full-board-ten/render-published.tsx": {
-      "bytes": 15982,
-      "sha256": "37551700b1b99d955aa3b669637b7ca67fec72087ab9fc8f6633751cbbe3231c"
-    },
-    "experiments/full-board-ten/run-one.ts": {
-      "bytes": 10746,
-      "sha256": "991764291305fd20e7ab140ee27080eb1efebad0e58ed1530867bfc354cfc340"
-    },
-    "experiments/full-board-ten/report.py": {
-      "bytes": 4074,
-      "sha256": "3fa537cd30224a1bdf10a6acd7e293a0a5e8e187c1e2c210b0ed83370a153b5d"
-    },
-    "experiments/full-board-ten/calibrate-assessment.tsx": {
-      "bytes": 2714,
-      "sha256": "efeb820cf34239465df53ce4c7932293e41a14dcab4bedb823c3bc60cc9627a0"
-    },
-    "experiments/full-board-ten/createCoarseRoutingDiagnostics.ts": {
-      "bytes": 18242,
-      "sha256": "dea45bba3386a9b55b7709834dff65468c421992808b406f54c6f9e556e8b618"
-    },
-    "experiments/full-board-ten/createProcessDiagnostics.mjs": {
-      "bytes": 14469,
-      "sha256": "52ce8f91bdc58ab2d25446004ce212087163878a4e013830afee404a72bc42a5"
-    },
-    "experiments/full-board-ten/source-provenance.json": {
-      "bytes": 23139,
-      "sha256": "bd24be29c5fdd5ae68ce15c5b2bc50f172ecdd325dcc1b57a80ec653d12570fb"
-    },
-    "experiments/full-board-ten/release.json": {
-      "bytes": 5677,
-      "sha256": "8254b27fb22466c26a0c3d88cbe1abe430e3410b9d302dc3a93dc146b1a21142"
-    },
-    "experiments/full-board-ten/harness-provenance.json": {
-      "bytes": 1764,
-      "sha256": "2d3190a8ded75aa32a7d59e2ca4c8aafbfa0d97ad7c2ac24c384a165e6db3fdf"
-    },
-    "experiments/full-board-ten/published-release-provenance.json": {
-      "bytes": 108648,
-      "sha256": "e88f458c4a76c4f966937f65c1a23bd052c0ededcef690672035f1ae2f8c84c8"
-    },
-    "experiments/full-board-ten/runtime/package.json": {
-      "bytes": 2804,
-      "sha256": "13b96086943c581a495b937ced1c75b0767a3e2af7b707e4f53a816ab3ead3d7"
-    },
-    "experiments/full-board-ten/runtime/bun.lock": {
-      "bytes": 72080,
-      "sha256": "1427b095c748f72640c558e57ee58b8e765f8489d46f8e1333bdc58e3b107b3d"
-    },
-    "experiments/full-board-ten/autorouter-dependencies/package.json": {
-      "bytes": 261,
-      "sha256": "7b4c1ecf979432e472a4f0589ed49976a8a1323ff7bf651a5938ee7006b61360"
-    },
-    "experiments/full-board-ten/autorouter-dependencies/bun.lock": {
-      "bytes": 13144,
-      "sha256": "ec313c582c29c1e35bb31190151a5649198c177119d32fe311746c06e94e8c4e"
-    }
+  "publishedTinyBase": "f1fe8edcfb3dfde8fd644d09d81bad18743144b3",
+  "sourcePRBase": "6a00f0406e131a2765179e052e45f07efd2f5ae7",
+  "scopeQualification": "Only the two changed source files are applied to the verified published1133 bundle. Other main-branch changes are excluded.",
+  "candidateSha256": "096597ad8503d977f79256a4f0db5f750a6e7355712479549e6b8a6e327155b2",
+  "purpose": "Paired native completion comparison for remaining-port-cost heuristic",
+  "mainVersion": "0.0.3244",
+  "runner": "blacksmith-8vcpu-ubuntu-2404-arm",
+  "branch": "bench/native-port-cost-3244-20261119",
+  "captureDeadlineMs": 900000,
+  "hardDeadlineMs": 960000,
+  "sourceOverrides": {
+    "base": false,
+    "candidate": "Only qualified search source"
   },
-  "comparisonPolicy": "Compare connected identities and raw findings with retained3243. Analyze stage transitions, exhausted searches, locked points, candidate outcomes and first geometry changes. No timing improvement claims.",
-  "diagnosticOnly": true,
-  "observationPolicy": "No solver input/options/budget or source changes. Passive method wrappers. Observer time recorded, not subtracted from native deadlines. Capture limits omit diagnostics only, never stop or redirect routing.",
-  "replacesContaminatedCase": {
-    "runId": 44514077848,
-    "artifactId": 14525319328,
-    "observationMs": 617500,
-    "reason": "Nested bus instances mixed into shared phase history, rewritten on each change;0connected cannotbeusedasreleasecomparison."
-  },
-  "loggerQualification": {
-    "nativeTransitionHistoryReplayed": 7806,
-    "solverIterations": 7806,
-    "retainedTransitions": 256,
-    "omittedTransitions": 7550,
-    "snapshotWrites": 2,
-    "maxSnapshotBytes": 49136,
-    "observationMs": 13.176913000008312,
-    "scope": "bounded logger stress check using recorded bus iterations and forced phase alternation, not a routing replay"
-  }
+  "comparisonPolicy": "Actual connected identities, raw findings, native copper and process counters; no aggregate claim before paired results."
 }

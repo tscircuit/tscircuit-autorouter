@@ -1,0 +1,27 @@
+{
+  "sourceCommit": "cba224ed2ced6d8ed4184f551740d3e4e62c219f",
+  "sourceRepository": "tscircuit/tiny-hypergraph",
+  "scope": "3 native cases, paired fresh published3244 then source-only candidate; identical900s/960s limits,8ARMcores,Bun1.4.3",
+  "noCompletionClaimBeforeRun": true,
+  "cases": [
+    {
+      "board": "butterstick",
+      "cohort": "original",
+      "expectedRoutableNets": 317
+    },
+    {
+      "board": "glider",
+      "cohort": "spaced",
+      "expectedRoutableNets": 356
+    },
+    {
+      "board": "icepi",
+      "cohort": "spaced",
+      "expectedRoutableNets": 230
+    }
+  ],
+  "publishedTinyBase": "f1fe8edcfb3dfde8fd644d09d81bad18743144b3",
+  "sourcePRBase": "6a00f0406e131a2765179e052e45f07efd2f5ae7",
+  "scopeQualification": "Only the two changed source files are applied to the verified published1133 bundle. Other main-branch changes are excluded.",
+  "candidateSha256": "096597ad8503d977f79256a4f0db5f750a6e7355712479549e6b8a6e327155b2"
+}

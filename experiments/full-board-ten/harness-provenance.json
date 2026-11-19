@@ -13,8 +13,8 @@
     },
     {
       "name": "render-published.tsx",
-      "bytes": 15982,
-      "sha256": "37551700b1b99d955aa3b669637b7ca67fec72087ab9fc8f6633751cbbe3231c"
+      "bytes": 16012,
+      "sha256": "059ca0bfd6c4b2566eeff18e2b29a0d41a6c5620a447b3b254abd4af38767a36"
     },
     {
       "name": "run-one.ts",
@@ -47,5 +47,5 @@
       "sha256": "2e881577c63bb6b62d14abd319240bbc6ae5e206ecb007dae80ab3ec922293c7"
     }
   ],
-  "diagnosticInstrumentation": "Same native3244 routing with bounded TOP-LEVEL bus observation:256 retained transitions,allphasecounters,5secondflush. Nested same-class instances are excluded. Corrects excessive logger overhead and nested-instance mixing in first ButterStick spaced attempt. No routing input/settings/budget/source changes."
+  "diagnosticInstrumentation": "Bounded top-level observers shared by both fresh runs; identical inputs/options/deadlines. Published control versus qualified remaining-port-cost source change."
 }
