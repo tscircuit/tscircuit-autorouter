@@ -5,7 +5,7 @@ import { doPipeline9RoutesHaveCopperConflict } from "lib/autorouter-pipelines/Au
 import { Pipeline9HighDensitySolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver"
 import type { NodeWithPortPoints } from "lib/types/high-density-types"
 
-test("Pipeline9 promotes only fixed copper that blocks an all-layer fallback", (): void => {
+test("Pipeline9 routes around native copper on a newly used layer", (): void => {
   const portPoints = [
     { x: -1, y: 0, z: 0, connectionName: "horizontal" },
     { x: 1, y: 0, z: 0, connectionName: "horizontal" },
@@ -56,14 +56,9 @@ test("Pipeline9 promotes only fixed copper that blocks an all-layer fallback", (
   expect(solver.stats.fallbackNodeCount).toBe(1)
   expect(solver.activeFallbackFixedRouteSections.size).toBe(0)
   expect(solver.activeFallbackFixedObstacleRoutes).toEqual([fixedBottomRoute])
-  expect(solver.activeFallbackSolver?.params.obstacles).toEqual([
-    expect.objectContaining({
-      layers: ["bottom"],
-      center: { x: 0, y: 0 },
-      width: 0.6,
-      height: 0.1,
-      connectedTo: ["fixed-bottom", "fixed-bottom-root"],
-    }),
+  expect(solver.activeFallbackSolver?.params.obstacles).toEqual([])
+  expect(solver.activeFallbackSolver?.params.fixedHdRoutes).toEqual([
+    fixedBottomRoute,
   ])
 
   solver.solve()
@@ -72,11 +67,11 @@ test("Pipeline9 promotes only fixed copper that blocks an all-layer fallback", (
   expect(solver.failed).toBeFalse()
   expect(solver.stats).toMatchObject({
     fallbackNodeCount: 1,
-    promotedFallbackAttemptCount: 1,
-    promotedFixedRouteCount: 1,
-    reroutedFixedRouteCount: 1,
+    promotedFallbackAttemptCount: 0,
+    promotedFixedRouteCount: 0,
+    reroutedFixedRouteCount: 0,
   })
-  expect([...solver.fixedRouteReplacements.keys()]).toEqual(["fixed-bottom"])
+  expect(solver.fixedRouteReplacements.size).toBe(0)
   const updatedFixedRoute = solver.getUpdatedFixedHdRoutes()[0]!
   expect(updatedFixedRoute.route[0]).toEqual(fixedBottomRoute.route[0])
   expect(updatedFixedRoute.route.at(-1)).toEqual(fixedBottomRoute.route.at(-1))

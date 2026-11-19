@@ -13,7 +13,11 @@ import type {
 import type { Obstacle } from "lib/types/srj-types"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { materializePipeline9HdRouteVias } from "./materializePipeline9HdRouteVias"
-import { getPipeline9RouteCopperGeometry } from "./pipeline9FixedRouteCopper"
+import {
+  arePipeline9RoutesOnSameNet,
+  doPipeline9RoutesHaveCopperConflict,
+  getPipeline9RouteCopperGeometry,
+} from "./pipeline9FixedRouteCopper"
 
 type Pipeline9RegionalFallbackSolverParams = {
   nodeWithPortPoints: NodeWithPortPoints
@@ -30,6 +34,9 @@ type Pipeline9RegionalFallbackSolverParams = {
     | Record<string, number | null>
   obstacles: Obstacle[]
   boardObstacles?: Obstacle[]
+  fixedHdRoutes?: HighDensityRoute[]
+  preservePhysicalGeometry?: boolean
+  immutableHdRoutes?: HighDensityRoute[]
   movablePreloadedConnectionNames?: ReadonlySet<string>
   viaToPadClearance?: number
   layerCount: number
@@ -167,6 +174,8 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
       effort: params.effort,
       nodePfById: params.nodePfById,
       obstacles: params.obstacles,
+      fixedHdRoutes: params.fixedHdRoutes,
+      preservePhysicalGeometry: params.preservePhysicalGeometry,
       layerCount: params.layerCount,
       useGrowShrinkHighDensityIntraNodeSolver: true,
       preserveTerminalPcbPortIds: false,
@@ -183,6 +192,26 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
   }
 
   private validateCandidateRoutes(routes: HighDensityRoute[]): boolean {
+    for (const route of routes) {
+      for (const fixedRoute of this.params.immutableHdRoutes ?? []) {
+        if (
+          arePipeline9RoutesOnSameNet(route, fixedRoute, this.params.connMap)
+        ) {
+          continue
+        }
+        if (
+          doPipeline9RoutesHaveCopperConflict({
+            left: route,
+            right: fixedRoute,
+            clearance: this.params.obstacleMargin,
+            layerCount: this.params.layerCount,
+            allowBlindAndBuriedVias: this.params.allowBlindAndBuriedVias,
+          })
+        ) {
+          return false
+        }
+      }
+    }
     const {
       boardObstacles,
       movablePreloadedConnectionNames,
@@ -220,6 +249,8 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
     const forceImproveSolver = new RegionalForceImproveSolver({
       nodeWithPortPoints: [this.params.nodeWithPortPoints],
       hdRoutes: routedCandidate,
+      fixedHdRoutes: this.params.fixedHdRoutes,
+      preserveTopologyPortAnchors: this.params.preservePhysicalGeometry,
       colorMap: this.params.colorMap,
       totalStepsPerNode: Math.max(12, Math.round(20 * this.params.effort)),
       nodeAssignmentMargin: this.params.obstacleMargin,
@@ -241,6 +272,9 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
     const repairSolver = new Pipeline4HighDensityRepairSolver({
       nodeWithPortPoints: [this.params.nodeWithPortPoints],
       hdRoutes: forceImprovedRoutes,
+      fixedHdRoutes: this.params.fixedHdRoutes,
+      layerCount: this.params.layerCount,
+      allowBlindAndBuriedVias: this.params.allowBlindAndBuriedVias,
       obstacles: this.params.obstacles,
       colorMap: this.params.colorMap,
       repairMargin: this.params.obstacleMargin,

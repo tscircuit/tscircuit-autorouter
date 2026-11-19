@@ -22,6 +22,7 @@ import {
 import { MultiGraphTopologyPlannerSolver } from "lib/solvers/TopologyPlanningSolver/MultiGraphTopologyPlannerSolver"
 import { TopologyMergingSolver } from "lib/solvers/TopologyMergingSolver/TopologyMergingSolver"
 import { createPreloadedPortValidator } from "./createPreloadedPortValidator"
+import { reservePreloadedCopperPorts } from "./reservePreloadedCopperPorts"
 import { UniformPortDistributionSolver } from "lib/solvers/UniformPortDistributionSolver/UniformPortDistributionSolver"
 import { getColorMap } from "lib/solvers/colors"
 import {
@@ -545,6 +546,14 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           ),
         })
 
+        reservePreloadedCopperPorts({
+          graph,
+          srj: cms.srj,
+          connMap: cms.connMap,
+          traceWidth: cms.minTraceWidth,
+          viaDiameter: cms.viaDiameter,
+        })
+
         return [
           {
             graph,
@@ -691,6 +700,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         {
           inputSrj: cms.srj,
           nodeWithPortPoints: cms.highDensityNodePortPoints ?? [],
+          fixedHdRoutes: cms.highDensityRouteSolver!
+            .getUpdatedFixedHdRoutes(),
           hdRoutes: simplifyPipeline9CollinearRoutePoints(
             materializePipeline9HdRouteVias(cms.highDensityRouteSolver!.routes),
           ),
@@ -713,6 +724,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           hdRoutes:
             cms.highDensityForceImproveSolver?.getOutput() ??
             cms.highDensityRouteSolver!.routes,
+          fixedHdRoutes: cms.highDensityRouteSolver!.getUpdatedFixedHdRoutes(),
           obstacles: cms.srj.obstacles,
           colorMap: cms.colorMap,
           repairMargin: cms.srj.defaultObstacleMargin ?? 0.2,

@@ -165,15 +165,18 @@ export class PrepareTraceSimplificationSolver extends BaseSolver {
     const rootConnectionName =
       this.preparedInput.connMap.getNetConnectedToId(trace.connection_name) ??
       trace.connection_name
-    const mutableHdRoute =
-      uniformTraceWidth === undefined
-        ? undefined
-        : convertSimplifiedPcbTraceToHighDensityRoute(traceToSimplify, {
-            layerCount: this.preparedInput.srj.layerCount,
-            defaultTraceThickness: uniformTraceWidth,
-            defaultViaDiameter: viaDimensions.padDiameter,
-            rootConnectionName,
-          })
+    let mutableHdRoute: HighDensityRoute | undefined
+    if (!trace.isFixed && uniformTraceWidth !== undefined) {
+      mutableHdRoute = convertSimplifiedPcbTraceToHighDensityRoute(
+        traceToSimplify,
+        {
+          layerCount: this.preparedInput.srj.layerCount,
+          defaultTraceThickness: uniformTraceWidth,
+          defaultViaDiameter: viaDimensions.padDiameter,
+          rootConnectionName,
+        },
+      )
+    }
     const usableMutableHdRoute =
       mutableHdRoute && mutableHdRoute.route.length >= 2
         ? mutableHdRoute
