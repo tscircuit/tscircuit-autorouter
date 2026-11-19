@@ -115,6 +115,24 @@ assert isolated_cases==349 and isolated_solved==292
 proof = read('production-equivalence.json')
 assert proof['generatedJavaScriptIdentical'] and proof['final']==COMMITS['fix'] and proof['measured']==COMMITS['measuredFix']
 report = {'versions':VERSIONS,'commits':COMMITS,'boards':boards,'pairedNativeSearches':paired,'fanout31':{'cases':72,'solvedBefore':30,'solvedAfter':30,'timedOutBefore':42,'timedOutAfter':42,'allOutcomesIdentical':True,'identicalSolvedSvgs':30},'isolatedNativePlanes':{'cases':349,'acceptedBefore':292,'acceptedAfter':292,'failuresBefore':57,'failuresAfter':57,'allAcceptedCopperIdentical':True,'independentDrcIssues':0},'focused':{'warmSourcePortReadsBefore':2148,'warmSourcePortReadsAfter':3,'routeAndViaUnchanged':True},'cpuProfile':read('profile/summary.json'),'limits':['All six full boards remain blocked in fanout; no DDR bus phase starts.','First-region best partials are diagnostic search states, not accepted routes or connected full-board nets.','OrangeCrab and H616 are limited by the 600-second full-board budget; partial scores at that cutoff depend on assignments reached. OrangeCrab reached 20 assignments before and 19 after (122 vs118 partial connections), with zero accepted copper in both runs.','Paired native timings use three serial before/after pairs on one Blacksmith worker per scene, alternating order. P95 uses linear interpolation over these three runs.','Warm metadata reads measure candidate construction work; they are not a time measurement.']}
+report['selectedFix'] = {
+    'problem': 'Warm plane searches reconstruct candidates even after every variant has failed static clearance.',
+    'change': 'Read the existing static-clearance cache before building the source path and endpoint plans; skip only when every variant is explicitly false.',
+    'whySelected': 'Plan construction is the largest avoidable helper in the native CPU profile (47.6% inclusive), and the matched replays show a large reduction without changing copper, vias, or iterations.',
+    'keepDecision': 'Keep: native P50, P95 and mean search times fall; completion and routing guard outcomes remain unchanged; no additional vias or DRC issues.',
+    'limits': 'This improves failed-search time, not board completion or joint routing quality. No new solver or cache was introduced.',
+}
+report['fullBoardSummary'] = {
+    'completedBefore': sum(row['before']['fullRenderComplete'] for row in boards),
+    'completedAfter': sum(row['after']['fullRenderComplete'] for row in boards),
+    'acceptedTracesBefore': sum(row['before']['acceptedTraces'] for row in boards),
+    'acceptedTracesAfter': sum(row['after']['acceptedTraces'] for row in boards),
+    'acceptedViasBefore': sum(row['before']['acceptedVias'] for row in boards),
+    'acceptedViasAfter': sum(row['after']['acceptedVias'] for row in boards),
+    'busPhasesStartedBefore': sum(row['before']['busPhasesStarted'] for row in boards),
+    'busPhasesStartedAfter': sum(row['after']['busPhasesStarted'] for row in boards),
+    'timingScope': 'Full-board runs used separate workers and a 600-second deadline; matched native pairs are the performance control.',
+}
 (ROOT/'analysis.json').write_text(json.dumps(report,indent=2)+'\n')
 (ROOT/'provenance.json').write_text(json.dumps({'versions':VERSIONS,'commits':COMMITS,'baselineRun':'https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44469791389','candidateAndMatchedBenchmarks':'https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44471015833','validationAndIsolatedPlanes':'https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44473254235','workflow':'Saved routes removed; fanout → bus lanes → remaining routing; exact original footprints/placement and rules.','nativeProfileInput':paired['icepi']['inputSha256'],'nativeProfileMatchesFreshInput':True,'renderers':{'pcb':'circuit-to-svg0.0.460 from actual emitted CircuitJson','solver':'graphics-debug0.0.99 native GraphicsObject, white background'}},indent=2)+'\n')
 

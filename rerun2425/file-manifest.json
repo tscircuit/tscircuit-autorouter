@@ -4,8 +4,8 @@
     "sha256": "aa5e70fe403a8e28bec6fd69d19f3064da9982fcb1d7ea4b2ff0d86e3157e094"
   },
   "analysis.json": {
-    "bytes": 25262,
-    "sha256": "3f2d5a869d1cbf1d12df213601b0e3fd39f8cb4319fee5dd2b39c268c5c76067"
+    "bytes": 26469,
+    "sha256": "a90d8965e5d6ff95a0775b628d0f2fdd0958f12fa9220cb00986087a48c72e6b"
   },
   "baseline/boards/butterstick/assessment.json": {
     "bytes": 20791,
@@ -344,8 +344,8 @@
     "sha256": "114f6cfcd0c96424482101c674ae92f0a51bc1f46b2af6204ae5ac9876012b37"
   },
   "build-report.py": {
-    "bytes": 14277,
-    "sha256": "dd367470b8b15063670e6b57f23c402fb2d7e57e4d05c93873d46167bdaee880"
+    "bytes": 15922,
+    "sha256": "e46e45ec4f3aa97b0867c23060156decaf7bcda9d6c2d6f7f76caacf47160db6"
   },
   "candidate/boards/butterstick/assessment.json": {
     "bytes": 20791,

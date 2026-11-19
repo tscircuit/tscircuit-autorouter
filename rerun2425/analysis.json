@@ -684,5 +684,23 @@
     "OrangeCrab and H616 are limited by the 600-second full-board budget; partial scores at that cutoff depend on assignments reached. OrangeCrab reached 20 assignments before and 19 after (122 vs118 partial connections), with zero accepted copper in both runs.",
     "Paired native timings use three serial before/after pairs on one Blacksmith worker per scene, alternating order. P95 uses linear interpolation over these three runs.",
     "Warm metadata reads measure candidate construction work; they are not a time measurement."
-  ]
+  ],
+  "selectedFix": {
+    "problem": "Warm plane searches reconstruct candidates even after every variant has failed static clearance.",
+    "change": "Read the existing static-clearance cache before building the source path and endpoint plans; skip only when every variant is explicitly false.",
+    "whySelected": "Plan construction is the largest avoidable helper in the native CPU profile (47.6% inclusive), and the matched replays show a large reduction without changing copper, vias, or iterations.",
+    "keepDecision": "Keep: native P50, P95 and mean search times fall; completion and routing guard outcomes remain unchanged; no additional vias or DRC issues.",
+    "limits": "This improves failed-search time, not board completion or joint routing quality. No new solver or cache was introduced."
+  },
+  "fullBoardSummary": {
+    "completedBefore": 6,
+    "completedAfter": 6,
+    "acceptedTracesBefore": 0,
+    "acceptedTracesAfter": 0,
+    "acceptedViasBefore": 0,
+    "acceptedViasAfter": 0,
+    "busPhasesStartedBefore": 0,
+    "busPhasesStartedAfter": 0,
+    "timingScope": "Full-board runs used separate workers and a 600-second deadline; matched native pairs are the performance control."
+  }
 }
