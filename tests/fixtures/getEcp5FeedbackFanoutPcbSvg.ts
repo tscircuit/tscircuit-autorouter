@@ -41,7 +41,9 @@ export const getEcp5FeedbackFanoutPcbSvg = ({
       throw new Error(`Missing native PCB component ${component.name}`)
     }
     if (pcbComponent.layer !== "top") {
-      throw new Error(`Unexpected feedback component layer for ${component.name}`)
+      throw new Error(
+        `Unexpected feedback component layer for ${component.name}`,
+      )
     }
     const labelFontSizeMm = 0.22
     view.push({
