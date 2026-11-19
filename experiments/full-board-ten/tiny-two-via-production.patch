@@ -1,0 +1,146 @@
+diff --git a/lib/core.ts b/lib/core.ts
+index 9e02c78..6c240a1 100644
+--- a/lib/core.ts
++++ b/lib/core.ts
+@@ -264,6 +264,8 @@ export interface TinyHyperGraphWorkingState {
+ 
+ export interface TinyHyperGraphSolverOptions {
+   minViaPadDiameter?: number
++  /** Physical through-via pitch; region dimensions must be rectangular extents. */
++  minThroughViaCenterDistance?: number
+   DISTANCE_TO_COST?: number
+   RIP_THRESHOLD_START?: number
+   RIP_THRESHOLD_END?: number
+@@ -328,6 +330,7 @@ export interface TinyHyperGraphSolverOptions {
+ 
+ export interface TinyHyperGraphSolverOptionTarget {
+   minViaPadDiameter: number
++  minThroughViaCenterDistance?: number
+   DISTANCE_TO_COST: number
+   RIP_THRESHOLD_START: number
+   RIP_THRESHOLD_END: number
+@@ -369,6 +372,9 @@ export const applyTinyHyperGraphSolverOptions = (
+   if (options.minViaPadDiameter !== undefined) {
+     solver.minViaPadDiameter = options.minViaPadDiameter
+   }
++  if (options.minThroughViaCenterDistance !== undefined) {
++    solver.minThroughViaCenterDistance = options.minThroughViaCenterDistance
++  }
+   if (options.DISTANCE_TO_COST !== undefined) {
+     solver.DISTANCE_TO_COST = options.DISTANCE_TO_COST
+   }
+@@ -471,6 +477,7 @@ export const getTinyHyperGraphSolverOptions = (
+   solver: TinyHyperGraphSolverOptionTarget,
+ ): TinyHyperGraphSolverOptions => ({
+   minViaPadDiameter: solver.minViaPadDiameter,
++  minThroughViaCenterDistance: solver.minThroughViaCenterDistance,
+   DISTANCE_TO_COST: solver.DISTANCE_TO_COST,
+   RIP_THRESHOLD_START: solver.RIP_THRESHOLD_START,
+   RIP_THRESHOLD_END: solver.RIP_THRESHOLD_END,
+@@ -564,6 +571,7 @@ export class TinyHyperGraphSolver extends BaseSolver {
+ 
+   DISTANCE_TO_COST = 0.05 // 50mm = 1 cost unit (1 cost unit ~ 100% chance of failure)
+   minViaPadDiameter = DEFAULT_MIN_VIA_PAD_DIAMETER
++  minThroughViaCenterDistance?: number
+ 
+   RIP_THRESHOLD_START = 0.05
+   RIP_THRESHOLD_END = 0.8
+@@ -894,6 +902,9 @@ export class TinyHyperGraphSolver extends BaseSolver {
+ 
+     for (const neighborPortId of neighbors) {
+       if (neighborPortId === state.goalPortId) {
++        if (this.isLayerTransitionBlocked(currentCandidate, neighborPortId)) {
++          continue
++        }
+         const assignedNetId = state.portAssignment[neighborPortId]
+         if (this.isPortReservedForDifferentNet(neighborPortId)) continue
+         if (assignedNetId !== -1 && assignedNetId !== state.currentRouteNetId) {
+@@ -1047,6 +1058,9 @@ export class TinyHyperGraphSolver extends BaseSolver {
+       previousNeighborIndex = currentNeighborIndex
+       const neighborPortId = neighbors[currentNeighborIndex]!
+       if (neighborPortId === state.goalPortId) {
++        if (this.isLayerTransitionBlocked(currentCandidate, neighborPortId)) {
++          continue
++        }
+         const assignedNetId = state.portAssignment[neighborPortId]
+         if (this.isPortReservedForDifferentNet(neighborPortId)) continue
+         if (assignedNetId !== -1 && assignedNetId !== state.currentRouteNetId) {
+@@ -1281,6 +1295,43 @@ export class TinyHyperGraphSolver extends BaseSolver {
+     return isKnownSingleLayerMask(regionAvailableZMask)
+   }
+ 
++  isLayerTransitionBlocked(
++    currentCandidate: Candidate,
++    neighborPortId: PortId,
++  ): boolean {
++    if (this.minThroughViaCenterDistance === undefined) return false
++    const { topology, state } = this
++    if (
++      topology.portZ[currentCandidate.portId] === topology.portZ[neighborPortId]
++    ) {
++      return false
++    }
++    const regionId = currentCandidate.nextRegionId
++    if (
++      Math.hypot(
++        topology.regionWidth[regionId],
++        topology.regionHeight[regionId],
++      ) +
++        1e-9 >=
++      this.minThroughViaCenterDistance
++    ) {
++      return false
++    }
++    // Even opposite corners cannot separate two different through-via owners.
++    // The first via may extend across the artificial region boundary.
++    const cache = state.regionIntersectionCaches[regionId]
++    for (let index = 0; index < cache.netIds.length; index++) {
++      const layerMask = cache.layerMasks[index]
++      if (
++        cache.netIds[index] !== state.currentRouteNetId &&
++        (layerMask & (layerMask - 1)) !== 0
++      ) {
++        return true
++      }
++    }
++    return false
++  }
++
+   protected computeRegionCostForRegion(
+     regionId: RegionId,
+     numSameLayerIntersections: number,
+@@ -2009,6 +2060,9 @@ export class TinyHyperGraphSolver extends BaseSolver {
+     maximumCost = Number.POSITIVE_INFINITY,
+     knownSegmentDistance?: number,
+   ): number {
++    if (this.isLayerTransitionBlocked(currentCandidate, neighborPortId)) {
++      return Number.POSITIVE_INFINITY
++    }
+     const { state, topology } = this
+ 
+     const nextRegionId = currentCandidate.nextRegionId
+@@ -2166,8 +2220,11 @@ export class TinyHyperGraphSolver extends BaseSolver {
+ class GreedyFinalRouteSolver extends TinyHyperGraphSolver {
+   override computeG(
+     currentCandidate: Candidate,
+-    _neighborPortId: PortId,
++    neighborPortId: PortId,
+   ): number {
++    if (this.isLayerTransitionBlocked(currentCandidate, neighborPortId)) {
++      return Number.POSITIVE_INFINITY
++    }
+     return currentCandidate.g
+   }
+ }
+diff --git a/lib/prepared/DenseRoutingWorkspace.ts b/lib/prepared/DenseRoutingWorkspace.ts
+index b13339a..338152c 100644
+--- a/lib/prepared/DenseRoutingWorkspace.ts
++++ b/lib/prepared/DenseRoutingWorkspace.ts
+@@ -181,6 +181,7 @@ export class DenseRoutingWorkspace {
+       const before = previous
+       previous = at
+       const port = neighbors[at]!
++      if (solver.isLayerTransitionBlocked(c, port)) continue
+       if (port === state.goalPortId) {
+         solver.onPathFound(c)
+         return

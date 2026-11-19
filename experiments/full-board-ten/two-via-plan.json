@@ -30,10 +30,10 @@
     "publishedCoreSha256": "889b3cf17684cec24dae36ebf7da06c85dd0713e093b2665b66de696bacb7f03",
     "publishedAutorouterSha256": "44e2cc5a759e11f3982a876733d0f224dcb901c0ac0840e2ff1ec5be434a4285",
     "dependencyGraphPolicy": "Exact frozen3243 release and lockfiles from baseline14176a10; no independent transitive refresh.",
-    "candidateAutorouterSha256": null
+    "candidateAutorouterSha256": "cdc632613451a24e64f0310c403879b78b6b5c5a23e5c83ef213dac83ca4e438"
   },
   "qualificationReady": false,
-  "status": "HELD_SOURCE_NOT_FROZEN",
+  "status": "HELD_ROOT_REVIEW",
   "branch": "bench/h616-two-via-capacity-3243-20261119",
   "workflow": ".github/workflows/full-board-two-via-capacity.yml",
   "experiment": "two-via-capacity",
@@ -47,31 +47,94 @@
   "expectedRoutableNetsTotal": 121,
   "jobs": 1,
   "maxParallel": 1,
-  "sourceMappingSha256": null,
-  "sourceMappingToolSha256": null,
+  "sourceMappingSha256": "72adea3ccc9a5ebd64dfc465d44a4e9fd0024054f8472793ff732049453a4d3e",
+  "sourceMappingToolSha256": "2c69f3f4f557d4076f7f6e325b63d8f2009d2186f2dcdf59e63d82b89d97291b",
   "source": {
-    "repositories": []
+    "repositories": [
+      {
+        "repository": "tscircuit/tiny-hypergraph",
+        "sourceBaseCommit": "f1fe8edcfb3dfde8fd644d09d81bad18743144b3",
+        "publishedBaseCommit": "f1fe8edcfb3dfde8fd644d09d81bad18743144b3",
+        "productionPatchFile": "tiny-two-via-production.patch",
+        "changedFiles": [
+          {
+            "relative": "lib/core.ts",
+            "beforeSha256": "dc4400b61c2feacd74560687b582706055fbe4808ef156865cd63016b7b9692b",
+            "afterSha256": "79c5e1fa489f0852cbeedf65de9c539717a335b11660c43c098443413fde96a2"
+          },
+          {
+            "relative": "lib/prepared/DenseRoutingWorkspace.ts",
+            "beforeSha256": "63752a8cfc8647d440e3a48906a5d7e8505847a6fa1169eebd7c462cf0965aa3",
+            "afterSha256": "25579b9231ac3bc39c60c4c2889fd4d70c1a08f4340ca90357fb8db0a91a3ecf"
+          }
+        ],
+        "candidateCommit": "29132d91a062f900396a92193e369038832fcb45",
+        "productionPatchSha256": "a525a47425daf46b842851f27a42f1dfba4606a05838a5397158fe00aff0fca2"
+      },
+      {
+        "repository": "tscircuit/tscircuit-autorouter",
+        "sourceBaseCommit": "a4f2778cb40bbc9c147b95a4e48ef0b32f1dd08f",
+        "publishedBaseCommit": "a4f2778cb40bbc9c147b95a4e48ef0b32f1dd08f",
+        "productionPatchFile": "autorouter-two-via-production.patch",
+        "changedFiles": [
+          {
+            "relative": "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver.ts",
+            "beforeSha256": "f7f9254152a9639b2cf4dc5b915c10bf4856d014178a99ef9e8c26fcbd6894da",
+            "afterSha256": "91bc4f5faec9c34c65fada082aff93821d89b8f2b34beb50501f16b3e70c1323"
+          },
+          {
+            "relative": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts",
+            "beforeSha256": "ae83c7785c32a12580c4eb8859a7de6d93acb7220d863d93aa29dd3e8d3a1456",
+            "afterSha256": "11490caa55a98babc103f1ee24424a7a53c76b1f608205d192cdf26dc96c01f0"
+          },
+          {
+            "relative": "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver/types.ts",
+            "beforeSha256": "1c6aa58984ea5391e888ac56fb330a1cab79f5df3716f45faad06a50d72ae59d",
+            "afterSha256": "ac3c1ac0ab3802d8cadf7827281660ed99786681a109d1ca796fc30c82377427"
+          }
+        ],
+        "candidateCommit": "b0334806becaa0cb41f76f80494722a998b1342e",
+        "productionPatchSha256": "d9164bfd70330229721edbed9d27d450f94f671d27e0569ba1062978afc206f2"
+      }
+    ]
   },
   "overlay": {
     "schemaVersion": 2,
-    "replace": [],
-    "insert": [],
+    "replace": [
+      "applyTinyHyperGraphSolverOptions",
+      "getTinyHyperGraphSolverOptions",
+      "TinyHyperGraphSolver._step",
+      "TinyHyperGraphSolver.expandRegionalHopFrontier",
+      "TinyHyperGraphSolver.computeG",
+      "GreedyFinalRouteSolver.computeG",
+      "DenseRoutingWorkspace.expand",
+      "getTinyHyperGraphSolveGraphOptions",
+      "getTinyHyperGraphSectionSolverOptions",
+      "TinyHypergraphPortPointPathingSolver.constructor",
+      "AutoroutingPipelineSolver9_PreloadedTraceGraph.pipelineDef.portPointPathingSolver"
+    ],
+    "insert": [
+      "TinyHyperGraphSolver.minThroughViaCenterDistance",
+      "TinyHyperGraphSolver.isLayerTransitionBlocked"
+    ],
     "publishedSourceMapSha256": "aec2fc7d644bba32defd9e4fa7ec957c78ffdeb37fbfe83d0de780bd5311d5f7",
-    "strategy": "Pending isolated source-qualified through-via center spacing constraint. No rejected port-capacity, cramped guard, B/A03 or budget changes."
+    "strategy": "Only source-qualified second-different-net through-via assignment rejection when the region diagonal cannot meet declared center spacing, plus Pipeline9 through-via pitch propagation. Single vias and same-net sharing remain allowed. No cramped/count-cap/B/A03 or budget changes."
   },
   "nativePolicies": "Complete authentic H616 spaced circuit, all components and121 native demands; unchanged source/options/phase order/900soft960hard180assessment. No routing WASM.",
   "observerPolicy": "Exact native baseline observer targets/hooks and15s circuit capture remain; no optional edge capture or observer changes.",
   "comparisonPolicy": "Compare native names/geometry/physical findings against retained latest3243 baseline44471059539; later phase inputs may differ. No timing-gain claim.",
   "qualification": {
-    "scope": "HELD source patches and exact npm overlay pending; not executable.",
+    "scope": "Frozen source and13 qualified source spans integrated; local syntax, held gate and mapping activation checks complete. Root release pending.",
     "nativeRoutingExecuted": false,
     "dependencyInstallsExecutedLocally": false,
-    "artifactDownloadsExecutedLocally": false
+    "artifactDownloadsExecutedLocally": false,
+    "sourceMappingHandoffSha256": "215c2cf96b5aa4594493222a798c8c061b2058918a5a3dbb9a44bbf6b6728cf3"
   },
   "reuseController": "1f3920c470a0a04683008b9b7343651535827e55",
   "frozenHarnessFiles": {
     "autorouter-dependencies/bun.lock": "ec313c582c29c1e35bb31190151a5649198c177119d32fe311746c06e94e8c4e",
     "autorouter-dependencies/package.json": "7b4c1ecf979432e472a4f0589ed49976a8a1323ff7bf651a5938ee7006b61360",
+    "autorouter-two-via-production.patch": "d9164bfd70330229721edbed9d27d450f94f671d27e0569ba1062978afc206f2",
     "baseline-run-plan.json": "0c6b5737f53e1f79f0416162dd8c6aff6d0feb64f6f0758d3b102199103af7b3",
     "bootstrap.py": "23de25ac8960be89afc57ba27b0d3fddb6e65dba593024be59ec5073d266164d",
     "calibrate-assessment.tsx": "efeb820cf34239465df53ce4c7932293e41a14dcab4bedb823c3bc60cc9627a0",
@@ -80,7 +143,9 @@
     "checks-279/runtime/package.json": "103d453294e1bec590ada749a228da8274336f0552aab4888d2a22debb75aea0",
     "compare-two-via-capacity.py": "b8566d2f0feb957ac903ee7aeaae26a145df7f3e553850c6d560b335aebdf017",
     "createCoarseRoutingDiagnostics.ts": "dea45bba3386a9b55b7709834dff65468c421992808b406f54c6f9e556e8b618",
+    "createTwoViaOverlay.ts": "2c69f3f4f557d4076f7f6e325b63d8f2009d2186f2dcdf59e63d82b89d97291b",
     "harness-provenance.json": "fc4b9191002e33b0561d50a2208d38848d81da0735869bb4f563bb9afe1b7405",
+    "mapping-source-handoff.json": "78dc16d080ec8839c0fd52d9d5c4e844c5970dd53f62ca488e54de307328eff6",
     "package.json": "469e1861d1259cd1307bca324fb0d8ba0a67ea0323d4e728a35c90a2bc92bdf3",
     "prepare-cases.ts": "b72e632e9c9152c9e5daedf1bb60daa5d86c33fdcc454f2a7825827d24124330",
     "prepare-two-via-capacity.py": "76f7bb19d55b1b51aef6a3b3d11431e43c66a64bc38658716b77b764611e60de",
@@ -93,11 +158,14 @@
     "runtime/bun.lock": "1a539e10575d08ee53d4ea289ed9b56975129123336ba552ff0792fb8bba97e2",
     "runtime/package.json": "ccd64599a0851ee1ed7b4c8ec3c18487f7eab6b2ffec7920bc39b007bae12bdb",
     "source-provenance.json": "bd24be29c5fdd5ae68ce15c5b2bc50f172ecdd325dcc1b57a80ec653d12570fb",
-    "tsconfig.json": "2e881577c63bb6b62d14abd319240bbc6ae5e206ecb007dae80ab3ec922293c7"
+    "tiny-two-via-production.patch": "a525a47425daf46b842851f27a42f1dfba4606a05838a5397158fe00aff0fca2",
+    "tsconfig.json": "2e881577c63bb6b62d14abd319240bbc6ae5e206ecb007dae80ab3ec922293c7",
+    "two-via-source-mapping.json": "72adea3ccc9a5ebd64dfc465d44a4e9fd0024054f8472793ff732049453a4d3e"
   },
   "frozenFiles": {
     "experiments/full-board-ten/autorouter-dependencies/bun.lock": "ec313c582c29c1e35bb31190151a5649198c177119d32fe311746c06e94e8c4e",
     "experiments/full-board-ten/autorouter-dependencies/package.json": "7b4c1ecf979432e472a4f0589ed49976a8a1323ff7bf651a5938ee7006b61360",
+    "experiments/full-board-ten/autorouter-two-via-production.patch": "d9164bfd70330229721edbed9d27d450f94f671d27e0569ba1062978afc206f2",
     "experiments/full-board-ten/baseline-run-plan.json": "0c6b5737f53e1f79f0416162dd8c6aff6d0feb64f6f0758d3b102199103af7b3",
     "experiments/full-board-ten/bootstrap.py": "23de25ac8960be89afc57ba27b0d3fddb6e65dba593024be59ec5073d266164d",
     "experiments/full-board-ten/calibrate-assessment.tsx": "efeb820cf34239465df53ce4c7932293e41a14dcab4bedb823c3bc60cc9627a0",
@@ -106,7 +174,9 @@
     "experiments/full-board-ten/checks-279/runtime/package.json": "103d453294e1bec590ada749a228da8274336f0552aab4888d2a22debb75aea0",
     "experiments/full-board-ten/compare-two-via-capacity.py": "b8566d2f0feb957ac903ee7aeaae26a145df7f3e553850c6d560b335aebdf017",
     "experiments/full-board-ten/createCoarseRoutingDiagnostics.ts": "dea45bba3386a9b55b7709834dff65468c421992808b406f54c6f9e556e8b618",
+    "experiments/full-board-ten/createTwoViaOverlay.ts": "2c69f3f4f557d4076f7f6e325b63d8f2009d2186f2dcdf59e63d82b89d97291b",
     "experiments/full-board-ten/harness-provenance.json": "fc4b9191002e33b0561d50a2208d38848d81da0735869bb4f563bb9afe1b7405",
+    "experiments/full-board-ten/mapping-source-handoff.json": "78dc16d080ec8839c0fd52d9d5c4e844c5970dd53f62ca488e54de307328eff6",
     "experiments/full-board-ten/package.json": "469e1861d1259cd1307bca324fb0d8ba0a67ea0323d4e728a35c90a2bc92bdf3",
     "experiments/full-board-ten/prepare-cases.ts": "b72e632e9c9152c9e5daedf1bb60daa5d86c33fdcc454f2a7825827d24124330",
     "experiments/full-board-ten/prepare-two-via-capacity.py": "76f7bb19d55b1b51aef6a3b3d11431e43c66a64bc38658716b77b764611e60de",
@@ -119,7 +189,9 @@
     "experiments/full-board-ten/runtime/bun.lock": "1a539e10575d08ee53d4ea289ed9b56975129123336ba552ff0792fb8bba97e2",
     "experiments/full-board-ten/runtime/package.json": "ccd64599a0851ee1ed7b4c8ec3c18487f7eab6b2ffec7920bc39b007bae12bdb",
     "experiments/full-board-ten/source-provenance.json": "bd24be29c5fdd5ae68ce15c5b2bc50f172ecdd325dcc1b57a80ec653d12570fb",
+    "experiments/full-board-ten/tiny-two-via-production.patch": "a525a47425daf46b842851f27a42f1dfba4606a05838a5397158fe00aff0fca2",
     "experiments/full-board-ten/tsconfig.json": "2e881577c63bb6b62d14abd319240bbc6ae5e206ecb007dae80ab3ec922293c7",
+    "experiments/full-board-ten/two-via-source-mapping.json": "72adea3ccc9a5ebd64dfc465d44a4e9fd0024054f8472793ff732049453a4d3e",
     ".github/workflows/full-board-two-via-capacity.yml": "5071a2ec894bde535629f3673f42bbb9a8b6267ef106f4c4b940436d289fd202"
   }
 }

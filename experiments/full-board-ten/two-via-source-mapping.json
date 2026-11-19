@@ -1,0 +1,471 @@
+{
+  "schemaVersion": 2,
+  "passed": true,
+  "sourceFrozen": true,
+  "originalAutorouterSha256": "44e2cc5a759e11f3982a876733d0f224dcb901c0ac0840e2ff1ec5be434a4285",
+  "candidateAutorouterSha256": "cdc632613451a24e64f0310c403879b78b6b5c5a23e5c83ef213dac83ca4e438",
+  "sourceMapSha256": "aec2fc7d644bba32defd9e4fa7ec957c78ffdeb37fbfe83d0de780bd5311d5f7",
+  "source": {
+    "repositories": [
+      {
+        "repository": "tscircuit/tiny-hypergraph",
+        "sourceBaseCommit": "f1fe8edcfb3dfde8fd644d09d81bad18743144b3",
+        "publishedBaseCommit": "f1fe8edcfb3dfde8fd644d09d81bad18743144b3",
+        "productionPatchFile": "tiny-two-via-production.patch",
+        "changedFiles": [
+          {
+            "relative": "lib/core.ts",
+            "beforeSha256": "dc4400b61c2feacd74560687b582706055fbe4808ef156865cd63016b7b9692b",
+            "afterSha256": "79c5e1fa489f0852cbeedf65de9c539717a335b11660c43c098443413fde96a2"
+          },
+          {
+            "relative": "lib/prepared/DenseRoutingWorkspace.ts",
+            "beforeSha256": "63752a8cfc8647d440e3a48906a5d7e8505847a6fa1169eebd7c462cf0965aa3",
+            "afterSha256": "25579b9231ac3bc39c60c4c2889fd4d70c1a08f4340ca90357fb8db0a91a3ecf"
+          }
+        ],
+        "candidateCommit": "29132d91a062f900396a92193e369038832fcb45",
+        "productionPatchSha256": "a525a47425daf46b842851f27a42f1dfba4606a05838a5397158fe00aff0fca2"
+      },
+      {
+        "repository": "tscircuit/tscircuit-autorouter",
+        "sourceBaseCommit": "a4f2778cb40bbc9c147b95a4e48ef0b32f1dd08f",
+        "publishedBaseCommit": "a4f2778cb40bbc9c147b95a4e48ef0b32f1dd08f",
+        "productionPatchFile": "autorouter-two-via-production.patch",
+        "changedFiles": [
+          {
+            "relative": "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver.ts",
+            "beforeSha256": "f7f9254152a9639b2cf4dc5b915c10bf4856d014178a99ef9e8c26fcbd6894da",
+            "afterSha256": "91bc4f5faec9c34c65fada082aff93821d89b8f2b34beb50501f16b3e70c1323"
+          },
+          {
+            "relative": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts",
+            "beforeSha256": "ae83c7785c32a12580c4eb8859a7de6d93acb7220d863d93aa29dd3e8d3a1456",
+            "afterSha256": "11490caa55a98babc103f1ee24424a7a53c76b1f608205d192cdf26dc96c01f0"
+          },
+          {
+            "relative": "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver/types.ts",
+            "beforeSha256": "1c6aa58984ea5391e888ac56fb330a1cab79f5df3716f45faad06a50d72ae59d",
+            "afterSha256": "ac3c1ac0ab3802d8cadf7827281660ed99786681a109d1ca796fc30c82377427"
+          }
+        ],
+        "candidateCommit": "b0334806becaa0cb41f76f80494722a998b1342e",
+        "productionPatchSha256": "d9164bfd70330229721edbed9d27d450f94f671d27e0569ba1062978afc206f2"
+      }
+    ]
+  },
+  "spans": [
+    {
+      "kind": "replace",
+      "name": "applyTinyHyperGraphSolverOptions",
+      "sourceRepository": "tscircuit/tiny-hypergraph",
+      "sourceRelative": "lib/core.ts",
+      "startCharacter": 2003955,
+      "endCharacter": 2006917,
+      "startByte": 2004014,
+      "endByte": 2006976,
+      "originalText": "(e,t)=>{t&&(void 0!==t.minViaPadDiameter&&(e.minViaPadDiameter=t.minViaPadDiameter),void 0!==t.DISTANCE_TO_COST&&(e.DISTANCE_TO_COST=t.DISTANCE_TO_COST),void 0!==t.RIP_THRESHOLD_START&&(e.RIP_THRESHOLD_START=t.RIP_THRESHOLD_START),void 0!==t.RIP_THRESHOLD_END&&(e.RIP_THRESHOLD_END=t.RIP_THRESHOLD_END),void 0!==t.RIP_THRESHOLD_RAMP_ATTEMPTS&&(e.RIP_THRESHOLD_RAMP_ATTEMPTS=t.RIP_THRESHOLD_RAMP_ATTEMPTS),void 0!==t.RIP_CONGESTION_REGION_COST_FACTOR&&(e.RIP_CONGESTION_REGION_COST_FACTOR=t.RIP_CONGESTION_REGION_COST_FACTOR),void 0!==t.TRACE_DENSITY_COST_FACTOR&&(e.TRACE_DENSITY_COST_FACTOR=Math.max(0,t.TRACE_DENSITY_COST_FACTOR)),void 0!==t.USE_LAZY_ROUTE_HEURISTIC&&(e.USE_LAZY_ROUTE_HEURISTIC=t.USE_LAZY_ROUTE_HEURISTIC),void 0!==t.USE_SPARSE_CANDIDATE_STORAGE&&(e.USE_SPARSE_CANDIDATE_STORAGE=t.USE_SPARSE_CANDIDATE_STORAGE),void 0!==t.OWNED_REGIONAL_HOP_FRONTIER&&(e.OWNED_REGIONAL_HOP_FRONTIER=t.OWNED_REGIONAL_HOP_FRONTIER),void 0!==t.MAX_ITERATIONS&&(e.MAX_ITERATIONS=t.MAX_ITERATIONS),void 0!==t.VERBOSE&&(e.VERBOSE=t.VERBOSE),void 0!==t.STATIC_REACHABILITY_PRECHECK&&(e.STATIC_REACHABILITY_PRECHECK=t.STATIC_REACHABILITY_PRECHECK),void 0!==t.STATIC_REACHABILITY_PRECHECK_MAX_HOPS&&(e.STATIC_REACHABILITY_PRECHECK_MAX_HOPS=t.STATIC_REACHABILITY_PRECHECK_MAX_HOPS),void 0!==t.ACCEPT_BEST_SOLUTION_ON_TIMEOUT&&(e.ACCEPT_BEST_SOLUTION_ON_TIMEOUT=t.ACCEPT_BEST_SOLUTION_ON_TIMEOUT),void 0!==t.GREEDY_FINAL_ROUTE_ITERS&&(e.GREEDY_FINAL_ROUTE_ITERS=t.GREEDY_FINAL_ROUTE_ITERS),void 0!==t.PARTIAL_RIP_ENABLED&&(e.PARTIAL_RIP_ENABLED=t.PARTIAL_RIP_ENABLED),void 0!==t.PARTIAL_RIP_MIN_ROUTE_COUNT&&(e.PARTIAL_RIP_MIN_ROUTE_COUNT=t.PARTIAL_RIP_MIN_ROUTE_COUNT),void 0!==t.PARTIAL_RIP_MAX_ROUTE_COUNT&&(e.PARTIAL_RIP_MAX_ROUTE_COUNT=t.PARTIAL_RIP_MAX_ROUTE_COUNT),void 0!==t.PARTIAL_RIP_MAX_DISTANCE&&(e.PARTIAL_RIP_MAX_DISTANCE=t.PARTIAL_RIP_MAX_DISTANCE),void 0!==t.PARTIAL_RIP_QUALITY_MAX_DISTANCE&&(e.PARTIAL_RIP_QUALITY_MAX_DISTANCE=t.PARTIAL_RIP_QUALITY_MAX_DISTANCE),void 0!==t.PARTIAL_RIP_MAX_ATTEMPTS&&(e.PARTIAL_RIP_MAX_ATTEMPTS=t.PARTIAL_RIP_MAX_ATTEMPTS),void 0!==t.PARTIAL_RIP_WARMUP_FULL_RIP_ATTEMPTS&&(e.PARTIAL_RIP_WARMUP_FULL_RIP_ATTEMPTS=t.PARTIAL_RIP_WARMUP_FULL_RIP_ATTEMPTS),void 0!==t.PARTIAL_RIP_COMPLEXITY_SELECTION_MIN_ROUTE_COUNT&&(e.PARTIAL_RIP_COMPLEXITY_SELECTION_MIN_ROUTE_COUNT=t.PARTIAL_RIP_COMPLEXITY_SELECTION_MIN_ROUTE_COUNT),void 0!==t.PARTIAL_RIP_TARGET_MAX_COST_IMPROVEMENT_RATIO&&(e.PARTIAL_RIP_TARGET_MAX_COST_IMPROVEMENT_RATIO=t.PARTIAL_RIP_TARGET_MAX_COST_IMPROVEMENT_RATIO),void 0!==t.PARTIAL_RIP_MAX_REGION_COST_GROWTH_RATIO&&(e.PARTIAL_RIP_MAX_REGION_COST_GROWTH_RATIO=t.PARTIAL_RIP_MAX_REGION_COST_GROWTH_RATIO),void 0!==t.PARTIAL_RIP_MAX_TOTAL_COST_GROWTH_RATIO&&(e.PARTIAL_RIP_MAX_TOTAL_COST_GROWTH_RATIO=t.PARTIAL_RIP_MAX_TOTAL_COST_GROWTH_RATIO),void 0!==t.OUTSIDE_IN_ROUTING&&(e.OUTSIDE_IN_ROUTING=t.OUTSIDE_IN_ROUTING),void 0!==t.OUTSIDE_IN_MAX_DISTANCE&&(e.OUTSIDE_IN_MAX_DISTANCE=t.OUTSIDE_IN_MAX_DISTANCE))}",
+      "replacementText": "(binding0,binding1)=>{binding1&&(void 0!==binding1.minViaPadDiameter&&(binding0.minViaPadDiameter=binding1.minViaPadDiameter),void 0!==binding1.minThroughViaCenterDistance&&(binding0.minThroughViaCenterDistance=binding1.minThroughViaCenterDistance),void 0!==binding1.DISTANCE_TO_COST&&(binding0.DISTANCE_TO_COST=binding1.DISTANCE_TO_COST),void 0!==binding1.RIP_THRESHOLD_START&&(binding0.RIP_THRESHOLD_START=binding1.RIP_THRESHOLD_START),void 0!==binding1.RIP_THRESHOLD_END&&(binding0.RIP_THRESHOLD_END=binding1.RIP_THRESHOLD_END),void 0!==binding1.RIP_THRESHOLD_RAMP_ATTEMPTS&&(binding0.RIP_THRESHOLD_RAMP_ATTEMPTS=binding1.RIP_THRESHOLD_RAMP_ATTEMPTS),void 0!==binding1.RIP_CONGESTION_REGION_COST_FACTOR&&(binding0.RIP_CONGESTION_REGION_COST_FACTOR=binding1.RIP_CONGESTION_REGION_COST_FACTOR),void 0!==binding1.TRACE_DENSITY_COST_FACTOR&&(binding0.TRACE_DENSITY_COST_FACTOR=Math.max(0,binding1.TRACE_DENSITY_COST_FACTOR)),void 0!==binding1.USE_LAZY_ROUTE_HEURISTIC&&(binding0.USE_LAZY_ROUTE_HEURISTIC=binding1.USE_LAZY_ROUTE_HEURISTIC),void 0!==binding1.USE_SPARSE_CANDIDATE_STORAGE&&(binding0.USE_SPARSE_CANDIDATE_STORAGE=binding1.USE_SPARSE_CANDIDATE_STORAGE),void 0!==binding1.OWNED_REGIONAL_HOP_FRONTIER&&(binding0.OWNED_REGIONAL_HOP_FRONTIER=binding1.OWNED_REGIONAL_HOP_FRONTIER),void 0!==binding1.MAX_ITERATIONS&&(binding0.MAX_ITERATIONS=binding1.MAX_ITERATIONS),void 0!==binding1.VERBOSE&&(binding0.VERBOSE=binding1.VERBOSE),void 0!==binding1.STATIC_REACHABILITY_PRECHECK&&(binding0.STATIC_REACHABILITY_PRECHECK=binding1.STATIC_REACHABILITY_PRECHECK),void 0!==binding1.STATIC_REACHABILITY_PRECHECK_MAX_HOPS&&(binding0.STATIC_REACHABILITY_PRECHECK_MAX_HOPS=binding1.STATIC_REACHABILITY_PRECHECK_MAX_HOPS),void 0!==binding1.ACCEPT_BEST_SOLUTION_ON_TIMEOUT&&(binding0.ACCEPT_BEST_SOLUTION_ON_TIMEOUT=binding1.ACCEPT_BEST_SOLUTION_ON_TIMEOUT),void 0!==binding1.GREEDY_FINAL_ROUTE_ITERS&&(binding0.GREEDY_FINAL_ROUTE_ITERS=binding1.GREEDY_FINAL_ROUTE_ITERS),void 0!==binding1.PARTIAL_RIP_ENABLED&&(binding0.PARTIAL_RIP_ENABLED=binding1.PARTIAL_RIP_ENABLED),void 0!==binding1.PARTIAL_RIP_MIN_ROUTE_COUNT&&(binding0.PARTIAL_RIP_MIN_ROUTE_COUNT=binding1.PARTIAL_RIP_MIN_ROUTE_COUNT),void 0!==binding1.PARTIAL_RIP_MAX_ROUTE_COUNT&&(binding0.PARTIAL_RIP_MAX_ROUTE_COUNT=binding1.PARTIAL_RIP_MAX_ROUTE_COUNT),void 0!==binding1.PARTIAL_RIP_MAX_DISTANCE&&(binding0.PARTIAL_RIP_MAX_DISTANCE=binding1.PARTIAL_RIP_MAX_DISTANCE),void 0!==binding1.PARTIAL_RIP_QUALITY_MAX_DISTANCE&&(binding0.PARTIAL_RIP_QUALITY_MAX_DISTANCE=binding1.PARTIAL_RIP_QUALITY_MAX_DISTANCE),void 0!==binding1.PARTIAL_RIP_MAX_ATTEMPTS&&(binding0.PARTIAL_RIP_MAX_ATTEMPTS=binding1.PARTIAL_RIP_MAX_ATTEMPTS),void 0!==binding1.PARTIAL_RIP_WARMUP_FULL_RIP_ATTEMPTS&&(binding0.PARTIAL_RIP_WARMUP_FULL_RIP_ATTEMPTS=binding1.PARTIAL_RIP_WARMUP_FULL_RIP_ATTEMPTS),void 0!==binding1.PARTIAL_RIP_COMPLEXITY_SELECTION_MIN_ROUTE_COUNT&&(binding0.PARTIAL_RIP_COMPLEXITY_SELECTION_MIN_ROUTE_COUNT=binding1.PARTIAL_RIP_COMPLEXITY_SELECTION_MIN_ROUTE_COUNT),void 0!==binding1.PARTIAL_RIP_TARGET_MAX_COST_IMPROVEMENT_RATIO&&(binding0.PARTIAL_RIP_TARGET_MAX_COST_IMPROVEMENT_RATIO=binding1.PARTIAL_RIP_TARGET_MAX_COST_IMPROVEMENT_RATIO),void 0!==binding1.PARTIAL_RIP_MAX_REGION_COST_GROWTH_RATIO&&(binding0.PARTIAL_RIP_MAX_REGION_COST_GROWTH_RATIO=binding1.PARTIAL_RIP_MAX_REGION_COST_GROWTH_RATIO),void 0!==binding1.PARTIAL_RIP_MAX_TOTAL_COST_GROWTH_RATIO&&(binding0.PARTIAL_RIP_MAX_TOTAL_COST_GROWTH_RATIO=binding1.PARTIAL_RIP_MAX_TOTAL_COST_GROWTH_RATIO),void 0!==binding1.OUTSIDE_IN_ROUTING&&(binding0.OUTSIDE_IN_ROUTING=binding1.OUTSIDE_IN_ROUTING),void 0!==binding1.OUTSIDE_IN_MAX_DISTANCE&&(binding0.OUTSIDE_IN_MAX_DISTANCE=binding1.OUTSIDE_IN_MAX_DISTANCE))}",
+      "originalSha256": "72f1e2358c7f672985575a0a3ae50a102e83006edf7508395b1cbd75134c6d4a",
+      "replacementSha256": "d33f817fae4bc4e0c7146ef871ad450e52ec660c65193f56b582e5fa142323e7",
+      "compiledBaseEquivalent": true,
+      "baseCanonicalSha256": "4ee4ba2155405d8650076a22a001853f09790facefb855610b398ed8caadf008",
+      "aliases": {}
+    },
+    {
+      "kind": "replace",
+      "name": "getTinyHyperGraphSolverOptions",
+      "sourceRepository": "tscircuit/tiny-hypergraph",
+      "sourceRelative": "lib/core.ts",
+      "startCharacter": 2006921,
+      "endCharacter": 2008595,
+      "startByte": 2006980,
+      "endByte": 2008654,
+      "originalText": "e=>({minViaPadDiameter:e.minViaPadDiameter,DISTANCE_TO_COST:e.DISTANCE_TO_COST,RIP_THRESHOLD_START:e.RIP_THRESHOLD_START,RIP_THRESHOLD_END:e.RIP_THRESHOLD_END,RIP_THRESHOLD_RAMP_ATTEMPTS:e.RIP_THRESHOLD_RAMP_ATTEMPTS,RIP_CONGESTION_REGION_COST_FACTOR:e.RIP_CONGESTION_REGION_COST_FACTOR,TRACE_DENSITY_COST_FACTOR:e.TRACE_DENSITY_COST_FACTOR,USE_LAZY_ROUTE_HEURISTIC:e.USE_LAZY_ROUTE_HEURISTIC,USE_SPARSE_CANDIDATE_STORAGE:e.USE_SPARSE_CANDIDATE_STORAGE,OWNED_REGIONAL_HOP_FRONTIER:e.OWNED_REGIONAL_HOP_FRONTIER,MAX_ITERATIONS:e.MAX_ITERATIONS,VERBOSE:e.VERBOSE,STATIC_REACHABILITY_PRECHECK:e.STATIC_REACHABILITY_PRECHECK,STATIC_REACHABILITY_PRECHECK_MAX_HOPS:e.STATIC_REACHABILITY_PRECHECK_MAX_HOPS,ACCEPT_BEST_SOLUTION_ON_TIMEOUT:e.ACCEPT_BEST_SOLUTION_ON_TIMEOUT,GREEDY_FINAL_ROUTE_ITERS:e.GREEDY_FINAL_ROUTE_ITERS,PARTIAL_RIP_ENABLED:e.PARTIAL_RIP_ENABLED,PARTIAL_RIP_MIN_ROUTE_COUNT:e.PARTIAL_RIP_MIN_ROUTE_COUNT,PARTIAL_RIP_MAX_ROUTE_COUNT:e.PARTIAL_RIP_MAX_ROUTE_COUNT,PARTIAL_RIP_MAX_DISTANCE:e.PARTIAL_RIP_MAX_DISTANCE,PARTIAL_RIP_QUALITY_MAX_DISTANCE:e.PARTIAL_RIP_QUALITY_MAX_DISTANCE,PARTIAL_RIP_MAX_ATTEMPTS:e.PARTIAL_RIP_MAX_ATTEMPTS,PARTIAL_RIP_WARMUP_FULL_RIP_ATTEMPTS:e.PARTIAL_RIP_WARMUP_FULL_RIP_ATTEMPTS,PARTIAL_RIP_COMPLEXITY_SELECTION_MIN_ROUTE_COUNT:e.PARTIAL_RIP_COMPLEXITY_SELECTION_MIN_ROUTE_COUNT,PARTIAL_RIP_TARGET_MAX_COST_IMPROVEMENT_RATIO:e.PARTIAL_RIP_TARGET_MAX_COST_IMPROVEMENT_RATIO,PARTIAL_RIP_MAX_REGION_COST_GROWTH_RATIO:e.PARTIAL_RIP_MAX_REGION_COST_GROWTH_RATIO,PARTIAL_RIP_MAX_TOTAL_COST_GROWTH_RATIO:e.PARTIAL_RIP_MAX_TOTAL_COST_GROWTH_RATIO,OUTSIDE_IN_ROUTING:e.OUTSIDE_IN_ROUTING,OUTSIDE_IN_MAX_DISTANCE:e.OUTSIDE_IN_MAX_DISTANCE})",
+      "replacementText": "binding0=>({minViaPadDiameter:binding0.minViaPadDiameter,minThroughViaCenterDistance:binding0.minThroughViaCenterDistance,DISTANCE_TO_COST:binding0.DISTANCE_TO_COST,RIP_THRESHOLD_START:binding0.RIP_THRESHOLD_START,RIP_THRESHOLD_END:binding0.RIP_THRESHOLD_END,RIP_THRESHOLD_RAMP_ATTEMPTS:binding0.RIP_THRESHOLD_RAMP_ATTEMPTS,RIP_CONGESTION_REGION_COST_FACTOR:binding0.RIP_CONGESTION_REGION_COST_FACTOR,TRACE_DENSITY_COST_FACTOR:binding0.TRACE_DENSITY_COST_FACTOR,USE_LAZY_ROUTE_HEURISTIC:binding0.USE_LAZY_ROUTE_HEURISTIC,USE_SPARSE_CANDIDATE_STORAGE:binding0.USE_SPARSE_CANDIDATE_STORAGE,OWNED_REGIONAL_HOP_FRONTIER:binding0.OWNED_REGIONAL_HOP_FRONTIER,MAX_ITERATIONS:binding0.MAX_ITERATIONS,VERBOSE:binding0.VERBOSE,STATIC_REACHABILITY_PRECHECK:binding0.STATIC_REACHABILITY_PRECHECK,STATIC_REACHABILITY_PRECHECK_MAX_HOPS:binding0.STATIC_REACHABILITY_PRECHECK_MAX_HOPS,ACCEPT_BEST_SOLUTION_ON_TIMEOUT:binding0.ACCEPT_BEST_SOLUTION_ON_TIMEOUT,GREEDY_FINAL_ROUTE_ITERS:binding0.GREEDY_FINAL_ROUTE_ITERS,PARTIAL_RIP_ENABLED:binding0.PARTIAL_RIP_ENABLED,PARTIAL_RIP_MIN_ROUTE_COUNT:binding0.PARTIAL_RIP_MIN_ROUTE_COUNT,PARTIAL_RIP_MAX_ROUTE_COUNT:binding0.PARTIAL_RIP_MAX_ROUTE_COUNT,PARTIAL_RIP_MAX_DISTANCE:binding0.PARTIAL_RIP_MAX_DISTANCE,PARTIAL_RIP_QUALITY_MAX_DISTANCE:binding0.PARTIAL_RIP_QUALITY_MAX_DISTANCE,PARTIAL_RIP_MAX_ATTEMPTS:binding0.PARTIAL_RIP_MAX_ATTEMPTS,PARTIAL_RIP_WARMUP_FULL_RIP_ATTEMPTS:binding0.PARTIAL_RIP_WARMUP_FULL_RIP_ATTEMPTS,PARTIAL_RIP_COMPLEXITY_SELECTION_MIN_ROUTE_COUNT:binding0.PARTIAL_RIP_COMPLEXITY_SELECTION_MIN_ROUTE_COUNT,PARTIAL_RIP_TARGET_MAX_COST_IMPROVEMENT_RATIO:binding0.PARTIAL_RIP_TARGET_MAX_COST_IMPROVEMENT_RATIO,PARTIAL_RIP_MAX_REGION_COST_GROWTH_RATIO:binding0.PARTIAL_RIP_MAX_REGION_COST_GROWTH_RATIO,PARTIAL_RIP_MAX_TOTAL_COST_GROWTH_RATIO:binding0.PARTIAL_RIP_MAX_TOTAL_COST_GROWTH_RATIO,OUTSIDE_IN_ROUTING:binding0.OUTSIDE_IN_ROUTING,OUTSIDE_IN_MAX_DISTANCE:binding0.OUTSIDE_IN_MAX_DISTANCE})",
+      "originalSha256": "a3074a58ad1c7fb8a78cc3fd2590d3ab0954e057e4fc3163064df471beb14aae",
+      "replacementSha256": "e4f8c4b5d2fddfca71cb4f6aa186dcde0fbbc8dd0552ee0b1319f21f835933e6",
+      "compiledBaseEquivalent": true,
+      "baseCanonicalSha256": "85753da69507c3f620aa358e78c4a577a720dd0ebfd5869e11ad2f888dde5cc8",
+      "aliases": {}
+    },
+    {
+      "kind": "insert",
+      "name": "TinyHyperGraphSolver.minThroughViaCenterDistance",
+      "sourceRepository": "tscircuit/tiny-hypergraph",
+      "sourceRelative": "lib/core.ts",
+      "startCharacter": 2010982,
+      "endCharacter": 2010982,
+      "startByte": 2011041,
+      "endByte": 2011041,
+      "originalText": "",
+      "replacementText": "minThroughViaCenterDistance",
+      "originalSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "replacementSha256": "83ba52ed6b181ba9c41b843ad3c8ffb014c473e42eefd43424ff8a8d41f6be08",
+      "compiledBaseEquivalent": null
+    },
+    {
+      "kind": "replace",
+      "name": "TinyHyperGraphSolver._step",
+      "sourceRepository": "tscircuit/tiny-hypergraph",
+      "sourceRelative": "lib/core.ts",
+      "startCharacter": 2015288,
+      "endCharacter": 2017752,
+      "startByte": 2015347,
+      "endByte": 2017811,
+      "originalText": "_step(){const{problem:e,topology:t,state:n}=this;if(void 0===n.currentRouteId){if(0===n.unroutedRoutes.length)return void this.onAllRoutesRouted();n.currentRouteId=n.unroutedRoutes.shift(),n.currentRouteNetId=e.routeNet[n.currentRouteId],this.routeAttemptCountByRouteId[n.currentRouteId]+=1,this.resetCandidateBestCosts();const t=this.getRouteStartPortId(n.currentRouteId);n.candidateQueue.clear();const o=this.getStartingNextRegionId(n.currentRouteId,t);if(void 0===o)return this.failed=!0,void(this.error=`Start port ${t} has no incident regions`);const i=this.getHopId(t,o);this.setCandidateBestCost(i,0),n.candidateQueue.queue({hopId:i,nextRegionId:o,portId:t,f:0,g:0,h:0}),n.goalPortId=this.getRouteEndPortId(n.currentRouteId)}const o=n.candidateQueue.dequeue();if(!o)return void this.onOutOfCandidates();const i=o.hopId??this.getHopId(o.portId,o.nextRegionId);if(o.g>this.getCandidateBestCost(i))return;if(this.isRegionReservedForDifferentNet(o.nextRegionId))return;const r=t.regionIncidentPorts[o.nextRegionId];if(this.OWNED_REGIONAL_HOP_FRONTIER){const e=this.getRegionalHopFrontier(o.nextRegionId,r);if(e)return void this.expandRegionalHopFrontier(o,e)}for(const i of r){if(i===n.goalPortId){const e=n.portAssignment[i];if(this.isPortReservedForDifferentNet(i))continue;if(-1!==e&&e!==n.currentRouteNetId)continue;return void this.onPathFound(o)}if(i===o.portId)continue;if(0===e.portSectionMask[i])continue;const r=t.incidentPortRegion[i][0]===o.nextRegionId?t.incidentPortRegion[i][1]:t.incidentPortRegion[i][0];if(void 0===r)continue;const s=this.getHopId(i,r);if(!0===(n.candidateQueue.isClosedHopId?n.candidateQueue.isClosedHopId(s):n.candidateQueue.isClosedHop?.(i,r)))continue;const a=n.portAssignment[i];if(this.isPortReservedForDifferentNet(i))continue;if(-1!==a&&a!==n.currentRouteNetId)continue;if(this.isRegionReservedForDifferentNet(r))continue;const c=this.getCandidateBestCost(s);if(o.g>=c)continue;let l,h=o.g+n.regionCongestionCost[o.nextRegionId]+(e.portPenalty?.[i]??0);if(this.ADD_SEGMENT_DISTANCE_TO_G){const e=t.portX[o.portId]-t.portX[i],n=t.portY[o.portId]-t.portY[i];l=Math.sqrt(e*e+n*n),h+=l*this.DISTANCE_TO_COST}if(h>=c)continue;const d=this.computeG(o,i,c,l);if(!Number.isFinite(d)||d>=c)continue;const u=this.computeH(i),p={hopId:s,prevRegionId:o.nextRegionId,nextRegionId:r,portId:i,g:d,h:u,f:d+u,prevCandidate:o};if(i===n.goalPortId)return void this.onPathFound(p);this.setCandidateBestCost(s,d),n.candidateQueue.queue(p)}}",
+      "replacementText": "_step(){const{problem:binding0,topology:binding1,state:binding2}=this;if(void 0===binding2.currentRouteId){if(0===binding2.unroutedRoutes.length)return void this.onAllRoutesRouted();binding2.currentRouteId=binding2.unroutedRoutes.shift(),binding2.currentRouteNetId=binding0.routeNet[binding2.currentRouteId],this.routeAttemptCountByRouteId[binding2.currentRouteId]+=1,this.resetCandidateBestCosts();const binding1=this.getRouteStartPortId(binding2.currentRouteId);binding2.candidateQueue.clear();const binding3=this.getStartingNextRegionId(binding2.currentRouteId,binding1);if(void 0===binding3)return this.failed=!0,void(this.error=`Start port ${binding1} has no incident regions`);const binding4=this.getHopId(binding1,binding3);this.setCandidateBestCost(binding4,0),binding2.candidateQueue.queue({hopId:binding4,nextRegionId:binding3,portId:binding1,f:0,g:0,h:0}),binding2.goalPortId=this.getRouteEndPortId(binding2.currentRouteId)}const binding3=binding2.candidateQueue.dequeue();if(!binding3)return void this.onOutOfCandidates();const binding4=binding3.hopId??this.getHopId(binding3.portId,binding3.nextRegionId);if(binding3.g>this.getCandidateBestCost(binding4))return;if(this.isRegionReservedForDifferentNet(binding3.nextRegionId))return;const binding5=binding1.regionIncidentPorts[binding3.nextRegionId];if(this.OWNED_REGIONAL_HOP_FRONTIER){const binding0=this.getRegionalHopFrontier(binding3.nextRegionId,binding5);if(binding0)return void this.expandRegionalHopFrontier(binding3,binding0)}for(const binding4 of binding5){if(binding4===binding2.goalPortId){if(this.isLayerTransitionBlocked(binding3,binding4))continue;const binding0=binding2.portAssignment[binding4];if(this.isPortReservedForDifferentNet(binding4))continue;if(-1!==binding0&&binding0!==binding2.currentRouteNetId)continue;return void this.onPathFound(binding3)}if(binding4===binding3.portId)continue;if(0===binding0.portSectionMask[binding4])continue;const binding5=binding1.incidentPortRegion[binding4][0]===binding3.nextRegionId?binding1.incidentPortRegion[binding4][1]:binding1.incidentPortRegion[binding4][0];if(void 0===binding5)continue;const binding6=this.getHopId(binding4,binding5);if(!0===(binding2.candidateQueue.isClosedHopId?binding2.candidateQueue.isClosedHopId(binding6):binding2.candidateQueue.isClosedHop?.(binding4,binding5)))continue;const binding7=binding2.portAssignment[binding4];if(this.isPortReservedForDifferentNet(binding4))continue;if(-1!==binding7&&binding7!==binding2.currentRouteNetId)continue;if(this.isRegionReservedForDifferentNet(binding5))continue;const binding8=this.getCandidateBestCost(binding6);if(binding3.g>=binding8)continue;let binding9,binding10=binding3.g+binding2.regionCongestionCost[binding3.nextRegionId]+(binding0.portPenalty?.[binding4]??0);if(this.ADD_SEGMENT_DISTANCE_TO_G){const binding0=binding1.portX[binding3.portId]-binding1.portX[binding4],binding2=binding1.portY[binding3.portId]-binding1.portY[binding4];binding9=Math.sqrt(binding0*binding0+binding2*binding2),binding10+=binding9*this.DISTANCE_TO_COST}if(binding10>=binding8)continue;const binding11=this.computeG(binding3,binding4,binding8,binding9);if(!Number.isFinite(binding11)||binding11>=binding8)continue;const binding12=this.computeH(binding4),binding13={hopId:binding6,prevRegionId:binding3.nextRegionId,nextRegionId:binding5,portId:binding4,g:binding11,h:binding12,f:binding11+binding12,prevCandidate:binding3};if(binding4===binding2.goalPortId)return void this.onPathFound(binding13);this.setCandidateBestCost(binding6,binding11),binding2.candidateQueue.queue(binding13)}}",
+      "originalSha256": "01c4d8fe5ab47cf0987051707f9e8da1238ea1212df78b0fd27787525bb89c84",
+      "replacementSha256": "6e060dd7404e3fe32c2fbe69f2af94a7953da98f7f51d3ae91c27c57bbce6eb6",
+      "compiledBaseEquivalent": true,
+      "baseCanonicalSha256": "90fb41720f23779250a21f81767fbb2742437cf0192819b9901b1d466be52206",
+      "aliases": {}
+    },
+    {
+      "kind": "replace",
+      "name": "TinyHyperGraphSolver.expandRegionalHopFrontier",
+      "sourceRepository": "tscircuit/tiny-hypergraph",
+      "sourceRelative": "lib/core.ts",
+      "startCharacter": 2019000,
+      "endCharacter": 2020583,
+      "startByte": 2019059,
+      "endByte": 2020642,
+      "originalText": "expandRegionalHopFrontier(e,t){const{problem:n,topology:o,state:i}=this,{neighbors:r,next:s,prepared:a,nextRegionIds:c,hopIds:l}=t;let h=t.head,d=-1;for(;-1!==h;){const u=h;h=s[u];const p=d;d=u;const m=r[u];if(m===i.goalPortId){const t=i.portAssignment[m];if(this.isPortReservedForDifferentNet(m))continue;if(-1!==t&&t!==i.currentRouteNetId)continue;return void this.onPathFound(e)}if(m===e.portId)continue;let g,f;if(a[u])g=c[u],f=l[u];else{if(0===n.portSectionMask[m])continue;const t=o.incidentPortRegion[m][0]===e.nextRegionId?o.incidentPortRegion[m][1]:o.incidentPortRegion[m][0];if(void 0===t)continue;g=t,f=this.getHopId(m,g)}if(!0===(i.candidateQueue.isClosedHopId?i.candidateQueue.isClosedHopId(f):i.candidateQueue.isClosedHop?.(m,g))){-1===p?t.head=h:s[p]=h,d=p;continue}if(!a[u]){const e=i.portAssignment[m];if(this.isPortReservedForDifferentNet(m))continue;if(-1!==e&&e!==i.currentRouteNetId)continue;if(this.isRegionReservedForDifferentNet(g))continue;c[u]=g,l[u]=f,a[u]=1}const y=this.getCandidateBestCost(f);if(e.g>=y)continue;let _,b=e.g+i.regionCongestionCost[e.nextRegionId]+(n.portPenalty?.[m]??0);if(this.ADD_SEGMENT_DISTANCE_TO_G){const t=o.portX[e.portId]-o.portX[m],n=o.portY[e.portId]-o.portY[m];_=Math.sqrt(t*t+n*n),b+=_*this.DISTANCE_TO_COST}if(b>=y)continue;const x=this.computeG(e,m,y,_);if(!Number.isFinite(x)||x>=y)continue;const v=this.computeH(m),I={hopId:f,prevRegionId:e.nextRegionId,nextRegionId:g,portId:m,g:x,h:v,f:x+v,prevCandidate:e};if(m===i.goalPortId)return void this.onPathFound(I);this.setCandidateBestCost(f,x),i.candidateQueue.queue(I)}}",
+      "replacementText": "expandRegionalHopFrontier(binding0,binding1){const{problem:binding2,topology:binding3,state:binding4}=this,{neighbors:binding5,next:binding6,prepared:binding7,nextRegionIds:binding8,hopIds:binding9}=binding1;let binding10=binding1.head,binding11=-1;for(;-1!==binding10;){const binding12=binding10;binding10=binding6[binding12];const binding13=binding11;binding11=binding12;const binding14=binding5[binding12];if(binding14===binding4.goalPortId){if(this.isLayerTransitionBlocked(binding0,binding14))continue;const binding1=binding4.portAssignment[binding14];if(this.isPortReservedForDifferentNet(binding14))continue;if(-1!==binding1&&binding1!==binding4.currentRouteNetId)continue;return void this.onPathFound(binding0)}if(binding14===binding0.portId)continue;let binding15,binding16;if(binding7[binding12])binding15=binding8[binding12],binding16=binding9[binding12];else{if(0===binding2.portSectionMask[binding14])continue;const binding1=binding3.incidentPortRegion[binding14][0]===binding0.nextRegionId?binding3.incidentPortRegion[binding14][1]:binding3.incidentPortRegion[binding14][0];if(void 0===binding1)continue;binding15=binding1,binding16=this.getHopId(binding14,binding15)}if(!0===(binding4.candidateQueue.isClosedHopId?binding4.candidateQueue.isClosedHopId(binding16):binding4.candidateQueue.isClosedHop?.(binding14,binding15))){-1===binding13?binding1.head=binding10:binding6[binding13]=binding10,binding11=binding13;continue}if(!binding7[binding12]){const binding0=binding4.portAssignment[binding14];if(this.isPortReservedForDifferentNet(binding14))continue;if(-1!==binding0&&binding0!==binding4.currentRouteNetId)continue;if(this.isRegionReservedForDifferentNet(binding15))continue;binding8[binding12]=binding15,binding9[binding12]=binding16,binding7[binding12]=1}const binding17=this.getCandidateBestCost(binding16);if(binding0.g>=binding17)continue;let binding18,binding19=binding0.g+binding4.regionCongestionCost[binding0.nextRegionId]+(binding2.portPenalty?.[binding14]??0);if(this.ADD_SEGMENT_DISTANCE_TO_G){const binding1=binding3.portX[binding0.portId]-binding3.portX[binding14],binding2=binding3.portY[binding0.portId]-binding3.portY[binding14];binding18=Math.sqrt(binding1*binding1+binding2*binding2),binding19+=binding18*this.DISTANCE_TO_COST}if(binding19>=binding17)continue;const binding20=this.computeG(binding0,binding14,binding17,binding18);if(!Number.isFinite(binding20)||binding20>=binding17)continue;const binding21=this.computeH(binding14),binding22={hopId:binding16,prevRegionId:binding0.nextRegionId,nextRegionId:binding15,portId:binding14,g:binding20,h:binding21,f:binding20+binding21,prevCandidate:binding0};if(binding14===binding4.goalPortId)return void this.onPathFound(binding22);this.setCandidateBestCost(binding16,binding20),binding4.candidateQueue.queue(binding22)}}",
+      "originalSha256": "a2c833f984073ad3de741b97f290d7eeae81682434c22607b15e10677024c259",
+      "replacementSha256": "49b65f7c86038c69849a17770af07db654ab57c3537a80c99fc681030836bd5b",
+      "compiledBaseEquivalent": true,
+      "baseCanonicalSha256": "42cc20bfdeb975d4cefd3cf0bca49b3486dd2bbd6c1b29808930e1c4b249016c",
+      "aliases": {}
+    },
+    {
+      "kind": "insert",
+      "name": "TinyHyperGraphSolver.isLayerTransitionBlocked",
+      "sourceRepository": "tscircuit/tiny-hypergraph",
+      "sourceRelative": "lib/core.ts",
+      "startCharacter": 2022846,
+      "endCharacter": 2022846,
+      "startByte": 2022905,
+      "endByte": 2022905,
+      "originalText": "",
+      "replacementText": "isLayerTransitionBlocked(binding0,binding1){if(void 0===this.minThroughViaCenterDistance)return!1;const{topology:binding2,state:binding3}=this;if(binding2.portZ[binding0.portId]===binding2.portZ[binding1])return!1;const binding4=binding0.nextRegionId;if(Math.hypot(binding2.regionWidth[binding4],binding2.regionHeight[binding4])+1e-9>=this.minThroughViaCenterDistance)return!1;const binding5=binding3.regionIntersectionCaches[binding4];for(let binding0=0;binding0<binding5.netIds.length;binding0++){const binding1=binding5.layerMasks[binding0];if(binding5.netIds[binding0]!==binding3.currentRouteNetId&&binding1&binding1-1)return!0}return!1}",
+      "originalSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "replacementSha256": "4bf13c9a7af9ad8fcadce438bd03a88635296677d7158b1cb823472d40b1a4da",
+      "compiledBaseEquivalent": null
+    },
+    {
+      "kind": "replace",
+      "name": "TinyHyperGraphSolver.computeG",
+      "sourceRepository": "tscircuit/tiny-hypergraph",
+      "sourceRelative": "lib/core.ts",
+      "startCharacter": 2034483,
+      "endCharacter": 2035431,
+      "startByte": 2034542,
+      "endByte": 2035490,
+      "originalText": "computeG(e,t,n=Number.POSITIVE_INFINITY,o){const{state:i,topology:r}=this,s=e.nextRegionId,a=i.regionIntersectionCaches[s],c=i.regionCongestionCost[s],l=this.problem.portPenalty?.[t]??0;let h=0;if(this.ADD_SEGMENT_DISTANCE_TO_G){let n=o;if(void 0===n){const o=r.portX[e.portId]-r.portX[t],i=r.portY[e.portId]-r.portY[t];n=Math.sqrt(o*o+i*i)}h=n*this.DISTANCE_TO_COST}if(e.g+c+l+h>n+1e-9)return Number.POSITIVE_INFINITY;let d=0,u=0,p=r.portZ[e.portId]!==r.portZ[t]?1:0;if(a.existingSegmentCount>0){const n=this.populateBaseSegmentGeometryScratch(s,e.portId,t);pJ(a,n),d=n.sameLayerIntersectionCount,u=n.crossingLayerIntersectionCount,p=n.entryExitLayerChanges}if(d>0&&this.isKnownSingleLayerRegion(s))return Number.POSITIVE_INFINITY;const m=this.computeRegionCostForRegion(s,a.existingSameLayerIntersections+d,a.existingCrossingLayerIntersections+u,a.existingEntryExitLayerChanges+p,a.existingSegmentCount+1)-a.existingRegionCost;return e.g+m+c+l+h}",
+      "replacementText": "computeG(binding0,binding1,binding2=Number.POSITIVE_INFINITY,binding3){if(this.isLayerTransitionBlocked(binding0,binding1))return Number.POSITIVE_INFINITY;const{state:binding4,topology:binding5}=this,binding6=binding0.nextRegionId,binding7=binding4.regionIntersectionCaches[binding6],binding8=binding4.regionCongestionCost[binding6],binding9=this.problem.portPenalty?.[binding1]??0;let binding10=0;if(this.ADD_SEGMENT_DISTANCE_TO_G){let binding2=binding3;if(void 0===binding2){const binding3=binding5.portX[binding0.portId]-binding5.portX[binding1],binding4=binding5.portY[binding0.portId]-binding5.portY[binding1];binding2=Math.sqrt(binding3*binding3+binding4*binding4)}binding10=binding2*this.DISTANCE_TO_COST}if(binding0.g+binding8+binding9+binding10>binding2+1e-9)return Number.POSITIVE_INFINITY;let binding11=0,binding12=0,binding13=binding5.portZ[binding0.portId]!==binding5.portZ[binding1]?1:0;if(binding7.existingSegmentCount>0){const binding2=this.populateBaseSegmentGeometryScratch(binding6,binding0.portId,binding1);pJ(binding7,binding2),binding11=binding2.sameLayerIntersectionCount,binding12=binding2.crossingLayerIntersectionCount,binding13=binding2.entryExitLayerChanges}if(binding11>0&&this.isKnownSingleLayerRegion(binding6))return Number.POSITIVE_INFINITY;const binding14=this.computeRegionCostForRegion(binding6,binding7.existingSameLayerIntersections+binding11,binding7.existingCrossingLayerIntersections+binding12,binding7.existingEntryExitLayerChanges+binding13,binding7.existingSegmentCount+1)-binding7.existingRegionCost;return binding0.g+binding14+binding8+binding9+binding10}",
+      "originalSha256": "58cb127c8e21b07a3b4744c06c3e379ca32674bd1ee8bdaef4bf79b60a604342",
+      "replacementSha256": "6783f38571d7604688f161420ee23f7029903aae10f97fbf4de9301b7a28ac1f",
+      "compiledBaseEquivalent": true,
+      "baseCanonicalSha256": "c05618bd4d72ea181f7d8b016189b9401c06a7c5379da2ed2d5a8cf54de451c6",
+      "aliases": {
+        "setNewIntersectionCounts": "pJ"
+      }
+    },
+    {
+      "kind": "replace",
+      "name": "GreedyFinalRouteSolver.computeG",
+      "sourceRepository": "tscircuit/tiny-hypergraph",
+      "sourceRelative": "lib/core.ts",
+      "startCharacter": 2036889,
+      "endCharacter": 2036914,
+      "startByte": 2036948,
+      "endByte": 2036973,
+      "originalText": "computeG(e,t){return e.g}",
+      "replacementText": "computeG(binding0,binding1){return this.isLayerTransitionBlocked(binding0,binding1)?Number.POSITIVE_INFINITY:binding0.g}",
+      "originalSha256": "79a18de7e55edbf525b88d90cda14236339a34095871d1341217949925808456",
+      "replacementSha256": "9ac546b0e743886ad8e1afa97ec4bba1b00f381c0cc52a7a871d939e6cc5cc12",
+      "compiledBaseEquivalent": true,
+      "baseCanonicalSha256": "88d5855c852d43adde0118e1c688162562e0124b84b6825b4ec39b546c9a2f2e",
+      "aliases": {}
+    },
+    {
+      "kind": "replace",
+      "name": "DenseRoutingWorkspace.expand",
+      "sourceRepository": "tscircuit/tiny-hypergraph",
+      "sourceRelative": "lib/prepared/DenseRoutingWorkspace.ts",
+      "startCharacter": 2079275,
+      "endCharacter": 2081337,
+      "startByte": 2079334,
+      "endByte": 2081396,
+      "originalText": "expand(e,t,n){const{topology:o,problem:i,state:r}=e,s=t.nextRegionId,a=r.regionIntersectionCaches[s];let c=this.rows[s];if(!c||c.cache!==a||c.via!==e.minViaPadDiameter||c.density!==e.TRACE_DENSITY_COST_FACTOR){const t=o.regionAvailableZMask?.[s]??0;c={cache:a,via:e.minViaPadDiameter,density:e.TRACE_DENSITY_COST_FACTOR,single:t>0&&!(t&t-1),costs:new Float64Array(2*a.netIds.length+2)};for(let e=0;e<c.costs.length;e++)c.costs[e]=hJ(o.regionWidth[s],o.regionHeight[s],a.existingSameLayerIntersections,a.existingCrossingLayerIntersections+e,a.existingEntryExitLayerChanges,a.existingSegmentCount+1,t,c.via,c.density)-a.existingRegionCost;this.rows[s]=c}const{neighbors:l,next:h,nextRegions:d,hops:u}=n,p=r.candidateBestCostByHopId,m=r.candidateBestCostGenerationByHopId,g=r.candidateBestCostGeneration,f=r.currentRouteNetId,y=r.candidateQueue,_=this.geometry.rowOffsets[2*t.portId+(o.incidentPortRegion[t.portId][0]===s?0:1)],b=this.geometry.distances,x=o.incidentPortRegion[t.portId][0]===s?o.portAngleForRegion1[t.portId]:o.portAngleForRegion2?.[t.portId]??o.portAngleForRegion1[t.portId],v=o.portZ[t.portId],{netIds:I,lesserAngles:S,greaterAngles:C,layerMasks:P}=a,M=r.regionCongestionCost[s],w=t.g+M;let N=n.head,R=-1;for(;-1!==N;){const a=N;N=h[a];const T=R;R=a;const E=l[a];if(E===r.goalPortId)return void e.onPathFound(t);if(E===t.portId)continue;const A=u[a];if(y.isClosedHopId(A)){-1===T?n.head=N:h[T]=N,R=T;continue}const O=m[A]===g?p[A]:1/0;if(t.g>=O)continue;const k=b[_+a]*e.DISTANCE_TO_COST,D=i.portPenalty?.[E]??0;if(w+D+k>=O)continue;const z=o.portZ[E],L=o.incidentPortRegion[E][0]===s?o.portAngleForRegion1[E]:o.portAngleForRegion2?.[E]??o.portAngleForRegion1[E],B=Math.min(x,L),F=Math.max(x,L),j=1<<v|1<<z;let Y=0,X=0;for(let e=0;e<I.length;e++)I[e]!==f&&(B<S[e]&&S[e]<F)!=(B<C[e]&&C[e]<F)&&(j&P[e]?Y++:X++);if(Y>0&&c.single)continue;const $=t.g+c.costs[2*Y+X+(v!==z?1:0)]+M+D+k;if(!Number.isFinite($)||$>=O)continue;const V=e.computeH(E);m[A]=g,p[A]=$,y.queue({hopId:A,prevRegionId:s,nextRegionId:d[a],portId:E,g:$,h:V,f:$+V,prevCandidate:t})}}",
+      "replacementText": "expand(binding0,binding1,binding2){const{topology:binding3,problem:binding4,state:binding5}=binding0,binding6=binding1.nextRegionId,binding7=binding5.regionIntersectionCaches[binding6];let binding8=this.rows[binding6];if(!binding8||binding8.cache!==binding7||binding8.via!==binding0.minViaPadDiameter||binding8.density!==binding0.TRACE_DENSITY_COST_FACTOR){const binding1=binding3.regionAvailableZMask?.[binding6]??0;binding8={cache:binding7,via:binding0.minViaPadDiameter,density:binding0.TRACE_DENSITY_COST_FACTOR,single:binding1>0&&!(binding1&binding1-1),costs:new Float64Array(2*binding7.netIds.length+2)};for(let binding0=0;binding0<binding8.costs.length;binding0++)binding8.costs[binding0]=hJ(binding3.regionWidth[binding6],binding3.regionHeight[binding6],binding7.existingSameLayerIntersections,binding7.existingCrossingLayerIntersections+binding0,binding7.existingEntryExitLayerChanges,binding7.existingSegmentCount+1,binding1,binding8.via,binding8.density)-binding7.existingRegionCost;this.rows[binding6]=binding8}const{neighbors:binding9,next:binding10,nextRegions:binding11,hops:binding12}=binding2,binding13=binding5.candidateBestCostByHopId,binding14=binding5.candidateBestCostGenerationByHopId,binding15=binding5.candidateBestCostGeneration,binding16=binding5.currentRouteNetId,binding17=binding5.candidateQueue,binding18=this.geometry.rowOffsets[2*binding1.portId+(binding3.incidentPortRegion[binding1.portId][0]===binding6?0:1)],binding19=this.geometry.distances,binding20=binding3.incidentPortRegion[binding1.portId][0]===binding6?binding3.portAngleForRegion1[binding1.portId]:binding3.portAngleForRegion2?.[binding1.portId]??binding3.portAngleForRegion1[binding1.portId],binding21=binding3.portZ[binding1.portId],{netIds:binding22,lesserAngles:binding23,greaterAngles:binding24,layerMasks:binding25}=binding7,binding26=binding5.regionCongestionCost[binding6],binding27=binding1.g+binding26;let binding28=binding2.head,binding29=-1;for(;-1!==binding28;){const binding7=binding28;binding28=binding10[binding7];const binding30=binding29;binding29=binding7;const binding31=binding9[binding7];if(binding0.isLayerTransitionBlocked(binding1,binding31))continue;if(binding31===binding5.goalPortId)return void binding0.onPathFound(binding1);if(binding31===binding1.portId)continue;const binding32=binding12[binding7];if(binding17.isClosedHopId(binding32)){-1===binding30?binding2.head=binding28:binding10[binding30]=binding28,binding29=binding30;continue}const binding33=binding14[binding32]===binding15?binding13[binding32]:1/0;if(binding1.g>=binding33)continue;const binding34=binding19[binding18+binding7]*binding0.DISTANCE_TO_COST,binding35=binding4.portPenalty?.[binding31]??0;if(binding27+binding35+binding34>=binding33)continue;const binding36=binding3.portZ[binding31],binding37=binding3.incidentPortRegion[binding31][0]===binding6?binding3.portAngleForRegion1[binding31]:binding3.portAngleForRegion2?.[binding31]??binding3.portAngleForRegion1[binding31],binding38=Math.min(binding20,binding37),binding39=Math.max(binding20,binding37),binding40=1<<binding21|1<<binding36;let binding41=0,binding42=0;for(let binding0=0;binding0<binding22.length;binding0++)binding22[binding0]!==binding16&&(binding38<binding23[binding0]&&binding23[binding0]<binding39)!=(binding38<binding24[binding0]&&binding24[binding0]<binding39)&&(binding40&binding25[binding0]?binding41++:binding42++);if(binding41>0&&binding8.single)continue;const binding43=binding1.g+binding8.costs[2*binding41+binding42+(binding21!==binding36?1:0)]+binding26+binding35+binding34;if(!Number.isFinite(binding43)||binding43>=binding33)continue;const binding44=binding0.computeH(binding31);binding14[binding32]=binding15,binding13[binding32]=binding43,binding17.queue({hopId:binding32,prevRegionId:binding6,nextRegionId:binding11[binding7],portId:binding31,g:binding43,h:binding44,f:binding43+binding44,prevCandidate:binding1})}}",
+      "originalSha256": "a6e8f03d36c783b2814b8539a055141ed9ca6af12b52c67675e7874f01fb2427",
+      "replacementSha256": "ed9f9fe186e09c33e4d11f2b00cac3954aac48192caf1f4d120130566cd9b8d7",
+      "compiledBaseEquivalent": true,
+      "baseCanonicalSha256": "cc3659c0b0cb5b45289483dda35b9935cedea62092c11b9f2cc7fcce68d2364a",
+      "aliases": {
+        "computeRegionCost": "hJ"
+      }
+    },
+    {
+      "kind": "replace",
+      "name": "getTinyHyperGraphSolveGraphOptions",
+      "sourceRepository": "tscircuit/tscircuit-autorouter",
+      "sourceRelative": "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver.ts",
+      "startCharacter": 2124998,
+      "endCharacter": 2125257,
+      "startByte": 2125057,
+      "endByte": 2125316,
+      "originalText": "({effort:e,portCount:t,minViaPadDiameter:n})=>{const o=p0(e),i=Math.max(1,Math.floor(t/125e3));return{...d0,...m0(n),OWNED_REGIONAL_HOP_FRONTIER:!0,USE_SPARSE_CANDIDATE_STORAGE:!1,RIP_THRESHOLD_RAMP_ATTEMPTS:Math.ceil(10*o),MAX_ITERATIONS:Math.ceil(2e6*o*i)}}",
+      "replacementText": "({effort:binding0,portCount:binding1,viaOptions:binding2})=>{const binding3=p0(binding0),binding4=Math.max(1,Math.floor(binding1/125e3));return{...d0,...binding2,OWNED_REGIONAL_HOP_FRONTIER:!0,USE_SPARSE_CANDIDATE_STORAGE:!1,RIP_THRESHOLD_RAMP_ATTEMPTS:Math.ceil(10*binding3),MAX_ITERATIONS:Math.ceil(2e6*binding3*binding4)}}",
+      "originalSha256": "5c71d599a7ea3301c7ffadae072782dabf127a435f48da411b7a3ad89cd1a8c0",
+      "replacementSha256": "850a03fc163fcdb2724db572961beea3cdff351444eab0bb0d0a806437f8f5c1",
+      "compiledBaseEquivalent": true,
+      "baseCanonicalSha256": "e75a717d9b679c3cd385f31d1bdadde60ab51a2cdd010ae7e17d57b04bac2f83",
+      "aliases": {
+        "getEffortScale": "p0",
+        "TINY_SOLVE_GRAPH_BASE_OPTIONS": "d0",
+        "getTinyViaSizeOptions": "m0"
+      }
+    },
+    {
+      "kind": "replace",
+      "name": "getTinyHyperGraphSectionSolverOptions",
+      "sourceRepository": "tscircuit/tscircuit-autorouter",
+      "sourceRelative": "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver.ts",
+      "startCharacter": 2125261,
+      "endCharacter": 2125414,
+      "startByte": 2125320,
+      "endByte": 2125473,
+      "originalText": "(e,t)=>{const n=p0(e);return{...u0,...m0(t),USE_SPARSE_CANDIDATE_STORAGE:!1,RIP_THRESHOLD_RAMP_ATTEMPTS:Math.ceil(16*n),MAX_ITERATIONS:Math.ceil(1e6*n)}}",
+      "replacementText": "(binding0,binding1)=>{const binding2=p0(binding0);return{...u0,...binding1,USE_SPARSE_CANDIDATE_STORAGE:!1,RIP_THRESHOLD_RAMP_ATTEMPTS:Math.ceil(16*binding2),MAX_ITERATIONS:Math.ceil(1e6*binding2)}}",
+      "originalSha256": "592ef33fd813ef8e6e7338e27930dd9a973efbb8d317387779327df933ab0813",
+      "replacementSha256": "5f3d07b717dc3bee0de188673f383e95014b97d045f0f33db651f8f7c0c4a2be",
+      "compiledBaseEquivalent": true,
+      "baseCanonicalSha256": "19f62c865f1ef2422089aabfb05cf5010db8c40b34553676c61ce03e84c1beb7",
+      "aliases": {
+        "getEffortScale": "p0",
+        "TINY_SECTION_SOLVER_BASE_OPTIONS": "u0",
+        "getTinyViaSizeOptions": "m0"
+      }
+    },
+    {
+      "kind": "replace",
+      "name": "TinyHypergraphPortPointPathingSolver.constructor",
+      "sourceRepository": "tscircuit/tscircuit-autorouter",
+      "sourceRelative": "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver.ts",
+      "startCharacter": 2136766,
+      "endCharacter": 2141591,
+      "startByte": 2136825,
+      "endByte": 2141650,
+      "originalText": "constructor(e){super(),this.params=e;const t=(e=>e.map(e=>{const t=e.simpleRouteConnection;if(!t)throw new Error(`TinyHypergraphPortPointPathingSolver requires a SimpleRouteConnection for \"${e.connectionId}\"`);const n=e.mutuallyConnectedNetworkId;if(!n)throw new Error(`TinyHypergraphPortPointPathingSolver requires a net ID for \"${e.connectionId}\"`);return{...e,mutuallyConnectedNetworkId:n,simpleRouteConnection:t}}))(e.connections),n=e.flags.USE_SELECTIVE_RERIP_ROUTING?function(e,t){const n=new Map;for(const o of e){const e=t(o);n.set(e,(n.get(e)??0)+1)}return e.map((e,t)=>({connection:e,index:t})).sort((e,o)=>(n.get(t(o.connection))??0)-(n.get(t(e.connection))??0)||e.index-o.index).map(({connection:e})=>e)}(t,_0):t;this.rootConnectionNameByConnectionId=new Map(n.map(e=>[e.connectionId,e.simpleRouteConnection.__rootConnectionNames?.[0]])),this.simpleRouteConnectionById=new Map(n.map(e=>[e.connectionId,e.simpleRouteConnection]));const o=S0({...e,connections:n});this.originalPreloadedSegmentKeysByConnectionId=(e=>{const t=new Map;for(const n of e.connections??[])t0(n)&&t.set(n.connectionId,new Set);for(const n of e.regions)for(const e of n.assignments??[]){const o=t.get(e.connectionId);if(!o)continue;const[i,r]=[e.regionPort1Id,e.regionPort2Id].sort();o.add(JSON.stringify([n.regionId,i,r]))}return t})(o);const i=a0(o),r=i.preloadedPortCount>0,s=r&&!0===e.flags.USE_PARTIAL_RIP_ROUTING_WITH_PRELOADED_TRACES,a=s?Math.max(o.connections?.length??0,i.preloadedAssignmentCount):void 0;let c=o;const l=new xK(o,{duplicatePortProximity:.05,useSerializedPortPenalties:!1,routeSolveOptions:{...m0(e.minViaPadDiameter),USE_SPARSE_CANDIDATE_STORAGE:!1,ACCEPT_BEST_SOLUTION_ON_TIMEOUT:!0,GREEDY_FINAL_ROUTE_ITERS:4,MAX_ITERATIONS:Math.ceil(2e6*p0(e.effort)),RIP_THRESHOLD_RAMP_ATTEMPTS:0,STATIC_REACHABILITY_PRECHECK:!0}});if(l.solve(),l.failed)this.duplicateCongestedPortError=l.error??\"unknown error\";else{this.duplicateCongestedPortReport=l.report,c=l.getOutput();for(const e of c.ports){const t=l0(e.d);\"string\"==typeof t.duplicatedFromPortId&&(delete t._preloadedFixedNetIds,delete t._preloadedTracePortAssignments)}}this.duplicatedPortCount=this.duplicateCongestedPortReport?.duplicatedPorts.reduce((e,t)=>e+t.duplicatePortIds.length,0)??0;const h=((e,t,n,o=!0,i)=>{const r=e.connections?.length??0,s=i??r,a=d0.PARTIAL_RIP_MIN_ROUTE_COUNT??0,c=d0.PARTIAL_RIP_MAX_ROUTE_COUNT??Number.POSITIVE_INFINITY,l=o&&s>=a&&s<=c;return{serializedHyperGraph:e,createSectionMask:({topology:e})=>new Int8Array(e.portCount),solveGraphOptions:{...g0({effort:t,portCount:e.ports.length,minViaPadDiameter:n}),...l?{PARTIAL_RIP_MIN_ROUTE_COUNT:0,PARTIAL_RIP_MAX_ROUTE_COUNT:Number.POSITIVE_INFINITY,PARTIAL_RIP_COMPLEXITY_SELECTION_MIN_ROUTE_COUNT:0}:{PARTIAL_RIP_ENABLED:!1,OUTSIDE_IN_ROUTING:!1}},sectionSolverOptions:{...f0(t,n)}}})({...c,solvedRoutes:o.solvedRoutes},e.effort,e.minViaPadDiameter,!r||s,a);this.tinyPipelineSolver=new w0(h,!0===e.flags.USE_SELECTIVE_RERIP_ROUTING,!0===e.flags.USE_PREPARED_PORT_POINT_ROUTING),this.primaryTinyPipelineSolver=this.tinyPipelineSolver,n.length>=30&&n.length<=99&&(this.alternativeTinyPipelineInput={...h,solveGraphOptions:{...h.solveGraphOptions,TRACE_DENSITY_COST_FACTOR:1}}),this.MAX_ITERATIONS=y0(h)*(this.alternativeTinyPipelineInput?2:1),this.originalRegionById=new Map(e.graph.regions.map(e=>[e.regionId,e])),this.originalRegionIds=new Set(this.originalRegionById.keys()),this.inputNodeWithPortPoints=((e,t)=>{const n=new Map(t.regions.map(e=>[e.regionId,e])),o=new Map(t.ports.map(e=>[e.portId,e]));return e.graph.regions.map(e=>{const t=n.get(e.regionId),i=(t?.pointIds??e.ports.map(e=>e.d.portId)).map(e=>o.get(e)).filter(e=>e&&!l0(e.d)._tinyTerminal).map(e=>{const t=e,o=l0(t.d),i=n.get(t.region1Id),r=n.get(t.region2Id),s=Boolean(c0(i?.d)._offBoardConnectionId??c0(r?.d)._offBoardConnectionId);return{portPointId:t.portId,x:Number(o.x??0),y:Number(o.y??0),z:Number(o.z??0),prevPortPointId:\"string\"==typeof o.prevPortPointId?o.prevPortPointId:void 0,nextPortPointId:\"string\"==typeof o.nextPortPointId?o.nextPortPointId:void 0,connectionNodeIds:[t.region1Id,t.region2Id],distToCentermostPortOnZ:Number(o.distToCentermostPortOnZ??0),cramped:Boolean(o.cramped),connectsToOffBoardNode:s}});return{capacityMeshNodeId:e.d.capacityMeshNodeId,center:e.d.center,width:e.d.width,height:e.d.height,portPoints:i,availableZ:e.d.availableZ,_containsObstacle:e.d._containsObstacle,_containsTarget:e.d._containsTarget,_offBoardConnectionId:e.d._offBoardConnectionId,_offBoardConnectedCapacityMeshNodeIds:e.d._offBoardConnectedCapacityMeshNodeIds,_qfpRegionType:e.d._qfpRegionType,_isNarrowQfpPadGap:e.d._isNarrowQfpPadGap}})})(e,c),Object.defineProperty(this,\"stats\",{configurable:!0,enumerable:!0,get:()=>this.getStatsSnapshot(),set:e=>{this.statsSnapshot=e,this.statsSnapshotDirty=!1}})}",
+      "replacementText": "constructor(binding0){super(),this.params=binding0;const binding1=(binding0=>binding0.map(binding0=>{const binding1=binding0.simpleRouteConnection;if(!binding1)throw new Error(`TinyHypergraphPortPointPathingSolver requires a SimpleRouteConnection for \"${binding0.connectionId}\"`);const binding2=binding0.mutuallyConnectedNetworkId;if(!binding2)throw new Error(`TinyHypergraphPortPointPathingSolver requires a net ID for \"${binding0.connectionId}\"`);return{...binding0,mutuallyConnectedNetworkId:binding2,simpleRouteConnection:binding1}}))(binding0.connections),binding2=binding0.flags.USE_SELECTIVE_RERIP_ROUTING?function(binding0,binding1){const binding2=new Map;for(const binding3 of binding0){const binding0=binding1(binding3);binding2.set(binding0,(binding2.get(binding0)??0)+1)}return binding0.map((binding0,binding1)=>({connection:binding0,index:binding1})).sort((binding0,binding3)=>(binding2.get(binding1(binding3.connection))??0)-(binding2.get(binding1(binding0.connection))??0)||binding0.index-binding3.index).map(({connection:binding0})=>binding0)}(binding1,_0):binding1;this.rootConnectionNameByConnectionId=new Map(binding2.map(binding0=>[binding0.connectionId,binding0.simpleRouteConnection.__rootConnectionNames?.[0]])),this.simpleRouteConnectionById=new Map(binding2.map(binding0=>[binding0.connectionId,binding0.simpleRouteConnection]));const binding3=S0({...binding0,connections:binding2});this.originalPreloadedSegmentKeysByConnectionId=(binding0=>{const binding1=new Map;for(const binding2 of binding0.connections??[])t0(binding2)&&binding1.set(binding2.connectionId,new Set);for(const binding2 of binding0.regions)for(const binding0 of binding2.assignments??[]){const binding3=binding1.get(binding0.connectionId);if(!binding3)continue;const[binding4,binding5]=[binding0.regionPort1Id,binding0.regionPort2Id].sort();binding3.add(JSON.stringify([binding2.regionId,binding4,binding5]))}return binding1})(binding3);const binding4=a0(binding3),binding5=binding4.preloadedPortCount>0,binding6=binding5&&!0===binding0.flags.USE_PARTIAL_RIP_ROUTING_WITH_PRELOADED_TRACES,binding7=binding6?Math.max(binding3.connections?.length??0,binding4.preloadedAssignmentCount):void 0;let binding8=binding3;const binding9={...m0(binding0.minViaPadDiameter),minThroughViaCenterDistance:binding0.minThroughViaCenterDistance},binding10=new xK(binding3,{duplicatePortProximity:.05,useSerializedPortPenalties:!1,routeSolveOptions:{...binding9,USE_SPARSE_CANDIDATE_STORAGE:!1,ACCEPT_BEST_SOLUTION_ON_TIMEOUT:!0,GREEDY_FINAL_ROUTE_ITERS:4,MAX_ITERATIONS:Math.ceil(2e6*p0(binding0.effort)),RIP_THRESHOLD_RAMP_ATTEMPTS:0,STATIC_REACHABILITY_PRECHECK:!0}});if(binding10.solve(),binding10.failed)this.duplicateCongestedPortError=binding10.error??\"unknown error\";else{this.duplicateCongestedPortReport=binding10.report,binding8=binding10.getOutput();for(const binding0 of binding8.ports){const binding1=l0(binding0.d);\"string\"==typeof binding1.duplicatedFromPortId&&(delete binding1._preloadedFixedNetIds,delete binding1._preloadedTracePortAssignments)}}this.duplicatedPortCount=this.duplicateCongestedPortReport?.duplicatedPorts.reduce((binding0,binding1)=>binding0+binding1.duplicatePortIds.length,0)??0;const binding11=((binding0,binding1,binding2,binding3=!0,binding4)=>{const binding5=binding0.connections?.length??0,binding6=binding4??binding5,binding7=d0.PARTIAL_RIP_MIN_ROUTE_COUNT??0,binding8=d0.PARTIAL_RIP_MAX_ROUTE_COUNT??Number.POSITIVE_INFINITY,binding9=binding3&&binding6>=binding7&&binding6<=binding8;return{serializedHyperGraph:binding0,createSectionMask:({topology:binding0})=>new Int8Array(binding0.portCount),solveGraphOptions:{...g0({effort:binding1,portCount:binding0.ports.length,viaOptions:binding2}),...binding9?{PARTIAL_RIP_MIN_ROUTE_COUNT:0,PARTIAL_RIP_MAX_ROUTE_COUNT:Number.POSITIVE_INFINITY,PARTIAL_RIP_COMPLEXITY_SELECTION_MIN_ROUTE_COUNT:0}:{PARTIAL_RIP_ENABLED:!1,OUTSIDE_IN_ROUTING:!1}},sectionSolverOptions:{...f0(binding1,binding2)}}})({...binding8,solvedRoutes:binding3.solvedRoutes},binding0.effort,binding9,!binding5||binding6,binding7);this.tinyPipelineSolver=new w0(binding11,!0===binding0.flags.USE_SELECTIVE_RERIP_ROUTING,!0===binding0.flags.USE_PREPARED_PORT_POINT_ROUTING),this.primaryTinyPipelineSolver=this.tinyPipelineSolver,binding2.length>=30&&binding2.length<=99&&(this.alternativeTinyPipelineInput={...binding11,solveGraphOptions:{...binding11.solveGraphOptions,TRACE_DENSITY_COST_FACTOR:1}}),this.MAX_ITERATIONS=y0(binding11)*(this.alternativeTinyPipelineInput?2:1),this.originalRegionById=new Map(binding0.graph.regions.map(binding0=>[binding0.regionId,binding0])),this.originalRegionIds=new Set(this.originalRegionById.keys()),this.inputNodeWithPortPoints=((binding0,binding1)=>{const binding2=new Map(binding1.regions.map(binding0=>[binding0.regionId,binding0])),binding3=new Map(binding1.ports.map(binding0=>[binding0.portId,binding0]));return binding0.graph.regions.map(binding0=>{const binding1=binding2.get(binding0.regionId),binding4=(binding1?.pointIds??binding0.ports.map(binding0=>binding0.d.portId)).map(binding0=>binding3.get(binding0)).filter(binding0=>binding0&&!l0(binding0.d)._tinyTerminal).map(binding0=>{const binding1=binding0,binding3=l0(binding1.d),binding4=binding2.get(binding1.region1Id),binding5=binding2.get(binding1.region2Id),binding6=Boolean(c0(binding4?.d)._offBoardConnectionId??c0(binding5?.d)._offBoardConnectionId);return{portPointId:binding1.portId,x:Number(binding3.x??0),y:Number(binding3.y??0),z:Number(binding3.z??0),prevPortPointId:\"string\"==typeof binding3.prevPortPointId?binding3.prevPortPointId:void 0,nextPortPointId:\"string\"==typeof binding3.nextPortPointId?binding3.nextPortPointId:void 0,connectionNodeIds:[binding1.region1Id,binding1.region2Id],distToCentermostPortOnZ:Number(binding3.distToCentermostPortOnZ??0),cramped:Boolean(binding3.cramped),connectsToOffBoardNode:binding6}});return{capacityMeshNodeId:binding0.d.capacityMeshNodeId,center:binding0.d.center,width:binding0.d.width,height:binding0.d.height,portPoints:binding4,availableZ:binding0.d.availableZ,_containsObstacle:binding0.d._containsObstacle,_containsTarget:binding0.d._containsTarget,_offBoardConnectionId:binding0.d._offBoardConnectionId,_offBoardConnectedCapacityMeshNodeIds:binding0.d._offBoardConnectedCapacityMeshNodeIds,_qfpRegionType:binding0.d._qfpRegionType,_isNarrowQfpPadGap:binding0.d._isNarrowQfpPadGap}})})(binding0,binding8),Object.defineProperty(this,\"stats\",{configurable:!0,enumerable:!0,get:()=>this.getStatsSnapshot(),set:binding0=>{this.statsSnapshot=binding0,this.statsSnapshotDirty=!1}})}",
+      "originalSha256": "aa30f6833c626d307d473d0d68f8bc49cb1211395a5572f186f0e488fca4f9d9",
+      "replacementSha256": "eabc7d2d055cd4c77ef68dc044177b9d4fbd1f502726e5fbec73d3e9611933f4",
+      "compiledBaseEquivalent": true,
+      "baseCanonicalSha256": "36be7d832c38d50830471ad37c20934b9f3ccf7cb9692660495ffe96b77e1ee1",
+      "aliases": {
+        "getTinyRouteConnectionNetId": "_0",
+        "buildSerializedTinyGraph": "S0",
+        "hasPreloadedTraceSectionMetadata": "t0",
+        "getSerializedPreloadedTraceStats": "a0",
+        "DuplicateCongestedPortSolver": "xK",
+        "getTinyViaSizeOptions": "m0",
+        "getEffortScale": "p0",
+        "asTinyPortMetadata": "l0",
+        "TINY_SOLVE_GRAPH_BASE_OPTIONS": "d0",
+        "getTinyHyperGraphSolveGraphOptions": "g0",
+        "getTinyHyperGraphSectionSolverOptions": "f0",
+        "TinyHyperGraphSectionPipelineWithTerminalNetIds": "w0",
+        "getTinyHyperGraphPipelineMaxIterations": "y0",
+        "asTinyRegionMetadata": "c0"
+      }
+    },
+    {
+      "kind": "replace",
+      "name": "AutoroutingPipelineSolver9_PreloadedTraceGraph.pipelineDef.portPointPathingSolver",
+      "sourceRepository": "tscircuit/tscircuit-autorouter",
+      "sourceRelative": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts",
+      "startCharacter": 3075219,
+      "endCharacter": 3076454,
+      "startByte": 3075278,
+      "endByte": 3076513,
+      "originalText": "e=>{const t=e.sharedEdgeSegmentsWithNecessaryCrampedPortPoints??e.necessaryCrampedPortPointSolver?.getOutput()??e.availableSegmentPointSolver.getOutput(),{graph:n,connections:o}=vZ({capacityMeshNodes:e.capacityNodes,layerCount:e.srj.layerCount,connectivityMap:e.connMap,segmentPortPoints:t.flatMap(e=>e.portPoints),simpleRouteJsonConnections:e.srjWithPointPairs.connections,existingViaInPadByPcbPortId:Goe(e.srjWithPointPairs)});return[{graph:n,connections:o,layerCount:e.srj.layerCount,effort:Math.min(1,e.effort),preserveTerminalPcbPortIds:!0,captureSearchDebug:e.opts.captureSearchDebug??!1,minViaPadDiameter:e.viaDiameter,flags:{FORCE_CENTER_FIRST:!0,RIPPING_ENABLED:!0,USE_SELECTIVE_RERIP_ROUTING:!0,USE_PREPARED_PORT_POINT_ROUTING:!0,USE_PARTIAL_RIP_ROUTING_WITH_PRELOADED_TRACES:!0},weights:{SHUFFLE_SEED:0,MEMORY_PF_FACTOR:4,CENTER_OFFSET_DIST_PENALTY_FACTOR:0,CENTER_OFFSET_FOCUS_SHIFT:0,NODE_PF_FACTOR:0,LAYER_CHANGE_COST:0,RIPPING_PF_COST:0,NODE_PF_MAX_PENALTY:100,BASE_CANDIDATE_COST:.6,MAX_ITERATIONS_PER_PATH:0,RANDOM_WALK_DISTANCE:0,START_RIPPING_PF_THRESHOLD:.3,END_RIPPING_PF_THRESHOLD:1,MAX_RIPS:1e3,RANDOM_RIP_FRACTION:.3,STRAIGHT_LINE_DEVIATION_PENALTY_FACTOR:4,GREEDY_MULTIPLIER:.7,MIN_ALLOWED_BOARD_SCORE:-1e4}}]}",
+      "replacementText": "binding0=>{const binding1=binding0.sharedEdgeSegmentsWithNecessaryCrampedPortPoints??binding0.necessaryCrampedPortPointSolver?.getOutput()??binding0.availableSegmentPointSolver.getOutput(),{graph:binding2,connections:binding3}=vZ({capacityMeshNodes:binding0.capacityNodes,layerCount:binding0.srj.layerCount,connectivityMap:binding0.connMap,segmentPortPoints:binding1.flatMap(binding0=>binding0.portPoints),simpleRouteJsonConnections:binding0.srjWithPointPairs.connections,existingViaInPadByPcbPortId:Goe(binding0.srjWithPointPairs)});return[{graph:binding2,connections:binding3,layerCount:binding0.srj.layerCount,effort:Math.min(1,binding0.effort),preserveTerminalPcbPortIds:!0,captureSearchDebug:binding0.opts.captureSearchDebug??!1,minViaPadDiameter:binding0.viaDiameter,minThroughViaCenterDistance:binding0.srj.allowBlindAndBuriedVias?void 0:binding0.viaDiameter+(binding0.srj.minPadEdgeToPadEdgeClearance??.1),flags:{FORCE_CENTER_FIRST:!0,RIPPING_ENABLED:!0,USE_SELECTIVE_RERIP_ROUTING:!0,USE_PREPARED_PORT_POINT_ROUTING:!0,USE_PARTIAL_RIP_ROUTING_WITH_PRELOADED_TRACES:!0},weights:{SHUFFLE_SEED:0,MEMORY_PF_FACTOR:4,CENTER_OFFSET_DIST_PENALTY_FACTOR:0,CENTER_OFFSET_FOCUS_SHIFT:0,NODE_PF_FACTOR:0,LAYER_CHANGE_COST:0,RIPPING_PF_COST:0,NODE_PF_MAX_PENALTY:100,BASE_CANDIDATE_COST:.6,MAX_ITERATIONS_PER_PATH:0,RANDOM_WALK_DISTANCE:0,START_RIPPING_PF_THRESHOLD:.3,END_RIPPING_PF_THRESHOLD:1,MAX_RIPS:1e3,RANDOM_RIP_FRACTION:.3,STRAIGHT_LINE_DEVIATION_PENALTY_FACTOR:4,GREEDY_MULTIPLIER:.7,MIN_ALLOWED_BOARD_SCORE:-1e4}}]}",
+      "originalSha256": "5fb975da88191c554c1d3cd4ab8f697674a174315a344e300eb9e2f4f7c7aa7f",
+      "replacementSha256": "0b09a1ebd9f3e16d8f5f59f9333a387a5959f8487bf01b85f78df3669a2280f3",
+      "compiledBaseEquivalent": true,
+      "baseCanonicalSha256": "50b3c16cd6527bd2a0a1f60160400e4743e04c11b147d78b9c5cc1c0281a5273",
+      "aliases": {
+        "buildHyperGraph": "vZ",
+        "getExistingViaInPadByPcbPortId": "Goe"
+      }
+    }
+  ],
+  "unchangedSegments": [
+    {
+      "startByte": 0,
+      "endByte": 2004014,
+      "candidateStartByte": 0,
+      "candidateEndByte": 2004014,
+      "sha256": "47c0ced49636e391b487f6d706acff467bf92a1480f135e5aafbcce5989284da"
+    },
+    {
+      "startByte": 2006976,
+      "endByte": 2006980,
+      "candidateStartByte": 2007729,
+      "candidateEndByte": 2007733,
+      "sha256": "4b7c15863ccdec0cb0ec96088f01e6dd328538b6c3269354c70b0a69d4927150"
+    },
+    {
+      "startByte": 2008654,
+      "endByte": 2011041,
+      "candidateStartByte": 2009682,
+      "candidateEndByte": 2012069,
+      "sha256": "4b3894c38064c16c165571975310aa32f84dcc43cd7987c63188335191600bc4"
+    },
+    {
+      "startByte": 2011041,
+      "endByte": 2015347,
+      "candidateStartByte": 2012096,
+      "candidateEndByte": 2016402,
+      "sha256": "2986aa7ebb80df0334612ad70ef163e43c28e06d553c54b4aa6f3ca8685a50b4"
+    },
+    {
+      "startByte": 2017811,
+      "endByte": 2019059,
+      "candidateStartByte": 2019971,
+      "candidateEndByte": 2021219,
+      "sha256": "06b71f386bfd10392cd27da656ebc95ae3c9c3c4d875b1a561aa08b06bf88db6"
+    },
+    {
+      "startByte": 2020642,
+      "endByte": 2022905,
+      "candidateStartByte": 2024027,
+      "candidateEndByte": 2026290,
+      "sha256": "3d0d1dff10609e472abd7ee2b32f69840b9ffbc3516218fe601013018e4612af"
+    },
+    {
+      "startByte": 2022905,
+      "endByte": 2034542,
+      "candidateStartByte": 2026931,
+      "candidateEndByte": 2038568,
+      "sha256": "36153233333ce493222f9054cae98f1a9325ad843fd77e42ddf7d63611fba680"
+    },
+    {
+      "startByte": 2035490,
+      "endByte": 2036948,
+      "candidateStartByte": 2040169,
+      "candidateEndByte": 2041627,
+      "sha256": "662b8fc9c92a5c05ae8c77a7dbe1e6506b34177b51d1601c63c8914750f7e445"
+    },
+    {
+      "startByte": 2036973,
+      "endByte": 2079334,
+      "candidateStartByte": 2041747,
+      "candidateEndByte": 2084108,
+      "sha256": "44b58340b3a53b09dc9e47c12cfdbff14067d62669846b3c6f9209dc7f88d085"
+    },
+    {
+      "startByte": 2081396,
+      "endByte": 2125057,
+      "candidateStartByte": 2088007,
+      "candidateEndByte": 2131668,
+      "sha256": "8dddf70df8ad7386d961dd05ce138e239f28aef3b7496957c90c25e9a2de3620"
+    },
+    {
+      "startByte": 2125316,
+      "endByte": 2125320,
+      "candidateStartByte": 2131993,
+      "candidateEndByte": 2131997,
+      "sha256": "925496346fad8fe9c0807cd202b04d657992355b5684a13c985c910b07d48a0e"
+    },
+    {
+      "startByte": 2125473,
+      "endByte": 2136825,
+      "candidateStartByte": 2132195,
+      "candidateEndByte": 2143547,
+      "sha256": "8791dc43982f2d9758125231a372e98fe00a65b3b128815b5f7e2fc09285e218"
+    },
+    {
+      "startByte": 2141650,
+      "endByte": 3075278,
+      "candidateStartByte": 2150119,
+      "candidateEndByte": 3083747,
+      "sha256": "2d378a0ab5a309e21edb5888c4a7e6c6ddc9f42d193c85d17d225fa116c1bd95"
+    },
+    {
+      "startByte": 3076513,
+      "endByte": 3344971,
+      "candidateStartByte": 3085270,
+      "candidateEndByte": 3353728,
+      "sha256": "7e157ef547d94ff38e494c2265d5e4b7da01e1b52c53af82ab80dc10a9a84fd8"
+    }
+  ],
+  "qualification": {
+    "allOutsideBytesUnchanged": true,
+    "unrelatedSourceRuntimeUnchanged": true,
+    "compiledBaseEquivalent": true,
+    "sourceMapGeneratedOffsetsUsed": false,
+    "typeErasure": "TypeScript5.9.3 transpileModule targeting ESNext; no Bun syntax optimization",
+    "canonicalizer": "Terser5.51.2 three compression passes and deterministic lexical names; differing free bindings mapped bijectively; properties and local bindings must match exactly",
+    "sourceAliases": [
+      {
+        "relative": "lib/core.ts",
+        "aliases": {
+          "setNewIntersectionCounts": "pJ"
+        }
+      },
+      {
+        "relative": "lib/prepared/DenseRoutingWorkspace.ts",
+        "aliases": {
+          "computeRegionCost": "hJ"
+        }
+      },
+      {
+        "relative": "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver.ts",
+        "aliases": {
+          "getEffortScale": "p0",
+          "TINY_SOLVE_GRAPH_BASE_OPTIONS": "d0",
+          "getTinyViaSizeOptions": "m0",
+          "TINY_SECTION_SOLVER_BASE_OPTIONS": "u0",
+          "getTinyRouteConnectionNetId": "_0",
+          "buildSerializedTinyGraph": "S0",
+          "hasPreloadedTraceSectionMetadata": "t0",
+          "getSerializedPreloadedTraceStats": "a0",
+          "DuplicateCongestedPortSolver": "xK",
+          "asTinyPortMetadata": "l0",
+          "getTinyHyperGraphSolveGraphOptions": "g0",
+          "getTinyHyperGraphSectionSolverOptions": "f0",
+          "TinyHyperGraphSectionPipelineWithTerminalNetIds": "w0",
+          "getTinyHyperGraphPipelineMaxIterations": "y0",
+          "asTinyRegionMetadata": "c0"
+        }
+      },
+      {
+        "relative": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts",
+        "aliases": {
+          "buildHyperGraph": "vZ",
+          "getExistingViaInPadByPcbPortId": "Goe"
+        }
+      }
+    ],
+    "unchangedImportedHelper": {
+      "name": "orderConnectionsByNetCardinality",
+      "relative": "lib/selective-rerip-tiny-hyper-graph-solver.ts",
+      "sourceBaseCommit": "f1fe8edcfb3dfde8fd644d09d81bad18743144b3",
+      "sourceMapIndex": 1248,
+      "sourceFileSha256": "0cb3bbc6219861b71e1cbd6a46f3d9de89d31f7803953c727b2780f1ef204da5",
+      "declarationSha256": "050354c93f3db691a828fb5c3f88956e0dc2bbd69d5351a29bcb2ed9afff9d8e",
+      "qualification": "Included unchanged in complete adapter constructor baseline equivalence"
+    },
+    "bun": "1.3.1",
+    "typescript": "5.9.3",
+    "terser": "5.51.2"
+  },
+  "sourceHandoffSha256": "78dc16d080ec8839c0fd52d9d5c4e844c5970dd53f62ca488e54de307328eff6",
+  "mapperSha256": "2c69f3f4f557d4076f7f6e325b63d8f2009d2186f2dcdf59e63d82b89d97291b",
+  "moduleImported": false,
+  "nativeRoutingExecuted": false
+}

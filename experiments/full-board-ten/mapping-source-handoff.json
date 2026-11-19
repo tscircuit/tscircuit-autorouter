@@ -1,0 +1,53 @@
+{
+  "repositories": [
+    {
+      "baseCommit": "f1fe8edcfb3dfde8fd644d09d81bad18743144b3",
+      "candidateCommit": "29132d91a062f900396a92193e369038832fcb45",
+      "productionClean": true,
+      "files": [
+        {
+          "path": "lib/core.ts",
+          "production": true,
+          "sha256": "79c5e1fa489f0852cbeedf65de9c539717a335b11660c43c098443413fde96a2"
+        },
+        {
+          "path": "lib/prepared/DenseRoutingWorkspace.ts",
+          "production": true,
+          "sha256": "25579b9231ac3bc39c60c4c2889fd4d70c1a08f4340ca90357fb8db0a91a3ecf"
+        }
+      ],
+      "patches": {
+        "production": {
+          "sha256": "a525a47425daf46b842851f27a42f1dfba4606a05838a5397158fe00aff0fca2"
+        }
+      }
+    },
+    {
+      "baseCommit": "a4f2778cb40bbc9c147b95a4e48ef0b32f1dd08f",
+      "candidateCommit": "b0334806becaa0cb41f76f80494722a998b1342e",
+      "productionClean": true,
+      "files": [
+        {
+          "path": "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver.ts",
+          "production": true,
+          "sha256": "91bc4f5faec9c34c65fada082aff93821d89b8f2b34beb50501f16b3e70c1323"
+        },
+        {
+          "path": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts",
+          "production": true,
+          "sha256": "11490caa55a98babc103f1ee24424a7a53c76b1f608205d192cdf26dc96c01f0"
+        },
+        {
+          "path": "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver/types.ts",
+          "production": true,
+          "sha256": "ac3c1ac0ab3802d8cadf7827281660ed99786681a109d1ca796fc30c82377427"
+        }
+      ],
+      "patches": {
+        "production": {
+          "sha256": "d9164bfd70330229721edbed9d27d450f94f671d27e0569ba1062978afc206f2"
+        }
+      }
+    }
+  ]
+}
