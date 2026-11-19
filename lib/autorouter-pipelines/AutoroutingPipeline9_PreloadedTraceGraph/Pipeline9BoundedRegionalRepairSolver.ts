@@ -328,6 +328,7 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
       }
     }
     const solver = new Pipeline9ClearanceProjectionSolver({
+      lockedConnectionNames: this.params.lockedConnectionNames,
       originalSrj: this.params.originalSrj,
       fixedHdRoutes: this.params.fixedHdRoutes,
       routes: referenced.currentRoutes,
@@ -559,6 +560,10 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
       const sourceRouteIndex =
         region.routeMappings[routeIndex]!.sourceRouteIndex
       const sourceRoute = context.currentRoutes[sourceRouteIndex]!
+      if (this.params.lockedConnectionNames?.has(sourceRoute.connectionName)) {
+        region.lockedPointIndices[routeIndex]!.fill(true)
+        continue
+      }
       const approaches = sourceRoute.route.filter(
         (point) => point.terminalApproach !== undefined,
       )
@@ -677,6 +682,7 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
       return
     }
     const solver = new Pipeline9ClearanceProjectionSolver({
+      lockedConnectionNames: this.params.lockedConnectionNames,
       originalSrj: this.params.originalSrj,
       fixedHdRoutes: this.params.fixedHdRoutes,
       routes: negotiatedRoutes,
@@ -700,6 +706,7 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
       return
     }
     const solver = new Pipeline9ReportedViaMergeSolver({
+      lockedConnectionNames: this.params.lockedConnectionNames,
       srj: state.context.srj,
       routes: state.candidateRoutes,
       connMap: this.params.connMap,
@@ -816,6 +823,7 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
   private prepareIndependentProjection(context: RegionalContext): void {
     // Private regional changes cannot leak into independent partial publication.
     const solver = new Pipeline9ClearanceProjectionSolver({
+      lockedConnectionNames: this.params.lockedConnectionNames,
       originalSrj: this.params.originalSrj,
       fixedHdRoutes: this.params.fixedHdRoutes,
       routes: this.params.routes,
@@ -841,6 +849,7 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
     >,
   ): void {
     const solver = new Pipeline9ClearanceProjectionSolver({
+      lockedConnectionNames: this.params.lockedConnectionNames,
       originalSrj: this.params.originalSrj,
       fixedHdRoutes: this.params.fixedHdRoutes,
       routes: state.independentRoutes,
@@ -871,6 +880,7 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
     >,
   ): void {
     const solver = new Pipeline9ClearanceProjectionSolver({
+      lockedConnectionNames: this.params.lockedConnectionNames,
       originalSrj: this.params.originalSrj,
       fixedHdRoutes: this.params.fixedHdRoutes,
       routes: state.independentRoutes,
@@ -936,6 +946,7 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
         // A clear nominal projection needs no extra slack. Otherwise refine
         // its retained bends with the margin before spending more search.
         const solver = new Pipeline9ClearanceProjectionSolver({
+          lockedConnectionNames: this.params.lockedConnectionNames,
           originalSrj: this.params.originalSrj,
           fixedHdRoutes: this.params.fixedHdRoutes,
           routes: state.solver.getOutput(),

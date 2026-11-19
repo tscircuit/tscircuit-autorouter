@@ -1,6 +1,7 @@
 import {
-  HighDensitySolverA03 as HighDensityA03Solver,
   HighDensitySolverA01,
+  HighDensitySolverA03 as HighDensityA03Solver,
+  type StaticSegmentValidator,
 } from "@tscircuit/high-density-a01"
 import { HighDensitySolverA13 } from "@tscircuit/high-density-a13"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
@@ -58,6 +59,8 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     typeof CachedIntraNodeRouteSolver
   >[0] & {
     boardGeometry?: HighDensityBoardGeometry
+    preservePhysicalGeometry?: boolean
+    staticSegmentValidator?: StaticSegmentValidator
     solutionValidator?: (routes: HighDensityIntraNodeRoute[]) => boolean
   }
   solvedRoutes: HighDensityIntraNodeRoute[] = []
@@ -131,6 +134,8 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       gridSearchWorkScale?: number
       rejectOverlappingTerminals?: boolean
       boardGeometry?: HighDensityBoardGeometry
+      preservePhysicalGeometry?: boolean
+      staticSegmentValidator?: StaticSegmentValidator
       solutionValidator?: (routes: HighDensityIntraNodeRoute[]) => boolean
     },
   ) {
@@ -618,8 +623,11 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     this.precomputedIntraNodeRouteParams ??= precomputeIntraNodeRouteParams(
       this.constructorParams,
     )
+    const preservePhysicalGeometry =
+      this.constructorParams.preservePhysicalGeometry ??
+      Boolean(this.constructorParams.fixedHdRoutes?.length)
     let traceMargin = 0.1
-    if (this.constructorParams.fixedHdRoutes?.length) {
+    if (preservePhysicalGeometry) {
       traceMargin = this.constructorParams.obstacleMargin ?? 0.15
     }
     if (hyperParameters.SINGLE_LAYER_NO_DIFFERENT_ROOT_INTERSECTIONS) {
@@ -692,11 +700,12 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     }
     if (hyperParameters.HIGH_DENSITY_A03) {
       let traceThickness = 0.1
-      if (this.constructorParams.fixedHdRoutes?.length) {
+      if (preservePhysicalGeometry) {
         traceThickness = this.constructorParams.traceWidth ?? 0.15
       }
       const solver = new HighDensityA03Solver({
         nodeWithPortPoints: this.nodeWithPortPoints,
+        staticSegmentValidator: this.constructorParams.staticSegmentValidator,
         highResolutionCellSize: 0.1,
         highResolutionCellThickness: 8,
         lowResolutionCellSize: 0.4,

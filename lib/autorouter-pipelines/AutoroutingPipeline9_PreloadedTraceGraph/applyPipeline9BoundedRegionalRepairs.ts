@@ -83,6 +83,7 @@ export type Pipeline9BoundedRegionalRepairParams = {
   syntheticConnectionNames: ReadonlySet<string>
   /** Earlier copper retained as read-only route geometry during local repair. */
   fixedHdRoutes?: HighDensityRoute[]
+  lockedConnectionNames?: ReadonlySet<string>
   drcEvaluator: DrcEvaluator
   viaHoleDiameter?: number
   budget?: Pipeline9BoundedRepairBudget

@@ -785,6 +785,13 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
         this,
       ),
     )
+    const regionalCopperRoutes = [
+      ...this.activeFallbackFixedObstacleRoutes,
+      ...routedObstacleRoutes,
+    ]
+    const hasImmutablePreload = this.fixedHdRoutes.some(
+      (route) => route.isFixed === true,
+    )
     this.activeFallbackSolver = new Pipeline9RegionalFallbackSolver({
       captureSearchDebug: this.params.captureSearchDebug,
       nodeWithPortPoints: fallbackProblem.nodeWithPortPoints,
@@ -799,10 +806,9 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       nodePfById: this.nodePfById,
       obstacles: this.obstacles,
       boardObstacles: this.obstacles,
-      fixedHdRoutes: [
-        ...this.activeFallbackFixedObstacleRoutes,
-        ...routedObstacleRoutes,
-      ],
+      fixedHdRoutes: regionalCopperRoutes,
+      preservePhysicalGeometry:
+        hasImmutablePreload && regionalCopperRoutes.length > 0,
       immutableHdRoutes: this.activeFallbackFixedObstacleRoutes.filter(
         (route) => route.isFixed === true || route.isThroughObstacle === true,
       ),
