@@ -144,5 +144,5 @@ test("A13 joint repair moves a trace onto pads of other nets", async (): Promise
     import.meta.path,
     { svgName: "joint-output" },
   )
-  expect(newPadContactIds.length).toBeGreaterThan(0)
+  expect(newPadContactIds).toEqual([])
 })
