@@ -12,7 +12,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: 9badf68bfd01565af0a2f68c500b9b0ae6859250
+          ref: 0a3b9a25a6e2c6ac07a869af951a91ef20ed6962
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: '1.4.3'
@@ -21,13 +21,21 @@ jobs:
         env:
           BUN_UPDATE_SNAPSHOTS: '1'
         run: |
-          test "$(git hash-object fixtures/bug-reports/bugreport107-board-1726/bugreport107-board-1726.json)" = "03480046cda96eea97f461fec82ac1f69b928519"
-          bun test --timeout 9999999 tests/bugs/bugreport107-board-1726.test.ts
+          test "$(git hash-object tests/fixtures/orangecrab-native-fixed-traces.srj.json)" = "39a22700f4d09732a5f6448f4df1a8e3e248ca8f"
+          bun test --timeout 9999999 tests/features/pipeline9-orangecrab-native-fixed-traces.test.ts
+          python - <<'PY'
+          import re
+          from pathlib import Path
+          svg = Path('tests/features/__snapshots__/pipeline9-orangecrab-native-fixed-traces.snap.svg').read_text()
+          count = int(re.search(r'Relaxed DRC errors: (\d+)', svg).group(1))
+          print(f'ORANGE_CI_DRC_ERRORS={count}')
+          assert count == 0
+          PY
       - name: Save only the verified expected SVG
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add tests/bugs/__snapshots__/bugreport107-board-1726-linux.snap.svg
+          git add tests/features/__snapshots__/pipeline9-orangecrab-native-fixed-traces.snap.svg
           git diff --cached --stat
-          git commit -m "Update the clean B107 routing snapshot for native cleanup"
-          git push origin HEAD:refs/heads/analysis/native-copper-b107-snapshot
+          git commit -m "Update the CI OrangeCrab routing snapshot for native cleanup"
+          git push origin HEAD:refs/heads/analysis/native-copper-orange-snapshot
