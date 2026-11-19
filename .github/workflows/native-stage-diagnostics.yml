@@ -87,6 +87,33 @@ jobs:
             console.log("AGGREGATE_DIRECT_REPAIR",JSON.stringify({scale,changed,count:result.errors.length,viaPadCount:result.errors.filter(isViaPadDrcError).length}))
            }
           }
+          if(solver.solved){
+           const joint=solver.pipeline9JointDrcRepairSolver
+           const routes=joint.combinedOutput
+           const srj=joint.exactRepairParams.srj
+           const evaluate=joint.cachedReferenceDrcEvaluator
+           const snapshot=evaluate({traces:[],routes,hdRoutes:routes})
+           const errors=(Array.isArray(snapshot)?snapshot:snapshot.errors).filter(isViaPadDrcError)
+           const index=getPipeline9RouteIndexByTraceId({routes,newConnections:joint.params.newConnections,syntheticConnectionNames:joint.syntheticConnectionNames})
+           const vias=collectViaNodes(routes,srj)
+           for(const error of errors){
+            const identifiers=[error.pcb_trace_id,...(error.pcb_trace_ids??[])].filter(id=>typeof id==="string")
+            const owner=identifiers.map(id=>index.get(id)).find(i=>i!==undefined)
+            const ownedVias=vias.filter(v=>v.routeIndex===owner)
+            const center=error.center
+            const nearest=center?ownedVias.toSorted((a,b)=>Math.hypot(a.x-center.x,a.y-center.y)-Math.hypot(b.x-center.x,b.y-center.y))[0]:undefined
+            const route=owner!==undefined?routes[owner]:undefined
+            console.log("AGGREGATE_VIA_ELIGIBILITY",JSON.stringify({owned:owner!==undefined,ownedViaCount:ownedVias.length,hasCenter:!!center,nearestFound:!!nearest,movable:nearest?.movable,canCanonicalize:nearest?.canCanonicalize,hasTerminalApproach:nearest?.pointIndexes.some(i=>route.route[i].terminalApproach!==undefined),hasPadPort:nearest?.pointIndexes.some(i=>route.route[i].pcb_port_id!==undefined),touchesRouteEndpoint:nearest?.pointIndexes.some(i=>i===0||i===route.route.length-1)}))
+           }
+           for(const scale of [0.03,0.1,0.25,1]){
+            const candidate=cloneRoutes(routes)
+            const changed=applyDrcErrorForces(srj,candidate,errors,index,scale,joint.params.connMap,true,false,true,true)
+            const materialized=materializeRoutes(candidate)
+            const checked=evaluate({traces:[],routes:materialized,hdRoutes:materialized})
+            const e=Array.isArray(checked)?checked:checked.errors
+            console.log("AGGREGATE_DIRECT_REPAIR",JSON.stringify({scale,changed,count:e.length,viaPadCount:e.filter(isViaPadDrcError).length}))
+           }
+          }
           if(!solver.solved)process.exitCode=1
           TS
           bun native-stage-diagnostics.ts
