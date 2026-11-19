@@ -1,0 +1,124 @@
+{
+  "schemaVersion": 2,
+  "passed": true,
+  "sourceFrozen": true,
+  "originalAutorouterSha256": "44e2cc5a759e11f3982a876733d0f224dcb901c0ac0840e2ff1ec5be434a4285",
+  "candidateAutorouterSha256": "0340617bfdef78ae86f6ae945b8391a47fae0a8241991e82ceeeda488ac73f90",
+  "sourceMapSha256": "aec2fc7d644bba32defd9e4fa7ec957c78ffdeb37fbfe83d0de780bd5311d5f7",
+  "source": {
+    "repositories": [
+      {
+        "repository": "tscircuit/tscircuit-autorouter",
+        "sourceBaseCommit": "a4f2778cb40bbc9c147b95a4e48ef0b32f1dd08f",
+        "publishedBaseCommit": "a4f2778cb40bbc9c147b95a4e48ef0b32f1dd08f",
+        "productionPatchFile": "autorouter-fixed-copper-severity-production.patch",
+        "changedFiles": [
+          {
+            "relative": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/createPipeline9FixedCopperDrcEvaluator.ts",
+            "beforeSha256": "1617d766f489eb60533a5e74ccab1894f364d85335d8acabcf968fbf44293c51",
+            "afterSha256": "bb32ce81b10d6b91e52cd8a4a9b669b78cd07f690e4eddd5a7621a8b0fd7f8bf"
+          }
+        ],
+        "candidateCommit": "304f1d45d252a98d7347f33167b007bd859c89f4",
+        "productionPatchSha256": "a6c7c158053ffe7140c38358e4e7dc4b67a57468e30870d9d459e8197e8796d9"
+      }
+    ]
+  },
+  "spans": [
+    {
+      "kind": "replace",
+      "name": "createPipeline9FixedCopperDrcEvaluator.wireMessage",
+      "sourceRepository": "tscircuit/tscircuit-autorouter",
+      "sourceRelative": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/createPipeline9FixedCopperDrcEvaluator.ts",
+      "startCharacter": 2846195,
+      "endCharacter": 2846244,
+      "startByte": 2846254,
+      "endByte": 2846303,
+      "originalText": "\"Trace is too close to fixed copper on its layer\"",
+      "replacementText": "`Trace is too close to fixed copper on its layer (gap: ${(l-n.severity).toFixed(6)}mm, required: ${l}mm)`",
+      "originalSha256": "fbf4eb3396fb825b2a657f0e2f04927b2f0ff1bb80950709fe211c1bd89ec4fe",
+      "replacementSha256": "f5c97686781147268ec8a60b42c3171fc2e3e0da022ecff469f933603c44f0ab",
+      "compiledBaseEquivalent": true,
+      "baseCanonicalSha256": "e04a1f320f8c6bdab855abe94e5633f8609553ddb6dd571d24daad8fbc263f5e",
+      "sourceTemplate": "`Trace is too close to fixed copper on its layer (gap: ${(wireClearance - violation.severity).toFixed(6)}mm, required: ${wireClearance}mm)`",
+      "expressionBindings": {
+        "actualClearance": "(l-n.severity).toFixed(6)",
+        "minimumClearance": "l"
+      }
+    },
+    {
+      "kind": "replace",
+      "name": "createPipeline9FixedCopperDrcEvaluator.viaMessage",
+      "sourceRepository": "tscircuit/tscircuit-autorouter",
+      "sourceRelative": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/createPipeline9FixedCopperDrcEvaluator.ts",
+      "startCharacter": 2846622,
+      "endCharacter": 2846675,
+      "startByte": 2846681,
+      "endByte": 2846734,
+      "originalText": "\"Via is too close to fixed copper on a drilled layer\"",
+      "replacementText": "`Via is too close to fixed copper on a drilled layer (gap: ${(h-n.severity).toFixed(6)}mm, required: ${h}mm)`",
+      "originalSha256": "08c1dab010706baa90227320e53cc86eaa75f070007dd34d10b4a0d0c78ec200",
+      "replacementSha256": "989a7da2a4c56f761d8b4d25736b4ec71d84ffa8f49c6453c8895b1dc1645d2f",
+      "compiledBaseEquivalent": true,
+      "baseCanonicalSha256": "e04a1f320f8c6bdab855abe94e5633f8609553ddb6dd571d24daad8fbc263f5e",
+      "sourceTemplate": "`Via is too close to fixed copper on a drilled layer (gap: ${(clearance - violation.severity).toFixed(6)}mm, required: ${clearance}mm)`",
+      "expressionBindings": {
+        "actualClearance": "(h-n.severity).toFixed(6)",
+        "minimumClearance": "h"
+      }
+    }
+  ],
+  "unchangedSegments": [
+    {
+      "startByte": 0,
+      "endByte": 2846254,
+      "candidateStartByte": 0,
+      "candidateEndByte": 2846254,
+      "sha256": "a49291af7b63fadc6d717daff510e007eed1a8ed1021bb9121f1c80526a4f684"
+    },
+    {
+      "startByte": 2846303,
+      "endByte": 2846681,
+      "candidateStartByte": 2846359,
+      "candidateEndByte": 2846737,
+      "sha256": "31d2080fe51673fc507e6b4c0b7ddc8eabd5a5b68b3eafdc6ecb36b2498c46bd"
+    },
+    {
+      "startByte": 2846734,
+      "endByte": 3344971,
+      "candidateStartByte": 2846846,
+      "candidateEndByte": 3345083,
+      "sha256": "67f6a4c983329077b87fe3f780663246b4e8877116770a633735de4e230c3e70"
+    }
+  ],
+  "qualification": {
+    "allOutsideBytesUnchanged": true,
+    "unrelatedSourceRuntimeUnchanged": true,
+    "compiledBaseEquivalent": true,
+    "sourceMapGeneratedOffsetsUsed": false,
+    "sourceMapIndex": 1548,
+    "typeErasure": "TypeScript5.9.3 transpileModule ESNext; static only",
+    "canonicalizer": "Terser5.51.2 deterministic local renaming; complete evaluator baseline tokens match modulo bijective free binding aliases",
+    "baselineEvaluatorAliases": {
+      "getFixedCopperObstacleIndexes": "joe",
+      "getConnectivityMapFromSimpleRouteJson": "ei",
+      "getViaToPadClearance": "x7",
+      "convertPreloadedTraceToHdRoutes": "Foe",
+      "createFixedObstacleViolationEvaluator": "k_"
+    },
+    "unchangedInlinedTraceClearance": {
+      "sourceMapIndex": 790,
+      "value": 0.1,
+      "publishedBinding": "ST"
+    },
+    "sourceChangeScope": "Exactly two message initializers; numeric fields and all other source bytes unchanged",
+    "expressionMapping": "Candidate gap.toFixed(6) and required expressions verified against same-object source actual_clearance/minimum_clearance, then rebound to those same-object published expressions",
+    "bun": "1.3.1",
+    "typescript": "5.9.3",
+    "terser": "5.51.2"
+  },
+  "sourceHandoffSha256": "4445db6e99652a7869d2385ed6cc66b1550211ec13878c130bb446d9cab8068c",
+  "mapperSha256": "02d0276c2acd479f83d1ff7f156f491ed07004d0d41b5ce244c6afe6a10b8421",
+  "moduleImported": false,
+  "nativeRoutingExecuted": false
+}

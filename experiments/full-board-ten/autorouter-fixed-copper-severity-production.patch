@@ -1,0 +1,22 @@
+diff --git a/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/createPipeline9FixedCopperDrcEvaluator.ts b/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/createPipeline9FixedCopperDrcEvaluator.ts
+index f93e31da3..b95e3d034 100644
+--- a/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/createPipeline9FixedCopperDrcEvaluator.ts
++++ b/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/createPipeline9FixedCopperDrcEvaluator.ts
+@@ -169,7 +169,7 @@ export const createPipeline9FixedCopperDrcEvaluator = ({
+             center: violation.center,
+             actual_clearance: wireClearance - violation.severity,
+             minimum_clearance: wireClearance,
+-            message: "Trace is too close to fixed copper on its layer",
++            message: `Trace is too close to fixed copper on its layer (gap: ${(wireClearance - violation.severity).toFixed(6)}mm, required: ${wireClearance}mm)`,
+           }
+         }
+         return {
+@@ -183,7 +183,7 @@ export const createPipeline9FixedCopperDrcEvaluator = ({
+           center: violation.center,
+           actual_clearance: clearance - violation.severity,
+           minimum_clearance: clearance,
+-          message: "Via is too close to fixed copper on a drilled layer",
++          message: `Via is too close to fixed copper on a drilled layer (gap: ${(clearance - violation.severity).toFixed(6)}mm, required: ${clearance}mm)`,
+         }
+       })
+     if (viaGeometryKey !== undefined) {

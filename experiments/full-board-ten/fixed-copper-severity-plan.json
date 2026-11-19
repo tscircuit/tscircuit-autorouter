@@ -1,0 +1,153 @@
+{
+  "schemaVersion": 1,
+  "runner": "blacksmith-8vcpu-ubuntu-2404-arm",
+  "budgetsMs": {
+    "capture": 900000,
+    "hardKill": 960000,
+    "assessment": 180000
+  },
+  "assessmentPolicy": "Restore exact published runtime before independent physical connectivity and geometry assessment; report gained/lost names and partial/deadline states.",
+  "baselineController": "14176a107694e38d70afc7e6653cf4bb6755e869",
+  "historicalBaseline": {
+    "runId": 44471059539,
+    "head": "14176a107694e38d70afc7e6653cf4bb6755e869",
+    "rerouted": false,
+    "scope": "Authenticated latest3243 baseline completed at224/2856 overall; this case53/121. No baseline reroute or timing-gain claim.",
+    "controllerHandoffSha256": "6fcf5354b6e8e0d91ff9fa9f35d608802d51e99ca4f2c615d7c22e2b04692a49",
+    "attempt": 1,
+    "controllerHandoffFile": "published-baseline-controller-handoff.json",
+    "resultHandoffPolicy": "After the latest baseline completes, the offline request supplies its authenticated result handoff and explicit SHA256. Every baseline archive is independently checked against pinned run/head/name/digest and exact latest runtime/source/case identities."
+  },
+  "laneOrder": [
+    "candidate"
+  ],
+  "jobTimeoutMinutes": 30,
+  "cases": [
+    {
+      "board": "h616",
+      "cohort": "spaced",
+      "expectedRoutableNets": 121
+    }
+  ],
+  "expectedRoutableNetsTotal": 121,
+  "jobs": 1,
+  "maxParallel": 1,
+  "nativePolicies": "Complete authentic H616 spaced circuit, all components and121 native demands; unchanged source/options/phase order/900soft960hard180assessment. No routing WASM.",
+  "observerPolicy": "Exact native baseline observer targets/hooks and15s circuit capture remain; no optional edge capture or observer changes.",
+  "comparisonPolicy": "Compare native names/geometry/physical findings against retained latest3243 baseline44471059539; later phase inputs may differ. No timing-gain claim.",
+  "runtime": {
+    "main": "0.0.3243",
+    "core": "0.0.2425",
+    "autorouter": "0.0.1133",
+    "eval": "0.0.1818",
+    "publishedCoreSha256": "889b3cf17684cec24dae36ebf7da06c85dd0713e093b2665b66de696bacb7f03",
+    "publishedAutorouterSha256": "44e2cc5a759e11f3982a876733d0f224dcb901c0ac0840e2ff1ec5be434a4285",
+    "dependencyGraphPolicy": "Exact frozen3243 release and lockfiles from baseline14176a10; no independent transitive refresh.",
+    "candidateAutorouterSha256": "0340617bfdef78ae86f6ae945b8391a47fae0a8241991e82ceeeda488ac73f90"
+  },
+  "qualificationReady": false,
+  "status": "HELD_ROOT_REVIEW",
+  "branch": "bench/h616-fixed-copper-severity-3243-20261119",
+  "workflow": ".github/workflows/full-board-fixed-copper-severity.yml",
+  "experiment": "fixed-copper-severity",
+  "sourceMappingSha256": "2f5902ad5c3eeb076279afb4226d9647f40c278e0a3dac23a187cf752729c1cc",
+  "sourceMappingToolSha256": "02d0276c2acd479f83d1ff7f156f491ed07004d0d41b5ce244c6afe6a10b8421",
+  "source": {
+    "repositories": [
+      {
+        "repository": "tscircuit/tscircuit-autorouter",
+        "sourceBaseCommit": "a4f2778cb40bbc9c147b95a4e48ef0b32f1dd08f",
+        "publishedBaseCommit": "a4f2778cb40bbc9c147b95a4e48ef0b32f1dd08f",
+        "productionPatchFile": "autorouter-fixed-copper-severity-production.patch",
+        "changedFiles": [
+          {
+            "relative": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/createPipeline9FixedCopperDrcEvaluator.ts",
+            "beforeSha256": "1617d766f489eb60533a5e74ccab1894f364d85335d8acabcf968fbf44293c51",
+            "afterSha256": "bb32ce81b10d6b91e52cd8a4a9b669b78cd07f690e4eddd5a7621a8b0fd7f8bf"
+          }
+        ],
+        "candidateCommit": "304f1d45d252a98d7347f33167b007bd859c89f4",
+        "productionPatchSha256": "a6c7c158053ffe7140c38358e4e7dc4b67a57468e30870d9d459e8197e8796d9"
+      }
+    ]
+  },
+  "overlay": {
+    "schemaVersion": 2,
+    "replace": [
+      "createPipeline9FixedCopperDrcEvaluator.wireMessage",
+      "createPipeline9FixedCopperDrcEvaluator.viaMessage"
+    ],
+    "insert": [],
+    "publishedSourceMapSha256": "aec2fc7d644bba32defd9e4fa7ec957c78ffdeb37fbfe83d0de780bd5311d5f7",
+    "strategy": "Only the two fixed-copper wire/via messages append existing gap/required syntax. No other source change, Global callback, validation guard or rejected candidate."
+  },
+  "qualification": {
+    "scope": "Source304f1d45 and exactlytwo qualified message spans frozen. Static byte activation/syntax/held gate checks passed; root review/release pending.",
+    "nativeRoutingExecuted": false,
+    "dependencyInstallsExecutedLocally": false,
+    "artifactDownloadsExecutedLocally": false,
+    "sourceMappingHandoffSha256": "fa05c92ce6f57220f441593d46289b5687c25155387a77dca2b57b48a68a177e"
+  },
+  "reuseController": "1c3150be3eea45d0accf6638b02d52d8a2a4a185",
+  "frozenHarnessFiles": {
+    "autorouter-dependencies/bun.lock": "ec313c582c29c1e35bb31190151a5649198c177119d32fe311746c06e94e8c4e",
+    "autorouter-dependencies/package.json": "7b4c1ecf979432e472a4f0589ed49976a8a1323ff7bf651a5938ee7006b61360",
+    "autorouter-fixed-copper-severity-production.patch": "a6c7c158053ffe7140c38358e4e7dc4b67a57468e30870d9d459e8197e8796d9",
+    "baseline-run-plan.json": "0c6b5737f53e1f79f0416162dd8c6aff6d0feb64f6f0758d3b102199103af7b3",
+    "bootstrap.py": "23de25ac8960be89afc57ba27b0d3fddb6e65dba593024be59ec5073d266164d",
+    "calibrate-assessment.tsx": "efeb820cf34239465df53ce4c7932293e41a14dcab4bedb823c3bc60cc9627a0",
+    "checks-279/release.json": "23546aa355405845c7bfef27eccf16c615e6bc291364d5a27b424dfc85b13fc4",
+    "checks-279/runtime/bun.lock": "114d7fe776ebab33c07718281b2fbf646dbb9c8b7c4f54931e882ae8e1d756ef",
+    "checks-279/runtime/package.json": "103d453294e1bec590ada749a228da8274336f0552aab4888d2a22debb75aea0",
+    "compare-fixed-copper-severity.py": "8d23031788541e598a6861579226f2bb9d8b152b7fc03bb798bacc396c439c02",
+    "createCoarseRoutingDiagnostics.ts": "dea45bba3386a9b55b7709834dff65468c421992808b406f54c6f9e556e8b618",
+    "createFixedCopperSeverityOverlay.ts": "02d0276c2acd479f83d1ff7f156f491ed07004d0d41b5ce244c6afe6a10b8421",
+    "fixed-copper-severity-source-mapping.json": "2f5902ad5c3eeb076279afb4226d9647f40c278e0a3dac23a187cf752729c1cc",
+    "harness-provenance.json": "fc4b9191002e33b0561d50a2208d38848d81da0735869bb4f563bb9afe1b7405",
+    "mapping-source-handoff.json": "4445db6e99652a7869d2385ed6cc66b1550211ec13878c130bb446d9cab8068c",
+    "package.json": "469e1861d1259cd1307bca324fb0d8ba0a67ea0323d4e728a35c90a2bc92bdf3",
+    "prepare-cases.ts": "b72e632e9c9152c9e5daedf1bb60daa5d86c33fdcc454f2a7825827d24124330",
+    "prepare-fixed-copper-severity.py": "081805c9c78f00b914b1abfe603010a0f8a4104b9de78b3a44b72bf057569079",
+    "published-baseline-controller-handoff.json": "6fcf5354b6e8e0d91ff9fa9f35d608802d51e99ca4f2c615d7c22e2b04692a49",
+    "published-release-provenance.json": "f3da70f1c717d53f78acaaccd9428e463d98e1d235792c1fd3340d6012449eba",
+    "release.json": "06ab74d85086008fda992c11fb391d37c37cb7dcd08ac5e1587ced492218f1ff",
+    "render-published.tsx": "e12628dfd6560dfb526392d22f8724c062054e54716d4439e5a91a397b2f231e",
+    "report.py": "3fa537cd30224a1bdf10a6acd7e293a0a5e8e187c1e2c210b0ed83370a153b5d",
+    "run-one.ts": "56b710a574e5ed22f01107368d320e181ba5ff0fd31013ed59861a592ba5ac00",
+    "runtime/bun.lock": "1a539e10575d08ee53d4ea289ed9b56975129123336ba552ff0792fb8bba97e2",
+    "runtime/package.json": "ccd64599a0851ee1ed7b4c8ec3c18487f7eab6b2ffec7920bc39b007bae12bdb",
+    "source-provenance.json": "bd24be29c5fdd5ae68ce15c5b2bc50f172ecdd325dcc1b57a80ec653d12570fb",
+    "tsconfig.json": "2e881577c63bb6b62d14abd319240bbc6ae5e206ecb007dae80ab3ec922293c7"
+  },
+  "frozenFiles": {
+    "experiments/full-board-ten/autorouter-dependencies/bun.lock": "ec313c582c29c1e35bb31190151a5649198c177119d32fe311746c06e94e8c4e",
+    "experiments/full-board-ten/autorouter-dependencies/package.json": "7b4c1ecf979432e472a4f0589ed49976a8a1323ff7bf651a5938ee7006b61360",
+    "experiments/full-board-ten/autorouter-fixed-copper-severity-production.patch": "a6c7c158053ffe7140c38358e4e7dc4b67a57468e30870d9d459e8197e8796d9",
+    "experiments/full-board-ten/baseline-run-plan.json": "0c6b5737f53e1f79f0416162dd8c6aff6d0feb64f6f0758d3b102199103af7b3",
+    "experiments/full-board-ten/bootstrap.py": "23de25ac8960be89afc57ba27b0d3fddb6e65dba593024be59ec5073d266164d",
+    "experiments/full-board-ten/calibrate-assessment.tsx": "efeb820cf34239465df53ce4c7932293e41a14dcab4bedb823c3bc60cc9627a0",
+    "experiments/full-board-ten/checks-279/release.json": "23546aa355405845c7bfef27eccf16c615e6bc291364d5a27b424dfc85b13fc4",
+    "experiments/full-board-ten/checks-279/runtime/bun.lock": "114d7fe776ebab33c07718281b2fbf646dbb9c8b7c4f54931e882ae8e1d756ef",
+    "experiments/full-board-ten/checks-279/runtime/package.json": "103d453294e1bec590ada749a228da8274336f0552aab4888d2a22debb75aea0",
+    "experiments/full-board-ten/compare-fixed-copper-severity.py": "8d23031788541e598a6861579226f2bb9d8b152b7fc03bb798bacc396c439c02",
+    "experiments/full-board-ten/createCoarseRoutingDiagnostics.ts": "dea45bba3386a9b55b7709834dff65468c421992808b406f54c6f9e556e8b618",
+    "experiments/full-board-ten/createFixedCopperSeverityOverlay.ts": "02d0276c2acd479f83d1ff7f156f491ed07004d0d41b5ce244c6afe6a10b8421",
+    "experiments/full-board-ten/fixed-copper-severity-source-mapping.json": "2f5902ad5c3eeb076279afb4226d9647f40c278e0a3dac23a187cf752729c1cc",
+    "experiments/full-board-ten/harness-provenance.json": "fc4b9191002e33b0561d50a2208d38848d81da0735869bb4f563bb9afe1b7405",
+    "experiments/full-board-ten/mapping-source-handoff.json": "4445db6e99652a7869d2385ed6cc66b1550211ec13878c130bb446d9cab8068c",
+    "experiments/full-board-ten/package.json": "469e1861d1259cd1307bca324fb0d8ba0a67ea0323d4e728a35c90a2bc92bdf3",
+    "experiments/full-board-ten/prepare-cases.ts": "b72e632e9c9152c9e5daedf1bb60daa5d86c33fdcc454f2a7825827d24124330",
+    "experiments/full-board-ten/prepare-fixed-copper-severity.py": "081805c9c78f00b914b1abfe603010a0f8a4104b9de78b3a44b72bf057569079",
+    "experiments/full-board-ten/published-baseline-controller-handoff.json": "6fcf5354b6e8e0d91ff9fa9f35d608802d51e99ca4f2c615d7c22e2b04692a49",
+    "experiments/full-board-ten/published-release-provenance.json": "f3da70f1c717d53f78acaaccd9428e463d98e1d235792c1fd3340d6012449eba",
+    "experiments/full-board-ten/release.json": "06ab74d85086008fda992c11fb391d37c37cb7dcd08ac5e1587ced492218f1ff",
+    "experiments/full-board-ten/render-published.tsx": "e12628dfd6560dfb526392d22f8724c062054e54716d4439e5a91a397b2f231e",
+    "experiments/full-board-ten/report.py": "3fa537cd30224a1bdf10a6acd7e293a0a5e8e187c1e2c210b0ed83370a153b5d",
+    "experiments/full-board-ten/run-one.ts": "56b710a574e5ed22f01107368d320e181ba5ff0fd31013ed59861a592ba5ac00",
+    "experiments/full-board-ten/runtime/bun.lock": "1a539e10575d08ee53d4ea289ed9b56975129123336ba552ff0792fb8bba97e2",
+    "experiments/full-board-ten/runtime/package.json": "ccd64599a0851ee1ed7b4c8ec3c18487f7eab6b2ffec7920bc39b007bae12bdb",
+    "experiments/full-board-ten/source-provenance.json": "bd24be29c5fdd5ae68ce15c5b2bc50f172ecdd325dcc1b57a80ec653d12570fb",
+    "experiments/full-board-ten/tsconfig.json": "2e881577c63bb6b62d14abd319240bbc6ae5e206ecb007dae80ab3ec922293c7",
+    ".github/workflows/full-board-fixed-copper-severity.yml": "7bfbccaabd5bd1b82c37c462ff7816d842d6949a7f156944c8aed047197514ed"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "repositories": [
+    {
+      "baseCommit": "a4f2778cb40bbc9c147b95a4e48ef0b32f1dd08f",
+      "candidateCommit": "304f1d45d252a98d7347f33167b007bd859c89f4",
+      "productionClean": true,
+      "files": [
+        {
+          "path": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/createPipeline9FixedCopperDrcEvaluator.ts",
+          "production": true,
+          "sha256": "bb32ce81b10d6b91e52cd8a4a9b669b78cd07f690e4eddd5a7621a8b0fd7f8bf"
+        }
+      ],
+      "patches": {
+        "production": {
+          "sha256": "a6c7c158053ffe7140c38358e4e7dc4b67a57468e30870d9d459e8197e8796d9"
+        }
+      }
+    }
+  ]
+}
