@@ -1,0 +1,1164 @@
+{
+  "cases": 300,
+  "beforeSolved": 235,
+  "afterSolved": 247,
+  "acceptedViasBefore": 180,
+  "acceptedViasAfter": 165,
+  "retainedAcceptedViasBefore": 179,
+  "retainedAcceptedViasAfter": 158,
+  "gains": [
+    {
+      "board": "h616",
+      "connection": "breakout:pcb_breakout_point_0",
+      "before": "failed",
+      "after": "solved",
+      "beforeDirection": "up",
+      "afterDirection": "right",
+      "beforeVias": null,
+      "afterVias": 1
+    },
+    {
+      "board": "h616",
+      "connection": "breakout:pcb_breakout_point_22",
+      "before": "failed",
+      "after": "solved",
+      "beforeDirection": "down",
+      "afterDirection": "right",
+      "beforeVias": null,
+      "afterVias": 1
+    },
+    {
+      "board": "h616",
+      "connection": "breakout:pcb_breakout_point_78",
+      "before": "failed",
+      "after": "solved",
+      "beforeDirection": "left",
+      "afterDirection": "up",
+      "beforeVias": null,
+      "afterVias": 0
+    },
+    {
+      "board": "h616",
+      "connection": "breakout:pcb_breakout_point_105",
+      "before": "failed",
+      "after": "solved",
+      "beforeDirection": "left",
+      "afterDirection": "down",
+      "beforeVias": null,
+      "afterVias": 1
+    },
+    {
+      "board": "icepi",
+      "connection": "breakout:pcb_breakout_point_0",
+      "before": "failed",
+      "after": "solved",
+      "beforeDirection": "left",
+      "afterDirection": "down",
+      "beforeVias": null,
+      "afterVias": 0
+    },
+    {
+      "board": "icepi",
+      "connection": "breakout:pcb_breakout_point_1",
+      "before": "failed",
+      "after": "solved",
+      "beforeDirection": "left",
+      "afterDirection": "down",
+      "beforeVias": null,
+      "afterVias": 0
+    },
+    {
+      "board": "imx6",
+      "connection": "breakout:pcb_breakout_point_0",
+      "before": "failed",
+      "after": "solved",
+      "beforeDirection": "down",
+      "afterDirection": "left",
+      "beforeVias": null,
+      "afterVias": 0
+    },
+    {
+      "board": "orangecrab",
+      "connection": "breakout:pcb_breakout_point_26",
+      "before": "failed",
+      "after": "solved",
+      "beforeDirection": "down",
+      "afterDirection": "right",
+      "beforeVias": null,
+      "afterVias": 1
+    },
+    {
+      "board": "orangecrab",
+      "connection": "breakout:pcb_breakout_point_32",
+      "before": "failed",
+      "after": "solved",
+      "beforeDirection": "down",
+      "afterDirection": "right",
+      "beforeVias": null,
+      "afterVias": 1
+    },
+    {
+      "board": "orangecrab",
+      "connection": "breakout:pcb_breakout_point_40",
+      "before": "failed",
+      "after": "solved",
+      "beforeDirection": "down",
+      "afterDirection": "right",
+      "beforeVias": null,
+      "afterVias": 1
+    },
+    {
+      "board": "orangecrab",
+      "connection": "breakout:pcb_breakout_point_50",
+      "before": "failed",
+      "after": "solved",
+      "beforeDirection": "down",
+      "afterDirection": "right",
+      "beforeVias": null,
+      "afterVias": 0
+    },
+    {
+      "board": "orangecrab",
+      "connection": "breakout:pcb_breakout_point_81",
+      "before": "failed",
+      "after": "solved",
+      "beforeDirection": "left",
+      "afterDirection": "up",
+      "beforeVias": null,
+      "afterVias": 1
+    },
+    {
+      "board": "orangecrab",
+      "connection": "breakout:pcb_breakout_point_83",
+      "before": "failed",
+      "after": "solved",
+      "beforeDirection": "left",
+      "afterDirection": "up",
+      "beforeVias": null,
+      "afterVias": 0
+    }
+  ],
+  "losses": [
+    {
+      "board": "orangecrab",
+      "connection": "breakout:pcb_breakout_point_5",
+      "before": "solved",
+      "after": "failed",
+      "beforeDirection": "down",
+      "afterDirection": "right",
+      "beforeVias": 1,
+      "afterVias": null
+    }
+  ],
+  "changedRetained": [
+    {
+      "board": "butterstick",
+      "connection": "breakout:pcb_breakout_point_19",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "left",
+      "afterDirection": "down",
+      "beforeVias": 1,
+      "afterVias": 1
+    },
+    {
+      "board": "butterstick",
+      "connection": "breakout:pcb_breakout_point_20",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "left",
+      "afterDirection": "down",
+      "beforeVias": 1,
+      "afterVias": 1
+    },
+    {
+      "board": "butterstick",
+      "connection": "breakout:pcb_breakout_point_26",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "right",
+      "afterDirection": "down",
+      "beforeVias": 1,
+      "afterVias": 0
+    },
+    {
+      "board": "butterstick",
+      "connection": "breakout:pcb_breakout_point_31",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "right",
+      "afterDirection": "down",
+      "beforeVias": 1,
+      "afterVias": 0
+    },
+    {
+      "board": "butterstick",
+      "connection": "breakout:pcb_breakout_point_35",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "left",
+      "afterDirection": "down",
+      "beforeVias": 1,
+      "afterVias": 1
+    },
+    {
+      "board": "butterstick",
+      "connection": "breakout:pcb_breakout_point_36",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "left",
+      "afterDirection": "down",
+      "beforeVias": 1,
+      "afterVias": 1
+    },
+    {
+      "board": "butterstick",
+      "connection": "breakout:pcb_breakout_point_40",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "left",
+      "afterDirection": "down",
+      "beforeVias": 1,
+      "afterVias": 1
+    },
+    {
+      "board": "butterstick",
+      "connection": "breakout:pcb_breakout_point_41",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "left",
+      "afterDirection": "down",
+      "beforeVias": 1,
+      "afterVias": 1
+    },
+    {
+      "board": "butterstick",
+      "connection": "breakout:pcb_breakout_point_42",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "left",
+      "afterDirection": "down",
+      "beforeVias": 1,
+      "afterVias": 1
+    },
+    {
+      "board": "butterstick",
+      "connection": "breakout:pcb_breakout_point_47",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "right",
+      "afterDirection": "down",
+      "beforeVias": 1,
+      "afterVias": 1
+    },
+    {
+      "board": "glider",
+      "connection": "breakout:pcb_breakout_point_6",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "left",
+      "afterDirection": "up",
+      "beforeVias": 1,
+      "afterVias": 0
+    },
+    {
+      "board": "glider",
+      "connection": "breakout:pcb_breakout_point_7",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "left",
+      "afterDirection": "up",
+      "beforeVias": 1,
+      "afterVias": 0
+    },
+    {
+      "board": "glider",
+      "connection": "breakout:pcb_breakout_point_8",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "left",
+      "afterDirection": "up",
+      "beforeVias": 1,
+      "afterVias": 0
+    },
+    {
+      "board": "glider",
+      "connection": "breakout:pcb_breakout_point_9",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "left",
+      "afterDirection": "up",
+      "beforeVias": 1,
+      "afterVias": 1
+    },
+    {
+      "board": "glider",
+      "connection": "breakout:pcb_breakout_point_10",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "left",
+      "afterDirection": "up",
+      "beforeVias": 1,
+      "afterVias": 1
+    },
+    {
+      "board": "glider",
+      "connection": "breakout:pcb_breakout_point_12",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "right",
+      "afterDirection": "up",
+      "beforeVias": 1,
+      "afterVias": 0
+    },
+    {
+      "board": "glider",
+      "connection": "breakout:pcb_breakout_point_13",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "right",
+      "afterDirection": "up",
+      "beforeVias": 1,
+      "afterVias": 1
+    },
+    {
+      "board": "glider",
+      "connection": "breakout:pcb_breakout_point_14",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "right",
+      "afterDirection": "up",
+      "beforeVias": 1,
+      "afterVias": 1
+    },
+    {
+      "board": "glider",
+      "connection": "breakout:pcb_breakout_point_15",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "right",
+      "afterDirection": "up",
+      "beforeVias": 1,
+      "afterVias": 1
+    },
+    {
+      "board": "glider",
+      "connection": "breakout:pcb_breakout_point_16",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "right",
+      "afterDirection": "up",
+      "beforeVias": 1,
+      "afterVias": 1
+    },
+    {
+      "board": "glider",
+      "connection": "breakout:pcb_breakout_point_21",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "left",
+      "afterDirection": "up",
+      "beforeVias": 1,
+      "afterVias": 1
+    },
+    {
+      "board": "glider",
+      "connection": "breakout:pcb_breakout_point_22",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "left",
+      "afterDirection": "up",
+      "beforeVias": 1,
+      "afterVias": 0
+    },
+    {
+      "board": "glider",
+      "connection": "breakout:pcb_breakout_point_23",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "left",
+      "afterDirection": "up",
+      "beforeVias": 1,
+      "afterVias": 1
+    },
+    {
+      "board": "glider",
+      "connection": "breakout:pcb_breakout_point_24",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "left",
+      "afterDirection": "up",
+      "beforeVias": 1,
+      "afterVias": 1
+    },
+    {
+      "board": "glider",
+      "connection": "breakout:pcb_breakout_point_26",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "right",
+      "afterDirection": "up",
+      "beforeVias": 1,
+      "afterVias": 0
+    },
+    {
+      "board": "glider",
+      "connection": "breakout:pcb_breakout_point_27",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "right",
+      "afterDirection": "up",
+      "beforeVias": 1,
+      "afterVias": 1
+    },
+    {
+      "board": "glider",
+      "connection": "breakout:pcb_breakout_point_28",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "right",
+      "afterDirection": "up",
+      "beforeVias": 1,
+      "afterVias": 1
+    },
+    {
+      "board": "glider",
+      "connection": "breakout:pcb_breakout_point_29",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "right",
+      "afterDirection": "up",
+      "beforeVias": 1,
+      "afterVias": 1
+    },
+    {
+      "board": "glider",
+      "connection": "breakout:pcb_breakout_point_30",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "right",
+      "afterDirection": "up",
+      "beforeVias": 1,
+      "afterVias": 1
+    },
+    {
+      "board": "glider",
+      "connection": "breakout:pcb_breakout_point_31",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "right",
+      "afterDirection": "up",
+      "beforeVias": 1,
+      "afterVias": 1
+    },
+    {
+      "board": "glider",
+      "connection": "breakout:pcb_breakout_point_37",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "left",
+      "afterDirection": "up",
+      "beforeVias": 1,
+      "afterVias": 1
+    },
+    {
+      "board": "glider",
+      "connection": "breakout:pcb_breakout_point_38",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "left",
+      "afterDirection": "up",
+      "beforeVias": 1,
+      "afterVias": 0
+    },
+    {
+      "board": "glider",
+      "connection": "breakout:pcb_breakout_point_39",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "left",
+      "afterDirection": "up",
+      "beforeVias": 1,
+      "afterVias": 1
+    },
+    {
+      "board": "glider",
+      "connection": "breakout:pcb_breakout_point_42",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "right",
+      "afterDirection": "up",
+      "beforeVias": 1,
+      "afterVias": 1
+    },
+    {
+      "board": "glider",
+      "connection": "breakout:pcb_breakout_point_43",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "right",
+      "afterDirection": "up",
+      "beforeVias": 1,
+      "afterVias": 1
+    },
+    {
+      "board": "glider",
+      "connection": "breakout:pcb_breakout_point_44",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "right",
+      "afterDirection": "up",
+      "beforeVias": 1,
+      "afterVias": 1
+    },
+    {
+      "board": "glider",
+      "connection": "breakout:pcb_breakout_point_45",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "right",
+      "afterDirection": "up",
+      "beforeVias": 1,
+      "afterVias": 1
+    },
+    {
+      "board": "glider",
+      "connection": "breakout:pcb_breakout_point_46",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "right",
+      "afterDirection": "up",
+      "beforeVias": 1,
+      "afterVias": 1
+    },
+    {
+      "board": "h616",
+      "connection": "breakout:pcb_breakout_point_23",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "down",
+      "afterDirection": "left",
+      "beforeVias": 0,
+      "afterVias": 0
+    },
+    {
+      "board": "h616",
+      "connection": "breakout:pcb_breakout_point_26",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "up",
+      "afterDirection": "left",
+      "beforeVias": 1,
+      "afterVias": 0
+    },
+    {
+      "board": "h616",
+      "connection": "breakout:pcb_breakout_point_27",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "up",
+      "afterDirection": "left",
+      "beforeVias": 1,
+      "afterVias": 1
+    },
+    {
+      "board": "h616",
+      "connection": "breakout:pcb_breakout_point_29",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "up",
+      "afterDirection": "left",
+      "beforeVias": 1,
+      "afterVias": 1
+    },
+    {
+      "board": "h616",
+      "connection": "breakout:pcb_breakout_point_30",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "up",
+      "afterDirection": "left",
+      "beforeVias": 1,
+      "afterVias": 1
+    },
+    {
+      "board": "h616",
+      "connection": "breakout:pcb_breakout_point_31",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "down",
+      "afterDirection": "left",
+      "beforeVias": 1,
+      "afterVias": 1
+    },
+    {
+      "board": "h616",
+      "connection": "breakout:pcb_breakout_point_32",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "down",
+      "afterDirection": "left",
+      "beforeVias": 1,
+      "afterVias": 0
+    },
+    {
+      "board": "h616",
+      "connection": "breakout:pcb_breakout_point_37",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "down",
+      "afterDirection": "left",
+      "beforeVias": 1,
+      "afterVias": 1
+    },
+    {
+      "board": "h616",
+      "connection": "breakout:pcb_breakout_point_40",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "up",
+      "afterDirection": "left",
+      "beforeVias": 1,
+      "afterVias": 1
+    },
+    {
+      "board": "h616",
+      "connection": "breakout:pcb_breakout_point_42",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "up",
+      "afterDirection": "left",
+      "beforeVias": 1,
+      "afterVias": 0
+    },
+    {
+      "board": "h616",
+      "connection": "breakout:pcb_breakout_point_43",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "up",
+      "afterDirection": "left",
+      "beforeVias": 0,
+      "afterVias": 1
+    },
+    {
+      "board": "h616",
+      "connection": "breakout:pcb_breakout_point_45",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "down",
+      "afterDirection": "left",
+      "beforeVias": 1,
+      "afterVias": 1
+    },
+    {
+      "board": "h616",
+      "connection": "breakout:pcb_breakout_point_50",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "down",
+      "afterDirection": "left",
+      "beforeVias": 0,
+      "afterVias": 0
+    },
+    {
+      "board": "h616",
+      "connection": "breakout:pcb_breakout_point_54",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "up",
+      "afterDirection": "left",
+      "beforeVias": 1,
+      "afterVias": 1
+    },
+    {
+      "board": "h616",
+      "connection": "breakout:pcb_breakout_point_55",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "up",
+      "afterDirection": "left",
+      "beforeVias": 1,
+      "afterVias": 1
+    },
+    {
+      "board": "h616",
+      "connection": "breakout:pcb_breakout_point_56",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "up",
+      "afterDirection": "left",
+      "beforeVias": 1,
+      "afterVias": 1
+    },
+    {
+      "board": "h616",
+      "connection": "breakout:pcb_breakout_point_57",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "up",
+      "afterDirection": "left",
+      "beforeVias": 1,
+      "afterVias": 1
+    },
+    {
+      "board": "h616",
+      "connection": "breakout:pcb_breakout_point_58",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "down",
+      "afterDirection": "left",
+      "beforeVias": 1,
+      "afterVias": 1
+    },
+    {
+      "board": "h616",
+      "connection": "breakout:pcb_breakout_point_63",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "down",
+      "afterDirection": "left",
+      "beforeVias": 1,
+      "afterVias": 0
+    },
+    {
+      "board": "h616",
+      "connection": "breakout:pcb_breakout_point_66",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "up",
+      "afterDirection": "left",
+      "beforeVias": 1,
+      "afterVias": 0
+    },
+    {
+      "board": "h616",
+      "connection": "breakout:pcb_breakout_point_68",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "up",
+      "afterDirection": "left",
+      "beforeVias": 0,
+      "afterVias": 1
+    },
+    {
+      "board": "h616",
+      "connection": "breakout:pcb_breakout_point_69",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "up",
+      "afterDirection": "left",
+      "beforeVias": 0,
+      "afterVias": 1
+    },
+    {
+      "board": "h616",
+      "connection": "breakout:pcb_breakout_point_70",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "up",
+      "afterDirection": "left",
+      "beforeVias": 1,
+      "afterVias": 0
+    },
+    {
+      "board": "h616",
+      "connection": "breakout:pcb_breakout_point_71",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "down",
+      "afterDirection": "left",
+      "beforeVias": 1,
+      "afterVias": 1
+    },
+    {
+      "board": "h616",
+      "connection": "breakout:pcb_breakout_point_72",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "down",
+      "afterDirection": "left",
+      "beforeVias": 1,
+      "afterVias": 1
+    },
+    {
+      "board": "h616",
+      "connection": "breakout:pcb_breakout_point_88",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "right",
+      "afterDirection": "up",
+      "beforeVias": 1,
+      "afterVias": 0
+    },
+    {
+      "board": "h616",
+      "connection": "breakout:pcb_breakout_point_92",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "right",
+      "afterDirection": "up",
+      "beforeVias": 0,
+      "afterVias": 0
+    },
+    {
+      "board": "h616",
+      "connection": "breakout:pcb_breakout_point_93",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "right",
+      "afterDirection": "up",
+      "beforeVias": 1,
+      "afterVias": 1
+    },
+    {
+      "board": "orangecrab",
+      "connection": "breakout:pcb_breakout_point_2",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "down",
+      "afterDirection": "right",
+      "beforeVias": 1,
+      "afterVias": 1
+    },
+    {
+      "board": "orangecrab",
+      "connection": "breakout:pcb_breakout_point_3",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "down",
+      "afterDirection": "right",
+      "beforeVias": 1,
+      "afterVias": 1
+    },
+    {
+      "board": "orangecrab",
+      "connection": "breakout:pcb_breakout_point_4",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "down",
+      "afterDirection": "right",
+      "beforeVias": 1,
+      "afterVias": 1
+    },
+    {
+      "board": "orangecrab",
+      "connection": "breakout:pcb_breakout_point_6",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "down",
+      "afterDirection": "right",
+      "beforeVias": 1,
+      "afterVias": 1
+    },
+    {
+      "board": "orangecrab",
+      "connection": "breakout:pcb_breakout_point_11",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "down",
+      "afterDirection": "right",
+      "beforeVias": 1,
+      "afterVias": 1
+    },
+    {
+      "board": "orangecrab",
+      "connection": "breakout:pcb_breakout_point_12",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "down",
+      "afterDirection": "right",
+      "beforeVias": 1,
+      "afterVias": 1
+    },
+    {
+      "board": "orangecrab",
+      "connection": "breakout:pcb_breakout_point_13",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "down",
+      "afterDirection": "right",
+      "beforeVias": 1,
+      "afterVias": 1
+    },
+    {
+      "board": "orangecrab",
+      "connection": "breakout:pcb_breakout_point_14",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "down",
+      "afterDirection": "right",
+      "beforeVias": 1,
+      "afterVias": 1
+    },
+    {
+      "board": "orangecrab",
+      "connection": "breakout:pcb_breakout_point_22",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "down",
+      "afterDirection": "right",
+      "beforeVias": 1,
+      "afterVias": 0
+    },
+    {
+      "board": "orangecrab",
+      "connection": "breakout:pcb_breakout_point_23",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "down",
+      "afterDirection": "right",
+      "beforeVias": 1,
+      "afterVias": 0
+    },
+    {
+      "board": "orangecrab",
+      "connection": "breakout:pcb_breakout_point_24",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "down",
+      "afterDirection": "right",
+      "beforeVias": 0,
+      "afterVias": 0
+    },
+    {
+      "board": "orangecrab",
+      "connection": "breakout:pcb_breakout_point_25",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "down",
+      "afterDirection": "right",
+      "beforeVias": 0,
+      "afterVias": 1
+    },
+    {
+      "board": "orangecrab",
+      "connection": "breakout:pcb_breakout_point_31",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "down",
+      "afterDirection": "right",
+      "beforeVias": 1,
+      "afterVias": 1
+    },
+    {
+      "board": "orangecrab",
+      "connection": "breakout:pcb_breakout_point_33",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "down",
+      "afterDirection": "right",
+      "beforeVias": 1,
+      "afterVias": 0
+    },
+    {
+      "board": "orangecrab",
+      "connection": "breakout:pcb_breakout_point_34",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "down",
+      "afterDirection": "right",
+      "beforeVias": 1,
+      "afterVias": 0
+    },
+    {
+      "board": "orangecrab",
+      "connection": "breakout:pcb_breakout_point_39",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "down",
+      "afterDirection": "right",
+      "beforeVias": 1,
+      "afterVias": 1
+    },
+    {
+      "board": "orangecrab",
+      "connection": "breakout:pcb_breakout_point_41",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "down",
+      "afterDirection": "right",
+      "beforeVias": 0,
+      "afterVias": 1
+    },
+    {
+      "board": "orangecrab",
+      "connection": "breakout:pcb_breakout_point_42",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "down",
+      "afterDirection": "right",
+      "beforeVias": 1,
+      "afterVias": 1
+    },
+    {
+      "board": "orangecrab",
+      "connection": "breakout:pcb_breakout_point_48",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "down",
+      "afterDirection": "right",
+      "beforeVias": 1,
+      "afterVias": 0
+    },
+    {
+      "board": "orangecrab",
+      "connection": "breakout:pcb_breakout_point_49",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "down",
+      "afterDirection": "right",
+      "beforeVias": 1,
+      "afterVias": 0
+    },
+    {
+      "board": "orangecrab",
+      "connection": "breakout:pcb_breakout_point_56",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "up",
+      "afterDirection": "left",
+      "beforeVias": 1,
+      "afterVias": 1
+    },
+    {
+      "board": "orangecrab",
+      "connection": "breakout:pcb_breakout_point_60",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "up",
+      "afterDirection": "left",
+      "beforeVias": 1,
+      "afterVias": 0
+    },
+    {
+      "board": "orangecrab",
+      "connection": "breakout:pcb_breakout_point_63",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "up",
+      "afterDirection": "left",
+      "beforeVias": 1,
+      "afterVias": 1
+    },
+    {
+      "board": "orangecrab",
+      "connection": "breakout:pcb_breakout_point_66",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "up",
+      "afterDirection": "left",
+      "beforeVias": 1,
+      "afterVias": 1
+    },
+    {
+      "board": "orangecrab",
+      "connection": "breakout:pcb_breakout_point_72",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "up",
+      "afterDirection": "left",
+      "beforeVias": 1,
+      "afterVias": 0
+    },
+    {
+      "board": "orangecrab",
+      "connection": "breakout:pcb_breakout_point_78",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "right",
+      "afterDirection": "up",
+      "beforeVias": 1,
+      "afterVias": 1
+    },
+    {
+      "board": "orangecrab",
+      "connection": "breakout:pcb_breakout_point_86",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "right",
+      "afterDirection": "up",
+      "beforeVias": 1,
+      "afterVias": 1
+    },
+    {
+      "board": "orangecrab",
+      "connection": "breakout:pcb_breakout_point_89",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "right",
+      "afterDirection": "up",
+      "beforeVias": 1,
+      "afterVias": 0
+    },
+    {
+      "board": "orangecrab",
+      "connection": "breakout:pcb_breakout_point_99",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "right",
+      "afterDirection": "down",
+      "beforeVias": 1,
+      "afterVias": 0
+    },
+    {
+      "board": "orangecrab",
+      "connection": "breakout:pcb_breakout_point_102",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "right",
+      "afterDirection": "down",
+      "beforeVias": 1,
+      "afterVias": 0
+    },
+    {
+      "board": "orangecrab",
+      "connection": "breakout:pcb_breakout_point_105",
+      "before": "solved",
+      "after": "solved",
+      "beforeDirection": "right",
+      "afterDirection": "down",
+      "beforeVias": 0,
+      "afterVias": 1
+    }
+  ],
+  "boards": [
+    {
+      "board": "butterstick",
+      "cases": 37,
+      "beforeSolved": 30,
+      "afterSolved": 30
+    },
+    {
+      "board": "glider",
+      "cases": 52,
+      "beforeSolved": 49,
+      "afterSolved": 49
+    },
+    {
+      "board": "h616",
+      "cases": 96,
+      "beforeSolved": 74,
+      "afterSolved": 78
+    },
+    {
+      "board": "icepi",
+      "cases": 12,
+      "beforeSolved": 1,
+      "afterSolved": 3
+    },
+    {
+      "board": "imx6",
+      "cases": 12,
+      "beforeSolved": 2,
+      "afterSolved": 3
+    },
+    {
+      "board": "orangecrab",
+      "cases": 91,
+      "beforeSolved": 79,
+      "afterSolved": 84
+    }
+  ],
+  "independentDrcIssues": 0
+}

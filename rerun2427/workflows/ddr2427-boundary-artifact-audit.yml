@@ -1,0 +1,44 @@
+name: Audit native boundary copper and distinct drill counts
+on:
+  push:
+    branches: [codex/ddr2427-boundary-artifact-audit]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  copper-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: boundary2427-isolated-*
+          run-id: 44521938110
+          github-token: ${{ github.token }}
+          path: captured
+      - name: Audit accepted copper without rerunning the solver
+        run: |
+          python3 - <<'PYAUDIT'
+          from pathlib import Path
+          import gzip,json,zipfile,io,base64
+          summaries=[]
+          for path in sorted(Path('captured').rglob('accepted-output.json.gz')):
+              rows=json.loads(gzip.decompress(path.read_bytes()))
+              reports={row['connectionName']:row for row in json.loads((path.parent/'report.json').read_text())}
+              counts=[]
+              for row in rows:
+                  traces={trace['pcb_trace_id']:trace for trace in row['fanoutTraces']+row['completionTraces']}
+                  vias=[point for trace in traces.values() for point in trace['route'] if point['route_type']=='via']
+                  unique={(point['x'],point['y']) for point in vias}
+                  counts.append({'connectionName':row['connectionName'],'reportedVias':reports[row['connectionName']]['viaCount'],'traceViaEntries':len(vias),'distinctDrills':len(unique)})
+              summaries.append({'artifact':path.parent.parent.name,'revision':path.parent.name,'accepted':len(rows),'counts':counts})
+          assert len(summaries)==12,len(summaries)
+          print('NATIVE_BOUNDARY_COPPER_AUDIT',json.dumps(summaries,separators=(',',':')))
+          stream=io.BytesIO()
+          with zipfile.ZipFile(stream,'w',zipfile.ZIP_DEFLATED,compresslevel=9) as archive:
+              for path in Path('captured').rglob('accepted-output.json.gz'):
+                  archive.write(path,path.relative_to('captured'))
+          print('NATIVE_BOUNDARY_COPPER_EVIDENCE_BEGIN')
+          encoded=base64.b64encode(stream.getvalue()).decode()
+          for offset in range(0,len(encoded),8000):print(encoded[offset:offset+8000])
+          print('NATIVE_BOUNDARY_COPPER_EVIDENCE_END')
+          PYAUDIT

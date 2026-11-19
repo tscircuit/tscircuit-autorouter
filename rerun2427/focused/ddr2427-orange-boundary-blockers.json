@@ -1,0 +1,95 @@
+[
+  {
+    "direction": "right",
+    "viaHandedness": -1,
+    "center": {
+      "x": 5.289999999999992,
+      "y": 5.5499989999999855
+    },
+    "blockers": [
+      {
+        "obstacle": {
+          "pcb_smtpad_id": "pcb_smtpad_463",
+          "pcb_port_id": "pcb_port_463",
+          "source_port_name": "BALL_1"
+        },
+        "center": {
+          "x": 5.38300000000001,
+          "y": 5.469999999999992
+        },
+        "layers": [
+          "bottom"
+        ],
+        "width": 0.4,
+        "height": 0.46,
+        "actualClearance": 0,
+        "requiredClearance": 0.229
+      }
+    ]
+  },
+  {
+    "direction": "right",
+    "viaHandedness": 1,
+    "center": {
+      "x": 5.289999999999992,
+      "y": 6.049998999999984
+    },
+    "blockers": [
+      {
+        "obstacle": {
+          "pcb_smtpad_id": "pcb_smtpad_464",
+          "pcb_port_id": "pcb_port_464",
+          "source_port_name": "BALL_2"
+        },
+        "center": {
+          "x": 5.38300000000001,
+          "y": 6.109999999999992
+        },
+        "layers": [
+          "bottom"
+        ],
+        "width": 0.4,
+        "height": 0.46,
+        "actualClearance": 0,
+        "requiredClearance": 0.229
+      }
+    ]
+  },
+  {
+    "direction": "down",
+    "viaHandedness": -1,
+    "center": {
+      "x": 4.789999999999994,
+      "y": 5.5499989999999855
+    },
+    "blockers": []
+  },
+  {
+    "direction": "down",
+    "viaHandedness": 1,
+    "center": {
+      "x": 5.289999999999992,
+      "y": 5.5499989999999855
+    },
+    "blockers": [
+      {
+        "obstacle": {
+          "pcb_smtpad_id": "pcb_smtpad_463",
+          "pcb_port_id": "pcb_port_463",
+          "source_port_name": "BALL_1"
+        },
+        "center": {
+          "x": 5.38300000000001,
+          "y": 5.469999999999992
+        },
+        "layers": [
+          "bottom"
+        ],
+        "width": 0.4,
+        "height": 0.46,
+        "actualClearance": 0,
+        "requiredClearance": 0.229
+      }
+    ]
+  }
+]

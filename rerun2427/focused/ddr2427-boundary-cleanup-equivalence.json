@@ -1,0 +1,44 @@
+[
+  {
+    "board": "icepi",
+    "inputSha256": "f2c622bc288faaae5e505f62fe8803b465d1be0bc5752547ea9136438df40279",
+    "buses": 32,
+    "matchingDirectionSha256": "46d450c483da0989f90c1f5b9fa5d1278cc7170581df82b993036896c7bd2707",
+    "toleratedOutsideTargets": 0
+  },
+  {
+    "board": "imx6",
+    "inputSha256": "70c8dbdc3c3b66954d47334f6d92353df135ba8eb4a7edf344b40718e6b43fd5",
+    "buses": 32,
+    "matchingDirectionSha256": "24a0fa6c15c6ff7ca730da8187fb88368d7d32efc96d09e12f2f4e97dc03e623",
+    "toleratedOutsideTargets": 0
+  },
+  {
+    "board": "h616",
+    "inputSha256": "0aa625dd9c4fe551e6cdcd60574f5d57d0fce74d754a8c91d3b302676c7fa7db",
+    "buses": 160,
+    "matchingDirectionSha256": "3e7f76e2c958e0ea08106e6d46a44c5d7e9f1899f00c22f03f1768eb27af215e",
+    "toleratedOutsideTargets": 0
+  },
+  {
+    "board": "orangecrab",
+    "inputSha256": "727660d7503438a3ab7618e2f8b52dde282f49cafb8b3f26783975dcd8642cc9",
+    "buses": 259,
+    "matchingDirectionSha256": "0fcf3da5184e41e0e9ea6012daf50771c24153f5e4d8fd25a4ff1d8e48267c97",
+    "toleratedOutsideTargets": 0
+  },
+  {
+    "board": "butterstick",
+    "inputSha256": "0c572408c68a22db9a1e49f1dc6c3a5626d78f431bb6bb095c8a4b18d6c9baf7",
+    "buses": 77,
+    "matchingDirectionSha256": "5c3067c46791bad8418a9b8281af395499808f871dac54459b9ced9c9951b659",
+    "toleratedOutsideTargets": 0
+  },
+  {
+    "board": "glider",
+    "inputSha256": "b407978a89550c8835548bd99252b8f042a167f50cd1a81adf8b234e85155f59",
+    "buses": 95,
+    "matchingDirectionSha256": "b88fa6a0f078eb1a962b0a45df5fb60e3c2009c47813c21bf662c10340082c65",
+    "toleratedOutsideTargets": 0
+  }
+]

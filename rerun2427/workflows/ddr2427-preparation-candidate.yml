@@ -1,0 +1,289 @@
+name: Measure scoped plane preparation reuse on the latest stack
+on:
+  push:
+    branches: [codex/ddr2427-preparation-candidate]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  boards:
+    strategy:
+      fail-fast: false
+      matrix:
+        board: [orangecrab, h616, butterstick, glider, imx6, icepi]
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          ref: a4a8f3a71dd66c2cae01d6a7ade426efad833ff6
+          path: router
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/core
+          ref: 75ab017cd6852dbe50516ee1f4ca9d1108c29985
+          path: core
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Build the frozen stack with the selected fanout revision
+        run: |
+          python3 - <<'PYFANOUT'
+          import json
+          from pathlib import Path
+          path=Path('core/package.json');package=json.loads(path.read_text())
+          assert package['devDependencies']['@tscircuit/fanout-solver']=='0.0.91'
+          package['devDependencies']['@tscircuit/fanout-solver']='https://codeload.github.com/tscircuit/fanout-solver/tar.gz/16e7eb622b9c47366e63f43f2ffada1c1c0c7f1a'
+          path.write_text(json.dumps(package,indent=2)+'\n')
+          PYFANOUT
+          for folder in router core; do (cd "$folder" && bun install --ignore-scripts); done
+          (cd router && bun build lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts --target bun --packages external --outfile benchmark-runtime/pipeline9.js)
+          cd experiments/full-board-priority-analysis
+          python3 - <<'PYDEPS'
+          import json
+          from pathlib import Path
+          path=Path('package.json');package=json.loads(path.read_text());package['dependencies']['tscircuit']='0.0.3245';path.write_text(json.dumps(package,indent=2)+'\n')
+          PYDEPS
+          bun install --ignore-scripts
+          bun build-core.ts ../../core
+      - name: Verify fanout then buses then remaining nets, and route fresh
+        working-directory: experiments/full-board-priority-analysis
+        env:
+          BOARD_ID: ${{ matrix.board }}
+          FULL_BOARD_CAPTURE_STAGE_INPUTS: "1"
+          FULL_BOARD_FANOUT_VERSION: "0.0.91+16e7eb6"
+        run: |
+          export FULL_BOARD_CORE_SOURCE="$GITHUB_WORKSPACE/core"
+          export FULL_BOARD_CORE_MODULE="$PWD/patched-core/index.js"
+          export FULL_BOARD_COPPER_MODULE="$PWD/patched-core/find-floating-copper.js"
+          export FULL_BOARD_ROUTER_MODULE="$GITHUB_WORKSPACE/router/benchmark-runtime/pipeline9.js"
+          export FULL_BOARD_ROUTER_COMMIT="a4a8f3a71dd66c2cae01d6a7ade426efad833ff6"
+          mkdir -p "$GITHUB_WORKSPACE/results/$BOARD_ID"
+          cp patched-core/build.json "$GITHUB_WORKSPACE/results/$BOARD_ID/core-build.json"
+          cp "$GITHUB_WORKSPACE/core/package.json" "$GITHUB_WORKSPACE/results/$BOARD_ID/core-package.json"
+          cp package.json "$GITHUB_WORKSPACE/results/$BOARD_ID/runtime-package.json"
+          cp bun.lock "$GITHUB_WORKSPACE/results/$BOARD_ID/runtime-bun.lock"
+          bun inspect-routing-workflow.tsx "$BOARD_ID" "$GITHUB_WORKSPACE/results/$BOARD_ID/plan.json"
+          bun run-fanout-bus-first.ts "$BOARD_ID" "$GITHUB_WORKSPACE/results/$BOARD_ID"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: static2427-${{ matrix.board }}
+          path: results
+          retention-days: 14
+      - name: Export native PCB output and diagnostics
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import base64,io,zipfile
+          from pathlib import Path
+          stream=io.BytesIO()
+          names={'core-build.json','core-package.json','plan.json','progress.json','assessment.json','diagnostics.json','process.json','circuit.json','pcb.svg','worker.log','runtime-package.json','runtime-bun.lock'}
+          with zipfile.ZipFile(stream,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=9) as archive:
+              for path in Path('results').rglob('*'):
+                  if path.is_file() and (path.name in names or path.name.startswith('fanout-') and path.name.endswith('.json.gz')):
+                      archive.writestr(str(path.relative_to('results')),path.read_bytes())
+          print('FANOUT_BUS_FIRST_EVIDENCE_BEGIN')
+          encoded=base64.b64encode(stream.getvalue()).decode()
+          for offset in range(0,len(encoded),8000): print(encoded[offset:offset+8000])
+          print('FANOUT_BUS_FIRST_EVIDENCE_END')
+          PY
+
+  paired-native:
+    strategy:
+      fail-fast: false
+      matrix:
+        board: [icepi, imx6]
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: 3b3511a83410437ab6cc09c995a971bf365b5fa4
+          path: before
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: 16e7eb622b9c47366e63f43f2ffada1c1c0c7f1a
+          path: after
+      - uses: actions/download-artifact@v4
+        with:
+          name: published2427-${{ matrix.board }}
+          run-id: 44519377875
+          github-token: ${{ github.token }}
+          path: captured
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Install the exact before and after source dependencies
+        run: |
+          for revision in before after; do
+            (cd "$revision" && bun install --frozen-lockfile --ignore-scripts)
+            cp experiments/full-board-priority-analysis/replay-native-plane-drop.ts "$revision/replay-native-plane-drop.ts"
+          done
+      - name: Replay three matched pairs serially, alternating order
+        run: |
+          for trial in 1 2 3; do
+            if [[ "$trial" == 2 ]]; then order="after before"; else order="before after"; fi
+            for revision in $order; do
+              mkdir -p "$GITHUB_WORKSPACE/paired/trial-$trial/$revision"
+              (cd "$revision" && bun replay-native-plane-drop.ts "$GITHUB_WORKSPACE/captured/${{ matrix.board }}/fanout-1-input.json.gz" "$GITHUB_WORKSPACE/paired/trial-$trial/$revision")
+            done
+          done
+      - name: Export matched timing and copper results
+        if: always()
+        run: |
+          python3 - <<'PYPAIRS'
+          import base64,hashlib,io,json,zipfile
+          from pathlib import Path
+          Path('paired').mkdir(exist_ok=True)
+          rows=[]
+          for path in sorted(Path('paired').rglob('report.json')):
+              report=json.loads(path.read_text());traces=path.parent/'best-traces.json'
+              rows.append({'trial':path.parent.parent.name,'revision':path.parent.name,'elapsedMs':report['elapsedMs'],'inputSha256':report['inputSha256'],'copperSha256':hashlib.sha256(traces.read_bytes()).hexdigest(),'bestPartial':report['bestPartial'],'copperDrc':report['copperDrc'],'failed':report['failed'],'solved':report['solved'],'error':report['error'],'iterations':report['iterations']})
+          Path('paired/comparison.json').write_text(json.dumps(rows,indent=2))
+          print('PAIRED_NATIVE2422_REPORT',json.dumps(rows,separators=(',',':')))
+          stream=io.BytesIO()
+          with zipfile.ZipFile(stream,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=9) as archive:
+              for path in Path('paired').rglob('*'):
+                  if path.is_file(): archive.writestr(str(path.relative_to('paired')),path.read_bytes())
+          print('PAIRED_NATIVE2422_EVIDENCE_BEGIN')
+          encoded=base64.b64encode(stream.getvalue()).decode()
+          for offset in range(0,len(encoded),8000): print(encoded[offset:offset+8000])
+          print('PAIRED_NATIVE2422_EVIDENCE_END')
+          PYPAIRS
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: static2427-paired-${{ matrix.board }}
+          path: paired
+
+  matched-frozen:
+    runs-on: blacksmith-32vcpu-ubuntu-2404-arm
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: 3b3511a83410437ab6cc09c995a971bf365b5fa4
+          path: original
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: 16e7eb622b9c47366e63f43f2ffada1c1c0c7f1a
+          path: cleanup
+      - uses: actions/download-artifact@v4
+        with:
+          name: guard-0
+          run-id: 44415945774
+          github-token: ${{ github.token }}
+          path: frozen
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - run: |
+          for revision in original cleanup; do
+            (cd "$revision" && bun install --frozen-lockfile --ignore-scripts)
+            cp experiments/full-board-priority-analysis/replay-frozen-fanout31.ts "$revision/replay-frozen-fanout31.ts"
+          done
+      - name: Run all frozen cases before and after the cleanup on the same worker
+        run: |
+          for revision in original cleanup; do
+            (cd "$revision" && bun replay-frozen-fanout31.ts "$GITHUB_WORKSPACE/frozen/inputs" "$GITHUB_WORKSPACE/matched/$revision" 16)
+          done
+      - name: Export reports and routed SVG hashes
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          for folder in [*Path('matched').glob('*'),*Path('probes').glob('*/*')]:
+              report=folder/'benchmark.json'
+              if not report.exists():continue
+              print('MATCHED_FANOUT31_RESULT',json.dumps({'cohort':str(folder),'report':json.loads(report.read_text()),'svgs':{path.name:hashlib.sha256(path.read_bytes()).hexdigest() for path in folder.glob('*.svg')}},separators=(',',':')))
+          print('FROZEN_INPUT_HASHES',json.dumps({path.name:hashlib.sha256(path.read_bytes()).hexdigest() for path in Path('frozen/inputs').glob('*.json')},separators=(',',':')))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: static2427-matched-fanout31
+          path: |
+            matched
+            probes
+
+  isolated-planes:
+    strategy:
+      fail-fast: false
+      matrix:
+        board: [orangecrab, h616, butterstick, glider, imx6, icepi]
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: 3b3511a83410437ab6cc09c995a971bf365b5fa4
+          path: before
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: 16e7eb622b9c47366e63f43f2ffada1c1c0c7f1a
+          path: after
+      - uses: actions/download-artifact@v4
+        with:
+          name: published2427-${{ matrix.board }}
+          run-id: 44519377875
+          github-token: ${{ github.token }}
+          path: captured
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Install exact source dependencies
+        run: |
+          for revision in before after; do
+            (cd "$revision" && bun install --frozen-lockfile --ignore-scripts)
+            cp experiments/full-board-priority-analysis/isolated-plane-suite.ts "$revision/isolated-plane-suite.ts"
+          done
+      - name: Solve every declared native plane bus separately, retaining all obstacles
+        env:
+          BOARD_ID: ${{ matrix.board }}
+        run: |
+          for revision in before after; do
+            mkdir -p "$GITHUB_WORKSPACE/isolated/$revision"
+            (cd "$revision" && bun isolated-plane-suite.ts "$GITHUB_WORKSPACE/captured/$BOARD_ID/fanout-1-input.json.gz" "$GITHUB_WORKSPACE/isolated/$revision")
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: static2427-isolated-${{ matrix.board }}
+          path: isolated
+      - name: Export paired native plane-bus reports
+        if: always()
+        run: |
+          python3 - <<'PYPLANES'
+          import json
+          from pathlib import Path
+          for revision in ['before','after']:
+              path=Path('isolated')/revision/'report.json'
+              if path.exists(): print('ISOLATED_PLANES_REPORT',json.dumps({'revision':revision,'rows':json.loads(path.read_text())},separators=(',',':')))
+          PYPLANES
+
+  source-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: 16e7eb622b9c47366e63f43f2ffada1c1c0c7f1a
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - run: bun install --frozen-lockfile --ignore-scripts
+      - run: bun run format:check
+      - if: always()
+        run: bun run typecheck

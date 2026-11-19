@@ -1,0 +1,66 @@
+name: Qualify all original native singleton boundary requests
+on:
+  push:
+    branches: [codex/ddr2427-boundary-qualification]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  isolated-boundaries:
+    strategy:
+      fail-fast: false
+      matrix:
+        board: [orangecrab, h616, butterstick, glider, imx6, icepi]
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: 3b3511a83410437ab6cc09c995a971bf365b5fa4
+          path: before
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: d06c766646de96a5c723d87250bed846d6c4b292
+          path: after
+      - uses: actions/download-artifact@v4
+        with:
+          name: published2427-${{ matrix.board }}
+          run-id: 44519377875
+          github-token: ${{ github.token }}
+          path: captured
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Install exact source dependencies
+        run: |
+          for revision in before after; do
+            (cd "$revision" && bun install --frozen-lockfile --ignore-scripts)
+            cp experiments/full-board-priority-analysis/isolated-boundary-suite.ts "$revision/isolated-boundary-suite.ts"
+          done
+      - name: Solve every original singleton boundary request separately, retaining all obstacles
+        env:
+          BOARD_ID: ${{ matrix.board }}
+        run: |
+          for revision in before after; do
+            mkdir -p "$GITHUB_WORKSPACE/isolated/$revision"
+            (cd "$revision" && bun isolated-boundary-suite.ts "$GITHUB_WORKSPACE/captured/$BOARD_ID/fanout-1-input.json.gz" "$GITHUB_WORKSPACE/isolated/$revision")
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: boundary2427-isolated-${{ matrix.board }}
+          path: isolated
+      - name: Export paired native plane-bus reports
+        if: always()
+        run: |
+          python3 - <<'PYPLANES'
+          import json
+          from pathlib import Path
+          for revision in ['before','after']:
+              path=Path('isolated')/revision/'report.json'
+              if path.exists(): print('ISOLATED_BOUNDARIES_REPORT',json.dumps({'revision':revision,'rows':json.loads(path.read_text())},separators=(',',':')))
+          PYPLANES
+

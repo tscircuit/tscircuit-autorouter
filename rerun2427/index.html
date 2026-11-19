@@ -1,0 +1,17 @@
+<!doctype html><meta charset="utf-8"><title>DDR full-board rerun2427</title><style>body{font:16px system-ui;max-width:1500px;margin:auto;padding:24px}img{max-width:100%}table{border-collapse:collapse}td,th{padding:8px;border:1px solid #ddd}</style>
+<h1>Latest full-board rerun</h1>
+<p>tscircuit 0.0.3245 / core 0.0.2427 / fanout 0.0.91. All six boards still fail fanout; no accepted traces or vias and no DDR bus phase.</p>
+<p><a href="analysis.json">Analysis and raw statistics</a> · <a href="all-boards.svg">Full before/after PCB SVG</a> · <a href="circuits-and-results.zip">TSX sources and raw results</a></p>
+<p>The selected boundary-contact default increases isolated accepts 235 → 247 (+5.1%, 78.3% → 82.3%) and reduces aggregate distinct via drills 180 → 165 (−8.3%). There are 13 gains and one real OrangeCrab regression: rightward dogbone sites collide with C4 bottom pads. The old down direction finds a legal interstice.</p>
+<table><tr><th>Full board: uncommitted first-region partial</th><th>Before</th><th>After</th><th>Committed traces/vias</th></tr>
+<tr><td>OrangeCrab rev 0.2.1 ECP5 DDR3</td><td>122/273</td><td>140/273</td><td>0 / 0</td></tr>
+<tr><td>Allwinner H616 Devboard DDR3</td><td>88/174</td><td>99/174</td><td>0 / 0</td></tr>
+<tr><td>ButterStick r1.0</td><td>62/91</td><td>65/91</td><td>0 / 0</td></tr>
+<tr><td>Glider mainboard</td><td>60/95</td><td>63/95</td><td>0 / 0</td></tr>
+<tr><td>i.MX6 Demo Board</td><td>8/32</td><td>9/32</td><td>0 / 0</td></tr>
+<tr><td>iCE/Pi CM0 SBC</td><td>7/32</td><td>9/32</td><td>0 / 0</td></tr>
+</table>
+<h2>Actual joint U22 search</h2><p>Uncommitted partial 7 → 9 escapes, 7 → 8 vias, zero independent DRC issues. Neither 32-connection region completes. This separate joint result is not the isolated 300-request total.</p><table><tr><th>Before</th><th>After</th></tr><tr><td><img src="paired/icepi/before.svg"></td><td><img src="paired/icepi/after.svg"></td></tr></table>
+<h2>Focused native boundary contact</h2><p>The same snapshot test has all 2,038 original obstacles: 0/1 → 1/1 accepted, zero vias and DRC issues. Core relocates automatic breakout endpoints to the emitted boundary exit.</p><table><tr><th>Before</th><th>After</th></tr><tr><td><img src="focused/before.svg"></td><td><img src="focused/after.svg"></td></tr></table>
+<h2>Qualification and tradeoffs</h2><p>All 349 isolated plane outcomes/copper remain identical. All 72 frozen PreparedBus records are unchanged; raw deadline-limited 9 → 10 completions do not establish a policy gain. Every completed SVG matches the canonical baseline. The CPU alternative reduced matched native medians by 26.8–29.8% without additional escapes; it is deferred in favor of routing yield. No speedup is claimed for the selected fix.</p>
+<h2>All emitted full-board PCBs</h2><img src="all-boards.svg">

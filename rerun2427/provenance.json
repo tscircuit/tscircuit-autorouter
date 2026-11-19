@@ -1,0 +1,39 @@
+{
+  "frozenAt": "2026-11-19",
+  "versions": {
+    "tscircuit": "0.0.3245",
+    "core": "0.0.2427",
+    "fanout": "0.0.91",
+    "capacityAutorouter": "0.0.1134",
+    "busLanes": "0.0.62",
+    "bun": "1.4.3"
+  },
+  "commits": {
+    "tscircuit": "2fef96503dde3e06e77c3a01a2275428f9da2d22",
+    "core": "75ab017cd6852dbe50516ee1f4ca9d1108c29985",
+    "capacityAutorouter": "a4a8f3a71dd66c2cae01d6a7ade426efad833ff6",
+    "fanoutBaseline": "3b3511a83410437ab6cc09c995a971bf365b5fa4",
+    "measuredFix": "d06c766646de96a5c723d87250bed846d6c4b292",
+    "repro": "48958e9b68adc1fb77a823064d3b80b92efff52b",
+    "fix": "d92cf7dc60300e61d402fc699ff566408dc57b98"
+  },
+  "controllerCommit": "1f9b63bd6cbb3da71cca147fbfd55b585b2a8dfe",
+  "workflowRuns": {
+    "publishedBaselineAndFreshProfile": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44519377875",
+    "earlyProfileOnIdenticalInput": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44519639464",
+    "cpuAlternative": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44521178962",
+    "boundaryCandidate": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44521254762",
+    "isolatedBoundaries": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44521938110",
+    "finalSourceChecks": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44525119825",
+    "frozenPreparedPolicyAudit": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44525124321",
+    "acceptedCopperAudit": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44526903608"
+  },
+  "reproPr": "https://github.com/tscircuit/fanout-solver/pull/321",
+  "fixPr": "https://github.com/tscircuit/fanout-solver/pull/322",
+  "sourceNote": "Full-board and boundary/plane replay measurements use the immutable prototype commit. CI verifies every PreparedBus field against the cleaned final source for all six native and all 72 frozen inputs. The rest of routing code is unchanged.",
+  "frozenDataset": {
+    "repository": "https://github.com/tscircuit/dataset-fanout31-am62l",
+    "commit": "8eabec2516c5066d43ec7672511a1134430c5d45",
+    "captureRun": 44415945774
+  }
+}

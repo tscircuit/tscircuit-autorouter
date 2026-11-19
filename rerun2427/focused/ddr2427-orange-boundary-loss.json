@@ -1,0 +1,92 @@
+[
+  {
+    "direction": "right",
+    "solved": false,
+    "error": "FanoutSolver: best layer assignment routed 0/1 connections"
+  },
+  {
+    "direction": "down",
+    "solved": true,
+    "error": null,
+    "validation": {
+      "valid": true,
+      "checkedConnectionCount": 1,
+      "brokenOutConnectionCount": 1,
+      "issues": []
+    },
+    "copper": {
+      "valid": true,
+      "checkedTraceCount": 1,
+      "checkedSegmentCount": 3,
+      "checkedViaCount": 1,
+      "issues": []
+    },
+    "traces": [
+      {
+        "type": "pcb_trace",
+        "pcb_trace_id": "fanout:breakout:pcb_breakout_point_5:source-0",
+        "connection_name": "breakout:pcb_breakout_point_5",
+        "connectsTo": [
+          "pcb_port_15",
+          "pcb_port_15",
+          "fanout-exit:breakout:pcb_breakout_point_5:source-0"
+        ],
+        "route": [
+          {
+            "route_type": "wire",
+            "x": 5.039999999999993,
+            "y": 5.799998999999985,
+            "width": 0.089,
+            "layer": "top",
+            "start_pcb_port_id": "pcb_port_15"
+          },
+          {
+            "route_type": "wire",
+            "x": 4.789999999999994,
+            "y": 5.5499989999999855,
+            "width": 0.089,
+            "layer": "top"
+          },
+          {
+            "route_type": "via",
+            "x": 4.789999999999994,
+            "y": 5.5499989999999855,
+            "from_layer": "top",
+            "to_layer": "inner2",
+            "via_diameter": 0.28,
+            "via_hole_diameter": 0.15,
+            "layers": [
+              "top",
+              "inner1",
+              "inner2",
+              "inner3",
+              "inner4",
+              "bottom"
+            ]
+          },
+          {
+            "route_type": "wire",
+            "x": 4.789999999999994,
+            "y": 5.5499989999999855,
+            "width": 0.089,
+            "layer": "inner2"
+          },
+          {
+            "route_type": "wire",
+            "x": 5.826999999999993,
+            "y": 4.512998999999986,
+            "width": 0.089,
+            "layer": "inner2"
+          },
+          {
+            "route_type": "wire",
+            "x": 5.826999999999993,
+            "y": -3.015001000000016,
+            "width": 0.089,
+            "layer": "inner2"
+          }
+        ]
+      }
+    ]
+  }
+]

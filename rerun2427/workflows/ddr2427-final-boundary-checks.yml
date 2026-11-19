@@ -1,0 +1,75 @@
+name: Validate native boundary repro and fix
+on:
+  push:
+    branches: [codex/ddr2427-final-boundary-checks]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  source-check:
+    strategy:
+      fail-fast: false
+      matrix:
+        revision: [48958e9b68adc1fb77a823064d3b80b92efff52b, d92cf7dc60300e61d402fc699ff566408dc57b98]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: ${{ matrix.revision }}
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - run: bun install --frozen-lockfile --ignore-scripts
+      - run: bun run format:check
+      - if: always()
+        run: bun run typecheck
+      - if: always()
+        run: |
+          bun test --timeout 9999999 tests/native-boundary-contact.test.ts
+          if [[ -f tests/boundary-contact-direction-overrides.test.ts ]]; then
+            bun test --timeout 9999999 tests/boundary-contact-direction-overrides.test.ts
+          fi
+
+  preparation-equivalence:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: d06c766646de96a5c723d87250bed846d6c4b292
+          path: before
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: d92cf7dc60300e61d402fc699ff566408dc57b98
+          path: after
+      - uses: actions/download-artifact@v4
+        with:
+          name: guard-0
+          run-id: 44415945774
+          github-token: ${{ github.token }}
+          path: frozen
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: published2427-*
+          run-id: 44519377875
+          github-token: ${{ github.token }}
+          path: captured
+          merge-multiple: true
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Install source dependencies
+        run: |
+          for revision in before after; do
+            (cd "$revision" && bun install --frozen-lockfile --ignore-scripts)
+          done
+      - name: Verify cleanup preserves all prepared fields for72frozen and6native inputs
+        run: bun experiments/full-board-priority-analysis/compare-prepared-buses.ts "$PWD/before" "$PWD/after" "$PWD/frozen/inputs" "$PWD/captured"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: prepared-boundary-equivalence-2427
+          path: prepared-bus-equivalence.json
