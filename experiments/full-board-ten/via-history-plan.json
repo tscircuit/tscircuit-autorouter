@@ -93,8 +93,8 @@
     "scope": "Sole DuplicateCongestedPortSolver.duplicateCongestedPorts method replacement from reviewed Tiny source. No B, A03, Uniform or dependency change."
   },
   "publishedRuntimeGraphUnchanged": true,
-  "qualificationReady": false,
-  "status": "HELD_PASSIVE_SUCCESSFUL_PHASE4_VIA_HISTORY",
+  "qualificationReady": true,
+  "status": "READY_ROOT_RELEASED_PASSIVE_HISTORY",
   "purpose": "Diagnose the retained invalid vias from the prior cramped-guard H616 spaced phase4. Same saved input/runtime/options; not latest-board gain qualification.",
   "branch": "bench/h616-cramped-via-history-3242-20261119",
   "workflow": ".github/workflows/via-history.yml",
