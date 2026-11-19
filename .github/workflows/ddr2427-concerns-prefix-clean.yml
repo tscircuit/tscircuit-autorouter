@@ -1,0 +1,25 @@
+name: Validate reviewed fanout source
+on:
+  push:
+    branches: [codex/ddr2427-concerns-prefix-clean]
+permissions:
+  contents: read
+jobs:
+  source-check:
+    strategy:
+      fail-fast: false
+      matrix:
+        revision: ["ae13569eb35dccc74e99708794cb2135a5c3ddc0", "e4edfc8122093bf7c6d67677f4cdc3344ef3983e", "03592d5e9b8045118dbcd1b0f7a515a030d18541", "a5987fb9c97f11a4145e8e0ca3ecc3498cbf6639", "56d05b945a5507df97acc7acb3c369393c875636"]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: ${{ matrix.revision }}
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - run: bun install --frozen-lockfile --ignore-scripts
+      - run: bun run format:check
+      - if: always()
+        run: bun run typecheck
