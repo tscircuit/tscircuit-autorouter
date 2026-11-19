@@ -1,4 +1,4 @@
-name: Verify existing postroute clearance repair with native paths
+name: Verify native constraints in every A03 search frame
 on:
   push:
     branches: [analysis/native-complete-cleanup-context]
@@ -21,34 +21,29 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: '1.4.3'
-      - name: Include saved paths in the existing via-to-trace postroute check
+      - name: Apply the existing native-path validator in each transformed frame
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          p=Path("lib/solvers/HighDensitySolver/IntraNodeSolver.ts")
+          p=Path("lib/solvers/HyperHighDensitySolver/PortfolioSingleIntraNodeSolver.ts")
           s=p.read_text()
-          old="    if (this.solvedRoutes.length < 2) return null\n\n    const spatialIndex = new HighDensityRouteSpatialIndex(this.solvedRoutes)"
+          old="if (preservePhysicalGeometry && fixedHdRoutes?.length)"
           assert s.count(old)==1
-          new="""    const copperRoutes = [...this.fixedHdRoutes, ...this.solvedRoutes]
-              if (this.solvedRoutes.length === 0 || copperRoutes.length < 2) return null
-
-              const spatialIndex = new HighDensityRouteSpatialIndex(copperRoutes)"""
-          s=s.replace(old,new,1)
-          old="""              return !(
-                          this.connMap?.areIdsConnected("""
-          new="""              if (
-                          route.rootConnectionName !== undefined &&
-                          route.rootConnectionName === conflictingRoute.rootConnectionName
-                        ) {
-                          return false
-                        }
-                        return !(
-                          this.connMap?.areIdsConnected("""
-          assert s.count(old)==1
-          p.write_text(s.replace(old,new,1))
+          p.write_text(s.replace(old,"if (fixedHdRoutes?.length)",1))
           PY
       - run: bun install
-      - name: Keep original board connectivity, via-count and clearance assertions
+      - name: Preserve all original board assertions
         env:
           BUN_UPDATE_SNAPSHOTS: '1'
         run: bun test --timeout 9999999 tests/bugs/bugreport96-full-gameboy-no-breakout.test.ts tests/bugs/usb-dp-phase-detour.test.ts tests/repro/pipeline9-h616-portfolio-candidate-clearance.test.ts tests/features/pipeline9-orangecrab-native-fixed-traces.test.ts
+      - name: Report the current OrangeCrab DRC total
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import re
+          from pathlib import Path
+          p=Path("tests/features/__snapshots__/pipeline9-orangecrab-native-fixed-traces.snap.svg")
+          if p.exists():
+            m=re.search(r"Relaxed DRC errors: (\d+)",p.read_text())
+            if m: print("ORANGECRAB_DRC_COUNT",int(m.group(1)))
+          PY
