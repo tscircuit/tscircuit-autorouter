@@ -65,8 +65,8 @@
     "sha256": "0c6b5737f53e1f79f0416162dd8c6aff6d0feb64f6f0758d3b102199103af7b3",
     "bytes": 5898
   },
-  "qualificationReady": false,
-  "status": "HELD_ROOT_REVIEW",
+  "qualificationReady": true,
+  "status": "RELEASED_PUBLISHED_PHASE_DIAGNOSTIC",
   "purpose": "Trace the earliest physical violation and actual producing solver for published3243 H616 spaced phase3 SDQS0P; no source change, no whole-board gain claim.",
   "branch": "bench/h616-baseline-short-capture-3243-20261119",
   "workflow": ".github/workflows/baseline-short-history.yml",
