@@ -1,0 +1,73 @@
+{
+  "capacityMeshNodeId": "ecp5-vref-fanout",
+  "center": {
+    "x": 20.65,
+    "y": 3.85
+  },
+  "width": 1.6999999999999993,
+  "height": 3.7,
+  "availableZ": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "portPoints": [
+    {
+      "x": 20.71,
+      "y": 3.509999999999991,
+      "z": 0,
+      "connectionName": "vrefC2",
+      "rootConnectionName": "source_net_64",
+      "portPointId": "vrefC2_0",
+      "pcb_port_id": "pcb_port_232"
+    },
+    {
+      "x": 20.71999999999999,
+      "y": 5.099999999999994,
+      "z": 0,
+      "connectionName": "vrefC2",
+      "rootConnectionName": "source_net_64",
+      "portPointId": "vrefC2_1",
+      "pcb_port_id": "pcb_port_22"
+    },
+    {
+      "x": 20.71,
+      "y": 3.509999999999991,
+      "z": 0,
+      "connectionName": "vrefC3",
+      "rootConnectionName": "source_net_64",
+      "portPointId": "vrefC3_0",
+      "pcb_port_id": "pcb_port_232"
+    },
+    {
+      "x": 20.549999999999997,
+      "y": 4.2949999999999875,
+      "z": 0,
+      "connectionName": "vrefC3",
+      "rootConnectionName": "source_net_64",
+      "portPointId": "vrefC3_1",
+      "pcb_port_id": "pcb_port_45"
+    },
+    {
+      "x": 20.71,
+      "y": 3.509999999999991,
+      "z": 0,
+      "connectionName": "vrefR2",
+      "rootConnectionName": "source_net_64",
+      "portPointId": "vrefR2_0",
+      "pcb_port_id": "pcb_port_232"
+    },
+    {
+      "x": 20.70000000000001,
+      "y": 2.799999999999983,
+      "z": 0,
+      "connectionName": "vrefR2",
+      "rootConnectionName": "source_net_64",
+      "portPointId": "vrefR2_1",
+      "pcb_port_id": "pcb_port_253"
+    }
+  ]
+}
