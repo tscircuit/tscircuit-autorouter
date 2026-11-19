@@ -54,6 +54,7 @@ test("whole trace-pair candidates preserve interior anchors and special copper c
     newConnections: srj.connections,
     syntheticConnectionNames: new Set(),
     drcEvaluator: (): [] => [],
+    findCopperContacts: (): [] => [],
     preloadRepairTraceIds: new Set(),
     connMap: getConnectivityMapFromSimpleRouteJson(srj),
     colorMap: {},

@@ -29,6 +29,7 @@ import {
   type Pipeline9RegularRegionalCandidateProblem,
 } from "./applyPipeline9RegionalB01Repairs"
 import {
+  type Pipeline9CopperPair,
   getPipeline9DrcErrors,
   getPipeline9RouteIndexByTraceId,
   isPipeline9DrcCandidateBetter,
@@ -67,41 +68,19 @@ type RegionalCleanup = {
 }
 
 /**
- * Identifies the copper a contact error touches: the trace plus the pad, trace
- * or via it overlaps (pcb_trace_error_id names both for trace overlaps).
- * Clearance shortfalls return undefined.
+ * True when the candidate has copper in contact that is not in contact in the
+ * current routes. Fewer DRC errors overall never justifies a new short.
  */
-const getCopperContactKey = (error: Pipeline9DrcError): string | undefined => {
-  const isContact =
-    (typeof error.actual_clearance === "number" &&
-      error.actual_clearance <= 0) ||
-    (typeof error.message === "string" &&
-      error.message.includes("(accidental contact)"))
-  if (!isContact) return undefined
-  const ids = [
-    error.pcb_trace_id,
-    ...(Array.isArray(error.pcb_trace_ids) ? error.pcb_trace_ids : []),
-    ...(Array.isArray(error.pcb_pad_ids) ? error.pcb_pad_ids : []),
-    error.pcb_smtpad_id,
-    error.pcb_via_id,
-    error.pcb_trace_error_id,
-  ].filter((id): id is string => typeof id === "string")
-  return [...new Set(ids)].sort().join("|")
-}
-
-/**
- * True when the candidate puts copper in contact that no current error has in
- * contact. Fewer errors overall never justifies a new short.
- */
-const introducesNewCopperContact = (
-  candidateErrors: Pipeline9DrcError[],
-  currentErrors: Pipeline9DrcError[],
+const hasNewCopperContact = (
+  candidateContacts: Pipeline9CopperPair[],
+  currentContacts: Pipeline9CopperPair[],
 ): boolean => {
-  const currentKeys = new Set(currentErrors.map(getCopperContactKey))
-  return candidateErrors.some((error) => {
-    const key = getCopperContactKey(error)
-    return key !== undefined && !currentKeys.has(key)
-  })
+  const currentPairs = new Set(
+    currentContacts.map(([first, second]) => `${first}\n${second}`),
+  )
+  return candidateContacts.some(
+    ([first, second]) => !currentPairs.has(`${first}\n${second}`),
+  )
 }
 
 /** Routes one regional candidate at a time through explicit child solver stages. */
@@ -534,8 +513,11 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
         if (
           getViaIssueCount(errors) <= getViaIssueCount(cleanup.errors) &&
           isPipeline9DrcCandidateBetter(errors, cleanup.errors) &&
-          !introducesNewCopperContact(errors, cleanup.errors) &&
-          !this.introducesViaInPad(refinedRoutes)
+          !this.introducesViaInPad(refinedRoutes) &&
+          !hasNewCopperContact(
+            this.params.findCopperContacts(refinedRoutes),
+            this.params.findCopperContacts(cleanup.routes),
+          )
         ) {
           cleanup.routes = refinedRoutes
           cleanup.errors = errors

@@ -59,6 +59,8 @@ test("regional B01 repair stages each child without draining candidate searches"
     newConnections: srj.connections,
     syntheticConnectionNames: new Set(),
     drcEvaluator,
+    // The synthetic evaluator models no copper geometry.
+    findCopperContacts: () => [],
     preloadRepairTraceIds: new Set(["route_0"]),
     connMap: getConnectivityMapFromSimpleRouteJson(srj),
     colorMap: {},

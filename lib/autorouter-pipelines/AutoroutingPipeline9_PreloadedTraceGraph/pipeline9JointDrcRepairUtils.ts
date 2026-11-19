@@ -86,6 +86,49 @@ export const getPipeline9DrcErrorTraceIds = (
   )
 }
 
+/** Two copper objects in contact, sorted by id. */
+export type Pipeline9CopperPair = readonly [string, string]
+
+const getStringIds = (value: unknown): string[] =>
+  Array.isArray(value)
+    ? value.filter((id): id is string => typeof id === "string")
+    : typeof value === "string"
+      ? [value]
+      : []
+
+/**
+ * The two objects a zero-clearance DRC error puts in contact, from its
+ * structured ids: the participant traces getPipeline9DrcErrorTraceIds already
+ * decodes (including the pad or hole a trace overlap encodes, and the owning
+ * trace of a via once addAutoroutingViaTraceIds has tagged it), pads from
+ * pcb_pad_id(s) and fixed copper from pcb_obstacle_id. Throws unless the error
+ * names exactly two.
+ */
+export const getPipeline9DrcErrorCopperPairOrThrow = (
+  error: Pipeline9DrcError,
+): Pipeline9CopperPair => {
+  const viaIds = new Set([
+    ...getStringIds(error.pcb_via_id),
+    ...getStringIds(error.pcb_via_ids),
+  ])
+  const copperIds = [
+    ...new Set(
+      [
+        ...getPipeline9DrcErrorTraceIds(error),
+        ...getStringIds(error.pcb_pad_id),
+        ...getStringIds(error.pcb_pad_ids),
+        ...getStringIds(error.pcb_obstacle_id),
+      ].filter((id) => !viaIds.has(id)),
+    ),
+  ].sort()
+  if (copperIds.length !== 2) {
+    throw new Error(
+      `Pipeline9 contact error ${String(error.type)} must name two copper objects, found ${copperIds.length} (${copperIds.join(", ") || "none"})`,
+    )
+  }
+  return [copperIds[0]!, copperIds[1]!]
+}
+
 export const isPipeline9DrcErrorOwnedByPreloadRepair = ({
   error,
   preloadRepairTraceIds,

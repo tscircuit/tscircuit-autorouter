@@ -52,6 +52,8 @@ test("Pipeline9 bounds failed regional candidate searches by route complexity", 
     newConnections: [connection],
     syntheticConnectionNames: new Set(),
     drcEvaluator,
+    // The synthetic evaluator models no copper geometry.
+    findCopperContacts: () => [],
     preloadRepairTraceIds: new Set(["route_0"]),
     connMap: getConnectivityMapFromSimpleRouteJson(srj),
     colorMap: { route: "red" },
