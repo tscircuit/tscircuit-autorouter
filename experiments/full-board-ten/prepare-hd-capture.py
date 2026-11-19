@@ -1,4 +1,4 @@
-"""Authenticate the exact published H616 phase input without changing geometry."""
+"""Authenticate the exact published iMX6 phase input without changing geometry."""
 
 import gzip
 import hashlib
@@ -20,7 +20,7 @@ def sha(data):
 def verified_plan():
     plan = json.loads((CONTROLLER / "hd-capture-plan.json").read_text())
     if plan["qualificationReady"] is not True:
-        raise RuntimeError("HELD: H616 diagnostic is not qualified for execution")
+        raise RuntimeError("HELD: iMX6 diagnostic is not qualified for execution")
     if plan["routingSourceOverrides"] or plan["sourceOverrides"] or plan["dependencyOverrides"]:
         raise RuntimeError("Published diagnostic cannot override routing or dependencies")
     if plan["captureDeadlineMs"] != 900000 or plan["hardDeadlineSeconds"] != 960:
@@ -71,8 +71,8 @@ def main():
         print(json.dumps({"qualifiedPlan": True, "mainVersion": plan["mainVersion"]}))
         return
     board, output_name = sys.argv[1:]
-    if board != "h616":
-        raise RuntimeError("This diagnostic is only for H616")
+    if board != "imx6":
+        raise RuntimeError("This diagnostic is only for iMX6")
     output = Path(output_name).resolve()
     if output.exists():
         raise RuntimeError("Refuse to overwrite a diagnostic capture")
@@ -107,16 +107,15 @@ def main():
         raise RuntimeError("Native phase identity mismatch")
     srj = json.loads(gzip.decompress(retained["phase-4-input.srj.json.gz"]))
     counts = {"connections": len(srj["connections"]), "terminals": sum(len(item["pointsToConnect"]) for item in srj["connections"]), "obstacles": len(srj["obstacles"]), "traces": len(srj["traces"]), "layerCount": srj["layerCount"]}
-    if counts != case["nativeCounts"] or sum(item["name"] == case["targetRoot"] for item in srj["connections"]) != 1:
-        raise RuntimeError("Native geometry or target membership changed")
+    if counts != case["nativeCounts"]:
+        raise RuntimeError("Native geometry membership changed")
     output.mkdir(parents=True)
     for name, content in retained.items():
         (output / name).write_bytes(content)
     (output / "input-proof.json").write_text(json.dumps({
         "board": board, "scope": plan["purpose"], "artifact": metadata,
         "archiveSha256": archive_sha, "files": case["files"], "phase": phase,
-        "targetRoot": case["targetRoot"], "primaryTargetConnection": case["primaryTargetConnection"],
-        "fallbackTargetNode": case["fallbackTargetNode"], "sourceSha256": progress["sourceSha256"],
+        "sourceSha256": progress["sourceSha256"],
         "nativeCounts": counts, "runtime": runtime_proof, "noInputTransformations": True,
     }, indent=2) + "\n")
     print(json.dumps({"board": board, "inputVerified": True, "phaseInputSha256": phase["inputSha256"]}))

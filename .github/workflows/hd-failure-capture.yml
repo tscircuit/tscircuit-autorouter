@@ -1,8 +1,8 @@
-name: Published3242 H616 rejected-candidate capture
+name: Published3242 iMX6 active-node diagnostic
 
 on:
   push:
-    branches: [bench/h616-rejected-candidate-capture-3242-20261119]
+    branches: [bench/imx6-hd-capture-3242-20261119]
 
 permissions:
   contents: read
@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   capture:
-    name: Exact H616-spaced rejected-candidate geometry
+    name: Exact iMX6-spaced phase4 active state
     runs-on: blacksmith-8vcpu-ubuntu-2404-arm
     timeout-minutes: 25
     env:
@@ -68,9 +68,9 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: >-
           python3 experiments/full-board-ten/prepare-hd-capture.py
-          h616 "$FULL_BOARD_ROOT/hd-capture"
+          imx6 "$FULL_BOARD_ROOT/hd-capture"
 
-      - name: Observe bounded rejected regional candidate geometry
+      - name: Observe published native phase and bounded active geometry
         id: capture
         continue-on-error: true
         shell: bash
@@ -81,7 +81,7 @@ jobs:
             --module "$FULL_BOARD_ROOT/npm/autorouter/dist/index.js" \
             --input "$FULL_BOARD_ROOT/hd-capture/phase-4-input.srj.json.gz" \
             --output "$FULL_BOARD_ROOT/hd-capture" \
-            --root source_net_1 \
+            --board imx6 \
             --manifest "$FULL_BOARD_ROOT/runtime-manifest.json" \
             --plan experiments/full-board-ten/hd-capture-plan.json
           capture_status=$?
@@ -93,7 +93,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           include-hidden-files: true
-          name: native-rejected-hd3242-h616-spaced-${{ github.run_attempt }}
+          name: native-active-hd3242-imx6-spaced-${{ github.run_attempt }}
           path: |
             .full-board-run/hd-capture
             .full-board-run/runtime-manifest.json

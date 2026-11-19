@@ -1,17 +1,17 @@
 {
   "schemaVersion": 2,
-  "purpose": "One isolated published3242 H616-spaced phase4 diagnostic. Passively retain the final cmn_162 regional constructor and at most four rejected candidate geometries to identify actual via-to-board-obstacle collisions. No source changes, routing intervention, completion benchmark, or new baseline.",
+  "purpose": "One isolated published 0.0.3242 iMX6-spaced phase 4 diagnostic. Periodically retain lightweight phase, HD node, B01, Regional and leaf scalar state, then bounded active-node geometry after failure or external deadline. No source change, routing intervention, completion benchmark, or new baseline.",
   "qualificationReady": true,
-  "status": "READY_REVIEWED_PUBLISHED_REJECTED_CANDIDATE_CAPTURE",
+  "status": "READY_REVIEWED_PUBLISHED_IMX6_PHASE4_CAPTURE",
   "runtimeController": "49e9de35db347f94eeeaef9bca48d821ed3be51e",
   "mainVersion": "0.0.3242",
-  "branch": "bench/h616-rejected-candidate-capture-3242-20261119",
+  "branch": "bench/imx6-hd-capture-3242-20261119",
   "workflow": ".github/workflows/hd-failure-capture.yml",
   "runner": "blacksmith-8vcpu-ubuntu-2404-arm",
   "captureDeadlineMs": 900000,
   "hardDeadlineSeconds": 960,
   "jobTimeoutMinutes": 25,
-  "deadlineScope": "Fresh isolated diagnostic window; the authentic full-board run entered phase4 at 555207.847951 ms and had about344792 ms remaining. No end-to-end timing or completion gain inference.",
+  "deadlineScope": "Fresh isolated 900-second diagnostic window; the authentic full-board run entered phase 4 at 585607.137166 ms and had about 314393 ms remaining. No end-to-end timing or completion gain inference.",
   "routingSourceOverrides": false,
   "sourceOverrides": false,
   "dependencyOverrides": [],
@@ -69,20 +69,16 @@
     }
   ],
   "cases": {
-    "h616": {
-      "targetRoot": "source_net_1",
-      "primaryTargetRoot": "source_net_1",
-      "primaryTargetConnection": "source_net_1_mst0",
-      "fallbackTargetNode": "cmn_162",
+    "imx6": {
       "phase": "other_signals",
       "phaseIndex": 4,
       "cohort": "spaced",
-      "sourceSha256": "c8b058094b8346508bb492f7ca71c249cb517fdbe4612c254386821826b99eab",
+      "sourceSha256": "d8cccad6f5cf63911130fbb5e13af9a961064bc231b92f639afa3944d6131c77",
       "artifact": {
-        "id": 14483812685,
-        "name": "full-board-h616-published-spaced-1",
-        "size_in_bytes": 4002194,
-        "digest": "sha256:e3d991e37df3f00f9c12223ba1556542e16276cdb9f03bb58a3ce5f1c0d19165",
+        "id": 14484573566,
+        "name": "full-board-imx6-published-spaced-1",
+        "size_in_bytes": 16888537,
+        "digest": "sha256:f8a14af8a8135d8fd453ede0d3d814d52edf1a160ba2c823ff88b3cba524e32b",
         "workflow_run": {
           "id": 44423458886,
           "repository_id": 924883209,
@@ -93,24 +89,24 @@
       },
       "files": {
         "phase-4-input.srj.json.gz": {
-          "sha256": "4e9572a2246046a2f9ea26cc0ff633eac341bee7f57f6605dd244b4aa154e936",
-          "bytes": 472943,
-          "payloadSha256": "948b9a36ed10b2132947dd6d5fe0a2132b99ccb341be1698f8b509fd9a63608c",
-          "payloadBytes": 3361777
+          "sha256": "a2c6aa7482eb674b6227debd76959fe3c6f45eb19a39e7e91a999c9e4fade4b0",
+          "bytes": 2351158,
+          "payloadSha256": "010757e915e6ad2b138c2bc8dd37c43f09162490537d082957c7ae907d7a1cfd",
+          "payloadBytes": 13494050
         },
         "progress.json": {
-          "sha256": "5fb34db69c8921b2125fe40ae3e3607d09794f3a0dfda21d51cc7ee916084c83",
-          "bytes": 11299
+          "sha256": "24c63cbaa0a2289d9cc86896705d337d0dff7088f40f2f6f6ff5576163f1164e",
+          "bytes": 9257
         }
       },
       "nativeCounts": {
-        "connections": 56,
-        "terminals": 143,
-        "obstacles": 1695,
-        "traces": 41,
-        "layerCount": 4
+        "connections": 327,
+        "terminals": 862,
+        "obstacles": 2922,
+        "traces": 49,
+        "layerCount": 6
       },
-      "historicalFailure": "Pipeline9 primary B01 no path for source_net_1_mst0; regional fallback cmn_162 failed. Prior capture geometry cannot be reused."
+      "historicalOutcome": "Full-board external 900-second deadline during phase 4; completed 53/404 native nets before phase 4. Active failing connection/node not established; diagnostic must observe actual state."
     }
   },
   "frozenFiles": {
@@ -187,20 +183,20 @@
       "bytes": 13144
     },
     ".github/workflows/hd-failure-capture.yml": {
-      "sha256": "a414e2a75ad8ca1dd6fbe746947420d9d5cc292468ef9d0eda18adda71e3e92e",
-      "bytes": 3697
+      "sha256": "3d67dc3c2a7bc8aa6efd087ece051e0f75a07fffe5d860c96f0e7f7d218cea8d",
+      "bytes": 3666
     },
     "experiments/full-board-ten/prepare-hd-capture.py": {
-      "sha256": "7d256b7ce67dbb0b3e0bf0f7c46d68380f2d87acc2e572140d0d718bc8f16366",
-      "bytes": 7297
+      "sha256": "68138c436537fdc51e114cc92b9990df6c72a1e1b604f762ae4c0f101d0028cf",
+      "bytes": 7056
     },
     "experiments/full-board-ten/verify-hd-capture.py": {
       "sha256": "ce1639f8d6d5aa8823ce704f00bc74bef6a29b77c84ad0f98ee612a0fcc08abe",
       "bytes": 6651
     },
     "experiments/full-board-ten/run-hd-capture.ts": {
-      "sha256": "5197ab9d2d87c7c321481d10989db47ef6a45e1fd891661f030fc537e14d1111",
-      "bytes": 18659
+      "sha256": "311be40a7b815b7bf9024d812057230bd9124a25a3d22e340f45d47de25070d8",
+      "bytes": 22224
     }
   },
   "frozenBaselinePlan": {
@@ -210,47 +206,39 @@
   "qualification": {
     "nativeRoutingExecuted": false,
     "pushPerformed": false,
-    "independentReview": "PASS: exact held plan7e3c73b4, own fields, native loop and bounded post-loop serialization reviewed",
-    "scope": "Preparation only. Existing published runtime and input authenticator are unchanged from b40dd3d4. Runner observation contracts and final frozen review required before release.",
+    "independentReview": "Narrow runner and wrapper review found no blocker; final three scalar fields approved by root. Final report identity to be retained externally.",
+    "scope": "One published iMX6 phase 4 diagnostic, using the inherited authenticated runtime and native call. Narrow input/observer contracts passed; root reviewed and authorized local freeze and commit.",
+    "inheritedController": "a84e5b5cdaf0ef13870826b389bd66ea9a047df1",
+    "inheritedRuntime": "Published 49e9de35 graph, dependency locks, source checkouts and package-entry hashes unchanged. No candidate override.",
     "evidence": {
-      "native-call-capture-handoff.json": {
-        "path": "/workspace/full-board-ten-20261118-3242/h616-b01-readonly-audit/native-call-capture-handoff.json",
-        "sha256": "af0f405fa2fb1dfc7ccab48c501478b6006934223c44a3ea4aa2eef4a7fbebbf"
+      "input-contracts.json": {
+        "path": "/workspace/full-board-ten-20261118-3242/imx6-hd-capture-preparation/input-contracts.json",
+        "sha256": "31967fe79cee3b7f571311bf484f6bd35184ed76bce514e42e548cd642f0422c"
       },
-      "native-geometry-transfer-report.json": {
-        "path": "/workspace/full-board-ten-20261118-3242/h616-b01-readonly-audit/native-geometry-transfer-report.json",
-        "sha256": "4bf8be24278998b0f5d84eb62f9a9b2274c9f8ba669351e1823607e3dde7f171"
+      "workflow-contracts.json": {
+        "path": "/workspace/full-board-ten-20261118-3242/imx6-hd-capture-preparation/workflow-contracts.json",
+        "sha256": "25f5854991e05ae2edf44511d583c2be8648a4cc970175760e4d99282315ba19"
       },
-      "wrapper-static-checks.json": {
-        "path": "/workspace/full-board-ten-20261118-3242/h616-rejected-candidate-capture-preparation/wrapper-static-checks.json",
-        "sha256": "ea4f63985d832c3d52994ce35bfa942ed914a81f04d26244cbb50d2e059f4fd8"
+      "capture-contract.json": {
+        "path": "/workspace/full-board-ten-20261118-3242/imx6-hd-capture-preparation/capture-contract.json",
+        "sha256": "5be4e2b3b9d8b9f7be089f5890f235e8f24604dd2fa6b3b45bd85fa40d715609"
       },
-      "projection-contract.json": {
-        "path": "/workspace/full-board-ten-20261118-3242/h616-rejected-candidate-capture-preparation/projection-contract.json",
-        "sha256": "a7fc0bdd778ed70cfcf2bf18ddd3286c934aa95c5b52b0b4b176c4fe73f64d6d"
-      },
-      "independent-controller-review.json": {
-        "path": "/workspace/full-board-ten-20261118-3242/h616-rejected-candidate-capture-preparation/independent-controller-review.json",
-        "sha256": "8769b300a17beb53029630d0bc08995ae54b0dbdac52876ea939216f20cf4041"
-      },
-      "passive-rejected-candidate-own-field-contract.json": {
-        "path": "/workspace/full-board-ten-20261118-3242/h616-b01-readonly-audit/passive-rejected-candidate-own-field-contract.json",
-        "sha256": "063a70f8e65e1b5358fecd1c609c3753334eae57ad25b5f51d835e315924e0c5"
+      "published-imx6-stage-and-execution-audit.json": {
+        "path": "/workspace/full-board-ten-20261118-3242/imx6-hd-readonly-audit/published-imx6-stage-and-execution-audit.json",
+        "sha256": "81b53649903f59ab30f247fd5beb6c50f05ec2cac3c798af6ae1ab13de2b5983"
       }
     },
-    "inheritedInputRuntimeContracts": "Prior unchanged prepare-hd-capture.py qualified authentic artifact14483812685 and all four released entry bytes; runtime layout was synthetic, no routing/imports/network.",
-    "releaseAuthorization": "Root authorized readiness metadata and local commit; root must verify exact committed records before one push-triggered run. No push or routing by preparation agent.",
-    "wrapperContracts": "PASS: held before I/O,20 inherited assets exact,only dedicated push workflow matches; no routing/imports/network.",
-    "observerContracts": "PASS: one data-only synthetic projection contract; exact four families, A03 union, sparse centers, shared obstacles, ownership maps, no getters/native mutations. No actual capture-size or routing claim."
+    "releaseAuthorization": "Root authorized readiness and local commit after final scalar additions. Root alone verifies and pushes the single automatic diagnostic run; no routing, push or dispatch by preparation agent.",
+    "wrapperContracts": "PASS: held before I/O; authentic retained iMX6 ZIP/input/member/source/counts and negative count guard; inherited runtime verifier byte-identical; only dedicated workflow matches. No network, import, routing, or live ARM qualification executed locally.",
+    "observerContracts": "PASS: syntax and one data-only shape contract for scalar and selected-node projection, including totalRipEvents, planeSize and layers. Native routing was not executed in preparation. Historical verify-hd-capture.py is retained but not invoked."
   },
   "captureScope": {
-    "targetNode": "cmn_162",
-    "maximumRejectedCandidates": 4,
+    "sampleIntervalMs": 10000,
     "maximumCaptureBytes": 6291456,
-    "geometry": "Final regional constructor once; rejected candidate own solvedRoutes plus scale/affine transforms and actual connection-map memberships; shared board obstacle prefix retained once.",
+    "geometry": "At most one active node after terminal stop: complete B01 node constructor/physical obstacles, or explicitly labelled near-node Regional/regular subset. Original authenticated SRJ remains retained separately. No whole solver graph or all-parameter tree.",
     "observationOnly": true,
     "captureFailureDoesNotAlterNativeResult": true,
-    "outcomeClassification": "Runner records native outcome separately from capture completeness/errors. A missing or truncated witness is not an observed collision or completion gain.",
+    "outcomeClassification": "Native outcome is separate from observation completeness/errors. Missing or truncated geometry is not a solved result, physical conflict proof, or completion gain.",
     "prohibitedChanges": [
       "source or dependency overrides",
       "point movement",
@@ -258,30 +246,14 @@
       "solver options or iteration limits",
       "live solution validator calls for observation"
     ],
-    "expectedRejectedCandidates": [
-      {
-        "family": "A01",
-        "scale": 1,
-        "shuffleSeed": 2
-      },
-      {
-        "family": "A03",
-        "scale": 2
-      },
-      {
-        "family": "A03",
-        "scale": 4
-      },
-      {
-        "family": "A03",
-        "scale": 8
-      }
-    ],
     "outputFiles": [
       "report.json",
-      "rejected-candidates.json.gz",
-      "diagnostic-progress.json"
+      "diagnostic-progress.json",
+      "final-node.json.gz"
     ],
-    "exactWitnessRequirement": "Unexpected candidate membership or native outcome remains explicit observation failure after retaining the unchanged native result; never interpreted as a physical collision or completion gain."
+    "unknownTarget": "No fixed target node/connection is assumed from the incomplete full-board capture.",
+    "maximumProgressRecords": 100,
+    "maximumProgressRecordBytes": 32768,
+    "optionalAcceptedOutput": "phase-output.srj.json.gz is retained only if the unchanged native solver fully solves. No assessment or full-board gain is claimed by this diagnostic."
   }
 }
