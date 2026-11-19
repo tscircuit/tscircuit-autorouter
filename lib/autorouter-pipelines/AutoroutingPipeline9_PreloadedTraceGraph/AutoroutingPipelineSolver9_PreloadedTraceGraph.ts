@@ -1676,7 +1676,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     )
   }
 
-  getNewTracesBeforePowerExpansion(): SimplifiedPcbTraces {
+  private convertHdRoutesToNewTraces(
+    hdRoutes?: HighDensityRoute[],
+  ): SimplifiedPcbTraces {
     if (!this.highDensityRouteSolver) {
       throw new Error("Cannot get new traces before high-density routing")
     }
@@ -1684,7 +1686,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     const routedTraces = convertPipeline7HdRoutesToSimplifiedPcbTraces({
       connections: this.netToPointPairsSolver?.newConnections ?? [],
       originalConnections: this.originalSrj.connections,
-      hdRoutes: canonicalizePipeline9HdRoutes(this._getOutputHdRoutes()),
+      hdRoutes: canonicalizePipeline9HdRoutes(
+        hdRoutes ?? this._getOutputHdRoutes(),
+      ),
       layerCount: this.srj.layerCount,
       obstacles: this.srj.obstacles,
       defaultViaHoleDiameter: this.viaHoleDiameter,
@@ -1694,6 +1698,58 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       routedTraces,
       this.originalSrj.traces ?? [],
     )
+  }
+
+  getNewTracesBeforePowerExpansion(): SimplifiedPcbTraces {
+    return this.convertHdRoutesToNewTraces()
+  }
+
+  /** Get independently valid new copper after length-matching post-processing fails. */
+  getPartialOutputSimplifiedPcbTraces(): SimplifiedPcbTraces {
+    if (
+      !this.failed ||
+      this.getCurrentPhase() !== "lengthMatchingPostProcessingSolver"
+    ) {
+      throw new Error("Partial output requires a length-matching failure")
+    }
+    const cleanupSolver = this.effortCleanupSolver
+    if (!cleanupSolver?.solved) {
+      throw new Error("Partial output requires completed route cleanup")
+    }
+
+    const cleanedRoutes = cleanupSolver.getOutput()
+    // Cleanup validates against the updated preloaded copper. Partial output
+    // cannot include replacements, so only return routes against unchanged copper.
+    if (
+      this.getMutatedPreloadedTraces().length > 0 ||
+      !cleanupSolver.params.isValid(cleanedRoutes)
+    ) {
+      return []
+    }
+
+    const constrainedConnectionNames = [
+      ...(this.originalSrj.differentialPairs ?? []).flatMap(
+        (pair) => pair.connectionNames,
+      ),
+      ...(this.originalSrj.buses ?? [])
+        .filter((bus) => bus.maxLengthSkew !== undefined)
+        .flatMap((bus) => bus.connectionNames),
+    ]
+    const constrainedNetNames = new Set(
+      constrainedConnectionNames.map(
+        (name) => this.connMap.getNetConnectedToId(name) ?? name,
+      ),
+    )
+    const independentRoutes = cleanedRoutes.filter((route) => {
+      const names = route.rootConnectionName
+        ? [route.connectionName, route.rootConnectionName]
+        : [route.connectionName]
+      return names.every((name) => {
+        const netName = this.connMap.getNetConnectedToId(name) ?? name
+        return !constrainedNetNames.has(netName)
+      })
+    })
+    return this.convertHdRoutesToNewTraces(independentRoutes)
   }
 
   private getPowerTraceExpansionFixedTraces(): SimplifiedPcbTraces {

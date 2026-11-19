@@ -4,7 +4,7 @@ import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-p
 import { getBugReportSnapshotSvg } from "lib/testing/getBugReportSnapshotSvg"
 import type { SimpleRouteJson } from "lib/types"
 
-test("Pipeline9 differential-pair failure discards an independent route", async (): Promise<void> => {
+test("Pipeline9 preserves independent copper after a differential-pair failure", async (): Promise<void> => {
   const input = structuredClone(inputFixture) as SimpleRouteJson
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(input, {
     cacheProvider: null,
@@ -25,11 +25,16 @@ test("Pipeline9 differential-pair failure discards an independent route", async 
     "Cannot get output before solving is complete",
   )
 
+  const routedTraces = solver.getPartialOutputSimplifiedPcbTraces()
+  expect(routedTraces.map((trace) => trace.connection_name)).toEqual([
+    "source_trace_0",
+  ])
+
   await expect(
     getBugReportSnapshotSvg({
       inputSrj: input,
       srjWithPointPairs: solver.srjWithPointPairs!,
-      routedTraces: [],
+      routedTraces,
     }),
   ).toMatchSvgSnapshot(import.meta.path)
 })
