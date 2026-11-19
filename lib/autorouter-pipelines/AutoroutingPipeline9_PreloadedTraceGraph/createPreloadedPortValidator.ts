@@ -74,7 +74,7 @@ export function createPreloadedPortBlockerLookup({
       ]
     }),
   )
-  if (copper.length === 0) return () => true
+  if (copper.length === 0) return () => []
   const index = new FlatbushIndex<CopperPrimitive>(copper.length)
   for (const primitive of copper) {
     index.insert(
@@ -90,7 +90,7 @@ export function createPreloadedPortBlockerLookup({
     srj.minTraceToPadEdgeClearance ??
     srj.defaultObstacleMargin ??
     RELAXED_DRC_OPTIONS.traceClearance
-  return (point, options): boolean => {
+  return (point, options): PreloadedHighDensityRoute[] => {
     const radius =
       traceWidth / 2 + (options?.includeClearance === false ? 0 : clearance)
     return index

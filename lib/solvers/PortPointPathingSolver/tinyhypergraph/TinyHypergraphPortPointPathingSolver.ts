@@ -214,6 +214,7 @@ type LoadedTinyGraph = {
     routeMetadata?: RouteMetadata[]
     routeNet: Int32Array
     regionNetId: Int32Array
+    portNetId?: Int32Array
     portPenalty?: Float64Array
     metadataPortPenaltiesApplied?: boolean
   }
