@@ -1,0 +1,87 @@
+name: Published3243 H616 phase3 SDQS0P history
+on:
+  push:
+    branches: [bench/h616-baseline-short-capture-3243-20261119]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  screen:
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 25
+    env:
+      FULL_BOARD_ROOT: ${{ github.workspace }}/.full-board-run
+      BUN_INSTALL_CACHE_DIR: ${{ github.workspace }}/.full-board-run/bun-cache
+      FULL_BOARD_EXPERIMENT: published
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            experiments/full-board-ten
+            .github/workflows/full-board-ten.yml
+            .github/workflows/baseline-short-history.yml
+            AGENTS.md
+      - name: Require reviewed held plan
+        run: python3 experiments/full-board-ten/prepare-baseline-short-history.py --verify-plan
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/tscircuit-autorouter
+          ref: ea398b4023119f65157e876a3101aa6ce3ca5f97
+          path: .full-board-run/sources/original
+          persist-credentials: false
+          sparse-checkout: experiments/full-board-priority-analysis
+      - uses: actions/checkout@v4
+        with:
+          repository: ShiboSoftwareDev/core-ddr-benchmark
+          ref: a3679559d6027aea2c441c1078853d58925d3a12
+          path: .full-board-run/sources/spaced
+          persist-credentials: false
+          sparse-checkout: |
+            full-boards
+            circuits
+            scripts
+            licenses
+            provenance
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Prepare exact published3243 graph
+        run: python3 experiments/full-board-ten/bootstrap.py --root "$FULL_BOARD_ROOT"
+      - name: Authenticate the retained published phase and runtime
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 experiments/full-board-ten/prepare-baseline-short-history.py --prepare-input "$FULL_BOARD_ROOT/via-history-input"
+      - name: Reproduce the phase with selected passive observations
+        shell: bash
+        run: |
+          python3 experiments/full-board-ten/prepare-baseline-short-history.py --verify-runtime "$FULL_BOARD_ROOT/via-history-input"
+          mkdir -p "$FULL_BOARD_ROOT/via-history"
+          set +e
+          timeout --signal=TERM --kill-after=10s 960s \
+            bun experiments/full-board-ten/run-baseline-short-history.ts \
+            --module "$FULL_BOARD_ROOT/npm/autorouter/dist/index.js" \
+            --input "$FULL_BOARD_ROOT/via-history-input/phase-3-input.srj.json.gz" \
+            --expected "$FULL_BOARD_ROOT/via-history-input/phase-3-output.srj.json.gz" \
+            --output "$FULL_BOARD_ROOT/via-history" \
+            --manifest "$FULL_BOARD_ROOT/runtime-manifest.json" \
+            --plan experiments/full-board-ten/baseline-short-history-plan.json
+          route_status=$?
+          printf '%s\n' "$route_status" > "$FULL_BOARD_ROOT/via-history/process-exit-code.txt"
+          set -e
+          python3 experiments/full-board-ten/prepare-baseline-short-history.py --verify-runtime "$FULL_BOARD_ROOT/via-history-input"
+          exit "$route_status"
+      - name: Preserve exact output and selected histories
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          include-hidden-files: true
+          name: h616-baseline-short-history-3243-${{ github.run_attempt }}
+          path: |
+            .full-board-run/via-history
+            .full-board-run/via-history-input
+            .full-board-run/runtime-manifest.json
+            experiments/full-board-ten/baseline-short-history-plan.json
+          retention-days: 7
+          compression-level: 0
+          if-no-files-found: warn
