@@ -1,4 +1,4 @@
-name: Verify shared native copper identities
+name: Verify native copper identities and movable clearance repair
 on:
   push:
     branches: [analysis/native-shared-copper-identity]
