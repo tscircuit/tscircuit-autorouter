@@ -1,8 +1,8 @@
-name: HELD published3242 H616 high-density diagnostic
+name: Published3242 H616 rejected-candidate capture
 
 on:
   push:
-    branches: [bench/h616-hd-capture-3242-20261119]
+    branches: [bench/h616-rejected-candidate-capture-3242-20261119]
 
 permissions:
   contents: read
@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   capture:
-    name: Exact H616-spaced phase4 diagnostic
+    name: Exact H616-spaced rejected-candidate geometry
     runs-on: blacksmith-8vcpu-ubuntu-2404-arm
     timeout-minutes: 25
     env:
@@ -70,7 +70,7 @@ jobs:
           python3 experiments/full-board-ten/prepare-hd-capture.py
           h616 "$FULL_BOARD_ROOT/hd-capture"
 
-      - name: Observe native primary and regional failures separately
+      - name: Observe bounded rejected regional candidate geometry
         id: capture
         continue-on-error: true
         shell: bash
@@ -88,18 +88,12 @@ jobs:
           printf '%s\n' "$capture_status" > "$FULL_BOARD_ROOT/hd-capture/process-exit-code.txt"
           exit "$capture_status"
 
-      - name: Verify capture provenance and classify diagnostic outcome
-        if: ${{ always() && steps.capture.outcome != 'skipped' }}
-        run: >-
-          python3 experiments/full-board-ten/verify-hd-capture.py
-          "$FULL_BOARD_ROOT/hd-capture"
-
       - name: Preserve compact native diagnosis and provenance
         if: always()
         uses: actions/upload-artifact@v4
         with:
           include-hidden-files: true
-          name: native-hd3242-h616-spaced-${{ github.run_attempt }}
+          name: native-rejected-hd3242-h616-spaced-${{ github.run_attempt }}
           path: |
             .full-board-run/hd-capture
             .full-board-run/runtime-manifest.json

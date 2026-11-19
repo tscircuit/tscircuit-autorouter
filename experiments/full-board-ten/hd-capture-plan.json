@@ -1,11 +1,11 @@
 {
   "schemaVersion": 2,
-  "purpose": "One isolated diagnostic of the authenticated published3242 H616-spaced phase4. Observe primary source_net_1_mst0 separately from fallback cmn_162; not a new whole-board baseline or completion benchmark.",
+  "purpose": "One isolated published3242 H616-spaced phase4 diagnostic. Passively retain the final cmn_162 regional constructor and at most four rejected candidate geometries to identify actual via-to-board-obstacle collisions. No source changes, routing intervention, completion benchmark, or new baseline.",
   "qualificationReady": true,
-  "status": "READY_FOR_ROOT_REVIEW_SELECTED_NODE_CAPTURE",
+  "status": "READY_REVIEWED_PUBLISHED_REJECTED_CANDIDATE_CAPTURE",
   "runtimeController": "49e9de35db347f94eeeaef9bca48d821ed3be51e",
   "mainVersion": "0.0.3242",
-  "branch": "bench/h616-hd-capture-3242-20261119",
+  "branch": "bench/h616-rejected-candidate-capture-3242-20261119",
   "workflow": ".github/workflows/hd-failure-capture.yml",
   "runner": "blacksmith-8vcpu-ubuntu-2404-arm",
   "captureDeadlineMs": 900000,
@@ -187,8 +187,8 @@
       "bytes": 13144
     },
     ".github/workflows/hd-failure-capture.yml": {
-      "sha256": "740e39f6016b627b1bd7e93a39bf4d7fb6452f86ba9d04fdf5783db2ef1301a2",
-      "bytes": 3928
+      "sha256": "a414e2a75ad8ca1dd6fbe746947420d9d5cc292468ef9d0eda18adda71e3e92e",
+      "bytes": 3697
     },
     "experiments/full-board-ten/prepare-hd-capture.py": {
       "sha256": "7d256b7ce67dbb0b3e0bf0f7c46d68380f2d87acc2e572140d0d718bc8f16366",
@@ -199,8 +199,8 @@
       "bytes": 6651
     },
     "experiments/full-board-ten/run-hd-capture.ts": {
-      "sha256": "53942bb7f17432f418c9725acda8e433c18e7e35db4ccaf1e8a2d7d62cce1d37",
-      "bytes": 29170
+      "sha256": "5197ab9d2d87c7c321481d10989db47ef6a45e1fd891661f030fc537e14d1111",
+      "bytes": 18659
     }
   },
   "frozenBaselinePlan": {
@@ -210,8 +210,8 @@
   "qualification": {
     "nativeRoutingExecuted": false,
     "pushPerformed": false,
-    "independentReview": "PASS: original controller plus narrow selected-node correction",
-    "scope": "Controller preparation only; no production source changes, topology overrides, solver option changes, or input transformations.",
+    "independentReview": "PASS: exact held plan7e3c73b4, own fields, native loop and bounded post-loop serialization reviewed",
+    "scope": "Preparation only. Existing published runtime and input authenticator are unchanged from b40dd3d4. Runner observation contracts and final frozen review required before release.",
     "evidence": {
       "native-call-capture-handoff.json": {
         "path": "/workspace/full-board-ten-20261118-3242/h616-b01-readonly-audit/native-call-capture-handoff.json",
@@ -221,37 +221,67 @@
         "path": "/workspace/full-board-ten-20261118-3242/h616-b01-readonly-audit/native-geometry-transfer-report.json",
         "sha256": "4bf8be24278998b0f5d84eb62f9a9b2274c9f8ba669351e1823607e3dde7f171"
       },
-      "observer-contracts.json": {
-        "path": "/workspace/full-board-ten-20261118-3242/h616-hd-controller-preparation/observer-contracts.json",
-        "sha256": "c92ca4cfc5ec1679ae8a3c14f94dc155933b0cb7618b6f735c51d0f26ec7f4b9"
+      "wrapper-static-checks.json": {
+        "path": "/workspace/full-board-ten-20261118-3242/h616-rejected-candidate-capture-preparation/wrapper-static-checks.json",
+        "sha256": "ea4f63985d832c3d52994ce35bfa942ed914a81f04d26244cbb50d2e059f4fd8"
       },
-      "controller-contracts.json": {
-        "path": "/workspace/full-board-ten-20261118-3242/h616-hd-capture-preparation/controller-contracts.json",
-        "sha256": "26713fdf628ec6da7909d8d858b0342daa231cf5dc82c83c58d59d36f1658cb8"
+      "projection-contract.json": {
+        "path": "/workspace/full-board-ten-20261118-3242/h616-rejected-candidate-capture-preparation/projection-contract.json",
+        "sha256": "a7fc0bdd778ed70cfcf2bf18ddd3286c934aa95c5b52b0b4b176c4fe73f64d6d"
       },
       "independent-controller-review.json": {
-        "path": "/workspace/full-board-ten-20261118-3242/h616-hd-capture-preparation/independent-controller-review.json",
-        "sha256": "8f534ea2e80f67ec9426aaf064fa108821bd24bd44ef5bc6edc314953684bd93"
+        "path": "/workspace/full-board-ten-20261118-3242/h616-rejected-candidate-capture-preparation/independent-controller-review.json",
+        "sha256": "8769b300a17beb53029630d0bc08995ae54b0dbdac52876ea939216f20cf4041"
       },
-      "selected-node-observer-contracts.json": {
-        "path": "/workspace/full-board-ten-20261118-3242/h616-hd-selected-node-preparation/observer-contracts.json",
-        "sha256": "b3e07f67b2207ea70f1b553dc0851ebdb8897a8361b06040adcbd79a3f215c07"
-      },
-      "independent-correction-review.json": {
-        "path": "/workspace/full-board-ten-20261118-3242/h616-hd-selected-node-preparation/independent-correction-review.json",
-        "sha256": "2afe323591c063c737de638e5334a4e6ed1d9626e67e6caa8a6d098fe2846f56"
+      "passive-rejected-candidate-own-field-contract.json": {
+        "path": "/workspace/full-board-ten-20261118-3242/h616-b01-readonly-audit/passive-rejected-candidate-own-field-contract.json",
+        "sha256": "063a70f8e65e1b5358fecd1c609c3753334eae57ad25b5f51d835e315924e0c5"
       }
     },
-    "controllerContracts": "12 passed; authentic archive and all four published entries, no imports/routing/network",
-    "observerContracts": "11 passed; synthetic lifecycle and selected-node bounds/late-alias capture; no routing/imports",
-    "releaseAuthorization": "Root authorized one reviewed diagnostic correction and one repeat; root verifies the local commit before pushing."
+    "inheritedInputRuntimeContracts": "Prior unchanged prepare-hd-capture.py qualified authentic artifact14483812685 and all four released entry bytes; runtime layout was synthetic, no routing/imports/network.",
+    "releaseAuthorization": "Root authorized readiness metadata and local commit; root must verify exact committed records before one push-triggered run. No push or routing by preparation agent.",
+    "wrapperContracts": "PASS: held before I/O,20 inherited assets exact,only dedicated push workflow matches; no routing/imports/network.",
+    "observerContracts": "PASS: one data-only synthetic projection contract; exact four families, A03 union, sparse centers, shared obstacles, ownership maps, no getters/native mutations. No actual capture-size or routing claim."
   },
-  "previousDiagnostic": {
-    "runId": 44438253479,
-    "controllerCommit": "7241206782e8cbd7b971cedaa76dac0c5a79f895",
-    "outcome": "Observer exceeded24MiB while copying all Uniform input nodes; no native HD result",
-    "authenticationReport": "/workspace/full-board-ten-20261118-3242/h616-hd-run44438253479/authenticated-summary.json",
-    "authenticationReportSha256": "96bd92f70b0d51ebfb75d4947fab96faee50983b6c1c5ff3685ac5b50599454a"
-  },
-  "captureCorrection": "Retain only selected source1/pre-Uniform node IDs and cmn_162, adding matching input nodes on demand for later alias-selected attempts. Full per-target constructor scenes and24MiB limit unchanged."
+  "captureScope": {
+    "targetNode": "cmn_162",
+    "maximumRejectedCandidates": 4,
+    "maximumCaptureBytes": 6291456,
+    "geometry": "Final regional constructor once; rejected candidate own solvedRoutes plus scale/affine transforms and actual connection-map memberships; shared board obstacle prefix retained once.",
+    "observationOnly": true,
+    "captureFailureDoesNotAlterNativeResult": true,
+    "outcomeClassification": "Runner records native outcome separately from capture completeness/errors. A missing or truncated witness is not an observed collision or completion gain.",
+    "prohibitedChanges": [
+      "source or dependency overrides",
+      "point movement",
+      "additional routing steps",
+      "solver options or iteration limits",
+      "live solution validator calls for observation"
+    ],
+    "expectedRejectedCandidates": [
+      {
+        "family": "A01",
+        "scale": 1,
+        "shuffleSeed": 2
+      },
+      {
+        "family": "A03",
+        "scale": 2
+      },
+      {
+        "family": "A03",
+        "scale": 4
+      },
+      {
+        "family": "A03",
+        "scale": 8
+      }
+    ],
+    "outputFiles": [
+      "report.json",
+      "rejected-candidates.json.gz",
+      "diagnostic-progress.json"
+    ],
+    "exactWitnessRequirement": "Unexpected candidate membership or native outcome remains explicit observation failure after retaining the unchanged native result; never interpreted as a physical collision or completion gain."
+  }
 }

@@ -8,12 +8,6 @@ import { gunzipSync, gzipSync } from "node:zlib"
 // Diagnostic only: observe the published solver's ordinary synchronous steps.
 // No production methods, budgets, geometry, ordering, or results are replaced.
 type RuntimeObject = Record<string, any>
-type ObservedAttempt = {
-  solver: RuntimeObject
-  kind: "b01" | "regional"
-  record: RuntimeObject
-  retained: boolean
-}
 
 const flags = Object.fromEntries(
   process.argv.slice(2).reduce<string[][]>((entries, value, index, args) => {
@@ -120,409 +114,207 @@ const pipeline = new Pipeline(input, options)
 assert.equal(typeof pipeline.step, "function")
 assert.equal(typeof pipeline.stepAsync, "undefined", "Native async stepping needs explicit review")
 
-const blobs: Record<string, unknown> = {}
-let serializedBytes = 0
-let observationMs = 0
-let observedAttempts = 0
-const retainedAttempts: RuntimeObject[] = []
-const attempts = new WeakMap<object, ObservedAttempt>()
-const activeAttempts = new Set<ObservedAttempt>()
-const phaseTransitions: RuntimeObject[] = []
-const targetNodeIds = new Set<string>()
-const uniformFamiliesBefore = new Map<string, RuntimeObject>()
-let uniformCaptured = false
-let nativePathCapture: RuntimeObject | null = null
-let preUniformNodes: RuntimeObject[] = []
-let uniformInputNodes: RuntimeObject[] = []
-let previousFailedB01Count = 0
-const failedB01Events: RuntimeObject[] = []
-const regionalEvents: RuntimeObject[] = []
-const regionalInstances = new Map<RuntimeObject, RuntimeObject>()
-let postUniformCaptured = false
-let failedB01Count = 0
-let lastRegional: ObservedAttempt | undefined
-let captureError: string | null = null
-let executionError: string | null = null
+// Capture only terminal retained data. No solver methods or getters are invoked
+// by this projection, and no candidate geometry is reconstructed during routing.
+function own(object: any, key: string): any {
+  assert(object !== null && typeof object === "object", `Missing object for ${key}`)
+  const descriptor = Object.getOwnPropertyDescriptor(object, key)
+  assert(descriptor && "value" in descriptor, `Missing own data field ${key}`)
+  return descriptor.value
+}
 
 function copyData(value: any, depth = 0): any {
-  assert(depth < 80, "Diagnostic nesting limit exceeded")
+  assert(depth < 40, "Capture data nesting exceeded 40")
   if (value === undefined) return { $undefined: true }
-  if (typeof value === "function") return { $callback: value.name || "anonymous", executable: false }
   if (typeof value === "number" && !Number.isFinite(value)) return { $number: String(value) }
+  assert(typeof value !== "function" && typeof value !== "symbol" && typeof value !== "bigint", "Unexpected executable or unsupported capture data")
   if (value === null || typeof value !== "object") return value
-  if (value instanceof Map) return { $map: [...value].map(([key, item]) => [copyData(key, depth + 1), copyData(item, depth + 1)]) }
-  if (value instanceof Set) return { $set: [...value].map((item) => copyData(item, depth + 1)) }
-  if (Array.isArray(value)) return value.map((item) => copyData(item, depth + 1))
-  assert(Object.getPrototypeOf(value) === Object.prototype || Object.getPrototypeOf(value) === null, "Unexpected class in diagnostic data")
+  if (value instanceof Map) return { $map: [...Map.prototype.entries.call(value)].map(([key, item]) => [copyData(key, depth + 1), copyData(item, depth + 1)]) }
+  if (value instanceof Set) return { $set: [...Set.prototype.values.call(value)].map(item => copyData(item, depth + 1)) }
+  if (ArrayBuffer.isView(value)) {
+    assert(!(value instanceof DataView), "Unexpected DataView")
+    return { $typedArray: Object.getPrototypeOf(value).constructor.name, values: Array.from(value as any, item => copyData(item, depth + 1)) }
+  }
+  if (Array.isArray(value)) return Array.from({ length: value.length }, (_, index) => {
+    const descriptor = Object.getOwnPropertyDescriptor(value, String(index))
+    if (!descriptor) return { $hole: true }
+    assert("value" in descriptor, "Unexpected array accessor")
+    return copyData(descriptor.value, depth + 1)
+  })
+  assert(Object.getPrototypeOf(value) === Object.prototype || Object.getPrototypeOf(value) === null, "Unexpected class in capture data")
   return Object.fromEntries(Object.entries(Object.getOwnPropertyDescriptors(value)).filter(([, descriptor]) => descriptor.enumerable).map(([key, descriptor]) => {
     assert("value" in descriptor, `Unexpected accessor ${key}`)
     return [key, copyData(descriptor.value, depth + 1)]
   }))
 }
 
-function copyParameters(params: RuntimeObject): RuntimeObject {
-  return Object.fromEntries(Object.entries(params).map(([key, value]) => {
-    if (key !== "connMap" || value === null || value === undefined) return [key, copyData(value)]
-    assert(value.netMap && value.idToNetMap, "Expected native connectivity maps")
-    return [key, {
+function captureRejectedCandidates(regional: RuntimeObject): RuntimeObject {
+  const params = own(regional, "params")
+  const node = own(params, "nodeWithPortPoints")
+  assert.equal(own(node, "capacityMeshNodeId"), "cmn_162")
+  const boardObstacles = own(params, "boardObstacles")
+  const obstacles = own(params, "obstacles")
+  assert(Array.isArray(boardObstacles) && Array.isArray(obstacles))
+  assert(obstacles.length >= boardObstacles.length)
+  for (let index = 0; index < boardObstacles.length; index++) {
+    assert.equal(obstacles[index], boardObstacles[index], `Shared board obstacle prefix differs at ${index}`)
+  }
+  const projectedParams: RuntimeObject = {}
+  for (const [key, descriptor] of Object.entries(Object.getOwnPropertyDescriptors(params))) {
+    if (!descriptor.enumerable) continue
+    assert("value" in descriptor, `Unexpected parameter getter ${key}`)
+    if (key === "obstacles") projectedParams[key] = { $arrayConcat: [{ $parameterRef: "boardObstacles" }, copyData(obstacles.slice(boardObstacles.length))] }
+    else if (key === "connMap") projectedParams[key] = {
       $connectivityMap: true,
-      netMap: copyData(value.netMap),
-      idToNetMapSha256: sha(JSON.stringify(copyData(value.idToNetMap))),
-    }]
-  }))
-}
-
-function storeEncoded(value: unknown): RuntimeObject {
-  const json = JSON.stringify(value)
-  const digest = sha(json)
-  if (!Object.hasOwn(blobs, digest)) {
-    serializedBytes += Buffer.byteLength(json)
-    assert(serializedBytes <= 24 * 1024 * 1024, "Unique diagnostic data exceeded 24 MiB")
-    blobs[digest] = value
-  }
-  return { $blob: digest }
-}
-
-function storeRecordFields(record: RuntimeObject): RuntimeObject {
-  return Object.fromEntries(Object.entries(record).map(([key, value]) => [
-    key,
-    value !== null && typeof value === "object" ? storeEncoded(value) : value,
-  ]))
-}
-
-function state(solver: RuntimeObject): RuntimeObject {
-  return {
-    className: solver.constructor.name,
-    iterations: solver.iterations,
-    MAX_ITERATIONS: solver.MAX_ITERATIONS,
-    solved: solver.solved,
-    failed: solver.failed,
-    error: solver.error,
-    stats: solver.stats ? Object.fromEntries(Object.entries(solver.stats).filter(([, value]) => value === null || ["number", "string", "boolean"].includes(typeof value))) : null,
-  }
-}
-
-function failureTree(root: RuntimeObject): RuntimeObject[] {
-  const rows: RuntimeObject[] = []
-  const seen = new Set<object>()
-  function visit(solver: RuntimeObject, parent: number | null, relation: string): void {
-    if (!solver || seen.has(solver)) return
-    assert(seen.size < 384, "Failure tree exceeded 384 instances")
-    seen.add(solver)
-    const index = rows.length
-    const row: RuntimeObject = { index, parent, relation, ...state(solver) }
-    rows.push(row)
-    if (Array.isArray(solver.supervisedSolvers)) {
-      row.portfolioCandidates = solver.supervisedSolvers.map((candidate: RuntimeObject) => ({ ...state(candidate.solver), hyperParameters: copyData(candidate.hyperParameters) }))
-      return
+      netMap: copyData(own(descriptor.value, "netMap")),
+      idToNetMap: copyData(own(descriptor.value, "idToNetMap")),
     }
-    for (const field of ["highDensitySolver", "activeSubSolver", "forceImproveSolver", "repairSolver", "winningSolver"]) visit(solver[field], index, field)
-    for (const field of ["failedSolvers", "failedSubSolvers"]) {
-      if (Array.isArray(solver[field])) for (const child of solver[field]) visit(child, index, field)
-    }
+    else projectedParams[key] = copyData(descriptor.value)
   }
-  visit(root, null, "root")
-  return rows
-}
-
-function containsTarget(node: RuntimeObject, hd: RuntimeObject): boolean {
-  const nativeNet = hd.connMap.getNetConnectedToId(targetRoot) ?? targetRoot
-  return node.portPoints.some((point: RuntimeObject) => {
-    const identity = point.rootConnectionName ?? point.connectionName
-    return identity === targetRoot || (hd.connMap.getNetConnectedToId(identity) ?? identity) === nativeNet
-  })
-}
-
-function captureParent(hd: RuntimeObject): RuntimeObject {
-  return {
-    state: state(hd),
-    parameters: copyParameters(hd.params),
-    activeNode: copyData(hd.activeNode),
-    unsolvedNodePortPoints: copyData(hd.unsolvedNodePortPoints),
-    acceptedRoutes: copyData(hd.routes),
-    fixedRouteReplacements: copyData(hd.fixedRouteReplacements),
-    removedFixedRouteConnectionNames: copyData(hd.removedFixedRouteConnectionNames),
-    preloadedTraceMutationMasks: copyData(hd.preloadedTraceMutationMasks),
-  }
-}
-
-function observeBefore(): void {
-  const uniform = pipeline.uniformPortDistributionSolver
-  if (uniform && !uniformCaptured) {
-    assert.equal(uniform.solved, false, "Uniform input must be observed before completion")
-    assert.equal(uniform.currentOwnerPairBeingProcessed, null, "Uniform input must precede redistribution")
-    for (const [key, points] of uniform.mapOfOwnerPairToPortPoints) {
-      uniformFamiliesBefore.set(key, {
-        points: copyData(points),
-        sharedEdge: copyData(uniform.mapOfOwnerPairToSharedEdge.get(key)),
-      })
-    }
-    preUniformNodes = copyData(uniform.input.nodeWithPortPoints)
-    uniformInputNodes = uniform.input.inputNodesWithPortPoints
-    const selectedPreUniformNodes = preUniformNodes.filter((node: RuntimeObject) => node.capacityMeshNodeId === fallbackTargetNode || node.portPoints.some((point: RuntimeObject) => point.connectionName === primaryTargetConnection || point.rootConnectionName === targetRoot))
-    const selectedNodeIds = new Set(selectedPreUniformNodes.map((node: RuntimeObject) => node.capacityMeshNodeId))
-    selectedNodeIds.add(fallbackTargetNode)
-    const pairs = pipeline.srjWithPointPairs.connections.filter((connection: RuntimeObject) => connection.name === primaryTargetConnection || connection.rootConnectionName === targetRoot || connection.name.startsWith(`${targetRoot}_mst`))
-    assert.equal(pairs.filter((connection: RuntimeObject) => connection.name === primaryTargetConnection).length, 1, "Exact native target MST pair is missing")
-    nativePathCapture = storeRecordFields({
-      primaryTargetConnection,
-      sourceConnection: copyData(input.connections.find((connection: RuntimeObject) => connection.name === targetRoot)),
-      pointPairs: copyData(pairs),
-      preUniformNodes: copyData(selectedPreUniformNodes),
-      inputNodeScope: "Selected source1/pre-Uniform node IDs plus cmn_162 only; full native phase SRJ is authenticated separately.",
-      selectedInputNodesWithPortPoints: copyData(uniformInputNodes.filter((node: RuntimeObject) => selectedNodeIds.has(node.capacityMeshNodeId))),
-    })
-    uniformCaptured = true
-  }
-  if (uniform?.solved && nativePathCapture && !postUniformCaptured) {
-    nativePathCapture.postUniformNodes = storeEncoded(copyData(uniform.redistributedNodes.filter((node: RuntimeObject) => node.capacityMeshNodeId === fallbackTargetNode || node.portPoints.some((point: RuntimeObject) => point.connectionName === primaryTargetConnection || point.rootConnectionName === targetRoot))))
-    postUniformCaptured = true
-  }
-  const hd = pipeline.highDensityRouteSolver
-  if (!hd?.activeNode) return
-  const regional = hd.activeFallbackSolver
-  if (regional && !regionalInstances.has(regional)) {
-    assert.equal(regional.iterations, 0, "Regional accounting must begin at construction")
-    assert(regionalEvents.length < 64, "Regional attempt accounting limit exceeded")
-    const latestFailure = failedB01Events.at(-1)
-    const event: RuntimeObject = {
-      id: regionalEvents.length,
-      parentNodeId: hd.activeNode.capacityMeshNodeId,
-      regionalNodeId: regional.params.nodeWithPortPoints.capacityMeshNodeId,
-      parentRootConnectionNames: [...new Set(hd.activeNode.portPoints.map((point: RuntimeObject) => point.rootConnectionName ?? point.connectionName))],
-      regionalRootConnectionNames: [...new Set(regional.params.nodeWithPortPoints.portPoints.map((point: RuntimeObject) => point.rootConnectionName ?? point.connectionName))],
-      reason: hd.activeFallbackReason,
-      triggeringB01FailureIndex: latestFailure?.nodeId === hd.activeNode.capacityMeshNodeId && hd.activeFallbackReason === `B01 failed: ${latestFailure.state.error}` ? failedB01Events.length - 1 : null,
-      initial: state(regional),
-      solvedNodeCountBefore: hd.stats.solvedNodeCount,
-      acceptedRouteCountBefore: hd.routes.length,
-      fixedRouteReplacementKeysBefore: [...hd.fixedRouteReplacements.keys()],
-      promotedConnectionNames: [...hd.activeFallbackPromotedFixedRouteConnectionNames],
-      parentOutcome: "active",
-    }
-    regionalEvents.push(event)
-    regionalInstances.set(regional, event)
-  }
-  const matchesPrimaryRoot = containsTarget(hd.activeNode, hd)
-  const matchesFallbackNode = hd.activeNode.capacityMeshNodeId === fallbackTargetNode || hd.activeFallbackSolver?.params.nodeWithPortPoints.capacityMeshNodeId === fallbackTargetNode
-  if (!matchesPrimaryRoot && !matchesFallbackNode) return
-  targetNodeIds.add(hd.activeNode.capacityMeshNodeId)
-  for (const [field, kind] of [["activeB01Solver", "b01"], ["activeFallbackSolver", "regional"]] as const) {
-    const solver = hd[field]
-    if (!solver || attempts.has(solver)) continue
-    assert(observedAttempts < 48, "Target created more than 48 observed attempts")
-    assert.equal(solver.iterations, 0, "Native constructor capture must precede its first solver step")
-    const params = kind === "b01" ? solver.getConstructorParams()[0] : solver.params
-    assert(params && typeof params === "object")
-    const record: RuntimeObject = {
-      id: observedAttempts++, kind, initial: state(solver),
-      selection: { matchesPrimaryRoot, matchesFallbackNode },
-      nodeRootConnectionNames: [...new Set(hd.activeNode.portPoints.map((point: RuntimeObject) => point.rootConnectionName ?? point.connectionName))],
-      primaryPointPair: copyData(pipeline.srjWithPointPairs.connections.find((connection: RuntimeObject) => connection.name === primaryTargetConnection)),
-      preUniformNode: copyData(preUniformNodes.find((node: RuntimeObject) => node.capacityMeshNodeId === hd.activeNode.capacityMeshNodeId)),
-      postUniformNode: copyData(uniform.redistributedNodes.find((node: RuntimeObject) => node.capacityMeshNodeId === hd.activeNode.capacityMeshNodeId)),
-      inputNodeScope: "Native input nodes matching this selected attempt, including later connectivity-alias matches.",
-      selectedInputNodesWithPortPoints: copyData(uniformInputNodes.filter((node: RuntimeObject) => node.capacityMeshNodeId === hd.activeNode.capacityMeshNodeId || node.capacityMeshNodeId === params.nodeWithPortPoints.capacityMeshNodeId)),
-      node: copyData(hd.activeNode),
-      constructorParameters: copyParameters(params),
-      MAX_RIPS: kind === "b01" ? solver.MAX_RIPS : null,
-      parent: captureParent(hd),
-      regionalReason: hd.activeFallbackReason,
-    }
-    const nodePortIds = new Set(hd.activeNode.portPoints.map((point: RuntimeObject) => point.portPointId))
-    record.portPlacement = [...uniformFamiliesBefore].flatMap(([ownerPairKey, before]) => {
-      if (!before.points.some((point: RuntimeObject) => nodePortIds.has(point.portPointId))) return []
-      const familyIds = new Set(before.points.map((point: RuntimeObject) => point.portPointId))
-      return [{
-        ownerPairKey,
-        before,
-        after: copyData(uniform.mapOfOwnerPairToPortPoints.get(ownerPairKey)),
-        finalNodes: copyData(uniform.redistributedNodes.flatMap((node: RuntimeObject) => {
-          const portPoints = node.portPoints.filter((point: RuntimeObject) => familyIds.has(point.portPointId))
-          return portPoints.length === 0 ? [] : [{ capacityMeshNodeId: node.capacityMeshNodeId, portPoints }]
-        })),
-        availableSegmentPorts: copyData(pipeline.sharedEdgeSegmentsWithNecessaryCrampedPortPoints.flatMap((segment: RuntimeObject) => {
-          const portPoints = segment.portPoints.filter((point: RuntimeObject) => point.availableZ.some((z: number) => familyIds.has(`${point.segmentPortPointId}::${z}`)))
-          return portPoints.length === 0 ? [] : [{ edgeId: segment.edgeId, nodeIds: segment.nodeIds, start: segment.start, end: segment.end, portPoints }]
-        })),
-      }]
-    })
-    if (kind === "b01") {
-      record.nativeObstacleMapping = params.obstacles.flatMap((obstacle: RuntimeObject, convertedIndex: number) => {
-        if (obstacle.type !== "rect") return []
-        const matches = hd.obstacles.flatMap((native: RuntimeObject, nativeIndex: number) => {
-          if (native.center.x !== obstacle.center.x || native.center.y !== obstacle.center.y || native.width !== obstacle.width || native.height !== obstacle.height || (native.ccwRotationDegrees ?? 0) !== (obstacle.ccwRotationDegrees ?? 0)) return []
-          const connectionName = native.connectedTo[0] ?? native.obstacleId ?? `pipeline9_obstacle_${native.center.x}_${native.center.y}`
-          if (connectionName !== obstacle.connectionName || (hd.connMap.getNetConnectedToId(connectionName) ?? connectionName) !== obstacle.rootConnectionName) return []
-          const availableZ = new Set(hd.activeNode.availableZ ?? hd.activeNode.portPoints.map((point: RuntimeObject) => point.z))
-          const layers = (native.zLayers ?? native.layers.map((layer: string) => layer === "top" ? 0 : layer === "bottom" ? hd.layerCount - 1 : Number(layer.replace("inner", "")))).filter((z: number) => availableZ.has(z))
-          if (JSON.stringify(layers) !== JSON.stringify(obstacle.zLayers)) return []
-          return [{ nativeIndex, shape: native.shape ?? "rect", componentId: native.componentId, circuitJsonMetadata: copyData(native.circuitJsonMetadata) }]
+  const candidates: RuntimeObject[] = []
+  const highDensity = own(regional, "highDensitySolver")
+  const growthSolvers = own(highDensity, "failedSolvers")
+  assert(Array.isArray(growthSolvers))
+  for (const [growthIndex, growth] of growthSolvers.entries()) {
+    const originalNode = own(growth, "nodeWithPortPoints")
+    const portfolios = own(growth, "failedSolvers")
+    assert(Array.isArray(portfolios))
+    for (const [portfolioIndex, portfolio] of portfolios.entries()) {
+      const scaledNode = own(portfolio, "nodeWithPortPoints")
+      const scale = own(scaledNode, "width") / own(originalNode, "width")
+      assert([1, 2, 4, 8].some(value => Math.abs(value - scale) < 1e-9), "Unexpected retained portfolio scale")
+      assert(Math.abs(own(scaledNode, "height") / own(originalNode, "height") - scale) < 1e-9)
+      const wrappers = own(portfolio, "supervisedSolvers")
+      assert(Array.isArray(wrappers) && wrappers.length <= 128)
+      for (const [candidateIndex, wrapper] of wrappers.entries()) {
+        const solver = own(wrapper, "solver")
+        const error = own(solver, "error")
+        if (error !== "Candidate solution rejected by validator") continue
+        const hyperParameters = own(wrapper, "hyperParameters")
+        const isA01 = Object.getOwnPropertyDescriptor(hyperParameters, "HIGH_DENSITY_A01")?.value === true
+        const isA03 = Object.getOwnPropertyDescriptor(hyperParameters, "HIGH_DENSITY_A03")?.value === true
+        assert(isA01 !== isA03, "Rejected candidate is not the expected A01/A03 family")
+        const fields: RuntimeObject = {}
+        for (const key of ["solvedRoutes", "connIdToName", "connIdToRootNet", "gridToBoundsTransform", "layerToZ", "traceThickness", "viaDiameter", "nodeWithPortPoints"]) fields[key] = copyData(own(solver, key))
+        if (isA01) {
+          assert(own(solver, "solvedRoutes") instanceof Map)
+          fields.gridOrigin = copyData(own(solver, "gridOrigin"))
+          fields.cellSizeMm = own(solver, "cellSizeMm")
+        } else {
+          const routes = own(solver, "solvedRoutes")
+          const planeSize = own(solver, "planeSize")
+          assert(Array.isArray(routes) && Number.isInteger(planeSize) && planeSize > 0)
+          const cellIds = new Set<number>()
+          for (const entry of routes) {
+            if (entry === undefined) continue
+            for (const route of Array.isArray(entry) ? entry : [entry]) {
+              for (const state of own(route, "states")) cellIds.add(state % planeSize)
+              for (const cellId of own(route, "viaCellIds")) cellIds.add(cellId)
+            }
+          }
+          const x = own(solver, "cellCenterX"), y = own(solver, "cellCenterY")
+          fields.planeSize = planeSize
+          fields.referencedCellCenters = [...cellIds].sort((a, b) => a - b).map(cellId => {
+            assert(Number.isInteger(cellId) && cellId >= 0 && cellId < planeSize)
+            assert(Number.isFinite(x[cellId]) && Number.isFinite(y[cellId]))
+            return [cellId, x[cellId], y[cellId]]
+          })
+          fields.cellCenterLengths = { x: x.length, y: y.length }
+        }
+        candidates.push({
+          family: isA01 ? "A01" : "A03", scale, growthIndex, portfolioIndex, candidateIndex,
+          hyperParameters: copyData(hyperParameters), originalNode: copyData(originalNode), scaledNode: copyData(scaledNode),
+          state: Object.fromEntries(["solved", "failed", "error", "iterations", "MAX_ITERATIONS"].map(key => [key, copyData(own(solver, key))])),
+          fields,
         })
-        return [{ convertedIndex, convertedType: obstacle.type, matches }]
-      })
-    } else {
-      record.fixedRouteSections = copyData(hd.activeFallbackFixedRouteSections)
-      record.fixedObstacleRoutes = copyData(hd.activeFallbackFixedObstacleRoutes)
-      record.promotedConnectionNames = copyData(hd.activeFallbackPromotedFixedRouteConnectionNames)
-    }
-    const entry: ObservedAttempt = { solver, kind, record, retained: false }
-    attempts.set(solver, entry)
-    activeAttempts.add(entry)
-    if (kind === "regional") lastRegional = entry
-  }
-}
-
-function retain(entry: ObservedAttempt): void {
-  if (entry.retained) return
-  entry.record.final = state(entry.solver)
-  entry.record.failureTree = failureTree(entry.solver)
-  if (entry.kind === "b01" && entry.solver.iterations > 0) {
-    entry.record.failedSearch = {
-      activeConnection: copyData(entry.solver.activeConnection),
-      unsolvedSegments: copyData(entry.solver.unsolvedConnections),
-      connectionNames: copyData(entry.solver.connIdToName),
-      connectionRoots: copyData(entry.solver.connIdToRootNet),
-      searchIterations: entry.solver.searchIterations,
-      baseSearchBudgetIters: entry.solver.baseSearchBudgetIters,
-      totalRipEvents: entry.solver.totalRipEvents,
-    }
-  }
-  const row: RuntimeObject = {}
-  for (const [key, value] of Object.entries(entry.record)) {
-    if (key === "parent") {
-      const parent = value as RuntimeObject
-      row[key] = storeRecordFields({ ...parent, parameters: storeRecordFields(parent.parameters) })
-    } else if (key === "constructorParameters") {
-      row[key] = storeRecordFields(value as RuntimeObject)
-    } else {
-      row[key] = value !== null && typeof value === "object" ? storeEncoded(value) : value
-    }
-  }
-  retainedAttempts.push(row)
-  entry.retained = true
-}
-
-function observeAfter(): void {
-  const hd = pipeline.highDensityRouteSolver
-  if (hd) {
-    for (const solver of hd.failedSolvers.slice(previousFailedB01Count)) {
-      const params = solver.getConstructorParams()[0]
-      const node = params.nodeWithPortPoints
-      failedB01Events.push({
-        state: state(solver),
-        nodeId: node.capacityMeshNodeId,
-        rootConnectionNames: [...new Set(node.portPoints.map((point: RuntimeObject) => point.rootConnectionName ?? point.connectionName))],
-        selectedAttemptId: attempts.get(solver)?.record.id ?? null,
-      })
-      if (solver.error?.includes(primaryTargetConnection)) assert(attempts.has(solver), "Primary failed B01 constructor was not captured")
-    }
-    previousFailedB01Count = hd.failedSolvers.length
-    for (const [solver, event] of regionalInstances) {
-      if (event.parentOutcome !== "active") continue
-      if (!solver.solved && !solver.failed && hd.activeFallbackSolver === solver) continue
-      event.final = state(solver)
-      event.parentStateAfter = state(hd)
-      event.solvedNodeCountAfter = hd.stats.solvedNodeCount
-      event.acceptedRouteCountAfter = hd.routes.length
-      event.parentOutcome = hd.failed ? "parent_failed" : Number(hd.stats.solvedNodeCount) === Number(event.solvedNodeCountBefore) + 1 && hd.activeNode === null && hd.activeFallbackSolver === null ? "node_accepted" : hd.activeFallbackSolver !== solver ? "replaced_by_regional_retry" : "terminal_solver_still_active"
-      event.fixedRouteReplacementKeysAfter = [...hd.fixedRouteReplacements.keys()]
-      if (attempts.has(solver) && event.parentOutcome === "node_accepted") {
-        event.acceptedRoutes = storeEncoded(copyData(hd.routes.slice(event.acceptedRouteCountBefore)))
+        assert(candidates.length <= 4, "More than four rejected candidate records")
       }
     }
   }
-  for (const entry of activeAttempts) {
-    if (!entry.solver.failed && !entry.solver.solved) continue
-    if (entry.kind === "b01" && entry.solver.failed) {
-      failedB01Count++
-      retain(entry)
-    }
-    if (entry.kind === "regional") retain(entry)
-    activeAttempts.delete(entry)
+  assert.equal(candidates.length, 4, "Expected all four retained rejected candidates")
+  assert.deepEqual(candidates.map(candidate => `${candidate.family}:${candidate.scale}`).sort(), ["A01:1", "A03:2", "A03:4", "A03:8"])
+  assert.equal(candidates.find(candidate => candidate.family === "A01")!.hyperParameters.SHUFFLE_SEED, 2)
+  return {
+    schemaVersion: 1, targetNode: "cmn_162", captureKind: "post-loop-own-data",
+    regionalState: Object.fromEntries(["solved", "failed", "error", "iterations", "stats"].map(key => [key, copyData(own(regional, key))])),
+    params: projectedParams, boardObstacleCount: boardObstacles.length,
+    appendedObstacleCount: obstacles.length - boardObstacles.length, candidates,
+    scope: "Raw retained published candidate states. No candidate getOutput, validator or geometry reconstruction was invoked. Repaired/unscaled/materialized output and exact conflict witnesses require offline source-equivalent reconstruction.",
   }
-  observeBefore()
 }
 
+const write = (name: string, value: unknown): void => writeFileSync(resolve(outputDirectory, name), JSON.stringify(value, null, 2) + "\n")
 const started = performance.now()
-let lastYield = started
+let lastFlush = started
 let lastPhase: string | undefined
+const phaseTransitions: RuntimeObject[] = []
+let retainedRegional: RuntimeObject | null = null
+let timedOut = false
+let executionError: string | null = null
+const state = (): RuntimeObject => ({
+  solved: pipeline.solved, failed: pipeline.failed, error: pipeline.error,
+  iterations: pipeline.iterations, MAX_ITERATIONS: pipeline.MAX_ITERATIONS,
+  activePhase: pipeline.getCurrentPhase(), elapsedMs: performance.now() - started,
+  highDensity: pipeline.highDensityRouteSolver ? {
+    solved: pipeline.highDensityRouteSolver.solved, failed: pipeline.highDensityRouteSolver.failed,
+    error: pipeline.highDensityRouteSolver.error, iterations: pipeline.highDensityRouteSolver.iterations,
+    stats: pipeline.highDensityRouteSolver.stats,
+  } : null,
+})
 try {
-  while (!pipeline.solved && !pipeline.failed && performance.now() - started < deadlineMs) {
-    const phase = pipeline.getCurrentPhase()
-    if (phase !== lastPhase) {
-      phaseTransitions.push({ phase, iterations: pipeline.iterations, elapsedMs: performance.now() - started })
-      lastPhase = phase
+  while (!pipeline.solved && !pipeline.failed) {
+    const batchStarted = performance.now()
+    do {
+      const regional = pipeline.highDensityRouteSolver?.activeFallbackSolver
+      if (regional) retainedRegional = regional
+      pipeline.step()
+      const phase = pipeline.getCurrentPhase()
+      if (phase !== lastPhase) {
+        phaseTransitions.push({ phase, elapsedMs: performance.now() - started, iterations: pipeline.iterations })
+        lastPhase = phase
+      }
+      if (performance.now() - started >= deadlineMs) { timedOut = true; break }
+    } while (!pipeline.solved && !pipeline.failed && performance.now() - batchStarted < 250)
+    if (performance.now() - lastFlush >= 10000) {
+      write("diagnostic-progress.json", state())
+      lastFlush = performance.now()
     }
-    let observedAt = performance.now()
-    observeBefore()
-    observationMs += performance.now() - observedAt
-    try { pipeline.step() }
-    finally {
-      observedAt = performance.now()
-      observeAfter()
-      observationMs += performance.now() - observedAt
-    }
-    if (performance.now() - lastYield >= 16) {
-      await new Promise<void>((done) => setTimeout(done, 0))
-      lastYield = performance.now()
-    }
+    if (timedOut) break
+    if (!pipeline.solved && !pipeline.failed) await new Promise<void>(done => setTimeout(done, 0))
   }
 } catch (error) {
-  executionError = String(error)
+  executionError = error instanceof Error ? `${error.message}\n${error.stack ?? ""}`.slice(0, 8000) : String(error)
 }
-try {
-  for (const entry of activeAttempts) retain(entry)
-  if (lastRegional && !lastRegional.retained) retain(lastRegional)
-} catch (error) { captureError = String(error) }
-
-let completedOutput: Buffer | undefined
-try {
-  if (pipeline.solved && !executionError && !captureError) {
-    const outputJson = JSON.stringify(pipeline.getOutputSimpleRouteJson())
-    completedOutput = Buffer.from(outputJson)
-  }
-} catch (error) { captureError = String(error) }
-
-const summary = {
-  schemaVersion: 2,
-  diagnostic: "published Pipeline9 standalone phase replay; read-only before/after observations",
-  planSha256: sha(planBytes),
-  modulePath, entrySha256: sha(entryBytes), inputPath,
-  inputCompressedSha256: sha(compressedInput), inputSha256: sha(inputBytes),
-  inputConnections: input.connections.length, inputObstacles: input.obstacles.length,
-  inputTerminals: 143, inputPreloadedTraces: input.traces.length,
+const terminalState = state()
+const report: RuntimeObject = {
+  schemaVersion: 1, ...terminalState, timedOut, executionError,
+  inputSha256: sha(inputBytes), inputCompressedSha256: sha(compressedInput),
   initialInputCanonicalSha256, finalInputCanonicalSha256: sha(JSON.stringify(input)),
   inputFileUnchanged: sha(readFileSync(inputPath)) === sha(compressedInput),
-  autorouterEntryUnchanged: sha(readFileSync(modulePath)) === sha(entryBytes),
-  coreEntryUnchanged: sha(readFileSync(publishedCore.entry)) === publishedCore.entrySha256,
-  primaryTargetConnection, fallbackTargetNode,
-  targetsAreIndependent: true,
-  targetRoot, nativeTarget: input.connections.find((connection: RuntimeObject) => connection.name === targetRoot),
-  suppliedOptions: copyData(options), effectiveOptions: copyData(pipeline.opts), effectiveEffort: pipeline.effort,
-  deadlineMs, elapsedMs: performance.now() - started, observationMs,
-  pipeline: state(pipeline), activePhase: pipeline.getCurrentPhase(),
-  highDensity: pipeline.highDensityRouteSolver ? state(pipeline.highDensityRouteSolver) : null,
-  targetNodesEncountered: targetNodeIds.size, targetNodeIds: [...targetNodeIds], observedAttempts, failedB01Count,
-  retainedAttempts: retainedAttempts.map((attempt) => ({ id: attempt.id, kind: attempt.kind })),
-  failedB01Events, regionalEvents,
-  nativePathCaptured: nativePathCapture !== null, postUniformCaptured,
-  outcome: executionError || captureError ? "execution_error" : pipeline.solved ? "pipeline_solved" : pipeline.failed ? "pipeline_failed" : "diagnostic_deadline",
-  targetEncountered: targetNodeIds.size > 0,
-  executionError, captureError, wasmAttempts, coldImportWasmCalls, phaseTransitions, serializedBytes,
-  failedNode: pipeline.highDensityRouteSolver?.failed ? copyData(pipeline.highDensityRouteSolver.activeNode) : null,
-  finalHighDensityAccounting: pipeline.highDensityRouteSolver ? {
-    stats: copyData(pipeline.highDensityRouteSolver.stats),
-    acceptedRouteCount: pipeline.highDensityRouteSolver.routes.length,
-    pendingNodeIds: pipeline.highDensityRouteSolver.unsolvedNodePortPoints.map((node: RuntimeObject) => node.capacityMeshNodeId),
-    finalRegionalFailureIds: regionalEvents.filter((event) => event.parentOutcome === "parent_failed").map((event) => event.id),
-  } : null,
+  autorouterEntrySha256: sha(entryBytes), autorouterEntryUnchanged: sha(readFileSync(modulePath)) === sha(entryBytes),
+  publishedCoreEntryUnchanged: sha(readFileSync(publishedCore.entry)) === publishedCore.entrySha256,
+  planSha256: sha(planBytes), suppliedOptions: { cacheProvider: null },
+  undefinedOptionKeys: ["capacityDepth", "targetMinCapacity", "effort"],
+  effectiveOptions: pipeline.opts, effectiveEffort: pipeline.effort,
+  captureDeadlineMs: deadlineMs, hardDeadlineSeconds: plan.hardDeadlineSeconds,
+  phaseTransitions, wasmAttempts, coldImportWasmCalls,
+  capture: { complete: false, status: "pending-post-loop-projection" },
+  scope: "Published-only isolated phase diagnostic. No candidate patch, point movement, source override, accepted-output assessment or completion gain claim.",
 }
-const diagnostic = { summary, nativePathCapture, attempts: retainedAttempts, blobs }
-const diagnosticBytes = Buffer.from(JSON.stringify(diagnostic))
-const compressedDiagnostic = gzipSync(diagnosticBytes, { level: 9 })
-if (completedOutput) writeFileSync(resolve(outputDirectory, "phase-output.srj.json.gz"), gzipSync(completedOutput, { level: 9 }))
-writeFileSync(resolve(outputDirectory, "hd-capture.json.gz"), compressedDiagnostic)
-writeFileSync(resolve(outputDirectory, "summary.json"), JSON.stringify({ ...summary, captureSha256: sha(diagnosticBytes), captureGzipSha256: sha(compressedDiagnostic), captureGzipBytes: compressedDiagnostic.length }, null, 2) + "\n")
-console.log(JSON.stringify({ ...summary, phaseTransitions: undefined }, null, 2))
-if (executionError || captureError || wasmAttempts.length > 0) process.exitCode = 1
+// Preserve the native result before optional geometry serialization can fail.
+write("report.json", report)
+try {
+  assert(retainedRegional, "No retained regional instance")
+  assert(report.failed && !report.solved && !report.timedOut && !executionError, "Expected terminal native failure before capturing rejected candidates")
+  const capture = captureRejectedCandidates(retainedRegional)
+  const bytes = Buffer.from(JSON.stringify(capture))
+  assert(bytes.length <= 6 * 1024 * 1024, "Rejected candidate capture exceeded 6 MiB")
+  const compressed = gzipSync(bytes)
+  writeFileSync(resolve(outputDirectory, "rejected-candidates.json.gz"), compressed)
+  report.capture = { complete: true, status: "raw-four-candidate-state-retained", payloadSha256: sha(bytes), payloadBytes: bytes.length, compressedSha256: sha(compressed), compressedBytes: compressed.length, candidateCount: capture.candidates.length, boardObstacleCount: capture.boardObstacleCount, appendedObstacleCount: capture.appendedObstacleCount, maximumBytes: 6 * 1024 * 1024 }
+} catch (error) {
+  report.capture = { complete: false, status: "observation-failed", error: String(error).slice(0, 4000), nativeTerminalStatePreserved: true }
+}
+write("report.json", report)
+console.log(JSON.stringify({ solved: report.solved, failed: report.failed, error: report.error, timedOut, executionError, elapsedMs: report.elapsedMs, capture: report.capture }))
+if (executionError || wasmAttempts.length || !report.inputFileUnchanged || !report.autorouterEntryUnchanged || !report.publishedCoreEntryUnchanged || report.initialInputCanonicalSha256 !== report.finalInputCanonicalSha256 || !report.capture.complete) process.exitCode = 1
