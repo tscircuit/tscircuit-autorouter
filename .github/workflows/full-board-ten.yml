@@ -2,7 +2,7 @@ name: Native DDR port-cost comparison
 
 on:
   push:
-    branches: [bench/native-port-cost-3244-20261119]
+    branches: [bench/native-port-cost-rest-3244-20261119]
 
 permissions:
   contents: read
@@ -14,12 +14,16 @@ jobs:
     timeout-minutes: 45
     strategy:
       fail-fast: false
-      max-parallel: 5
+      max-parallel: 7
       matrix:
         include:
-          - { board: butterstick, experiment: published, cohorts: "original" }
-          - { board: glider, experiment: published, cohorts: "spaced" }
-          - { board: icepi, experiment: published, cohorts: "spaced" }
+          - { board: h616, experiment: published, cohorts: "original" }
+          - { board: h616, experiment: published, cohorts: "spaced" }
+          - { board: butterstick, experiment: published, cohorts: "spaced" }
+          - { board: glider, experiment: published, cohorts: "original" }
+          - { board: imx6, experiment: published, cohorts: "original" }
+          - { board: imx6, experiment: published, cohorts: "spaced" }
+          - { board: icepi, experiment: published, cohorts: "original" }
     env:
       FULL_BOARD_ROOT: ${{ github.workspace }}/.full-board-run
       FULL_BOARD_RUNTIME_MANIFEST: ${{ github.workspace }}/.full-board-run/runtime-manifest.json
