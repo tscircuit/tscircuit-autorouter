@@ -2,7 +2,8 @@
   "_comment": "Measured per-file bun test wall time in seconds. Regenerate with: bun scripts/record-test-timings.ts <run-id>",
   "_generatedFrom": [
     "36590200281",
-    "36592267061"
+    "36592267061",
+    "44420421487"
   ],
   "timings": {
     "tests/auto-capacity-depth.test.ts": 0,
@@ -559,6 +560,7 @@
     "tests/repro/pipeline9-multipoint-bus-trace-width.test.ts": 0.5,
     "tests/repro/pipeline9-silent-trace-width-neckdown.test.ts": 1,
     "tests/repro/pipeline9-sot23-missing-via.test.ts": 0.6,
+    "tests/repro/pipeline9-stmp157-native-ddr-via-space.test.ts": 954.2,
     "tests/repro/pipeline9-t113-boot-fanout.test.ts": 20.7,
     "tests/repro/pipeline9-t113-hdmi-ddc-joint-vias.test.ts": 0.4,
     "tests/repro/pipeline9-t113-hdmi-ddc-via-spacing.test.ts": 207.5,
