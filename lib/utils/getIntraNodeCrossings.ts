@@ -1,10 +1,14 @@
 import { doSegmentsIntersect } from "@tscircuit/math-utils"
+import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { NodeWithPortPoints } from "lib/types/high-density-types"
 
 // Intersection calculation is only accurate to 0.00001 (0.01mm)
 const intSpace = (a: number) => Math.round(a * 10000)
 
-export const getIntraNodeCrossings = (node: NodeWithPortPoints) => {
+export const getIntraNodeCrossings = (
+  node: NodeWithPortPoints,
+  connMap?: ConnectivityMap,
+) => {
   // Count the number of crossings
   let numSameLayerCrossings = 0
   let pointPairs: {
@@ -51,6 +55,8 @@ export const getIntraNodeCrossings = (node: NodeWithPortPoints) => {
     for (let j = i + 1; j < pointPairs.length; j++) {
       const pair1 = pointPairs[i]
       const pair2 = pointPairs[j]
+      if (connMap?.areIdsConnected(pair1.connectionName, pair2.connectionName))
+        continue
       if (
         pair1.z === pair2.z &&
         doSegmentsIntersect(
@@ -70,6 +76,8 @@ export const getIntraNodeCrossings = (node: NodeWithPortPoints) => {
     for (let j = i + 1; j < transitionPairPoints.length; j++) {
       const pair1 = transitionPairPoints[i]
       const pair2 = transitionPairPoints[j]
+      if (connMap?.areIdsConnected(pair1.connectionName, pair2.connectionName))
+        continue
 
       if (
         doSegmentsIntersect(

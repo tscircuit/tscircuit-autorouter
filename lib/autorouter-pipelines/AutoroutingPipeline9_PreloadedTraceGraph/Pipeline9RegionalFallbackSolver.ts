@@ -1,6 +1,6 @@
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
-import { HighDensityForceImproveSolver } from "high-density-repair01/lib/HighDensityForceImproveSolver"
+import { RegionalForceImproveSolver } from "high-density-repair01"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import { Pipeline4HighDensityRepairSolver } from "lib/solvers/HighDensityRepairSolver/Pipeline4HighDensityRepairSolver"
 import { HighDensitySolver } from "lib/solvers/HighDensitySolver/HighDensitySolver"
@@ -144,7 +144,7 @@ const hasPreloadedViaToBoardObstacleConflict = ({
 export class Pipeline9RegionalFallbackSolver extends BaseSolver {
   readonly params: Pipeline9RegionalFallbackSolverParams
   readonly highDensitySolver: HighDensitySolver
-  forceImproveSolver?: HighDensityForceImproveSolver
+  forceImproveSolver?: RegionalForceImproveSolver
   repairSolver?: Pipeline4HighDensityRepairSolver
   private validatedRoutes?: HighDensityRoute[]
 
@@ -217,12 +217,14 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
 
     // Cleanup is part of a candidate: a legal raw route can move into a pad.
     // Reject that candidate before the portfolio commits to its winner.
-    const forceImproveSolver = new HighDensityForceImproveSolver({
+    const forceImproveSolver = new RegionalForceImproveSolver({
       nodeWithPortPoints: [this.params.nodeWithPortPoints],
       hdRoutes: routedCandidate,
       colorMap: this.params.colorMap,
       totalStepsPerNode: Math.max(12, Math.round(20 * this.params.effort)),
       nodeAssignmentMargin: this.params.obstacleMargin,
+      isViaClearanceValid: (routes): boolean =>
+        this.validateCandidateRoutes(routes),
     })
     forceImproveSolver.solve()
     if (forceImproveSolver.failed) {
