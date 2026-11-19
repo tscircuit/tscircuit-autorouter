@@ -1,30 +1,32 @@
-name: Published3243 paired H616 via-site bounds comparison
+name: Published3243 remaining-nine via-site bounds regression
 on:
   push:
-    branches: [bench/h616-via-site-bounds-3243-20261119]
+    branches: [bench/remaining-nine-via-site-bounds-3243-20261119]
 permissions:
   contents: read
 jobs:
   route:
-    name: ${{ matrix.lane }} (${{ matrix.board }}, ${{ matrix.cohort }})
+    name: bounds-fix (${{ matrix.board }}, ${{ matrix.cohorts }})
     runs-on: blacksmith-8vcpu-ubuntu-2404-arm
-    timeout-minutes: 30
+    timeout-minutes: 45
     strategy:
       fail-fast: false
-      max-parallel: 2
+      max-parallel: 5
       matrix:
         include:
-          - { lane: feature-base, board: h616, cohort: spaced }
-          - { lane: bounds-fix, board: h616, cohort: spaced }
+          - { board: h616, cohorts: "original" }
+          - { board: butterstick, cohorts: "original,spaced" }
+          - { board: glider, cohorts: "original,spaced" }
+          - { board: imx6, cohorts: "original,spaced" }
+          - { board: icepi, cohorts: "original,spaced" }
     env:
       FULL_BOARD_ROOT: ${{ github.workspace }}/.full-board-run
       FULL_BOARD_RUNTIME_MANIFEST: ${{ github.workspace }}/.full-board-run/runtime-manifest.json
       BUN_INSTALL_CACHE_DIR: ${{ github.workspace }}/.full-board-run/bun-cache
       FULL_BOARD_EXPERIMENT: published
-      FULL_BOARD_CANDIDATE_LANE: ${{ matrix.lane }}
-      FULL_BOARD_COHORTS: ${{ matrix.cohort }}
+      FULL_BOARD_CANDIDATE_LANE: bounds-fix
+      FULL_BOARD_COHORTS: ${{ matrix.cohorts }}
       BOARD: ${{ matrix.board }}
-      COHORT: ${{ matrix.cohort }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -34,15 +36,17 @@ jobs:
             .github/workflows/full-board-ten.yml
             .github/workflows/full-board-via-site-bounds.yml
             AGENTS.md
-      - name: Require the reviewed H616 spaced plan
+      - name: Require the held remaining-nine plan
         run: |
           python3 - <<'PY'
           import json
           from pathlib import Path
           plan = json.loads(Path('experiments/full-board-ten/via-site-bounds-plan.json').read_text())
-          assert plan['qualificationReady'] is True, 'HELD: H616 candidate run is not released'
-          assert plan['jobs'] == 2 and plan['maxParallel'] == 2 and plan['laneOrder'] == ['feature-base', 'bounds-fix']
-          assert plan['cases'] == [{'board': 'h616', 'cohort': 'spaced', 'expectedRoutableNets': 121}]
+          assert plan['qualificationReady'] is True, 'HELD: remaining-nine regression is not released'
+          assert plan['jobs'] == 5 and plan['maxParallel'] == 5 and plan['laneOrder'] == ['bounds-fix']
+          assert len(plan['cases']) == 9 and plan['expectedRoutableNetsTotal'] == 2735
+          assert {(row['board'], row['cohort']) for row in plan['cases']} == {('h616', 'original')} | {(board, cohort) for board in ['butterstick', 'glider', 'imx6', 'icepi'] for cohort in ['original', 'spaced']}
+          assert plan['cohortOrder'] == ['original', 'spaced']
           PY
       - name: Checkout immutable original circuits
         uses: actions/checkout@v4
@@ -95,49 +99,51 @@ jobs:
           bun experiments/full-board-ten/prepare-cases.ts \
             "$FULL_BOARD_ROOT/sources/original/experiments/full-board-priority-analysis" \
             "$FULL_BOARD_ROOT/sources/spaced" "$FULL_BOARD_ROOT/cases" "$BOARD"
-      - name: Authenticate the published graph and activate only the reviewed source
+      - name: Authenticate the published graph and activate the source once
+        id: activate_original
         run: |
-          python3 experiments/full-board-ten/prepare-via-site-bounds.py "$FULL_BOARD_ROOT" baseline "$BOARD" "$COHORT"
-          python3 experiments/full-board-ten/prepare-via-site-bounds.py "$FULL_BOARD_ROOT" source "$BOARD" "$COHORT"
-          python3 experiments/full-board-ten/prepare-via-site-bounds.py "$FULL_BOARD_ROOT" candidate "$BOARD" "$COHORT"
-      - name: Run the full native circuit and published physical assessment
-        id: route
-        continue-on-error: true
-        run: >-
-          bun experiments/full-board-ten/run-one.ts
-          "$FULL_BOARD_ROOT/lanes/candidate/cases/$BOARD-$COHORT.json"
-          "$FULL_BOARD_ROOT/results/$FULL_BOARD_CANDIDATE_LANE/$BOARD/$COHORT"
-      - name: Preserve case geometry and diagnostics
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          include-hidden-files: true
-          name: via-site-bounds-${{ matrix.lane }}-${{ matrix.board }}-${{ matrix.cohort }}-case-${{ github.run_attempt }}
-          path: .full-board-run/results/${{ matrix.lane }}/${{ matrix.board }}/${{ matrix.cohort }}
-          compression-level: 0
-          retention-days: 7
-          if-no-files-found: warn
+          python3 experiments/full-board-ten/prepare-via-site-bounds.py "$FULL_BOARD_ROOT" baseline "$BOARD" original
+          python3 experiments/full-board-ten/prepare-via-site-bounds.py "$FULL_BOARD_ROOT" source "$BOARD" original
+          python3 experiments/full-board-ten/prepare-via-site-bounds.py "$FULL_BOARD_ROOT" candidate "$BOARD" original
       - name: Preserve the frozen comparison identities
         if: always()
         run: |
-          python3 - <<'PY'
+          python3 - <<'PYTHON'
           import json, os, shutil
           from pathlib import Path
           controller = Path('experiments/full-board-ten')
           plan = json.loads((controller / 'via-site-bounds-plan.json').read_text())
-          lane = plan['lanes'][os.environ['FULL_BOARD_CANDIDATE_LANE']]
+          lane = plan['lanes']['bounds-fix']
           target = Path(os.environ['FULL_BOARD_ROOT']) / 'via-site-bounds/controller'
           target.mkdir(parents=True, exist_ok=True)
           for name in ['via-site-bounds-plan.json', lane['sourceMappingFile'], plan['pairedByteProofFile'], 'release.json', 'source-provenance.json', 'harness-provenance.json', 'baseline-run-plan.json', 'published-baseline-controller-handoff.json']:
             (target / name).parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(controller / name, target / name)
-          PY
-      - name: Preserve runtime, source and restoration proofs
+          PYTHON
+      - name: Run the original native circuit and published physical assessment
+        id: original
+        if: ${{ !cancelled() && steps.activate_original.outcome == 'success' }}
+        continue-on-error: true
+        run: >-
+          bun experiments/full-board-ten/run-one.ts
+          "$FULL_BOARD_ROOT/lanes/candidate/cases/$BOARD-original.json"
+          "$FULL_BOARD_ROOT/results/bounds-fix/$BOARD/original"
+      - name: Preserve original geometry and diagnostics
         if: always()
         uses: actions/upload-artifact@v4
         with:
           include-hidden-files: true
-          name: via-site-bounds-${{ matrix.lane }}-${{ matrix.board }}-${{ matrix.cohort }}-summary-${{ github.run_attempt }}
+          name: via-site-bounds-bounds-fix-${{ matrix.board }}-original-case-${{ github.run_attempt }}
+          path: .full-board-run/results/bounds-fix/${{ matrix.board }}/original
+          compression-level: 0
+          retention-days: 7
+          if-no-files-found: warn
+      - name: Preserve original runtime, source and restoration proofs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          include-hidden-files: true
+          name: via-site-bounds-bounds-fix-${{ matrix.board }}-original-summary-${{ github.run_attempt }}
           path: |
             .full-board-run/runtime-manifest.json
             .full-board-run/published-runtime-manifest.json
@@ -145,7 +151,46 @@ jobs:
             .full-board-run/via-site-bounds/*.json
             .full-board-run/via-site-bounds/runtime-guard.json.gz
             .full-board-run/via-site-bounds/controller
-            .full-board-run/lanes/candidate/cases/${{ matrix.board }}-${{ matrix.cohort }}.json
+            .full-board-run/lanes/candidate/cases/${{ matrix.board }}-original.json
+            .full-board-run/cases/assessment-helper-proof.json
+          retention-days: 7
+          if-no-files-found: warn
+      - name: Reactivate the verified overlay for the spaced circuit
+        id: activate_spaced
+        if: ${{ !cancelled() && matrix.board != 'h616' && steps.activate_original.outcome == 'success' }}
+        run: python3 experiments/full-board-ten/prepare-via-site-bounds.py "$FULL_BOARD_ROOT" candidate "$BOARD" spaced
+      - name: Run the spaced native circuit and published physical assessment
+        id: spaced
+        if: ${{ !cancelled() && steps.activate_spaced.outcome == 'success' }}
+        continue-on-error: true
+        run: >-
+          bun experiments/full-board-ten/run-one.ts
+          "$FULL_BOARD_ROOT/lanes/candidate/cases/$BOARD-spaced.json"
+          "$FULL_BOARD_ROOT/results/bounds-fix/$BOARD/spaced"
+      - name: Preserve spaced geometry and diagnostics
+        if: ${{ always() && matrix.board != 'h616' }}
+        uses: actions/upload-artifact@v4
+        with:
+          include-hidden-files: true
+          name: via-site-bounds-bounds-fix-${{ matrix.board }}-spaced-case-${{ github.run_attempt }}
+          path: .full-board-run/results/bounds-fix/${{ matrix.board }}/spaced
+          compression-level: 0
+          retention-days: 7
+          if-no-files-found: warn
+      - name: Preserve spaced runtime, source and restoration proofs
+        if: ${{ always() && matrix.board != 'h616' }}
+        uses: actions/upload-artifact@v4
+        with:
+          include-hidden-files: true
+          name: via-site-bounds-bounds-fix-${{ matrix.board }}-spaced-summary-${{ github.run_attempt }}
+          path: |
+            .full-board-run/runtime-manifest.json
+            .full-board-run/published-runtime-manifest.json
+            .full-board-run/candidate-runtime-manifest.json
+            .full-board-run/via-site-bounds/*.json
+            .full-board-run/via-site-bounds/runtime-guard.json.gz
+            .full-board-run/via-site-bounds/controller
+            .full-board-run/lanes/candidate/cases/${{ matrix.board }}-spaced.json
             .full-board-run/cases/assessment-helper-proof.json
           retention-days: 7
           if-no-files-found: warn

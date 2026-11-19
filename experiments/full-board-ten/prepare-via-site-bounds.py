@@ -96,16 +96,16 @@ root = args.root.resolve()
 controller = Path(__file__).resolve().parent
 plan = json.loads((controller / "via-site-bounds-plan.json").read_text())
 if plan["qualificationReady"] is not True:
-    raise RuntimeError("Reviewed source and exact autorouter mapping are pending; controller held")
+    raise RuntimeError("Remaining-nine regression awaits native pair attribution; controller held")
 lane = os.environ["FULL_BOARD_CANDIDATE_LANE"]
-assert set(plan["lanes"]) == {"feature-base", "bounds-fix"} and lane in plan["lanes"]
+assert set(plan["lanes"]) == {"bounds-fix"} and lane == "bounds-fix"
 lane_plan = plan["lanes"][lane]
 plan = {**plan, **lane_plan, "runtime": {**plan["runtime"], **lane_plan["runtime"]}}
 assert len(plan["source"]["repositories"]) == 2
 assert all(len(row["candidateCommit"]) == 40 for row in plan["source"]["repositories"])
-selected_cases = [case for case in plan["cases"] if case["board"] == args.board and case["cohort"] == args.cohort]
-assert len(selected_cases) == 1, "Case is outside the reviewed H616 spaced screen"
-assert plan["cases"] == [{"board": "h616", "cohort": "spaced", "expectedRoutableNets": 121}]
+selected_cases = [case for case in plan["cases"] if case["board"] == args.board]
+assert sum(case["cohort"] == args.cohort for case in selected_cases) == 1, "Case is outside the reviewed remaining-nine scope"
+assert len(plan["cases"]) == 9 and not any(case["board"] == "h616" and case["cohort"] == "spaced" for case in plan["cases"])
 assert set(plan["frozenFiles"]) == {"experiments/full-board-ten/" + name for name in plan["frozenHarnessFiles"]} | {plan["workflow"]}
 for name, digest in plan["frozenFiles"].items():
     assert sha(controller.parents[1] / name) == digest, f"Reviewed controller changed: {name}"
@@ -254,18 +254,25 @@ for row in mapping["unchangedSegments"]:
     assert original_segment == after[row["candidateStartByte"]:row["candidateEndByte"]]
     assert hashlib.sha256(original_segment).hexdigest() == row["sha256"]
 assert hashlib.sha256(after).hexdigest() == mapping["candidateAutorouterSha256"] == plan["runtime"]["candidateAutorouterSha256"]
-overlay.mkdir()
+# Reuse the verified overlay after the preceding cohort restored publication.
+reuse_overlay = overlay.exists()
+overlay.mkdir(exist_ok=True)
 files = []
 for row in autorouter["publishedFiles"]:
     target = overlay / row["path"]
-    target.parent.mkdir(parents=True, exist_ok=True)
-    if row["path"] == autorouter["entryRelative"]:
-        target.write_bytes(after)
-        files.append({**row, "bytes": len(after), "sha256": mapping["candidateAutorouterSha256"]})
+    expected = {**row, "bytes": len(after), "sha256": mapping["candidateAutorouterSha256"]} if row["path"] == autorouter["entryRelative"] else row
+    if reuse_overlay:
+        assert target.stat().st_size == expected["bytes"] and sha(target) == expected["sha256"]
     else:
-        os.link(original / row["path"], target)
-        files.append(row)
-(overlay / "node_modules").symlink_to(root / "autorouter-dependencies/node_modules")
+        target.parent.mkdir(parents=True, exist_ok=True)
+        if row["path"] == autorouter["entryRelative"]:
+            target.write_bytes(after)
+        else:
+            os.link(original / row["path"], target)
+    files.append(expected)
+if not reuse_overlay:
+    (overlay / "node_modules").symlink_to(root / "autorouter-dependencies/node_modules")
+assert (overlay / "node_modules").is_symlink() and (overlay / "node_modules").resolve() == (root / "autorouter-dependencies/node_modules").resolve()
 assert alias.is_symlink() and alias.resolve() == original
 alias.unlink()
 alias.symlink_to(overlay)

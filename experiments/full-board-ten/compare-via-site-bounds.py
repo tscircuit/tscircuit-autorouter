@@ -1,8 +1,8 @@
-"""Offline paired H616 spaced comparison; reads retained ZIPs, never routes or downloads.
+"""Offline remaining-nine native comparison; reads retained ZIPs, never routes or downloads.
 
 Usage: python3 compare-via-site-bounds.py REQUEST.json
 The request supplies candidateRunId, candidateHead, baselineHandoffPath, baselineHandoffSha256,
-outputPath, and feature-base/bounds-fix H616 spaced cases. Each case has board, cohort, nativeSourcePath,
+outputPath, and nine bounds-fix cases excluding H616 spaced. Each case has board, cohort, nativeSourcePath,
 baselineCaseProof, baselineSummaryProof, candidateCase and candidateSummary.
 Candidate archive references contain archivePath and metadataPath.
 """
@@ -384,9 +384,10 @@ def main(request_path):
     assert isinstance(request["candidateRunId"], int) and request["candidateRunId"] > 0
     assert re.fullmatch(r"[0-9a-f]{40}", request["candidateHead"])
     cases = request["cases"]
-    expected = {("feature-base", "h616", "spaced"), ("bounds-fix", "h616", "spaced")}
-    assert len(cases) == 2 and {(row["lane"], row["board"], row["cohort"]) for row in cases} == expected
-    assert plan["laneOrder"] == ["feature-base", "bounds-fix"] and set(plan["lanes"]) == set(plan["laneOrder"])
+    expected = {("bounds-fix", row["board"], row["cohort"]) for row in plan["cases"]}
+    assert len(expected) == 9 and ("bounds-fix", "h616", "spaced") not in expected
+    assert len(cases) == 9 and {(row["lane"], row["board"], row["cohort"]) for row in cases} == expected
+    assert plan["laneOrder"] == ["bounds-fix"] and set(plan["lanes"]) == set(plan["laneOrder"])
     paired_proof_bytes = (CONTROLLER / plan["pairedByteProofFile"]).read_bytes()
     assert digest(paired_proof_bytes) == plan["pairedByteProofSha256"]
     paired_proof = json.loads(paired_proof_bytes)
@@ -419,38 +420,28 @@ def main(request_path):
         context = {"request": request, "plan": selected_plan, "mapping": mapping, "mappingBytes": mapping_bytes,
                    "release": read_json(CONTROLLER / "release.json"), "provenance": read_json(CONTROLLER / "source-provenance.json"),
                    "controlArtifacts": {row["artifactId"]: row for row in handoff["artifacts"]}}
-        spec = next(row for row in cases if row["lane"] == lane)
-        rows.append(compare_case(spec, context))
+        for spec in cases:
+            assert spec["lane"] == lane
+            rows.append(compare_case(spec, context))
         mapping_hashes[lane] = digest(mapping_bytes)
         sources[lane] = mapping["source"]
-    assert rows[0]["sourceSha256"] == rows[1]["sourceSha256"]
-    assert rows[0]["nativeNamesSha256"] == rows[1]["nativeNamesSha256"]
-    before, after = rows[0]["candidate"], rows[1]["candidate"]
     comparable = all(row["comparisonAvailable"] for row in rows)
-    direct = {
-        "comparisonAvailable": comparable,
-        "beforeLane": "feature-base", "afterLane": "bounds-fix",
-        "connectedBefore": before["connectedNets"], "connectedAfter": after["connectedNets"],
-        "completeAndCleanBefore": before["completeAndClean"], "completeAndCleanAfter": after["completeAndClean"],
-        "nativeStaticGeometryEqual": before["geometry"] is not None and after["geometry"] is not None and before["geometry"]["sha256"] == after["geometry"]["sha256"],
-        "completeCopperRecordsEqual": before["copper"] == after["copper"] if before["copper"] is not None and after["copper"] is not None else None,
-        "gainedNativeNames": sorted(set(after["connectedNativeNames"]) - set(before["connectedNativeNames"])) if comparable else None,
-        "lostNativeNames": sorted(set(before["connectedNativeNames"]) - set(after["connectedNativeNames"])) if comparable else None,
-        "physicalFindingChanges": finding_changes(before["physicalFindingRecords"], after["physicalFindingRecords"]) if comparable else None,
-        "attribution": "Only this direct feature-base to bounds-fix comparison measures the four-expression correction. Published-to-feature results include existing PR3906 and shared Tiny support.",
+    totals = {
+        "requestedNets": sum(row["requestedNets"] for row in rows),
+        "publishedConnected": sum(row["baseline"]["connectedNets"] for row in rows) if comparable else None,
+        "candidateConnected": sum(row["candidate"]["connectedNets"] for row in rows) if comparable else None,
+        "gained": sum(len(row["gainedNativeNets"]) for row in rows) if comparable else None,
+        "lost": sum(len(row["lostNativeNets"]) for row in rows) if comparable else None,
     }
+    assert totals["requestedNets"] == plan["expectedRoutableNetsTotal"] == 2735
     result = {"schemaVersion": 2, "controlRun": CONTROL_RUN, "controlHead": CONTROL_HEAD,
               "candidateRun": request["candidateRunId"], "candidateHead": request["candidateHead"],
               "mappingSha256ByLane": mapping_hashes, "sourceByLane": sources, "pairedByteProofSha256": digest(paired_proof_bytes),
               "baselineArtifactHandoffSha256": digest(handoff_data), "baselineControllerHandoffSha256": digest(controller_handoff_data),
-              "authenticatedLanes": len(rows), "nativeNetsPerLane": 121,
-              "comparisonComplete": comparable, "lanes": rows, "boundsFixVsFeatureBase": direct,
-              "scope": "Two independent full H616 spaced lanes with identical native circuits/options/budgets and published assessment. Compare each to authenticated retained published3243, then attribute only the direct lane delta to the bounds correction. No speedup claim."}
+              "authenticatedCases": len(rows), "comparisonComplete": comparable, "cases": rows, "totals": totals,
+              "scope": "Remaining nine native cases versus authenticated retained published3243; H616 spaced is excluded. This is regression coverage for the combined existing feature plus bounds correction. Only the separate paired H616 run attributes the four-expression correction. No speedup claim."}
     Path(request["outputPath"]).write_text(json.dumps(result, indent=2) + "\n")
-    print(json.dumps({"comparisonComplete": comparable, "publishedConnected": rows[0]["baseline"]["connectedNets"],
-                      "featureBaseConnected": before["connectedNets"], "boundsFixConnected": after["connectedNets"],
-                      "directGained": len(direct["gainedNativeNames"]) if comparable else None,
-                      "directLost": len(direct["lostNativeNames"]) if comparable else None}))
+    print(json.dumps({"comparisonComplete": comparable, **totals}))
 
 
 if __name__ == "__main__":
