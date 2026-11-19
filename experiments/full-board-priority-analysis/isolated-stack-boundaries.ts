@@ -1,3 +1,4 @@
+import { validateNativeRequestConstraints } from "./validate-native-request-constraints"
 import { createHash } from "node:crypto"
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs"
 import { gunzipSync, gzipSync } from "node:zlib"
@@ -43,6 +44,14 @@ for (const selectedConnection of nativeConnections) {
   }
   solverParams.buses = []
   solverOptions.buses = []
+  // A one-request replay has one physical width. Resolve the original
+  // request's width explicitly because the legacy singleton path ignores it.
+  const selectedWidth = selectedConnection as typeof selectedConnection & { width?: number }
+  solverOptions.traceWidth = Math.max(
+    solverParams.minTraceWidth,
+    solverOptions.traceWidth ?? selectedWidth.nominalTraceWidth ?? selectedWidth.width ??
+      solverParams.nominalTraceWidth ?? solverParams.minTraceWidth,
+  )
   // No synthetic direction, preferred exit, fixed via, or layer guidance.
   const inputSha256 = createHash("sha256")
     .update(JSON.stringify({ solverParams, solverOptions }))
@@ -68,6 +77,13 @@ for (const selectedConnection of nativeConnections) {
           solverOptions.allowBlindAndBuriedVias ?? true,
       })
     : null
+  const requestConstraints = output
+    ? validateNativeRequestConstraints({
+        inputSrj: solverParams,
+        solverOptions,
+        traces: output.fanoutTraces,
+      })
+    : null
   const report = {
     connectionName: selectedConnection.name,
     inputSha256,
@@ -79,6 +95,8 @@ for (const selectedConnection of nativeConnections) {
     error: solver.error,
     validation: output?.validation ?? null,
     copperDrc,
+    requestConstraints,
+    resolvedTraceWidth: solverOptions.traceWidth,
     viaCount: copperDrc?.checkedViaCount ?? null,
     distinctDrills: output
       ? new Set(output.simpleRouteJson.traces.flatMap((trace) => trace.route.filter((point) => point.route_type === "via").map((point) => `${point.x},${point.y}`))).size
@@ -111,7 +129,7 @@ for (const selectedConnection of nativeConnections) {
     gzipSync(JSON.stringify(acceptedOutputs)),
   )
   console.log("ISOLATED_NATIVE_BOUNDARY_CASE", JSON.stringify(report))
-  if (copperDrc && !copperDrc.valid) {
+  if (copperDrc && (!copperDrc.valid || !requestConstraints?.valid)) {
     throw new Error(`Accepted native boundary connection failed copper DRC: ${selectedConnection.name}`)
   }
 }
