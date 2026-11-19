@@ -78,8 +78,8 @@
     "publishedAutorouterSha256": "44e2cc5a759e11f3982a876733d0f224dcb901c0ac0840e2ff1ec5be434a4285",
     "dependencyGraphPolicy": "Exact frozen3243 release and lockfiles from baseline14176a10; no independent transitive refresh."
   },
-  "qualificationReady": false,
-  "status": "HELD_REMAINING_NINE_REGRESSION",
+  "qualificationReady": true,
+  "status": "RELEASED: paired native correction verified; remaining-nine regression",
   "branch": "bench/remaining-nine-via-site-bounds-3243-20261119",
   "workflow": ".github/workflows/full-board-via-site-bounds.yml",
   "laneOrder": [
@@ -287,5 +287,13 @@
     "cohort": "spaced",
     "reason": "Already running in paired native run44494718529; reuse authenticated candidate result instead of rerouting."
   },
-  "releaseCondition": "HELD until root accepts paired H616 attribution and authorizes remaining-nine regression. No automatic release, push or dispatch."
+  "releaseCondition": "HELD until root accepts paired H616 attribution and authorizes remaining-nine regression. No automatic release, push or dispatch.",
+  "release": {
+    "at": "2026-11-19T09:32:26.344426+00:00",
+    "nativeRun": 44494718529,
+    "nativeComparisonSha256": "20dc6ac68316e6b9de8638ddd779c1396560edc2010d49e450537426ed86abcb",
+    "nativeResult": "53/121 retained; exact feature-base equals published; four bounds corrections remove three physical findings and introduce none",
+    "independentReviewSha256": "e51e8ddec305e2ea236c1a2155ff4baf79f6749c1eeb455ea3cbdc88c55a9466",
+    "rootReview": "PASS: exact9cases,5jobs,sequentialcohorts,publishedrestorationandverifiedoverlayreactivation; sourceandruntimeunchanged"
+  }
 }
