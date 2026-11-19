@@ -1,0 +1,95 @@
+name: Measure elimination of repeated declared-heading geometry
+on:
+  push:
+    branches: [codex/ddr2427-concerns-heading]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  native-experiment:
+    strategy:
+      fail-fast: false
+      matrix:
+        board: [icepi, imx6, glider]
+        variant: [heading]
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: 3258e97a80f0239c0c92de072c4cba5d559935ce
+          path: source
+      - uses: actions/download-artifact@v4
+        with:
+          name: published2427-${{ matrix.board }}
+          run-id: 44519377875
+          github-token: ${{ github.token }}
+          path: captured
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Prepare immutable source variants with identical dependencies
+        run: |
+          (cd source && bun install --frozen-lockfile --ignore-scripts)
+          python3 - <<'PYVARIANTS'
+          import json,subprocess
+          from pathlib import Path
+          root=Path.cwd()
+          variants=json.loads(Path('experiments/full-board-priority-analysis/concerns-heading-variants.json').read_text())
+          for name,revision in variants.items():
+              if name != '${{ matrix.variant }}': continue
+              subprocess.run(['git','fetch','--no-tags','origin',revision],cwd='source',check=True)
+              folder=root/'variants'/name
+              subprocess.run(['git','worktree','add','--detach',str(folder),revision],cwd='source',check=True)
+              (folder/'node_modules').symlink_to(root/'source/node_modules',target_is_directory=True)
+              (folder/'replay-stack-native.ts').write_bytes(Path('experiments/full-board-priority-analysis/replay-stack-native.ts').read_bytes())
+              (folder/'validate-native-request-constraints.ts').write_bytes(Path('experiments/full-board-priority-analysis/validate-native-request-constraints.ts').read_bytes())
+          PYVARIANTS
+      - name: Replay every subset with the same180second budget
+        env:
+          BOARD_ID: ${{ matrix.board }}
+          SELECTED_VARIANT: ${{ matrix.variant }}
+          NATIVE_FANOUT_BUDGET_MS: '900000'
+        run: |
+          python3 - <<'PYREPLAY'
+          import json,os,subprocess
+          from pathlib import Path
+          root=Path.cwd()
+          variants=json.loads(Path('experiments/full-board-priority-analysis/concerns-heading-variants.json').read_text())
+          for name,revision in variants.items():
+              if name != os.environ['SELECTED_VARIANT']: continue
+              output=root/'results'/name
+              completed=subprocess.run(['bun','replay-stack-native.ts',str(root/'captured'/os.environ['BOARD_ID']/'fanout-1-input.json.gz'),str(output)],cwd=root/'variants'/name)
+              print('STACK_VARIANT_EXIT',json.dumps({'variant':name,'revision':revision,'exitCode':completed.returncode}),flush=True)
+          PYREPLAY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: concerns-heading-${{ matrix.board }}-${{ matrix.variant }}
+          path: results
+          retention-days: 14
+      - name: Export native metrics and actual copper
+        if: always()
+        run: |
+          python3 - <<'PYEXPORT'
+          import base64,hashlib,io,json,zipfile
+          from pathlib import Path
+          rows=[]
+          for path in sorted(Path('results').glob('*/report.json')):
+              report=json.loads(path.read_text())
+              rows.append({'variant':path.parent.name,**report,'copperSha256':hashlib.sha256((path.parent/'best-traces.json').read_bytes()).hexdigest()})
+          print('STACK_NATIVE_SUBSETS_REPORT',json.dumps(rows,separators=(',',':')))
+          stream=io.BytesIO()
+          with zipfile.ZipFile(stream,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=9) as archive:
+              for path in Path('results').rglob('*'):
+                  if path.is_file():archive.writestr(str(path.relative_to('results')),path.read_bytes())
+          print('STACK_NATIVE_SUBSETS_EVIDENCE_BEGIN')
+          encoded=base64.b64encode(stream.getvalue()).decode()
+          for offset in range(0,len(encoded),8000):print(encoded[offset:offset+8000])
+          print('STACK_NATIVE_SUBSETS_EVIDENCE_END')
+          assert len(rows)==1
+          assert all(row['copperDrc']['valid'] and row['requestConstraints']['valid'] for row in rows)
+          PYEXPORT
+
