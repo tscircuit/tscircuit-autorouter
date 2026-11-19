@@ -1,0 +1,140 @@
+diff --git a/lib/compat/loadSerializedHyperGraph.ts b/lib/compat/loadSerializedHyperGraph.ts
+index afcafc7..d29eedd 100644
+--- a/lib/compat/loadSerializedHyperGraph.ts
++++ b/lib/compat/loadSerializedHyperGraph.ts
+@@ -179,6 +179,23 @@ const getRegionGeometry = (
+   }
+ }
+ 
++/** A region's via area fraction from `d.viaAreaFraction`; 1 when absent. */
++const getRegionViaAreaFraction = (
++  region: SerializedHyperGraph["regions"][number],
++): number => {
++  const viaAreaFraction = region.d?.viaAreaFraction
++  if (viaAreaFraction === undefined) return 1
++  if (
++    typeof viaAreaFraction !== "number" ||
++    !(viaAreaFraction > 0 && viaAreaFraction <= 1)
++  ) {
++    throw new Error(
++      `Region "${region.regionId}" has viaAreaFraction ${String(viaAreaFraction)}; expected a number in (0, 1]`,
++    )
++  }
++  return viaAreaFraction
++}
++
+ const getRegionAvailableZMask = (
+   region: SerializedHyperGraph["regions"][number],
+ ): number => {
+@@ -367,6 +384,7 @@ export const loadSerializedHyperGraph = (
+   const regionCenterX = new Float64Array(regionCount)
+   const regionCenterY = new Float64Array(regionCount)
+   const regionAvailableZMask = new Int32Array(regionCount)
++  const regionViaAreaFraction = new Float64Array(regionCount)
+   const regionNetId = new Int32Array(regionCount).fill(-1)
+   const hasSerializedRegionNetId = new Int8Array(regionCount)
+ 
+@@ -377,6 +395,7 @@ export const loadSerializedHyperGraph = (
+     regionCenterX[regionIndex] = geometry.centerX
+     regionCenterY[regionIndex] = geometry.centerY
+     regionAvailableZMask[regionIndex] = getRegionAvailableZMask(region)
++    regionViaAreaFraction[regionIndex] = getRegionViaAreaFraction(region)
+ 
+     const serializedRegionNetId = getSerializedRegionNetId(region)
+     if (serializedRegionNetId !== undefined) {
+@@ -559,6 +578,7 @@ export const loadSerializedHyperGraph = (
+     regionCenterX,
+     regionCenterY,
+     regionAvailableZMask,
++    regionViaAreaFraction,
+     regionMetadata,
+     portAngleForRegion1,
+     portAngleForRegion2,
+diff --git a/lib/computeRegionCost.ts b/lib/computeRegionCost.ts
+index aba9066..f53f501 100644
+--- a/lib/computeRegionCost.ts
++++ b/lib/computeRegionCost.ts
+@@ -17,6 +17,7 @@ export const computeRegionCost = (
+   regionAvailableZMask = 0,
+   minViaPadDiameter = DEFAULT_MIN_VIA_PAD_DIAMETER,
+   traceDensityCostFactor = 0,
++  viaAreaFraction = 1,
+ ) => {
+   const area = regionWidth * regionHeight
+ 
+@@ -29,6 +30,7 @@ export const computeRegionCost = (
+     regionAvailableZMask,
+     minViaPadDiameter,
+     traceDensityCostFactor,
++    viaAreaFraction,
+   )
+ }
+ 
+@@ -41,6 +43,7 @@ export const computeRegionCostForArea = (
+   regionAvailableZMask = 0,
+   minViaPadDiameter = DEFAULT_MIN_VIA_PAD_DIAMETER,
+   traceDensityCostFactor = 0,
++  viaAreaFraction = 1,
+ ) => {
+   const estViasRequired =
+     numSameLayerIntersections * 2 +
+@@ -63,7 +66,8 @@ export const computeRegionCostForArea = (
+     area
+ 
+   return (
+-    (estViasRequired * viaSizeWithMarginSq * traceCountMult) / area +
++    (estViasRequired * viaSizeWithMarginSq * traceCountMult) /
++      (area * viaAreaFraction) +
+     impossibleSingleLayerIntersectionCost +
+     traceDensityCost
+   )
+diff --git a/lib/core.ts b/lib/core.ts
+index 9e02c78..87f6073 100644
+--- a/lib/core.ts
++++ b/lib/core.ts
+@@ -117,6 +117,12 @@ export interface TinyHyperGraphTopology {
+    * behavior for manually-constructed topologies that do not provide this data.
+    */
+   regionAvailableZMask?: Int32Array
++  /**
++   * regionViaAreaFraction[regionId] is the share (0 to 1] of the region's area
++   * where a via can actually go. Only the via term of the region cost uses it;
++   * trace density and geometry keep the full region. Missing means 1.
++   */
++  regionViaAreaFraction?: Float64Array
+ 
+   /** regionMetadata[regionId] = metadata for the region */
+   regionMetadata?: any[]
+@@ -1298,6 +1304,7 @@ export class TinyHyperGraphSolver extends BaseSolver {
+       this.topology.regionAvailableZMask?.[regionId] ?? 0,
+       this.minViaPadDiameter,
+       this.TRACE_DENSITY_COST_FACTOR,
++      this.topology.regionViaAreaFraction?.[regionId] ?? 1,
+     )
+   }
+ 
+diff --git a/lib/poly.ts b/lib/poly.ts
+index 0e4e45a..0c6aa2a 100644
+--- a/lib/poly.ts
++++ b/lib/poly.ts
+@@ -673,6 +673,8 @@ export class PolyHyperGraphSolver extends TinyHyperGraphSolver {
+       traceCount,
+       this.topology.regionAvailableZMask?.[regionId] ?? 0,
+       this.minViaPadDiameter,
++      0,
++      this.topology.regionViaAreaFraction?.[regionId] ?? 1,
+     )
+   }
+ 
+diff --git a/lib/prepared/DenseRoutingWorkspace.ts b/lib/prepared/DenseRoutingWorkspace.ts
+index b13339a..a935f8c 100644
+--- a/lib/prepared/DenseRoutingWorkspace.ts
++++ b/lib/prepared/DenseRoutingWorkspace.ts
+@@ -144,6 +144,7 @@ export class DenseRoutingWorkspace {
+             mask,
+             row.via,
+             row.density,
++            t.regionViaAreaFraction?.[region] ?? 1,
+           ) - cache.existingRegionCost
+       }
+       this.rows[region] = row

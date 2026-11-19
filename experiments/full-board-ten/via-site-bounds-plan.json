@@ -1,0 +1,350 @@
+{
+  "schemaVersion": 1,
+  "runner": "blacksmith-8vcpu-ubuntu-2404-arm",
+  "budgetsMs": {
+    "capture": 900000,
+    "hardKill": 960000,
+    "assessment": 180000
+  },
+  "assessmentPolicy": "Restore exact published runtime before independent physical connectivity and geometry assessment; report gained/lost names and partial/deadline states.",
+  "baselineController": "14176a107694e38d70afc7e6653cf4bb6755e869",
+  "historicalBaseline": {
+    "runId": 44471059539,
+    "head": "14176a107694e38d70afc7e6653cf4bb6755e869",
+    "rerouted": false,
+    "scope": "Authenticated latest3243 baseline completed at224/2856 overall; this case53/121. No baseline reroute or timing-gain claim.",
+    "controllerHandoffSha256": "6fcf5354b6e8e0d91ff9fa9f35d608802d51e99ca4f2c615d7c22e2b04692a49",
+    "attempt": 1,
+    "controllerHandoffFile": "published-baseline-controller-handoff.json",
+    "resultHandoffPolicy": "After the latest baseline completes, the offline request supplies its authenticated result handoff and explicit SHA256. Every baseline archive is independently checked against pinned run/head/name/digest and exact latest runtime/source/case identities."
+  },
+  "jobTimeoutMinutes": 30,
+  "cases": [
+    {
+      "board": "h616",
+      "cohort": "spaced",
+      "expectedRoutableNets": 121
+    }
+  ],
+  "expectedRoutableNetsTotal": 121,
+  "nativePolicies": "Complete authentic H616 spaced circuit, all components and121 native demands; unchanged source/options/phase order/900soft960hard180assessment. No routing WASM.",
+  "observerPolicy": "Exact native baseline observer targets/hooks and15s circuit capture remain; no optional edge capture or observer changes.",
+  "runtime": {
+    "main": "0.0.3243",
+    "core": "0.0.2425",
+    "autorouter": "0.0.1133",
+    "eval": "0.0.1818",
+    "publishedCoreSha256": "889b3cf17684cec24dae36ebf7da06c85dd0713e093b2665b66de696bacb7f03",
+    "publishedAutorouterSha256": "44e2cc5a759e11f3982a876733d0f224dcb901c0ac0840e2ff1ec5be434a4285",
+    "dependencyGraphPolicy": "Exact frozen3243 release and lockfiles from baseline14176a10; no independent transitive refresh."
+  },
+  "qualificationReady": false,
+  "status": "HELD_ROOT_REVIEW",
+  "branch": "bench/h616-via-site-bounds-3243-20261119",
+  "workflow": ".github/workflows/full-board-via-site-bounds.yml",
+  "laneOrder": [
+    "feature-base",
+    "bounds-fix"
+  ],
+  "jobs": 2,
+  "maxParallel": 2,
+  "lanes": {
+    "feature-base": {
+      "experiment": "via-site-feature-base",
+      "runtime": {
+        "candidateAutorouterSha256": "3b5657650ca137415726691932958426e6106d8f0207a94c5893b7ef91f2044f"
+      },
+      "sourceMappingFile": "feature-base/via-site-source-mapping.json",
+      "sourceMappingToolFile": "createViaSiteOverlay.ts",
+      "sourceMappingSha256": "38d3acd6b5b38e8b8d5b868705efbd2b461b2deb3625056330ea0fe8b3712d22",
+      "sourceMappingToolSha256": "284be5ca9868d9e7da8b4003305caed3fa8caaafee3ca6ca4a473f8b18973c76",
+      "source": {
+        "repositories": [
+          {
+            "repository": "tscircuit/tiny-hypergraph",
+            "sourceBaseCommit": "f1fe8edcfb3dfde8fd644d09d81bad18743144b3",
+            "publishedBaseCommit": "f1fe8edcfb3dfde8fd644d09d81bad18743144b3",
+            "candidateCommit": "6a00f0406e131a2765179e052e45f07efd2f5ae7",
+            "productionPatchFile": "feature-base/tiny-via-site.patch",
+            "productionPatchSha256": "2bf25be19da380f6ebe23c677c0348cec3e9ce7f0302c8e059f5a3d8fb111b60",
+            "changedFiles": [
+              {
+                "relative": "lib/computeRegionCost.ts",
+                "beforeSha256": "92cf3311f42bdcb8daeee3c9628d0157fc5c0ee0ccc12c860da94fb5fbd3afe9",
+                "afterSha256": "3b91aa3e7d9e221d623ea6c369ee4fd67404e78903cf431bc67a7c941d7147f9"
+              },
+              {
+                "relative": "lib/compat/loadSerializedHyperGraph.ts",
+                "beforeSha256": "83a771ae576ac98db9a11f78e6aa50ce06b291a245a40aaef9efd9b4b37b6d93",
+                "afterSha256": "23b2abb1334de7d4804b476306674373a3486aae67dc5eb81d12d66126d716cb"
+              },
+              {
+                "relative": "lib/core.ts",
+                "beforeSha256": "dc4400b61c2feacd74560687b582706055fbe4808ef156865cd63016b7b9692b",
+                "afterSha256": "0cbfa9c9a306d9f1d3a7caf3c530888d62735c391b85eeefec30d5c855788e0d"
+              },
+              {
+                "relative": "lib/prepared/DenseRoutingWorkspace.ts",
+                "beforeSha256": "63752a8cfc8647d440e3a48906a5d7e8505847a6fa1169eebd7c462cf0965aa3",
+                "afterSha256": "257650714f31770696aa46a00702e41ae5fa9470f33a4fa8445180064f438267"
+              },
+              {
+                "relative": "lib/poly.ts",
+                "beforeSha256": "944e857237562d9aa42289c149f709f3c2824b470d07f60ab58c9a27a7d553ff",
+                "afterSha256": "cf8df984ed4cf5d7d26f1120f97c134d0488d64c1bf1fab790ffa3d4d3fa3f6c",
+                "runtimeAbsent": true,
+                "reason": "Regular Tiny poly module is not in published graph; separate tiny-hypergraph-poly pin untouched"
+              }
+            ]
+          },
+          {
+            "repository": "tscircuit/tscircuit-autorouter",
+            "sourceBaseCommit": "a4f2778cb40bbc9c147b95a4e48ef0b32f1dd08f",
+            "publishedBaseCommit": "a4f2778cb40bbc9c147b95a4e48ef0b32f1dd08f",
+            "candidateCommit": "6dd514c6f8a8624deec3ebc6e6db4f806cd797ca",
+            "productionPatchFile": "feature-base/autorouter-production.patch",
+            "productionPatchSha256": "dce22cfaff0b66932669a4538a87890870069d5bba5cb75b70c84fe6e0b6bfe2",
+            "changedFiles": [
+              {
+                "relative": "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver.ts",
+                "beforeSha256": "f7f9254152a9639b2cf4dc5b915c10bf4856d014178a99ef9e8c26fcbd6894da",
+                "afterSha256": "dc7b3e4d31631725d069d38d667f24c274e92a56b7978249a06ee9a141cd2152"
+              },
+              {
+                "relative": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts",
+                "beforeSha256": "ae83c7785c32a12580c4eb8859a7de6d93acb7220d863d93aa29dd3e8d3a1456",
+                "afterSha256": "6563f048503ffbec87570dfa3c9241cb2c34ac7fadc5a77ec368994479431eab"
+              },
+              {
+                "relative": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9RegionalFallbackSolver.ts",
+                "beforeSha256": "a21d1c1c07175216b88922acdb4dbe9911fa931dc255ed53ebe4e97654ad8863",
+                "afterSha256": "4dc27ddfe3021ac257b16947a101f8ae7f3c3f9f2919d1db8ec7d172b4680f39"
+              },
+              {
+                "relative": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/markNodesWithoutViaSite.ts",
+                "beforeSha256": null,
+                "afterSha256": "743182ee34f452740269300da7070bbff2ec96f5ab6cb830a1e2d48c762e98c0",
+                "newFile": true
+              },
+              {
+                "relative": "lib/types/capacity-mesh-types.ts",
+                "beforeSha256": "cb19b41d0ea6daf658d483d9cf66c45d7de4aa3bad84c1fbe82ec7df3e49a41f",
+                "afterSha256": "a7b47183be6d30b18cbe4ecac5b590ff0b9c6dcf6983256bfbc48bcef7e0f0ae"
+              },
+              {
+                "relative": "package.json",
+                "beforeSha256": "f1caf72cf0804be3dcafb895c5195fa7f278a11072938e38f6308c363e77bd65",
+                "afterSha256": "504a44c75029957daeab8b2cde630058e9e2e042e2ead826a501f247915ee4b6",
+                "runtimeMetadataUnchanged": true
+              }
+            ]
+          }
+        ]
+      },
+      "overlay": {
+        "schemaVersion": 2,
+        "replace": [
+          "computeRegionCost",
+          "computeRegionCostForArea",
+          "TinyHyperGraphSolver.computeRegionCostForRegion",
+          "DenseRoutingWorkspace.expand",
+          "loadSerializedHyperGraph",
+          "toSerializedRegionData",
+          "Pipeline9.nodeDimensionSubdivisionSolver.onSolved"
+        ],
+        "insert": [
+          "markNodesWithoutViaSite with newly exported existing geometry helpers"
+        ],
+        "publishedSourceMapSha256": "aec2fc7d644bba32defd9e4fa7ec957c78ffdeb37fbfe83d0de780bd5311d5f7"
+      }
+    },
+    "bounds-fix": {
+      "experiment": "via-site-bounds-fix",
+      "runtime": {
+        "candidateAutorouterSha256": "bf181f13ead7c377b3f6e127f5db81f2bd3a075e4e40e5bdfa8465e409bd056b"
+      },
+      "sourceMappingFile": "bounds-fix/via-site-source-mapping.json",
+      "sourceMappingToolFile": "createViaSiteOverlay.ts",
+      "sourceMappingSha256": "2d422e99a1e27eba1a92bfd191c24cc57db39b22cd5cd519f1e0ea1d1345d766",
+      "sourceMappingToolSha256": "284be5ca9868d9e7da8b4003305caed3fa8caaafee3ca6ca4a473f8b18973c76",
+      "source": {
+        "repositories": [
+          {
+            "repository": "tscircuit/tiny-hypergraph",
+            "sourceBaseCommit": "f1fe8edcfb3dfde8fd644d09d81bad18743144b3",
+            "publishedBaseCommit": "f1fe8edcfb3dfde8fd644d09d81bad18743144b3",
+            "candidateCommit": "6a00f0406e131a2765179e052e45f07efd2f5ae7",
+            "productionPatchFile": "bounds-fix/tiny-via-site.patch",
+            "productionPatchSha256": "2bf25be19da380f6ebe23c677c0348cec3e9ce7f0302c8e059f5a3d8fb111b60",
+            "changedFiles": [
+              {
+                "relative": "lib/computeRegionCost.ts",
+                "beforeSha256": "92cf3311f42bdcb8daeee3c9628d0157fc5c0ee0ccc12c860da94fb5fbd3afe9",
+                "afterSha256": "3b91aa3e7d9e221d623ea6c369ee4fd67404e78903cf431bc67a7c941d7147f9"
+              },
+              {
+                "relative": "lib/compat/loadSerializedHyperGraph.ts",
+                "beforeSha256": "83a771ae576ac98db9a11f78e6aa50ce06b291a245a40aaef9efd9b4b37b6d93",
+                "afterSha256": "23b2abb1334de7d4804b476306674373a3486aae67dc5eb81d12d66126d716cb"
+              },
+              {
+                "relative": "lib/core.ts",
+                "beforeSha256": "dc4400b61c2feacd74560687b582706055fbe4808ef156865cd63016b7b9692b",
+                "afterSha256": "0cbfa9c9a306d9f1d3a7caf3c530888d62735c391b85eeefec30d5c855788e0d"
+              },
+              {
+                "relative": "lib/prepared/DenseRoutingWorkspace.ts",
+                "beforeSha256": "63752a8cfc8647d440e3a48906a5d7e8505847a6fa1169eebd7c462cf0965aa3",
+                "afterSha256": "257650714f31770696aa46a00702e41ae5fa9470f33a4fa8445180064f438267"
+              },
+              {
+                "relative": "lib/poly.ts",
+                "beforeSha256": "944e857237562d9aa42289c149f709f3c2824b470d07f60ab58c9a27a7d553ff",
+                "afterSha256": "cf8df984ed4cf5d7d26f1120f97c134d0488d64c1bf1fab790ffa3d4d3fa3f6c",
+                "runtimeAbsent": true,
+                "reason": "Regular Tiny poly module is not in published graph; separate tiny-hypergraph-poly pin untouched"
+              }
+            ]
+          },
+          {
+            "repository": "tscircuit/tscircuit-autorouter",
+            "sourceBaseCommit": "a4f2778cb40bbc9c147b95a4e48ef0b32f1dd08f",
+            "publishedBaseCommit": "a4f2778cb40bbc9c147b95a4e48ef0b32f1dd08f",
+            "candidateCommit": "f362c3ab026c8498c9ccb4ed1b1144f650ee187a",
+            "productionPatchFile": "bounds-fix/autorouter-production.patch",
+            "productionPatchSha256": "437196dcf8c11cbaa99e67a9f4a294f98bf9b4db92192f9afa97c6eda00c3cfd",
+            "changedFiles": [
+              {
+                "relative": "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver.ts",
+                "beforeSha256": "f7f9254152a9639b2cf4dc5b915c10bf4856d014178a99ef9e8c26fcbd6894da",
+                "afterSha256": "dc7b3e4d31631725d069d38d667f24c274e92a56b7978249a06ee9a141cd2152"
+              },
+              {
+                "relative": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts",
+                "beforeSha256": "ae83c7785c32a12580c4eb8859a7de6d93acb7220d863d93aa29dd3e8d3a1456",
+                "afterSha256": "6563f048503ffbec87570dfa3c9241cb2c34ac7fadc5a77ec368994479431eab"
+              },
+              {
+                "relative": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9RegionalFallbackSolver.ts",
+                "beforeSha256": "a21d1c1c07175216b88922acdb4dbe9911fa931dc255ed53ebe4e97654ad8863",
+                "afterSha256": "4dc27ddfe3021ac257b16947a101f8ae7f3c3f9f2919d1db8ec7d172b4680f39"
+              },
+              {
+                "relative": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/markNodesWithoutViaSite.ts",
+                "beforeSha256": null,
+                "afterSha256": "452abf37c02b98496224360453ed9374a723d6f6055c28d6cd8813a608e2a56b",
+                "newFile": true
+              },
+              {
+                "relative": "lib/types/capacity-mesh-types.ts",
+                "beforeSha256": "cb19b41d0ea6daf658d483d9cf66c45d7de4aa3bad84c1fbe82ec7df3e49a41f",
+                "afterSha256": "af6c4667f44f7050006d62c02af66ca6b7cbd8d72647caf13d46011884024318"
+              },
+              {
+                "relative": "package.json",
+                "beforeSha256": "f1caf72cf0804be3dcafb895c5195fa7f278a11072938e38f6308c363e77bd65",
+                "afterSha256": "504a44c75029957daeab8b2cde630058e9e2e042e2ead826a501f247915ee4b6",
+                "runtimeMetadataUnchanged": true
+              }
+            ]
+          }
+        ]
+      },
+      "overlay": {
+        "schemaVersion": 2,
+        "replace": [
+          "computeRegionCost",
+          "computeRegionCostForArea",
+          "TinyHyperGraphSolver.computeRegionCostForRegion",
+          "DenseRoutingWorkspace.expand",
+          "loadSerializedHyperGraph",
+          "toSerializedRegionData",
+          "Pipeline9.nodeDimensionSubdivisionSolver.onSolved"
+        ],
+        "insert": [
+          "markNodesWithoutViaSite with newly exported existing geometry helpers"
+        ],
+        "publishedSourceMapSha256": "aec2fc7d644bba32defd9e4fa7ec957c78ffdeb37fbfe83d0de780bd5311d5f7"
+      }
+    }
+  },
+  "comparisonPolicy": "Authenticate both independent native lanes against retained published3243 H616spaced and directly against each other. Attribute only feature-base to bounds-fix change to the four-expression correction. Compare exact native names, static geometry, copper and physical findings; no timing-gain claim.",
+  "qualification": {
+    "scope": "Frozen paired mappings pass. Existing PR3906 plus merged Tiny6a00 shared; bounds-fix differs only four executable center-bound expressions and source comments. Awaiting root controller review and release.",
+    "nativeRoutingExecuted": false,
+    "dependencyInstallsExecutedLocally": false,
+    "artifactDownloadsExecutedLocally": false
+  },
+  "reuseController": "a12e3bb46195ab05f14db9af622979963643d0c5",
+  "pairedByteProofFile": "paired-byte-proof.json",
+  "pairedByteProofSha256": "8e5d97148a4d0bc836c344ccabdede0bdba353349913578cf28c61d3dc008839",
+  "frozenHarnessFiles": {
+    "autorouter-dependencies/bun.lock": "ec313c582c29c1e35bb31190151a5649198c177119d32fe311746c06e94e8c4e",
+    "autorouter-dependencies/package.json": "7b4c1ecf979432e472a4f0589ed49976a8a1323ff7bf651a5938ee7006b61360",
+    "baseline-run-plan.json": "0c6b5737f53e1f79f0416162dd8c6aff6d0feb64f6f0758d3b102199103af7b3",
+    "bootstrap.py": "23de25ac8960be89afc57ba27b0d3fddb6e65dba593024be59ec5073d266164d",
+    "bounds-fix/autorouter-production.patch": "437196dcf8c11cbaa99e67a9f4a294f98bf9b4db92192f9afa97c6eda00c3cfd",
+    "bounds-fix/tiny-via-site.patch": "2bf25be19da380f6ebe23c677c0348cec3e9ce7f0302c8e059f5a3d8fb111b60",
+    "bounds-fix/via-site-source-mapping.json": "2d422e99a1e27eba1a92bfd191c24cc57db39b22cd5cd519f1e0ea1d1345d766",
+    "calibrate-assessment.tsx": "efeb820cf34239465df53ce4c7932293e41a14dcab4bedb823c3bc60cc9627a0",
+    "checks-279/release.json": "23546aa355405845c7bfef27eccf16c615e6bc291364d5a27b424dfc85b13fc4",
+    "checks-279/runtime/bun.lock": "114d7fe776ebab33c07718281b2fbf646dbb9c8b7c4f54931e882ae8e1d756ef",
+    "checks-279/runtime/package.json": "103d453294e1bec590ada749a228da8274336f0552aab4888d2a22debb75aea0",
+    "compare-via-site-bounds.py": "95ff24cf29577c8e80a641992f15e7d134185548feb74aef975180fb5c212fca",
+    "createCoarseRoutingDiagnostics.ts": "dea45bba3386a9b55b7709834dff65468c421992808b406f54c6f9e556e8b618",
+    "createViaSiteOverlay.ts": "284be5ca9868d9e7da8b4003305caed3fa8caaafee3ca6ca4a473f8b18973c76",
+    "feature-base/autorouter-production.patch": "dce22cfaff0b66932669a4538a87890870069d5bba5cb75b70c84fe6e0b6bfe2",
+    "feature-base/tiny-via-site.patch": "2bf25be19da380f6ebe23c677c0348cec3e9ce7f0302c8e059f5a3d8fb111b60",
+    "feature-base/via-site-source-mapping.json": "38d3acd6b5b38e8b8d5b868705efbd2b461b2deb3625056330ea0fe8b3712d22",
+    "harness-provenance.json": "fc4b9191002e33b0561d50a2208d38848d81da0735869bb4f563bb9afe1b7405",
+    "package.json": "469e1861d1259cd1307bca324fb0d8ba0a67ea0323d4e728a35c90a2bc92bdf3",
+    "paired-byte-proof.json": "8e5d97148a4d0bc836c344ccabdede0bdba353349913578cf28c61d3dc008839",
+    "prepare-cases.ts": "b72e632e9c9152c9e5daedf1bb60daa5d86c33fdcc454f2a7825827d24124330",
+    "prepare-via-site-bounds.py": "8fcef6f4fa9d8e83fc0ada387d060ddc1e2c911d68954e7bcd1a7181c2dbcee4",
+    "published-baseline-controller-handoff.json": "6fcf5354b6e8e0d91ff9fa9f35d608802d51e99ca4f2c615d7c22e2b04692a49",
+    "published-release-provenance.json": "f3da70f1c717d53f78acaaccd9428e463d98e1d235792c1fd3340d6012449eba",
+    "release.json": "06ab74d85086008fda992c11fb391d37c37cb7dcd08ac5e1587ced492218f1ff",
+    "render-published.tsx": "e12628dfd6560dfb526392d22f8724c062054e54716d4439e5a91a397b2f231e",
+    "report.py": "3fa537cd30224a1bdf10a6acd7e293a0a5e8e187c1e2c210b0ed83370a153b5d",
+    "run-one.ts": "29317b2b5dc5dec8d51be8b83a747a80ce419f75beff328052f981caf7094670",
+    "runtime/bun.lock": "1a539e10575d08ee53d4ea289ed9b56975129123336ba552ff0792fb8bba97e2",
+    "runtime/package.json": "ccd64599a0851ee1ed7b4c8ec3c18487f7eab6b2ffec7920bc39b007bae12bdb",
+    "source-provenance.json": "bd24be29c5fdd5ae68ce15c5b2bc50f172ecdd325dcc1b57a80ec653d12570fb",
+    "tsconfig.json": "2e881577c63bb6b62d14abd319240bbc6ae5e206ecb007dae80ab3ec922293c7"
+  },
+  "frozenFiles": {
+    "experiments/full-board-ten/autorouter-dependencies/bun.lock": "ec313c582c29c1e35bb31190151a5649198c177119d32fe311746c06e94e8c4e",
+    "experiments/full-board-ten/autorouter-dependencies/package.json": "7b4c1ecf979432e472a4f0589ed49976a8a1323ff7bf651a5938ee7006b61360",
+    "experiments/full-board-ten/baseline-run-plan.json": "0c6b5737f53e1f79f0416162dd8c6aff6d0feb64f6f0758d3b102199103af7b3",
+    "experiments/full-board-ten/bootstrap.py": "23de25ac8960be89afc57ba27b0d3fddb6e65dba593024be59ec5073d266164d",
+    "experiments/full-board-ten/bounds-fix/autorouter-production.patch": "437196dcf8c11cbaa99e67a9f4a294f98bf9b4db92192f9afa97c6eda00c3cfd",
+    "experiments/full-board-ten/bounds-fix/tiny-via-site.patch": "2bf25be19da380f6ebe23c677c0348cec3e9ce7f0302c8e059f5a3d8fb111b60",
+    "experiments/full-board-ten/bounds-fix/via-site-source-mapping.json": "2d422e99a1e27eba1a92bfd191c24cc57db39b22cd5cd519f1e0ea1d1345d766",
+    "experiments/full-board-ten/calibrate-assessment.tsx": "efeb820cf34239465df53ce4c7932293e41a14dcab4bedb823c3bc60cc9627a0",
+    "experiments/full-board-ten/checks-279/release.json": "23546aa355405845c7bfef27eccf16c615e6bc291364d5a27b424dfc85b13fc4",
+    "experiments/full-board-ten/checks-279/runtime/bun.lock": "114d7fe776ebab33c07718281b2fbf646dbb9c8b7c4f54931e882ae8e1d756ef",
+    "experiments/full-board-ten/checks-279/runtime/package.json": "103d453294e1bec590ada749a228da8274336f0552aab4888d2a22debb75aea0",
+    "experiments/full-board-ten/compare-via-site-bounds.py": "95ff24cf29577c8e80a641992f15e7d134185548feb74aef975180fb5c212fca",
+    "experiments/full-board-ten/createCoarseRoutingDiagnostics.ts": "dea45bba3386a9b55b7709834dff65468c421992808b406f54c6f9e556e8b618",
+    "experiments/full-board-ten/createViaSiteOverlay.ts": "284be5ca9868d9e7da8b4003305caed3fa8caaafee3ca6ca4a473f8b18973c76",
+    "experiments/full-board-ten/feature-base/autorouter-production.patch": "dce22cfaff0b66932669a4538a87890870069d5bba5cb75b70c84fe6e0b6bfe2",
+    "experiments/full-board-ten/feature-base/tiny-via-site.patch": "2bf25be19da380f6ebe23c677c0348cec3e9ce7f0302c8e059f5a3d8fb111b60",
+    "experiments/full-board-ten/feature-base/via-site-source-mapping.json": "38d3acd6b5b38e8b8d5b868705efbd2b461b2deb3625056330ea0fe8b3712d22",
+    "experiments/full-board-ten/harness-provenance.json": "fc4b9191002e33b0561d50a2208d38848d81da0735869bb4f563bb9afe1b7405",
+    "experiments/full-board-ten/package.json": "469e1861d1259cd1307bca324fb0d8ba0a67ea0323d4e728a35c90a2bc92bdf3",
+    "experiments/full-board-ten/paired-byte-proof.json": "8e5d97148a4d0bc836c344ccabdede0bdba353349913578cf28c61d3dc008839",
+    "experiments/full-board-ten/prepare-cases.ts": "b72e632e9c9152c9e5daedf1bb60daa5d86c33fdcc454f2a7825827d24124330",
+    "experiments/full-board-ten/prepare-via-site-bounds.py": "8fcef6f4fa9d8e83fc0ada387d060ddc1e2c911d68954e7bcd1a7181c2dbcee4",
+    "experiments/full-board-ten/published-baseline-controller-handoff.json": "6fcf5354b6e8e0d91ff9fa9f35d608802d51e99ca4f2c615d7c22e2b04692a49",
+    "experiments/full-board-ten/published-release-provenance.json": "f3da70f1c717d53f78acaaccd9428e463d98e1d235792c1fd3340d6012449eba",
+    "experiments/full-board-ten/release.json": "06ab74d85086008fda992c11fb391d37c37cb7dcd08ac5e1587ced492218f1ff",
+    "experiments/full-board-ten/render-published.tsx": "e12628dfd6560dfb526392d22f8724c062054e54716d4439e5a91a397b2f231e",
+    "experiments/full-board-ten/report.py": "3fa537cd30224a1bdf10a6acd7e293a0a5e8e187c1e2c210b0ed83370a153b5d",
+    "experiments/full-board-ten/run-one.ts": "29317b2b5dc5dec8d51be8b83a747a80ce419f75beff328052f981caf7094670",
+    "experiments/full-board-ten/runtime/bun.lock": "1a539e10575d08ee53d4ea289ed9b56975129123336ba552ff0792fb8bba97e2",
+    "experiments/full-board-ten/runtime/package.json": "ccd64599a0851ee1ed7b4c8ec3c18487f7eab6b2ffec7920bc39b007bae12bdb",
+    "experiments/full-board-ten/source-provenance.json": "bd24be29c5fdd5ae68ce15c5b2bc50f172ecdd325dcc1b57a80ec653d12570fb",
+    "experiments/full-board-ten/tsconfig.json": "2e881577c63bb6b62d14abd319240bbc6ae5e206ecb007dae80ab3ec922293c7",
+    ".github/workflows/full-board-via-site-bounds.yml": "6381ea78a9fedce93a4dd660f0dbc6c4e71fdeed6b8f39469255e9ebf1cc515a"
+  }
+}

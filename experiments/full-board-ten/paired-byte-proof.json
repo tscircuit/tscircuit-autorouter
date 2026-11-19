@@ -1,0 +1,28 @@
+{
+  "passed": true,
+  "sharedTinyCommit": "6a00f0406e131a2765179e052e45f07efd2f5ae7",
+  "replacementSpansIdentical": 7,
+  "changedInsertedSpans": 1,
+  "executableChanges": [
+    {
+      "before": "minX: node.center.x - node.width / 2 + viaDiameter / 2",
+      "after": "minX: node.center.x - node.width / 2"
+    },
+    {
+      "before": "maxX: node.center.x + node.width / 2 - viaDiameter / 2",
+      "after": "maxX: node.center.x + node.width / 2"
+    },
+    {
+      "before": "minY: node.center.y - node.height / 2 + viaDiameter / 2",
+      "after": "minY: node.center.y - node.height / 2"
+    },
+    {
+      "before": "maxY: node.center.y + node.height / 2 - viaDiameter / 2",
+      "after": "maxY: node.center.y + node.height / 2"
+    }
+  ],
+  "completeBundlesEqualAfterExactlyFourBoundEdits": true,
+  "outsideMappedPublishedBytesUnchangedBothLanes": true,
+  "moduleImported": false,
+  "nativeRoutingExecuted": false
+}

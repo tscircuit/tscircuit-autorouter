@@ -1,0 +1,419 @@
+{
+  "schemaVersion": 2,
+  "passed": true,
+  "sourceFrozen": true,
+  "lane": "bounds-fix",
+  "originalAutorouterSha256": "44e2cc5a759e11f3982a876733d0f224dcb901c0ac0840e2ff1ec5be434a4285",
+  "candidateAutorouterSha256": "bf181f13ead7c377b3f6e127f5db81f2bd3a075e4e40e5bdfa8465e409bd056b",
+  "sourceMapSha256": "aec2fc7d644bba32defd9e4fa7ec957c78ffdeb37fbfe83d0de780bd5311d5f7",
+  "source": {
+    "repositories": [
+      {
+        "repository": "tscircuit/tiny-hypergraph",
+        "sourceBaseCommit": "f1fe8edcfb3dfde8fd644d09d81bad18743144b3",
+        "publishedBaseCommit": "f1fe8edcfb3dfde8fd644d09d81bad18743144b3",
+        "candidateCommit": "6a00f0406e131a2765179e052e45f07efd2f5ae7",
+        "productionPatchFile": "bounds-fix/tiny-via-site.patch",
+        "productionPatchSha256": "2bf25be19da380f6ebe23c677c0348cec3e9ce7f0302c8e059f5a3d8fb111b60",
+        "changedFiles": [
+          {
+            "relative": "lib/computeRegionCost.ts",
+            "beforeSha256": "92cf3311f42bdcb8daeee3c9628d0157fc5c0ee0ccc12c860da94fb5fbd3afe9",
+            "afterSha256": "3b91aa3e7d9e221d623ea6c369ee4fd67404e78903cf431bc67a7c941d7147f9"
+          },
+          {
+            "relative": "lib/compat/loadSerializedHyperGraph.ts",
+            "beforeSha256": "83a771ae576ac98db9a11f78e6aa50ce06b291a245a40aaef9efd9b4b37b6d93",
+            "afterSha256": "23b2abb1334de7d4804b476306674373a3486aae67dc5eb81d12d66126d716cb"
+          },
+          {
+            "relative": "lib/core.ts",
+            "beforeSha256": "dc4400b61c2feacd74560687b582706055fbe4808ef156865cd63016b7b9692b",
+            "afterSha256": "0cbfa9c9a306d9f1d3a7caf3c530888d62735c391b85eeefec30d5c855788e0d"
+          },
+          {
+            "relative": "lib/prepared/DenseRoutingWorkspace.ts",
+            "beforeSha256": "63752a8cfc8647d440e3a48906a5d7e8505847a6fa1169eebd7c462cf0965aa3",
+            "afterSha256": "257650714f31770696aa46a00702e41ae5fa9470f33a4fa8445180064f438267"
+          },
+          {
+            "relative": "lib/poly.ts",
+            "beforeSha256": "944e857237562d9aa42289c149f709f3c2824b470d07f60ab58c9a27a7d553ff",
+            "afterSha256": "cf8df984ed4cf5d7d26f1120f97c134d0488d64c1bf1fab790ffa3d4d3fa3f6c",
+            "runtimeAbsent": true,
+            "reason": "Regular Tiny poly module is not in published graph; separate tiny-hypergraph-poly pin untouched"
+          }
+        ]
+      },
+      {
+        "repository": "tscircuit/tscircuit-autorouter",
+        "sourceBaseCommit": "a4f2778cb40bbc9c147b95a4e48ef0b32f1dd08f",
+        "publishedBaseCommit": "a4f2778cb40bbc9c147b95a4e48ef0b32f1dd08f",
+        "candidateCommit": "f362c3ab026c8498c9ccb4ed1b1144f650ee187a",
+        "productionPatchFile": "bounds-fix/autorouter-production.patch",
+        "productionPatchSha256": "437196dcf8c11cbaa99e67a9f4a294f98bf9b4db92192f9afa97c6eda00c3cfd",
+        "changedFiles": [
+          {
+            "relative": "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver.ts",
+            "beforeSha256": "f7f9254152a9639b2cf4dc5b915c10bf4856d014178a99ef9e8c26fcbd6894da",
+            "afterSha256": "dc7b3e4d31631725d069d38d667f24c274e92a56b7978249a06ee9a141cd2152"
+          },
+          {
+            "relative": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts",
+            "beforeSha256": "ae83c7785c32a12580c4eb8859a7de6d93acb7220d863d93aa29dd3e8d3a1456",
+            "afterSha256": "6563f048503ffbec87570dfa3c9241cb2c34ac7fadc5a77ec368994479431eab"
+          },
+          {
+            "relative": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9RegionalFallbackSolver.ts",
+            "beforeSha256": "a21d1c1c07175216b88922acdb4dbe9911fa931dc255ed53ebe4e97654ad8863",
+            "afterSha256": "4dc27ddfe3021ac257b16947a101f8ae7f3c3f9f2919d1db8ec7d172b4680f39"
+          },
+          {
+            "relative": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/markNodesWithoutViaSite.ts",
+            "beforeSha256": null,
+            "afterSha256": "452abf37c02b98496224360453ed9374a723d6f6055c28d6cd8813a608e2a56b",
+            "newFile": true
+          },
+          {
+            "relative": "lib/types/capacity-mesh-types.ts",
+            "beforeSha256": "cb19b41d0ea6daf658d483d9cf66c45d7de4aa3bad84c1fbe82ec7df3e49a41f",
+            "afterSha256": "af6c4667f44f7050006d62c02af66ca6b7cbd8d72647caf13d46011884024318"
+          },
+          {
+            "relative": "package.json",
+            "beforeSha256": "f1caf72cf0804be3dcafb895c5195fa7f278a11072938e38f6308c363e77bd65",
+            "afterSha256": "504a44c75029957daeab8b2cde630058e9e2e042e2ead826a501f247915ee4b6",
+            "runtimeMetadataUnchanged": true
+          }
+        ]
+      }
+    ]
+  },
+  "spans": [
+    {
+      "kind": "replace",
+      "name": "computeRegionCost",
+      "sourceRepository": "tscircuit/tiny-hypergraph",
+      "sourceRelative": "lib/computeRegionCost.ts",
+      "startCharacter": 1982644,
+      "endCharacter": 1982693,
+      "startByte": 1982703,
+      "endByte": 1982752,
+      "originalText": "(e,t,n,o,i,r,s=0,a=.3,c=0)=>dJ(e*t,n,o,i,r,s,a,c)",
+      "replacementText": "(binding0,binding1,binding2,binding3,binding4,binding5,binding6=0,binding7=.3,binding8=0,binding9=1)=>dJ(binding0*binding1,binding2,binding3,binding4,binding5,binding6,binding7,binding8,binding9)",
+      "originalSha256": "1cc9f4c8c6e624a4ec9ad4846b88197145f708167ea335ce13d3b253a8d4571e",
+      "replacementSha256": "f6a21cfa701e3c4df7739a43b107801f7cae2e1ef9241f0e524b95572814ede7",
+      "compiledBaseEquivalent": true,
+      "baseCanonicalSha256": "0c72ac18fd5aa9a85060059c7ed81f5ec716ffc25f34aa27efe228db634eece9",
+      "aliases": {
+        "computeRegionCostForArea": "dJ"
+      }
+    },
+    {
+      "kind": "replace",
+      "name": "computeRegionCostForArea",
+      "sourceRepository": "tscircuit/tiny-hypergraph",
+      "sourceRelative": "lib/computeRegionCost.ts",
+      "startCharacter": 1982697,
+      "endCharacter": 1982795,
+      "startByte": 1982756,
+      "endByte": 1982854,
+      "originalText": "(e,t,n,o,i,r=0,s=.3,a=0)=>(2*t+1*n+1*o)*(s+.15)**2*(1+i/5)/e+(lJ(r)?10*t:0)+a*(i/uJ(r))**2*.1**2/e",
+      "replacementText": "(binding0,binding1,binding2,binding3,binding4,binding5=0,binding6=.3,binding7=0,binding8=1)=>(2*binding1+1*binding2+1*binding3)*(binding6+.15)**2*(1+binding4/5)/(binding0*binding8)+(lJ(binding5)?10*binding1:0)+binding7*(binding4/uJ(binding5))**2*.1**2/binding0",
+      "originalSha256": "b62b05fd880975672dd8bbe2fa215576f31cd2b4f67c5d3a7d14891c75e2f758",
+      "replacementSha256": "13ba016dcd7393886d54e88e21f3048a373edfbfb497d24cfc7961285b3fd814",
+      "compiledBaseEquivalent": true,
+      "baseCanonicalSha256": "942afd7c35d4efda8fba367def0546276ec200d7c71f1073a418131a2fff56bc",
+      "aliases": {
+        "isKnownSingleLayerMask": "lJ",
+        "countAvailableLayers": "uJ"
+      }
+    },
+    {
+      "kind": "replace",
+      "name": "TinyHyperGraphSolver.computeRegionCostForRegion",
+      "sourceRepository": "tscircuit/tiny-hypergraph",
+      "sourceRelative": "lib/core.ts",
+      "startCharacter": 2022846,
+      "endCharacter": 2023059,
+      "startByte": 2022905,
+      "endByte": 2023118,
+      "originalText": "computeRegionCostForRegion(e,t,n,o,i){return hJ(this.topology.regionWidth[e],this.topology.regionHeight[e],t,n,o,i,this.topology.regionAvailableZMask?.[e]??0,this.minViaPadDiameter,this.TRACE_DENSITY_COST_FACTOR)}",
+      "replacementText": "computeRegionCostForRegion(binding0,binding1,binding2,binding3,binding4){return hJ(this.topology.regionWidth[binding0],this.topology.regionHeight[binding0],binding1,binding2,binding3,binding4,this.topology.regionAvailableZMask?.[binding0]??0,this.minViaPadDiameter,this.TRACE_DENSITY_COST_FACTOR,this.topology.regionViaAreaFraction?.[binding0]??1)}",
+      "originalSha256": "e2ae9382208139e1ad8cdeacc880425472b72339f3f2c7bc16b6471241dcbf33",
+      "replacementSha256": "5be7f08feeab9d40cfc5d8a03ed13d93adb5679700ee44bf0b67147aed288f33",
+      "compiledBaseEquivalent": true,
+      "baseCanonicalSha256": "5308519a555e015bffe3ab78f77468d73438481d23278d44791b92115e8391c8",
+      "aliases": {
+        "computeRegionCost": "hJ"
+      }
+    },
+    {
+      "kind": "replace",
+      "name": "DenseRoutingWorkspace.expand",
+      "sourceRepository": "tscircuit/tiny-hypergraph",
+      "sourceRelative": "lib/prepared/DenseRoutingWorkspace.ts",
+      "startCharacter": 2079275,
+      "endCharacter": 2081337,
+      "startByte": 2079334,
+      "endByte": 2081396,
+      "originalText": "expand(e,t,n){const{topology:o,problem:i,state:r}=e,s=t.nextRegionId,a=r.regionIntersectionCaches[s];let c=this.rows[s];if(!c||c.cache!==a||c.via!==e.minViaPadDiameter||c.density!==e.TRACE_DENSITY_COST_FACTOR){const t=o.regionAvailableZMask?.[s]??0;c={cache:a,via:e.minViaPadDiameter,density:e.TRACE_DENSITY_COST_FACTOR,single:t>0&&!(t&t-1),costs:new Float64Array(2*a.netIds.length+2)};for(let e=0;e<c.costs.length;e++)c.costs[e]=hJ(o.regionWidth[s],o.regionHeight[s],a.existingSameLayerIntersections,a.existingCrossingLayerIntersections+e,a.existingEntryExitLayerChanges,a.existingSegmentCount+1,t,c.via,c.density)-a.existingRegionCost;this.rows[s]=c}const{neighbors:l,next:h,nextRegions:d,hops:u}=n,p=r.candidateBestCostByHopId,m=r.candidateBestCostGenerationByHopId,g=r.candidateBestCostGeneration,f=r.currentRouteNetId,y=r.candidateQueue,_=this.geometry.rowOffsets[2*t.portId+(o.incidentPortRegion[t.portId][0]===s?0:1)],b=this.geometry.distances,x=o.incidentPortRegion[t.portId][0]===s?o.portAngleForRegion1[t.portId]:o.portAngleForRegion2?.[t.portId]??o.portAngleForRegion1[t.portId],v=o.portZ[t.portId],{netIds:I,lesserAngles:S,greaterAngles:C,layerMasks:P}=a,M=r.regionCongestionCost[s],w=t.g+M;let N=n.head,R=-1;for(;-1!==N;){const a=N;N=h[a];const T=R;R=a;const E=l[a];if(E===r.goalPortId)return void e.onPathFound(t);if(E===t.portId)continue;const A=u[a];if(y.isClosedHopId(A)){-1===T?n.head=N:h[T]=N,R=T;continue}const O=m[A]===g?p[A]:1/0;if(t.g>=O)continue;const k=b[_+a]*e.DISTANCE_TO_COST,D=i.portPenalty?.[E]??0;if(w+D+k>=O)continue;const z=o.portZ[E],L=o.incidentPortRegion[E][0]===s?o.portAngleForRegion1[E]:o.portAngleForRegion2?.[E]??o.portAngleForRegion1[E],B=Math.min(x,L),F=Math.max(x,L),j=1<<v|1<<z;let Y=0,X=0;for(let e=0;e<I.length;e++)I[e]!==f&&(B<S[e]&&S[e]<F)!=(B<C[e]&&C[e]<F)&&(j&P[e]?Y++:X++);if(Y>0&&c.single)continue;const $=t.g+c.costs[2*Y+X+(v!==z?1:0)]+M+D+k;if(!Number.isFinite($)||$>=O)continue;const V=e.computeH(E);m[A]=g,p[A]=$,y.queue({hopId:A,prevRegionId:s,nextRegionId:d[a],portId:E,g:$,h:V,f:$+V,prevCandidate:t})}}",
+      "replacementText": "expand(binding0,binding1,binding2){const{topology:binding3,problem:binding4,state:binding5}=binding0,binding6=binding1.nextRegionId,binding7=binding5.regionIntersectionCaches[binding6];let binding8=this.rows[binding6];if(!binding8||binding8.cache!==binding7||binding8.via!==binding0.minViaPadDiameter||binding8.density!==binding0.TRACE_DENSITY_COST_FACTOR){const binding1=binding3.regionAvailableZMask?.[binding6]??0;binding8={cache:binding7,via:binding0.minViaPadDiameter,density:binding0.TRACE_DENSITY_COST_FACTOR,single:binding1>0&&!(binding1&binding1-1),costs:new Float64Array(2*binding7.netIds.length+2)};for(let binding0=0;binding0<binding8.costs.length;binding0++)binding8.costs[binding0]=hJ(binding3.regionWidth[binding6],binding3.regionHeight[binding6],binding7.existingSameLayerIntersections,binding7.existingCrossingLayerIntersections+binding0,binding7.existingEntryExitLayerChanges,binding7.existingSegmentCount+1,binding1,binding8.via,binding8.density,binding3.regionViaAreaFraction?.[binding6]??1)-binding7.existingRegionCost;this.rows[binding6]=binding8}const{neighbors:binding9,next:binding10,nextRegions:binding11,hops:binding12}=binding2,binding13=binding5.candidateBestCostByHopId,binding14=binding5.candidateBestCostGenerationByHopId,binding15=binding5.candidateBestCostGeneration,binding16=binding5.currentRouteNetId,binding17=binding5.candidateQueue,binding18=this.geometry.rowOffsets[2*binding1.portId+(binding3.incidentPortRegion[binding1.portId][0]===binding6?0:1)],binding19=this.geometry.distances,binding20=binding3.incidentPortRegion[binding1.portId][0]===binding6?binding3.portAngleForRegion1[binding1.portId]:binding3.portAngleForRegion2?.[binding1.portId]??binding3.portAngleForRegion1[binding1.portId],binding21=binding3.portZ[binding1.portId],{netIds:binding22,lesserAngles:binding23,greaterAngles:binding24,layerMasks:binding25}=binding7,binding26=binding5.regionCongestionCost[binding6],binding27=binding1.g+binding26;let binding28=binding2.head,binding29=-1;for(;-1!==binding28;){const binding7=binding28;binding28=binding10[binding7];const binding30=binding29;binding29=binding7;const binding31=binding9[binding7];if(binding31===binding5.goalPortId)return void binding0.onPathFound(binding1);if(binding31===binding1.portId)continue;const binding32=binding12[binding7];if(binding17.isClosedHopId(binding32)){-1===binding30?binding2.head=binding28:binding10[binding30]=binding28,binding29=binding30;continue}const binding33=binding14[binding32]===binding15?binding13[binding32]:1/0;if(binding1.g>=binding33)continue;const binding34=binding19[binding18+binding7]*binding0.DISTANCE_TO_COST,binding35=binding4.portPenalty?.[binding31]??0;if(binding27+binding35+binding34>=binding33)continue;const binding36=binding3.portZ[binding31],binding37=binding3.incidentPortRegion[binding31][0]===binding6?binding3.portAngleForRegion1[binding31]:binding3.portAngleForRegion2?.[binding31]??binding3.portAngleForRegion1[binding31],binding38=Math.min(binding20,binding37),binding39=Math.max(binding20,binding37),binding40=1<<binding21|1<<binding36;let binding41=0,binding42=0;for(let binding0=0;binding0<binding22.length;binding0++)binding22[binding0]!==binding16&&(binding38<binding23[binding0]&&binding23[binding0]<binding39)!=(binding38<binding24[binding0]&&binding24[binding0]<binding39)&&(binding40&binding25[binding0]?binding41++:binding42++);if(binding41>0&&binding8.single)continue;const binding43=binding1.g+binding8.costs[2*binding41+binding42+(binding21!==binding36?1:0)]+binding26+binding35+binding34;if(!Number.isFinite(binding43)||binding43>=binding33)continue;const binding44=binding0.computeH(binding31);binding14[binding32]=binding15,binding13[binding32]=binding43,binding17.queue({hopId:binding32,prevRegionId:binding6,nextRegionId:binding11[binding7],portId:binding31,g:binding43,h:binding44,f:binding43+binding44,prevCandidate:binding1})}}",
+      "originalSha256": "a6e8f03d36c783b2814b8539a055141ed9ca6af12b52c67675e7874f01fb2427",
+      "replacementSha256": "f2f62a81eeaf5a6d4a0efd3c7c84b44f928e27855b43f774e33580733486af16",
+      "compiledBaseEquivalent": true,
+      "baseCanonicalSha256": "cc3659c0b0cb5b45289483dda35b9935cedea62092c11b9f2cc7fcce68d2364a",
+      "aliases": {
+        "computeRegionCost": "hJ"
+      }
+    },
+    {
+      "kind": "replace",
+      "name": "loadSerializedHyperGraph",
+      "sourceRepository": "tscircuit/tiny-hypergraph",
+      "sourceRelative": "lib/compat/loadSerializedHyperGraph.ts",
+      "startCharacter": 2086633,
+      "endCharacter": 2091975,
+      "startByte": 2086692,
+      "endByte": 2092034,
+      "originalText": "e=>{const t=JQ(e),n=new Map,o=new Map,i=new Map,r=new Map((t.solvedRoutes??[]).map(e=>[e.connection.connectionId,e]));t.regions.forEach((e,t)=>{n.set(e.regionId,t)}),t.ports.forEach((e,t)=>{o.set(e.portId,t),i.set(e.portId,e)});const s=t.regions.length,a=t.ports.length,c=t.regions.map(e=>e.pointIds.map(e=>o.get(e)).filter(e=>void 0!==e)),l=Array.from({length:a},()=>[]),h=new Float64Array(s),d=new Float64Array(s),u=new Float64Array(s),p=new Float64Array(s),m=new Int32Array(s),g=new Int32Array(s).fill(-1),f=new Int8Array(s);t.regions.forEach((e,t)=>{const n=(e=>{const t=QQ(e),n=\"number\"==typeof e.d?.width?e.d.width:t.maxX-t.minX,o=\"number\"==typeof e.d?.height?e.d.height:t.maxY-t.minY;return{centerX:\"number\"==typeof e.d?.center?.x?e.d.center.x:(t.minX+t.maxX)/2,centerY:\"number\"==typeof e.d?.center?.y?e.d.center.y:(t.minY+t.maxY)/2,width:n,height:o}})(e);h[t]=n.width,d[t]=n.height,u[t]=n.centerX,p[t]=n.centerY,m[t]=(e=>{const t=e.d?.availableZ;if(!Array.isArray(t))return 0;let n=0;for(const e of t)!Number.isInteger(e)||e<0||e>=31||(n|=1<<e);return n})(e);const o=qQ(e);void 0!==o&&(g[t]=o,f[t]=1)});const y=new Int32Array(a),_=new Int32Array(a),b=new Float64Array(a),x=new Float64Array(a),v=new Int32Array(a);t.ports.forEach((e,o)=>{const i=n.get(e.region1Id),r=n.get(e.region2Id);if(void 0===i||void 0===r)throw new Error(`Port \"${e.portId}\" references missing regions \"${e.region1Id}\" or \"${e.region2Id}\"`);l[o]=[i,r],b[o]=KQ(e),x[o]=eK(e),v[o]=(e=>{const t=Number(e.d?.z??0);return Number.isFinite(t)?t:0})(e),y[o]=tK(e,t.regions[i]),_[o]=tK(e,t.regions[r])});const I=t.regions.map((e,t)=>((e,t)=>{const n=e.d&&\"object\"==typeof e.d&&!Array.isArray(e.d)?{...e.d}:{value:e.d};return n.layer=t,Object.defineProperty(n,\"serializedRegionId\",{value:e.regionId,enumerable:!1,configurable:!0,writable:!0}),n})(e,(e=>qq(Jq(m[e]))??qq((c[e]??[]).map(e=>v[e]))??\"z0\")(t))),S=t.ports.map((e,t)=>((e,t)=>{const n=e.d&&\"object\"==typeof e.d&&!Array.isArray(e.d)?{...e.d}:{value:e.d};return n.layer=t,Object.defineProperty(n,\"serializedPortId\",{value:e.portId,enumerable:!1,configurable:!0,writable:!0}),n})(e,qq([v[t]])??\"z0\")),C=t.connections??[],P=new Map;let M=0;const w=e=>{const t=e.mutuallyConnectedNetworkId??e.connectionId;let n=P.get(t);return void 0===n&&(n=M++,P.set(t,n)),n},N=Array.from({length:s},()=>new Set),R=(e,t)=>{const o=n.get(e);if(void 0===o)throw new Error(`Connection references missing region \"${e}\"`);N[o].add(t)};C.forEach(e=>{const t=w(e);R(e.startRegionId,t),R(e.endRegionId,t)}),N.forEach((e,t)=>{1!==f[t]&&1===e.size&&(g[t]=[...e][0])});const T=C.map(e=>{const n=r.get(e.connectionId),o=((e,t)=>e.ports.filter(e=>e.region1Id===t.startRegionId&&e.region2Id===t.endRegionId||e.region2Id===t.startRegionId&&e.region1Id===t.endRegionId).map(e=>e.portId))(t,e);return{connection:e,solvedRoute:n,sharedPortIds:o}}).filter(({solvedRoute:e,sharedPortIds:t})=>0===t.length||(e?.path.length??0)>1),E=T.length,A=new Map(T.map(({connection:e},t)=>[e.connectionId,t])),O=new Int8Array(a).fill(1),k=new Int32Array(E),D=new Int32Array(E),z=new Int32Array(E),L=new Uint8Array(E);T.forEach(({connection:e,solvedRoute:n},r)=>{const s=nK(t.regions.find(t=>t.regionId===e.startRegionId),i),a=nK(t.regions.find(t=>t.regionId===e.endRegionId),i),c=n?.path[0]?.portId??s,l=n?.path[n.path.length-1]?.portId??a,h=void 0!==c?o.get(c):void 0,d=void 0!==l?o.get(l):void 0;if(void 0===h||void 0===d)throw new Error(`Connection \"${e.connectionId}\" could not be mapped to route endpoints`);k[r]=h,D[r]=d,z[r]=w(e),\"isFixed\"in e&&!0===e.isFixed&&(L[r]=1)});const B={portCount:a,regionCount:s,regionIncidentPorts:c,incidentPortRegion:l,regionWidth:h,regionHeight:d,regionCenterX:u,regionCenterY:p,regionAvailableZMask:m,regionMetadata:I,portAngleForRegion1:y,portAngleForRegion2:_,portX:b,portY:x,portZ:v,portMetadata:S},F=t.regions.flatMap((e,t)=>(e.assignments??[]).map(n=>{const i=A.get(n.connectionId);if(void 0===i)throw new Error(`Region \"${e.regionId}\" assignment references unknown routable connection \"${n.connectionId}\"`);const r=o.get(n.regionPort1Id),s=o.get(n.regionPort2Id);if(void 0===r||void 0===s)throw new Error(`Region \"${e.regionId}\" assignment references missing port \"${void 0===r?n.regionPort1Id:n.regionPort2Id}\"`);if(!c[t]?.includes(r)||!c[t]?.includes(s))throw new Error(`Region \"${e.regionId}\" assignment ports must both belong to the region`);return{routeId:i,regionId:t,fromPortId:r,toPortId:s}})),j=Float64Array.from(t.ports,e=>{const t=Number(e.d?.tinyHypergraphPortPenalty??0);return Number.isFinite(t)&&t>0?t:0}),Y=j.some(e=>e>0),X={routeCount:E,portSectionMask:O,routeMetadata:T.map(({connection:e})=>e),routeStartPort:k,routeEndPort:D,routeNet:z,regionNetId:g,...L.some(e=>1===e)&&{routeIsFixed:L},...F.length>0&&{initialAssignments:F},...Y&&{portPenalty:j}},$=[],V=[];for(const{solvedRoute:e}of T){if(!e){$.push([]),V.push([]);continue}const t=[],i=[];for(let r=1;r<e.path.length;r++){const s=e.path[r-1],a=e.path[r],c=s?.portId,l=a?.portId,h=void 0!==c?o.get(c):void 0,d=void 0!==l?o.get(l):void 0;if(void 0===h||void 0===d)continue;const u=\"string\"==typeof s?.nextRegionId?s.nextRegionId:\"string\"==typeof a?.lastRegionId?a.lastRegionId:void 0;t.push([h,d]),i.push(void 0!==u?n.get(u):void 0)}$.push(t),V.push(i)}return{topology:B,problem:X,solution:{solvedRoutePathSegments:$,solvedRoutePathRegionIds:V}}}",
+      "replacementText": "binding0=>{const binding1=JQ(binding0),binding2=new Map,binding3=new Map,binding4=new Map,binding5=new Map((binding1.solvedRoutes??[]).map(binding0=>[binding0.connection.connectionId,binding0]));binding1.regions.forEach((binding0,binding1)=>{binding2.set(binding0.regionId,binding1)}),binding1.ports.forEach((binding0,binding1)=>{binding3.set(binding0.portId,binding1),binding4.set(binding0.portId,binding0)});const binding6=binding1.regions.length,binding7=binding1.ports.length,binding8=binding1.regions.map(binding0=>binding0.pointIds.map(binding0=>binding3.get(binding0)).filter(binding0=>void 0!==binding0)),binding9=Array.from({length:binding7},()=>[]),binding10=new Float64Array(binding6),binding11=new Float64Array(binding6),binding12=new Float64Array(binding6),binding13=new Float64Array(binding6),binding14=new Int32Array(binding6),binding15=new Float64Array(binding6),binding16=new Int32Array(binding6).fill(-1),binding17=new Int8Array(binding6);binding1.regions.forEach((binding0,binding1)=>{const binding2=(binding0=>{const binding1=QQ(binding0),binding2=\"number\"==typeof binding0.d?.width?binding0.d.width:binding1.maxX-binding1.minX,binding3=\"number\"==typeof binding0.d?.height?binding0.d.height:binding1.maxY-binding1.minY;return{centerX:\"number\"==typeof binding0.d?.center?.x?binding0.d.center.x:(binding1.minX+binding1.maxX)/2,centerY:\"number\"==typeof binding0.d?.center?.y?binding0.d.center.y:(binding1.minY+binding1.maxY)/2,width:binding2,height:binding3}})(binding0);binding10[binding1]=binding2.width,binding11[binding1]=binding2.height,binding12[binding1]=binding2.centerX,binding13[binding1]=binding2.centerY,binding14[binding1]=(binding0=>{const binding1=binding0.d?.availableZ;if(!Array.isArray(binding1))return 0;let binding2=0;for(const binding0 of binding1)!Number.isInteger(binding0)||binding0<0||binding0>=31||(binding2|=1<<binding0);return binding2})(binding0),binding15[binding1]=(binding0=>{const binding1=binding0.d?.viaAreaFraction;if(void 0===binding1)return 1;if(\"number\"!=typeof binding1||!(binding1>0&&binding1<=1))throw new Error(`Region \"${binding0.regionId}\" has viaAreaFraction ${String(binding1)}; expected a number in (0, 1]`);return binding1})(binding0);const binding3=qQ(binding0);void 0!==binding3&&(binding16[binding1]=binding3,binding17[binding1]=1)});const binding18=new Int32Array(binding7),binding19=new Int32Array(binding7),binding20=new Float64Array(binding7),binding21=new Float64Array(binding7),binding22=new Int32Array(binding7);binding1.ports.forEach((binding0,binding3)=>{const binding4=binding2.get(binding0.region1Id),binding5=binding2.get(binding0.region2Id);if(void 0===binding4||void 0===binding5)throw new Error(`Port \"${binding0.portId}\" references missing regions \"${binding0.region1Id}\" or \"${binding0.region2Id}\"`);binding9[binding3]=[binding4,binding5],binding20[binding3]=KQ(binding0),binding21[binding3]=eK(binding0),binding22[binding3]=(binding0=>{const binding1=Number(binding0.d?.z??0);return Number.isFinite(binding1)?binding1:0})(binding0),binding18[binding3]=tK(binding0,binding1.regions[binding4]),binding19[binding3]=tK(binding0,binding1.regions[binding5])});const binding23=binding1.regions.map((binding0,binding1)=>((binding0,binding1)=>{const binding2=binding0.d&&\"object\"==typeof binding0.d&&!Array.isArray(binding0.d)?{...binding0.d}:{value:binding0.d};return binding2.layer=binding1,Object.defineProperty(binding2,\"serializedRegionId\",{value:binding0.regionId,enumerable:!1,configurable:!0,writable:!0}),binding2})(binding0,(binding0=>qq(Jq(binding14[binding0]))??qq((binding8[binding0]??[]).map(binding0=>binding22[binding0]))??\"z0\")(binding1))),binding24=binding1.ports.map((binding0,binding1)=>((binding0,binding1)=>{const binding2=binding0.d&&\"object\"==typeof binding0.d&&!Array.isArray(binding0.d)?{...binding0.d}:{value:binding0.d};return binding2.layer=binding1,Object.defineProperty(binding2,\"serializedPortId\",{value:binding0.portId,enumerable:!1,configurable:!0,writable:!0}),binding2})(binding0,qq([binding22[binding1]])??\"z0\")),binding25=binding1.connections??[],binding26=new Map;let binding27=0;const binding28=binding0=>{const binding1=binding0.mutuallyConnectedNetworkId??binding0.connectionId;let binding2=binding26.get(binding1);return void 0===binding2&&(binding2=binding27++,binding26.set(binding1,binding2)),binding2},binding29=Array.from({length:binding6},()=>new Set),binding30=(binding0,binding1)=>{const binding3=binding2.get(binding0);if(void 0===binding3)throw new Error(`Connection references missing region \"${binding0}\"`);binding29[binding3].add(binding1)};binding25.forEach(binding0=>{const binding1=binding28(binding0);binding30(binding0.startRegionId,binding1),binding30(binding0.endRegionId,binding1)}),binding29.forEach((binding0,binding1)=>{1!==binding17[binding1]&&1===binding0.size&&(binding16[binding1]=[...binding0][0])});const binding31=binding25.map(binding0=>{const binding2=binding5.get(binding0.connectionId),binding3=((binding0,binding1)=>binding0.ports.filter(binding0=>binding0.region1Id===binding1.startRegionId&&binding0.region2Id===binding1.endRegionId||binding0.region2Id===binding1.startRegionId&&binding0.region1Id===binding1.endRegionId).map(binding0=>binding0.portId))(binding1,binding0);return{connection:binding0,solvedRoute:binding2,sharedPortIds:binding3}}).filter(({solvedRoute:binding0,sharedPortIds:binding1})=>0===binding1.length||(binding0?.path.length??0)>1),binding32=binding31.length,binding33=new Map(binding31.map(({connection:binding0},binding1)=>[binding0.connectionId,binding1])),binding34=new Int8Array(binding7).fill(1),binding35=new Int32Array(binding32),binding36=new Int32Array(binding32),binding37=new Int32Array(binding32),binding38=new Uint8Array(binding32);binding31.forEach(({connection:binding0,solvedRoute:binding2},binding5)=>{const binding6=nK(binding1.regions.find(binding1=>binding1.regionId===binding0.startRegionId),binding4),binding7=nK(binding1.regions.find(binding1=>binding1.regionId===binding0.endRegionId),binding4),binding8=binding2?.path[0]?.portId??binding6,binding9=binding2?.path[binding2.path.length-1]?.portId??binding7,binding10=void 0!==binding8?binding3.get(binding8):void 0,binding11=void 0!==binding9?binding3.get(binding9):void 0;if(void 0===binding10||void 0===binding11)throw new Error(`Connection \"${binding0.connectionId}\" could not be mapped to route endpoints`);binding35[binding5]=binding10,binding36[binding5]=binding11,binding37[binding5]=binding28(binding0),\"isFixed\"in binding0&&!0===binding0.isFixed&&(binding38[binding5]=1)});const binding39={portCount:binding7,regionCount:binding6,regionIncidentPorts:binding8,incidentPortRegion:binding9,regionWidth:binding10,regionHeight:binding11,regionCenterX:binding12,regionCenterY:binding13,regionAvailableZMask:binding14,regionViaAreaFraction:binding15,regionMetadata:binding23,portAngleForRegion1:binding18,portAngleForRegion2:binding19,portX:binding20,portY:binding21,portZ:binding22,portMetadata:binding24},binding40=binding1.regions.flatMap((binding0,binding1)=>(binding0.assignments??[]).map(binding2=>{const binding4=binding33.get(binding2.connectionId);if(void 0===binding4)throw new Error(`Region \"${binding0.regionId}\" assignment references unknown routable connection \"${binding2.connectionId}\"`);const binding5=binding3.get(binding2.regionPort1Id),binding6=binding3.get(binding2.regionPort2Id);if(void 0===binding5||void 0===binding6)throw new Error(`Region \"${binding0.regionId}\" assignment references missing port \"${void 0===binding5?binding2.regionPort1Id:binding2.regionPort2Id}\"`);if(!binding8[binding1]?.includes(binding5)||!binding8[binding1]?.includes(binding6))throw new Error(`Region \"${binding0.regionId}\" assignment ports must both belong to the region`);return{routeId:binding4,regionId:binding1,fromPortId:binding5,toPortId:binding6}})),binding41=Float64Array.from(binding1.ports,binding0=>{const binding1=Number(binding0.d?.tinyHypergraphPortPenalty??0);return Number.isFinite(binding1)&&binding1>0?binding1:0}),binding42=binding41.some(binding0=>binding0>0),binding43={routeCount:binding32,portSectionMask:binding34,routeMetadata:binding31.map(({connection:binding0})=>binding0),routeStartPort:binding35,routeEndPort:binding36,routeNet:binding37,regionNetId:binding16,...binding38.some(binding0=>1===binding0)&&{routeIsFixed:binding38},...binding40.length>0&&{initialAssignments:binding40},...binding42&&{portPenalty:binding41}},binding44=[],binding45=[];for(const{solvedRoute:binding0}of binding31){if(!binding0){binding44.push([]),binding45.push([]);continue}const binding1=[],binding4=[];for(let binding5=1;binding5<binding0.path.length;binding5++){const binding6=binding0.path[binding5-1],binding7=binding0.path[binding5],binding8=binding6?.portId,binding9=binding7?.portId,binding10=void 0!==binding8?binding3.get(binding8):void 0,binding11=void 0!==binding9?binding3.get(binding9):void 0;if(void 0===binding10||void 0===binding11)continue;const binding12=\"string\"==typeof binding6?.nextRegionId?binding6.nextRegionId:\"string\"==typeof binding7?.lastRegionId?binding7.lastRegionId:void 0;binding1.push([binding10,binding11]),binding4.push(void 0!==binding12?binding2.get(binding12):void 0)}binding44.push(binding1),binding45.push(binding4)}return{topology:binding39,problem:binding43,solution:{solvedRoutePathSegments:binding44,solvedRoutePathRegionIds:binding45}}}",
+      "originalSha256": "7ca05d4cdf6c0ac4fed5585c4a3146fcf95dac2680342d45a8dc236f8366a8c8",
+      "replacementSha256": "4d7a28b2510a2f2bbd7f6498480ac5d0693f8d682ade2f710bb9143230a73b24",
+      "compiledBaseEquivalent": true,
+      "baseCanonicalSha256": "5648c30861f6b2dba7ceaf549672c955fcea7b5587d1c849039655f973223577",
+      "aliases": {
+        "filterObstacleRegions": "JQ",
+        "getRegionBounds": "QQ",
+        "getSerializedRegionNetId": "qQ",
+        "getSerializedPortX": "KQ",
+        "getSerializedPortY": "eK",
+        "computePortAngle": "tK",
+        "getZLayerLabel": "qq",
+        "getAvailableZFromMask": "Jq",
+        "getCentermostPortIdForRegion": "nK"
+      }
+    },
+    {
+      "kind": "replace",
+      "name": "toSerializedRegionData",
+      "sourceRepository": "tscircuit/tscircuit-autorouter",
+      "sourceRelative": "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver.ts",
+      "startCharacter": 2125786,
+      "endCharacter": 2126404,
+      "startByte": 2125845,
+      "endByte": 2126463,
+      "originalText": "(e,t)=>{const n=e.d,o=n.bounds;return{capacityMeshNodeId:e.d.capacityMeshNodeId,center:{x:e.d.center.x,y:e.d.center.y},width:e.d.width,height:e.d.height,availableZ:[...e.d.availableZ],...o?{bounds:{minX:o.minX,maxX:o.maxX,minY:o.minY,maxY:o.maxY}}:{},_containsObstacle:e.d._containsObstacle,_containsTarget:e.d._containsTarget,_offBoardConnectionId:e.d._offBoardConnectionId,_offBoardConnectedCapacityMeshNodeIds:void 0===e.d._offBoardConnectedCapacityMeshNodeIds?void 0:[...e.d._offBoardConnectedCapacityMeshNodeIds],_qfpRegionType:n._qfpRegionType,_isNarrowQfpPadGap:n._isNarrowQfpPadGap,...void 0!==t?{netId:t}:{}}}",
+      "replacementText": "(binding0,binding1)=>{const binding2=binding0.d,binding3=binding2.bounds;return{capacityMeshNodeId:binding0.d.capacityMeshNodeId,center:{x:binding0.d.center.x,y:binding0.d.center.y},width:binding0.d.width,height:binding0.d.height,availableZ:[...binding0.d.availableZ],...binding3?{bounds:{minX:binding3.minX,maxX:binding3.maxX,minY:binding3.minY,maxY:binding3.maxY}}:{},_containsObstacle:binding0.d._containsObstacle,_containsTarget:binding0.d._containsTarget,_offBoardConnectionId:binding0.d._offBoardConnectionId,_offBoardConnectedCapacityMeshNodeIds:void 0===binding0.d._offBoardConnectedCapacityMeshNodeIds?void 0:[...binding0.d._offBoardConnectedCapacityMeshNodeIds],_qfpRegionType:binding2._qfpRegionType,_isNarrowQfpPadGap:binding2._isNarrowQfpPadGap,...binding0.d._lacksViaSite?{viaAreaFraction:.1}:{},...void 0!==binding1?{netId:binding1}:{}}}",
+      "originalSha256": "49549bdd949c98908774e7d0ca79c9f727a00372359cc3b13a467168342ac820",
+      "replacementSha256": "b982bf8a8fa2c233ea4b7a02f0f0e91708d9b818d8ba7dce26c3075a8ce425f9",
+      "compiledBaseEquivalent": true,
+      "baseCanonicalSha256": "f40ebaa8106bffcb2d330de85d0c5419c1195fe707dc300e8ef109627fac8f3f",
+      "aliases": {}
+    },
+    {
+      "kind": "insert",
+      "name": "markNodesWithoutViaSite with newly exported existing geometry helpers",
+      "sourceRepository": "tscircuit/tscircuit-autorouter",
+      "sourceRelative": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/markNodesWithoutViaSite.ts",
+      "startCharacter": 3068950,
+      "endCharacter": 3068950,
+      "startByte": 3069009,
+      "endByte": 3069009,
+      "originalText": "",
+      "replacementText": "var __viaSiteMarkNodesWithoutViaSite=(() => {\n    const getPointToObstacleDistance = (point, obstacle) => {\n        if (obstacle.shape === \"circle\") {\n            return Math.max(0, Math.hypot(point.x - obstacle.center.x, point.y - obstacle.center.y) -\n                obstacle.width / 2);\n        }\n        const rotationRadians = (-1 * (obstacle.ccwRotationDegrees ?? 0) * Math.PI) / 180;\n        const offsetX = point.x - obstacle.center.x;\n        const offsetY = point.y - obstacle.center.y;\n        const localX = offsetX * Math.cos(rotationRadians) - offsetY * Math.sin(rotationRadians);\n        const localY = offsetX * Math.sin(rotationRadians) + offsetY * Math.cos(rotationRadians);\n        const outsideX = Math.max(Math.abs(localX) - obstacle.width / 2, 0);\n        const outsideY = Math.max(Math.abs(localY) - obstacle.height / 2, 0);\n        return Math.hypot(outsideX, outsideY);\n    };\n    const getObstacleZLayers = (obstacle, layerCount) => {\n        const existingZLayers = obstacle.__zLayers ?? obstacle.zLayers;\n        if (existingZLayers)\n            return existingZLayers;\n        return obstacle.layers.map((layer) => mo(layer, layerCount));\n    };\n    const getObstacleBounds = (obstacle) => {\n        const rotationRadians = ((obstacle.ccwRotationDegrees ?? 0) * Math.PI) / 180;\n        const cos = Math.abs(Math.cos(rotationRadians));\n        const sin = Math.abs(Math.sin(rotationRadians));\n        const halfWidth = (obstacle.width / 2) * cos + (obstacle.height / 2) * sin;\n        const halfHeight = (obstacle.width / 2) * sin + (obstacle.height / 2) * cos;\n        return {\n            minX: obstacle.center.x - halfWidth,\n            maxX: obstacle.center.x + halfWidth,\n            minY: obstacle.center.y - halfHeight,\n            maxY: obstacle.center.y + halfHeight,\n        };\n    };\n    const MIN_SEARCH_CELL_SIZE = 0.005;\n    const isRoutedNetObstacle = (obstacle, connMap, routedNetIds) => [obstacle.obstacleId, ...obstacle.connectedTo].some((id) => {\n        if (!id)\n            return false;\n        const netId = connMap.getNetConnectedToId(id);\n        return netId !== undefined && routedNetIds.has(netId);\n    });\n    const hasViaSiteInCell = (cell, obstacles, keepOut) => {\n        const corners = [\n            { x: cell.minX, y: cell.minY },\n            { x: cell.maxX, y: cell.minY },\n            { x: cell.minX, y: cell.maxY },\n            { x: cell.maxX, y: cell.maxY },\n        ];\n        const center = {\n            x: (cell.minX + cell.maxX) / 2,\n            y: (cell.minY + cell.maxY) / 2,\n        };\n        for (const point of [center, ...corners]) {\n            if (obstacles.every(({ obstacle }) => getPointToObstacleDistance(point, obstacle) >= keepOut))\n                return true;\n        }\n        if (obstacles.some(({ obstacle }) => corners.every((corner) => getPointToObstacleDistance(corner, obstacle) < keepOut)))\n            return false;\n        const width = cell.maxX - cell.minX;\n        const height = cell.maxY - cell.minY;\n        if (Math.max(width, height) <= MIN_SEARCH_CELL_SIZE)\n            return false;\n        const halves = width >= height\n            ? [\n                { ...cell, maxX: center.x },\n                { ...cell, minX: center.x },\n            ]\n            : [\n                { ...cell, maxY: center.y },\n                { ...cell, minY: center.y },\n            ];\n        return halves.some((half) => hasViaSiteInCell(half, obstacles.filter(({ bounds }) => bounds.minX - keepOut < half.maxX &&\n            bounds.maxX + keepOut > half.minX &&\n            bounds.minY - keepOut < half.maxY &&\n            bounds.maxY + keepOut > half.minY), keepOut));\n    };\n    const markNodesWithoutViaSite = ({ nodes, srj, connMap, viaDiameter, viaToPadClearance, }) => {\n        const routedNetIds = new Set(srj.connections.map((connection) => connMap.getNetConnectedToId(connection.name) ?? connection.name));\n        const keepOut = viaDiameter / 2 + viaToPadClearance;\n        const hardObstacles = srj.obstacles\n            .filter((obstacle) => !isRoutedNetObstacle(obstacle, connMap, routedNetIds))\n            .map((obstacle) => ({\n            obstacle,\n            bounds: getObstacleBounds(obstacle),\n            zLayers: getObstacleZLayers(obstacle, srj.layerCount),\n        }));\n        return nodes.map((node) => {\n            if (node._isComponentTopologyNode ||\n                node._containsTarget ||\n                node._containsObstacle ||\n                node.availableZ.length < 2)\n                return node;\n            const centers = {\n                minX: node.center.x - node.width / 2,\n                maxX: node.center.x + node.width / 2,\n                minY: node.center.y - node.height / 2,\n                maxY: node.center.y + node.height / 2,\n            };\n            if (centers.minX > centers.maxX || centers.minY > centers.maxY)\n                return node;\n            const nearby = hardObstacles.filter(({ bounds, zLayers }) => zLayers.some((z) => node.availableZ.includes(z)) &&\n                bounds.minX - keepOut < centers.maxX &&\n                bounds.maxX + keepOut > centers.minX &&\n                bounds.minY - keepOut < centers.maxY &&\n                bounds.maxY + keepOut > centers.minY);\n            if (nearby.length === 0)\n                return node;\n            const hasViaSite = hasViaSiteInCell(centers, nearby, keepOut);\n            return hasViaSite ? node : { ...node, _lacksViaSite: true };\n        });\n    };\n    return markNodesWithoutViaSite;\n})();\n",
+      "originalSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "replacementSha256": "944502b3c16dcd21d81450f3d79add95d208468cbb737e1853b6186c3131fea9",
+      "compiledBaseEquivalent": null,
+      "geometryProof": [
+        {
+          "name": "getPointToObstacleDistance",
+          "publishedContainer": "Ire",
+          "sourceSha256": "97b494b17d3b89aabed94c11c9165871bb7a0e522f3ae047491d8668274495e4",
+          "publishedExpressionSha256": "7a3dc616d92b935b065bdd55436c8a647d6edd2e7bd6010f2d5041fd221598da",
+          "aliases": {}
+        },
+        {
+          "name": "getObstacleZLayers",
+          "publishedContainer": "Ire",
+          "sourceSha256": "3331b6c3a1e0e70a802e6e8ad125f3bce53d44b8578f50c357e5478f12f36433",
+          "publishedExpressionSha256": "b6ba190df834b124348957ad95837beb6c20150bf50864e6e602941482541684",
+          "aliases": {
+            "mapLayerNameToZ": "mo"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "replace",
+      "name": "Pipeline9.nodeDimensionSubdivisionSolver.onSolved",
+      "sourceRepository": "tscircuit/tscircuit-autorouter",
+      "sourceRelative": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts",
+      "startCharacter": 3072751,
+      "endCharacter": 3072816,
+      "startByte": 3072810,
+      "endByte": 3072875,
+      "originalText": "e=>{e.capacityNodes=e.nodeDimensionSubdivisionSolver.outputNodes}",
+      "replacementText": "binding0=>{binding0.capacityNodes=__viaSiteMarkNodesWithoutViaSite({nodes:binding0.nodeDimensionSubdivisionSolver.outputNodes,srj:binding0.srj,connMap:binding0.connMap,viaDiameter:binding0.viaDiameter,viaToPadClearance:x7(binding0.srj)??binding0.srj.defaultObstacleMargin??.15})}",
+      "originalSha256": "9194ae2156f2f805f4285644521909de6fa7f09facb3c0dc5f6843269886ea70",
+      "replacementSha256": "d26c86c62cb6517b8c474de6fe29ab9ae7da1f27b5c1001323d8cd10112bd328",
+      "compiledBaseEquivalent": true,
+      "baseCanonicalSha256": "e2211d99ca625e49442ea0dcb8b35a8ff6054f6de2dc2160c878fdba5a4c7ce2",
+      "aliases": {}
+    }
+  ],
+  "unchangedSegments": [
+    {
+      "startByte": 0,
+      "endByte": 1982703,
+      "candidateStartByte": 0,
+      "candidateEndByte": 1982703,
+      "sha256": "af0871c6e7a36eb49a8badc3c35a0811fde2f9b3619830da7950d34b4d6f6e4d"
+    },
+    {
+      "startByte": 1982752,
+      "endByte": 1982756,
+      "candidateStartByte": 1982898,
+      "candidateEndByte": 1982902,
+      "sha256": "c727ff113161b1831a15c59c2f8f49fd094514245dd85e4275320ccda148371b"
+    },
+    {
+      "startByte": 1982854,
+      "endByte": 2022905,
+      "candidateStartByte": 1983162,
+      "candidateEndByte": 2023213,
+      "sha256": "24a5d9a0dd3f59ad60d9b31ba9f762c9cf305d63989f6e8189b8e0d39ce7d620"
+    },
+    {
+      "startByte": 2023118,
+      "endByte": 2079334,
+      "candidateStartByte": 2023561,
+      "candidateEndByte": 2079777,
+      "sha256": "49e52a41d0913bf563f00d74434c052b9da8ba8d93f11c0cef9e03cb36c31c00"
+    },
+    {
+      "startByte": 2081396,
+      "endByte": 2086692,
+      "candidateStartByte": 2083656,
+      "candidateEndByte": 2088952,
+      "sha256": "6d6afa97f6a9d754941660b1475918e6fb2847aa869201c8864f68aae8650975"
+    },
+    {
+      "startByte": 2092034,
+      "endByte": 2125845,
+      "candidateStartByte": 2098303,
+      "candidateEndByte": 2132114,
+      "sha256": "771b7e4973b6c3ac7da7f5e790ef6940f3f1134c58a16dc443b0f2d12c3277e2"
+    },
+    {
+      "startByte": 2126463,
+      "endByte": 3069009,
+      "candidateStartByte": 2132966,
+      "candidateEndByte": 3075512,
+      "sha256": "604b46808d7886468740be3b748a3a0675d370a08381f8498aa6d7eaa8178363"
+    },
+    {
+      "startByte": 3069009,
+      "endByte": 3072810,
+      "candidateStartByte": 3081029,
+      "candidateEndByte": 3084830,
+      "sha256": "cd6758eb8c4021f34a0c7d2122eaf2899af44a6fde3be82d6f737c5d4762cec2"
+    },
+    {
+      "startByte": 3072875,
+      "endByte": 3344971,
+      "candidateStartByte": 3085109,
+      "candidateEndByte": 3357205,
+      "sha256": "0d61478c40fe04e26b7a9851a98c899145c0c48bdeae64df53767be86e502058"
+    }
+  ],
+  "qualification": {
+    "allOutsideBytesUnchanged": true,
+    "unrelatedSourceRuntimeUnchanged": true,
+    "compiledBaseEquivalent": true,
+    "sourceMapGeneratedOffsetsUsed": false,
+    "regularTinyOnly": true,
+    "regularTinyPolySourceAbsent": true,
+    "separateTinyPolyAliasUntouched": true,
+    "clearanceBinding": "x7",
+    "geometryProof": [
+      {
+        "name": "getPointToObstacleDistance",
+        "publishedContainer": "Ire",
+        "sourceSha256": "97b494b17d3b89aabed94c11c9165871bb7a0e522f3ae047491d8668274495e4",
+        "publishedExpressionSha256": "7a3dc616d92b935b065bdd55436c8a647d6edd2e7bd6010f2d5041fd221598da",
+        "aliases": {}
+      },
+      {
+        "name": "getObstacleZLayers",
+        "publishedContainer": "Ire",
+        "sourceSha256": "3331b6c3a1e0e70a802e6e8ad125f3bce53d44b8578f50c357e5478f12f36433",
+        "publishedExpressionSha256": "b6ba190df834b124348957ad95837beb6c20150bf50864e6e602941482541684",
+        "aliases": {
+          "mapLayerNameToZ": "mo"
+        }
+      }
+    ],
+    "typeErasure": "TypeScript5.9.3 transpileModule ESNext; source helpers emitted without optimizer for exact four-bound identity",
+    "canonicalizer": "Terser5.51.2 three compression passes and deterministic lexical names; free bindings mapped bijectively",
+    "sourceAliases": [
+      {
+        "relative": "lib/computeRegionCost.ts",
+        "aliases": {
+          "computeRegionCostForArea": "dJ",
+          "isKnownSingleLayerMask": "lJ",
+          "countAvailableLayers": "uJ"
+        }
+      },
+      {
+        "relative": "lib/compat/loadSerializedHyperGraph.ts",
+        "aliases": {
+          "filterObstacleRegions": "JQ",
+          "getRegionBounds": "QQ",
+          "getSerializedRegionNetId": "qQ",
+          "getSerializedPortX": "KQ",
+          "getSerializedPortY": "eK",
+          "computePortAngle": "tK",
+          "getZLayerLabel": "qq",
+          "getAvailableZFromMask": "Jq",
+          "getCentermostPortIdForRegion": "nK"
+        }
+      },
+      {
+        "relative": "lib/core.ts",
+        "aliases": {
+          "computeRegionCost": "hJ"
+        }
+      },
+      {
+        "relative": "lib/prepared/DenseRoutingWorkspace.ts",
+        "aliases": {
+          "computeRegionCost": "hJ"
+        }
+      },
+      {
+        "relative": "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver.ts",
+        "aliases": {}
+      },
+      {
+        "relative": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts",
+        "aliases": {
+          "markNodesWithoutViaSite": "__viaSiteMarkNodesWithoutViaSite",
+          "getViaToPadClearance": "x7"
+        }
+      },
+      {
+        "relative": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9RegionalFallbackSolver.ts",
+        "aliases": {
+          "mapLayerNameToZ": "mo"
+        }
+      }
+    ],
+    "bun": "1.3.1",
+    "typescript": "5.9.3",
+    "terser": "5.51.2"
+  },
+  "mapperSha256": "284be5ca9868d9e7da8b4003305caed3fa8caaafee3ca6ca4a473f8b18973c76",
+  "moduleImported": false,
+  "nativeRoutingExecuted": false
+}

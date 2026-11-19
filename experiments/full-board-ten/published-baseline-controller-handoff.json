@@ -1,0 +1,192 @@
+{
+  "status": "READY_FOR_ROOT_REVIEW_UNPUSHED",
+  "controllerWorktree": "/tmp/full-board-ten-3243-20261119",
+  "controllerBaseCommit": "49e9de35db347f94eeeaef9bca48d821ed3be51e",
+  "controllerCommit": "14176a107694e38d70afc7e6653cf4bb6755e869",
+  "controllerBranch": "bench/full-board-ten-3243-20261119",
+  "workflow": ".github/workflows/full-board-ten.yml",
+  "mainVersion": "0.0.3243",
+  "packages": {
+    "tscircuit": "0.0.3243",
+    "@tscircuit/core": "0.0.2425",
+    "@tscircuit/eval": "0.0.1818",
+    "@tscircuit/capacity-autorouter": "0.0.1133"
+  },
+  "cases": [
+    {
+      "id": "h616",
+      "cohort": "original",
+      "expectedRoutableNets": 121
+    },
+    {
+      "id": "h616",
+      "cohort": "spaced",
+      "expectedRoutableNets": 121
+    },
+    {
+      "id": "butterstick",
+      "cohort": "original",
+      "expectedRoutableNets": 317
+    },
+    {
+      "id": "butterstick",
+      "cohort": "spaced",
+      "expectedRoutableNets": 317
+    },
+    {
+      "id": "glider",
+      "cohort": "original",
+      "expectedRoutableNets": 356
+    },
+    {
+      "id": "glider",
+      "cohort": "spaced",
+      "expectedRoutableNets": 356
+    },
+    {
+      "id": "imx6",
+      "cohort": "original",
+      "expectedRoutableNets": 404
+    },
+    {
+      "id": "imx6",
+      "cohort": "spaced",
+      "expectedRoutableNets": 404
+    },
+    {
+      "id": "icepi",
+      "cohort": "original",
+      "expectedRoutableNets": 230
+    },
+    {
+      "id": "icepi",
+      "cohort": "spaced",
+      "expectedRoutableNets": 230
+    }
+  ],
+  "expectedRoutableNetsTotal": 2856,
+  "priorBaseline": {
+    "mainVersion": "0.0.3242",
+    "controllerCommit": "49e9de35db347f94eeeaef9bca48d821ed3be51e",
+    "runId": 44423458886,
+    "handoffSha256": "647fd215058c7a2609c757732e8a2f1d57dcad4bc8784da5a3ba14855970cd36",
+    "rerouted": false
+  },
+  "runner": "blacksmith-8vcpu-ubuntu-2404-arm",
+  "jobs": 5,
+  "maxParallel": 5,
+  "cohortOrder": [
+    "original",
+    "spaced"
+  ],
+  "budgetsMs": [
+    900000,
+    960000,
+    180000
+  ],
+  "planSha256": "0c6b5737f53e1f79f0416162dd8c6aff6d0feb64f6f0758d3b102199103af7b3",
+  "frozenFiles": {
+    ".github/workflows/full-board-ten.yml": {
+      "sha256": "1e77f7eb83b879d81d1a5860ebaa63aaeb379aac36945c7d0845d89ec548de21",
+      "bytes": 5858
+    },
+    "experiments/full-board-ten/bootstrap.py": {
+      "sha256": "23de25ac8960be89afc57ba27b0d3fddb6e65dba593024be59ec5073d266164d",
+      "bytes": 8903
+    },
+    "experiments/full-board-ten/prepare-cases.ts": {
+      "sha256": "b72e632e9c9152c9e5daedf1bb60daa5d86c33fdcc454f2a7825827d24124330",
+      "bytes": 6254
+    },
+    "experiments/full-board-ten/render-published.tsx": {
+      "sha256": "f79daf7c0e6e54239baa6f116cdab1d1f1785f366a320d2c7a8ca0a4fa54b731",
+      "bytes": 14522
+    },
+    "experiments/full-board-ten/run-one.ts": {
+      "sha256": "991764291305fd20e7ab140ee27080eb1efebad0e58ed1530867bfc354cfc340",
+      "bytes": 10746
+    },
+    "experiments/full-board-ten/report.py": {
+      "sha256": "3fa537cd30224a1bdf10a6acd7e293a0a5e8e187c1e2c210b0ed83370a153b5d",
+      "bytes": 4074
+    },
+    "experiments/full-board-ten/calibrate-assessment.tsx": {
+      "sha256": "efeb820cf34239465df53ce4c7932293e41a14dcab4bedb823c3bc60cc9627a0",
+      "bytes": 2714
+    },
+    "experiments/full-board-ten/createCoarseRoutingDiagnostics.ts": {
+      "sha256": "dea45bba3386a9b55b7709834dff65468c421992808b406f54c6f9e556e8b618",
+      "bytes": 18242
+    },
+    "experiments/full-board-ten/source-provenance.json": {
+      "sha256": "bd24be29c5fdd5ae68ce15c5b2bc50f172ecdd325dcc1b57a80ec653d12570fb",
+      "bytes": 23139
+    },
+    "experiments/full-board-ten/package.json": {
+      "sha256": "469e1861d1259cd1307bca324fb0d8ba0a67ea0323d4e728a35c90a2bc92bdf3",
+      "bytes": 87
+    },
+    "experiments/full-board-ten/tsconfig.json": {
+      "sha256": "2e881577c63bb6b62d14abd319240bbc6ae5e206ecb007dae80ab3ec922293c7",
+      "bytes": 208
+    },
+    "experiments/full-board-ten/release.json": {
+      "sha256": "06ab74d85086008fda992c11fb391d37c37cb7dcd08ac5e1587ced492218f1ff",
+      "bytes": 5677
+    },
+    "experiments/full-board-ten/harness-provenance.json": {
+      "sha256": "fc4b9191002e33b0561d50a2208d38848d81da0735869bb4f563bb9afe1b7405",
+      "bytes": 1479
+    },
+    "experiments/full-board-ten/published-release-provenance.json": {
+      "sha256": "f3da70f1c717d53f78acaaccd9428e463d98e1d235792c1fd3340d6012449eba",
+      "bytes": 11984
+    },
+    "experiments/full-board-ten/runtime/package.json": {
+      "sha256": "ccd64599a0851ee1ed7b4c8ec3c18487f7eab6b2ffec7920bc39b007bae12bdb",
+      "bytes": 2804
+    },
+    "experiments/full-board-ten/runtime/bun.lock": {
+      "sha256": "1a539e10575d08ee53d4ea289ed9b56975129123336ba552ff0792fb8bba97e2",
+      "bytes": 72080
+    },
+    "experiments/full-board-ten/autorouter-dependencies/package.json": {
+      "sha256": "7b4c1ecf979432e472a4f0589ed49976a8a1323ff7bf651a5938ee7006b61360",
+      "bytes": 261
+    },
+    "experiments/full-board-ten/autorouter-dependencies/bun.lock": {
+      "sha256": "ec313c582c29c1e35bb31190151a5649198c177119d32fe311746c06e94e8c4e",
+      "bytes": 13144
+    },
+    "experiments/full-board-ten/baseline-run-plan.json": {
+      "bytes": 5898,
+      "sha256": "0c6b5737f53e1f79f0416162dd8c6aff6d0feb64f6f0758d3b102199103af7b3"
+    }
+  },
+  "sourceOverrides": false,
+  "routingSourceOverrides": false,
+  "dependencyOverrides": [],
+  "routingWasmPermitted": false,
+  "nativeHarnessFilesByteIdentical": 10,
+  "localDependencyInstall": false,
+  "localRoutingExecuted": false,
+  "pushed": false,
+  "dispatched": false,
+  "runtimeFrozenLockOnlyPassed": true,
+  "runtimeFullArmInstallPending": true,
+  "releaseEvidenceRoot": "/tmp/full-board-ten-20261119-3243/release",
+  "graphEvidenceRoot": "/tmp/full-board-ten-20261119-3243/baseline-plan",
+  "staticQualification": "/tmp/full-board-ten-20261119-3243/baseline-plan/controller-static-qualification.json",
+  "staticQualificationSha256": "162480287c2a451d10f647bfd14627e2ef1d1a071e3255567c80e29d3729f55b",
+  "changedControllerFiles": [
+    ".github/workflows/full-board-ten.yml",
+    "experiments/full-board-ten/baseline-run-plan.json",
+    "experiments/full-board-ten/published-release-provenance.json",
+    "experiments/full-board-ten/release.json",
+    "experiments/full-board-ten/runtime/bun.lock",
+    "experiments/full-board-ten/runtime/package.json"
+  ],
+  "cleanTree": true,
+  "committedFilesVerified": 19,
+  "nextAction": "Root independently reviews then may push this dedicated baseline branch. No push or routing performed by this agent."
+}

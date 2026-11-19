@@ -42,8 +42,13 @@ if (existsSync(diagnosticPath)) {
       bestCompleteSnapshotPresent: report.final.bestCompleteSnapshotPresent, selectiveRerip: report.final.selectiveRerip } : null,
   })}`)
 }
-const processResult = { id: task.id, cohort: task.cohort, experiment: task.experiment ?? "published", dependencyOverrides: task.dependencyOverrides ?? [], mode: "phased", executionMode, renderExitCode, hardTimedOut, renderWallMs: performance.now() - started, peakRssMiB: peakRssKb / 1024, captureDeadlineMs: 900000, hardDeadlineMs: 960000, memoryCap: null }
+const processResult = { id: task.id, cohort: task.cohort, routingSourceOverride: task.routingSourceOverride ?? null, experiment: task.experiment ?? "published", dependencyOverrides: task.dependencyOverrides ?? [], mode: "phased", executionMode, renderExitCode, hardTimedOut, renderWallMs: performance.now() - started, peakRssMiB: peakRssKb / 1024, captureDeadlineMs: 900000, hardDeadlineMs: 960000, memoryCap: null }
 writeFileSync(join(output, "process.json"), JSON.stringify(processResult, null, 2))
+
+if (task.restorePublishedCoreBeforeAssessment) {
+  const restore = Bun.spawn(["python3", join(import.meta.dir, "prepare-via-site-bounds.py"), task.restorePublishedCoreBeforeAssessment, "restore", task.id, task.cohort], { stdout: "inherit", stderr: "inherit" })
+  if (await restore.exited !== 0) throw new Error("Could not restore and verify published assessment runtime")
+}
 
 let auditExitCode: number | null = null, auditTimedOut = false
 let emittedCounts: Record<string, number> | null = null
