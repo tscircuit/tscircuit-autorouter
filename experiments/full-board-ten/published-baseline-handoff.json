@@ -1,0 +1,244 @@
+{
+  "status": "COMPLETE_AUTHENTICATED_AND_INDEPENDENTLY_REVIEWED",
+  "completedAtUtc": "2026-11-19T00:18:52.438565+00:00",
+  "runId": 44423458886,
+  "head": "49e9de35db347f94eeeaef9bca48d821ed3be51e",
+  "runUrl": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44423458886",
+  "mainVersion": "0.0.3242",
+  "priorMainVersion": "0.0.3236",
+  "cases": 10,
+  "routableNets": 2856,
+  "connectedBefore": 224,
+  "connectedAfter": 224,
+  "completeAndCleanBefore": 0,
+  "completeAndCleanAfter": 0,
+  "gainedNativeNets": 0,
+  "lostNativeNets": 0,
+  "allArtifactsRetainedAndAuthenticated": true,
+  "artifacts": [
+    {
+      "artifactId": 14484906039,
+      "name": "full-board-icepi-published-spaced-1",
+      "bytes": 11561389,
+      "sha256": "35a9ff9968d01bb72d609fafb3f530b68a0c5cab4c72b4058de07403f3bed019",
+      "archivePath": "/workspace/full-board-ten-20261118-3242/baseline-plan/download-cache/14484906039.zip",
+      "primaryProof": "/workspace/full-board-ten-20261118-3242/artifacts-3242/icepi/spaced/archive-proof.json",
+      "primaryProofSha256": "9e1f648c20e9e16caefe2348dcc7e5a0c674534c028177c0656d8ff1df28fcc9",
+      "independentReview": "/workspace/full-board-ten-20261118-3242/artifacts-3242/icepi/spaced/independent-case-review.json",
+      "independentReviewSha256": "b1085b73807b098155445c79480f279d9e7ff4bf4e39a7cfcb9944ebcc216659"
+    },
+    {
+      "artifactId": 14484573566,
+      "name": "full-board-imx6-published-spaced-1",
+      "bytes": 16888537,
+      "sha256": "f8a14af8a8135d8fd453ede0d3d814d52edf1a160ba2c823ff88b3cba524e32b",
+      "archivePath": "/workspace/full-board-ten-20261118-3242/baseline-plan/download-cache/14484573566.zip",
+      "primaryProof": "/workspace/full-board-ten-20261118-3242/artifacts-3242/imx6/spaced/archive-proof.json",
+      "primaryProofSha256": "1ac1ff51f6265ad758301bbd838e08602f3da89b8ca24eedc7e48c5c89151c07",
+      "independentReview": "/workspace/full-board-ten-20261118-3242/artifacts-3242/imx6/spaced/independent-case-review.json",
+      "independentReviewSha256": "fceb63e38f3d63ed53c9fae76646baa257092b7badf9bf3c928760455e8c1fa3"
+    },
+    {
+      "artifactId": 14484538558,
+      "name": "full-board-imx6-published-summary-1",
+      "bytes": 38847,
+      "sha256": "f3ab89c144322610600f7dfc6af336184a3c606a43a3f582b1ed5e7ec84a4939",
+      "archivePath": "/workspace/full-board-ten-20261118-3242/baseline-plan/download-cache/14484538558.zip",
+      "primaryProof": "/workspace/full-board-ten-20261118-3242/artifacts-3242/imx6/summary/archive-proof.json",
+      "primaryProofSha256": "70f672f4b0dace665fad1d9f945e42f1faa28eb66b7a461694bf0fb98e36a3bb",
+      "independentReview": "/workspace/full-board-ten-20261118-3242/artifacts-3242/imx6/summary/independent-summary-review.json",
+      "independentReviewSha256": "c1fd9bf4813e088fb876f0f24bcd6c6476ec49157d36e7048d4ef4c13d28530d"
+    },
+    {
+      "artifactId": 14484457279,
+      "name": "full-board-butterstick-published-spaced-1",
+      "bytes": 6816981,
+      "sha256": "bb964307b2783c0d5983f72e52cd8abe464ed3964c3f6e9c6dcc6e44d9fb3c42",
+      "archivePath": "/workspace/full-board-ten-20261118-3242/baseline-plan/download-cache/14484457279.zip",
+      "primaryProof": "/workspace/full-board-ten-20261118-3242/artifacts-3242/butterstick/spaced/archive-proof.json",
+      "primaryProofSha256": "a90b90bf91e0bf06a3d45711b5635e8c3199d4a0085ca901e8092d41a26b8898",
+      "independentReview": "/workspace/full-board-ten-20261118-3242/artifacts-3242/butterstick/spaced/independent-case-review.json",
+      "independentReviewSha256": "757ef6b583f473a382ef480e1d4ee1c0f1ec777350f8fb1a94384c8ea95072fa"
+    },
+    {
+      "artifactId": 14484381732,
+      "name": "full-board-h616-published-summary-1",
+      "bytes": 36461,
+      "sha256": "3ccff9d1258902160a84ef569380e9604ac538bd45913f0cf39f60d2321f7763",
+      "archivePath": "/workspace/full-board-ten-20261118-3242/baseline-plan/download-cache/14484381732.zip",
+      "primaryProof": "/workspace/full-board-ten-20261118-3242/artifacts-3242/h616/summary/archive-proof.json",
+      "primaryProofSha256": "bb7b920972cab79408f63eda4ffc303c4d817556daddaa74ee15b9d20fb73251",
+      "independentReview": "/workspace/full-board-ten-20261118-3242/artifacts-3242/h616/summary/independent-summary-review.json",
+      "independentReviewSha256": "c6fde5ed2846672f56b4dc3ef871457b5b7902bc2468c8dfbba9fb1cd62c96e1"
+    },
+    {
+      "artifactId": 14484347174,
+      "name": "full-board-glider-published-spaced-1",
+      "bytes": 18064749,
+      "sha256": "8ce77d86011bebd5d363809a723ac53f2447033e805f2d9d91a598b1160ebe54",
+      "archivePath": "/workspace/full-board-ten-20261118-3242/baseline-plan/download-cache/14484347174.zip",
+      "primaryProof": "/workspace/full-board-ten-20261118-3242/artifacts-3242/glider/spaced/archive-proof.json",
+      "primaryProofSha256": "4a9002835fc5f9054a66b23fe49f9765488b132f5003035f46dd29b63276043c",
+      "independentReview": "/workspace/full-board-ten-20261118-3242/artifacts-3242/glider/spaced/independent-case-review.json",
+      "independentReviewSha256": "efb61678354be99b87c424a80a2b04c496777e0d2d1096b529f63b110cf6a5ae"
+    },
+    {
+      "artifactId": 14484190443,
+      "name": "full-board-h616-published-original-1",
+      "bytes": 4492524,
+      "sha256": "b8e98bf6a072795b78f4cea9e2eeb892a7c5998683870f11087028b4f8f35a99",
+      "archivePath": "/workspace/full-board-ten-20261118-3242/baseline-plan/download-cache/14484190443.zip",
+      "primaryProof": "/workspace/full-board-ten-20261118-3242/artifacts-3242/h616/original/archive-proof.json",
+      "primaryProofSha256": "9cf5c62cc92fc9ca56a1d37d31a074e75ec5d9dc3dbf78061c85ebc83a469a3e",
+      "independentReview": "/workspace/full-board-ten-20261118-3242/artifacts-3242/h616/original/independent-case-review.json",
+      "independentReviewSha256": "720dff2d35c416fdb00286fe36ef9551f746a0cf4a301fad34613dc75f498dbd"
+    },
+    {
+      "artifactId": 14484117832,
+      "name": "full-board-icepi-published-summary-1",
+      "bytes": 36451,
+      "sha256": "e801d7bcb4bfe02de5d810961115626cfcb3f47edb2342168653e07996084901",
+      "archivePath": "/workspace/full-board-ten-20261118-3242/baseline-plan/download-cache/14484117832.zip",
+      "primaryProof": "/workspace/full-board-ten-20261118-3242/artifacts-3242/icepi/summary/archive-proof.json",
+      "primaryProofSha256": "ef32813f2458469324223b7bf88df6473e9bcf519862a854ee525251a531985d",
+      "independentReview": "/workspace/full-board-ten-20261118-3242/artifacts-3242/icepi/summary/independent-summary-review.json",
+      "independentReviewSha256": "fb7336767a504f6c61987a98d09489b69e1beaf2730db426cbe5ceb7f97cac09"
+    },
+    {
+      "artifactId": 14483917187,
+      "name": "full-board-glider-published-summary-1",
+      "bytes": 37513,
+      "sha256": "bff4e7f89a3569bdae4122879031463f86e38f3e9e25d33639de9cf5650a271e",
+      "archivePath": "/workspace/full-board-ten-20261118-3242/baseline-plan/download-cache/14483917187.zip",
+      "primaryProof": "/workspace/full-board-ten-20261118-3242/artifacts-3242/glider/summary/archive-proof.json",
+      "primaryProofSha256": "8878e2d7a7ea1542de0e58ccdfa742a66d95fc59a4cbb0985ba2a6e91ea1f7d8",
+      "independentReview": "/workspace/full-board-ten-20261118-3242/artifacts-3242/glider/summary/independent-summary-review.json",
+      "independentReviewSha256": "a251eba320f687ef5a978360b235041f3fa591cee162e7f92009f2cdc3f63b3c"
+    },
+    {
+      "artifactId": 14483812685,
+      "name": "full-board-h616-published-spaced-1",
+      "bytes": 4002194,
+      "sha256": "e3d991e37df3f00f9c12223ba1556542e16276cdb9f03bb58a3ce5f1c0d19165",
+      "archivePath": "/workspace/full-board-ten-20261118-3242/baseline-plan/download-cache/14483812685.zip",
+      "primaryProof": "/workspace/full-board-ten-20261118-3242/artifacts-3242/h616/spaced/archive-proof.json",
+      "primaryProofSha256": "ee5da736c17c39d9f0c108696fd777e721622ed51d95d15c0f9451c0201dab78",
+      "independentReview": "/workspace/full-board-ten-20261118-3242/artifacts-3242/h616/spaced/independent-case-review.json",
+      "independentReviewSha256": "1e788573e9b0f256ab0890a01684cbd9dfe19a07922ce62497e85ca48d91ce5c"
+    },
+    {
+      "artifactId": 14483792509,
+      "name": "full-board-imx6-published-original-1",
+      "bytes": 14334735,
+      "sha256": "08907fb2656107173dd52b3a2963146106bfbbb969d73f92a3fa1b870a457950",
+      "archivePath": "/workspace/full-board-ten-20261118-3242/baseline-plan/download-cache/14483792509.zip",
+      "primaryProof": "/workspace/full-board-ten-20261118-3242/artifacts-3242/imx6/original/archive-proof.json",
+      "primaryProofSha256": "83ce83b4904e1908d81d77c3ba18e9577d559addc33834b121b44f96dfc561ba",
+      "independentReview": "/workspace/full-board-ten-20261118-3242/artifacts-3242/imx6/original/independent-case-review.json",
+      "independentReviewSha256": "4d3f7a4e1298fad433e16611429a78c8ab3936c59ba273892900293409fe55b5"
+    },
+    {
+      "artifactId": 14483547275,
+      "name": "full-board-glider-published-original-1",
+      "bytes": 8968087,
+      "sha256": "2237d3fbc05ef0b04816714c9749c6dda248d9f5a212ea090acd1310b6976f95",
+      "archivePath": "/workspace/full-board-ten-20261118-3242/baseline-plan/download-cache/14483547275.zip",
+      "primaryProof": "/workspace/full-board-ten-20261118-3242/artifacts-3242/glider/original/archive-proof.json",
+      "primaryProofSha256": "3bb7f636c8f51e6aca21550e89dcf464431d04cfcafd6cf6240f55a389697a2b",
+      "independentReview": "/workspace/full-board-ten-20261118-3242/artifacts-3242/glider/original/independent-case-review.json",
+      "independentReviewSha256": "ffe92c6c0b3332a50dcaf7bfb9a3e6e51618f85d345e07c529d2843ad9679e42"
+    },
+    {
+      "artifactId": 14483409229,
+      "name": "full-board-butterstick-published-summary-1",
+      "bytes": 37122,
+      "sha256": "0df2407890e6403113325d66bd750452aeae18541b4b85ed63b73e34156d56e8",
+      "archivePath": "/workspace/full-board-ten-20261118-3242/baseline-plan/download-cache/14483409229.zip",
+      "primaryProof": "/workspace/full-board-ten-20261118-3242/artifacts-3242/butterstick/summary/archive-proof.json",
+      "primaryProofSha256": "a0a4f94749f9c99bd147cc0d0cf0cc9602ef5e114ba9f6d5b52a28fdb93a1821",
+      "independentReview": "/workspace/full-board-ten-20261118-3242/artifacts-3242/butterstick/summary/independent-summary-review.json",
+      "independentReviewSha256": "6e85822878b9bbb2191960cbbc184e46620caf1270d5fd05e33b96125fa57a8d"
+    },
+    {
+      "artifactId": 14483099551,
+      "name": "full-board-icepi-published-original-1",
+      "bytes": 6007581,
+      "sha256": "028d735a62dda9f646c36b5d050031f1437c60606a7d79033119ece3ced23d09",
+      "archivePath": "/workspace/full-board-ten-20261118-3242/baseline-plan/download-cache/14483099551.zip",
+      "primaryProof": "/workspace/full-board-ten-20261118-3242/artifacts-3242/icepi/original/archive-proof.json",
+      "primaryProofSha256": "10dfa6309f36901d8360953f6494938cd0360c916d9a25c970cac76933beeab1",
+      "independentReview": "/workspace/full-board-ten-20261118-3242/artifacts-3242/icepi/original/independent-case-review.json",
+      "independentReviewSha256": "a3de28e96bd7063f413959072174d31c6f157063eb4091d9c6b0dd3d6e3f6fb9"
+    },
+    {
+      "artifactId": 14482778409,
+      "name": "full-board-butterstick-published-original-1",
+      "bytes": 8339594,
+      "sha256": "cd26e639a62dcf45be3a945a7ab9673a815a9935be001105248a6e1ca0b517ba",
+      "archivePath": "/workspace/full-board-ten-20261118-3242/baseline-plan/download-cache/14482778409.zip",
+      "primaryProof": "/workspace/full-board-ten-20261118-3242/artifacts-3242/butterstick/original/archive-proof.json",
+      "primaryProofSha256": "3a8193d92ba180fee3a67937f8ba90f49d3139530498f000da7395820ebf2fcc",
+      "independentReview": "/workspace/full-board-ten-20261118-3242/artifacts-3242/butterstick/original/independent-case-review.json",
+      "independentReviewSha256": "dcb22f4ea34e0de85a00e917d96474681ed1d38088505b2d63c799d8b995aca5"
+    }
+  ],
+  "jobs": [
+    {
+      "id": 135222112476,
+      "name": "Full board (glider, published)",
+      "conclusion": "failure",
+      "onlyCompletionAcceptanceMayFail": true,
+      "failedSteps": [
+        "Require selected full circuits to be complete and clean"
+      ]
+    },
+    {
+      "id": 135222112769,
+      "name": "Full board (icepi, published)",
+      "conclusion": "failure",
+      "onlyCompletionAcceptanceMayFail": true,
+      "failedSteps": [
+        "Require selected full circuits to be complete and clean"
+      ]
+    },
+    {
+      "id": 135222112833,
+      "name": "Full board (h616, published)",
+      "conclusion": "failure",
+      "onlyCompletionAcceptanceMayFail": true,
+      "failedSteps": [
+        "Require selected full circuits to be complete and clean"
+      ]
+    },
+    {
+      "id": 135222112840,
+      "name": "Full board (butterstick, published)",
+      "conclusion": "failure",
+      "onlyCompletionAcceptanceMayFail": true,
+      "failedSteps": [
+        "Require selected full circuits to be complete and clean"
+      ]
+    },
+    {
+      "id": 135222112856,
+      "name": "Full board (imx6, published)",
+      "conclusion": "failure",
+      "onlyCompletionAcceptanceMayFail": true,
+      "failedSteps": [
+        "Require selected full circuits to be complete and clean"
+      ]
+    }
+  ],
+  "comparison": "/workspace/full-board-ten-20261118-3242/comparison-3236-to-3242-authenticated.json",
+  "comparisonSha256": "2cbc84f18fc54995021b57b787f22c275ac500679bdeb9aa3b011d508ecfcd43",
+  "independentComparison": "/workspace/full-board-ten-20261118-3242/independent-comparison-3236-to-3242.json",
+  "independentComparisonSha256": "5c09727b622049ec2097390a1d8d60b53b9d27ee2f8884c67740ca1bb5ba5ae4",
+  "sourceOverrides": false,
+  "routingWasmUsed": false,
+  "limitations": [
+    "Single native runs support observed completion comparison, not a performance claim.",
+    "Hard capture deadlines can leave stale saved progress; per-case independent review records checkpoint ages.",
+    "Buffered phase SRJ output is distinguished from copper emitted into the assessed board.",
+    "Published package graph and Checks282 update together; physical outputs and native identities are compared separately."
+  ]
+}

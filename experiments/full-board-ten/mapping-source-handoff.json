@@ -1,0 +1,21 @@
+{
+  "repositories": [
+    {
+      "baseCommit": "f1fe8edcfb3dfde8fd644d09d81bad18743144b3",
+      "candidateCommit": "a03bb390246ed35a6ebbb4fa6d39350361f9caf0",
+      "productionClean": true,
+      "files": [
+        {
+          "path": "lib/DuplicateCongestedPortSolver.ts",
+          "production": true,
+          "sha256": "111fa0262a79c0cd77177f9d046f3bde199dffc01d1ec1ec086b12054a53f22d"
+        }
+      ],
+      "patches": {
+        "production": {
+          "sha256": "5471c0825499ba2d2a873c4172b99fe2d7fb1e076cd09a0c1eb7d490d5ce3863"
+        }
+      }
+    }
+  ]
+}

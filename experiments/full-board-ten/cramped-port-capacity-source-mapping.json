@@ -1,0 +1,111 @@
+{
+  "schemaVersion": 2,
+  "passed": true,
+  "sourceFrozen": true,
+  "originalAutorouterSha256": "5695c6361c0f7a7dc26ddd1b9264b8a8c122e5f7b9610cf24c6af3b99c545df1",
+  "candidateAutorouterSha256": "7f9aad1b371eabaf935df6551b01dde711b357140121ab81d03db0e6ba90b251",
+  "sourceMapSha256": "9edff1c06b9a33231e581e2aae1115cfd96213f28df65eb3d56d7d78b078241d",
+  "source": {
+    "repositories": [
+      {
+        "repository": "tscircuit/tiny-hypergraph",
+        "sourceBaseCommit": "f1fe8edcfb3dfde8fd644d09d81bad18743144b3",
+        "publishedBaseCommit": "f1fe8edcfb3dfde8fd644d09d81bad18743144b3",
+        "candidateCommit": "a03bb390246ed35a6ebbb4fa6d39350361f9caf0",
+        "productionPatchFile": "tiny-cramped-port-capacity-production.patch",
+        "productionPatchSha256": "5471c0825499ba2d2a873c4172b99fe2d7fb1e076cd09a0c1eb7d490d5ce3863",
+        "changedFiles": [
+          {
+            "relative": "lib/DuplicateCongestedPortSolver.ts",
+            "beforeSha256": "12801e8d12f34b93c0f4b78a551b2bb567a29df9f99d6831ce0c8ee2d2a86b65",
+            "afterSha256": "111fa0262a79c0cd77177f9d046f3bde199dffc01d1ec1ec086b12054a53f22d"
+          }
+        ]
+      }
+    ]
+  },
+  "spans": [
+    {
+      "kind": "replace",
+      "name": "DuplicateCongestedPortSolver.duplicateCongestedPorts",
+      "sourceRepository": "tscircuit/tiny-hypergraph",
+      "sourceRelative": "lib/DuplicateCongestedPortSolver.ts",
+      "startCharacter": 2095092,
+      "endCharacter": 2096609,
+      "startByte": 2095151,
+      "endByte": 2096668,
+      "originalText": "duplicateCongestedPorts(e){const t=this.getDuplicatePortProximity();if(!(t>0))throw new Error(\"duplicatePortProximity must be greater than zero\");const{solvedRoutes:n,...o}=this.serializedHyperGraph,i=this.serializedHyperGraph.regions.map(e=>({...e,pointIds:[...e.pointIds],d:rK(e.d)})),r=this.serializedHyperGraph.ports.map(e=>({...e,d:rK(e.d)})),s=new Map(i.map(e=>[e.regionId,e])),a=new Map(r.map(e=>[e.portId,e])),c=(e=>{const t=new Map;for(const n of e){const e=lK(n),o=t.get(e);o?o.push(n):t.set(e,[n])}return t})(this.serializedHyperGraph.ports),l=new Set(r.map(e=>e.portId)),h=[];for(const[n,o]of[...e.entries()].sort(([e],[t])=>e.localeCompare(t))){if(o<=1)continue;const e=a.get(n);if(!e)continue;const i=o-1,d=c.get(lK(e));if(!d)throw new Error(`No boundary ports found for \"${n}\"`);const u=pK(e,d),p=mK(e,u,s),m=cK(e),g=[];for(let s=1;s<=i;s++){const a=gK(n,s,l),c=t*s/(i+1),h=sK(rK(e.d));h.x=m.x+p.x*c,h.y=m.y+p.y*c,h.duplicatedFromPortId=n,h.duplicateIndex=s,h.duplicatePortUseCount=o,h.duplicatePortProximity=t,h.repairReason=\"congested-port\",r.push({...e,portId:a,d:h}),g.push(a)}for(const t of[e.region1Id,e.region2Id]){const e=s.get(t);e&&fK(e.pointIds,n,g)}h.push({sourcePortId:n,duplicatePortIds:g,useCount:o})}return this.report={portUseCounts:Object.fromEntries([...e.entries()].sort()),duplicatedPorts:h,routeSearchIterations:this.report.routeSearchIterations},{...o,regions:i,ports:r,connections:void 0===this.serializedHyperGraph.connections?void 0:rK(this.serializedHyperGraph.connections)}}",
+      "replacementText": "duplicateCongestedPorts(binding0){const binding1=this.getDuplicatePortProximity();if(!(binding1>0))throw new Error(\"duplicatePortProximity must be greater than zero\");const{solvedRoutes:binding2,...binding3}=this.serializedHyperGraph,binding4=this.serializedHyperGraph.regions.map(binding0=>({...binding0,pointIds:[...binding0.pointIds],d:rK(binding0.d)})),binding5=this.serializedHyperGraph.ports.map(binding0=>({...binding0,d:rK(binding0.d)})),binding6=new Map(binding4.map(binding0=>[binding0.regionId,binding0])),binding7=new Map(binding5.map(binding0=>[binding0.portId,binding0])),binding8=(binding0=>{const binding1=new Map;for(const binding2 of binding0){const binding0=lK(binding2),binding3=binding1.get(binding0);binding3?binding3.push(binding2):binding1.set(binding0,[binding2])}return binding1})(this.serializedHyperGraph.ports),binding9=new Set(binding5.map(binding0=>binding0.portId)),binding10=[];for(const[binding2,binding3]of[...binding0.entries()].sort(([binding0],[binding1])=>binding0.localeCompare(binding1))){if(binding3<=1)continue;const binding0=binding7.get(binding2);if(!binding0)continue;if(!0===binding0.d?.cramped)continue;const binding4=binding3-1,binding11=binding8.get(lK(binding0));if(!binding11)throw new Error(`No boundary ports found for \"${binding2}\"`);const binding12=pK(binding0,binding11),binding13=mK(binding0,binding12,binding6),binding14=cK(binding0),binding15=[];for(let binding6=1;binding6<=binding4;binding6++){const binding7=gK(binding2,binding6,binding9),binding8=binding1*binding6/(binding4+1),binding10=sK(rK(binding0.d));binding10.x=binding14.x+binding13.x*binding8,binding10.y=binding14.y+binding13.y*binding8,binding10.duplicatedFromPortId=binding2,binding10.duplicateIndex=binding6,binding10.duplicatePortUseCount=binding3,binding10.duplicatePortProximity=binding1,binding10.repairReason=\"congested-port\",binding5.push({...binding0,portId:binding7,d:binding10}),binding15.push(binding7)}for(const binding1 of[binding0.region1Id,binding0.region2Id]){const binding0=binding6.get(binding1);binding0&&fK(binding0.pointIds,binding2,binding15)}binding10.push({sourcePortId:binding2,duplicatePortIds:binding15,useCount:binding3})}return this.report={portUseCounts:Object.fromEntries([...binding0.entries()].sort()),duplicatedPorts:binding10,routeSearchIterations:this.report.routeSearchIterations},{...binding3,regions:binding4,ports:binding5,connections:void 0===this.serializedHyperGraph.connections?void 0:rK(this.serializedHyperGraph.connections)}}",
+      "originalSha256": "ae8ca0a92a451819ae4781cabca8490c2b87bfe335858be8422d503ba4a8752f",
+      "replacementSha256": "83c31ad42fd451461feedb55d357717c76ac1424fedfd493a377c16368e03b20",
+      "compiledBaseEquivalent": true,
+      "baseCanonicalSha256": "8bae98286e14c81c4e0747edb07ed668e0caef32e860a70e40c8afc44ae65028",
+      "aliases": {
+        "cloneSerializableValue": "rK",
+        "getBoundaryKey": "lK",
+        "findNearestPortOnSameBoundary": "pK",
+        "getDuplicateDirection": "mK",
+        "getPortPoint": "cK",
+        "createDuplicatePortId": "gK",
+        "toObjectRecord": "sK",
+        "insertDuplicatePortIdsAfterSource": "fK"
+      }
+    }
+  ],
+  "unchangedSegments": [
+    {
+      "startByte": 0,
+      "endByte": 2095151,
+      "candidateStartByte": 0,
+      "candidateEndByte": 2095151,
+      "sha256": "4eba205fc35c48265d4d727182c67067a63451dcc51356fcd1cbe7f8eabad2d2"
+    },
+    {
+      "startByte": 2096668,
+      "endByte": 3344844,
+      "candidateStartByte": 2097649,
+      "candidateEndByte": 3345825,
+      "sha256": "d9d341e3354d04b788e1ebe388ecb517577d5ccadcbd378046ede2776d5b3c89"
+    }
+  ],
+  "qualification": {
+    "allOutsideBytesUnchanged": true,
+    "unrelatedSourceRuntimeUnchanged": true,
+    "compiledBaseEquivalent": true,
+    "sourceMapGeneratedOffsetsUsed": false,
+    "exactExistingFix": {
+      "url": "https://github.com/tscircuit/tiny-hypergraph/pull/274",
+      "commit": "31e0f360bb4ff245a2995ed53eacfd6fc1e403a3",
+      "guard": "if (sourcePort.d?.cramped === true) continue"
+    },
+    "typeErasure": "TypeScript5.9.3 transpileModule targeting ESNext; no Bun syntax optimization",
+    "inlinedUnchangedSourceHelper": {
+      "name": "groupPortsByBoundary",
+      "sourceSha256": "c566f305af7b2ced6bd1f4c2ec32b015217b13a344ec18c177c6f171e2118007",
+      "qualification": "Compile original method plus unchanged source helper; entire canonical method equals the published method under the recorded external aliases"
+    },
+    "canonicalizer": "Terser5.51.2 three compression passes and deterministic lexical names; differing free bindings mapped bijectively; properties and local bindings must match exactly",
+    "sourceAliases": [
+      {
+        "relative": "lib/DuplicateCongestedPortSolver.ts",
+        "aliases": {
+          "cloneSerializableValue": "rK",
+          "getBoundaryKey": "lK",
+          "findNearestPortOnSameBoundary": "pK",
+          "getDuplicateDirection": "mK",
+          "getPortPoint": "cK",
+          "createDuplicatePortId": "gK",
+          "toObjectRecord": "sK",
+          "insertDuplicatePortIdsAfterSource": "fK"
+        }
+      }
+    ],
+    "bun": "1.4.3",
+    "typescript": "5.9.3",
+    "terser": "5.51.2"
+  },
+  "sourceHandoffSha256": "2aaf5a9a59ce9e54e4651b18e6405e3e7ac7f58a36ed9d2f0387bc4741af84f8",
+  "mapperSha256": "5164e03402b39e930cc13920ad045c2a18a9a90e7dd8d0a1d6478a6e0ef0998a",
+  "moduleImported": false,
+  "nativeRoutingExecuted": false
+}

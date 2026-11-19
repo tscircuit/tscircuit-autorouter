@@ -1,0 +1,195 @@
+{
+  "schemaVersion": 1,
+  "runner": "blacksmith-8vcpu-ubuntu-2404-arm",
+  "budgetsMs": {
+    "capture": 900000,
+    "hardKill": 960000,
+    "assessment": 180000
+  },
+  "runtime": {
+    "main": "0.0.3242",
+    "core": "0.0.2424",
+    "eval": "0.0.1818",
+    "autorouter": "0.0.1132",
+    "publishedCoreSha256": "f8122fb04b46cb37bf48de0f8642044bc8360937a03630e4655112cc8694471b",
+    "publishedAutorouterSha256": "5695c6361c0f7a7dc26ddd1b9264b8a8c122e5f7b9610cf24c6af3b99c545df1",
+    "dependencyGraphPolicy": "Exact frozen3242 release and lockfiles; no independent transitive refresh.",
+    "candidateAutorouterSha256": "7f9aad1b371eabaf935df6551b01dde711b357140121ab81d03db0e6ba90b251"
+  },
+  "assessmentPolicy": "Restore exact published runtime before independent physical connectivity and geometry assessment; report gained/lost names and partial/deadline states.",
+  "qualificationReady": false,
+  "status": "HELD_QUALIFIED_PENDING_ROOT_RELEASE",
+  "branch": "bench/full-board-cramped-guard-3242-20261119",
+  "workflow": ".github/workflows/full-board-cramped-guard.yml",
+  "baselineController": "49e9de35db347f94eeeaef9bca48d821ed3be51e",
+  "aliasHarnessController": "95ed0ac7",
+  "historicalBaseline": {
+    "runId": 44423458886,
+    "head": "49e9de35db347f94eeeaef9bca48d821ed3be51e",
+    "rerouted": false,
+    "scope": "Authenticated full native3242 published artifacts. Compare completion and physical findings; no timing-gain claim.",
+    "handoffFile": "published-baseline-handoff.json",
+    "handoffSha256": "647fd215058c7a2609c757732e8a2f1d57dcad4bc8784da5a3ba14855970cd36"
+  },
+  "experiment": "cramped-guard",
+  "cases": [
+    {
+      "board": "h616",
+      "cohort": "original",
+      "expectedRoutableNets": 121
+    },
+    {
+      "board": "h616",
+      "cohort": "spaced",
+      "expectedRoutableNets": 121
+    },
+    {
+      "board": "butterstick",
+      "cohort": "original",
+      "expectedRoutableNets": 317
+    },
+    {
+      "board": "butterstick",
+      "cohort": "spaced",
+      "expectedRoutableNets": 317
+    },
+    {
+      "board": "glider",
+      "cohort": "original",
+      "expectedRoutableNets": 356
+    },
+    {
+      "board": "glider",
+      "cohort": "spaced",
+      "expectedRoutableNets": 356
+    },
+    {
+      "board": "imx6",
+      "cohort": "original",
+      "expectedRoutableNets": 404
+    },
+    {
+      "board": "imx6",
+      "cohort": "spaced",
+      "expectedRoutableNets": 404
+    },
+    {
+      "board": "icepi",
+      "cohort": "original",
+      "expectedRoutableNets": 230
+    },
+    {
+      "board": "icepi",
+      "cohort": "spaced",
+      "expectedRoutableNets": 230
+    }
+  ],
+  "expectedRoutableNetsTotal": 2856,
+  "laneOrder": [
+    "candidate"
+  ],
+  "jobs": 10,
+  "maxParallel": 5,
+  "jobTimeoutMinutes": 30,
+  "sourceMappingSha256": "7e64ae807660a36567ccf5dc20c37b69bfa0f53431452903126dd2779bac37c3",
+  "sourceMappingToolSha256": "5164e03402b39e930cc13920ad045c2a18a9a90e7dd8d0a1d6478a6e0ef0998a",
+  "source": {
+    "repository": "tscircuit/tiny-hypergraph",
+    "baseCommit": "f1fe8edcfb3dfde8fd644d09d81bad18743144b3",
+    "candidateCommit": "a03bb390246ed35a6ebbb4fa6d39350361f9caf0",
+    "candidateLibTree": "dcfbf39565f6818ec3831b98bfd9d1841f470313",
+    "patchSha256": "5471c0825499ba2d2a873c4172b99fe2d7fb1e076cd09a0c1eb7d490d5ce3863",
+    "files": {
+      "lib/DuplicateCongestedPortSolver.ts": {
+        "beforeSha256": "12801e8d12f34b93c0f4b78a551b2bb567a29df9f99d6831ce0c8ee2d2a86b65",
+        "afterSha256": "111fa0262a79c0cd77177f9d046f3bde199dffc01d1ec1ec086b12054a53f22d"
+      }
+    }
+  },
+  "overlay": {
+    "schemaVersion": 2,
+    "replace": [
+      "DuplicateCongestedPortSolver.duplicateCongestedPorts"
+    ],
+    "insert": [],
+    "publishedSourceMapSha256": "9edff1c06b9a33231e581e2aae1115cfd96213f28df65eb3d56d7d78b078241d",
+    "strategy": "Sole source-qualified Tiny cramped-port method replacement in published AR1132. All other AR bytes and every Core byte unchanged."
+  },
+  "nativePolicies": "All ten complete original/spaced circuits,2856 native demands, same source IDs/options/phase ordering and900/960/180-second budgets. No saved/pre-routed board import, B/A03/Uniform changes or routing WASM.",
+  "observerPolicy": "Exact49e9 coarse diagnostic targets/hooks and15s circuit capture remain. Only AR alias identity/provenance and restoration additions are inherited from95ed; its observer-disable line is excluded.",
+  "comparisonPolicy": "Offline authenticated baseline/candidate case and summary ZIPs; all ten native membership/geometry/completion/physical findings and exact gained/lost names. Later phase inputs/preloads may change; no timing-gain or equivalent-later-input assumption.",
+  "frozenHarnessFiles": {
+    "autorouter-dependencies/bun.lock": "ec313c582c29c1e35bb31190151a5649198c177119d32fe311746c06e94e8c4e",
+    "autorouter-dependencies/package.json": "7b4c1ecf979432e472a4f0589ed49976a8a1323ff7bf651a5938ee7006b61360",
+    "baseline-run-plan.json": "3b3d1b99221b1e175eae3f5e6a824b959b9a97f19e67bb2eb3da2ad4704689bf",
+    "bootstrap.py": "23de25ac8960be89afc57ba27b0d3fddb6e65dba593024be59ec5073d266164d",
+    "calibrate-assessment.tsx": "efeb820cf34239465df53ce4c7932293e41a14dcab4bedb823c3bc60cc9627a0",
+    "compare-cramped-guard.py": "aa44d601ddc52e578a5a4810d2e254977dfbfefa896b1170701095528db908f0",
+    "cramped-port-capacity-source-mapping.json": "7e64ae807660a36567ccf5dc20c37b69bfa0f53431452903126dd2779bac37c3",
+    "createCoarseRoutingDiagnostics.ts": "dea45bba3386a9b55b7709834dff65468c421992808b406f54c6f9e556e8b618",
+    "createCrampedPortCapacityOverlay.ts": "5164e03402b39e930cc13920ad045c2a18a9a90e7dd8d0a1d6478a6e0ef0998a",
+    "harness-provenance.json": "fc4b9191002e33b0561d50a2208d38848d81da0735869bb4f563bb9afe1b7405",
+    "mapping-source-handoff.json": "2aaf5a9a59ce9e54e4651b18e6405e3e7ac7f58a36ed9d2f0387bc4741af84f8",
+    "package.json": "469e1861d1259cd1307bca324fb0d8ba0a67ea0323d4e728a35c90a2bc92bdf3",
+    "prepare-cases.ts": "b72e632e9c9152c9e5daedf1bb60daa5d86c33fdcc454f2a7825827d24124330",
+    "prepare-cramped-guard.py": "beee433df5d2b9e86123cd2c5b7b0d3c9c90406a53c8d834d36d32c1e8f73bff",
+    "published-baseline-handoff.json": "647fd215058c7a2609c757732e8a2f1d57dcad4bc8784da5a3ba14855970cd36",
+    "published-release-provenance.json": "89326fdcc1e99945b98798b0b5b95c60560be6f1f3789184e3bda84464577dc3",
+    "release.json": "5eece79b055b28bd17e321140949a66f036ceb28573adf108419b5f2f64ddbd4",
+    "render-published.tsx": "e12628dfd6560dfb526392d22f8724c062054e54716d4439e5a91a397b2f231e",
+    "report.py": "3fa537cd30224a1bdf10a6acd7e293a0a5e8e187c1e2c210b0ed83370a153b5d",
+    "run-one.ts": "a43021dd254280076480528a41767d5d33cc79ffb43189491172ca5831c96af0",
+    "runtime/bun.lock": "cdf19ae5668a61815a76f9d912b1fbc88907b1f029b2f3dd955f6f81a6cb7b57",
+    "runtime/package.json": "c0542a47684ae97ccbe3670fbd2555c3ce0b935e00e8c13aff983442426decda",
+    "source-provenance.json": "bd24be29c5fdd5ae68ce15c5b2bc50f172ecdd325dcc1b57a80ec653d12570fb",
+    "tiny-cramped-port-capacity-production.patch": "5471c0825499ba2d2a873c4172b99fe2d7fb1e076cd09a0c1eb7d490d5ce3863",
+    "tsconfig.json": "2e881577c63bb6b62d14abd319240bbc6ae5e206ecb007dae80ab3ec922293c7"
+  },
+  "frozenFiles": {
+    "experiments/full-board-ten/autorouter-dependencies/bun.lock": "ec313c582c29c1e35bb31190151a5649198c177119d32fe311746c06e94e8c4e",
+    "experiments/full-board-ten/autorouter-dependencies/package.json": "7b4c1ecf979432e472a4f0589ed49976a8a1323ff7bf651a5938ee7006b61360",
+    "experiments/full-board-ten/baseline-run-plan.json": "3b3d1b99221b1e175eae3f5e6a824b959b9a97f19e67bb2eb3da2ad4704689bf",
+    "experiments/full-board-ten/bootstrap.py": "23de25ac8960be89afc57ba27b0d3fddb6e65dba593024be59ec5073d266164d",
+    "experiments/full-board-ten/calibrate-assessment.tsx": "efeb820cf34239465df53ce4c7932293e41a14dcab4bedb823c3bc60cc9627a0",
+    "experiments/full-board-ten/compare-cramped-guard.py": "aa44d601ddc52e578a5a4810d2e254977dfbfefa896b1170701095528db908f0",
+    "experiments/full-board-ten/cramped-port-capacity-source-mapping.json": "7e64ae807660a36567ccf5dc20c37b69bfa0f53431452903126dd2779bac37c3",
+    "experiments/full-board-ten/createCoarseRoutingDiagnostics.ts": "dea45bba3386a9b55b7709834dff65468c421992808b406f54c6f9e556e8b618",
+    "experiments/full-board-ten/createCrampedPortCapacityOverlay.ts": "5164e03402b39e930cc13920ad045c2a18a9a90e7dd8d0a1d6478a6e0ef0998a",
+    "experiments/full-board-ten/harness-provenance.json": "fc4b9191002e33b0561d50a2208d38848d81da0735869bb4f563bb9afe1b7405",
+    "experiments/full-board-ten/mapping-source-handoff.json": "2aaf5a9a59ce9e54e4651b18e6405e3e7ac7f58a36ed9d2f0387bc4741af84f8",
+    "experiments/full-board-ten/package.json": "469e1861d1259cd1307bca324fb0d8ba0a67ea0323d4e728a35c90a2bc92bdf3",
+    "experiments/full-board-ten/prepare-cases.ts": "b72e632e9c9152c9e5daedf1bb60daa5d86c33fdcc454f2a7825827d24124330",
+    "experiments/full-board-ten/prepare-cramped-guard.py": "beee433df5d2b9e86123cd2c5b7b0d3c9c90406a53c8d834d36d32c1e8f73bff",
+    "experiments/full-board-ten/published-baseline-handoff.json": "647fd215058c7a2609c757732e8a2f1d57dcad4bc8784da5a3ba14855970cd36",
+    "experiments/full-board-ten/published-release-provenance.json": "89326fdcc1e99945b98798b0b5b95c60560be6f1f3789184e3bda84464577dc3",
+    "experiments/full-board-ten/release.json": "5eece79b055b28bd17e321140949a66f036ceb28573adf108419b5f2f64ddbd4",
+    "experiments/full-board-ten/render-published.tsx": "e12628dfd6560dfb526392d22f8724c062054e54716d4439e5a91a397b2f231e",
+    "experiments/full-board-ten/report.py": "3fa537cd30224a1bdf10a6acd7e293a0a5e8e187c1e2c210b0ed83370a153b5d",
+    "experiments/full-board-ten/run-one.ts": "a43021dd254280076480528a41767d5d33cc79ffb43189491172ca5831c96af0",
+    "experiments/full-board-ten/runtime/bun.lock": "cdf19ae5668a61815a76f9d912b1fbc88907b1f029b2f3dd955f6f81a6cb7b57",
+    "experiments/full-board-ten/runtime/package.json": "c0542a47684ae97ccbe3670fbd2555c3ce0b935e00e8c13aff983442426decda",
+    "experiments/full-board-ten/source-provenance.json": "bd24be29c5fdd5ae68ce15c5b2bc50f172ecdd325dcc1b57a80ec653d12570fb",
+    "experiments/full-board-ten/tiny-cramped-port-capacity-production.patch": "5471c0825499ba2d2a873c4172b99fe2d7fb1e076cd09a0c1eb7d490d5ce3863",
+    "experiments/full-board-ten/tsconfig.json": "2e881577c63bb6b62d14abd319240bbc6ae5e206ecb007dae80ab3ec922293c7",
+    ".github/workflows/full-board-cramped-guard.yml": "609de28d53b73be309b8db3155f4bccfa938f8bb386859a36398a420b18cfe4a"
+  },
+  "qualification": {
+    "nativeRoutingExecuted": false,
+    "dependencyInstallsExecutedLocally": false,
+    "artifactDownloadsExecutedLocally": false,
+    "candidateArtifactsSyntheticInContracts": true,
+    "scope": "Existing alias/restore and baseline observation/assessment reuse independently reviewed. Comparator qualified against authentic retained all-ten baseline archives and eight explicit offline synthetic/rejection contracts. No candidate gain or native completion claimed.",
+    "evidence": [
+      {
+        "path": "/workspace/full-board-ten-20261118-3242/cramped-guard-all-ten-controller-preparation/independent-runtime-activation-review.json",
+        "sha256": "af61582006ddd8b9c516ee23a262176453de0dfb67b0d870956c3ab72504d255",
+        "bytes": 2698
+      },
+      {
+        "path": "/workspace/full-board-ten-20261118-3242/cramped-guard-all-ten-controller-preparation/comparator-contracts.json",
+        "sha256": "32b5935ee2d0512bded0ddac39b35566bd7b52a0f52f550e9dc22c3b0455252f",
+        "bytes": 3534
+      }
+    ]
+  }
+}

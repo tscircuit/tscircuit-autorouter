@@ -59,9 +59,11 @@ globalThis.WebAssembly = new Proxy(nativeWasm, {
     return wrapped
   },
 })
-// No custom Core module, algorithmFn, SOLVERS injection or source package.
+// Native package resolution selects the declared autorouter source overlay.
 if (!task.runtimeManifestPath) throw new Error("Explicit published runtime identity manifest required")
-const expectedRuntime = JSON.parse(readFileSync(task.runtimeManifestPath, "utf8")).packages
+const runtimeManifest = JSON.parse(readFileSync(task.runtimeManifestPath, "utf8"))
+const expectedRuntime = runtimeManifest.packages
+if (JSON.stringify(task.routingSourceOverride ?? null) !== JSON.stringify(runtimeManifest.routingSourceOverride ?? null)) throw new Error("Routing source override identity differs from manifest")
 const expectedNames = ["tscircuit", "@tscircuit/core", "@tscircuit/eval", "@tscircuit/capacity-autorouter"]
 if (expectedRuntime.length !== 4 || expectedNames.some(name => !expectedRuntime.some((row: any) => row.name === name))) throw new Error("Runtime manifest must identify the complete compatible four-package chain")
 const runtime = expectedRuntime.map(({ name, version, entrySha256 }: { name: string; version: string; entrySha256: string }) => {
@@ -80,8 +82,10 @@ function readablePackage(folder: string, name: string): boolean {
   catch (error: any) { if (error.code === "ENOENT") return false; throw error }
 }
 const { RootCircuit, SOLVERS } = await import("tscircuit")
+const { RootCircuit: SelectedRootCircuit } = await import("@tscircuit/core")
 importingPublishedMain = false
 const { AutoroutingPipelineSolver9_PreloadedTraceGraph: PublishedPipeline9 } = await import("@tscircuit/capacity-autorouter")
+if (RootCircuit !== SelectedRootCircuit || SOLVERS.AutoroutingPipelineSolver9_PreloadedTraceGraph !== PublishedPipeline9) throw new Error("Main package did not select the authenticated Core/autorouter classes")
 const { default: SourceBoard } = await import(pathToFileURL(resolve(task.boardModule)).href)
 const { convertCircuitJsonToPcbSvg } = await import("circuit-to-svg")
 const circuit = new RootCircuit({ platform: { localCacheEngine: undefined, routingDisabled: executionMode === "geometry" } })
@@ -90,7 +94,7 @@ const progress: any = {
   ...task, executionMode, status: "running", renderCompleted: false, errors: [], phases: [], solvers: [],
   forbiddenRoutingSolverSelections: [],
   elapsedMs: 0, expectedGroups: task.cohort === "original" ? [...new Set(source.nets.map(net => net.group))] : ["byte0", "byte1", "remaining", "other_signals", "power"],
-  runtime: { packages: runtime, candidateOverride: (task.dependencyOverrides?.length ?? 0) > 0, routingSourceOverride: false, cacheEngine: false },
+  runtime: { packages: runtime, candidateOverride: (task.dependencyOverrides?.length ?? 0) > 0, routingSourceOverride: task.routingSourceOverride ?? null, cacheEngine: false },
   planeIntent: { enabled: task.cohort === "original", authoredZones: task.cohort === "original" ? source.planeIntent.zones.length : 0, savedCopperImported: false },
 }
 const atomic = (name: string, value: Uint8Array | string): void => {
