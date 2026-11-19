@@ -1,0 +1,181 @@
+name: Qualify small boundary and plane-contact fixes
+on:
+  push:
+    branches: [codex/ddr2427-restart-boundary]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  native-experiment:
+    strategy:
+      fail-fast: false
+      matrix:
+        board: [orangecrab, h616, butterstick, glider, imx6, icepi]
+        variant: [simple_boundary, finite_boundary]
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: 3258e97a80f0239c0c92de072c4cba5d559935ce
+          path: source
+      - uses: actions/download-artifact@v4
+        with:
+          name: published2427-${{ matrix.board }}
+          run-id: 44519377875
+          github-token: ${{ github.token }}
+          path: captured
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Prepare immutable source variants with identical dependencies
+        run: |
+          (cd source && bun install --frozen-lockfile --ignore-scripts)
+          python3 - <<'PYVARIANTS'
+          import json,subprocess
+          from pathlib import Path
+          root=Path.cwd()
+          variants=json.loads(Path('experiments/full-board-priority-analysis/restart-boundary-variants.json').read_text())
+          for name,revision in variants.items():
+              if name != '${{ matrix.variant }}': continue
+              subprocess.run(['git','fetch','--no-tags','origin',revision],cwd='source',check=True)
+              folder=root/'variants'/name
+              subprocess.run(['git','worktree','add','--detach',str(folder),revision],cwd='source',check=True)
+              (folder/'node_modules').symlink_to(root/'source/node_modules',target_is_directory=True)
+              (folder/'replay-stack-native.ts').write_bytes(Path('experiments/full-board-priority-analysis/replay-stack-native.ts').read_bytes())
+              (folder/'validate-native-request-constraints.ts').write_bytes(Path('experiments/full-board-priority-analysis/validate-native-request-constraints.ts').read_bytes())
+          PYVARIANTS
+      - name: Replay original captured inputs with the same 900-second budget
+        env:
+          BOARD_ID: ${{ matrix.board }}
+          SELECTED_VARIANT: ${{ matrix.variant }}
+          NATIVE_FANOUT_BUDGET_MS: '900000'
+        run: |
+          python3 - <<'PYREPLAY'
+          import json,os,subprocess
+          from pathlib import Path
+          root=Path.cwd()
+          variants=json.loads(Path('experiments/full-board-priority-analysis/restart-boundary-variants.json').read_text())
+          for name,revision in variants.items():
+              if name != os.environ['SELECTED_VARIANT']: continue
+              output=root/'results'/name
+              completed=subprocess.run(['bun','replay-stack-native.ts',str(root/'captured'/os.environ['BOARD_ID']/'fanout-1-input.json.gz'),str(output)],cwd=root/'variants'/name)
+              print('STACK_VARIANT_EXIT',json.dumps({'variant':name,'revision':revision,'exitCode':completed.returncode}),flush=True)
+          PYREPLAY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: restart-boundary-${{ matrix.board }}-${{ matrix.variant }}
+          path: results
+          retention-days: 14
+      - name: Export native metrics and actual copper
+        if: always()
+        run: |
+          python3 - <<'PYEXPORT'
+          import base64,hashlib,io,json,zipfile
+          from pathlib import Path
+          rows=[]
+          for path in sorted(Path('results').glob('*/report.json')):
+              report=json.loads(path.read_text())
+              rows.append({'variant':path.parent.name,**report,'copperSha256':hashlib.sha256((path.parent/'best-traces.json').read_bytes()).hexdigest()})
+          print('STACK_NATIVE_SUBSETS_REPORT',json.dumps(rows,separators=(',',':')))
+          stream=io.BytesIO()
+          with zipfile.ZipFile(stream,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=9) as archive:
+              for path in Path('results').rglob('*'):
+                  if path.is_file():archive.writestr(str(path.relative_to('results')),path.read_bytes())
+          print('STACK_NATIVE_SUBSETS_EVIDENCE_BEGIN')
+          encoded=base64.b64encode(stream.getvalue()).decode()
+          for offset in range(0,len(encoded),8000):print(encoded[offset:offset+8000])
+          print('STACK_NATIVE_SUBSETS_EVIDENCE_END')
+          assert len(rows)==1
+          # Preserve failed physical audits as evidence; compare qualified requests, never raw counts alone.
+          PYEXPORT
+
+
+  matched-frozen:
+    strategy:
+      fail-fast: false
+      matrix:
+        pair: [neighbors, full]
+        include:
+          - pair: neighbors
+            before: e4edfc8122093bf7c6d67677f4cdc3344ef3983e
+            after: ad6ffd998ea69f903e13abac2651d37ad5c3bcb1
+          - pair: full
+            before: e4edfc8122093bf7c6d67677f4cdc3344ef3983e
+            after: 9b4e657086b8c1eb7b17d8319ab032f3f44f7203
+    runs-on: blacksmith-32vcpu-ubuntu-2404-arm
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: ${{ matrix.before }}
+          path: original
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: ${{ matrix.after }}
+          path: cleanup
+      - uses: actions/download-artifact@v4
+        with:
+          name: guard-0
+          run-id: 44415945774
+          github-token: ${{ github.token }}
+          path: frozen
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - run: |
+          for revision in original cleanup; do
+            (cd "$revision" && bun install --frozen-lockfile --ignore-scripts)
+            cp experiments/full-board-priority-analysis/replay-frozen-fanout31.ts "$revision/replay-frozen-fanout31.ts"
+          done
+          python3 experiments/full-board-priority-analysis/add-frozen-physical-audit.py original cleanup
+      - name: Run all frozen cases before and after the cleanup on the same worker
+        run: |
+          for revision in original cleanup; do
+            (cd "$revision" && bun replay-frozen-fanout31.ts "$GITHUB_WORKSPACE/frozen/inputs" "$GITHUB_WORKSPACE/matched/$revision" 16)
+          done
+      - name: Export reports and routed SVG hashes
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          for folder in [*Path('matched').glob('*'),*Path('probes').glob('*/*')]:
+              report=folder/'benchmark.json'
+              if not report.exists():continue
+              print('MATCHED_FANOUT31_RESULT',json.dumps({'cohort':str(folder),'report':json.loads(report.read_text()),'svgs':{path.name:hashlib.sha256(path.read_bytes()).hexdigest() for path in folder.glob('*.svg')}},separators=(',',':')))
+          print('FROZEN_INPUT_HASHES',json.dumps({path.name:hashlib.sha256(path.read_bytes()).hexdigest() for path in Path('frozen/inputs').glob('*.json')},separators=(',',':')))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: restart-frozen-${{ matrix.pair }}
+          path: |
+            matched
+            probes
+
+
+  source-check:
+    strategy:
+      fail-fast: false
+      matrix:
+        revision: [6ead30efc8285012b2cec110cbcbb935d5a21ee3, 9b4e657086b8c1eb7b17d8319ab032f3f44f7203]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: ${{ matrix.revision }}
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - run: bun install --frozen-lockfile --ignore-scripts
+      - run: bun run format:check
+      - if: always()
+        run: bun run typecheck
