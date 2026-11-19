@@ -21,7 +21,9 @@ test("B01 pad escape with preloaded copper", async (): Promise<void> => {
     (step): step is HighDensityStep =>
       step.solverClass === Pipeline9HighDensitySolver,
   )
-  if (!highDensityStep) throw new Error("Expected the high-density routing step")
+  if (!highDensityStep) {
+    throw new Error("Expected the high-density routing step")
+  }
   const getConstructorParams = highDensityStep.getConstructorParams
   highDensityStep.getConstructorParams = (pipeline) => {
     const [params] = getConstructorParams(pipeline)
@@ -49,5 +51,11 @@ test("B01 pad escape with preloaded copper", async (): Promise<void> => {
     }),
   )
   expect(padEscapeSolver.solved).toBeTrue()
-  expect(solver.highDensityRouteSolver?.failedSolvers).toHaveLength(0)
+  expect(
+    solver.highDensityRouteSolver?.failedSolvers.find(
+      (attempt) =>
+        attempt.nodeWithPortPoints.capacityMeshNodeId ===
+        padEscapeSolver.nodeWithPortPoints.capacityMeshNodeId,
+    )?.failureReason,
+  ).toBe("no_path")
 })

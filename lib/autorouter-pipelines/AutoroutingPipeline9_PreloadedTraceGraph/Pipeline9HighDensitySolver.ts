@@ -39,7 +39,7 @@ export const DEFAULT_PIPELINE9_OBSTACLE_MARGIN = 0.15
 type B01Params = ConstructorParameters<typeof HighDensitySolverB01>[0]
 type MinimumPadClearanceSearch =
   | { params: B01Params }
-  | { regionalError: string }
+  | { previousError: string }
 
 export type Pipeline9HighDensitySolverParams = {
   nodePortPoints: NodeWithPortPoints[]
@@ -726,11 +726,11 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     }
   }
 
-  private startB01AtMinimumPadClearance(regionalError: string): boolean {
+  private startB01AtMinimumPadClearance(previousError: string): boolean {
     const search = this.minimumPadClearanceSearch
     if (!search || !("params" in search)) return false
 
-    this.minimumPadClearanceSearch = { regionalError }
+    this.minimumPadClearanceSearch = { previousError }
     this.activeFallbackSolver = null
     this.startB01Solver(search.params)
     return true
@@ -1269,8 +1269,8 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
         this.activeB01Solver = null
         const error = solver.error ?? "unknown error"
         const minimumSearch = this.minimumPadClearanceSearch
-        if (minimumSearch && "regionalError" in minimumSearch) {
-          this.error = `${minimumSearch.regionalError}; B01 at minimum pad clearance failed: ${error}`
+        if (minimumSearch && "previousError" in minimumSearch) {
+          this.error = `${minimumSearch.previousError}; B01 at minimum pad clearance failed: ${error}`
           this.failed = true
           this.minimumPadClearanceSearch = undefined
           this.activeNode = null
@@ -1281,7 +1281,9 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
           this.minimumPadClearanceSearch = undefined
         }
         if (!this.enableRegionalFallback) {
-          this.error = `Pipeline9 ${this.activeFallbackReason}`
+          const error = `Pipeline9 ${this.activeFallbackReason}`
+          if (this.startB01AtMinimumPadClearance(error)) return
+          this.error = error
           this.failed = true
           this.activeNode = null
           return
@@ -1353,31 +1355,29 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
         : DEFAULT_PIPELINE9_OBSTACLE_MARGIN,
       ...this.params.b01RepairOptions,
     }
-    // Prefer the existing spacing while a regional repair is available.
+    // Search at the preferred spacing before using the board's pad minimums.
     const preferredClearance = b01Options.obstacleClearanceMargin ?? 0
     let hasLowerPadClearance = false
-    const preferredBoardObstacles = this.enableRegionalFallback
-      ? boardObstacles.map((obstacle) => {
-          const { traceClearanceMargin, viaClearanceMargin } = obstacle
-          const preferWiderTraceClearance =
-            (traceClearanceMargin ?? preferredClearance) < preferredClearance
-          const preferWiderViaClearance =
-            (viaClearanceMargin ?? preferredClearance) < preferredClearance
-          if (!preferWiderTraceClearance && !preferWiderViaClearance) {
-            return obstacle
-          }
-          hasLowerPadClearance = true
-          return {
-            ...obstacle,
-            traceClearanceMargin: preferWiderTraceClearance
-              ? undefined
-              : traceClearanceMargin,
-            viaClearanceMargin: preferWiderViaClearance
-              ? undefined
-              : viaClearanceMargin,
-          }
-        })
-      : boardObstacles
+    const preferredBoardObstacles = boardObstacles.map((obstacle) => {
+      const { traceClearanceMargin, viaClearanceMargin } = obstacle
+      const preferWiderTraceClearance =
+        (traceClearanceMargin ?? preferredClearance) < preferredClearance
+      const preferWiderViaClearance =
+        (viaClearanceMargin ?? preferredClearance) < preferredClearance
+      if (!preferWiderTraceClearance && !preferWiderViaClearance) {
+        return obstacle
+      }
+      hasLowerPadClearance = true
+      return {
+        ...obstacle,
+        traceClearanceMargin: preferWiderTraceClearance
+          ? undefined
+          : traceClearanceMargin,
+        viaClearanceMargin: preferWiderViaClearance
+          ? undefined
+          : viaClearanceMargin,
+      }
+    })
     const props: B01Params = {
       ...b01Options,
       nodeWithPortPoints: normalizedNode as B01NodeWithPortPoints,
