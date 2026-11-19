@@ -9,6 +9,7 @@ import {
   pointToSegmentDistance,
   segmentToSegmentMinDistance,
 } from "@tscircuit/math-utils"
+import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { GraphicsObject } from "graphics-debug"
 import { NodeWithPortPoints } from "lib/types/high-density-types"
 import { cloneAndShuffleArray } from "lib/utils/cloneAndShuffleArray"
@@ -19,6 +20,10 @@ import { BaseSolver } from "../BaseSolver"
 import { safeTransparentize } from "../colors"
 
 export type ConnectionName = string
+
+type ViaPathPoint = Point3 & { pcb_port_id?: string }
+
+const ENDPOINT_CONTACT_TOLERANCE_MM = 1e-6
 
 export interface Segment {
   start: Point3
@@ -62,6 +67,7 @@ export class ViaPossibilitiesSolver2 extends BaseSolver {
   PLACEHOLDER_WALL_BUFFER_DISTANCE = 0.1
   NEW_HEAD_WALL_BUFFER_DISTANCE = 0.05
   viaDiameter: number
+  connMap?: ConnectivityMap
 
   unprocessedConnections: ConnectionName[]
 
@@ -78,11 +84,13 @@ export class ViaPossibilitiesSolver2 extends BaseSolver {
     colorMap,
     hyperParameters,
     viaDiameter,
+    connMap,
   }: {
     nodeWithPortPoints: NodeWithPortPoints
     colorMap?: Record<string, string>
     hyperParameters?: ViaPossibilities2HyperParameters
     viaDiameter?: number
+    connMap?: ConnectivityMap
   }) {
     super()
     this.MAX_ITERATIONS = 100e3
@@ -98,6 +106,7 @@ export class ViaPossibilitiesSolver2 extends BaseSolver {
       SHUFFLE_SEED: 0,
     }
     this.viaDiameter = viaDiameter ?? 0.3
+    this.connMap = connMap
 
     this.unprocessedConnections = Array.from(this.portPairMap.keys()).sort()
     if (hyperParameters?.SHUFFLE_SEED) {
@@ -194,16 +203,22 @@ export class ViaPossibilitiesSolver2 extends BaseSolver {
   _step() {
     if (this.solved) return
 
-    const targetEnd = this.portPairMap.get(this.currentConnectionName)!.end
+    const targetEnd: ViaPathPoint = this.portPairMap.get(
+      this.currentConnectionName,
+    )!.end
     const proposedSegment: [Point3, Point3] = [this.currentHead, targetEnd]
 
     let closestIntersection: any = null
     let intersectedSegmentZ: number | null = null
 
     const checkIntersectionsWithPathMap = (
-      pathMap: Map<ConnectionName, Point3[]>,
+      pathMap: Map<ConnectionName, ViaPathPoint[]>,
     ) => {
-      for (const path of pathMap.values()) {
+      for (const [connectionName, path] of pathMap) {
+        const sharesTargetPcbPort =
+          targetEnd.pcb_port_id !== undefined &&
+          (path[0]!.pcb_port_id === targetEnd.pcb_port_id ||
+            path.at(-1)!.pcb_port_id === targetEnd.pcb_port_id)
         for (let i = 0; i < path.length - 1; i++) {
           const segment: [Point3, Point3] = [path[i], path[i + 1]]
           // Skip checking intersection if segment is just a via (z change)
@@ -223,9 +238,22 @@ export class ViaPossibilitiesSolver2 extends BaseSolver {
             segment[1],
           )
           if (intersection) {
+            // A branch already on the destination pad is a valid net contact.
+            if (
+              sharesTargetPcbPort &&
+              this.currentHead.z === targetEnd.z &&
+              distance(intersection, targetEnd) <
+                ENDPOINT_CONTACT_TOLERANCE_MM &&
+              this.connMap?.areIdsConnected(
+                this.currentConnectionName,
+                connectionName,
+              )
+            ) {
+              continue
+            }
             // Ignore intersection if it's exactly at the start point (currentHead)
             const distToIntersection = distance(this.currentHead, intersection)
-            if (distToIntersection < 1e-6) continue // Tolerance for floating point
+            if (distToIntersection < ENDPOINT_CONTACT_TOLERANCE_MM) continue
 
             if (
               !closestIntersection ||
