@@ -18,9 +18,9 @@ def sha(data):
 
 
 def verified_plan():
-    plan = json.loads((CONTROLLER / "local-preload-retention-screen-plan.json").read_text())
+    plan = json.loads((CONTROLLER / "cramped-port-screen-plan.json").read_text())
     if plan["qualificationReady"] is not True:
-        raise RuntimeError("HELD: iMX6 local-preload-retention screen is not qualified for execution")
+        raise RuntimeError("HELD: iMX6 cramped-port screen is not qualified for execution")
     if plan["routingSourceOverrides"] is not True or plan["sourceOverrides"] is not True or plan["dependencyOverrides"] or plan["publishedRuntimeGraphUnchanged"] is not True:
         raise RuntimeError("Only the declared direct-entry candidate source change is allowed")
     if plan["captureDeadlineMs"] != 900000 or plan["hardDeadlineSeconds"] != 960:
@@ -81,7 +81,7 @@ def prepare_overlay(plan, output):
         raise RuntimeError("Unqualified source mapping identity")
     source_proof = []
     repositories = mapping["source"]["repositories"]
-    folders = {"tscircuit/tscircuit-autorouter": "autorouter"}
+    folders = {"tscircuit/tiny-hypergraph": "tiny"}
     if len(repositories) != 1 or {item["repository"] for item in repositories} != set(folders):
         raise RuntimeError("Unexpected candidate repositories")
     for source in repositories:
@@ -93,7 +93,7 @@ def prepare_overlay(plan, output):
         patch_path = CONTROLLER / source["productionPatchFile"]
         if patch_path.name != source["productionPatchFile"] or sha(patch_path.read_bytes()) != source["productionPatchSha256"]:
             raise RuntimeError("Frozen candidate patch changed")
-        derived_root = output.parent / "sources" / (folder + "-local-preload-retention-candidate")
+        derived_root = output.parent / "sources" / (folder + "-cramped-port-candidate")
         for entry in source["changedFiles"]:
             relative = Path(entry["relative"])
             if relative.is_absolute() or ".." in relative.parts:
@@ -117,8 +117,8 @@ def prepare_overlay(plan, output):
     if sha(published.with_name("index.js.map").read_bytes()) != mapping["sourceMapSha256"]:
         raise RuntimeError("Published source map changed")
     spans = mapping["spans"]
-    if len(spans) != 5 or sum(span["kind"] == "replace" for span in spans) != 4 or sum(span["kind"] == "insert" for span in spans) != 1:
-        raise RuntimeError("Unexpected standalone B source span scope")
+    if len(spans) != 1 or sum(span["kind"] == "replace" for span in spans) != 1 or sum(span["kind"] == "insert" for span in spans) != 0:
+        raise RuntimeError("Unexpected Tiny cramped-port source span scope")
     chunks, unchanged, cursor, candidate_cursor = [], [], 0, 0
     for span in spans:
         start, end = span["startByte"], span["endByte"]
@@ -146,9 +146,9 @@ def prepare_overlay(plan, output):
     replaced = b"".join(chunks)
     if sha(replaced) != mapping["candidateAutorouterSha256"] or sha(replaced) != candidate["candidateAutorouterSha256"]:
         raise RuntimeError("Candidate autorouter digest mismatch")
-    if candidate["siblingEntryRelative"] != "dist/local-preload-retention-candidate.js":
+    if candidate["siblingEntryRelative"] != "dist/cramped-port-capacity-candidate.js":
         raise RuntimeError("Unexpected sibling entry location")
-    sibling = published.with_name("local-preload-retention-candidate.js")
+    sibling = published.with_name("cramped-port-capacity-candidate.js")
     if sibling.exists() and sibling.read_bytes() != replaced:
         raise RuntimeError("Refuse to overwrite a different candidate")
     if not sibling.exists():
@@ -156,7 +156,7 @@ def prepare_overlay(plan, output):
     after = verify_runtime(plan, output)
     if before != after:
         raise RuntimeError("Published graph changed during direct-entry preparation")
-    proof = {"schemaVersion": 2, "mappingSha256": sha(mapping_bytes), "source": mapping["source"], "sourceProofs": source_proof, "originalAutorouterSha256": sha(original), "candidateAutorouterSha256": sha(replaced), "candidateEntry": str(sibling), "replacementCount": 4, "insertionCount": 1, "unchangedSegments": unchanged, "publishedRuntimeUnchanged": True, "packageAliasesUnchanged": True, "runtimeProof": after, "candidateNotUsedByAssessment": True}
+    proof = {"schemaVersion": 2, "mappingSha256": sha(mapping_bytes), "source": mapping["source"], "sourceProofs": source_proof, "originalAutorouterSha256": sha(original), "candidateAutorouterSha256": sha(replaced), "candidateEntry": str(sibling), "replacementCount": 1, "insertionCount": 0, "unchangedSegments": unchanged, "publishedRuntimeUnchanged": True, "packageAliasesUnchanged": True, "runtimeProof": after, "candidateNotUsedByAssessment": True}
     (output / "overlay-proof.json").write_text(json.dumps(proof, indent=2) + "\n")
     return proof
 

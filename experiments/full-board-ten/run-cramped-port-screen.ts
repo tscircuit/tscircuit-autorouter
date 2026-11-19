@@ -22,7 +22,7 @@ assert.equal(plan.qualificationReady, true, "Screen remains held")
 assert.equal(plan.captureDeadlineMs, 900000)
 assert.equal(plan.hardDeadlineSeconds, 960)
 const sha = (bytes: string | Buffer): string => createHash("sha256").update(bytes).digest("hex")
-const mapBytes = readFileSync(resolve(dirname(planPath), "local-preload-retention-source-mapping.json"))
+const mapBytes = readFileSync(resolve(dirname(planPath), "cramped-port-capacity-source-mapping.json"))
 assert.equal(sha(mapBytes), plan.sourceCandidate.mappingSha256)
 const mapping = JSON.parse(mapBytes.toString())
 assert.equal(mapping.schemaVersion, 2)
@@ -43,7 +43,7 @@ assert.equal(manifest.mainVersion, "0.0.3242")
 assert.equal(manifest.sourceOverrides, false)
 assert.deepEqual(manifest.dependencyOverrides, [])
 const autorouter = manifest.packages.find((item: Data) => item.name === "@tscircuit/capacity-autorouter")
-assert.equal(modulePath, variant === "base" ? autorouter.entry : resolve(dirname(autorouter.entry), "local-preload-retention-candidate.js"))
+assert.equal(modulePath, variant === "base" ? autorouter.entry : resolve(dirname(autorouter.entry), "cramped-port-capacity-candidate.js"))
 assert.equal(autorouter.entrySha256, mapping.originalAutorouterSha256)
 assert.equal(sha(readFileSync(autorouter.entry)), mapping.originalAutorouterSha256)
 assert.equal(autorouter.version, "0.0.1132")
@@ -226,7 +226,7 @@ const report: Data = {
   effectiveOptions: pipeline.opts, effectiveEffort: pipeline.effort,
   captureDeadlineMs: plan.captureDeadlineMs, hardDeadlineSeconds: plan.hardDeadlineSeconds,
   uniformBoundary, regionalContextSha256: null, regionalObservationErrors: [], phaseTransitions, wasmAttempts, coldImportWasmCalls,
-  scope: "Standalone local-preload-retention source comparison on unchanged native iMX6 phase4. Published control is authenticated prior run44458267851. A fresh900s phase solve is diagnostic only; all native demands/physical assessment and an actual fullboard900s rerun are required before any fullboard gain claim.",
+  scope: "Single Tiny cramped-port guard source comparison on unchanged native iMX6 phase4. Published control is authenticated prior run44458267851. A fresh900s phase solve is diagnostic only; all native demands/physical assessment and an actual fullboard900s rerun are required before any fullboard gain claim.",
 }
 write("report.json", report)
 const currentRegional = pipeline.highDensityRouteSolver?.activeFallbackSolver

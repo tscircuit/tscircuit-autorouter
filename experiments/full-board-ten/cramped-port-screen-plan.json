@@ -148,12 +148,12 @@
     "sha256": "3b3d1b99221b1e175eae3f5e6a824b959b9a97f19e67bb2eb3da2ad4704689bf",
     "bytes": 5489
   },
-  "purpose": "One candidate-only iMX6 phase4 source screen for standalone local preloaded-route retention. Compare native outcome to authenticated published run44458267851; no baseline routing repeats. Published3242 graph and native input/options remain exact. No A03, endpoint, Uniform or budget change; no whole-board benefit claim.",
+  "purpose": "One candidate-only iMX6 phase4 screen of the existing Tiny cramped-port duplication guard. Compare with authenticated published run44458267851 using exact native input/options and published3242 graph. Sole Tiny method replacement; no local-preload retention, A03, Uniform point or budget change. Full-board qualification remains required because earlier phases can change.",
   "qualificationReady": true,
-  "status": "READY_REVIEWED_IMX6_LOCAL_PRELOAD_RETENTION_SOURCE_SCREEN",
+  "status": "READY_REVIEWED_IMX6_CRAMPED_PORT_CAPACITY_SOURCE_SCREEN",
   "runtimeController": "49e9de35db347f94eeeaef9bca48d821ed3be51e",
-  "branch": "bench/imx6-local-preload-retention-screen-3242-20261119",
-  "workflow": ".github/workflows/local-preload-retention-screen.yml",
+  "branch": "bench/imx6-cramped-port-screen-3242-20261119",
+  "workflow": ".github/workflows/cramped-port-screen.yml",
   "assessmentDeadlineSeconds": 180,
   "jobTimeoutMinutes": 25,
   "cohortOrder": [
@@ -237,41 +237,41 @@
       "sha256": "ce1639f8d6d5aa8823ce704f00bc74bef6a29b77c84ad0f98ee612a0fcc08abe",
       "bytes": 6651
     },
-    ".github/workflows/local-preload-retention-screen.yml": {
-      "sha256": "74be73075f2dbf7ad55f863a602be61ebef43ad8f44349f1ef330549b3b598fc",
-      "bytes": 6456
+    ".github/workflows/cramped-port-screen.yml": {
+      "sha256": "0caae909429b73ad491ee18beba247b231e9b5f6a7f1f277481b17078ccb27f3",
+      "bytes": 5802
     },
-    "experiments/full-board-ten/assess-local-preload-retention-output.ts": {
-      "sha256": "43d753dadd28e01d3088c07b52c95c21645d7354a06f6935ee700ff1b024a252",
-      "bytes": 14631
+    "experiments/full-board-ten/assess-cramped-port-output.ts": {
+      "sha256": "a45fa01b2067ad3cc6b69f7957d5d2b47de2b9c9187bdd3537f3c00d14b80560",
+      "bytes": 14620
     },
-    "experiments/full-board-ten/compare-local-preload-retention-screen.py": {
-      "sha256": "5be46fa93dba421af6eb3a3df5fcf22140de2940c7cbbbeafd84b03f9c9a3650",
-      "bytes": 12426
+    "experiments/full-board-ten/compare-cramped-port-screen.py": {
+      "sha256": "0486be0d9c7c63d94bc79331b9b4c14e6e76e27207d05259a2bb43aa029cb4ea",
+      "bytes": 12393
     },
-    "experiments/full-board-ten/createLocalPreloadRetentionOverlay.ts": {
-      "sha256": "bdfcbf4a72f154f8c6a6a26bfbb4af8a06a2ddff744f7ebf96c606e6f27b26d1",
-      "bytes": 29366
+    "experiments/full-board-ten/prepare-cramped-port-screen.py": {
+      "sha256": "66a055b70f24fef374a54a290cc728efaaa7c4168867db8d3cecbae650b36178",
+      "bytes": 18932
     },
-    "experiments/full-board-ten/local-preload-retention-production.patch": {
-      "sha256": "4eec98c7208b41fcf3a699f7bd33001609299bb15bcc82e82c2353e001ac6112",
-      "bytes": 11776
+    "experiments/full-board-ten/run-cramped-port-screen.ts": {
+      "sha256": "78b0897cd34c2d74389d447cc1159f50defb7e2143ba8605ea05f7072520da64",
+      "bytes": 14466
     },
-    "experiments/full-board-ten/local-preload-retention-source-mapping.json": {
-      "sha256": "6eb6df1c104a3f8ccfb3660da1772c1b63db5ae1d4c8c6da2e47cd01be06f477",
-      "bytes": 37268
+    "experiments/full-board-ten/cramped-port-capacity-source-mapping.json": {
+      "sha256": "7e64ae807660a36567ccf5dc20c37b69bfa0f53431452903126dd2779bac37c3",
+      "bytes": 8551
+    },
+    "experiments/full-board-ten/createCrampedPortCapacityOverlay.ts": {
+      "sha256": "5164e03402b39e930cc13920ad045c2a18a9a90e7dd8d0a1d6478a6e0ef0998a",
+      "bytes": 16218
+    },
+    "experiments/full-board-ten/tiny-cramped-port-capacity-production.patch": {
+      "sha256": "5471c0825499ba2d2a873c4172b99fe2d7fb1e076cd09a0c1eb7d490d5ce3863",
+      "bytes": 552
     },
     "experiments/full-board-ten/mapping-source-handoff.json": {
-      "sha256": "e95e469e45dd1e95a9156eb8389eb0fff1f746bd1475ad3f724ffeb91a5a08e2",
-      "bytes": 1147
-    },
-    "experiments/full-board-ten/prepare-local-preload-retention-screen.py": {
-      "sha256": "55a4f1cd4e98ddd2d3f856b03157ff0d13b1f8d8000eee595c82b7ded073d00c",
-      "bytes": 18975
-    },
-    "experiments/full-board-ten/run-local-preload-retention-screen.ts": {
-      "sha256": "c15af7f8c82309e9f58048040d292f363caa5e43cb1d2eb5d5cacebb524236ac",
-      "bytes": 14474
+      "sha256": "2aaf5a9a59ce9e54e4651b18e6405e3e7ac7f58a36ed9d2f0387bc4741af84f8",
+      "bytes": 572
     }
   },
   "assessment": {
@@ -305,91 +305,46 @@
   },
   "publishedRuntimeGraphUnchanged": true,
   "qualification": {
-    "scope": "Source-qualified candidate-only controller preparation complete. Wrapper, assessment, comparator and runner scope reviewed; final frozen identity review pending. No local native imports, routing, dependency installations, dispatch or push. Baseline physical calibration is mandatory in CI before candidate routing.",
+    "scope": "Reviewed source/path delta from5d746dcb candidate-only controller. Final Tiny source/mapping and all28assets frozen; native routing and assessment protocol reused unchanged. Existing native assessment remains a mandatory first CI gate.",
     "nativeRoutingExecuted": false,
     "pushPerformed": false,
-    "independentReview": "PASS: source mapping, native call/observer, wrapper, assessor and comparator reviewed. Exact committed-file identity review follows local commit.",
+    "independentReview": "PASS: sole Tiny source/mapping, three-string runner delta and renamed wrapper identity. Exact committed-file binding follows local commit.",
     "localEvidence": [
       {
-        "path": "/workspace/full-board-ten-20261118-3242/local-preload-retention-controller-preparation/wrapper-static-contracts.json",
-        "sha256": "26e2523148dd0e3f564ad9edfebb3036d120696e85e4c5bee5804da81f04c068",
-        "bytes": 1097
-      },
-      {
-        "path": "/workspace/full-board-ten-20261118-3242/local-preload-retention-controller-preparation/completion-gate-contracts.json",
-        "sha256": "f1a60dd033c35d7ab4031ea6aad76ccfbf154b7a7c9efcecbed74da2a8845808",
-        "bytes": 602
-      },
-      {
-        "path": "/workspace/full-board-ten-20261118-3242/imx6-local-preload-retention-screen-preparation/regional-context-contract.json",
-        "sha256": "c23b3763a11f9be0a0df26cb5a5cef5709ad7d612d7035497459074f9c2deee7",
-        "bytes": 434
-      },
-      {
-        "path": "/workspace/full-board-ten-20261118-3242/local-preload-retention-controller-preparation/independent-source-overlay-proof.json",
-        "sha256": "5f004c672497fa981810789e8b57f6bc97cc653dbdf9f5ff1ad06ee5bfceb4d1",
-        "bytes": 2494
+        "path": "/workspace/full-board-ten-20261118-3242/imx6-cramped-port-screen-preparation/wrapper-reuse-proof.json",
+        "sha256": "abb2db46a2f9413ba6af2b89b8baf8cfaa9c54ca6ab45c80b6f24cc6c03d33aa",
+        "bytes": 1566
       }
     ],
-    "publishedA03Unchanged": {
-      "startByte": 224736,
-      "endByte": 253732,
-      "sha256": "47013301138fb09128323c49ac3b9248980247b96b1b2d3103ae9e324b7bbf17",
-      "candidateBytesIdentical": true,
-      "constructorRange": [
-        227047,
-        227959
-      ],
-      "stepOnceRange": [
-        237100,
-        240101
-      ],
-      "containingUnchangedInterval": [
-        0,
-        2864151
-      ],
-      "sourceProofPath": "/workspace/full-board-ten-20261118-3242/local-preload-continuity-source-preparation/published-a03-unchanged-proof.json",
-      "sourceProofSha256": "ebe6f6bae5a626f455fa7dc8681fc003a61d5e20580763d2241227f8740a011f"
-    },
-    "releaseAuthorization": "Root authorized readiness and local commit after final source mapping. Root alone verifies and pushes the single candidate-only workflow; no source push or benchmark dispatch by this preparer."
+    "releaseAuthorization": "Root authorized readiness/local commit after narrow wrapper identity PASS. Root alone verifies and pushes the single candidate-only workflow; no source push or dispatch by this preparer."
   },
   "sourceCandidate": {
     "source": {
       "repositories": [
         {
-          "repository": "tscircuit/tscircuit-autorouter",
-          "sourceBaseCommit": "c0dcc07ae48b17296a1dc73678e258de62ca8de3",
-          "publishedBaseCommit": "c0dcc07ae48b17296a1dc73678e258de62ca8de3",
-          "productionPatchFile": "local-preload-retention-production.patch",
+          "repository": "tscircuit/tiny-hypergraph",
+          "sourceBaseCommit": "f1fe8edcfb3dfde8fd644d09d81bad18743144b3",
+          "publishedBaseCommit": "f1fe8edcfb3dfde8fd644d09d81bad18743144b3",
+          "candidateCommit": "a03bb390246ed35a6ebbb4fa6d39350361f9caf0",
+          "productionPatchFile": "tiny-cramped-port-capacity-production.patch",
+          "productionPatchSha256": "5471c0825499ba2d2a873c4172b99fe2d7fb1e076cd09a0c1eb7d490d5ce3863",
           "changedFiles": [
             {
-              "relative": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9RegionalFallback.ts",
-              "beforeSha256": "73c41d1b225ea44a201c1f5d93cbaa637a7d550adad4f1d124ef9c88de645947",
-              "afterSha256": "0725446218946851e500722f1e071ef88337db63784a0846c48cf5cdceaf1eb8"
-            },
-            {
-              "relative": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver.ts",
-              "beforeSha256": "98e991916f4bff0482ef9d8b956f02db696be7fc1bd8a536b232c564694f43d6",
-              "afterSha256": "1e29caf8bd7e52a597f8aace2ed7f837d3977c0d1330d1b166f53e008319895e"
-            },
-            {
-              "relative": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/applyPipeline9RegionalB01Repairs.ts",
-              "beforeSha256": "4dcbe52d2bd7b28b4bd276dae7d880e97f4cf51057e20da4388e7f356d9c4424",
-              "afterSha256": "48a14087f7beea336d221dab8a70919c1d651b5c2cb3b336f6775cb954404388"
+              "relative": "lib/DuplicateCongestedPortSolver.ts",
+              "beforeSha256": "12801e8d12f34b93c0f4b78a551b2bb567a29df9f99d6831ce0c8ee2d2a86b65",
+              "afterSha256": "111fa0262a79c0cd77177f9d046f3bde199dffc01d1ec1ec086b12054a53f22d"
             }
-          ],
-          "candidateCommit": "d92a73bd10fca408d5643821b8f5f789f9ae5067",
-          "productionPatchSha256": "4eec98c7208b41fcf3a699f7bd33001609299bb15bcc82e82c2353e001ac6112"
+          ]
         }
       ]
     },
-    "mappingFile": "local-preload-retention-source-mapping.json",
-    "mappingSha256": "6eb6df1c104a3f8ccfb3660da1772c1b63db5ae1d4c8c6da2e47cd01be06f477",
-    "candidateAutorouterSha256": "0f050e1378e82d3c8ac50feec945aa69117a10af733ee9b231e741e08c4b6e4e",
-    "siblingEntryRelative": "dist/local-preload-retention-candidate.js",
-    "scope": "Standalone B local preloaded-route retention in three AR source files. Four runtime replacements plus one pure helper insertion; all other published bytes, including the complete A03 class, remain unchanged. No leaf solver, endpoint, Uniform point, option or dependency change.",
-    "replacementCount": 4,
-    "insertionCount": 1
+    "mappingFile": "cramped-port-capacity-source-mapping.json",
+    "mappingSha256": "7e64ae807660a36567ccf5dc20c37b69bfa0f53431452903126dd2779bac37c3",
+    "candidateAutorouterSha256": "7f9aad1b371eabaf935df6551b01dde711b357140121ab81d03db0e6ba90b251",
+    "siblingEntryRelative": "dist/cramped-port-capacity-candidate.js",
+    "replacementCount": 1,
+    "insertionCount": 0,
+    "scope": "Sole DuplicateCongestedPortSolver.duplicateCongestedPorts method replacement from reviewed Tiny source. No B, A03, Uniform or dependency change."
   },
   "diagnosticCapture": {
     "maximumBlobBytes": 524288,
@@ -446,5 +401,5 @@
     "scope": "Historical published isolated phase failure. Same frozen input/runtime/options; comparison is not a fresh paired timing benchmark and lacks a historical Uniform-node hash."
   },
   "historicalFullBoardRemainingMs": 314392.862834,
-  "wrapperBaseController": "e61864a8534ebe54f1c7d307480361ac660a82ff"
+  "wrapperBaseController": "5d746dcb5eaec038af672eb474d3327bc51667ba"
 }

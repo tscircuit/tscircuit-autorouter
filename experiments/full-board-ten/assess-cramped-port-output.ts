@@ -10,7 +10,7 @@ const [rootArg, inputArg, outputArg, variant] = process.argv.slice(2)
 assert(rootArg && inputArg && outputArg && ["baseline", "base", "candidate"].includes(variant!))
 const root = resolve(rootArg), inputDirectory = resolve(inputArg), output = resolve(outputArg)
 const controller = import.meta.dir
-const plan = JSON.parse(readFileSync(resolve(controller, "local-preload-retention-screen-plan.json"), "utf8"))
+const plan = JSON.parse(readFileSync(resolve(controller, "cramped-port-screen-plan.json"), "utf8"))
 assert.equal(plan.qualificationReady, true)
 const sha = (value: Uint8Array | string): string => createHash("sha256").update(value).digest("hex")
 const load = (name: string): Data => JSON.parse(gunzipSync(readFileSync(resolve(inputDirectory, name))).toString())

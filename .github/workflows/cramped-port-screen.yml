@@ -1,0 +1,121 @@
+name: published3242 iMX6 cramped port capacity source screen
+on:
+  push:
+    branches: [bench/imx6-cramped-port-screen-3242-20261119]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  screen:
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 25
+    env:
+      FULL_BOARD_ROOT: ${{ github.workspace }}/.full-board-run
+      BUN_INSTALL_CACHE_DIR: ${{ github.workspace }}/.full-board-run/bun-cache
+      FULL_BOARD_EXPERIMENT: published
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            experiments/full-board-ten
+            .github/workflows/full-board-ten.yml
+            .github/workflows/cramped-port-screen.yml
+            AGENTS.md
+      - name: Require reviewed held plan
+        run: python3 experiments/full-board-ten/prepare-cramped-port-screen.py --verify-plan
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/tscircuit-autorouter
+          ref: ea398b4023119f65157e876a3101aa6ce3ca5f97
+          path: .full-board-run/sources/original
+          persist-credentials: false
+          sparse-checkout: experiments/full-board-priority-analysis
+      - uses: actions/checkout@v4
+        with:
+          repository: ShiboSoftwareDev/core-ddr-benchmark
+          ref: a3679559d6027aea2c441c1078853d58925d3a12
+          path: .full-board-run/sources/spaced
+          persist-credentials: false
+          sparse-checkout: |
+            full-boards
+            circuits
+            scripts
+            licenses
+            provenance
+      - name: Checkout published Tiny source file
+        uses: actions/checkout@v4
+        with:
+          repository: tscircuit/tiny-hypergraph
+          ref: f1fe8edcfb3dfde8fd644d09d81bad18743144b3
+          path: .full-board-run/sources/tiny-base
+          persist-credentials: false
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            lib/DuplicateCongestedPortSolver.ts
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Prepare exact published3242 graph
+        run: python3 experiments/full-board-ten/bootstrap.py --root "$FULL_BOARD_ROOT"
+      - name: Authenticate native input and retained published control
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 experiments/full-board-ten/prepare-cramped-port-screen.py imx6 "$FULL_BOARD_ROOT/cramped-port-input"
+      - name: Construct the source-qualified sibling entry
+        run: python3 experiments/full-board-ten/prepare-cramped-port-screen.py --prepare-overlay "$FULL_BOARD_ROOT/cramped-port-input"
+      - name: Qualify native baseline identities and zero physical findings
+        run: >-
+          timeout --signal=TERM --kill-after=10s 180s
+          bun experiments/full-board-ten/assess-cramped-port-output.ts
+          "$FULL_BOARD_ROOT" "$FULL_BOARD_ROOT/cramped-port-input"
+          "$FULL_BOARD_ROOT/assessment-baseline" baseline
+      - name: Run the candidate once without rerouting the published control
+        id: candidate
+        shell: bash
+        run: |
+          python3 experiments/full-board-ten/prepare-cramped-port-screen.py --verify-runtime "$FULL_BOARD_ROOT/cramped-port-input"
+          mkdir -p "$FULL_BOARD_ROOT/cramped-port/candidate"
+          set +e
+          timeout --signal=TERM --kill-after=10s 960s \
+            bun experiments/full-board-ten/run-cramped-port-screen.ts \
+            --module "$FULL_BOARD_ROOT/npm/autorouter/dist/cramped-port-capacity-candidate.js" \
+            --input "$FULL_BOARD_ROOT/cramped-port-input/phase-4-input.srj.json.gz" \
+            --output "$FULL_BOARD_ROOT/cramped-port/candidate" \
+            --manifest "$FULL_BOARD_ROOT/runtime-manifest.json" \
+            --plan experiments/full-board-ten/cramped-port-screen-plan.json \
+            --variant candidate
+          route_status=$?
+          printf '%s\n' "$route_status" > "$FULL_BOARD_ROOT/cramped-port/candidate/process-exit-code.txt"
+          python3 experiments/full-board-ten/prepare-cramped-port-screen.py --verify-runtime "$FULL_BOARD_ROOT/cramped-port-input" || exit $?
+          timeout --signal=TERM --kill-after=10s 180s \
+            bun experiments/full-board-ten/assess-cramped-port-output.ts \
+            "$FULL_BOARD_ROOT" "$FULL_BOARD_ROOT/cramped-port-input" \
+            "$FULL_BOARD_ROOT/cramped-port/candidate" candidate
+          assessment_status=$?
+          printf '%s\n' "$assessment_status" > "$FULL_BOARD_ROOT/cramped-port/candidate/assessment-exit-code.txt"
+          set -e
+      - name: Compare retained published failure and physically qualified candidate
+        if: ${{ always() && steps.candidate.outcome != 'skipped' }}
+        run: >-
+          python3 experiments/full-board-ten/compare-cramped-port-screen.py
+          "$FULL_BOARD_ROOT/cramped-port-input" "$FULL_BOARD_ROOT/cramped-port"
+      - name: Preserve compact source-screen evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          include-hidden-files: true
+          name: imx6-cramped-port-screen-3242-${{ github.run_attempt }}
+          path: |
+            .full-board-run/cramped-port
+            .full-board-run/assessment-baseline
+            .full-board-run/cramped-port-input/*.json
+            .full-board-run/cramped-port-input/*.gz
+            .full-board-run/cramped-port-input/historical-published/*.json
+            .full-board-run/runtime-manifest.json
+            experiments/full-board-ten/cramped-port-screen-plan.json
+            experiments/full-board-ten/cramped-port-capacity-source-mapping.json
+            experiments/full-board-ten/tiny-cramped-port-capacity-production.patch
+          retention-days: 7
+          compression-level: 0
+          if-no-files-found: warn

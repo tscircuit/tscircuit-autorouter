@@ -16,7 +16,7 @@ def require(condition, message):
 
 
 def main():
-    spec = importlib.util.spec_from_file_location("prepare", C / "prepare-local-preload-retention-screen.py")
+    spec = importlib.util.spec_from_file_location("prepare", C / "prepare-cramped-port-screen.py")
     prep = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(prep)
     plan = prep.verified_plan()
@@ -58,7 +58,7 @@ def main():
     source_screen_qualified = False
     if report_path.exists():
         report = json.loads(report_path.read_text())
-        require(report["variant"] == "candidate" and report["planSha256"] == sha((C / "local-preload-retention-screen-plan.json").read_bytes()), "Runner plan/variant mismatch")
+        require(report["variant"] == "candidate" and report["planSha256"] == sha((C / "cramped-port-screen-plan.json").read_bytes()), "Runner plan/variant mismatch")
         require(report["inputSha256"] == historical["inputSha256"] and report["inputCompressedSha256"] == historical["inputCompressedSha256"], "Historical and candidate native input differs")
         require(report["initialInputCanonicalSha256"] == report["finalInputCanonicalSha256"] == historical["initialInputCanonicalSha256"] == historical["finalInputCanonicalSha256"], "Native routing geometry changed")
         require(report["inputFileUnchanged"] and report["autorouterEntryUnchanged"] and report["publishedAutorouterEntryUnchanged"], "Native file or published runtime changed")
@@ -107,7 +107,7 @@ def main():
         require(exit_code in [124, 137, 143], "Missing report without external interruption")
         require(not (lane / "phase-output.srj.json.gz").exists(), "Missing final report with unqualified output")
     benefit = bool(source_screen_qualified and row["validatedPhaseCompletion"] and row.get("connectedComparedToPriorCopper", {}).get("gainedNativeNames"))
-    result = {"scope": plan["purpose"], "diagnosticOnly": True, "wholeBoardGainClaim": False, "fullBoardRunRequired": True, "freshPairedTimingComparison": False, "baselineRoutingRepeated": False, "historicalPublishedQualified": True, "sourceScreenInterpretable": source_screen_qualified, "benefitQualified": benefit, "benefitScope": "Isolated full native phase completion only, compared with the authenticated published failure. Actual full-board900s qualification remains required.", "baselineMaterializationQualified": True, "planSha256": sha((C / "local-preload-retention-screen-plan.json").read_bytes()), "sourceCandidate": candidate, "runtimeVerifiedAfterCandidate": True, "historicalPublished": {"runId": reference["artifact"]["workflow_run"]["id"], "artifactId": reference["artifact"]["id"], "elapsedMs": historical["elapsedMs"], "error": historical["error"], "highDensity": historical["highDensity"], "geometryCaptureComplete": False}, "candidate": row, "timeWindow": {"historicalFullBoardRemainingMs": plan["historicalFullBoardRemainingMs"], "candidateElapsedMs": report["elapsedMs"] if report else None, "candidateCompletionWithinHistoricalRemainingWindow": bool(benefit and report["elapsedMs"] <= plan["historicalFullBoardRemainingMs"]), "wholeBoardBudgetQualified": False, "scope": "Diagnostic comparison only; prior full-board prefix time cannot substitute for an actual full-board rerun."}, "sourceOverrideScope": "Direct sibling AR entry only; published package aliases/Core/assessment stay unchanged."}
+    result = {"scope": plan["purpose"], "diagnosticOnly": True, "wholeBoardGainClaim": False, "fullBoardRunRequired": True, "freshPairedTimingComparison": False, "baselineRoutingRepeated": False, "historicalPublishedQualified": True, "sourceScreenInterpretable": source_screen_qualified, "benefitQualified": benefit, "benefitScope": "Isolated full native phase completion only, compared with the authenticated published failure. Actual full-board900s qualification remains required.", "baselineMaterializationQualified": True, "planSha256": sha((C / "cramped-port-screen-plan.json").read_bytes()), "sourceCandidate": candidate, "runtimeVerifiedAfterCandidate": True, "historicalPublished": {"runId": reference["artifact"]["workflow_run"]["id"], "artifactId": reference["artifact"]["id"], "elapsedMs": historical["elapsedMs"], "error": historical["error"], "highDensity": historical["highDensity"], "geometryCaptureComplete": False}, "candidate": row, "timeWindow": {"historicalFullBoardRemainingMs": plan["historicalFullBoardRemainingMs"], "candidateElapsedMs": report["elapsedMs"] if report else None, "candidateCompletionWithinHistoricalRemainingWindow": bool(benefit and report["elapsedMs"] <= plan["historicalFullBoardRemainingMs"]), "wholeBoardBudgetQualified": False, "scope": "Diagnostic comparison only; prior full-board prefix time cannot substitute for an actual full-board rerun."}, "sourceOverrideScope": "Direct sibling AR entry only; published package aliases/Core/assessment stay unchanged."}
     (output / "comparison.json").write_text(json.dumps(result, indent=2) + "\n")
     print(json.dumps({"outcome": row["outcome"], "benefitQualified": benefit, "wholeBoardGainClaim": False}))
 
