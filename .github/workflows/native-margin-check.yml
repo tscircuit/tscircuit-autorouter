@@ -1,4 +1,4 @@
-name: Verify adaptive repair budget with native copper
+name: Verify cleanup preserves pad clearance
 on:
   push:
     branches: [analysis/native-complete-cleanup-context]
@@ -21,17 +21,34 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: '1.4.3'
-      - name: Let the existing repair solver scale its budget to the problem
+      - name: Include physical pads in the existing no-worsening cleanup guard
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          p=Path("lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts")
+          prefix="lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/"
+          p=Path(prefix+"Pipeline9HighDensityForceImproveSolver.ts")
           s=p.read_text()
-          assert s.count("            maxIterations: 16,\n")==1
-          p.write_text(s.replace("            maxIterations: 16,\n","",1))
+          a=s.index("    const representedPadObstacleIndexes")
+          b=s.index("    this.evaluateFixedObstacles",a)
+          s=s[:a]+"""    this.fixedViaObstacleIndexes = new Set(
+                params.inputSrj.obstacles.flatMap((obstacle, index) => {
+                  if (obstacle.isCopperPour || obstacle.isNonPlatedHole) return []
+                  return [index]
+                }),
+              )
+          """+s[b:]
+          p.write_text(s)
+          p=Path(prefix+"Pipeline9RegionalFallbackSolver.ts")
+          s=p.read_text()
+          old="""    if (!movablePreloadedConnectionNames.has(route.connectionName)) {
+                return false
+              }
+          """
+          assert s.count(old)==1
+          p.write_text(s.replace(old,"",1))
           PY
       - run: bun install
-      - name: Keep original Game Boy completion, clearance and via-count assertions
+      - name: Keep original completion, clearance and via-count assertions
         env:
           BUN_UPDATE_SNAPSHOTS: '1'
-        run: bun test --timeout 9999999 tests/bugs/bugreport96-full-gameboy-no-breakout.test.ts
+        run: bun test --timeout 9999999 tests/bugs/bugreport96-full-gameboy-no-breakout.test.ts tests/bugs/usb-dp-phase-detour.test.ts tests/repro/pipeline9-h616-portfolio-candidate-clearance.test.ts
