@@ -13,7 +13,6 @@ jobs:
       fail-fast: false
       matrix:
         source: [09bd0812beff4b44f03cf5e2e5881b3186655558, 0f98be6237dfa0a852360b07d38f0e2fbee5f92d]
-        baseline: [preserve, repair]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -22,22 +21,16 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: '1.4.3'
-      - name: Supply read-only native routes to the existing clearance solver
-        env:
-          BASELINE: ${{ matrix.baseline }}
+      - name: Enable existing clearance cleanup after native routing
         run: |
           python3 - <<'PY'
           import os
           from pathlib import Path
-          p=Path("lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9JointDrcRepairSolver.ts")
+          p=Path("lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts")
           s=p.read_text()
-          old="            routes: this.exactRepairParams.hdRoutes,\n            drcEvaluator: this.cachedReferenceDrcEvaluator!,"
+          old="            enablePostSolveClearanceRelaxation: false,"
           assert s.count(old)==1
-          s=s.replace(old,"            routes: this.exactRepairParams.hdRoutes,\n            fixedHdRoutes: this.fixedPreloadedObstacleRoutes,\n            drcEvaluator: this.cachedReferenceDrcEvaluator!,",1)
-          if os.environ["BASELINE"]=="repair":
-            old="    const baselineDrc = evaluateInitialDrc([])"
-            assert s.count(old)==1
-            s=s.replace(old,"    const baselineDrc = { ...evaluateInitialDrc([]), errors: [], errorsWithCenters: [] }",1)
+          s=s.replace(old,"            enablePostSolveClearanceRelaxation: true,",1)
           p.write_text(s)
           PY
       - run: bun install
