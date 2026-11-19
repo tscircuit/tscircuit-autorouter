@@ -1,4 +1,4 @@
-name: Verify exact pad ownership during existing via repair
+name: Verify exact pad identity and final shared-via repair
 on:
   push:
     branches: [analysis/native-complete-cleanup-context]
@@ -23,7 +23,7 @@ jobs:
         with:
           bun-version: '1.4.3'
       - run: bun install
-      - name: Use existing shared-site translation and exact pad references
+      - name: Resolve the reported physical pad before broad connectivity aliases
         env:
           REPAIR: ${{ matrix.repair }}
         run: |
@@ -33,11 +33,12 @@ jobs:
           root=Path("node_modules/high-density-repair03/lib/solvers/GlobalDrcForceImproveSolver")
           p=root/"solverHelpers.ts"
           s=p.read_text()
-          a=s.index("const moveViaAwayFromPoint = (")
-          b=s.index("\ntype SegmentContact",a)
-          helper=s[a:b]
+          start=s.index("const moveViaAwayFromPoint = (")
+          end=s.index("\ntype SegmentContact",start)
+          helper=s[start:end]
           assert "  return moveVia(" in helper
-          s=s[:a]+helper.replace("  return moveVia(","  return translateSameRootViaSite(",1)+s[b:]
+          helper=helper.replace("  return moveVia(","  return translateSameRootViaSite(",1)
+          s=s[:start]+helper+s[end:]
           anchor="  const referencedObstacle = srj.obstacles.find("
           assert s.count(anchor)==1
           exact="""  const exactObstacle = srj.obstacles.find(
@@ -49,23 +50,26 @@ jobs:
               ) && (obstacleFilter?.(obstacle) ?? true),
           )
           if (exactObstacle) return exactObstacle.center
-          
+
           """
           s=s.replace(anchor,exact+anchor,1)
           p.write_text(s)
           if os.environ["REPAIR"]=="finalization":
             p=root/"TraceContactRepairSolver.ts"
             s=p.read_text()
-            s=s.replace("  isForbiddenPadDrillError,","  isForbiddenPadDrillError,\n  isViaPadDrcError,",1)
+            old="  isForbiddenPadDrillError,"
+            assert s.count(old)==1
+            s=s.replace(old,old+"\n  isViaPadDrcError,",1)
             old="      if (isForbiddenPadDrillError(error)) return true"
             assert s.count(old)==1
-            p.write_text(s.replace(old,"      if (isForbiddenPadDrillError(error) || isViaPadDrcError(error)) return true",1))
+            s=s.replace(old,"      if (isForbiddenPadDrillError(error) || isViaPadDrcError(error)) return true",1)
+            p.write_text(s)
           PY
-      - name: Keep all original routing and clearance assertions
+      - name: Keep all original board assertions
         env:
           BUN_UPDATE_SNAPSHOTS: '1'
         run: bun test --timeout 9999999 tests/bugs/bugreport96-full-gameboy-no-breakout.test.ts tests/bugs/usb-dp-phase-detour.test.ts tests/repro/pipeline9-h616-portfolio-candidate-clearance.test.ts tests/features/pipeline9-orangecrab-native-fixed-traces.test.ts
-      - name: Report actual OrangeCrab findings
+      - name: Report the actual OrangeCrab DRC total
         if: always()
         run: |
           python3 - <<'PY'
