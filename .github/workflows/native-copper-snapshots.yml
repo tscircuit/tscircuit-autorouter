@@ -1,0 +1,31 @@
+name: Regenerate native-path SVG snapshots
+on:
+  push:
+    branches: [analysis/native-copper-snapshots]
+    paths: [.github/workflows/native-copper-snapshots.yml]
+permissions:
+  contents: write
+jobs:
+  snapshots:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: analysis/native-copper-snapshots
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.4.3'
+      - run: bun install
+      - name: Regenerate only snapshots whose routing assertions pass
+        env:
+          BUN_UPDATE_SNAPSHOTS: '1'
+        run: bun test --timeout 9999999 tests/bugs/usb-dp-phase-detour.test.ts tests/bugs/usb-shield-phase-detour.test.ts tests/repro/pipeline9-orangecrab-native-clearance.test.ts tests/repro/pipeline9-h616-full-board-ddr-clearance.test.ts tests/repro/pipeline9-h616-round-pad-full-circuit.test.ts tests/repro/pipeline9-h616-solitary-crossing.test.ts tests/repro/pipeline9-h616-preloaded-board-clearance.test.ts
+      - name: Save generated SVGs for review
+        run: |
+          git config user.name "tscircuit-bot"
+          git config user.email "actions@github.com"
+          git add -- '*.snap.svg'
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "Regenerate native-path routing SVG snapshots"
+          git push origin HEAD:analysis/native-copper-snapshots
