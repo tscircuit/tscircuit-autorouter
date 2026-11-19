@@ -163,8 +163,7 @@ const getFixedTraceSegments = (
       previous &&
       previous.assignment.z === crossing.assignment.z &&
       Math.abs(
-        previous.assignment.routePosition -
-          crossing.assignment.routePosition,
+        previous.assignment.routePosition - crossing.assignment.routePosition,
       ) <= ROUTE_POSITION_TOLERANCE
     ) {
       group.push(crossing)

@@ -1179,7 +1179,9 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
             USE_SPARSE_CANDIDATE_STORAGE: false,
             ACCEPT_BEST_SOLUTION_ON_TIMEOUT: true,
             GREEDY_FINAL_ROUTE_ITERS: 4,
-            MAX_ITERATIONS: Math.ceil(2_000_000 * getEffortScale(params.effort)),
+            MAX_ITERATIONS: Math.ceil(
+              2_000_000 * getEffortScale(params.effort),
+            ),
             RIP_THRESHOLD_RAMP_ATTEMPTS: 0,
             STATIC_REACHABILITY_PRECHECK: true,
           },

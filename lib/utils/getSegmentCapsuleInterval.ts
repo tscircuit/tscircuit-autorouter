@@ -43,8 +43,7 @@ export function getSegmentCapsuleInterval({
   for (let index = 1; index < cuts.length; index++) {
     const low = cuts[index - 1]!
     const high = cuts[index]!
-    const midpointProjection =
-      projection + (projectionSlope * (low + high)) / 2
+    const midpointProjection = projection + (projectionSlope * (low + high)) / 2
     const clampedProjection = Math.max(0, Math.min(1, midpointProjection))
     let qx = px - clampedProjection * ux
     let qy = py - clampedProjection * uy

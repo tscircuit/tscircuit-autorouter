@@ -95,7 +95,10 @@ export class Pipeline9ClearanceProjectionSolver extends BaseSolver {
       const canonicalRoutes = params.subdivideSegments
         ? subdividePipeline9ClearanceSegments(originalCanonicalRoutes, errors)
         : originalCanonicalRoutes
-      const contextRoutes = [...canonicalRoutes, ...(params.fixedHdRoutes ?? [])]
+      const contextRoutes = [
+        ...canonicalRoutes,
+        ...(params.fixedHdRoutes ?? []),
+      ]
       const solver = new RelaxTraceClearanceSolver({
         srj,
         routes: contextRoutes,

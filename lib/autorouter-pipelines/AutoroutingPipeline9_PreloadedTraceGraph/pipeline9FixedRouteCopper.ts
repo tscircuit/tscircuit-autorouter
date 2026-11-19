@@ -38,9 +38,11 @@ export type Pipeline9AxisAlignedRect = {
   height: number
 }
 
+type RouteCopperGeometryKey = string
+
 const routeCopperGeometryCache = new WeakMap<
   HighDensityRoute,
-  Map<string, Pipeline9RouteCopperGeometry>
+  Map<RouteCopperGeometryKey, Pipeline9RouteCopperGeometry>
 >()
 
 export const getPipeline9RouteCopperGeometry = (

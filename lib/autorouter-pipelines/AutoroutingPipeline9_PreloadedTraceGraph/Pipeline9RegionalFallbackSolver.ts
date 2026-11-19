@@ -245,7 +245,9 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
   ): boolean {
     for (const route of routes) {
       for (const fixedRoute of immutableRoutes) {
-        if (arePipeline9RoutesOnSameNet(route, fixedRoute, this.params.connMap)) {
+        if (
+          arePipeline9RoutesOnSameNet(route, fixedRoute, this.params.connMap)
+        ) {
           continue
         }
         if (

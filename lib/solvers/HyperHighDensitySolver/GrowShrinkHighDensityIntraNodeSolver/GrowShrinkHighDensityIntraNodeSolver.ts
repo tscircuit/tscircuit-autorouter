@@ -253,12 +253,14 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
       portfolioParams.viaDiameter = (portfolioParams.viaDiameter ?? 0.3) * scale
       portfolioParams.obstacleMargin =
         (portfolioParams.obstacleMargin ?? 0.15) * scale
-      portfolioParams.obstacles = portfolioParams.obstacles?.map((obstacle) => ({
-        ...obstacle,
-        center: scalePoint(obstacle.center, center, scale),
-        width: obstacle.width * scale,
-        height: obstacle.height * scale,
-      }))
+      portfolioParams.obstacles = portfolioParams.obstacles?.map(
+        (obstacle) => ({
+          ...obstacle,
+          center: scalePoint(obstacle.center, center, scale),
+          width: obstacle.width * scale,
+          height: obstacle.height * scale,
+        }),
+      )
       if (portfolioParams.boardGeometry) {
         const geometry = portfolioParams.boardGeometry
         const bounds = geometry.bounds
@@ -497,4 +499,3 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
     )
   }
 }
-

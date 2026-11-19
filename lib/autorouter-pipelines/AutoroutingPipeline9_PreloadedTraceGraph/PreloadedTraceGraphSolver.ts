@@ -428,8 +428,8 @@ export class PreloadedTraceGraphSolver extends BaseSolver {
       const lengthSquared = dx * dx + dy * dy
       if (lengthSquared === 0) continue
       for (const z of segment.availableZ) {
-        const layerPorts = segment.portPoints.filter(
-          (port) => port.availableZ.includes(z),
+        const layerPorts = segment.portPoints.filter((port) =>
+          port.availableZ.includes(z),
         )
         const template = layerPorts[0]
         if (!template) continue
