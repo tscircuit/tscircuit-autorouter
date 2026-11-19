@@ -47,6 +47,8 @@ jobs:
           s=s.replace(marker,"      viaToPadClearance,\n      defaultViaToPadClearance: this.params.minClearance ?? this.params.obstacleMargin,\n    })")
           # This helper compares edge distance after subtracting via radius.
           s=s.replace("< viaToPadClearance\n", "< (viaToPadClearance ?? defaultViaToPadClearance)\n")
+          assert "via.diameter / 2 + viaToPadClearance" in s
+          s=s.replace("via.diameter / 2 + viaToPadClearance","via.diameter / 2 + (viaToPadClearance ?? defaultViaToPadClearance)",1)
           p.write_text(s)
           if os.environ["VARIANT"]=="native-width":
               p=Path("lib/solvers/HighDensityRepairSolver/Pipeline4HighDensityRepairSolver.ts")
