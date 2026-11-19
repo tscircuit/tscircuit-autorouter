@@ -1,4 +1,4 @@
-name: Isolate remaining Game Boy regression
+name: Verify ordinary fallback via clearance
 on:
   push:
     branches: [analysis/native-complete-cleanup-context]
@@ -12,39 +12,43 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        variant: [canonical-force, saved-width, both]
+        include:
+          - variant: parent
+            source: 7b5f98e1785f9fcf3751448de03f58603afbf0d6
+          - variant: native
+            source: 75a6381c6985cd48f91b30516a828f6a771cfce0
+          - variant: native-width
+            source: 75a6381c6985cd48f91b30516a828f6a771cfce0
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: 75a6381c6985cd48f91b30516a828f6a771cfce0
-          fetch-depth: 0
+          ref: ${{ matrix.source }}
           persist-credentials: false
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: '1.4.3'
-      - name: Isolate changes without changing the fixture or assertions
+      - name: Apply general pad clearance to newly created fallback vias
         env:
           VARIANT: ${{ matrix.variant }}
         run: |
           python3 - <<'PY'
-          import os,subprocess
+          import os
           from pathlib import Path
-          variant=os.environ["VARIANT"]
-          if variant in ["canonical-force","both"]:
-              p=Path("lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts")
-              s=p.read_text()
-              old="materializePipeline9HdRouteVias(cms.highDensityRouteSolver!.routes),\n          ),"
-              new="""materializePipeline9HdRouteVias(cms.highDensityRouteSolver!.routes),
-                        ).map((route) => ({
-                          ...route,
-                          rootConnectionName:
-                            cms.connMap.getNetConnectedToId(route.rootConnectionName ?? route.connectionName) ??
-                            route.rootConnectionName ??
-                            route.connectionName,
-                        })),"""
-              assert s.count(old)==1
-              p.write_text(s.replace(old,new))
-          if variant in ["saved-width","both"]:
+          p=Path("lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9RegionalFallbackSolver.ts")
+          s=p.read_text().replace("hasPreloadedViaToBoardObstacleConflict","hasViaToBoardObstacleConflict")
+          s=s.replace("  viaToPadClearance,\n  allowBlindAndBuriedVias,","  viaToPadClearance,\n  defaultViaToPadClearance,\n  allowBlindAndBuriedVias,",1)
+          s=s.replace("  viaToPadClearance: number\n  allowBlindAndBuriedVias?","  viaToPadClearance?: number\n  defaultViaToPadClearance: number\n  allowBlindAndBuriedVias?",1)
+          s=s.replace("    if (!movablePreloadedConnectionNames.has(route.connectionName)) {","    if (movablePreloadedConnectionNames.has(route.connectionName) && viaToPadClearance === undefined) {",1)
+          s=s.replace("getPointToObstacleDistance(via, obstacle) < viaToPadClearance","getPointToObstacleDistance(via, obstacle) < (viaToPadClearance ?? defaultViaToPadClearance)")
+          # Radius is subtracted by the existing helper's comparison.
+          s=s.replace("    if (\n      !boardObstacles ||\n      !movablePreloadedConnectionNames ||\n      viaToPadClearance === undefined\n    ) {","    if (!boardObstacles || !movablePreloadedConnectionNames) {",1)
+          marker="      viaToPadClearance,\n    })"
+          assert s.count(marker)==1
+          s=s.replace(marker,"      viaToPadClearance,\n      defaultViaToPadClearance: this.params.minClearance ?? this.params.obstacleMargin,\n    })")
+          # This helper compares edge distance after subtracting via radius.
+          s=s.replace("< viaToPadClearance\n", "< (viaToPadClearance ?? defaultViaToPadClearance)\n")
+          p.write_text(s)
+          if os.environ["VARIANT"]=="native-width":
               p=Path("lib/solvers/HighDensityRepairSolver/Pipeline4HighDensityRepairSolver.ts")
               s=p.read_text()
               old="""    const repairRoutes = contextRoutes.map((route) =>
@@ -58,18 +62,13 @@ jobs:
               new="""    const repairRoutes = contextRoutes.map((route, index) => {
                 let minimumTraceWidth = params.minimumTraceWidth
                 if (index >= params.hdRoutes.length) minimumTraceWidth = undefined
-                return toRepairRoute({
-                  route,
-                  connMap: params.connMap,
-                  minimumTraceWidth,
-                  viaLayerSpan,
-                })
+                return toRepairRoute({route, connMap: params.connMap, minimumTraceWidth, viaLayerSpan})
               })"""
               assert s.count(old)==1
               p.write_text(s.replace(old,new))
           PY
       - run: bun install
-      - name: Run original full-board routing and clearance assertions
+      - name: Keep the original Game Boy routing and clearance assertions
         env:
           BUN_UPDATE_SNAPSHOTS: '1'
         run: bun test --timeout 9999999 tests/bugs/bugreport96-full-gameboy-no-breakout.test.ts
