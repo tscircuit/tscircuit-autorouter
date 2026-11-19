@@ -1,0 +1,417 @@
+{
+  "schemaVersion": 2,
+  "passed": true,
+  "originalAutorouterSha256": "5695c6361c0f7a7dc26ddd1b9264b8a8c122e5f7b9610cf24c6af3b99c545df1",
+  "candidateAutorouterSha256": "d05bd05d52da6980fc29864193dd1c56c409b8db25a36f4741f2f0b622be13b3",
+  "sourceMapSha256": "9edff1c06b9a33231e581e2aae1115cfd96213f28df65eb3d56d7d78b078241d",
+  "source": {
+    "repositories": [
+      {
+        "repository": "tscircuit/high-density-a01",
+        "sourceBaseCommit": "eef8b059d54ffbd12b0d2751c53d3e501e2f3430",
+        "publishedBaseCommit": "85ee23a25403bbb79be14b6d0783e592928a85a0",
+        "productionPatchFile": "a01-via-gate-production.patch",
+        "changedFiles": [
+          {
+            "relative": "lib/HighDensitySolverA01/HighDensitySolverA01.ts",
+            "beforeSha256": "d9ddf24d2cef76012e7be01427c11429e86162dfbf74aa74a0b443493cddc114",
+            "afterSha256": "2677d9e6a4c91709722cc192038d1dc186a5bb36e2cb5b9bf8d6ef81e22df86d"
+          }
+        ],
+        "candidateCommit": "b3cb6ef2d21159d97410b00fda3ac712642ab2e0",
+        "productionPatchSha256": "6ae16c91dfba4cff91adcc89ad98b9513d6d4d571f03955ca4c71f641de97d0e"
+      },
+      {
+        "repository": "tscircuit/tscircuit-autorouter",
+        "sourceBaseCommit": "c0dcc07ae48b17296a1dc73678e258de62ca8de3",
+        "publishedBaseCommit": "c0dcc07ae48b17296a1dc73678e258de62ca8de3",
+        "productionPatchFile": "autorouter-via-gate-production.patch",
+        "changedFiles": [
+          {
+            "relative": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9RegionalFallbackSolver.ts",
+            "beforeSha256": "a21d1c1c07175216b88922acdb4dbe9911fa931dc255ed53ebe4e97654ad8863",
+            "afterSha256": "af5a257aa730c523701194b8b46085fd2f1ac166481d44565fb490ce9188cd3a"
+          },
+          {
+            "relative": "lib/solvers/HighDensitySolver/HighDensitySolver.ts",
+            "beforeSha256": "a138621c704e5f5cdb088893842097b974cb02e16c1078ca4c905d043b982dab",
+            "afterSha256": "647126db000eeeb7f8f8f1df50422997a69a9ac2cf64ade3c69d7ffcf2e0b325"
+          },
+          {
+            "relative": "lib/solvers/HyperHighDensitySolver/PortfolioSingleIntraNodeSolver.ts",
+            "beforeSha256": "2f77dcbf4f80ad22b0d3a0c7792a858833b49baaf179291d45596a7b19a87436",
+            "afterSha256": "fa3f97c55c5e1117763b1f19ac5e65b6ba2a647c44fed7e2f0519051a4f33708"
+          }
+        ],
+        "candidateCommit": "2c493169ef3c16d404dff54bf04127274c39e6b4",
+        "productionPatchSha256": "8a36b78392f1223c119acea1ee99b8f68384f02feb1b1cd783f6f4b72e2ad76d"
+      }
+    ]
+  },
+  "spans": [
+    {
+      "kind": "insert",
+      "name": "HighDensitySolverA01.isViaAllowed",
+      "sourceRepository": "tscircuit/high-density-a01",
+      "sourceRelative": "lib/HighDensitySolverA01/HighDensitySolverA01.ts",
+      "startCharacter": 198215,
+      "endCharacter": 198215,
+      "startByte": 198215,
+      "endByte": 198215,
+      "originalText": "",
+      "replacementText": "isViaAllowed;",
+      "originalSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "replacementSha256": "83f0b131f8af2344d86a84a8aeab8d49af11bad5cb023abdf990d40c54a49d4e",
+      "compiledBaseEquivalent": null
+    },
+    {
+      "kind": "replace",
+      "name": "HighDensitySolverA01.constructor",
+      "sourceRepository": "tscircuit/high-density-a01",
+      "sourceRelative": "lib/HighDensitySolverA01/HighDensitySolverA01.ts",
+      "startCharacter": 199569,
+      "endCharacter": 200258,
+      "startByte": 199569,
+      "endByte": 200258,
+      "originalText": "constructor(e){super(),this.nodeWithPortPoints=e.nodeWithPortPoints,this.cellSizeMm=e.cellSizeMm,this.viaDiameter=e.viaDiameter,this.maxCellCount=e.maxCellCount,this.traceThickness=e.traceThickness??.1,this.traceMargin=e.traceMargin??.15,this.viaMinDistFromBorder=e.viaMinDistFromBorder??.15,this.showPenaltyMap=e.showPenaltyMap??!1,this.showUsedCellMap=e.showUsedCellMap??!1,this.effort=e.effort??1,this.stepMultiplier=Math.max(1,Math.floor(e.stepMultiplier??1)),this.hyperParameters={shuffleSeed:0,ripCost:10,ripTracePenalty:.5,ripViaPenalty:.75,viaBaseCost:.1,greedyMultiplier:1.5,...e.hyperParameters},this.MAX_ITERATIONS=1e8,this.MAX_RIPS=200,this.initialPenaltyFn=e.initialPenaltyFn}",
+      "replacementText": "constructor(props) {\n    super();\n    this.nodeWithPortPoints = props.nodeWithPortPoints;\n    this.cellSizeMm = props.cellSizeMm;\n    this.viaDiameter = props.viaDiameter;\n    this.maxCellCount = props.maxCellCount;\n    this.traceThickness = props.traceThickness ?? 0.1;\n    this.traceMargin = props.traceMargin ?? 0.15;\n    this.viaMinDistFromBorder = props.viaMinDistFromBorder ?? 0.15;\n    this.showPenaltyMap = props.showPenaltyMap ?? !1;\n    this.showUsedCellMap = props.showUsedCellMap ?? !1;\n    this.effort = props.effort ?? 1;\n    this.stepMultiplier = Math.max(1, Math.floor(props.stepMultiplier ?? 1));\n    this.hyperParameters = {\n      shuffleSeed: 0,\n      ripCost: 10,\n      ripTracePenalty: 0.5,\n      ripViaPenalty: 0.75,\n      viaBaseCost: 0.1,\n      greedyMultiplier: 1.5,\n      ...props.hyperParameters\n    };\n    this.MAX_ITERATIONS = 1e8;\n    this.MAX_RIPS = 200;\n    this.initialPenaltyFn = props.initialPenaltyFn;\n    this.isViaAllowed = props.isViaAllowed;\n  }",
+      "originalSha256": "1d0c5a6f0655e833d86eda3de79847d376d1508e269fabdc3a254b0e1ba4c2bd",
+      "replacementSha256": "ff04905acc5f36f891bc7a34d54cc53779135f9fac958656223034cd9d3725b9",
+      "compiledBaseEquivalent": true,
+      "baseCanonicalSha256": "fff0feec8a2e24610a68e5b6df80ae4193e9c70725f5a42930c9508aa0988d19",
+      "aliases": {}
+    },
+    {
+      "kind": "replace",
+      "name": "HighDensitySolverA01.getConstructorParams",
+      "sourceRepository": "tscircuit/high-density-a01",
+      "sourceRelative": "lib/HighDensitySolverA01/HighDensitySolverA01.ts",
+      "startCharacter": 200258,
+      "endCharacter": 200734,
+      "startByte": 200258,
+      "endByte": 200734,
+      "originalText": "getConstructorParams(){return[{nodeWithPortPoints:this.nodeWithPortPoints,cellSizeMm:this.cellSizeMm,viaDiameter:this.viaDiameter,maxCellCount:this.maxCellCount,stepMultiplier:this.stepMultiplier,traceThickness:this.traceThickness,traceMargin:this.traceMargin,viaMinDistFromBorder:this.viaMinDistFromBorder,showPenaltyMap:this.showPenaltyMap,showUsedCellMap:this.showUsedCellMap,effort:this.effort,hyperParameters:this.hyperParameters,initialPenaltyFn:this.initialPenaltyFn}]}",
+      "replacementText": "getConstructorParams() {\n    return [\n      {\n        nodeWithPortPoints: this.nodeWithPortPoints,\n        cellSizeMm: this.cellSizeMm,\n        viaDiameter: this.viaDiameter,\n        maxCellCount: this.maxCellCount,\n        stepMultiplier: this.stepMultiplier,\n        traceThickness: this.traceThickness,\n        traceMargin: this.traceMargin,\n        viaMinDistFromBorder: this.viaMinDistFromBorder,\n        showPenaltyMap: this.showPenaltyMap,\n        showUsedCellMap: this.showUsedCellMap,\n        effort: this.effort,\n        hyperParameters: this.hyperParameters,\n        initialPenaltyFn: this.initialPenaltyFn,\n        isViaAllowed: this.isViaAllowed\n      }\n    ];\n  }",
+      "originalSha256": "e8b98dd0275e0903dcc55366a5d388cbfab57d70f72bcbe61fa7e64e98d944aa",
+      "replacementSha256": "b060fa67dd31f7aa832f618215533099f83c195cff89d075439bd0f8a88dbc50",
+      "compiledBaseEquivalent": true,
+      "baseCanonicalSha256": "135ed74bbaf2dd64cce32c62ac01fe98d1cec295b58c5cee04646810a04e8ed5",
+      "aliases": {}
+    },
+    {
+      "kind": "replace",
+      "name": "HighDensitySolverA01.computeMoveCostAndRips",
+      "sourceRepository": "tscircuit/high-density-a01",
+      "sourceRelative": "lib/HighDensitySolverA01/HighDensitySolverA01.ts",
+      "startCharacter": 207677,
+      "endCharacter": 209613,
+      "startByte": 207677,
+      "endByte": 209613,
+      "originalText": "computeMoveCostAndRips(e,t,n,o,i,r,s,a){let c=0,l=a;const h=this.cols;if(t!==i){c+=this.hyperParameters.viaBaseCost,c+=Math.min(this.penalty2d[r*h+s],this.penaltyCap);const t=(i*this.rows+r)*h+s,n=this.portOwnerFlat[t];if(n>=0&&n!==e){const t=this.connIdToRootNet[n]===this.connIdToRootNet[e]&&this.overlapFriendlyRootNets.has(this.connIdToRootNet[e]),o=this.activeConnSeg,a=!!o&&i===o.endZ&&r===o.endRow&&s===o.endCol;if(!t&&!a)return this._moveCost=-1,void(this._moveRipped=l)}this.fillViaOccupants(r,s,e);const o=this._viaOccs;for(let e=0;e<o.length;e++){const t=o[e];Ri(l,t)||(c+=this.getRipCost(t),l={id:t,prev:l}),c+=this.hyperParameters.ripViaPenalty}}else{const t=n>r?n-r:r-n,a=o>s?o-s:s-o;c+=(t+a>1?Math.SQRT2:1)*this.cellSizeMm,c+=Math.min(this.penalty2d[r*h+s],this.penaltyCap);const d=(i*this.rows+r)*h+s,u=this.portOwnerFlat[d];if(u>=0&&u!==e){const t=this.connIdToRootNet[u]===this.connIdToRootNet[e]&&this.overlapFriendlyRootNets.has(this.connIdToRootNet[e]),n=this.activeConnSeg,o=!!n&&i===n.endZ&&r===n.endRow&&s===n.endCol;if(!t&&!o)return this._moveCost=-1,void(this._moveRipped=l)}const p=this.usedCellsFlat[d];if(p>=0&&p!==e){this.connIdToRootNet[p]===this.connIdToRootNet[e]&&this.overlapFriendlyRootNets.has(this.connIdToRootNet[e])||(Ri(l,p)||(c+=this.getRipCost(p),l={id:p,prev:l}),c+=this.hyperParameters.ripTracePenalty)}if(this.viaOwnersByCell.size>0){this.fillTraceSegmentViaOccupants(n,o,r,s,e);const t=this._viaOccs;for(let e=0;e<t.length;e++){const n=t[e];Ri(l,n)||(c+=this.getRipCost(n),l={id:n,prev:l}),c+=this.hyperParameters.ripViaPenalty}}if(1===t&&1===a){const t=n<r?n:r,a=o<s?o:s,c=1^(n<r&&o<s||n>r&&o>s?0:1),h=this.cols-1,d=2*((i*(this.rows-1)+t)*h+a),u=this.usedDiagFlat[d+c];if(u>=0&&u!==e){if(!(this.connIdToRootNet[u]===this.connIdToRootNet[e]&&this.overlapFriendlyRootNets.has(this.connIdToRootNet[e])))return this._moveCost=-1,void(this._moveRipped=l)}}}this._moveCost=c,this._moveRipped=l}",
+      "replacementText": "computeMoveCostAndRips(activeConn, fromZ, fromRow, fromCol, toZ, toRow, toCol, ripped) {\n    let cost = 0, r = ripped;\n    const cols = this.cols;\n    if (fromZ !== toZ) {\n      cost += this.hyperParameters.viaBaseCost;\n      cost += Math.min(this.penalty2d[toRow * cols + toCol], this.penaltyCap);\n      const toFlatIdx = (toZ * this.rows + toRow) * cols + toCol, fixedOwner = this.portOwnerFlat[toFlatIdx];\n      if (fixedOwner >= 0 && fixedOwner !== activeConn) {\n        const allowFixedOverlap = this.connIdToRootNet[fixedOwner] === this.connIdToRootNet[activeConn] && this.overlapFriendlyRootNets.has(this.connIdToRootNet[activeConn]), seg = this.activeConnSeg, isSegEnd = !!seg && toZ === seg.endZ && toRow === seg.endRow && toCol === seg.endCol;\n        if (!allowFixedOverlap && !isSegEnd) {\n          this._moveCost = -1;\n          this._moveRipped = r;\n          return;\n        }\n      }\n      if (this.isViaAllowed) {\n        const point = Ii(this.gridToBoundsTransform, {\n          x: this.gridOrigin.x + (toCol + 0.5) * this.cellSizeMm,\n          y: this.gridOrigin.y + (toRow + 0.5) * this.cellSizeMm\n        });\n        if (!this.isViaAllowed({\n          ...point,\n          fromZ: this.layerToZ.get(fromZ),\n          toZ: this.layerToZ.get(toZ),\n          connectionName: this.connIdToName[activeConn],\n          rootConnectionName: this.connIdToRootNet[activeConn]\n        })) {\n          this._moveCost = -1;\n          this._moveRipped = r;\n          return;\n        }\n      }\n      this.fillViaOccupants(toRow, toCol, activeConn);\n      const occs = this._viaOccs;\n      for (let i = 0;i < occs.length; i++) {\n        const occ = occs[i];\n        if (!Ri(r, occ)) {\n          cost += this.getRipCost(occ);\n          r = { id: occ, prev: r };\n        }\n        cost += this.hyperParameters.ripViaPenalty;\n      }\n    } else {\n      const dr = fromRow > toRow ? fromRow - toRow : toRow - fromRow, dc = fromCol > toCol ? fromCol - toCol : toCol - fromCol;\n      cost += (dr + dc > 1 ? Math.SQRT2 : 1) * this.cellSizeMm;\n      cost += Math.min(this.penalty2d[toRow * cols + toCol], this.penaltyCap);\n      const flatIdx = (toZ * this.rows + toRow) * cols + toCol, fixedOwner = this.portOwnerFlat[flatIdx];\n      if (fixedOwner >= 0 && fixedOwner !== activeConn) {\n        const allowFixedOverlap = this.connIdToRootNet[fixedOwner] === this.connIdToRootNet[activeConn] && this.overlapFriendlyRootNets.has(this.connIdToRootNet[activeConn]), seg = this.activeConnSeg, isSegEnd = !!seg && toZ === seg.endZ && toRow === seg.endRow && toCol === seg.endCol;\n        if (!allowFixedOverlap && !isSegEnd) {\n          this._moveCost = -1;\n          this._moveRipped = r;\n          return;\n        }\n      }\n      const occ = this.usedCellsFlat[flatIdx];\n      if (occ >= 0 && occ !== activeConn) {\n        if (!(this.connIdToRootNet[occ] === this.connIdToRootNet[activeConn] && this.overlapFriendlyRootNets.has(this.connIdToRootNet[activeConn]))) {\n          if (!Ri(r, occ)) {\n            cost += this.getRipCost(occ);\n            r = { id: occ, prev: r };\n          }\n          cost += this.hyperParameters.ripTracePenalty;\n        }\n      }\n      if (this.viaOwnersByCell.size > 0) {\n        this.fillTraceSegmentViaOccupants(fromRow, fromCol, toRow, toCol, activeConn);\n        const viaOccs = this._viaOccs;\n        for (let i = 0;i < viaOccs.length; i++) {\n          const viaOwner = viaOccs[i];\n          if (!Ri(r, viaOwner)) {\n            cost += this.getRipCost(viaOwner);\n            r = { id: viaOwner, prev: r };\n          }\n          cost += this.hyperParameters.ripViaPenalty;\n        }\n      }\n      if (dr === 1 && dc === 1) {\n        const sqRow = fromRow < toRow ? fromRow : toRow, sqCol = fromCol < toCol ? fromCol : toCol, crossingSlot = (fromRow < toRow && fromCol < toCol || fromRow > toRow && fromCol > toCol ? 0 : 1) ^ 1, sqCols = this.cols - 1, diagBase = ((toZ * (this.rows - 1) + sqRow) * sqCols + sqCol) * 2, crossingOcc = this.usedDiagFlat[diagBase + crossingSlot];\n        if (crossingOcc >= 0 && crossingOcc !== activeConn) {\n          if (!(this.connIdToRootNet[crossingOcc] === this.connIdToRootNet[activeConn] && this.overlapFriendlyRootNets.has(this.connIdToRootNet[activeConn]))) {\n            this._moveCost = -1;\n            this._moveRipped = r;\n            return;\n          }\n        }\n      }\n    }\n    this._moveCost = cost;\n    this._moveRipped = r;\n  }",
+      "originalSha256": "8fe655b32725562773c7b40b8d9b1c1ef86fda27b981eb16fa8550889b38202c",
+      "replacementSha256": "cec6b3112400360dc6bd7dfe76290d51a7298c96c9964a554017cf2b83ef84b5",
+      "compiledBaseEquivalent": true,
+      "baseCanonicalSha256": "79872bdeebffc01a6d7daf78834fd1f5df10f791f5848aa75664e5f0294719e1",
+      "aliases": {
+        "rippedContains": "Ri"
+      }
+    },
+    {
+      "kind": "replace",
+      "name": "PortfolioSingleIntraNodeSolver.generateSolver",
+      "sourceRepository": "tscircuit/tscircuit-autorouter",
+      "sourceRelative": "lib/solvers/HyperHighDensitySolver/PortfolioSingleIntraNodeSolver.ts",
+      "startCharacter": 1262837,
+      "endCharacter": 1266102,
+      "startByte": 1262896,
+      "endByte": 1266161,
+      "originalText": "generateSolver(e){if(this.precomputedIntraNodeRouteParams??=Yr(this.constructorParams),e.SINGLE_LAYER_NO_DIFFERENT_ROOT_INTERSECTIONS){if(!ga.isApplicable(this.nodeWithPortPoints)){const e=new Vr({nodeWithPortPoints:this.nodeWithPortPoints,connMap:this.connMap,traceWidth:this.constructorParams.traceWidth,viaDiameter:this.constructorParams.viaDiameter,obstacleMargin:this.constructorParams.obstacleMargin,precomputedIntraNodeRouteParams:this.precomputedIntraNodeRouteParams});return e.failed=!0,e.error=\"Single-layer no-different-root-intersection solver not applicable\",e}return new ga({nodeWithPortPoints:this.nodeWithPortPoints,traceWidth:this.constructorParams.traceWidth,viaDiameter:this.constructorParams.viaDiameter})}if(e.HIGH_DENSITY_A13){const t=Math.max(1,Math.round(5e7*this.effort)),n=new NB({obstacles:this.constructorParams.obstacles??[],boardGeometry:this.constructorParams.boardGeometry,connMap:this.connMap,layerCount:this.constructorParams.layerCount??2,nodeWithPortPoints:this.nodeWithPortPoints,cellSizeMm:.1,viaDiameter:this.constructorParams.viaDiameter??.3,viaMinDistFromBorder:(this.constructorParams.viaDiameter??.3)/2,traceThickness:this.constructorParams.traceWidth??.15,traceMargin:.1,stepMultiplier:1e3,maxSearchIterations:t,maxRounds:Math.max(1,Math.round(200*this.effort)),hyperParameters:{shuffleSeed:e.SHUFFLE_SEED??0}});return n.MAX_ITERATIONS=2*t,n}if(e.HIGH_DENSITY_A01){return new Oi({nodeWithPortPoints:this.nodeWithPortPoints,cellSizeMm:.1,viaDiameter:this.constructorParams.viaDiameter??.3,viaMinDistFromBorder:(this.constructorParams.viaDiameter??.3)/2,traceMargin:.1,traceThickness:this.constructorParams.traceWidth??.15,effort:this.effort,hyperParameters:{shuffleSeed:e.SHUFFLE_SEED??0}})}if(e.HIGH_DENSITY_A03){return new Vi({nodeWithPortPoints:this.nodeWithPortPoints,highResolutionCellSize:.1,highResolutionCellThickness:8,lowResolutionCellSize:.4,viaDiameter:this.constructorParams.viaDiameter??.3,viaMinDistFromBorder:(this.constructorParams.viaDiameter??.3)/2,traceMargin:.1,traceThickness:.1,effort:this.effort,hyperParameters:e})}return e.CLOSED_FORM_TWO_TRACE_SAME_LAYER?new za({nodeWithPortPoints:this.nodeWithPortPoints,viaDiameter:this.constructorParams.viaDiameter}):e.CLOSED_FORM_TWO_TRACE_TRANSITION_CROSSING?new ka({nodeWithPortPoints:this.nodeWithPortPoints,viaDiameter:this.constructorParams.viaDiameter}):e.CLOSED_FORM_SINGLE_TRANSITION?new ya({nodeWithPortPoints:this.nodeWithPortPoints,viaDiameter:this.constructorParams.viaDiameter}):e.THROUGH_OBSTACLE?new va({nodeWithPortPoints:this.nodeWithPortPoints,obstacles:this.constructorParams.obstacles,connMap:this.connMap,layerCount:this.constructorParams.layerCount,viaDiameter:this.constructorParams.viaDiameter,traceThickness:this.constructorParams.traceWidth}):e.MULTI_HEAD_POLYLINE_SOLVER?new Us({nodeWithPortPoints:this.nodeWithPortPoints,connMap:this.connMap,hyperParameters:e,viaDiameter:this.constructorParams.viaDiameter}):e.PRIORITY_DAG_FAMILY_SIZE?new vs({...this.constructorParams,hyperParameters:e,priorityFamilySize:e.PRIORITY_DAG_FAMILY_SIZE,precomputedIntraNodeRouteParams:this.precomputedIntraNodeRouteParams}):new qr({...this.constructorParams,hyperParameters:e,precomputedIntraNodeRouteParams:this.precomputedIntraNodeRouteParams})}",
+      "replacementText": "generateSolver(hyperParameters) {\n    this.precomputedIntraNodeRouteParams ??= Yr(this.constructorParams);\n    if (hyperParameters.SINGLE_LAYER_NO_DIFFERENT_ROOT_INTERSECTIONS) {\n      if (!ga.isApplicable(this.nodeWithPortPoints)) {\n        const ineligibleSolver = new Vr({\n          nodeWithPortPoints: this.nodeWithPortPoints,\n          connMap: this.connMap,\n          traceWidth: this.constructorParams.traceWidth,\n          viaDiameter: this.constructorParams.viaDiameter,\n          obstacleMargin: this.constructorParams.obstacleMargin,\n          precomputedIntraNodeRouteParams: this.precomputedIntraNodeRouteParams\n        });\n        ineligibleSolver.failed = !0;\n        ineligibleSolver.error = \"Single-layer no-different-root-intersection solver not applicable\";\n        return ineligibleSolver;\n      }\n      return new ga({\n        nodeWithPortPoints: this.nodeWithPortPoints,\n        traceWidth: this.constructorParams.traceWidth,\n        viaDiameter: this.constructorParams.viaDiameter\n      });\n    }\n    if (hyperParameters.HIGH_DENSITY_A13) {\n      const maxSearchIterations = Math.max(1, Math.round(50000000 * this.effort)), solver = new NB({\n        obstacles: this.constructorParams.obstacles ?? [],\n        boardGeometry: this.constructorParams.boardGeometry,\n        connMap: this.connMap,\n        layerCount: this.constructorParams.layerCount ?? 2,\n        nodeWithPortPoints: this.nodeWithPortPoints,\n        cellSizeMm: 0.1,\n        viaDiameter: this.constructorParams.viaDiameter ?? 0.3,\n        viaMinDistFromBorder: (this.constructorParams.viaDiameter ?? 0.3) / 2,\n        traceThickness: this.constructorParams.traceWidth ?? 0.15,\n        traceMargin: 0.1,\n        stepMultiplier: 1000,\n        maxSearchIterations,\n        maxRounds: Math.max(1, Math.round(200 * this.effort)),\n        hyperParameters: { shuffleSeed: hyperParameters.SHUFFLE_SEED ?? 0 }\n      });\n      solver.MAX_ITERATIONS = maxSearchIterations * 2;\n      return solver;\n    }\n    if (hyperParameters.HIGH_DENSITY_A01) {\n      const { isViaAllowed, priorityCoordinateScale = 1 } = this.constructorParams, { center } = this.nodeWithPortPoints, inverseScale = 1 / priorityCoordinateScale;\n      return new Oi({\n        nodeWithPortPoints: this.nodeWithPortPoints,\n        cellSizeMm: 0.1,\n        viaDiameter: this.constructorParams.viaDiameter ?? 0.3,\n        viaMinDistFromBorder: (this.constructorParams.viaDiameter ?? 0.3) / 2,\n        traceMargin: 0.1,\n        traceThickness: this.constructorParams.traceWidth ?? 0.15,\n        isViaAllowed: isViaAllowed && priorityCoordinateScale !== 1 ? (position) => isViaAllowed({\n          ...position,\n          x: center.x + (position.x - center.x) * inverseScale,\n          y: center.y + (position.y - center.y) * inverseScale\n        }) : isViaAllowed,\n        effort: this.effort,\n        hyperParameters: {\n          shuffleSeed: hyperParameters.SHUFFLE_SEED ?? 0\n        }\n      });\n    }\n    if (hyperParameters.HIGH_DENSITY_A03)\n      return new Vi({\n        nodeWithPortPoints: this.nodeWithPortPoints,\n        highResolutionCellSize: 0.1,\n        highResolutionCellThickness: 8,\n        lowResolutionCellSize: 0.4,\n        viaDiameter: this.constructorParams.viaDiameter ?? 0.3,\n        viaMinDistFromBorder: (this.constructorParams.viaDiameter ?? 0.3) / 2,\n        traceMargin: 0.1,\n        traceThickness: 0.1,\n        effort: this.effort,\n        hyperParameters\n      });\n    if (hyperParameters.CLOSED_FORM_TWO_TRACE_SAME_LAYER)\n      return new za({\n        nodeWithPortPoints: this.nodeWithPortPoints,\n        viaDiameter: this.constructorParams.viaDiameter\n      });\n    if (hyperParameters.CLOSED_FORM_TWO_TRACE_TRANSITION_CROSSING)\n      return new ka({\n        nodeWithPortPoints: this.nodeWithPortPoints,\n        viaDiameter: this.constructorParams.viaDiameter\n      });\n    if (hyperParameters.CLOSED_FORM_SINGLE_TRANSITION)\n      return new ya({\n        nodeWithPortPoints: this.nodeWithPortPoints,\n        viaDiameter: this.constructorParams.viaDiameter\n      });\n    if (hyperParameters.THROUGH_OBSTACLE)\n      return new va({\n        nodeWithPortPoints: this.nodeWithPortPoints,\n        obstacles: this.constructorParams.obstacles,\n        connMap: this.connMap,\n        layerCount: this.constructorParams.layerCount,\n        viaDiameter: this.constructorParams.viaDiameter,\n        traceThickness: this.constructorParams.traceWidth\n      });\n    if (hyperParameters.MULTI_HEAD_POLYLINE_SOLVER)\n      return new Us({\n        nodeWithPortPoints: this.nodeWithPortPoints,\n        connMap: this.connMap,\n        hyperParameters,\n        viaDiameter: this.constructorParams.viaDiameter\n      });\n    if (hyperParameters.PRIORITY_DAG_FAMILY_SIZE)\n      return new vs({\n        ...this.constructorParams,\n        hyperParameters,\n        priorityFamilySize: hyperParameters.PRIORITY_DAG_FAMILY_SIZE,\n        precomputedIntraNodeRouteParams: this.precomputedIntraNodeRouteParams\n      });\n    return new qr({\n      ...this.constructorParams,\n      hyperParameters,\n      precomputedIntraNodeRouteParams: this.precomputedIntraNodeRouteParams\n    });\n  }",
+      "originalSha256": "41e6a1811a462995aee662eb74f45ef8c683601b292c147e49c491417c4b4c1a",
+      "replacementSha256": "dd69186eb1dc46e0f5a92b8231d57cca60a8370e2d9f12d38106e9d4c36f4ef0",
+      "compiledBaseEquivalent": true,
+      "baseCanonicalSha256": "3f74dda2e645563453d64eaef0b4fca14ab58a56462ef88cfc7b2c54065e74bb",
+      "aliases": {
+        "precomputeIntraNodeRouteParams": "Yr",
+        "SingleLayerNoDifferentRootIntersectionsIntraNodeSolver": "ga",
+        "IntraNodeRouteSolver": "Vr",
+        "HighDensitySolverA13WithDrcValidation": "NB",
+        "HighDensitySolverA01": "Oi",
+        "HighDensityA03Solver": "Vi",
+        "TwoCrossingRoutesHighDensitySolver": "za",
+        "SingleTransitionCrossingRouteSolver": "ka",
+        "SingleTransitionIntraNodeSolver": "ya",
+        "SingleTransitionThroughObstacleIntraNodeSolver": "va",
+        "MultiHeadPolyLineIntraNodeSolver3": "Us",
+        "PriorityDagIntraNodeSolver": "vs",
+        "CachedIntraNodeRouteSolver": "qr"
+      }
+    },
+    {
+      "kind": "insert",
+      "name": "HighDensitySolver.isViaAllowed",
+      "sourceRepository": "tscircuit/tscircuit-autorouter",
+      "sourceRelative": "lib/solvers/HighDensitySolver/HighDensitySolver.ts",
+      "startCharacter": 1275255,
+      "endCharacter": 1275255,
+      "startByte": 1275314,
+      "endByte": 1275314,
+      "originalText": "",
+      "replacementText": "isViaAllowed;",
+      "originalSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "replacementSha256": "83f0b131f8af2344d86a84a8aeab8d49af11bad5cb023abdf990d40c54a49d4e",
+      "compiledBaseEquivalent": null
+    },
+    {
+      "kind": "replace",
+      "name": "HighDensitySolver.constructor",
+      "sourceRepository": "tscircuit/tscircuit-autorouter",
+      "sourceRelative": "lib/solvers/HighDensitySolver/HighDensitySolver.ts",
+      "startCharacter": 1275397,
+      "endCharacter": 1277144,
+      "startByte": 1275456,
+      "endByte": 1277203,
+      "originalText": "constructor({nodePortPoints:e,colorMap:t,connMap:n,viaDiameter:o,traceWidth:i,obstacleMargin:r,effort:s,nodePfById:a,obstacles:c,layerCount:l,useGrowShrinkHighDensityIntraNodeSolver:h,enableNegotiatedSearch:d=!1,gridSearchSegmentWork:u=1e4,gridSearchWorkScale:p=1,rejectOverlappingTerminals:m=!1,boardGeometry:g,preserveTerminalPcbPortIds:f,growShrinkMaxInnerIterationsPerGrowthAttempt:y,growShrinkFallbackToInvalidGeometryOnFailure:_,growShrinkSolutionValidator:b,captureSearchDebug:x,priorityDagSearch:v=!1,priorityDiagnostics:I,viaHoleDiameter:S,minViaHoleEdgeToViaHoleEdgeClearance:C,allowBlindAndBuriedVias:P}){super(),this.unsolvedNodePortPoints=e,this.colorMap=t??{},this.connMap=n,this.routes=[],this.failedSolvers=[],this.effort=s??1,this.viaDiameter=o??this.defaultViaDiameter,this.traceWidth=i??this.defaultTraceThickness,this.obstacleMargin=r??.15,this.obstacles=c??[],this.layerCount=l??2,this.enableNegotiatedSearch=d,this.gridSearchSegmentWork=u,this.gridSearchWorkScale=p,this.rejectOverlappingTerminals=m,this.boardGeometry=g,this.useGrowShrinkHighDensityIntraNodeSolver=h??!1,this.preserveTerminalPcbPortIds=f??!1,this.growShrinkMaxInnerIterationsPerGrowthAttempt=y,this.growShrinkFallbackToInvalidGeometryOnFailure=_??!1,this.growShrinkSolutionValidator=b,this.captureSearchDebug=x??!0,this.benchmarkDiagnosticCounters=I??{},this.priorityDagOptions={priorityDagSearch:v,viaHoleDiameter:S,minViaHoleEdgeToViaHoleEdgeClearance:C,allowBlindAndBuriedVias:P},this.MAX_ITERATIONS=1e7*this.effort*(this.useGrowShrinkHighDensityIntraNodeSolver?4:1),this.nodePfById=a instanceof Map?new Map(a):new Map(Object.entries(a??{})),this.nodeSolveMetadataById=new Map,this.stats={solverNodeCount:{},difficultNodePfs:{},highDensityResizeCount:0}}",
+      "replacementText": "constructor({nodePortPoints:binding0,colorMap:binding1,connMap:binding2,viaDiameter:binding3,traceWidth:binding4,obstacleMargin:binding5,effort:binding6,nodePfById:binding7,obstacles:binding8,layerCount:binding9,useGrowShrinkHighDensityIntraNodeSolver:binding10,enableNegotiatedSearch:binding11=!1,gridSearchSegmentWork:binding12=1e4,gridSearchWorkScale:binding13=1,rejectOverlappingTerminals:binding14=!1,boardGeometry:binding15,preserveTerminalPcbPortIds:binding16,growShrinkMaxInnerIterationsPerGrowthAttempt:binding17,growShrinkFallbackToInvalidGeometryOnFailure:binding18,growShrinkSolutionValidator:binding19,isViaAllowed:binding20,captureSearchDebug:binding21,priorityDagSearch:binding22=!1,priorityDiagnostics:binding23,viaHoleDiameter:binding24,minViaHoleEdgeToViaHoleEdgeClearance:binding25,allowBlindAndBuriedVias:binding26}){super(),this.unsolvedNodePortPoints=binding0,this.colorMap=binding1??{},this.connMap=binding2,this.routes=[],this.failedSolvers=[],this.effort=binding6??1,this.viaDiameter=binding3??this.defaultViaDiameter,this.traceWidth=binding4??this.defaultTraceThickness,this.obstacleMargin=binding5??.15,this.obstacles=binding8??[],this.layerCount=binding9??2,this.enableNegotiatedSearch=binding11,this.gridSearchSegmentWork=binding12,this.gridSearchWorkScale=binding13,this.rejectOverlappingTerminals=binding14,this.boardGeometry=binding15,this.useGrowShrinkHighDensityIntraNodeSolver=binding10??!1,this.preserveTerminalPcbPortIds=binding16??!1,this.growShrinkMaxInnerIterationsPerGrowthAttempt=binding17,this.growShrinkFallbackToInvalidGeometryOnFailure=binding18??!1,this.growShrinkSolutionValidator=binding19,this.isViaAllowed=binding20,this.captureSearchDebug=binding21??!0,this.benchmarkDiagnosticCounters=binding23??{},this.priorityDagOptions={priorityDagSearch:binding22,viaHoleDiameter:binding24,minViaHoleEdgeToViaHoleEdgeClearance:binding25,allowBlindAndBuriedVias:binding26},this.MAX_ITERATIONS=1e7*this.effort*(this.useGrowShrinkHighDensityIntraNodeSolver?4:1),this.nodePfById=binding7 instanceof Map?new Map(binding7):new Map(Object.entries(binding7??{})),this.nodeSolveMetadataById=new Map,this.stats={solverNodeCount:{},difficultNodePfs:{},highDensityResizeCount:0}}",
+      "originalSha256": "a228d596a8329c4f347f902d4159ba544023c31fe90fb78aa539f12e7aeadbf4",
+      "replacementSha256": "ce2b453862c43e6ee233d5bf0d3d1a45619f7e928228ab58f02947b3d60e1a58",
+      "compiledBaseEquivalent": true,
+      "baseCanonicalSha256": "0d6e8f31bb675a26ee7e89760242d3120c8f76c5f9f32ece49f7a1720a6d7680",
+      "aliases": {}
+    },
+    {
+      "kind": "replace",
+      "name": "HighDensitySolver._step",
+      "sourceRepository": "tscircuit/tscircuit-autorouter",
+      "sourceRelative": "lib/solvers/HighDensitySolver/HighDensitySolver.ts",
+      "startCharacter": 1279795,
+      "endCharacter": 1281864,
+      "startByte": 1279854,
+      "endByte": 1281923,
+      "originalText": "_step(){if(this.updateCacheStats(),this.activeSubSolver)return this.activeSubSolver.step(),this.activeSubSolver.solved?(this.routes.push(...this.preserveTerminalPcbPortIds?this.getSolvedRoutesWithTerminalPcbPortIds(this.activeSubSolver):this.activeSubSolver.solvedRoutes),this.recordNodeSolveMetadata(this.activeSubSolver,\"solved\"),this.recordSolvedNodeStats(this.activeSubSolver,this.activeSubSolver.nodeWithPortPoints),this.recordResizeStats(this.activeSubSolver),this.activeSubSolver=null):this.activeSubSolver.failed&&(this.recordNodeSolveMetadata(this.activeSubSolver,\"failed\"),this.recordResizeStats(this.activeSubSolver),this.failedSolvers.push(this.activeSubSolver),this.activeSubSolver=null),void this.updateCacheStats();if(0===this.unsolvedNodePortPoints.length)return this.failedSolvers.length>0?(this.solved=!1,this.failed=!0,this.error=`Failed to solve ${this.failedSolvers.length} nodes, ${this.failedSolvers.slice(0,5).map(e=>e.nodeWithPortPoints.capacityMeshNodeId)}. err0: ${this.failedSolvers[0].error}.`,void this.updateCacheStats()):(this.solved=!0,void this.updateCacheStats());const e={nodeWithPortPoints:this.unsolvedNodePortPoints.pop(),...this.priorityDagOptions,priorityDiagnostics:this.benchmarkDiagnosticCounters,enableNegotiatedSearch:this.enableNegotiatedSearch,gridSearchSegmentWork:this.gridSearchSegmentWork,gridSearchWorkScale:this.gridSearchWorkScale,rejectOverlappingTerminals:this.rejectOverlappingTerminals,boardGeometry:this.boardGeometry,colorMap:this.colorMap,connMap:this.connMap,viaDiameter:this.viaDiameter,traceWidth:this.traceWidth,obstacleMargin:this.obstacleMargin,effort:this.effort,obstacles:this.obstacles,layerCount:this.layerCount,maxInnerIterationsPerGrowthAttempt:this.growShrinkMaxInnerIterationsPerGrowthAttempt,fallbackToInvalidGeometryOnFailure:this.growShrinkFallbackToInvalidGeometryOnFailure,growShrinkSolutionValidator:this.growShrinkSolutionValidator,captureSearchDebug:this.captureSearchDebug};this.activeSubSolver=this.useGrowShrinkHighDensityIntraNodeSolver?new WB(e):new OB(e),this.updateCacheStats()}",
+      "replacementText": "_step() {\n    this.updateCacheStats();\n    if (this.activeSubSolver) {\n      this.activeSubSolver.step();\n      if (this.activeSubSolver.solved) {\n        this.routes.push(...this.preserveTerminalPcbPortIds ? this.getSolvedRoutesWithTerminalPcbPortIds(this.activeSubSolver) : this.activeSubSolver.solvedRoutes);\n        this.recordNodeSolveMetadata(this.activeSubSolver, \"solved\");\n        this.recordSolvedNodeStats(this.activeSubSolver, this.activeSubSolver.nodeWithPortPoints);\n        this.recordResizeStats(this.activeSubSolver);\n        this.activeSubSolver = null;\n      } else if (this.activeSubSolver.failed) {\n        this.recordNodeSolveMetadata(this.activeSubSolver, \"failed\");\n        this.recordResizeStats(this.activeSubSolver);\n        this.failedSolvers.push(this.activeSubSolver);\n        this.activeSubSolver = null;\n      }\n      this.updateCacheStats();\n      return;\n    }\n    if (this.unsolvedNodePortPoints.length === 0) {\n      if (this.failedSolvers.length > 0) {\n        this.solved = !1;\n        this.failed = !0;\n        this.error = `Failed to solve ${this.failedSolvers.length} nodes, ${this.failedSolvers.slice(0, 5).map((fs) => fs.nodeWithPortPoints.capacityMeshNodeId)}. err0: ${this.failedSolvers[0].error}.`;\n        this.updateCacheStats();\n        return;\n      }\n      this.solved = !0;\n      this.updateCacheStats();\n      return;\n    }\n    const intraNodeSolverParams = {\n      nodeWithPortPoints: this.unsolvedNodePortPoints.pop(),\n      ...this.priorityDagOptions,\n      priorityDiagnostics: this.benchmarkDiagnosticCounters,\n      enableNegotiatedSearch: this.enableNegotiatedSearch,\n      gridSearchSegmentWork: this.gridSearchSegmentWork,\n      gridSearchWorkScale: this.gridSearchWorkScale,\n      rejectOverlappingTerminals: this.rejectOverlappingTerminals,\n      boardGeometry: this.boardGeometry,\n      colorMap: this.colorMap,\n      connMap: this.connMap,\n      viaDiameter: this.viaDiameter,\n      traceWidth: this.traceWidth,\n      obstacleMargin: this.obstacleMargin,\n      effort: this.effort,\n      obstacles: this.obstacles,\n      layerCount: this.layerCount,\n      maxInnerIterationsPerGrowthAttempt: this.growShrinkMaxInnerIterationsPerGrowthAttempt,\n      fallbackToInvalidGeometryOnFailure: this.growShrinkFallbackToInvalidGeometryOnFailure,\n      growShrinkSolutionValidator: this.growShrinkSolutionValidator,\n      isViaAllowed: this.isViaAllowed,\n      captureSearchDebug: this.captureSearchDebug\n    };\n    this.activeSubSolver = this.useGrowShrinkHighDensityIntraNodeSolver ? new WB(intraNodeSolverParams) : new OB(intraNodeSolverParams);\n    this.updateCacheStats();\n  }",
+      "originalSha256": "aac24b5a316f5f7e6c11158b98bf6d39de55330fb898f99071898778719a5de3",
+      "replacementSha256": "7638872c50df4a72e2c3002317db492b4aa8b00bc1a684509662baf70a1103b3",
+      "compiledBaseEquivalent": true,
+      "baseCanonicalSha256": "4cbfcd47facc2f867cb16b5c601f7af0f71b75b1d481e1e9b1e61cf66c5ae112",
+      "aliases": {
+        "GrowShrinkHighDensityIntraNodeSolver": "WB",
+        "PortfolioSingleIntraNodeSolver": "OB"
+      }
+    },
+    {
+      "kind": "insert",
+      "name": "hasViaToBoardObstacleConflict",
+      "sourceRepository": "tscircuit/tscircuit-autorouter",
+      "sourceRelative": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9RegionalFallbackSolver.ts",
+      "startCharacter": 2923673,
+      "endCharacter": 2923673,
+      "startByte": 2923732,
+      "endByte": 2923732,
+      "originalText": "",
+      "replacementText": "hasViaToBoardObstacleConflict=({via:binding0,route:binding1,boardObstacles:binding2,connMap:binding3,layerCount:binding4,viaToPadClearance:binding5})=>binding2.some(binding2=>((binding0,binding1)=>{if(\"circle\"===binding1.shape)return Math.max(0,Math.hypot(binding0.x-binding1.center.x,binding0.y-binding1.center.y)-binding1.width/2);const binding2=-1*(binding1.ccwRotationDegrees??0)*Math.PI/180,binding3=binding0.x-binding1.center.x,binding4=binding0.y-binding1.center.y,binding5=binding3*Math.cos(binding2)-binding4*Math.sin(binding2),binding6=binding3*Math.sin(binding2)+binding4*Math.cos(binding2),binding7=Math.max(Math.abs(binding5)-binding1.width/2,0),binding8=Math.max(Math.abs(binding6)-binding1.height/2,0);return Math.hypot(binding7,binding8)})(binding0.center,binding2)<binding0.diameter/2+binding5&&!(({obstacle:binding0,route:binding1,connMap:binding2})=>{if(xo(binding0,binding1,binding2))return!0;if(!binding1.rootConnectionName)return!1;const binding3=binding2.getNetConnectedToId(binding1.connectionName)??binding2.getNetConnectedToId(binding1.rootConnectionName)??(binding2.netMap[binding1.rootConnectionName]?binding1.rootConnectionName:void 0);return!!binding3&&binding0.connectedTo.some(binding0=>(binding2.getNetConnectedToId(binding0)??(binding2.netMap[binding0]?binding0:void 0))===binding3)})({obstacle:binding2,route:binding1,connMap:binding3})&&!!((binding0,binding1)=>(binding0.__zLayers??binding0.zLayers)||binding0.layers.map(binding0=>mo(binding0,binding1)))(binding2,binding4).some(binding1=>binding1>=binding0.minZ&&binding1<=binding0.maxZ)),",
+      "originalSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "replacementSha256": "db452bc0b502b89b0a32ecf24c6212c44b661a2d3591eb12e4244b355d9b0ba1",
+      "compiledBaseEquivalent": null
+    },
+    {
+      "kind": "replace",
+      "name": "hasPreloadedViaToBoardObstacleConflict",
+      "sourceRepository": "tscircuit/tscircuit-autorouter",
+      "sourceRelative": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9RegionalFallbackSolver.ts",
+      "startCharacter": 2923673,
+      "endCharacter": 2924828,
+      "startByte": 2923732,
+      "endByte": 2924887,
+      "originalText": "Ire=({routes:e,movablePreloadedConnectionNames:t,boardObstacles:n,connMap:o,layerCount:i,viaToPadClearance:r,allowBlindAndBuriedVias:s})=>e.some(e=>{if(!t.has(e.connectionName))return!1;return ps(e,{layerCount:i,allowBlindAndBuriedVias:s}).viaSpans.some(t=>n.some(n=>{if((({obstacle:e,route:t,connMap:n})=>{if(xo(e,t,n))return!0;if(!t.rootConnectionName)return!1;const o=n.getNetConnectedToId(t.connectionName)??n.getNetConnectedToId(t.rootConnectionName)??(n.netMap[t.rootConnectionName]?t.rootConnectionName:void 0);return!!o&&e.connectedTo.some(e=>(n.getNetConnectedToId(e)??(n.netMap[e]?e:void 0))===o)})({obstacle:n,route:e,connMap:o}))return!1;const s=((e,t)=>{const n=e.__zLayers??e.zLayers;return n||e.layers.map(e=>mo(e,t))})(n,i);return!!s.some(e=>e>=t.minZ&&e<=t.maxZ)&&((e,t)=>{if(\"circle\"===t.shape)return Math.max(0,Math.hypot(e.x-t.center.x,e.y-t.center.y)-t.width/2);const n=-1*(t.ccwRotationDegrees??0)*Math.PI/180,o=e.x-t.center.x,i=e.y-t.center.y,r=o*Math.cos(n)-i*Math.sin(n),s=o*Math.sin(n)+i*Math.cos(n),a=Math.max(Math.abs(r)-t.width/2,0),c=Math.max(Math.abs(s)-t.height/2,0);return Math.hypot(a,c)})(t.center,n)<t.diameter/2+r}))})",
+      "replacementText": "Ire = ({ routes, movablePreloadedConnectionNames, boardObstacles, connMap, layerCount, viaToPadClearance, allowBlindAndBuriedVias }) => routes.some((route) => {\n  if (!movablePreloadedConnectionNames.has(route.connectionName))\n    return !1;\n  return ps(route, {\n    layerCount,\n    allowBlindAndBuriedVias\n  }).viaSpans.some((via) => hasViaToBoardObstacleConflict({\n    via,\n    route,\n    boardObstacles,\n    connMap,\n    layerCount,\n    viaToPadClearance\n  }));\n})",
+      "originalSha256": "0073610e29c8474a6b1f034966898e5f8da68f27072897dd543e53e98ddde00e",
+      "replacementSha256": "f4a21258474881855bd0a6bc04b0f6b9c6716a6afe8a5e7b032e36beeedb1910",
+      "compiledBaseEquivalent": true,
+      "baseCanonicalSha256": "4280567100a6acfa22d942b7d41b7f80bf4488997f0ae3f80a31e3418874a345",
+      "aliases": {
+        "getPipeline9RouteCopperGeometry": "ps"
+      }
+    },
+    {
+      "kind": "replace",
+      "name": "Pipeline9RegionalFallbackSolver.constructor",
+      "sourceRepository": "tscircuit/tscircuit-autorouter",
+      "sourceRelative": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9RegionalFallbackSolver.ts",
+      "startCharacter": 2924923,
+      "endCharacter": 2925664,
+      "startByte": 2924982,
+      "endByte": 2925723,
+      "originalText": "constructor(e){super(),this.params=e,this.stats={preloadedViaCandidateRejectionCount:0,forceImproveCandidateRejectionCount:0,repairCandidateRejectionCount:0},this.highDensitySolver=new UB({captureSearchDebug:e.captureSearchDebug,nodePortPoints:[e.nodeWithPortPoints],colorMap:e.colorMap,connMap:e.connMap,viaDiameter:e.viaDiameter,traceWidth:e.traceWidth,obstacleMargin:e.obstacleMargin,effort:e.effort,nodePfById:e.nodePfById,obstacles:e.obstacles,layerCount:e.layerCount,useGrowShrinkHighDensityIntraNodeSolver:!0,preserveTerminalPcbPortIds:!1,growShrinkFallbackToInvalidGeometryOnFailure:!1,growShrinkSolutionValidator:e=>this.validateCandidateWithCleanup(e)}),this.activeSubSolver=this.highDensitySolver,this.MAX_ITERATIONS=1e8*e.effort}",
+      "replacementText": "constructor(params) {\n    super();\n    this.params = params;\n    const { boardObstacles, movablePreloadedConnectionNames, viaToPadClearance } = params;\n    this.stats = {\n      preloadedViaCandidateRejectionCount: 0,\n      forceImproveCandidateRejectionCount: 0,\n      repairCandidateRejectionCount: 0\n    };\n    this.highDensitySolver = new UB({\n      captureSearchDebug: params.captureSearchDebug,\n      nodePortPoints: [params.nodeWithPortPoints],\n      colorMap: params.colorMap,\n      connMap: params.connMap,\n      viaDiameter: params.viaDiameter,\n      traceWidth: params.traceWidth,\n      obstacleMargin: params.obstacleMargin,\n      effort: params.effort,\n      nodePfById: params.nodePfById,\n      obstacles: params.obstacles,\n      layerCount: params.layerCount,\n      useGrowShrinkHighDensityIntraNodeSolver: !0,\n      preserveTerminalPcbPortIds: !1,\n      growShrinkFallbackToInvalidGeometryOnFailure: !1,\n      growShrinkSolutionValidator: (routes) => this.validateCandidateWithCleanup(routes),\n      isViaAllowed: boardObstacles && movablePreloadedConnectionNames && movablePreloadedConnectionNames.size > 0 && viaToPadClearance !== void 0 ? (position) => {\n        if (!movablePreloadedConnectionNames.has(position.connectionName))\n          return !0;\n        return !hasViaToBoardObstacleConflict({\n          route: position,\n          via: {\n            center: position,\n            minZ: params.allowBlindAndBuriedVias ? Math.min(position.fromZ, position.toZ) : 0,\n            maxZ: params.allowBlindAndBuriedVias ? Math.max(position.fromZ, position.toZ) : params.layerCount - 1,\n            diameter: params.viaDiameter\n          },\n          boardObstacles,\n          connMap: params.connMap,\n          layerCount: params.layerCount,\n          viaToPadClearance\n        });\n      } : void 0\n    });\n    this.activeSubSolver = this.highDensitySolver;\n    this.MAX_ITERATIONS = 1e8 * params.effort;\n  }",
+      "originalSha256": "93eddd860b85fb1d95ae3f20380ef91428d9c65f6830bcff0cbe4ed64260d7ba",
+      "replacementSha256": "0c476d4ba7705404ab35b4683e5da0edd39e2bb65a6d8bab2e6681cd9c0109c0",
+      "compiledBaseEquivalent": true,
+      "baseCanonicalSha256": "0da085bc6cdef4a4606d710131d01a7b6fdffff26873966a6678e9c88d1944a8",
+      "aliases": {
+        "HighDensitySolver": "UB"
+      }
+    }
+  ],
+  "unchangedSegments": [
+    {
+      "startByte": 0,
+      "endByte": 198215,
+      "candidateStartByte": 0,
+      "candidateEndByte": 198215,
+      "sha256": "c59ca38bc677206765a3cb5c72e24323e6004d8570203276bcf08ab86610cb64"
+    },
+    {
+      "startByte": 198215,
+      "endByte": 199569,
+      "candidateStartByte": 198228,
+      "candidateEndByte": 199582,
+      "sha256": "910f5e507299df72b9c70e3e43b2bfceb291f64bbbdea95e7bde0a2eb9e05528"
+    },
+    {
+      "startByte": 200734,
+      "endByte": 207677,
+      "candidateStartByte": 201244,
+      "candidateEndByte": 208187,
+      "sha256": "8671bf3b61f62b73f14c0e115515c22243824173c797f3bdeb0e4b1ab54f717e"
+    },
+    {
+      "startByte": 209613,
+      "endByte": 1262896,
+      "candidateStartByte": 212592,
+      "candidateEndByte": 1265875,
+      "sha256": "647b88a44beccc8726078374773a993bd8295de96aa355ed354c0f4a593cc610"
+    },
+    {
+      "startByte": 1266161,
+      "endByte": 1275314,
+      "candidateStartByte": 1270993,
+      "candidateEndByte": 1280146,
+      "sha256": "73a7c7402615f65fc730cc4dabd5d21646b1b72c73e339941ecfc7844d13e26d"
+    },
+    {
+      "startByte": 1275314,
+      "endByte": 1275456,
+      "candidateStartByte": 1280159,
+      "candidateEndByte": 1280301,
+      "sha256": "0275ff647bfc7dcdadcfa84efe514ea6b2f46ee66258753dbf088b4815c21b1d"
+    },
+    {
+      "startByte": 1277203,
+      "endByte": 1279854,
+      "candidateStartByte": 1282509,
+      "candidateEndByte": 1285160,
+      "sha256": "bf6fc206e7f2ee36339bcfb99d279e03055ab29c28cf4b1be19b0c9da7dcc7be"
+    },
+    {
+      "startByte": 1281923,
+      "endByte": 2923732,
+      "candidateStartByte": 1287796,
+      "candidateEndByte": 2929605,
+      "sha256": "00f42595a2fead84df7ca8fd2686750f205a8aeb21f204f7d747e397a0c6a056"
+    },
+    {
+      "startByte": 2924887,
+      "endByte": 2924982,
+      "candidateStartByte": 2931648,
+      "candidateEndByte": 2931743,
+      "sha256": "cf7da1eaa61cd0f0e82178b76f52569c01b4302d02b5ce6da88c5a1378b4f131"
+    },
+    {
+      "startByte": 2925723,
+      "endByte": 3344844,
+      "candidateStartByte": 2933666,
+      "candidateEndByte": 3352787,
+      "sha256": "ba5a80a78b481111a6cddf2af4405bc20c13494544e652cd8c21bb90d69d824f"
+    }
+  ],
+  "qualification": {
+    "allOutsideBytesUnchanged": true,
+    "unrelatedSourceRuntimeUnchanged": true,
+    "compiledBaseEquivalent": true,
+    "sourceMapGeneratedOffsetsUsed": false,
+    "canonicalizer": "Terser5.51.2 three compression passes and deterministic lexical names; differing free bindings mapped bijectively; properties and local bindings must match exactly",
+    "sourceAliases": [
+      {
+        "relative": "lib/HighDensitySolverA01/HighDensitySolverA01.ts",
+        "aliases": {
+          "rippedContains": "Ri",
+          "applyAffineTransformToPoint": "Ii"
+        }
+      },
+      {
+        "relative": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9RegionalFallbackSolver.ts",
+        "aliases": {
+          "HighDensitySolver": "UB",
+          "isObstacleConnectedToRoute": "xo",
+          "mapLayerNameToZ": "mo",
+          "getPipeline9RouteCopperGeometry": "ps",
+          "hasPreloadedViaToBoardObstacleConflict": "Ire"
+        }
+      },
+      {
+        "relative": "lib/solvers/HighDensitySolver/HighDensitySolver.ts",
+        "aliases": {
+          "GrowShrinkHighDensityIntraNodeSolver": "WB",
+          "PortfolioSingleIntraNodeSolver": "OB"
+        }
+      },
+      {
+        "relative": "lib/solvers/HyperHighDensitySolver/PortfolioSingleIntraNodeSolver.ts",
+        "aliases": {
+          "precomputeIntraNodeRouteParams": "Yr",
+          "SingleLayerNoDifferentRootIntersectionsIntraNodeSolver": "ga",
+          "IntraNodeRouteSolver": "Vr",
+          "HighDensitySolverA13WithDrcValidation": "NB",
+          "HighDensitySolverA01": "Oi",
+          "HighDensityA03Solver": "Vi",
+          "TwoCrossingRoutesHighDensitySolver": "za",
+          "SingleTransitionCrossingRouteSolver": "ka",
+          "SingleTransitionIntraNodeSolver": "ya",
+          "SingleTransitionThroughObstacleIntraNodeSolver": "va",
+          "MultiHeadPolyLineIntraNodeSolver3": "Us",
+          "PriorityDagIntraNodeSolver": "vs",
+          "CachedIntraNodeRouteSolver": "qr"
+        }
+      }
+    ],
+    "inlinedHelperEquivalence": [
+      {
+        "name": "isPipeline9ObstacleConnectedToRoute",
+        "publishedInlineSha256": "60f5fcf0a40e1b53f092dc279499f6a41e9c4201af093236bd6da29d1c0a3751",
+        "compiledBaseCanonicalSha256": "54a2557dd3aaf690460a20dcccaccde428fb398cd0c2d8f3c839de62b7e1e97a",
+        "publishedCanonicalSha256": "e95a8324442e582b78f1509be75b1932ade3d7974a074eca9ae5f3c65ba84905",
+        "aliases": {
+          "isObstacleConnectedToRoute": "xo"
+        },
+        "compiledBaseEquivalent": true
+      },
+      {
+        "name": "getObstacleZLayers",
+        "publishedInlineSha256": "b6ba190df834b124348957ad95837beb6c20150bf50864e6e602941482541684",
+        "compiledBaseCanonicalSha256": "18db8dee0a49b571c74c72ff712a00024e70ad86be86e91eeffba0280f7aeee6",
+        "publishedCanonicalSha256": "bacbda85be8fbc28695f0956f45ba73ba995536617450fb5c48764889d8814b4",
+        "aliases": {
+          "mapLayerNameToZ": "mo"
+        },
+        "compiledBaseEquivalent": true
+      },
+      {
+        "name": "getPointToObstacleDistance",
+        "publishedInlineSha256": "7a3dc616d92b935b065bdd55436c8a647d6edd2e7bd6010f2d5041fd221598da",
+        "compiledBaseCanonicalSha256": "2f527c04e6ff117a3ea887e426ac6bc54fb7cc3694e2dcde6ff02cc87e3ac343",
+        "publishedCanonicalSha256": "2f527c04e6ff117a3ea887e426ac6bc54fb7cc3694e2dcde6ff02cc87e3ac343",
+        "aliases": {},
+        "compiledBaseEquivalent": true
+      }
+    ],
+    "bun": "1.4.3",
+    "typescript": "5.9.3",
+    "terser": "5.51.2"
+  },
+  "sourceHandoffSha256": "11ed10d0faa232fc773b2bc77b6de07541e58b281730e034f752113f307af9b6",
+  "mapperSha256": "f27fbb58a7e94c886afdc614e385746e5d0c826360114ae8148b39cc0526f495",
+  "moduleImported": false,
+  "nativeRoutingExecuted": false
+}

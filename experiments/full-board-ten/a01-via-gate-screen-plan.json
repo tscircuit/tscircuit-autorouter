@@ -1,0 +1,430 @@
+{
+  "schemaVersion": 2,
+  "mainVersion": "0.0.3242",
+  "runner": "blacksmith-8vcpu-ubuntu-2404-arm",
+  "captureDeadlineMs": 900000,
+  "hardDeadlineSeconds": 960,
+  "sourceOverrides": true,
+  "routingSourceOverrides": true,
+  "dependencyOverrides": [],
+  "solverOptions": {
+    "capacityDepth": null,
+    "targetMinCapacity": null,
+    "cacheProvider": null,
+    "effort": null
+  },
+  "undefinedOptionKeys": [
+    "capacityDepth",
+    "targetMinCapacity",
+    "effort"
+  ],
+  "packages": [
+    {
+      "label": "tscircuit",
+      "name": "tscircuit",
+      "version": "0.0.3242",
+      "gitHead": "31200e03323e6e4573b560eb152d3c625a86edf9",
+      "entryRelative": "dist/index.js",
+      "entrySha256": "cfd669f2d96ac77eb054aab53ff34a80120bcd3db72b87f969b3d8b8d2af78a3",
+      "tarball": "https://registry.npmjs.org/tscircuit/-/tscircuit-0.0.3242.tgz",
+      "integrity": "sha512-SiHpu5DJnSA5MmuMp/Ev4Xu6Dyk0Wu6hSETq9v3HubYT2Z8re2mgcYYhe4y9ZZOooFvDupAzC1jIirmAcCW3MQ=="
+    },
+    {
+      "label": "core",
+      "name": "@tscircuit/core",
+      "version": "0.0.2424",
+      "gitHead": "fb7f456de0a867c7074a9f196597992e0d1253b9",
+      "entryRelative": "dist/index.js",
+      "entrySha256": "f8122fb04b46cb37bf48de0f8642044bc8360937a03630e4655112cc8694471b",
+      "tarball": "https://registry.npmjs.org/@tscircuit/core/-/core-0.0.2424.tgz",
+      "integrity": "sha512-qqc/S8UE7UrMaMEuCMSdNyxhYcnWeNj8bCpnl/fzf7mghcASwuy9ipg2AGSTOOjFr01J7oPtNCNxg9wo6CbDQA=="
+    },
+    {
+      "label": "eval",
+      "name": "@tscircuit/eval",
+      "version": "0.0.1818",
+      "gitHead": "f2a5b80dd2c0bf5436929ac96a9c7bc0993405ff",
+      "entryRelative": "dist/lib/index.js",
+      "entrySha256": "71517bf85bef897c0a658f69fba77e69dc6599f82f701ce966fa6af370991465",
+      "tarball": "https://registry.npmjs.org/@tscircuit/eval/-/eval-0.0.1818.tgz",
+      "integrity": "sha512-ar70mlpktg682FACZ2lxIRtaYKoB97fEcF3TxsBzAQd31Gz8NqkptLDE8vmjMZWyMzmx9k6uaExISHjPCzXUuA=="
+    },
+    {
+      "label": "autorouter",
+      "name": "@tscircuit/capacity-autorouter",
+      "version": "0.0.1132",
+      "gitHead": "c0dcc07ae48b17296a1dc73678e258de62ca8de3",
+      "entryRelative": "dist/index.js",
+      "entrySha256": "5695c6361c0f7a7dc26ddd1b9264b8a8c122e5f7b9610cf24c6af3b99c545df1",
+      "tarball": "https://registry.npmjs.org/@tscircuit/capacity-autorouter/-/capacity-autorouter-0.0.1132.tgz",
+      "integrity": "sha512-giOwlXlzQMsFphclwu0iRjWwRwyokvRDy6F2USnHnxa+ywQbocVmKXRYKPs8e2db5SMoG/Kg3G7nBP6e3cyr6Q=="
+    }
+  ],
+  "cases": {
+    "h616": {
+      "targetRoot": "source_net_1",
+      "primaryTargetRoot": "source_net_1",
+      "primaryTargetConnection": "source_net_1_mst0",
+      "fallbackTargetNode": "cmn_162",
+      "phase": "other_signals",
+      "phaseIndex": 4,
+      "cohort": "spaced",
+      "sourceSha256": "c8b058094b8346508bb492f7ca71c249cb517fdbe4612c254386821826b99eab",
+      "artifact": {
+        "id": 14483812685,
+        "name": "full-board-h616-published-spaced-1",
+        "size_in_bytes": 4002194,
+        "digest": "sha256:e3d991e37df3f00f9c12223ba1556542e16276cdb9f03bb58a3ce5f1c0d19165",
+        "workflow_run": {
+          "id": 44423458886,
+          "repository_id": 924883209,
+          "head_repository_id": 924883209,
+          "head_branch": "bench/full-board-ten-3242-20261118",
+          "head_sha": "49e9de35db347f94eeeaef9bca48d821ed3be51e"
+        }
+      },
+      "files": {
+        "phase-4-input.srj.json.gz": {
+          "sha256": "4e9572a2246046a2f9ea26cc0ff633eac341bee7f57f6605dd244b4aa154e936",
+          "bytes": 472943,
+          "payloadSha256": "948b9a36ed10b2132947dd6d5fe0a2132b99ccb341be1698f8b509fd9a63608c",
+          "payloadBytes": 3361777
+        },
+        "progress.json": {
+          "sha256": "5fb34db69c8921b2125fe40ae3e3607d09794f3a0dfda21d51cc7ee916084c83",
+          "bytes": 11299
+        },
+        "phase-1-input.srj.json.gz": {
+          "sha256": "0751854a922c2da4782db2c51921116de21b986d18ade22092daef675d267602",
+          "bytes": 435371,
+          "payloadSha256": "2cdedbb685087f57be9c499e6631a809e49487ac3613656a4f604c07c08b39d0",
+          "payloadBytes": 3101385
+        },
+        "phase-2-input.srj.json.gz": {
+          "sha256": "fa8ce087aa344feeb720bd2487140e5b1d64cf84f93bdeed80b15b3ca78d7474",
+          "bytes": 436883,
+          "payloadSha256": "9757b197b59e91cbe265d3d6cd55cda6a817d7fc01f56c618113bd347a081e4d",
+          "payloadBytes": 3111271
+        },
+        "phase-3-input.srj.json.gz": {
+          "sha256": "d1738b713c24ff88945bf314a2c69318d632840398019d0798c5cfd3a3041ac3",
+          "bytes": 455345,
+          "payloadSha256": "23f7f1041272a21b549809819b747a45616991c077ccd5a654e80a56b399fb49",
+          "payloadBytes": 3272634
+        },
+        "phase-2-output.srj.json.gz": {
+          "sha256": "a606fea7e19b80d8870736a8d1b2ef720d22c3ec3b01ff3e9657dedd4573eeb9",
+          "bytes": 438377,
+          "payloadSha256": "f00bce3c33eae990e5a4e9a974a486ccd04c7c44b04b396d5d5b5ff994d23e6c",
+          "payloadBytes": 3121611
+        },
+        "circuit.json.gz": {
+          "sha256": "090136fffb4d6a5d52163913a4ce7537a01a24d229bb1846ed81e7ca01ad1062",
+          "bytes": 157855,
+          "payloadSha256": "9b3241a0b7bf52a090cfda37c72276734b0594d53d70f99708f3c473eeb3a90a",
+          "payloadBytes": 1839714
+        },
+        "assessment.json": {
+          "sha256": "cc472e39bb25e135f0931be3dbf7ea111e6b6c234e4a582eb8ce1e8f7da9cd4d",
+          "bytes": 1815
+        },
+        "findings.json.gz": {
+          "sha256": "2270c77266222216928dba8984ecc9b903677c2bda3ef717569066c1ff9204c3",
+          "bytes": 14093,
+          "payloadSha256": "9b4e394c59da456333c9b0b6625ebeff6f4e61b21ca97fccc805aba3611de035",
+          "payloadBytes": 217382
+        }
+      },
+      "nativeCounts": {
+        "connections": 56,
+        "terminals": 143,
+        "obstacles": 1695,
+        "traces": 41,
+        "layerCount": 4
+      },
+      "historicalFailure": "Pipeline9 primary B01 no path for source_net_1_mst0; regional fallback cmn_162 failed. Prior capture geometry cannot be reused."
+    }
+  },
+  "frozenBaselinePlan": {
+    "sha256": "3b3d1b99221b1e175eae3f5e6a824b959b9a97f19e67bb2eb3da2ad4704689bf",
+    "bytes": 5489
+  },
+  "purpose": "Held isolated H616 phase4 comparison: exact published3242 autorouter versus source-qualified A01 hard via-placement gate and its three autorouter integration files. Native input/options/package aliases unchanged; no endpoint, point-placement, A03 or B01 change and no whole-board gain claim.",
+  "qualificationReady": true,
+  "status": "READY_REVIEWED_A01_VIA_GATE_SOURCE_PAIR",
+  "runtimeController": "da60dc4c8ad54668e580e74571d696d53058256d",
+  "branch": "bench/h616-a01-via-gate-screen-3242-20261119",
+  "workflow": ".github/workflows/a01-via-gate-screen.yml",
+  "assessmentDeadlineSeconds": 180,
+  "jobTimeoutMinutes": 45,
+  "cohortOrder": [
+    "base",
+    "candidate"
+  ],
+  "deadlineScope": "Fresh isolated diagnostic window; the authentic full-board run entered phase4 at 555207.847951 ms and had about344792 ms remaining. No end-to-end timing or completion gain inference.",
+  "frozenFiles": {
+    ".github/workflows/full-board-ten.yml": {
+      "sha256": "4cc59922690f566f4e5e8b7948a83cbcdf4489d00f23db7efaa23a7303c156a7",
+      "bytes": 5858
+    },
+    "experiments/full-board-ten/bootstrap.py": {
+      "sha256": "23de25ac8960be89afc57ba27b0d3fddb6e65dba593024be59ec5073d266164d",
+      "bytes": 8903
+    },
+    "experiments/full-board-ten/prepare-cases.ts": {
+      "sha256": "b72e632e9c9152c9e5daedf1bb60daa5d86c33fdcc454f2a7825827d24124330",
+      "bytes": 6254
+    },
+    "experiments/full-board-ten/render-published.tsx": {
+      "sha256": "f79daf7c0e6e54239baa6f116cdab1d1f1785f366a320d2c7a8ca0a4fa54b731",
+      "bytes": 14522
+    },
+    "experiments/full-board-ten/run-one.ts": {
+      "sha256": "991764291305fd20e7ab140ee27080eb1efebad0e58ed1530867bfc354cfc340",
+      "bytes": 10746
+    },
+    "experiments/full-board-ten/report.py": {
+      "sha256": "3fa537cd30224a1bdf10a6acd7e293a0a5e8e187c1e2c210b0ed83370a153b5d",
+      "bytes": 4074
+    },
+    "experiments/full-board-ten/calibrate-assessment.tsx": {
+      "sha256": "efeb820cf34239465df53ce4c7932293e41a14dcab4bedb823c3bc60cc9627a0",
+      "bytes": 2714
+    },
+    "experiments/full-board-ten/createCoarseRoutingDiagnostics.ts": {
+      "sha256": "dea45bba3386a9b55b7709834dff65468c421992808b406f54c6f9e556e8b618",
+      "bytes": 18242
+    },
+    "experiments/full-board-ten/source-provenance.json": {
+      "sha256": "bd24be29c5fdd5ae68ce15c5b2bc50f172ecdd325dcc1b57a80ec653d12570fb",
+      "bytes": 23139
+    },
+    "experiments/full-board-ten/package.json": {
+      "sha256": "469e1861d1259cd1307bca324fb0d8ba0a67ea0323d4e728a35c90a2bc92bdf3",
+      "bytes": 87
+    },
+    "experiments/full-board-ten/tsconfig.json": {
+      "sha256": "2e881577c63bb6b62d14abd319240bbc6ae5e206ecb007dae80ab3ec922293c7",
+      "bytes": 208
+    },
+    "experiments/full-board-ten/release.json": {
+      "sha256": "5eece79b055b28bd17e321140949a66f036ceb28573adf108419b5f2f64ddbd4",
+      "bytes": 5677
+    },
+    "experiments/full-board-ten/harness-provenance.json": {
+      "sha256": "fc4b9191002e33b0561d50a2208d38848d81da0735869bb4f563bb9afe1b7405",
+      "bytes": 1479
+    },
+    "experiments/full-board-ten/published-release-provenance.json": {
+      "sha256": "89326fdcc1e99945b98798b0b5b95c60560be6f1f3789184e3bda84464577dc3",
+      "bytes": 19481
+    },
+    "experiments/full-board-ten/runtime/package.json": {
+      "sha256": "c0542a47684ae97ccbe3670fbd2555c3ce0b935e00e8c13aff983442426decda",
+      "bytes": 2804
+    },
+    "experiments/full-board-ten/runtime/bun.lock": {
+      "sha256": "cdf19ae5668a61815a76f9d912b1fbc88907b1f029b2f3dd955f6f81a6cb7b57",
+      "bytes": 72080
+    },
+    "experiments/full-board-ten/autorouter-dependencies/package.json": {
+      "sha256": "7b4c1ecf979432e472a4f0589ed49976a8a1323ff7bf651a5938ee7006b61360",
+      "bytes": 261
+    },
+    "experiments/full-board-ten/autorouter-dependencies/bun.lock": {
+      "sha256": "ec313c582c29c1e35bb31190151a5649198c177119d32fe311746c06e94e8c4e",
+      "bytes": 13144
+    },
+    ".github/workflows/a01-via-gate-screen.yml": {
+      "sha256": "5232ebd8269da0b116f9928f6284894b0d35151f7a5e41a5f78436a0c59baac3",
+      "bytes": 6663
+    },
+    "experiments/full-board-ten/a01-via-gate-source-mapping.json": {
+      "sha256": "ea48878e8394ecbbc4d46e698e52a37af4ff18590f9114d53230e06c07cd1864",
+      "bytes": 49975
+    },
+    "experiments/full-board-ten/a01-via-gate-production.patch": {
+      "sha256": "6ae16c91dfba4cff91adcc89ad98b9513d6d4d571f03955ca4c71f641de97d0e",
+      "bytes": 2575
+    },
+    "experiments/full-board-ten/autorouter-via-gate-production.patch": {
+      "sha256": "8a36b78392f1223c119acea1ee99b8f68384f02feb1b1cd783f6f4b72e2ad76d",
+      "bytes": 9492
+    },
+    "experiments/full-board-ten/createA01ViaGateOverlay.ts": {
+      "sha256": "f27fbb58a7e94c886afdc614e385746e5d0c826360114ae8148b39cc0526f495",
+      "bytes": 27077
+    },
+    "experiments/full-board-ten/prepare-a01-via-gate-screen.py": {
+      "sha256": "3c5b389146e190ae441446e047047969e683963e2fdf48208f75a0b7e70f0250",
+      "bytes": 14671
+    },
+    "experiments/full-board-ten/compare-a01-via-gate-screen.py": {
+      "sha256": "326b8c02d4de67974d38df07d795e5247128502aa15a150c9303e73989afe57d",
+      "bytes": 11726
+    },
+    "experiments/full-board-ten/assess-a01-via-gate-output.ts": {
+      "sha256": "4850e99719c5b9334b1ed7c3ca06ee264481466946ae9fcc60a9f85859897de0",
+      "bytes": 14410
+    },
+    "experiments/full-board-ten/run-a01-via-gate-screen.ts": {
+      "sha256": "b93abf7c1952a9f41771619ffbd0d789e31b77cc6aef2f69b8d9f778df30e541",
+      "bytes": 16767
+    }
+  },
+  "assessment": {
+    "status": "Baseline materialization already qualified on exact3242 graph in run44443273220; repeat mandatory53-identities/exact3-findings gate before these lanes.",
+    "onlyIfPipelineSolved": true,
+    "baselineExistingPhysicalFindings": {
+      "trace_overlap": 1,
+      "via_trace": 1,
+      "via_pad": 1
+    },
+    "baselineConnectedNativeNets": 53,
+    "nativeBoardNets": 121,
+    "activePhaseConnections": 56,
+    "activePhaseTerminals": 143,
+    "validationConnections": 109,
+    "validationTerminals": 253,
+    "allOriginalObstacles": 1695,
+    "preloadedTraceCount": 41,
+    "movablePreloadsMayChange": true,
+    "path": "Native Core2424 route ownership/orientation/physical via helper exports on an exact bundle prefix; unchanged native spaced assessor and Checks282; baseline connected native identities and canonical physical findings must match the authenticated originals.",
+    "priorQualification": {
+      "runId": 44443273220,
+      "controllerCommit": "0b06406d923335c7bdfeab2706a69b5bac1d76fb",
+      "path": "/workspace/full-board-ten-20261118-3242/h616-uniform-point-run44443273220/authenticated-summary.json",
+      "sha256": "5e3f21dc0334fa805e1409a0aeed43cd254f3f9a1b0a29b8cf8bba237721311c",
+      "baselineConnectedNativeNets": 53,
+      "sameThreePhysicalFindingIdentities": true
+    },
+    "benefitQualification": "Raw solver success is insufficient: all109 original phase/prior demands connected (56active/53prior), no previously connected native net lost, no new physical findings or geometry errors, immutable DDR geometry and authentic source/port ownership preserved; causal base must reproduce exact published failure."
+  },
+  "expectedPublishedFailure": {
+    "pipelineError": "Pipeline9 primary high-density routing failed: B01 failed: No path found for source_net_1_mst0; regional fallback failed: Failed to solve 1 nodes, cmn_162. err0: GrowShrinkHighDensityIntraNodeSolver failed after resizing to 8x. Last error: All solvers failed in hyper solver. Example failures: ViaPossibilitiesSolver2 failed with: Exceeded max via count of 5, ViaPossibilitiesSolver2 failed with: Exceeded max via count of 5, SingleHighDensityRouteSolver ran out of iterations (MAX_ITERATIONS=10000), SingleHighDensityRouteSolver ran out of iterations (MAX_ITERATIONS=10000), SingleHighDensityRouteSolver ran out of iterations (MAX_ITERATIONS=10000).",
+    "artifactId": 14483812685,
+    "runId": 44423458886,
+    "member": "progress.json",
+    "memberSha256": "5fb34db69c8921b2125fe40ae3e3607d09794f3a0dfda21d51cc7ee916084c83",
+    "errorIndex": 0,
+    "removedCoreVersionSuffix": " (capacity-autorouter@0.0.1132)",
+    "scope": "Exact authenticated published phase4 failure; only the Core-appended autorouter version suffix is removed to compare the native Pipeline error."
+  },
+  "publishedRuntimeGraphUnchanged": true,
+  "qualification": {
+    "independentReview": "PASS: final held plan d5b0e19c and all27 files; reviewed source, compiled mapping, strict native physical qualification and unchanged runtime protocol",
+    "routingExecuted": false,
+    "pushPerformed": false,
+    "sourceMapping": "PASS: compiled published-source binding,8replacements+3insertions,10unchanged bundle segments; candidate d05bd05d. Final mapping byte/binding reviews retained.",
+    "controllerContracts": "PASS21: authentic native archive,four published entries,two source patches,8replacement+3insertion reconstruction; synthetic result/physical qualification cases. No solver imports,routing,network or dependency installation.",
+    "priorBaselineAssessmentQualified": true,
+    "evidence": {
+      "source-handoff.json": {
+        "path": "/workspace/full-board-ten-20261118-3242/a01-regional-via-gate-source-preparation/source-handoff.json",
+        "sha256": "11ed10d0faa232fc773b2bc77b6de07541e58b281730e034f752113f307af9b6"
+      },
+      "independent-source-review.json": {
+        "path": "/workspace/full-board-ten-20261118-3242/a01-regional-via-gate-source-preparation/independent-source-review.json",
+        "sha256": "e97f2816a434a84b930ebfd44a78090db08d5d95eb880e5c394c6cd6b072f4e2"
+      },
+      "independent-mapping-binding-review.json": {
+        "path": "/workspace/full-board-ten-20261118-3242/a01-regional-via-gate-source-preparation/independent-mapping-binding-review.json",
+        "sha256": "40006319e1e4779b62e7c46c4e5e93a8bc9dd0d5c93818a391968cb98c080d04"
+      },
+      "independent-mapping-byte-review.json": {
+        "path": "/workspace/full-board-ten-20261118-3242/a01-regional-via-gate-source-preparation/independent-mapping-byte-review.json",
+        "sha256": "515742bc83d9e659d3850df6ce256981c6ab717006f95d8ee635f2fa7cb86f36"
+      },
+      "independent-inline-helper-review.json": {
+        "path": "/workspace/full-board-ten-20261118-3242/a01-regional-via-gate-source-preparation/independent-inline-helper-review.json",
+        "sha256": "59abbdca9b5376c8588ba61c0b15cf3c67c90f96f059dea6283f4daa0e493d2b"
+      },
+      "wrapper-contracts.json": {
+        "path": "/workspace/full-board-ten-20261118-3242/a01-via-gate-screen-preparation/wrapper-contracts.json",
+        "sha256": "ac125eea14977a495fa223b27cdfe1baee3b4f3948708332cda21bece6f84497"
+      },
+      "comparator-design-review.json": {
+        "path": "/workspace/full-board-ten-20261118-3242/a01-via-gate-screen-preparation/comparator-design-review.json",
+        "sha256": "9ef4c589adea1f73165b5e6fddb707b32489bdf2c43422c5aa98487f48f0211c"
+      },
+      "static-controller-checks.json": {
+        "path": "/workspace/full-board-ten-20261118-3242/a01-via-gate-screen-preparation/static-controller-checks.json",
+        "sha256": "03942ca16442730ee8064810568fb87fdc72e1a1728dcbd71ce872ab2b7978c7"
+      },
+      "independent-held-controller-review.json": {
+        "path": "/workspace/full-board-ten-20261118-3242/a01-via-gate-screen-preparation/independent-held-controller-review.json",
+        "sha256": "1910c83e526f89d291fd1837e237b119eb7a7600a425a36a360108e8e50552a9"
+      },
+      "independent-final-source-addendum.json": {
+        "path": "/workspace/full-board-ten-20261118-3242/a01-regional-via-gate-source-preparation/independent-final-source-addendum.json",
+        "sha256": "437b54e9b3a2cb73debea4e43842e26ce55532bae275e533500539610dbeff39"
+      }
+    },
+    "releaseAuthorization": "Root authorized local readiness/commit after final review; root must verify exact committed identities before a single push-triggered run. No source push or routing by preparation agent.",
+    "syntax": "PASS: Python and YAML parsed; runner transpiled by owner; assessor byte-equivalent except two paths. Only dedicated push workflow matches."
+  },
+  "sourceCandidate": {
+    "source": {
+      "repositories": [
+        {
+          "repository": "tscircuit/high-density-a01",
+          "sourceBaseCommit": "eef8b059d54ffbd12b0d2751c53d3e501e2f3430",
+          "publishedBaseCommit": "85ee23a25403bbb79be14b6d0783e592928a85a0",
+          "productionPatchFile": "a01-via-gate-production.patch",
+          "changedFiles": [
+            {
+              "relative": "lib/HighDensitySolverA01/HighDensitySolverA01.ts",
+              "beforeSha256": "d9ddf24d2cef76012e7be01427c11429e86162dfbf74aa74a0b443493cddc114",
+              "afterSha256": "2677d9e6a4c91709722cc192038d1dc186a5bb36e2cb5b9bf8d6ef81e22df86d"
+            }
+          ],
+          "candidateCommit": "b3cb6ef2d21159d97410b00fda3ac712642ab2e0",
+          "productionPatchSha256": "6ae16c91dfba4cff91adcc89ad98b9513d6d4d571f03955ca4c71f641de97d0e"
+        },
+        {
+          "repository": "tscircuit/tscircuit-autorouter",
+          "sourceBaseCommit": "c0dcc07ae48b17296a1dc73678e258de62ca8de3",
+          "publishedBaseCommit": "c0dcc07ae48b17296a1dc73678e258de62ca8de3",
+          "productionPatchFile": "autorouter-via-gate-production.patch",
+          "changedFiles": [
+            {
+              "relative": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9RegionalFallbackSolver.ts",
+              "beforeSha256": "a21d1c1c07175216b88922acdb4dbe9911fa931dc255ed53ebe4e97654ad8863",
+              "afterSha256": "af5a257aa730c523701194b8b46085fd2f1ac166481d44565fb490ce9188cd3a"
+            },
+            {
+              "relative": "lib/solvers/HighDensitySolver/HighDensitySolver.ts",
+              "beforeSha256": "a138621c704e5f5cdb088893842097b974cb02e16c1078ca4c905d043b982dab",
+              "afterSha256": "647126db000eeeb7f8f8f1df50422997a69a9ac2cf64ade3c69d7ffcf2e0b325"
+            },
+            {
+              "relative": "lib/solvers/HyperHighDensitySolver/PortfolioSingleIntraNodeSolver.ts",
+              "beforeSha256": "2f77dcbf4f80ad22b0d3a0c7792a858833b49baaf179291d45596a7b19a87436",
+              "afterSha256": "fa3f97c55c5e1117763b1f19ac5e65b6ba2a647c44fed7e2f0519051a4f33708"
+            }
+          ],
+          "candidateCommit": "2c493169ef3c16d404dff54bf04127274c39e6b4",
+          "productionPatchSha256": "8a36b78392f1223c119acea1ee99b8f68384f02feb1b1cd783f6f4b72e2ad76d"
+        }
+      ]
+    },
+    "candidateAutorouterSha256": "d05bd05d52da6980fc29864193dd1c56c409b8db25a36f4741f2f0b622be13b3",
+    "mappingFile": "a01-via-gate-source-mapping.json",
+    "mappingSha256": "ea48878e8394ecbbc4d46e698e52a37af4ff18590f9114d53230e06c07cd1864",
+    "siblingEntryRelative": "dist/a01-via-gate-candidate.js",
+    "scope": "A01 optional via gate plus three existing autorouter integration files only. No endpoint/point/B01/A03/budget/dependency changes.",
+    "candidateCommitScope": "Reviewed local commits only; derive exact candidate source files from published bases plus frozen patches, no candidate source fetch/push.",
+    "publishedSourceReconstruction": "A01 sourceBaseCommit eef8 differs from published85ee only outside the mapped production file; each changed source file beforeSha256 must match the public publishedBaseCommit checkout. Frozen patches derive exact reviewed afterSha256. Unpublished candidate commits are provenance only."
+  },
+  "diagnosticCapture": {
+    "maxChildrenPerField": 128,
+    "maxNodes": 1024,
+    "maxBytes": 524288,
+    "targetMetadataPriority": [
+      "HIGH_DENSITY_A01",
+      "HIGH_DENSITY_A03"
+    ],
+    "sourceBound": "68 earlier native candidates, up to76 total per portfolio. Four-portfolio synthetic contract retains all24 A01 and4 A03 records even when ordinary descendant data hits the global byte bound.",
+    "scope": "Post-loop observation only; native arrays, execution order, inputs, source and all solver limits are unchanged. Other descendants may be explicitly truncated."
+  }
+}

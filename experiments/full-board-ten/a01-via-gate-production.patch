@@ -1,0 +1,71 @@
+diff --git a/lib/HighDensitySolverA01/HighDensitySolverA01.ts b/lib/HighDensitySolverA01/HighDensitySolverA01.ts
+index c8a2e92..8ba718a 100644
+--- a/lib/HighDensitySolverA01/HighDensitySolverA01.ts
++++ b/lib/HighDensitySolverA01/HighDensitySolverA01.ts
+@@ -212,6 +212,14 @@ export interface HighDensitySolverA01Props {
+   showUsedCellMap?: boolean
+   effort?: number
+   hyperParameters?: Partial<HyperParameters>
++  isViaAllowed?: (params: {
++    x: number
++    y: number
++    fromZ: number
++    toZ: number
++    connectionName: string
++    rootConnectionName: string
++  }) => boolean
+   initialPenaltyFn?: (params: {
+     x: number
+     y: number
+@@ -245,6 +253,7 @@ export class HighDensitySolverA01 extends BaseSolver {
+   stepMultiplier: number
+   hyperParameters: HyperParameters
+   initialPenaltyFn?: HighDensitySolverA01Props["initialPenaltyFn"]
++  isViaAllowed?: HighDensitySolverA01Props["isViaAllowed"]
+   protected useExactViaTraceClearance = false
+   protected ripHistoryCostMultiplier = 0
+ 
+@@ -377,6 +386,7 @@ export class HighDensitySolverA01 extends BaseSolver {
+     this.MAX_ITERATIONS = 100e6
+     this.MAX_RIPS = 200
+     this.initialPenaltyFn = props.initialPenaltyFn
++    this.isViaAllowed = props.isViaAllowed
+   }
+ 
+   override getConstructorParams(): [HighDensitySolverA01Props] {
+@@ -395,6 +405,7 @@ export class HighDensitySolverA01 extends BaseSolver {
+         effort: this.effort,
+         hyperParameters: this.hyperParameters,
+         initialPenaltyFn: this.initialPenaltyFn,
++        isViaAllowed: this.isViaAllowed,
+       },
+     ]
+   }
+@@ -815,6 +826,27 @@ export class HighDensitySolverA01 extends BaseSolver {
+         }
+       }
+ 
++      if (this.isViaAllowed) {
++        // The predicate observes the same physical coordinates as getOutput.
++        const point = applyAffineTransformToPoint(this.gridToBoundsTransform, {
++          x: this.gridOrigin.x + (toCol + 0.5) * this.cellSizeMm,
++          y: this.gridOrigin.y + (toRow + 0.5) * this.cellSizeMm,
++        })
++        if (
++          !this.isViaAllowed({
++            ...point,
++            fromZ: this.layerToZ.get(fromZ)!,
++            toZ: this.layerToZ.get(toZ)!,
++            connectionName: this.connIdToName[activeConn]!,
++            rootConnectionName: this.connIdToRootNet[activeConn]!,
++          })
++        ) {
++          this._moveCost = -1
++          this._moveRipped = r
++          return
++        }
++      }
++
+       // Via footprint occupants (reusable scratch array)
+       this.fillViaOccupants(toRow, toCol, activeConn)
+       const occs = this._viaOccs
