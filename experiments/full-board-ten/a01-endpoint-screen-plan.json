@@ -252,8 +252,8 @@
       "bytes": 13178
     },
     "experiments/full-board-ten/run-a01-endpoint-screen.ts": {
-      "sha256": "e34f1d8f8372136b0bf402231214f125e6c3bc8dea0db2e0932b1d3842b31f9d",
-      "bytes": 15899
+      "sha256": "40d2a111ba22782a4f9ee50569079d27a9333d1af158efa9d2eff548dee02ce2",
+      "bytes": 16562
     },
     "experiments/full-board-ten/assess-a01-endpoint-output.ts": {
       "sha256": "cc0cc4f01b62a19b583ae63386c1c27f1ffbba8f107771729a63c73d3953927b",
@@ -307,7 +307,7 @@
   },
   "publishedRuntimeGraphUnchanged": true,
   "qualification": {
-    "independentReview": "PASS: exact source mapping, native call, scalar tree, wrapper and assessment",
+    "independentReview": "PASS: original source/mapping/controller review plus independently reviewed pre-push capture-limit correction",
     "routingExecuted": false,
     "pushPerformed": false,
     "sourceMapping": "PASS: one source method only; compiled published-base canonical equality and all outside bundle bytes verified",
@@ -321,14 +321,18 @@
       },
       "scalar-tree-contract.json": {
         "path": "/workspace/full-board-ten-20261118-3242/a01-endpoint-screen-preparation/scalar-tree-contract.json",
-        "sha256": "597ca77933375060031e504f68d05e3ff793dbdbdac4494467a7cd107dcc3850"
+        "sha256": "9e9cd3ab17b8b8b3c7c99d3e6139201d85bd7d42d942d54fd30d766af28e0434"
+      },
+      "independent-portfolio-count-review.json": {
+        "path": "/workspace/full-board-ten-20261118-3242/a01-endpoint-screen-preparation/independent-portfolio-count-review.json",
+        "sha256": "be72ff2b112acfb1f19b43d4be0662e3c423f94265042967c445a61459a62649"
       }
     },
     "independentReviewProof": {
       "path": "/workspace/full-board-ten-20261118-3242/a01-endpoint-screen-preparation/independent-controller-review.json",
       "sha256": "2b26bbff523215e129170808be0a2ee96fa4884a50139e15fe2c3796b1d292d7"
     },
-    "releaseAuthorization": "Root authorizes one exploratory native efficacy/failure-tree screen, readiness and local commit. Root alone verifies and pushes. Existing source PRs129/140 are not duplicated; no source or integration PR is selected."
+    "releaseAuthorization": "Root authorizes the reviewed pre-push diagnostic capture correction and local commit for one exploratory A01 screen. Root alone verifies and pushes; old60ba37e8 must not launch. Existing source PRs129/140 are not duplicated."
   },
   "sourceCandidate": {
     "repository": "tscircuit/high-density-a01",
@@ -345,5 +349,16 @@
     "productionPatchFile": "a01-production.patch",
     "productionPatchSha256": "cbaa44fc4da0590ab34929f5b6c1b821f96059e07ee069f9cb10e9e6110edb88",
     "candidateCommitScope": "Reviewed local commit only; CI derives the exact candidate file from the published base plus the frozen patch, without fetching or publishing the candidate commit."
+  },
+  "diagnosticCapture": {
+    "maxChildrenPerField": 128,
+    "maxNodes": 1024,
+    "maxBytes": 524288,
+    "targetMetadataPriority": [
+      "HIGH_DENSITY_A01",
+      "HIGH_DENSITY_A03"
+    ],
+    "sourceBound": "68 earlier native candidates, up to76 total per portfolio. Four-portfolio synthetic contract retains all24 A01 and4 A03 records even when ordinary descendant data hits the global byte bound.",
+    "scope": "Post-loop observation only; native arrays, execution order, inputs, source and all solver limits are unchanged. Other descendants may be explicitly truncated."
   }
 }

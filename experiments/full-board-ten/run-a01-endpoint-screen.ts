@@ -97,7 +97,9 @@ function inspectUniformBoundary(): void {
 // This reads retained data only after the native loop has stopped. It never
 // calls solver methods or copies routes, constructor inputs or obstacle arrays.
 function summarizeRegionalTree(regional: any): Data {
-  const limits = { nodes: 512, childrenPerField: 64, routesPerSolver: 32, bytes: 131072 }
+  // The native portfolio can place 68 candidates before A01, then A03/A13
+  // and adaptive A01 seeds. Keep that complete portfolio within this snapshot.
+  const limits = { nodes: 1024, childrenPerField: 128, routesPerSolver: 32, bytes: 524288 }
   const rows: Data[] = []
   const seen = new Map<object, number>()
   let retainedBytes = 0
@@ -113,8 +115,11 @@ function summarizeRegionalTree(regional: any): Data {
     return result
   }
   const queue: Data[] = regional ? [{ solver: regional, parentId: null, edge: "retainedRegional" }] : []
-  for (let cursor = 0; cursor < queue.length; cursor++) {
-    const { solver, parentId, edge, hyperParameters } = queue[cursor]!
+  const targetQueue: Data[] = []
+  let cursor = 0
+  let targetCursor = 0
+  while (cursor < queue.length || targetCursor < targetQueue.length) {
+    const { solver, parentId, edge, hyperParameters } = targetCursor < targetQueue.length ? targetQueue[targetCursor++]! : queue[cursor++]!
     if (!solver || typeof solver !== "object") continue
     if (seen.has(solver)) continue
     if (rows.length >= limits.nodes) { truncated = true; break }
@@ -172,7 +177,11 @@ function summarizeRegionalTree(regional: any): Data {
           const value = own(parameters, name)
           if (typeof value === "number" || typeof value === "boolean") flags[name] = value
         }
-        queue.push({ solver: key === "supervisedSolvers" ? own(child, "solver") : child, parentId: id, edge: `${key}[${index}]`, hyperParameters: flags })
+        const entry = { solver: key === "supervisedSolvers" ? own(child, "solver") : child, parentId: id, edge: `${key}[${index}]`, hyperParameters: flags }
+        // Prioritize retained target metadata in this post-loop snapshot only.
+        // Native candidate arrays and their execution order are never changed.
+        if (flags.HIGH_DENSITY_A01 || flags.HIGH_DENSITY_A03) targetQueue.push(entry)
+        else queue.push(entry)
       })
     }
     for (const key of ["highDensitySolver", "activeSubSolver"]) {
@@ -180,7 +189,7 @@ function summarizeRegionalTree(regional: any): Data {
       if (child && typeof child === "object") queue.push({ solver: child, parentId: id, edge: key })
     }
   }
-  return { captured: regional !== null, captureKind: "latestRetainedRegional", retainedNodeId: own(own(own(regional, "params"), "nodeWithPortPoints"), "capacityMeshNodeId") ?? null, retainedSolved: own(regional, "solved") ?? null, retainedFailed: own(regional, "failed") ?? null, knownBaselineNode: "cmn_162", nativeTerminalReached: pipeline.solved || pipeline.failed, limits, retainedBytes, truncated, rows, missingIdentityIsUnknown: true, scope: "Latest regional reference retained before parent clear; it may be a completed region if failure happened elsewhere. Post-loop own-data reads only. Temporary/discarded leaf state cannot be recovered; missing names are unknown. No solver method calls or constructor/route/obstacle arrays." }
+  return { captured: regional !== null, captureKind: "latestRetainedRegional", retainedNodeId: own(own(own(regional, "params"), "nodeWithPortPoints"), "capacityMeshNodeId") ?? null, retainedSolved: own(regional, "solved") ?? null, retainedFailed: own(regional, "failed") ?? null, knownBaselineNode: "cmn_162", nativeTerminalReached: pipeline.solved || pipeline.failed, limits, retainedBytes, truncated, prioritizedCandidateMetadata: ["HIGH_DENSITY_A01", "HIGH_DENSITY_A03"], rows, missingIdentityIsUnknown: true, scope: "Latest regional reference retained before parent clear; it may be a completed region if failure happened elsewhere. Post-loop own-data reads only. Temporary/discarded leaf state cannot be recovered; missing names are unknown. No solver method calls or constructor/route/obstacle arrays." }
 }
 
 const started = performance.now()
