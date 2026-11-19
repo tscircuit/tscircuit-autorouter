@@ -791,10 +791,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
           this,
         ),
       )
-      regionalCopperRoutes = [
-        ...regionalCopperRoutes,
-        ...routedCopperRoutes,
-      ]
+      regionalCopperRoutes = [...regionalCopperRoutes, ...routedCopperRoutes]
     }
     this.activeFallbackSolver = new Pipeline9RegionalFallbackSolver({
       captureSearchDebug: this.params.captureSearchDebug,

@@ -18,9 +18,17 @@ test("saved copper retains net ownership through canonical and alias IDs", (): v
     arePipeline9RoutesOnSameNet({ connectionName: "ram-data" }, saved, connMap),
   ).toBeTrue()
   expect(
-    arePipeline9RoutesOnSameNet({ connectionName: "cpu-clock" }, saved, connMap),
+    arePipeline9RoutesOnSameNet(
+      { connectionName: "cpu-clock" },
+      saved,
+      connMap,
+    ),
   ).toBeFalse()
   expect(
-    arePipeline9RoutesOnSameNet({ connectionName: "unrelated" }, saved, connMap),
+    arePipeline9RoutesOnSameNet(
+      { connectionName: "unrelated" },
+      saved,
+      connMap,
+    ),
   ).toBeFalse()
 })
