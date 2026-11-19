@@ -1281,9 +1281,16 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       node,
       this.connMap,
     )
+    const declaredPadClearance =
+      this.params.minClearance ?? this.viaToPadClearance
     let obstacleClearanceMargin = 0.15
     if (this.fixedHdRoutes.some((route) => route.isFixed === true)) {
       obstacleClearanceMargin = this.obstacleMargin
+    } else if (declaredPadClearance !== undefined) {
+      obstacleClearanceMargin = Math.max(
+        declaredPadClearance,
+        this.viaToPadClearance ?? declaredPadClearance,
+      )
     }
     this.stats.b01NodeCount = Number(this.stats.b01NodeCount ?? 0) + 1
     this.activeB01Solver = new HighDensitySolverB01({

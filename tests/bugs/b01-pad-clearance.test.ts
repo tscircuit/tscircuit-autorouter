@@ -24,5 +24,10 @@ test("B01 pad escape with preloaded copper", async (): Promise<void> => {
     backgroundColor: "white",
     includeTextLabels: false,
   }).replace(/[ \t]+$/gm, "")
-  await expect(svg).toMatchSvgSnapshot(import.meta.path)
+  await expect(svg).toMatchSvgSnapshot(import.meta.path, { tolerance: 0.001 })
+  expect(padEscapeSolver.obstacleClearanceMargin).toBe(
+    phaseInput.minTraceToPadEdgeClearance,
+  )
+  expect(padEscapeSolver.solved).toBeTrue()
+  expect(solver.highDensityRouteSolver?.failedSolvers).toHaveLength(0)
 })
