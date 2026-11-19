@@ -776,7 +776,8 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     const hasImmutablePreload = this.fixedHdRoutes.some(
       (route) => route.isFixed === true,
     )
-    let regionalCopperRoutes = this.activeFallbackFixedObstacleRoutes
+    let regionalCopperRoutes: HighDensityRoute[] =
+      this.activeFallbackFixedObstacleRoutes
     if (hasImmutablePreload) {
       // Native-copper repairs can leave the mesh cell. Keep completed neighbors
       // in their physical frame along with the immutable preloaded paths.
