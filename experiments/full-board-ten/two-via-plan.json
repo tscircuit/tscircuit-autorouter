@@ -32,8 +32,8 @@
     "dependencyGraphPolicy": "Exact frozen3243 release and lockfiles from baseline14176a10; no independent transitive refresh.",
     "candidateAutorouterSha256": "cdc632613451a24e64f0310c403879b78b6b5c5a23e5c83ef213dac83ca4e438"
   },
-  "qualificationReady": false,
-  "status": "HELD_ROOT_REVIEW",
+  "qualificationReady": true,
+  "status": "READY_ROOT_CONTROLLER_REVIEW",
   "branch": "bench/h616-two-via-capacity-3243-20261119",
   "workflow": ".github/workflows/full-board-two-via-capacity.yml",
   "experiment": "two-via-capacity",
@@ -124,11 +124,12 @@
   "observerPolicy": "Exact native baseline observer targets/hooks and15s circuit capture remain; no optional edge capture or observer changes.",
   "comparisonPolicy": "Compare native names/geometry/physical findings against retained latest3243 baseline44471059539; later phase inputs may differ. No timing-gain claim.",
   "qualification": {
-    "scope": "Frozen source and13 qualified source spans integrated; local syntax, held gate and mapping activation checks complete. Root release pending.",
+    "scope": "Root source and mapping review passed; frozen source and13 qualified spans integrated. Controller review precedes one branch push; no native execution yet.",
     "nativeRoutingExecuted": false,
     "dependencyInstallsExecutedLocally": false,
     "artifactDownloadsExecutedLocally": false,
-    "sourceMappingHandoffSha256": "215c2cf96b5aa4594493222a798c8c061b2058918a5a3dbb9a44bbf6b6728cf3"
+    "sourceMappingHandoffSha256": "215c2cf96b5aa4594493222a798c8c061b2058918a5a3dbb9a44bbf6b6728cf3",
+    "sourceChecksHandoff": "/workspace/full-board-ten-20261119-3243/two-via-source-validation/handoff.json"
   },
   "reuseController": "1f3920c470a0a04683008b9b7343651535827e55",
   "frozenHarnessFiles": {
