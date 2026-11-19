@@ -367,7 +367,8 @@ const resolveCircuitJsonSourceTraceId = (
   }
 
   const connectivityNetId =
-    resolver.connMap.getNetConnectedToId(srjConnectivityId)
+    resolver.connMap.getNetConnectedToId(srjConnectivityId) ??
+    (resolver.connMap.netMap[srjConnectivityId] ? srjConnectivityId : undefined)
   if (!connectivityNetId) return undefined
   const sourceTraceIds =
     resolver.circuitJsonSourceTraceIdsByConnectivityNetId.get(
@@ -537,11 +538,23 @@ function createSourceTraces(
     }
   })
 
-  if (hdRoutes[0] && "type" in hdRoutes[0]) {
+  if (hdRoutes.length > 0) {
     const connectionByName = new Map(
       connections.map((connection) => [connection.name, connection]),
     )
-    for (const trace of hdRoutes as SimplifiedPcbTrace[]) {
+    const routeConnections = hdRoutes.map((route) => {
+      if ("connection_name" in route) return route
+      const connectsTo: string[] = []
+      const connMap = circuitJsonSourceTraceIdResolver.connMap
+      if (
+        route.rootConnectionName &&
+        !connMap.getNetConnectedToId(route.connectionName)
+      ) {
+        connectsTo.push(route.rootConnectionName)
+      }
+      return { connection_name: route.connectionName, connectsTo }
+    })
+    for (const trace of routeConnections) {
       const declaredSourceTraceId = resolveCircuitJsonSourceTraceId(
         circuitJsonSourceTraceIdResolver,
         trace.connection_name,
@@ -553,7 +566,19 @@ function createSourceTraces(
       // Their pad ownership still exists in the SRJ connectivity map.
       if (declaredSourceTraceId === undefined) {
         const connMap = circuitJsonSourceTraceIdResolver.connMap
-        const traceNetId = connMap.getNetConnectedToId(trace.connection_name)
+        let traceNetId =
+          connMap.getNetConnectedToId(trace.connection_name) ??
+          (connMap.netMap[trace.connection_name]
+            ? trace.connection_name
+            : undefined)
+        if (!traceNetId) {
+          for (const reference of trace.connectsTo ?? []) {
+            traceNetId =
+              connMap.getNetConnectedToId(reference) ??
+              (connMap.netMap[reference] ? reference : undefined)
+            if (traceNetId) break
+          }
+        }
         if (traceNetId) {
           for (const reference of connMap.netMap[traceNetId]!) {
             if (declaredPcbPortIds.has(reference)) {
@@ -1265,11 +1290,23 @@ export function convertToCircuitJson(
     } else {
       // Handle HighDensityRoutes - may produce multiple traces per route if jumpers exist
       ;(routes as HighDensityRoute[]).forEach((route, index) => {
-        const connectionName =
-          resolveCircuitJsonSourceTraceId(
-            routeCircuitJsonSourceTraceIdResolver,
+        let connectionName = resolveCircuitJsonSourceTraceId(
+          routeCircuitJsonSourceTraceIdResolver,
+          route.connectionName,
+        )
+        if (
+          !connectionName &&
+          !routeCircuitJsonSourceTraceIdResolver.connMap.getNetConnectedToId(
             route.connectionName,
-          ) ?? (route.connectionName as CircuitJsonSourceTraceId)
+          ) &&
+          route.rootConnectionName
+        ) {
+          connectionName = resolveCircuitJsonSourceTraceId(
+            routeCircuitJsonSourceTraceIdResolver,
+            route.rootConnectionName,
+          )
+        }
+        connectionName ??= route.connectionName as CircuitJsonSourceTraceId
         const traces = convertHdRouteToCircuitJsonTraces(
           route,
           `trace_${index}`,
