@@ -93,7 +93,10 @@ import {
   convertPreloadedTraceToHdRoutes,
   type PreloadedHighDensityRoute,
 } from "./convertPreloadedTraceToHdRoutes"
-import { Pipeline9HighDensitySolver } from "./Pipeline9HighDensitySolver"
+import {
+  DEFAULT_PIPELINE9_OBSTACLE_MARGIN,
+  Pipeline9HighDensitySolver,
+} from "./Pipeline9HighDensitySolver"
 import { Pipeline9JointDrcRepairSolver } from "./Pipeline9JointDrcRepairSolver"
 import { PreloadedTraceGraphSolver } from "./PreloadedTraceGraphSolver"
 import { PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver } from "./PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver"
@@ -645,7 +648,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         const hasImmutablePreloadedCopper = fixedHdRoutes.some(
           (route) => route.isFixed === true,
         )
-        let obstacleMargin = cms.srj.defaultObstacleMargin ?? 0.15
+        let obstacleMargin =
+          cms.srj.defaultObstacleMargin ?? DEFAULT_PIPELINE9_OBSTACLE_MARGIN
         if (
           hasImmutablePreloadedCopper &&
           cms.srj.minTraceToPadEdgeClearance !== undefined
