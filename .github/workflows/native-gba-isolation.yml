@@ -1,4 +1,4 @@
-name: Verify ordinary fallback via clearance
+name: Verify pad-aware native routing in physical coordinates
 on:
   push:
     branches: [analysis/native-complete-cleanup-context]
@@ -13,12 +13,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - variant: parent
-            source: 7b5f98e1785f9fcf3751448de03f58603afbf0d6
-          - variant: native
-            source: 75a6381c6985cd48f91b30516a828f6a771cfce0
           - variant: native-width
-            source: 75a6381c6985cd48f91b30516a828f6a771cfce0
+            source: 0477e6f5d46e0f43910ec285e16871ba8ad0296f
+          - variant: parent-width
+            source: 0477e6f5d46e0f43910ec285e16871ba8ad0296f
     steps:
       - uses: actions/checkout@v4
         with:
@@ -50,7 +48,7 @@ jobs:
           assert "via.diameter / 2 + viaToPadClearance" in s
           s=s.replace("via.diameter / 2 + viaToPadClearance","via.diameter / 2 + (viaToPadClearance ?? defaultViaToPadClearance)",1)
           p.write_text(s)
-          if os.environ["VARIANT"]=="native-width":
+          if os.environ["VARIANT"] in ["native-width","parent-width"]:
               p=Path("lib/solvers/HighDensityRepairSolver/Pipeline4HighDensityRepairSolver.ts")
               s=p.read_text()
               old="""    const repairRoutes = contextRoutes.map((route) =>
@@ -69,8 +67,34 @@ jobs:
               assert s.count(old)==1
               p.write_text(s.replace(old,new))
           PY
+      - name: Use a physical frame for all native-copper context
+        env:
+          VARIANT: ${{ matrix.variant }}
+        run: |
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+          prefix="lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/"
+          p=Path(prefix+"Pipeline9HighDensitySolver.ts")
+          s=p.read_text()
+          old="    const hasImmutablePreload = this.fixedHdRoutes.some(\n      (route) => route.isFixed === true,\n    )"
+          assert s.count(old)==1
+          p.write_text(s.replace(old,"    const hasImmutablePreload = fixedHdRoutes.length > 0"))
+          if os.environ["VARIANT"]=="parent-width":
+              p=Path(prefix+"AutoroutingPipelineSolver9_PreloadedTraceGraph.ts")
+              s=p.read_text()
+              old="          fixedHdRoutes: cms.highDensityRouteSolver!\n            .getUpdatedFixedHdRoutes(),\n"
+              assert s.count(old)==1
+              p.write_text(s.replace(old,""))
+              p=Path(prefix+"Pipeline9RegionalFallbackSolver.ts")
+              s=p.read_text().replace("      fixedHdRoutes: this.params.fixedHdRoutes,\n      preserveTopologyPortAnchors:", "      preserveTopologyPortAnchors:",1)
+              p.write_text(s)
+          PY
       - run: bun install
       - name: Keep the original Game Boy routing and clearance assertions
         env:
           BUN_UPDATE_SNAPSHOTS: '1'
         run: bun test --timeout 9999999 tests/bugs/bugreport96-full-gameboy-no-breakout.test.ts
+      - name: Check native integration types
+        if: always()
+        run: bunx tsc --noEmit
