@@ -1,0 +1,110 @@
+name: HELD published3242 H616 high-density diagnostic
+
+on:
+  push:
+    branches: [bench/h616-hd-capture-3242-20261119]
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  capture:
+    name: Exact H616-spaced phase4 diagnostic
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 25
+    env:
+      FULL_BOARD_ROOT: ${{ github.workspace }}/.full-board-run
+      BUN_INSTALL_CACHE_DIR: ${{ github.workspace }}/.full-board-run/bun-cache
+      FULL_BOARD_EXPERIMENT: published
+
+    steps:
+      - name: Checkout frozen diagnostic controller
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            experiments/full-board-ten
+            .github/workflows/full-board-ten.yml
+            .github/workflows/hd-failure-capture.yml
+            AGENTS.md
+
+      - name: Require reviewed diagnostic plan before runtime preparation
+        run: python3 experiments/full-board-ten/prepare-hd-capture.py --verify-plan
+
+      - name: Checkout immutable original circuit sources
+        uses: actions/checkout@v4
+        with:
+          repository: tscircuit/tscircuit-autorouter
+          ref: ea398b4023119f65157e876a3101aa6ce3ca5f97
+          path: .full-board-run/sources/original
+          persist-credentials: false
+          sparse-checkout: experiments/full-board-priority-analysis
+
+      - name: Checkout immutable spaced circuit sources
+        uses: actions/checkout@v4
+        with:
+          repository: ShiboSoftwareDev/core-ddr-benchmark
+          ref: a3679559d6027aea2c441c1078853d58925d3a12
+          path: .full-board-run/sources/spaced
+          persist-credentials: false
+          sparse-checkout: |
+            full-boards
+            circuits
+            scripts
+            licenses
+            provenance
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+
+      - name: Prepare unchanged verified published3242 runtime
+        run: python3 experiments/full-board-ten/bootstrap.py --root "$FULL_BOARD_ROOT"
+
+      - name: Authenticate exact native phase4 input
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          python3 experiments/full-board-ten/prepare-hd-capture.py
+          h616 "$FULL_BOARD_ROOT/hd-capture"
+
+      - name: Observe native primary and regional failures separately
+        id: capture
+        continue-on-error: true
+        shell: bash
+        run: |
+          set +e
+          timeout --signal=TERM --kill-after=10s 960s \
+            bun experiments/full-board-ten/run-hd-capture.ts \
+            --module "$FULL_BOARD_ROOT/npm/autorouter/dist/index.js" \
+            --input "$FULL_BOARD_ROOT/hd-capture/phase-4-input.srj.json.gz" \
+            --output "$FULL_BOARD_ROOT/hd-capture" \
+            --root source_net_1 \
+            --manifest "$FULL_BOARD_ROOT/runtime-manifest.json" \
+            --plan experiments/full-board-ten/hd-capture-plan.json
+          capture_status=$?
+          printf '%s\n' "$capture_status" > "$FULL_BOARD_ROOT/hd-capture/process-exit-code.txt"
+          exit "$capture_status"
+
+      - name: Verify capture provenance and classify diagnostic outcome
+        if: ${{ always() && steps.capture.outcome != 'skipped' }}
+        run: >-
+          python3 experiments/full-board-ten/verify-hd-capture.py
+          "$FULL_BOARD_ROOT/hd-capture"
+
+      - name: Preserve compact native diagnosis and provenance
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          include-hidden-files: true
+          name: native-hd3242-h616-spaced-${{ github.run_attempt }}
+          path: |
+            .full-board-run/hd-capture
+            .full-board-run/runtime-manifest.json
+            experiments/full-board-ten/hd-capture-plan.json
+            experiments/full-board-ten/release.json
+          retention-days: 7
+          compression-level: 0
+          if-no-files-found: warn

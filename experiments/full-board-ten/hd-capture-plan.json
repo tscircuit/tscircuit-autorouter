@@ -1,0 +1,241 @@
+{
+  "schemaVersion": 2,
+  "purpose": "One isolated diagnostic of the authenticated published3242 H616-spaced phase4. Observe primary source_net_1_mst0 separately from fallback cmn_162; not a new whole-board baseline or completion benchmark.",
+  "qualificationReady": true,
+  "status": "READY_FOR_ROOT_VERIFICATION_UNPUSHED",
+  "runtimeController": "49e9de35db347f94eeeaef9bca48d821ed3be51e",
+  "mainVersion": "0.0.3242",
+  "branch": "bench/h616-hd-capture-3242-20261119",
+  "workflow": ".github/workflows/hd-failure-capture.yml",
+  "runner": "blacksmith-8vcpu-ubuntu-2404-arm",
+  "captureDeadlineMs": 900000,
+  "hardDeadlineSeconds": 960,
+  "jobTimeoutMinutes": 25,
+  "deadlineScope": "Fresh isolated diagnostic window; the authentic full-board run entered phase4 at 555207.847951 ms and had about344792 ms remaining. No end-to-end timing or completion gain inference.",
+  "routingSourceOverrides": false,
+  "sourceOverrides": false,
+  "dependencyOverrides": [],
+  "solverOptions": {
+    "capacityDepth": null,
+    "targetMinCapacity": null,
+    "cacheProvider": null,
+    "effort": null
+  },
+  "undefinedOptionKeys": [
+    "capacityDepth",
+    "targetMinCapacity",
+    "effort"
+  ],
+  "packages": [
+    {
+      "label": "tscircuit",
+      "name": "tscircuit",
+      "version": "0.0.3242",
+      "gitHead": "31200e03323e6e4573b560eb152d3c625a86edf9",
+      "entryRelative": "dist/index.js",
+      "entrySha256": "cfd669f2d96ac77eb054aab53ff34a80120bcd3db72b87f969b3d8b8d2af78a3",
+      "tarball": "https://registry.npmjs.org/tscircuit/-/tscircuit-0.0.3242.tgz",
+      "integrity": "sha512-SiHpu5DJnSA5MmuMp/Ev4Xu6Dyk0Wu6hSETq9v3HubYT2Z8re2mgcYYhe4y9ZZOooFvDupAzC1jIirmAcCW3MQ=="
+    },
+    {
+      "label": "core",
+      "name": "@tscircuit/core",
+      "version": "0.0.2424",
+      "gitHead": "fb7f456de0a867c7074a9f196597992e0d1253b9",
+      "entryRelative": "dist/index.js",
+      "entrySha256": "f8122fb04b46cb37bf48de0f8642044bc8360937a03630e4655112cc8694471b",
+      "tarball": "https://registry.npmjs.org/@tscircuit/core/-/core-0.0.2424.tgz",
+      "integrity": "sha512-qqc/S8UE7UrMaMEuCMSdNyxhYcnWeNj8bCpnl/fzf7mghcASwuy9ipg2AGSTOOjFr01J7oPtNCNxg9wo6CbDQA=="
+    },
+    {
+      "label": "eval",
+      "name": "@tscircuit/eval",
+      "version": "0.0.1818",
+      "gitHead": "f2a5b80dd2c0bf5436929ac96a9c7bc0993405ff",
+      "entryRelative": "dist/lib/index.js",
+      "entrySha256": "71517bf85bef897c0a658f69fba77e69dc6599f82f701ce966fa6af370991465",
+      "tarball": "https://registry.npmjs.org/@tscircuit/eval/-/eval-0.0.1818.tgz",
+      "integrity": "sha512-ar70mlpktg682FACZ2lxIRtaYKoB97fEcF3TxsBzAQd31Gz8NqkptLDE8vmjMZWyMzmx9k6uaExISHjPCzXUuA=="
+    },
+    {
+      "label": "autorouter",
+      "name": "@tscircuit/capacity-autorouter",
+      "version": "0.0.1132",
+      "gitHead": "c0dcc07ae48b17296a1dc73678e258de62ca8de3",
+      "entryRelative": "dist/index.js",
+      "entrySha256": "5695c6361c0f7a7dc26ddd1b9264b8a8c122e5f7b9610cf24c6af3b99c545df1",
+      "tarball": "https://registry.npmjs.org/@tscircuit/capacity-autorouter/-/capacity-autorouter-0.0.1132.tgz",
+      "integrity": "sha512-giOwlXlzQMsFphclwu0iRjWwRwyokvRDy6F2USnHnxa+ywQbocVmKXRYKPs8e2db5SMoG/Kg3G7nBP6e3cyr6Q=="
+    }
+  ],
+  "cases": {
+    "h616": {
+      "targetRoot": "source_net_1",
+      "primaryTargetRoot": "source_net_1",
+      "primaryTargetConnection": "source_net_1_mst0",
+      "fallbackTargetNode": "cmn_162",
+      "phase": "other_signals",
+      "phaseIndex": 4,
+      "cohort": "spaced",
+      "sourceSha256": "c8b058094b8346508bb492f7ca71c249cb517fdbe4612c254386821826b99eab",
+      "artifact": {
+        "id": 14483812685,
+        "name": "full-board-h616-published-spaced-1",
+        "size_in_bytes": 4002194,
+        "digest": "sha256:e3d991e37df3f00f9c12223ba1556542e16276cdb9f03bb58a3ce5f1c0d19165",
+        "workflow_run": {
+          "id": 44423458886,
+          "repository_id": 924883209,
+          "head_repository_id": 924883209,
+          "head_branch": "bench/full-board-ten-3242-20261118",
+          "head_sha": "49e9de35db347f94eeeaef9bca48d821ed3be51e"
+        }
+      },
+      "files": {
+        "phase-4-input.srj.json.gz": {
+          "sha256": "4e9572a2246046a2f9ea26cc0ff633eac341bee7f57f6605dd244b4aa154e936",
+          "bytes": 472943,
+          "payloadSha256": "948b9a36ed10b2132947dd6d5fe0a2132b99ccb341be1698f8b509fd9a63608c",
+          "payloadBytes": 3361777
+        },
+        "progress.json": {
+          "sha256": "5fb34db69c8921b2125fe40ae3e3607d09794f3a0dfda21d51cc7ee916084c83",
+          "bytes": 11299
+        }
+      },
+      "nativeCounts": {
+        "connections": 56,
+        "terminals": 143,
+        "obstacles": 1695,
+        "traces": 41,
+        "layerCount": 4
+      },
+      "historicalFailure": "Pipeline9 primary B01 no path for source_net_1_mst0; regional fallback cmn_162 failed. Prior capture geometry cannot be reused."
+    }
+  },
+  "frozenFiles": {
+    ".github/workflows/full-board-ten.yml": {
+      "sha256": "4cc59922690f566f4e5e8b7948a83cbcdf4489d00f23db7efaa23a7303c156a7",
+      "bytes": 5858
+    },
+    "experiments/full-board-ten/bootstrap.py": {
+      "sha256": "23de25ac8960be89afc57ba27b0d3fddb6e65dba593024be59ec5073d266164d",
+      "bytes": 8903
+    },
+    "experiments/full-board-ten/prepare-cases.ts": {
+      "sha256": "b72e632e9c9152c9e5daedf1bb60daa5d86c33fdcc454f2a7825827d24124330",
+      "bytes": 6254
+    },
+    "experiments/full-board-ten/render-published.tsx": {
+      "sha256": "f79daf7c0e6e54239baa6f116cdab1d1f1785f366a320d2c7a8ca0a4fa54b731",
+      "bytes": 14522
+    },
+    "experiments/full-board-ten/run-one.ts": {
+      "sha256": "991764291305fd20e7ab140ee27080eb1efebad0e58ed1530867bfc354cfc340",
+      "bytes": 10746
+    },
+    "experiments/full-board-ten/report.py": {
+      "sha256": "3fa537cd30224a1bdf10a6acd7e293a0a5e8e187c1e2c210b0ed83370a153b5d",
+      "bytes": 4074
+    },
+    "experiments/full-board-ten/calibrate-assessment.tsx": {
+      "sha256": "efeb820cf34239465df53ce4c7932293e41a14dcab4bedb823c3bc60cc9627a0",
+      "bytes": 2714
+    },
+    "experiments/full-board-ten/createCoarseRoutingDiagnostics.ts": {
+      "sha256": "dea45bba3386a9b55b7709834dff65468c421992808b406f54c6f9e556e8b618",
+      "bytes": 18242
+    },
+    "experiments/full-board-ten/source-provenance.json": {
+      "sha256": "bd24be29c5fdd5ae68ce15c5b2bc50f172ecdd325dcc1b57a80ec653d12570fb",
+      "bytes": 23139
+    },
+    "experiments/full-board-ten/package.json": {
+      "sha256": "469e1861d1259cd1307bca324fb0d8ba0a67ea0323d4e728a35c90a2bc92bdf3",
+      "bytes": 87
+    },
+    "experiments/full-board-ten/tsconfig.json": {
+      "sha256": "2e881577c63bb6b62d14abd319240bbc6ae5e206ecb007dae80ab3ec922293c7",
+      "bytes": 208
+    },
+    "experiments/full-board-ten/release.json": {
+      "sha256": "5eece79b055b28bd17e321140949a66f036ceb28573adf108419b5f2f64ddbd4",
+      "bytes": 5677
+    },
+    "experiments/full-board-ten/harness-provenance.json": {
+      "sha256": "fc4b9191002e33b0561d50a2208d38848d81da0735869bb4f563bb9afe1b7405",
+      "bytes": 1479
+    },
+    "experiments/full-board-ten/published-release-provenance.json": {
+      "sha256": "89326fdcc1e99945b98798b0b5b95c60560be6f1f3789184e3bda84464577dc3",
+      "bytes": 19481
+    },
+    "experiments/full-board-ten/runtime/package.json": {
+      "sha256": "c0542a47684ae97ccbe3670fbd2555c3ce0b935e00e8c13aff983442426decda",
+      "bytes": 2804
+    },
+    "experiments/full-board-ten/runtime/bun.lock": {
+      "sha256": "cdf19ae5668a61815a76f9d912b1fbc88907b1f029b2f3dd955f6f81a6cb7b57",
+      "bytes": 72080
+    },
+    "experiments/full-board-ten/autorouter-dependencies/package.json": {
+      "sha256": "7b4c1ecf979432e472a4f0589ed49976a8a1323ff7bf651a5938ee7006b61360",
+      "bytes": 261
+    },
+    "experiments/full-board-ten/autorouter-dependencies/bun.lock": {
+      "sha256": "ec313c582c29c1e35bb31190151a5649198c177119d32fe311746c06e94e8c4e",
+      "bytes": 13144
+    },
+    ".github/workflows/hd-failure-capture.yml": {
+      "sha256": "740e39f6016b627b1bd7e93a39bf4d7fb6452f86ba9d04fdf5783db2ef1301a2",
+      "bytes": 3928
+    },
+    "experiments/full-board-ten/prepare-hd-capture.py": {
+      "sha256": "7d256b7ce67dbb0b3e0bf0f7c46d68380f2d87acc2e572140d0d718bc8f16366",
+      "bytes": 7297
+    },
+    "experiments/full-board-ten/verify-hd-capture.py": {
+      "sha256": "ce1639f8d6d5aa8823ce704f00bc74bef6a29b77c84ad0f98ee612a0fcc08abe",
+      "bytes": 6651
+    },
+    "experiments/full-board-ten/run-hd-capture.ts": {
+      "sha256": "a351eae997190afa2da4cdbc89669bd74e2884ba3b1e866c4b1e19dfe8a422c8",
+      "bytes": 28383
+    }
+  },
+  "frozenBaselinePlan": {
+    "sha256": "3b3d1b99221b1e175eae3f5e6a824b959b9a97f19e67bb2eb3da2ad4704689bf",
+    "bytes": 5489
+  },
+  "qualification": {
+    "nativeRoutingExecuted": false,
+    "pushPerformed": false,
+    "independentReview": "PASS",
+    "scope": "Controller preparation only; no production source changes, topology overrides, solver option changes, or input transformations.",
+    "evidence": {
+      "native-call-capture-handoff.json": {
+        "path": "/workspace/full-board-ten-20261118-3242/h616-b01-readonly-audit/native-call-capture-handoff.json",
+        "sha256": "af0f405fa2fb1dfc7ccab48c501478b6006934223c44a3ea4aa2eef4a7fbebbf"
+      },
+      "native-geometry-transfer-report.json": {
+        "path": "/workspace/full-board-ten-20261118-3242/h616-b01-readonly-audit/native-geometry-transfer-report.json",
+        "sha256": "4bf8be24278998b0f5d84eb62f9a9b2274c9f8ba669351e1823607e3dde7f171"
+      },
+      "observer-contracts.json": {
+        "path": "/workspace/full-board-ten-20261118-3242/h616-hd-controller-preparation/observer-contracts.json",
+        "sha256": "c92ca4cfc5ec1679ae8a3c14f94dc155933b0cb7618b6f735c51d0f26ec7f4b9"
+      },
+      "controller-contracts.json": {
+        "path": "/workspace/full-board-ten-20261118-3242/h616-hd-capture-preparation/controller-contracts.json",
+        "sha256": "26713fdf628ec6da7909d8d858b0342daa231cf5dc82c83c58d59d36f1658cb8"
+      },
+      "independent-controller-review.json": {
+        "path": "/workspace/full-board-ten-20261118-3242/h616-hd-capture-preparation/independent-controller-review.json",
+        "sha256": "8f534ea2e80f67ec9426aaf064fa108821bd24bd44ef5bc6edc314953684bd93"
+      }
+    },
+    "controllerContracts": "12 passed; authentic archive and all four published entries, no imports/routing/network",
+    "observerContracts": "9 passed; synthetic lifecycle observers only, including fifth target failure continuation; no routing/imports",
+    "releaseAuthorization": "Root authorized readiness and local commit; root must verify committed identities before any push or run."
+  }
+}
