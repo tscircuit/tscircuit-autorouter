@@ -701,8 +701,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           inputSrj: cms.srj,
           nodeWithPortPoints: cms.highDensityNodePortPoints ?? [],
           fixedHdRoutes: cms.highDensityRouteSolver!
-            .getUpdatedFixedHdRoutes()
-            .filter((route) => route.isFixed === true),
+            .getUpdatedFixedHdRoutes(),
           hdRoutes: simplifyPipeline9CollinearRoutePoints(
             materializePipeline9HdRouteVias(cms.highDensityRouteSolver!.routes),
           ),
