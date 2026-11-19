@@ -1,0 +1,67 @@
+name: Compare complete native repair context
+on:
+  push:
+    branches: [analysis/native-copper-repair-context]
+    paths: [.github/workflows/native-repair-context.yml]
+permissions:
+  contents: read
+jobs:
+  focused:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        variant: [baseline, force-api, force-combined, force-combined-legacy-bounds]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: e0641e36e11b35d2d590ccdb8ef6749511493b39
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.4.3'
+      - name: Isolate routing and repair context
+        env:
+          VARIANT: ${{ matrix.variant }}
+        run: |
+          python3 - <<'PY'
+          import os,json,urllib.request
+          from pathlib import Path
+          variant=os.environ["VARIANT"]
+          if variant=="baseline":
+              import subprocess
+              subprocess.run(["git","checkout","8bc7eeee1d42c94eb72f32460dc03f54add143e5","--","."],check=True)
+          else:
+              prefix="lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/"
+              for name in ["AutoroutingPipelineSolver9_PreloadedTraceGraph.ts","Pipeline9HighDensityForceImproveSolver.ts","Pipeline9RegionalFallbackSolver.ts"]:
+                  url="https://raw.githubusercontent.com/tscircuit/tscircuit-autorouter/3db2cef321fe8821239903945e3bcc5eb1c94fd9/"+prefix+name
+                  Path(prefix+name).write_bytes(urllib.request.urlopen(url).read())
+              pkg=Path("package.json")
+              data=json.loads(pkg.read_text())
+              sha="3dfd90b982d749c0bf286be39dd16f776692e101" if variant=="force-api" else "eeca3801e32a6b413a5dbfe6e4b72b5858cf2738"
+              data["dependencies"]["high-density-repair01"]="github:tscircuit/high-density-repair01#"+sha
+              pkg.write_text(json.dumps(data,indent=2)+"\n")
+          # Report solver failure, without exporting inputs or route geometry.
+          p=Path("tests/bugs/t113-linux-exact-pipeline9-root.test.ts")
+          s=p.read_text().replace("  expect(solver.solved).toBe(true)",'  console.log("T113_STATUS", JSON.stringify({error:solver.error,stats:solver.stats}))\n  expect(solver.solved).toBe(true)')
+          p.write_text(s)
+          PY
+      - run: bun install
+      - name: Compare ordinary node assignment
+        if: matrix.variant == 'force-combined-legacy-bounds'
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path("node_modules/high-density-repair01/lib/HighDensityForceImproveSolver.ts")
+          s=p.read_text()
+          anchor="      .filter(([nodeIndex, routeIndexes]) => {"
+          assert s.count(anchor)==1
+          s=s.replace(anchor,anchor+"\n        return true\n")
+          p.write_text(s)
+          PY
+      - name: Run unchanged routing and DRC assertions
+        env:
+          BUN_UPDATE_SNAPSHOTS: '1'
+        run: bun test --timeout 9999999 tests/bugs/t113-linux-exact-pipeline9-root.test.ts tests/bugs/bugreport96-full-gameboy-no-breakout.test.ts tests/repro/pipeline9-h616-staged-regional-clearance.test.ts tests/repro/pipeline9-h616-preload-reachability.test.ts tests/features/pipeline9-srj33-sample37-pair-repair.test.ts
