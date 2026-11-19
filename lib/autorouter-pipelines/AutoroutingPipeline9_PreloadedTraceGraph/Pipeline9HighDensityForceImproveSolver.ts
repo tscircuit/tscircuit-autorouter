@@ -1,23 +1,15 @@
 import { createFixedObstacleViolationEvaluator } from "@tscircuit/repair04"
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import { HighDensityForceImproveSolver } from "high-density-repair01/lib/HighDensityForceImproveSolver"
-import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { SimpleRouteJson } from "lib/types"
-import type { HighDensityRoute } from "lib/types/high-density-types"
 import { convertToCircuitJson } from "lib/utils/convertToCircuitJson"
 import { RELAXED_DRC_OPTIONS } from "lib/utils/drcPresets"
-import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 import { getViaToPadClearance } from "lib/utils/getViaToPadClearance"
 import {
   Pipeline9HighDensityForceImproveSampleSolver,
   type Pipeline9HighDensityForceImproveSampleOutput,
 } from "./Pipeline9HighDensityForceImproveSampleSolver"
 import { getFixedCopperObstacleIndexes } from "./getFixedCopperObstacleIndexes"
-import { convertPreloadedTraceToHdRoutes } from "./convertPreloadedTraceToHdRoutes"
-import {
-  arePipeline9RoutesOnSameNet,
-  doPipeline9RoutesHaveCopperConflict,
-} from "./pipeline9FixedRouteCopper"
 
 type ForceImproveParams = ConstructorParameters<
   typeof HighDensityForceImproveSolver
@@ -31,10 +23,6 @@ export class Pipeline9HighDensityForceImproveSolver extends HighDensityForceImpr
   private asyncRunning = false
   private completedSample?: Pipeline9HighDensityForceImproveSampleOutput
   private readonly inputSrj: SimpleRouteJson
-  private readonly fixedCopper?: {
-    routes: HighDensityRoute[]
-    connMap: ConnectivityMap
-  }
   private readonly fixedViaObstacleIndexes: ReadonlySet<number>
   private readonly evaluateFixedObstacles: ReturnType<
     typeof createFixedObstacleViolationEvaluator
@@ -43,26 +31,6 @@ export class Pipeline9HighDensityForceImproveSolver extends HighDensityForceImpr
   constructor(params: ForceImproveParams) {
     super(params)
     this.inputSrj = params.inputSrj
-    const fixedTraces = (params.inputSrj.traces ?? []).filter(
-      (trace): boolean => trace.isFixed === true,
-    )
-    if (fixedTraces.length > 0) {
-      const connMap = getConnectivityMapFromSimpleRouteJson(params.inputSrj)
-      this.fixedCopper = {
-        connMap,
-        routes: fixedTraces.flatMap((trace, index): HighDensityRoute[] =>
-          convertPreloadedTraceToHdRoutes(
-            trace,
-            index,
-            params.inputSrj.layerCount,
-            params.inputSrj.minViaPadDiameter ??
-              params.inputSrj.minViaDiameter ??
-              0.3,
-            connMap,
-          ),
-        ),
-      }
-    }
     const representedPadObstacleIndexes = new Set<number>()
     convertToCircuitJson(params.inputSrj, [], {
       originalSrj: params.inputSrj,
@@ -109,43 +77,8 @@ export class Pipeline9HighDensityForceImproveSolver extends HighDensityForceImpr
     ]
   }
 
-  private createsFixedTraceContact({
-    originalRoutes,
-    candidateRoutes,
-  }: {
-    originalRoutes: HighDensityRoute[]
-    candidateRoutes: HighDensityRoute[]
-  }): boolean {
-    const fixedCopper = this.fixedCopper
-    if (!fixedCopper) return false
-    const clearance =
-      this.inputSrj.minTraceToPadEdgeClearance ??
-      this.inputSrj.defaultObstacleMargin ??
-      RELAXED_DRC_OPTIONS.traceClearance
-    return candidateRoutes.some((candidate, index): boolean =>
-      fixedCopper.routes.some((fixed): boolean => {
-        if (arePipeline9RoutesOnSameNet(candidate, fixed, fixedCopper.connMap)) {
-          return false
-        }
-        const context = {
-          right: fixed,
-          clearance,
-          layerCount: this.inputSrj.layerCount,
-          allowBlindAndBuriedVias: this.inputSrj.allowBlindAndBuriedVias,
-        }
-        return (
-          doPipeline9RoutesHaveCopperConflict({ ...context, left: candidate }) &&
-          !doPipeline9RoutesHaveCopperConflict({
-            ...context,
-            left: originalRoutes[index]!,
-          })
-        )
-      }),
-    )
-  }
-
   private validateImprovedSample(routeIndexes: number[]): void {
-    if (this.fixedViaObstacleIndexes.size === 0 && !this.fixedCopper) return
+    if (this.fixedViaObstacleIndexes.size === 0) return
     const originalRoutes = routeIndexes.map(
       (routeIndex) => this.originalHdRoutes[routeIndex],
     )
@@ -154,32 +87,25 @@ export class Pipeline9HighDensityForceImproveSolver extends HighDensityForceImpr
       if (!route) throw new Error("Force improvement lost a node's candidate")
       return route
     })
-    let worsensViaClearance = false
-    if (this.fixedViaObstacleIndexes.size > 0) {
-      // Leave existing via conflicts to repair without worsening their clearance.
-      const originalSeverityByKey = new Map<ViaClearanceViolationKey, number>(
-        this.evaluateFixedObstacles(originalRoutes)
-          .filter(
-            (violation) =>
-              violation.kind === "via" &&
-              this.fixedViaObstacleIndexes.has(violation.obstacleIndex),
-          )
-          .map((violation) => [violation.key, violation.severity]),
-      )
-      worsensViaClearance = this.evaluateFixedObstacles(
-        candidateRoutes,
-      ).some(
-        (violation) =>
-          violation.kind === "via" &&
-          this.fixedViaObstacleIndexes.has(violation.obstacleIndex) &&
-          violation.severity > (originalSeverityByKey.get(violation.key) ?? 0),
-      )
-    }
-    const createsFixedTraceContact = this.createsFixedTraceContact({
-      originalRoutes,
+    // Leave existing via conflicts to repair without worsening their clearance.
+    const originalSeverityByKey = new Map<ViaClearanceViolationKey, number>(
+      this.evaluateFixedObstacles(originalRoutes)
+        .filter(
+          (violation) =>
+            violation.kind === "via" &&
+            this.fixedViaObstacleIndexes.has(violation.obstacleIndex),
+        )
+        .map((violation) => [violation.key, violation.severity]),
+    )
+    const worsensViaClearance = this.evaluateFixedObstacles(
       candidateRoutes,
-    })
-    if (!worsensViaClearance && !createsFixedTraceContact) return
+    ).some(
+      (violation) =>
+        violation.kind === "via" &&
+        this.fixedViaObstacleIndexes.has(violation.obstacleIndex) &&
+        violation.severity > (originalSeverityByKey.get(violation.key) ?? 0),
+    )
+    if (!worsensViaClearance) return
     // A node's routes move together; accepting only some can introduce peer shorts.
     for (const routeIndex of routeIndexes) {
       this.improvedRoutesByIndex.delete(routeIndex)
