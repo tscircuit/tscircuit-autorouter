@@ -54,6 +54,10 @@ export class ViaPossibilitiesSolver2 extends BaseSolver {
   bounds: Bounds
   maxViaCount: number
   portPairMap: PortPairMap
+  private readonly rootConnectionNameByConnectionName: ReadonlyMap<
+    ConnectionName,
+    ConnectionName
+  >
   colorMap: Record<string, string>
   nodeWidth: number
   availableZ: number[]
@@ -92,6 +96,12 @@ export class ViaPossibilitiesSolver2 extends BaseSolver {
     this.bounds = getBoundsFromNodeWithPortPoints(nodeWithPortPoints)
     this.nodeWidth = this.bounds.maxX - this.bounds.minX
     this.portPairMap = getPortPairMap(nodeWithPortPoints)
+    this.rootConnectionNameByConnectionName = new Map(
+      nodeWithPortPoints.portPoints.map((portPoint) => [
+        portPoint.connectionName,
+        portPoint.rootConnectionName ?? portPoint.connectionName,
+      ]),
+    )
     this.stats.solutionsFound = 0
     this.availableZ = nodeWithPortPoints.availableZ ?? [0, 1]
     this.hyperParameters = hyperParameters ?? {
@@ -203,7 +213,13 @@ export class ViaPossibilitiesSolver2 extends BaseSolver {
     const checkIntersectionsWithPathMap = (
       pathMap: Map<ConnectionName, Point3[]>,
     ) => {
-      for (const path of pathMap.values()) {
+      for (const [connectionName, path] of pathMap) {
+        if (
+          this.rootConnectionNameByConnectionName.get(connectionName) ===
+          this.rootConnectionNameByConnectionName.get(this.currentConnectionName)
+        ) {
+          continue
+        }
         for (let i = 0; i < path.length - 1; i++) {
           const segment: [Point3, Point3] = [path[i], path[i + 1]]
           // Skip checking intersection if segment is just a via (z change)

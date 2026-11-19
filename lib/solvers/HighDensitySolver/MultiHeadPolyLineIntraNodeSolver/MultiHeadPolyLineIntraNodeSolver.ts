@@ -14,6 +14,7 @@ import { safeTransparentize } from "lib/solvers/colors"
 import {
   HighDensityIntraNodeRoute,
   NodeWithPortPoints,
+  PortPoint,
 } from "lib/types/high-density-types"
 import { generateColorMapFromNodeWithPortPoints } from "lib/utils/generateColorMapFromNodeWithPortPoints"
 import { getIntraNodeCrossings } from "lib/utils/getIntraNodeCrossings"
@@ -28,6 +29,21 @@ import { Candidate, MHPoint, PolyLine } from "./types1"
 import { MHPoint2, PolyLine2 } from "./types2"
 import { withinBounds } from "./withinBounds"
 
+type ConnectionName = string
+
+const normalizePortPointRootConnectionName = (
+  portPoint: PortPoint,
+  connMap: ConnectivityMap,
+): PortPoint => {
+  const rootConnectionName =
+    connMap.getNetConnectedToId(
+      portPoint.rootConnectionName ?? portPoint.connectionName,
+    ) ?? portPoint.rootConnectionName
+  return rootConnectionName === portPoint.rootConnectionName
+    ? portPoint
+    : { ...portPoint, rootConnectionName }
+}
+
 export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
   override getSolverName(): string {
     return "MultiHeadPolyLineIntraNodeSolver"
@@ -37,6 +53,10 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
   colorMap: Record<string, string>
   hyperParameters: Partial<HighDensityHyperParameters>
   connMap?: ConnectivityMap
+  private readonly rootConnectionNameByConnectionName: ReadonlyMap<
+    ConnectionName,
+    ConnectionName
+  >
   candidates: Candidate[]
   bounds: { minX: number; maxX: number; minY: number; maxY: number }
   solvedRoutes: HighDensityIntraNodeRoute[] = []
@@ -73,7 +93,21 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
   }) {
     super()
     this.MAX_ITERATIONS = 10e3
-    this.nodeWithPortPoints = params.nodeWithPortPoints
+    const connMap = params.connMap
+    this.nodeWithPortPoints = connMap
+      ? {
+          ...params.nodeWithPortPoints,
+          portPoints: params.nodeWithPortPoints.portPoints.map((portPoint) =>
+            normalizePortPointRootConnectionName(portPoint, connMap),
+          ),
+          portPointsInPairs: params.nodeWithPortPoints.portPointsInPairs?.map(
+            ([start, end]) => [
+              normalizePortPointRootConnectionName(start, connMap),
+              normalizePortPointRootConnectionName(end, connMap),
+            ],
+          ),
+        }
+      : params.nodeWithPortPoints
     this.colorMap =
       params.colorMap ??
       generateColorMapFromNodeWithPortPoints(params.nodeWithPortPoints)
@@ -82,6 +116,12 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
       params.hyperParameters?.SEGMENTS_PER_POLYLINE ?? 3
     this.BOUNDARY_PADDING = params.hyperParameters?.BOUNDARY_PADDING ?? 0.05
     this.connMap = params.connMap
+    this.rootConnectionNameByConnectionName = new Map(
+      this.nodeWithPortPoints.portPoints.map((portPoint) => [
+        portPoint.connectionName,
+        portPoint.rootConnectionName ?? portPoint.connectionName,
+      ]),
+    )
     this.viaDiameter = params.viaDiameter ?? this.viaDiameter
 
     // TODO swap with more sophisticated grid in SingleHighDensityRouteSolver
@@ -144,6 +184,23 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
     }
   }
 
+  protected areConnectionsOnSameNet(
+    firstConnectionName: ConnectionName,
+    secondConnectionName: ConnectionName,
+  ): boolean {
+    const firstRootConnectionName =
+      this.rootConnectionNameByConnectionName.get(firstConnectionName) ??
+      firstConnectionName
+    const secondRootConnectionName =
+      this.rootConnectionNameByConnectionName.get(secondConnectionName) ??
+      secondConnectionName
+    return (
+      firstRootConnectionName === secondRootConnectionName ||
+      this.connMap?.areIdsConnected(firstConnectionName, secondConnectionName) ===
+        true
+    )
+  }
+
   /**
    * minGaps is a list of distances representing the "gap" between segments
    * on each layer.
@@ -182,7 +239,7 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
       // Start j from i + 1 to compare distinct pairs only once
       for (let j = i + 1; j < polyLines.length; j++) {
         if (
-          this.connMap?.areIdsConnected(
+          this.areConnectionsOnSameNet(
             polyLines[i].connectionName,
             polyLines[j].connectionName,
           )
@@ -303,12 +360,13 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
 
     const portPairsEntries = Array.from(portPairs.entries())
 
-    const viaCountVariants = computeViaCountVariants(
+    const viaCountVariants = computeViaCountVariants({
       portPairsEntries,
-      this.SEGMENTS_PER_POLYLINE,
-      this.maxViaCount,
-      this.minViaCount,
-    )
+      segmentsPerPolyline: this.SEGMENTS_PER_POLYLINE,
+      maxViaCount: this.maxViaCount,
+      minViaCount: this.minViaCount,
+      areConnectionsOnSameNet: this.areConnectionsOnSameNet.bind(this),
+    })
 
     const possibleViaPositions = getPossibleInitialViaPositions({
       portPairsEntries,
@@ -367,7 +425,16 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
         })
       }
       const hasClosedSameLayerFace =
-        detectMultiConnectionClosedFacesWithoutVias(polyLines, this.bounds)
+        detectMultiConnectionClosedFacesWithoutVias(
+          polyLines.map((polyLine) => ({
+            ...polyLine,
+            connectionName:
+              this.rootConnectionNameByConnectionName.get(
+                polyLine.connectionName,
+              )!,
+          })),
+          this.bounds,
+        )
 
       if (hasClosedSameLayerFace) continue
 
@@ -470,6 +537,14 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
     // 2. Calculate forces between all pairs of polylines
     for (let i = 0; i < numPolyLines; i++) {
       for (let j = i + 1; j < numPolyLines; j++) {
+        if (
+          this.areConnectionsOnSameNet(
+            polyLines[i].connectionName,
+            polyLines[j].connectionName,
+          )
+        ) {
+          continue
+        }
         const polyLine1 = polyLines[i]
         const polyLine2 = polyLines[j]
 
@@ -1013,9 +1088,12 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
 
         // Dampen force? Add friction? (Optional) - Applied before clamping/boundary force
 
+        // Boundary clamping still applies when shared copper needs no repulsion.
         if (
           Math.abs(netForce.fx) < EPSILON &&
-          Math.abs(netForce.fy) < EPSILON
+          Math.abs(netForce.fy) < EPSILON &&
+          Math.abs(mPoint.x - newX) <= EPSILON &&
+          Math.abs(mPoint.y - newY) <= EPSILON
         ) {
           continue // No significant net force, skip update
         }

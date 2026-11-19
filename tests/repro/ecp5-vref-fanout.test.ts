@@ -26,7 +26,7 @@ import nodeFixture from "tests/fixtures/ecp5-vref-fanout-node.json" with {
 import { getEcp5VrefFanoutPcbSvg } from "tests/fixtures/getEcp5VrefFanoutPcbSvg"
 import { replaceNativePcbTraces } from "tests/fixtures/replaceNativePcbTraces"
 
-test("reproduces the native C2/C3/R1/R2 VREF fanout rejection", async (): Promise<void> => {
+test("routes the native C2/C3/R1/R2 VREF fanout without avoiding its own copper", async (): Promise<void> => {
   const node = nodeFixture as NodeWithPortPoints
   const fixture = JSON.parse(
     gunzipSync(
@@ -64,12 +64,10 @@ test("reproduces the native C2/C3/R1/R2 VREF fanout rejection", async (): Promis
   solver.traceWidth = referenceNet.trace_width
   solver.solve()
 
-  expect(solver.error).toBe(
-    "Not possible to solve problem with given SEGMENTS_PER_POLYLINE (3), atleast 6 vias are required",
-  )
-  expect(solver.solved).toBeFalse()
-  expect(solver.failed).toBeTrue()
-  expect(solver.solvedRoutes).toHaveLength(0)
+  expect(solver.error).toBeNull()
+  expect(solver.solved).toBeTrue()
+  expect(solver.failed).toBeFalse()
+  expect(solver.solvedRoutes).toHaveLength(3)
   expect(node).toEqual(original)
   const traces = solver.solvedRoutes.map(
     (route): SimplifiedPcbTrace => ({

@@ -334,6 +334,14 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
     // Points move only after all forces have been accumulated.
     for (let i = 0; i < numPolyLines; i++) {
       for (let j = i + 1; j < numPolyLines; j++) {
+        if (
+          this.areConnectionsOnSameNet(
+            polyLines[i].connectionName,
+            polyLines[j].connectionName,
+          )
+        ) {
+          continue
+        }
         const { segments: segments1, vias: vias1 } = geometry[i]!
         const { segments: segments2, vias: vias2 } = geometry[j]!
 
@@ -656,10 +664,12 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
 
         // Dampen force? Add friction? (Optional) - Applied before clamping/boundary force
 
-        // Check if the *total applied force* (including boundary) is significant
+        // Boundary clamping still applies when shared copper needs no repulsion.
         if (
           Math.abs(currentForceX) < EPSILON &&
-          Math.abs(currentForceY) < EPSILON
+          Math.abs(currentForceY) < EPSILON &&
+          Math.abs(mPoint.x - newX) <= EPSILON &&
+          Math.abs(mPoint.y - newY) <= EPSILON
         ) {
           continue // No significant force applied in this step, skip update
         }

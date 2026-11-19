@@ -38,14 +38,24 @@ import { doSegmentsIntersect } from "@tscircuit/math-utils"
  *  [2, 1, 0],
  * ]
  */
-export const computeViaCountVariants = (
+export const computeViaCountVariants = ({
+  portPairsEntries,
+  segmentsPerPolyline,
+  maxViaCount,
+  minViaCount,
+  areConnectionsOnSameNet,
+}: {
   portPairsEntries: Array<
     [connectionName: string, { start: MHPoint2; end: MHPoint2 }]
-  >,
-  segmentsPerPolyline: number,
-  maxViaCount: number,
-  minViaCount: number,
-): Array<number[]> => {
+  >
+  segmentsPerPolyline: number
+  maxViaCount: number
+  minViaCount: number
+  areConnectionsOnSameNet: (
+    firstConnectionName: string,
+    secondConnectionName: string,
+  ) => boolean
+}): Array<number[]> => {
   const possibleViaCountsPerPolyline: number[][] = []
 
   for (const [, portPair] of portPairsEntries) {
@@ -96,6 +106,14 @@ export const computeViaCountVariants = (
       if (portPairsEntries[i][1].start.z1 !== portPairsEntries[i][1].start.z2)
         continue
       for (let j = i + 1; j < portPairsEntries.length; j++) {
+        if (
+          areConnectionsOnSameNet(
+            portPairsEntries[i][0],
+            portPairsEntries[j][0],
+          )
+        ) {
+          continue
+        }
         if (portPairsEntries[j][1].start.z1 !== portPairsEntries[j][1].start.z2)
           continue
 

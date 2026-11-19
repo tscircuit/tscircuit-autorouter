@@ -11,11 +11,13 @@ export const getIntraNodeCrossings = (node: NodeWithPortPoints) => {
     points: { x: number; y: number; z: number }[]
     z: number
     connectionName: string
+    rootConnectionName: string
   }[] = []
 
   const transitionPairPoints: {
     points: { x: number; y: number; z: number }[]
     connectionName: string
+    rootConnectionName: string
   }[] = []
 
   for (const A of node.portPoints) {
@@ -29,6 +31,7 @@ export const getIntraNodeCrossings = (node: NodeWithPortPoints) => {
     }
     const pointPair = {
       connectionName: A.connectionName,
+      rootConnectionName: A.rootConnectionName ?? A.connectionName,
       z: A.z,
       points: [{ x: intSpace(A.x), y: intSpace(A.y), z: A.z }],
     }
@@ -51,6 +54,7 @@ export const getIntraNodeCrossings = (node: NodeWithPortPoints) => {
     for (let j = i + 1; j < pointPairs.length; j++) {
       const pair1 = pointPairs[i]
       const pair2 = pointPairs[j]
+      if (pair1.rootConnectionName === pair2.rootConnectionName) continue
       if (
         pair1.z === pair2.z &&
         doSegmentsIntersect(
@@ -70,6 +74,7 @@ export const getIntraNodeCrossings = (node: NodeWithPortPoints) => {
     for (let j = i + 1; j < transitionPairPoints.length; j++) {
       const pair1 = transitionPairPoints[i]
       const pair2 = transitionPairPoints[j]
+      if (pair1.rootConnectionName === pair2.rootConnectionName) continue
 
       if (
         doSegmentsIntersect(
