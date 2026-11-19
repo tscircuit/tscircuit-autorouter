@@ -47,5 +47,5 @@
       "sha256": "2e881577c63bb6b62d14abd319240bbc6ae5e206ecb007dae80ab3ec922293c7"
     }
   ],
-  "diagnosticInstrumentation": "Same native3244 routing with bounded TOP-LEVEL bus observation:256 retained transitions,allphasecounters,5secondflush. Nested same-class instances are excluded. Corrects excessive logger overhead and nested-instance mixing in first ButterStick spaced attempt. No routing input/settings/budget/source changes."
+  "diagnosticInstrumentation": "Same native3244 routing with bounded TOP-LEVEL bus observation:256 retained transitions,allphasecounters,5secondflush. Nested same-class instances are excluded. Corrects excessive logger overhead and nested-instance mixing in first iMX6 spaced attempt. No routing input/settings/budget/source changes."
 }

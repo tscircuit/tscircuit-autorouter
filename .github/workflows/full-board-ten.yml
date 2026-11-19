@@ -1,8 +1,8 @@
-name: Published3244 bounded ButterStick bus process analysis
+name: Published3244 bounded iMX6 bus process analysis
 
 on:
   push:
-    branches: [bench/process-bus-light-3244-20261119]
+    branches: [bench/process-imx-light-3244-20261119]
 
 permissions:
   contents: read
@@ -17,7 +17,7 @@ jobs:
       max-parallel: 5
       matrix:
         include:
-          - { board: butterstick, experiment: published, cohorts: "spaced" }
+          - { board: imx6, experiment: published, cohorts: "spaced" }
     env:
       FULL_BOARD_ROOT: ${{ github.workspace }}/.full-board-run
       FULL_BOARD_RUNTIME_MANIFEST: ${{ github.workspace }}/.full-board-run/runtime-manifest.json

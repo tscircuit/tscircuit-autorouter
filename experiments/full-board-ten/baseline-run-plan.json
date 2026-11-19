@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "purpose": "Qualified bounded top-level logger rerun of only ButterStick spaced after previous observation overhead invalidated completion comparison",
+  "purpose": "Qualified bounded top-level logger rerun of only iMX6 spaced after previous observation overhead invalidated completion comparison",
   "mainVersion": "0.0.3244",
   "priorBaseline": {
     "mainVersion": "0.0.3243",
@@ -8,7 +8,7 @@
     "controllerCommit": "14176a107694e38d70afc7e6653cf4bb6755e869"
   },
   "workflow": ".github/workflows/full-board-ten.yml",
-  "branch": "bench/process-bus-light-3244-20261119",
+  "branch": "bench/process-imx-light-3244-20261119",
   "runner": "blacksmith-8vcpu-ubuntu-2404-arm",
   "jobs": 1,
   "maxParallel": 1,
@@ -22,12 +22,12 @@
   "jobTimeoutMinutes": 45,
   "cases": [
     {
-      "id": "butterstick",
+      "id": "imx6",
       "cohort": "spaced",
-      "expectedRoutableNets": 317
+      "expectedRoutableNets": 404
     }
   ],
-  "expectedRoutableNetsTotal": 317,
+  "expectedRoutableNetsTotal": 404,
   "sourceOverrides": false,
   "routingSourceOverrides": false,
   "dependencyOverrides": [],
@@ -36,8 +36,8 @@
   "assessmentPolicy": "Authentic cohort assessor sources and controller policy are unchanged. Assessors resolve published3243, including unchanged Checks282 and published Core2425 copper helper. All actual package graph changes are recorded; no source overrides.",
   "frozenFiles": {
     ".github/workflows/full-board-ten.yml": {
-      "bytes": 5650,
-      "sha256": "6a0a3b90afb0f6415e8932646d3c28871219aa09e8f01600585e03e0fa740c0d"
+      "bytes": 5636,
+      "sha256": "d3e7c04b2282126d40d9226efbfe79785f96ae93d4138698f26a869af0a7a146"
     },
     "experiments/full-board-ten/bootstrap.py": {
       "bytes": 8903,
@@ -80,8 +80,8 @@
       "sha256": "8254b27fb22466c26a0c3d88cbe1abe430e3410b9d302dc3a93dc146b1a21142"
     },
     "experiments/full-board-ten/harness-provenance.json": {
-      "bytes": 1764,
-      "sha256": "2d3190a8ded75aa32a7d59e2ca4c8aafbfa0d97ad7c2ac24c384a165e6db3fdf"
+      "bytes": 1757,
+      "sha256": "b6df716a00ce3794f5c2f50e84d1c1c2124415d1824dd22f2fde523df0238cb0"
     },
     "experiments/full-board-ten/published-release-provenance.json": {
       "bytes": 108648,
@@ -109,9 +109,9 @@
   "observationPolicy": "No solver input/options/budget or source changes. Passive method wrappers. Observer time recorded, not subtracted from native deadlines. Capture limits omit diagnostics only, never stop or redirect routing.",
   "replacesContaminatedCase": {
     "runId": 44514077848,
-    "artifactId": 14525319328,
-    "observationMs": 617500,
-    "reason": "Nested bus instances mixed into shared phase history, rewritten on each change;0connected cannotbeusedasreleasecomparison."
+    "artifactId": 14527241093,
+    "observationMs": 585525.368,
+    "reason": "Nested bus instances mixed into shared phase history; repeated writes consumed routing deadline.16 connected cannot be used as release comparison."
   },
   "loggerQualification": {
     "nativeTransitionHistoryReplayed": 7806,
