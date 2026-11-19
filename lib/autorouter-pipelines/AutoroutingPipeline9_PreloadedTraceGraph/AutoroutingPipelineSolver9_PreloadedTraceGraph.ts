@@ -722,6 +722,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           hdRoutes:
             cms.highDensityForceImproveSolver?.getOutput() ??
             cms.highDensityRouteSolver!.routes,
+          fixedHdRoutes: cms.highDensityRouteSolver!.getUpdatedFixedHdRoutes(),
           obstacles: cms.srj.obstacles,
           colorMap: cms.colorMap,
           repairMargin: cms.srj.defaultObstacleMargin ?? 0.2,

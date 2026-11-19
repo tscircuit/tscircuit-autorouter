@@ -267,6 +267,9 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
     const repairSolver = new Pipeline4HighDensityRepairSolver({
       nodeWithPortPoints: [this.params.nodeWithPortPoints],
       hdRoutes: forceImprovedRoutes,
+      fixedHdRoutes: this.params.fixedHdRoutes,
+      layerCount: this.params.layerCount,
+      allowBlindAndBuriedVias: this.params.allowBlindAndBuriedVias,
       obstacles: this.params.obstacles,
       colorMap: this.params.colorMap,
       repairMargin: this.params.obstacleMargin,
