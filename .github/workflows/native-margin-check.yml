@@ -1,4 +1,4 @@
-name: Verify final native DRC and bounded repair convergence
+name: Verify existing shared-via repair on native circuits
 on:
   push:
     branches: [analysis/native-complete-cleanup-context]
@@ -12,16 +12,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - variant: midi-consistency
-            source: 896e20783c83a4afb9554e5ab8a81fec203e8ca7
-            tests: tests/bugs/usb-dp-phase-detour.test.ts
-          - variant: parent-fine
-            source: 1d5168a1411831d5411d93bb01e43da28522bbb9
-            tests: tests/bugs/bugreport96-full-gameboy-no-breakout.test.ts
-          - variant: leaf-fine
-            source: 896e20783c83a4afb9554e5ab8a81fec203e8ca7
-            tests: tests/bugs/bugreport96-full-gameboy-no-breakout.test.ts
+        source: [1d5168a1411831d5411d93bb01e43da28522bbb9, 896e20783c83a4afb9554e5ab8a81fec203e8ca7]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -32,48 +23,20 @@ jobs:
         with:
           bun-version: '1.4.3'
       - run: git checkout 896e20783c83a4afb9554e5ab8a81fec203e8ca7 -- lib/utils/convertToCircuitJson.ts
-      - name: Observe final native and reference counts
-        if: matrix.variant == 'midi-consistency'
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          p=Path("tests/bugs/usb-dp-phase-detour.test.ts")
-          s=p.read_text()
-          s='import { createPipeline9AutoroutingDrcEvaluator } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/createPipeline9AutoroutingDrcEvaluator"\n'+s
-          marker="  expect(evaluateRelaxedDrc(drcInput).errors).toEqual([])"
-          extra="""  const nativeOutput = createPipeline9AutoroutingDrcEvaluator({
-              inputSrj: output, srjWithPointPairs: solver.srjWithPointPairs!, includeBoardClearance: true,
-            })([])
-            const nativeInput = createPipeline9AutoroutingDrcEvaluator({
-              inputSrj: srj, srjWithPointPairs: solver.srjWithPointPairs!, includeBoardClearance: true,
-            })(solver.getOutputSimplifiedPcbTraces())
-            const reference = evaluateRelaxedDrc(drcInput)
-            console.log("MIDI_FINAL_DRC_COUNTS", JSON.stringify({
-              nativeFromOutput:nativeOutput.errors.length,
-              nativeFromInput:nativeInput.errors.length,
-              reference:reference.errors.length,
-              nativeViaPad:nativeOutput.errors.filter(error => error.type === "pcb_pad_pad_clearance_error").length,
-              referenceViaPad:reference.errors.filter(error => error.type === "pcb_pad_pad_clearance_error").length,
-              nativePadCount:nativeOutput.circuitJson.filter(element => element.type === "pcb_smtpad" || element.type === "pcb_plated_hole").length,
-              referencePadCount:reference.circuitJson.filter(element => element.type === "pcb_smtpad" || element.type === "pcb_plated_hole").length,
-            }))
-          """
-          assert s.count(marker)==1
-          p.write_text(s.replace(marker,extra+marker))
-          PY
       - run: bun install
-      - name: Let existing bounded fine repair continue until convergence
-        if: matrix.variant != 'midi-consistency'
+      - name: Test the existing one-line repair03 PR 166 on the current dependency
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          p=Path("node_modules/high-density-repair03/lib/solvers/GlobalDrcForceImproveSolver/TraceContactRepairSolver.ts")
+          p=Path("node_modules/high-density-repair03/lib/solvers/GlobalDrcForceImproveSolver/solverHelpers.ts")
           s=p.read_text()
-          old="      if (this.fineViaAdjustment) this.finish()\n      else this.startViaRound()"
-          assert s.count(old)==1
-          p.write_text(s.replace(old,"      this.startViaRound()",1))
+          a=s.index("const moveViaAwayFromPoint =")
+          b=s.index("\ntype SegmentContact",a)
+          method=s[a:b]
+          assert method.count("return moveVia(")==1
+          p.write_text(s[:a]+method.replace("return moveVia(","return translateSameRootViaSite(",1)+s[b:])
           PY
-      - name: Keep original physical routing assertions
+      - name: Keep original routing, physical-clearance and via-count assertions
         env:
           BUN_UPDATE_SNAPSHOTS: '1'
-        run: bun test --timeout 9999999 ${{ matrix.tests }}
+        run: bun test --timeout 9999999 tests/bugs/bugreport96-full-gameboy-no-breakout.test.ts tests/bugs/usb-dp-phase-detour.test.ts tests/repro/pipeline9-h616-portfolio-candidate-clearance.test.ts
