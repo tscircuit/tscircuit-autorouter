@@ -9,7 +9,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        revision: ["ae13569eb35dccc74e99708794cb2135a5c3ddc0", "e4edfc8122093bf7c6d67677f4cdc3344ef3983e", "03592d5e9b8045118dbcd1b0f7a515a030d18541", "a5987fb9c97f11a4145e8e0ca3ecc3498cbf6639", "56d05b945a5507df97acc7acb3c369393c875636"]
+        revision: ["ae13569eb35dccc74e99708794cb2135a5c3ddc0", "e4edfc8122093bf7c6d67677f4cdc3344ef3983e", "66b1f5ec09731837a991ddee489cb7ce3949a964", "2280363a17aec48409653b8abd0ce4d22a70ef7b", "ff2f931affb820e21517c471d5670f67d1112ced"]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
