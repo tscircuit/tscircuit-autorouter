@@ -17,8 +17,8 @@
     "candidateAutorouterSha256": "7f9aad1b371eabaf935df6551b01dde711b357140121ab81d03db0e6ba90b251"
   },
   "assessmentPolicy": "Restore exact published runtime before independent physical connectivity and geometry assessment; report gained/lost names and partial/deadline states.",
-  "qualificationReady": false,
-  "status": "HELD_QUALIFIED_PENDING_ROOT_RELEASE",
+  "qualificationReady": true,
+  "status": "READY_ROOT_RELEASED",
   "branch": "bench/full-board-cramped-guard-3242-20261119",
   "workflow": ".github/workflows/full-board-cramped-guard.yml",
   "baselineController": "49e9de35db347f94eeeaef9bca48d821ed3be51e",
