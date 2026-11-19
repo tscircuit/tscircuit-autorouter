@@ -25,6 +25,7 @@ export type RawPort = {
   regions: RegionHg[]
   tinyHypergraphPortPenalty?: number
   _preloadedFixedNetIds?: string[]
+  _preloadedCopperNetIds?: string[]
   _preloadedTracePortAssignments?: PreloadedTracePortAssignment[]
 }
 

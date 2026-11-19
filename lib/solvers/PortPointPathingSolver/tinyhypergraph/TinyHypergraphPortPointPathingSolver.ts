@@ -1,3 +1,4 @@
+import type { NetId as SrjNetId } from "lib/types"
 import type { SerializedHyperGraph } from "@tscircuit/hypergraph"
 import type { GraphicsObject } from "graphics-debug"
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
@@ -199,6 +200,7 @@ type TinyPortMetadata = {
   tinyHypergraphPortPenalty?: number
   duplicatedFromPortId?: string
   _preloadedFixedNetIds?: string[]
+  _preloadedCopperNetIds?: SrjNetId[]
   _preloadedTracePortAssignments?: PreloadedTracePortAssignment[]
 }
 
@@ -439,6 +441,7 @@ const toSerializedPortData = (
     tinyHypergraphPortPenalty: port.d.tinyHypergraphPortPenalty,
     cramped: port.d.cramped,
     _preloadedFixedNetIds: port.d._preloadedFixedNetIds,
+    _preloadedCopperNetIds: port.d._preloadedCopperNetIds,
     _preloadedTracePortAssignments: port.d._preloadedTracePortAssignments,
   }
 }
@@ -745,8 +748,8 @@ const buildInputNodesWithPortPoints = (
   })
 }
 
-const applyTerminalRegionNetIds = (loaded: LoadedTinyGraph) => {
-  const netIndexById = new Map<string, number>()
+const applyGraphNetReservations = (loaded: LoadedTinyGraph) => {
+  const netIndexById = new Map<SrjNetId, number>()
   for (let routeId = 0; routeId < loaded.problem.routeNet.length; routeId++) {
     const routeMetadata = loaded.problem.routeMetadata?.[routeId]
     const netId = routeMetadata?.mutuallyConnectedNetworkId
@@ -772,6 +775,25 @@ const applyTerminalRegionNetIds = (loaded: LoadedTinyGraph) => {
     }
     loaded.problem.regionNetId[regionIndex] = netIndex
   }
+
+  if (loaded.problem.portNetId) return
+  let portNetId: Int32Array | undefined
+  for (let portIndex = 0; portIndex < loaded.topology.portCount; portIndex++) {
+    const metadata = loaded.topology.portMetadata?.[portIndex] as
+      | TinyPortMetadata
+      | undefined
+    const fixedNetIds = metadata?._preloadedCopperNetIds
+    if (!fixedNetIds?.length) continue
+    portNetId ??= new Int32Array(loaded.topology.portCount).fill(-1)
+    // Different copper nets cannot share this crossing. A net absent from the
+    // route list also has no active route that could legally use its copper.
+    let reservedNetIndex = -2
+    if (fixedNetIds.length === 1) {
+      reservedNetIndex = netIndexById.get(fixedNetIds[0]!) ?? -2
+    }
+    portNetId[portIndex] = reservedNetIndex
+  }
+  if (portNetId) loaded.problem.portNetId = portNetId
 }
 
 const restorePreloadedTraceSectionMetadata = (
@@ -967,7 +989,7 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
     const metadataPortPenaltyCount = applyMetadataPortPenalties(loaded)
     const { duplicatePortPenaltyCount, crampedPortPenaltyCount } =
       applyPortMetadataPenalties(loaded, this.crampedPortTraversalPenalty)
-    applyTerminalRegionNetIds(loaded)
+    applyGraphNetReservations(loaded)
     clearPreloadedEndpointRegionNetIds(loaded)
     this.metadataPortPenaltyCount = Math.max(
       this.metadataPortPenaltyCount,
@@ -1035,7 +1057,7 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
     ) {
       const loadedSolver = solver as typeof solver & LoadedTinyGraph
       applyMetadataPortPenalties(loadedSolver)
-      applyTerminalRegionNetIds(loadedSolver)
+      applyGraphNetReservations(loadedSolver)
       clearPreloadedEndpointRegionNetIds(loadedSolver)
     }
 

@@ -2,9 +2,12 @@ import { pointToSegmentDistance } from "@tscircuit/math-utils"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { FlatbushIndex } from "lib/data-structures/FlatbushIndex"
 import type { SimpleRouteJson } from "lib/types"
-import type { HighDensityRoute, PortPoint } from "lib/types/high-density-types"
+import type { PortPoint } from "lib/types/high-density-types"
 import { RELAXED_DRC_OPTIONS } from "lib/utils/drcPresets"
-import { convertPreloadedTraceToHdRoutes } from "./convertPreloadedTraceToHdRoutes"
+import {
+  convertPreloadedTraceToHdRoutes,
+  type PreloadedHighDensityRoute,
+} from "./convertPreloadedTraceToHdRoutes"
 import {
   arePipeline9RoutesOnSameNet,
   getPipeline9RouteCopperGeometry,
@@ -12,31 +15,36 @@ import {
 
 type Point = { x: number; y: number }
 type CopperPrimitive = {
-  route: HighDensityRoute
+  route: PreloadedHighDensityRoute
   start: Point
   end: Point
   minZ: number
   maxZ: number
   radius: number
 }
+type PreloadedCopperInput = {
+  srj: SimpleRouteJson
+  connMap: ConnectivityMap
+  traceWidth: number
+  viaDiameter: number
+}
+type PortBlockerLookup = (
+  point: Pick<PortPoint, "x" | "y" | "z">,
+  options?: { includeClearance?: boolean },
+) => PreloadedHighDensityRoute[]
 type PortValidator = (
   point: PortPoint,
   options?: { includeClearance?: boolean },
 ) => boolean
 
-/** Validate crossings against preloaded wire and via copper. */
-export function createPreloadedPortValidator({
+/** Find copper whose clearance envelope covers a board-world crossing. */
+export function createPreloadedPortBlockerLookup({
   srj,
   connMap,
   traceWidth,
   viaDiameter,
-}: {
-  srj: SimpleRouteJson
-  connMap: ConnectivityMap
-  traceWidth: number
-  viaDiameter: number
-}): PortValidator {
-  if (!srj.traces?.length) return () => true
+}: PreloadedCopperInput): PortBlockerLookup {
+  if (!srj.traces?.length) return () => []
   const copper: CopperPrimitive[] = srj.traces.flatMap((trace, index) =>
     convertPreloadedTraceToHdRoutes(
       trace,
@@ -92,13 +100,24 @@ export function createPreloadedPortValidator({
         point.x + radius,
         point.y + radius,
       )
-      .every(
+      .filter(
         (primitive) =>
-          point.z < primitive.minZ ||
-          point.z > primitive.maxZ ||
-          arePipeline9RoutesOnSameNet(point, primitive.route, connMap) ||
-          pointToSegmentDistance(point, primitive.start, primitive.end) >=
+          point.z >= primitive.minZ &&
+          point.z <= primitive.maxZ &&
+          pointToSegmentDistance(point, primitive.start, primitive.end) <
             primitive.radius + radius,
       )
+      .map((primitive) => primitive.route)
   }
+}
+
+/** Validate crossings against preloaded wire and via copper. */
+export function createPreloadedPortValidator(
+  input: PreloadedCopperInput,
+): PortValidator {
+  const getBlockers = createPreloadedPortBlockerLookup(input)
+  return (point, options): boolean =>
+    getBlockers(point, options).every((route) =>
+      arePipeline9RoutesOnSameNet(point, route, input.connMap),
+    )
 }
