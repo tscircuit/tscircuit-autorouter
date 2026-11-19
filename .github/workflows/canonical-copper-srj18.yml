@@ -1,0 +1,66 @@
+name: Paired canonical-copper dataset18 comparison
+on:
+  push:
+    branches: [analysis/canonical-copper-srj18]
+    paths: [.github/workflows/canonical-copper-srj18.yml]
+permissions:
+  contents: read
+jobs:
+  benchmark:
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 90
+    env:
+      BENCHMARK_TASK_TIMEOUT_PER_EFFORT_MS: '360000'
+      BENCHMARK_TERMINATE_TIMEOUT_MS: '1000'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 1b6aba03295a1a3b1bdffd79523e8ddbd8e8c4c8
+          path: same-machine-controller
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: 1b6aba03295a1a3b1bdffd79523e8ddbd8e8c4c8
+          path: same-machine-base
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: e8d8d93bc3b6555d514bae10d317fa37289f4c62
+          path: same-machine-pr
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.4.3'
+      - run: bun install
+        working-directory: same-machine-base
+      - run: bun install
+        working-directory: same-machine-pr
+      - name: Run both revisions with the repository comparison harness
+        working-directory: same-machine-controller
+        env:
+          BENCHMARK_DATASET: srj18
+          BENCHMARK_ARGS_JSON: '["--solver","AutoroutingPipelineSolver9_PreloadedTraceGraph","--dataset","srj18","--effort","1","--concurrency","3","--sample-timeout","360s"]'
+        run: bun scripts/benchmark/runSameMachineBenchmarks.ts
+      - name: Report counts and timings without circuit geometry
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          aggregate={}
+          fields=["sampleNumber","didSolve","didTimeout","relaxedDrcPassed","elapsedTimeMs","peakRssBytes","viaCount","drcErrorCount","drcErrorTypes","traceLintIssueCounts","stageTiming","routingMetrics"]
+          for revision in ["base","pr"]:
+            path=Path("same-machine-results")/revision/"benchmark-result.json"
+            if not path.exists():
+              aggregate[revision]={"reportProduced":False}
+              continue
+            report=json.loads(path.read_text())
+            aggregate[revision]={"reportProduced":True,"dataset":report["datasetName"],"runtime":report.get("runtime"),"scenarioCount":report["scenarioCount"],"effortLabel":report["effortLabel"],"summary":report["summary"],"tests":[{key:row.get(key) for key in fields} for row in report["tests"]]}
+          Path("paired-aggregate.json").write_text(json.dumps(aggregate,indent=2))
+          print("SRJ18_AGGREGATE="+json.dumps(aggregate))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: canonical-copper-srj18-aggregate
+          path: paired-aggregate.json
