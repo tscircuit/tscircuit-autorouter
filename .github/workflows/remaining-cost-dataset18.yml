@@ -1,0 +1,72 @@
+name: Remaining-cost Dataset 18 comparison
+on:
+  push:
+    branches: [bench/remaining-cost-dataset18-20261119]
+permissions:
+  contents: read
+jobs:
+  compare:
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 90
+    env:
+      BENCHMARK_TASK_TIMEOUT_PER_EFFORT_MS: "60000"
+      BENCHMARK_HEARTBEAT_INTERVAL_MS: "30000"
+      BENCHMARK_TERMINATE_TIMEOUT_MS: "1000"
+      BENCHMARK_ARGS_JSON: '["--pipeline","9","--dataset","srj18","--concurrency","2"]'
+      BENCHMARK_DATASET: srj18
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 8bc7eeee1d42c94eb72f32460dc03f54add143e5
+          path: same-machine-controller
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: 8bc7eeee1d42c94eb72f32460dc03f54add143e5
+          path: same-machine-base
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: 5e66758e5a632ad968ffe32eab43d694d3bb92af
+          path: same-machine-pr
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Install control dependencies
+        working-directory: same-machine-base
+        run: bun install
+      - name: Resolve candidate from the same dependency lock
+        run: |
+          cp same-machine-base/bun.lock same-machine-pr/bun.lock
+          cd same-machine-pr
+          bun install
+      - name: Verify dependency isolation
+        run: |
+          python3 - <<'PYTHON'
+          import json,re,hashlib
+          from pathlib import Path
+          def read(path):
+            text=Path(path).read_text()
+            return json.loads(re.sub(r',\s*([}\]])',r'\1',re.sub(r'^\s*//.*$','',text,flags=re.M)))
+          base=read('same-machine-base/bun.lock');candidate=read('same-machine-pr/bun.lock')
+          changed=[key for key in set(base['packages'])|set(candidate['packages']) if base['packages'].get(key)!=candidate['packages'].get(key)]
+          assert changed==['tiny-hypergraph'],changed
+          assert '27174da103a3408d31373035bb6cf0ffd79911df' in Path('same-machine-pr/package.json').read_text()
+          Path('dependency-proof.json').write_text(json.dumps({'base':'8bc7eeee1d42c94eb72f32460dc03f54add143e5','candidate':'5e66758e5a632ad968ffe32eab43d694d3bb92af','changedPackages':changed,'locks':{lane:hashlib.sha256(Path(f'same-machine-{lane}/bun.lock').read_bytes()).hexdigest() for lane in ['base','pr']}},indent=2))
+          PYTHON
+      - name: Run stock same-machine benchmark
+        working-directory: same-machine-controller
+        run: bun scripts/benchmark/runSameMachineBenchmarks.ts
+      - name: Preserve comparison
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: remaining-cost-dataset18
+          path: |
+            same-machine-results
+            dependency-proof.json
+            same-machine-base/bun.lock
+            same-machine-pr/bun.lock
+          if-no-files-found: error
+          retention-days: 7
