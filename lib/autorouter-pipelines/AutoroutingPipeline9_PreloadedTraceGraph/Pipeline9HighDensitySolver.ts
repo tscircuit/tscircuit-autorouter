@@ -776,18 +776,15 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     // Regional repairs can leave the original mesh cell. Neighboring nodes'
     // completed ordinary traces must remain copper constraints during repair.
     const regionalBounds = getNodeBounds(regionalNode, this.obstacleMargin)
-    let routedCopperRoutes: HighDensityRoute[] = []
-    if (this.fixedHdRoutes.length > 0) {
-      routedCopperRoutes = this.routes.filter((route) =>
-        routeOverlapsNode(
-          route,
-          regionalNode,
-          regionalBounds,
-          Math.max(this.traceWidth, this.viaDiameter) / 2,
-          this,
-        ),
-      )
-    }
+    const routedCopperRoutes = this.routes.filter((route) =>
+      routeOverlapsNode(
+        route,
+        regionalNode,
+        regionalBounds,
+        Math.max(this.traceWidth, this.viaDiameter) / 2,
+        this,
+      ),
+    )
     const regionalCopperRoutes = [
       ...this.activeFallbackFixedObstacleRoutes,
       ...routedCopperRoutes,
