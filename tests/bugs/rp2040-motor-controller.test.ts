@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import { getPendingEffectsFromSolverTree } from "lib/solvers/getPendingEffectsFromSolverTree"
+import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { getBugReportSnapshotSvg } from "lib/testing/getBugReportSnapshotSvg"
 import type { SimpleRouteJson } from "lib/types"
 import capturedInput from "../../fixtures/bug-reports/rp2040-motor-controller/rp2040-motor-controller.srj.json" with {
@@ -23,6 +24,14 @@ test("RP2040 motor controller: default Pipeline 9 relaxed DRC", async (): Promis
 
   expect(solver.failed, solver.error ?? "").toBe(false)
   expect(solver.solved).toBe(true)
+  const routedTraces = solver.getOutputSimplifiedPcbTraces()
+  expect(
+    evaluateRelaxedDrc({
+      inputSrj: input,
+      srjWithPointPairs: solver.srjWithPointPairs!,
+      routedTraces,
+    }).errors,
+  ).toEqual([])
   // Native routing can produce different route variants across platforms.
   const snapshotPath =
     process.platform === "linux"
@@ -32,7 +41,7 @@ test("RP2040 motor controller: default Pipeline 9 relaxed DRC", async (): Promis
     getBugReportSnapshotSvg({
       inputSrj: input,
       srjWithPointPairs: solver.srjWithPointPairs!,
-      routedTraces: solver.getOutputSimplifiedPcbTraces(),
+      routedTraces,
     }),
   ).toMatchSvgSnapshot(snapshotPath)
 })
