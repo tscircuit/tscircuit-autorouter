@@ -13,7 +13,7 @@ jobs:
       fail-fast: false
       max-parallel: 3
       matrix:
-        variant: [validate, physical, force]
+        variant: [budget, budget-force, budget-physical]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -37,7 +37,7 @@ jobs:
           old="    if (hasImmutablePreload) {"
           assert source.count(old)==1
           source=source.replace(old,"    {")
-          if variant=="physical":
+          if variant=="budget-physical":
               source=source.replace("hasImmutablePreload && regionalCopperRoutes.length > 0","regionalCopperRoutes.length > 0")
           old='''      immutableHdRoutes: this.activeFallbackFixedObstacleRoutes.filter(
                   (route) => route.isFixed === true || route.isThroughObstacle === true,
@@ -48,7 +48,7 @@ jobs:
           source,n=re.subn(r"immutableHdRoutes: this.activeFallbackFixedObstacleRoutes.filter\(\s*\(route\) => route.isFixed === true \|\| route.isThroughObstacle === true,\s*\),", "immutableHdRoutes: regionalCopperRoutes,", source)
           assert n==1
           p.write_text(source)
-          if variant=="force":
+          if variant=="budget-force":
               for name in ["AutoroutingPipelineSolver9_PreloadedTraceGraph.ts","Pipeline9HighDensityForceImproveSolver.ts","Pipeline9RegionalFallbackSolver.ts"]:
                   url="https://raw.githubusercontent.com/tscircuit/tscircuit-autorouter/3db2cef321fe8821239903945e3bcc5eb1c94fd9/"+prefix+name
                   Path(prefix+name).write_bytes(urllib.request.urlopen(url).read())
@@ -56,6 +56,17 @@ jobs:
               data=json.loads(pkg.read_text())
               data["devDependencies"]["high-density-repair01"]="github:tscircuit/high-density-repair01#eeca3801e32a6b413a5dbfe6e4b72b5858cf2738"
               pkg.write_text(json.dumps(data,indent=2)+"\n")
+          if variant=="budget-force":
+              package=Path("package.json")
+              data=json.loads(package.read_text())
+              data["devDependencies"]["high-density-repair01"]="git+https://github.com/tscircuit/high-density-repair01.git#eeca3801e32a6b413a5dbfe6e4b72b5858cf2738"
+              package.write_text(json.dumps(data,indent=2)+"\n")
+          p=Path("lib/solvers/HighDensitySolver/IntraNodeSolver.ts")
+          s=p.read_text()
+          old="this.MAX_ITERATIONS = 1_000 * this.totalConnections ** 1.5"
+          assert s.count(old)==1
+          s=s.replace(old, old+"\n    if (this.fixedHdRoutes.length > 0) {\n      this.MAX_ITERATIONS = Math.max(this.MAX_ITERATIONS, 10_000 * this.totalConnections)\n    }")
+          p.write_text(s)
           # Report solver failure, without exporting inputs or route geometry.
           p=Path("tests/bugs/t113-linux-exact-pipeline9-root.test.ts")
           s=p.read_text().replace("  expect(solver.solved).toBe(true)",'  console.log("T113_STATUS", JSON.stringify({error:solver.error,stats:solver.stats}))\n  expect(solver.solved).toBe(true)')
