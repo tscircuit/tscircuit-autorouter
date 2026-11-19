@@ -145,6 +145,7 @@ export class Pipeline9HighDensityForceImproveSolver extends HighDensityForceImpr
           runtime
             .executeAsync(Pipeline9HighDensityForceImproveSampleSolver, {
               nodeWithPortPoints: [entry.node],
+              fixedHdRoutes: this.getFixedRoutesForNode(entry.node),
               hdRoutes: entry.routeIndexes.map(
                 (routeIndex) => this.originalHdRoutes[routeIndex],
               ),
