@@ -1,0 +1,43 @@
+name: Isolate remaining Game Boy regression
+on:
+  push:
+    branches: [analysis/native-complete-cleanup-context]
+    paths: [.github/workflows/native-gba-isolation.yml]
+permissions:
+  contents: read
+jobs:
+  original:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: [current, old-growth, old-intranode, old-node-repair]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 75a6381c6985cd48f91b30516a828f6a771cfce0
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.4.3'
+      - name: Isolate changes without changing the fixture or assertions
+        env:
+          VARIANT: ${{ matrix.variant }}
+        run: |
+          python3 - <<'PY'
+          import os,subprocess
+          paths={
+            "old-growth":"lib/solvers/HyperHighDensitySolver/GrowShrinkHighDensityIntraNodeSolver/GrowShrinkHighDensityIntraNodeSolver.ts",
+            "old-intranode":"lib/solvers/HighDensitySolver/IntraNodeSolver.ts",
+            "old-node-repair":"lib/solvers/HighDensityRepairSolver/Pipeline4HighDensityRepairSolver.ts",
+          }
+          path=paths.get(os.environ["VARIANT"])
+          if path: subprocess.run(["git","checkout","8bc7eeee1d42c94eb72f32460dc03f54add143e5","--",path],check=True)
+          PY
+      - run: bun install
+      - name: Run original full-board routing and clearance assertions
+        env:
+          BUN_UPDATE_SNAPSHOTS: '1'
+        run: bun test --timeout 9999999 tests/bugs/bugreport96-full-gameboy-no-breakout.test.ts
