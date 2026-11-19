@@ -6,23 +6,26 @@ import {
 
 test("pipeline9 DRC candidate with fewer errors is not better when it adds a contact", () => {
   const clearanceError: Pipeline9DrcError = { type: "pcb_trace_error" }
-  const contact = (
-    firstId: string,
-    secondId: string,
-  ): Pipeline9DrcError => ({
+  const traceOnPad1: Pipeline9DrcError = {
     type: "pcb_trace_error",
-    contact_ids: [firstId, secondId],
-  })
-  const current = [contact("tA", "pad1"), clearanceError, clearanceError]
+    contact_ids: ["tA", "pad1"],
+  }
+  const pad1UnderTrace: Pipeline9DrcError = {
+    type: "pcb_trace_error",
+    contact_ids: ["pad1", "tA"],
+  }
+  const traceOnPad2: Pipeline9DrcError = {
+    type: "pcb_trace_error",
+    contact_ids: ["tA", "pad2"],
+  }
+  const current = [traceOnPad1, clearanceError, clearanceError]
+  // Each candidate has one error fewer than the current routes.
+  const newContact = [traceOnPad2, clearanceError]
+  const reorderedContact = [pad1UnderTrace, clearanceError]
+  const clearanceErrorsOnly = [clearanceError]
 
-  // One error fewer, but tA now also touches pad2.
-  expect(
-    isPipeline9DrcCandidateBetter([contact("tA", "pad2"), clearanceError], current),
-  ).toBe(false)
-  // The same contact, named in either order, is not new.
-  expect(
-    isPipeline9DrcCandidateBetter([contact("pad1", "tA"), clearanceError], current),
-  ).toBe(true)
+  expect(isPipeline9DrcCandidateBetter(newContact, current)).toBe(false)
+  expect(isPipeline9DrcCandidateBetter(reorderedContact, current)).toBe(true)
   // Errors without contact_ids are clearance errors and are only counted.
-  expect(isPipeline9DrcCandidateBetter([clearanceError], current)).toBe(true)
+  expect(isPipeline9DrcCandidateBetter(clearanceErrorsOnly, current)).toBe(true)
 })

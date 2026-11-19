@@ -11,6 +11,13 @@ import {
   issue3130Traces,
 } from "./fixtures/issue3130-via-pad-clearance"
 
+/** Native errors add contact_ids, which the reference checks cannot report. */
+const getReferenceFields = (errors: Record<string, unknown>[]): unknown[] =>
+  errors.map((error) => {
+    const { contact_ids: _contactIds, ...referenceFields } = error
+    return referenceFields
+  })
+
 test("Pipeline9 native DRC matches current reference rules and optional categories", () => {
   const input: SimpleRouteJson = {
     ...structuredClone(issue3130Input),
@@ -154,11 +161,13 @@ test("Pipeline9 native DRC matches current reference rules and optional categori
     const actual = evaluate(traces)
     expect(input).toEqual(inputBeforeEvaluation)
     expect(reference.errors.length).toBeGreaterThan(0)
-    expect(actual.errors as unknown[]).toEqual(reference.errors as unknown[])
-    expect(actual.errorsWithCenters as unknown[]).toEqual(
+    expect(getReferenceFields(actual.errors)).toEqual(
+      reference.errors as unknown[],
+    )
+    expect(getReferenceFields(actual.errorsWithCenters)).toEqual(
       reference.errorsWithCenters as unknown[],
     )
-    expect(actual.locationAwareErrors as unknown[]).toEqual(
+    expect(getReferenceFields(actual.locationAwareErrors)).toEqual(
       reference.locationAwareErrors as unknown[],
     )
     for (const error of reference.errors) {
@@ -172,9 +181,12 @@ test("Pipeline9 native DRC matches current reference rules and optional categori
       ...options,
       drcOptions: { ...options.drcOptions, includeTraceContinuity: false },
     })
-    expect(
-      evaluate(traces, { includeTraceContinuity: false }).errors as unknown[],
-    ).toEqual(withoutContinuity.errors as unknown[])
+    const withoutContinuityActual = evaluate(traces, {
+      includeTraceContinuity: false,
+    })
+    expect(getReferenceFields(withoutContinuityActual.errors)).toEqual(
+      withoutContinuity.errors as unknown[],
+    )
   }
   expect([...observedTypes]).toEqual(
     expect.arrayContaining([

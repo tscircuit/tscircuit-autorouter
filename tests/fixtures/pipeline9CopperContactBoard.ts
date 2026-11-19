@@ -87,7 +87,9 @@ export const getBoardDrcErrors = (
 }
 
 /** The sorted contact_ids of every error that reports copper touching. */
-export const getBoardContactIds = (traces: SimplifiedPcbTrace[]): string[][] => {
+export const getBoardContactIds = (
+  traces: SimplifiedPcbTrace[],
+): string[][] => {
   const contactIds: string[][] = []
   for (const error of getBoardDrcErrors(traces)) {
     if (error.contact_ids) contactIds.push([...error.contact_ids].sort())
