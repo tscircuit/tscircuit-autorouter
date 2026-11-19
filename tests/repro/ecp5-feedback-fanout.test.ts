@@ -64,8 +64,10 @@ test("routes the native C18/R37/R38 feedback fanout without false via obstacles"
   solver.traceWidth = referenceNet.trace_width
   solver.solve()
 
-  expect(solver.solved).toBeFalse()
-  expect(solver.error).toContain("Exceeded max via count")
+  expect(solver.solved).toBeTrue()
+  expect(solver.failed).toBeFalse()
+  expect(solver.error).toBeNull()
+  expect(solver.solvedRoutes).toHaveLength(2)
   expect(node).toEqual(original)
   const traces = solver.solvedRoutes.map(
     (route): SimplifiedPcbTrace => ({
