@@ -1,4 +1,4 @@
-name: Verify native integration on current main
+name: Verify adaptive repair budget with native copper
 on:
   push:
     branches: [analysis/native-complete-cleanup-context]
@@ -12,7 +12,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        source: [2b1207ad70971f326166b134ea19418137273f23, cf5e59215399130d7205af1fa5bc5a86166567a0]
+        source: [1d5168a1411831d5411d93bb01e43da28522bbb9, 767872b7bea7e62b918d6b282d9be12e24af0e54]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -21,8 +21,17 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: '1.4.3'
+      - name: Let the existing repair solver scale its budget to the problem
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path("lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts")
+          s=p.read_text()
+          assert s.count("            maxIterations: 16,\n")==1
+          p.write_text(s.replace("            maxIterations: 16,\n","",1))
+          PY
       - run: bun install
-      - name: Keep original completion, clearance and via-count assertions
+      - name: Keep original Game Boy completion, clearance and via-count assertions
         env:
           BUN_UPDATE_SNAPSHOTS: '1'
         run: bun test --timeout 9999999 tests/bugs/bugreport96-full-gameboy-no-breakout.test.ts
