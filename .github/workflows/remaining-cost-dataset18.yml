@@ -41,12 +41,12 @@ jobs:
           TOML
       - name: Install control dependencies
         working-directory: same-machine-base
-        run: bun install --config ../install.toml
+        run: bun install --config=../install.toml
       - name: Resolve candidate from the same dependency lock
         run: |
           cp same-machine-base/bun.lock same-machine-pr/bun.lock
           cd same-machine-pr
-          bun install --config ../install.toml
+          bun install --config=../install.toml
       - name: Verify dependency isolation
         run: |
           python3 - <<'PYTHON'
