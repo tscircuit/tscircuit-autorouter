@@ -1,0 +1,99 @@
+# Created using @tscircuit/plop (npm install -g @tscircuit/plop)
+name: Build pinned native cleanup preview
+
+on:
+  push:
+    branches: [analysis/native-cleanup-preview]
+    paths: [.github/workflows/native-cleanup-preview.yml]
+
+jobs:
+  build:
+    if: github.event_name != 'pull_request' || !startsWith(github.head_ref, 'version-bumps/')
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: 767872b7bea7e62b918d6b282d9be12e24af0e54
+          persist-credentials: false
+
+      - name: Setup bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: 1.4.3
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Run build
+        run: bun run build
+
+      - name: Check packed solver runtime consumers
+        run: bun scripts/check-solver-runtime-packaging.ts
+
+      - name: Create npm package tarball
+        id: create-npm-package-tarball
+        run: |
+          mkdir -p npm-package
+          npm pack --pack-destination npm-package
+          TARBALL_PATH=$(find npm-package -maxdepth 1 -name '*.tgz' -type f | head -n 1)
+          if [ -z "$TARBALL_PATH" ]; then
+            echo "No npm package tarball was created" >&2
+            exit 1
+          fi
+          echo "tarball-name=$(basename "$TARBALL_PATH")" >> "$GITHUB_OUTPUT"
+          echo "tarball-path=$TARBALL_PATH" >> "$GITHUB_OUTPUT"
+
+      - name: Ensure AWS CLI is available
+        run: |
+          if ! command -v aws >/dev/null 2>&1; then
+            python3 -m pip install --user awscli
+            export PATH="$HOME/.local/bin:$PATH"
+            echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          fi
+          aws --version
+
+      - name: Upload npm package tarball to R2
+        if: github.event_name != 'pull_request' || !github.event.pull_request.head.repo.fork
+        id: upload-npm-package-tarball-to-r2
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID || vars.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY || vars.R2_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+          AWS_EC2_METADATA_DISABLED: true
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID || vars.CLOUDFLARE_ACCOUNT_ID }}
+          R2_BUCKET: ${{ secrets.R2_BUCKET || vars.R2_BUCKET }}
+          R2_PUBLIC_BASE_URL: ${{ secrets.R2_PUBLIC_BASE_URL || vars.R2_PUBLIC_BASE_URL }}
+          RUN_ID: ${{ github.run_id }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
+          TARBALL_NAME: ${{ steps.create-npm-package-tarball.outputs.tarball-name }}
+          TARBALL_PATH: ${{ steps.create-npm-package-tarball.outputs.tarball-path }}
+        run: |
+          for name in CLOUDFLARE_ACCOUNT_ID R2_BUCKET R2_PUBLIC_BASE_URL AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY; do
+            if [ -z "${!name}" ]; then
+              echo "$name is required" >&2
+              exit 1
+            fi
+          done
+
+          OBJECT_KEY="npm-tarballs/$RUN_ID-$RUN_ATTEMPT/$TARBALL_NAME"
+          R2_ENDPOINT="https://$CLOUDFLARE_ACCOUNT_ID.r2.cloudflarestorage.com"
+          PACKAGE_URL="${R2_PUBLIC_BASE_URL%/}/$OBJECT_KEY"
+
+          aws s3 cp "$TARBALL_PATH" "s3://$R2_BUCKET/$OBJECT_KEY" \
+            --endpoint-url "$R2_ENDPOINT" \
+            --content-type "application/gzip"
+
+          echo "package-url=$PACKAGE_URL" >> "$GITHUB_OUTPUT"
+          echo "Uploaded npm package tarball to: $PACKAGE_URL"
+          echo "Install with:"
+          echo "  bun add -D $PACKAGE_URL"
+          echo "### npm package tarball" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "- URL: $PACKAGE_URL" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Install with:" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo '```sh' >> "$GITHUB_STEP_SUMMARY"
+          echo "bun add -D $PACKAGE_URL" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
