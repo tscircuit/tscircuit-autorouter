@@ -25,9 +25,12 @@ jobs:
         run: bun run typecheck
       - if: always()
         run: |
-          bun test --timeout 9999999 tests/two-via-windows.test.ts tests/native-boundary-contact.test.ts tests/singleton-trace-width.test.ts tests/bus-trace-width.test.ts
+          bun test --timeout 9999999 tests/two-via-windows.test.ts tests/native-boundary-contact.test.ts tests/singleton-trace-width.test.ts
           if [[ -f tests/boundary-contact-direction-overrides.test.ts ]]; then
             bun test --timeout 9999999 tests/boundary-contact-direction-overrides.test.ts
+          fi
+          if [[ -f tests/bus-trace-width.test.ts ]]; then
+            bun test --timeout 9999999 tests/bus-trace-width.test.ts
           fi
           if [[ -f tests/boundary-point-direction.test.ts ]]; then
             bun test --timeout 9999999 tests/boundary-point-direction.test.ts
