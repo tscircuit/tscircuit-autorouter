@@ -62,7 +62,7 @@ jobs:
            }
           }
           console.log("AGGREGATE_FINISH",JSON.stringify({board,solved:solver.solved,failed:solver.failed,iterations:solver.iterations}))
-          import { collectViaNodes, cloneRoutes, materializeRoutes, applyDrcErrorForces, isViaPadDrcError } from "high-density-repair03/lib/solvers/GlobalDrcForceImproveSolver/solverHelpers"
+          import { getSameRootViaSite, collectViaNodes, cloneRoutes, materializeRoutes, applyDrcErrorForces, isViaPadDrcError } from "high-density-repair03/lib/solvers/GlobalDrcForceImproveSolver/solverHelpers"
           import { getPipeline9RouteIndexByTraceId } from "./lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9JointDrcRepairUtils"
           if(solver.solved){
            const joint=solver.pipeline9JointDrcRepairSolver
@@ -103,6 +103,10 @@ jobs:
             const center=error.center
             const nearest=center?ownedVias.toSorted((a,b)=>Math.hypot(a.x-center.x,a.y-center.y)-Math.hypot(b.x-center.x,b.y-center.y))[0]:undefined
             const route=owner!==undefined?routes[owner]:undefined
+            if(nearest){
+             const site=getSameRootViaSite({routes,via:nearest,srj})
+             console.log("AGGREGATE_SHARED_SITE",JSON.stringify({count:site.length,movableCount:site.filter(v=>v.movable).length,canonicalCount:site.filter(v=>v.canCanonicalize).length,taggedTerminalCount:site.filter(v=>v.pointIndexes.some(i=>routes[v.routeIndex].route[i].pcb_port_id!==undefined)).length,distinctRadii:new Set(site.map(v=>v.radius)).size,syntheticOwnerCount:site.filter(v=>joint.syntheticConnectionNames.has(routes[v.routeIndex].connectionName)).length}))
+            }
             console.log("AGGREGATE_VIA_ELIGIBILITY",JSON.stringify({owned:owner!==undefined,ownedViaCount:ownedVias.length,hasCenter:!!center,nearestFound:!!nearest,movable:nearest?.movable,canCanonicalize:nearest?.canCanonicalize,hasTerminalApproach:nearest?.pointIndexes.some(i=>route.route[i].terminalApproach!==undefined),hasPadPort:nearest?.pointIndexes.some(i=>route.route[i].pcb_port_id!==undefined),touchesRouteEndpoint:nearest?.pointIndexes.some(i=>i===0||i===route.route.length-1)}))
            }
            for(const scale of [0.03,0.1,0.25,1]){
