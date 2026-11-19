@@ -1,0 +1,8 @@
+{
+  "board": "imx6",
+  "baselinePhysicalCircuitSha256": "b28d96945a645b09e5b08c2331c434ca73c0ef606507ed7fe4900f4519e49664",
+  "physicalCircuitSha256": "b28d96945a645b09e5b08c2331c434ca73c0ef606507ed7fe4900f4519e49664",
+  "samePhysicalCircuit": true,
+  "inputSha256": "70c8dbdc3c3b66954d47334f6d92353df135ba8eb4a7edf344b40718e6b43fd5",
+  "sameInput": true
+}

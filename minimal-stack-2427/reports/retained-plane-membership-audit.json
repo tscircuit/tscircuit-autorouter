@@ -1,0 +1,2908 @@
+[
+  {
+    "board": "icepi",
+    "variant": "baseline",
+    "planeVias": 6,
+    "outsideDeclaredPlaneCenter": [],
+    "planes": [
+      {
+        "connectionName": "source_trace_16",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 1.2399999999987588,
+          "y": 10.579999999999984,
+          "diameter": 0.45
+        },
+        "targetPours": 112,
+        "sameNetPours": 112,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_3",
+        "targetLayer": "inner2",
+        "via": {
+          "x": 0.7399999999987616,
+          "y": 18.579999999999984,
+          "diameter": 0.45
+        },
+        "targetPours": 500,
+        "sameNetPours": 225,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_7",
+        "targetLayer": "inner2",
+        "via": {
+          "x": 1.739999999998759,
+          "y": 14.079999999999984,
+          "diameter": 0.45
+        },
+        "targetPours": 500,
+        "sameNetPours": 225,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_15",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 1.2399999999987585,
+          "y": 14.579999999999984,
+          "diameter": 0.45
+        },
+        "targetPours": 112,
+        "sameNetPours": 112,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_17",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 1.7399999999987594,
+          "y": 15.079999999999984,
+          "diameter": 0.45
+        },
+        "targetPours": 112,
+        "sameNetPours": 112,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_18",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 0.7399999999987579,
+          "y": 14.079999999999984,
+          "diameter": 0.45
+        },
+        "targetPours": 112,
+        "sameNetPours": 112,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      }
+    ]
+  },
+  {
+    "board": "icepi",
+    "variant": "s",
+    "planeVias": 11,
+    "outsideDeclaredPlaneCenter": [],
+    "planes": [
+      {
+        "connectionName": "source_trace_16",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 1.2399999999987588,
+          "y": 10.579999999999984,
+          "diameter": 0.45
+        },
+        "targetPours": 112,
+        "sameNetPours": 112,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_3",
+        "targetLayer": "inner2",
+        "via": {
+          "x": 0.7399999999987616,
+          "y": 18.579999999999984,
+          "diameter": 0.45
+        },
+        "targetPours": 500,
+        "sameNetPours": 225,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_1",
+        "targetLayer": "inner2",
+        "via": {
+          "x": 2.7399999999987585,
+          "y": 16.379999999999985,
+          "diameter": 0.45
+        },
+        "targetPours": 500,
+        "sameNetPours": 225,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_7",
+        "targetLayer": "inner2",
+        "via": {
+          "x": 1.739999999998759,
+          "y": 14.079999999999984,
+          "diameter": 0.45
+        },
+        "targetPours": 500,
+        "sameNetPours": 225,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_15",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 1.2399999999987585,
+          "y": 14.579999999999984,
+          "diameter": 0.45
+        },
+        "targetPours": 112,
+        "sameNetPours": 112,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_17",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 1.7399999999987594,
+          "y": 15.079999999999984,
+          "diameter": 0.45
+        },
+        "targetPours": 112,
+        "sameNetPours": 112,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_18",
+        "targetLayer": "inner1",
+        "via": {
+          "x": -0.46000000000124147,
+          "y": 14.579999999999984,
+          "diameter": 0.45
+        },
+        "targetPours": 112,
+        "sameNetPours": 112,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_0",
+        "targetLayer": "inner2",
+        "via": {
+          "x": 0.23999999999875887,
+          "y": 16.279999999999983,
+          "diameter": 0.45
+        },
+        "targetPours": 500,
+        "sameNetPours": 225,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_19",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 2.9399999999987587,
+          "y": 15.329999999999984,
+          "diameter": 0.45
+        },
+        "targetPours": 112,
+        "sameNetPours": 112,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_8",
+        "targetLayer": "inner2",
+        "via": {
+          "x": 0.7399999999987579,
+          "y": 14.079999999999984,
+          "diameter": 0.45
+        },
+        "targetPours": 500,
+        "sameNetPours": 225,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_9",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 0.9899999999987588,
+          "y": 16.279999999999983,
+          "diameter": 0.45
+        },
+        "targetPours": 112,
+        "sameNetPours": 112,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      }
+    ]
+  },
+  {
+    "board": "icepi",
+    "variant": "so",
+    "planeVias": 11,
+    "outsideDeclaredPlaneCenter": [],
+    "planes": [
+      {
+        "connectionName": "source_trace_16",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 1.2399999999987588,
+          "y": 10.579999999999984,
+          "diameter": 0.45
+        },
+        "targetPours": 112,
+        "sameNetPours": 112,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_3",
+        "targetLayer": "inner2",
+        "via": {
+          "x": 0.7399999999987616,
+          "y": 18.579999999999984,
+          "diameter": 0.45
+        },
+        "targetPours": 500,
+        "sameNetPours": 225,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_1",
+        "targetLayer": "inner2",
+        "via": {
+          "x": 2.7399999999987585,
+          "y": 16.379999999999985,
+          "diameter": 0.45
+        },
+        "targetPours": 500,
+        "sameNetPours": 225,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_7",
+        "targetLayer": "inner2",
+        "via": {
+          "x": 1.739999999998759,
+          "y": 14.079999999999984,
+          "diameter": 0.45
+        },
+        "targetPours": 500,
+        "sameNetPours": 225,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_15",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 1.2399999999987585,
+          "y": 14.579999999999984,
+          "diameter": 0.45
+        },
+        "targetPours": 112,
+        "sameNetPours": 112,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_17",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 1.7399999999987594,
+          "y": 15.079999999999984,
+          "diameter": 0.45
+        },
+        "targetPours": 112,
+        "sameNetPours": 112,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_18",
+        "targetLayer": "inner1",
+        "via": {
+          "x": -0.46000000000124147,
+          "y": 14.579999999999984,
+          "diameter": 0.45
+        },
+        "targetPours": 112,
+        "sameNetPours": 112,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_0",
+        "targetLayer": "inner2",
+        "via": {
+          "x": 0.23999999999875887,
+          "y": 16.279999999999983,
+          "diameter": 0.45
+        },
+        "targetPours": 500,
+        "sameNetPours": 225,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_19",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 2.9399999999987587,
+          "y": 15.329999999999984,
+          "diameter": 0.45
+        },
+        "targetPours": 112,
+        "sameNetPours": 112,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_8",
+        "targetLayer": "inner2",
+        "via": {
+          "x": 0.7399999999987579,
+          "y": 14.079999999999984,
+          "diameter": 0.45
+        },
+        "targetPours": 500,
+        "sameNetPours": 225,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_9",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 0.9899999999987588,
+          "y": 16.279999999999983,
+          "diameter": 0.45
+        },
+        "targetPours": 112,
+        "sameNetPours": 112,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      }
+    ]
+  },
+  {
+    "board": "icepi",
+    "variant": "sob",
+    "planeVias": 11,
+    "outsideDeclaredPlaneCenter": [],
+    "planes": [
+      {
+        "connectionName": "source_trace_16",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 1.2399999999987588,
+          "y": 10.579999999999984,
+          "diameter": 0.45
+        },
+        "targetPours": 112,
+        "sameNetPours": 112,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_3",
+        "targetLayer": "inner2",
+        "via": {
+          "x": 0.7399999999987616,
+          "y": 18.579999999999984,
+          "diameter": 0.45
+        },
+        "targetPours": 500,
+        "sameNetPours": 225,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_1",
+        "targetLayer": "inner2",
+        "via": {
+          "x": 2.7399999999987585,
+          "y": 16.379999999999985,
+          "diameter": 0.45
+        },
+        "targetPours": 500,
+        "sameNetPours": 225,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_7",
+        "targetLayer": "inner2",
+        "via": {
+          "x": 1.739999999998759,
+          "y": 14.079999999999984,
+          "diameter": 0.45
+        },
+        "targetPours": 500,
+        "sameNetPours": 225,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_15",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 1.2399999999987585,
+          "y": 14.579999999999984,
+          "diameter": 0.45
+        },
+        "targetPours": 112,
+        "sameNetPours": 112,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_17",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 1.7399999999987594,
+          "y": 15.079999999999984,
+          "diameter": 0.45
+        },
+        "targetPours": 112,
+        "sameNetPours": 112,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_18",
+        "targetLayer": "inner1",
+        "via": {
+          "x": -0.46000000000124147,
+          "y": 14.579999999999984,
+          "diameter": 0.45
+        },
+        "targetPours": 112,
+        "sameNetPours": 112,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_0",
+        "targetLayer": "inner2",
+        "via": {
+          "x": 0.23999999999875887,
+          "y": 16.279999999999983,
+          "diameter": 0.45
+        },
+        "targetPours": 500,
+        "sameNetPours": 225,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_19",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 2.9399999999987587,
+          "y": 15.329999999999984,
+          "diameter": 0.45
+        },
+        "targetPours": 112,
+        "sameNetPours": 112,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_8",
+        "targetLayer": "inner2",
+        "via": {
+          "x": 0.7399999999987579,
+          "y": 14.079999999999984,
+          "diameter": 0.45
+        },
+        "targetPours": 500,
+        "sameNetPours": 225,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_9",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 0.9899999999987588,
+          "y": 16.279999999999983,
+          "diameter": 0.45
+        },
+        "targetPours": 112,
+        "sameNetPours": 112,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      }
+    ]
+  },
+  {
+    "board": "icepi",
+    "variant": "sr",
+    "planeVias": 11,
+    "outsideDeclaredPlaneCenter": [],
+    "planes": [
+      {
+        "connectionName": "source_trace_16",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 1.2399999999987588,
+          "y": 10.579999999999984,
+          "diameter": 0.45
+        },
+        "targetPours": 112,
+        "sameNetPours": 112,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_3",
+        "targetLayer": "inner2",
+        "via": {
+          "x": 0.7399999999987616,
+          "y": 18.579999999999984,
+          "diameter": 0.45
+        },
+        "targetPours": 500,
+        "sameNetPours": 225,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_1",
+        "targetLayer": "inner2",
+        "via": {
+          "x": 2.7399999999987585,
+          "y": 16.379999999999985,
+          "diameter": 0.45
+        },
+        "targetPours": 500,
+        "sameNetPours": 225,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_7",
+        "targetLayer": "inner2",
+        "via": {
+          "x": 1.739999999998759,
+          "y": 14.079999999999984,
+          "diameter": 0.45
+        },
+        "targetPours": 500,
+        "sameNetPours": 225,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_15",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 1.2399999999987585,
+          "y": 14.579999999999984,
+          "diameter": 0.45
+        },
+        "targetPours": 112,
+        "sameNetPours": 112,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_17",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 1.7399999999987594,
+          "y": 15.079999999999984,
+          "diameter": 0.45
+        },
+        "targetPours": 112,
+        "sameNetPours": 112,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_18",
+        "targetLayer": "inner1",
+        "via": {
+          "x": -0.46000000000124147,
+          "y": 14.579999999999984,
+          "diameter": 0.45
+        },
+        "targetPours": 112,
+        "sameNetPours": 112,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_0",
+        "targetLayer": "inner2",
+        "via": {
+          "x": 0.23999999999875887,
+          "y": 16.279999999999983,
+          "diameter": 0.45
+        },
+        "targetPours": 500,
+        "sameNetPours": 225,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_19",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 2.9399999999987587,
+          "y": 15.329999999999984,
+          "diameter": 0.45
+        },
+        "targetPours": 112,
+        "sameNetPours": 112,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_8",
+        "targetLayer": "inner2",
+        "via": {
+          "x": 0.7399999999987579,
+          "y": 14.079999999999984,
+          "diameter": 0.45
+        },
+        "targetPours": 500,
+        "sameNetPours": 225,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_9",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 0.9899999999987588,
+          "y": 16.279999999999983,
+          "diameter": 0.45
+        },
+        "targetPours": 112,
+        "sameNetPours": 112,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      }
+    ]
+  },
+  {
+    "board": "icepi",
+    "variant": "srb",
+    "planeVias": 11,
+    "outsideDeclaredPlaneCenter": [],
+    "planes": [
+      {
+        "connectionName": "source_trace_16",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 1.2399999999987588,
+          "y": 10.579999999999984,
+          "diameter": 0.45
+        },
+        "targetPours": 112,
+        "sameNetPours": 112,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_3",
+        "targetLayer": "inner2",
+        "via": {
+          "x": 0.7399999999987616,
+          "y": 18.579999999999984,
+          "diameter": 0.45
+        },
+        "targetPours": 500,
+        "sameNetPours": 225,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_1",
+        "targetLayer": "inner2",
+        "via": {
+          "x": 2.7399999999987585,
+          "y": 16.379999999999985,
+          "diameter": 0.45
+        },
+        "targetPours": 500,
+        "sameNetPours": 225,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_7",
+        "targetLayer": "inner2",
+        "via": {
+          "x": 1.739999999998759,
+          "y": 14.079999999999984,
+          "diameter": 0.45
+        },
+        "targetPours": 500,
+        "sameNetPours": 225,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_15",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 1.2399999999987585,
+          "y": 14.579999999999984,
+          "diameter": 0.45
+        },
+        "targetPours": 112,
+        "sameNetPours": 112,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_17",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 1.7399999999987594,
+          "y": 15.079999999999984,
+          "diameter": 0.45
+        },
+        "targetPours": 112,
+        "sameNetPours": 112,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_18",
+        "targetLayer": "inner1",
+        "via": {
+          "x": -0.46000000000124147,
+          "y": 14.579999999999984,
+          "diameter": 0.45
+        },
+        "targetPours": 112,
+        "sameNetPours": 112,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_0",
+        "targetLayer": "inner2",
+        "via": {
+          "x": 0.23999999999875887,
+          "y": 16.279999999999983,
+          "diameter": 0.45
+        },
+        "targetPours": 500,
+        "sameNetPours": 225,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_19",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 2.9399999999987587,
+          "y": 15.329999999999984,
+          "diameter": 0.45
+        },
+        "targetPours": 112,
+        "sameNetPours": 112,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_8",
+        "targetLayer": "inner2",
+        "via": {
+          "x": 0.7399999999987579,
+          "y": 14.079999999999984,
+          "diameter": 0.45
+        },
+        "targetPours": 500,
+        "sameNetPours": 225,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_9",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 0.9899999999987588,
+          "y": 16.279999999999983,
+          "diameter": 0.45
+        },
+        "targetPours": 112,
+        "sameNetPours": 112,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      }
+    ]
+  },
+  {
+    "board": "icepi",
+    "variant": "original305",
+    "planeVias": 15,
+    "outsideDeclaredPlaneCenter": [],
+    "planes": [
+      {
+        "connectionName": "source_trace_10",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 4.935,
+          "y": 17.58,
+          "diameter": 0.45
+        },
+        "targetPours": 112,
+        "sameNetPours": 112,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_14",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 0.49,
+          "y": 12.815000000000001,
+          "diameter": 0.45
+        },
+        "targetPours": 112,
+        "sameNetPours": 112,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_2",
+        "targetLayer": "inner2",
+        "via": {
+          "x": 2.8600000000000003,
+          "y": 16.385,
+          "diameter": 0.45
+        },
+        "targetPours": 500,
+        "sameNetPours": 225,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_19",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 2.935,
+          "y": 15.442499999999999,
+          "diameter": 0.45
+        },
+        "targetPours": 112,
+        "sameNetPours": 112,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_9",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 0.99,
+          "y": 16.275,
+          "diameter": 0.45
+        },
+        "targetPours": 112,
+        "sameNetPours": 112,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_8",
+        "targetLayer": "inner2",
+        "via": {
+          "x": -0.455,
+          "y": 15,
+          "diameter": 0.45
+        },
+        "targetPours": 500,
+        "sameNetPours": 225,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_0",
+        "targetLayer": "inner2",
+        "via": {
+          "x": 0.36,
+          "y": 16.2625,
+          "diameter": 0.45
+        },
+        "targetPours": 500,
+        "sameNetPours": 225,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_18",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 0.435,
+          "y": 14.942499999999999,
+          "diameter": 0.45
+        },
+        "targetPours": 112,
+        "sameNetPours": 112,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_6",
+        "targetLayer": "inner2",
+        "via": {
+          "x": 1.785,
+          "y": 13.75,
+          "diameter": 0.45
+        },
+        "targetPours": 500,
+        "sameNetPours": 225,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_15",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 1.045,
+          "y": 13.83,
+          "diameter": 0.45
+        },
+        "targetPours": 112,
+        "sameNetPours": 112,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_3",
+        "targetLayer": "inner2",
+        "via": {
+          "x": 3.045,
+          "y": 18.275,
+          "diameter": 0.45
+        },
+        "targetPours": 500,
+        "sameNetPours": 225,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_11",
+        "targetLayer": "inner1",
+        "via": {
+          "x": -2.455,
+          "y": 18.1,
+          "diameter": 0.45
+        },
+        "targetPours": 112,
+        "sameNetPours": 112,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_4",
+        "targetLayer": "inner2",
+        "via": {
+          "x": 0.7399999999987608,
+          "y": 18.579999999999984,
+          "diameter": 0.45
+        },
+        "targetPours": 500,
+        "sameNetPours": 225,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_7",
+        "targetLayer": "inner2",
+        "via": {
+          "x": 1.785,
+          "y": 14.442499999999999,
+          "diameter": 0.45
+        },
+        "targetPours": 500,
+        "sameNetPours": 225,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_17",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 1.8475000000000001,
+          "y": 15,
+          "diameter": 0.45
+        },
+        "targetPours": 112,
+        "sameNetPours": 112,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      }
+    ]
+  },
+  {
+    "board": "imx6",
+    "variant": "baseline",
+    "planeVias": 6,
+    "outsideDeclaredPlaneCenter": [],
+    "planes": [
+      {
+        "connectionName": "source_trace_12",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 16.000010388624133,
+          "y": -17.000010388624133,
+          "diameter": 0.4
+        },
+        "targetPours": 138,
+        "sameNetPours": 138,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_11",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 16.000010388624133,
+          "y": -14.500010388624133,
+          "diameter": 0.4
+        },
+        "targetPours": 138,
+        "sameNetPours": 138,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_17",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 12.500010388624133,
+          "y": -14.000010388624133,
+          "diameter": 0.4
+        },
+        "targetPours": 138,
+        "sameNetPours": 138,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_16",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 8.305010388624133,
+          "y": -14.500010388624133,
+          "diameter": 0.4
+        },
+        "targetPours": 138,
+        "sameNetPours": 138,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_15",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 11.500010388624133,
+          "y": -14.000010388624133,
+          "diameter": 0.4
+        },
+        "targetPours": 138,
+        "sameNetPours": 138,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_3",
+        "targetLayer": "inner2",
+        "via": {
+          "x": 15.695010388624134,
+          "y": -15.000010388624133,
+          "diameter": 0.4
+        },
+        "targetPours": 773,
+        "sameNetPours": 94,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      }
+    ]
+  },
+  {
+    "board": "imx6",
+    "variant": "s",
+    "planeVias": 12,
+    "outsideDeclaredPlaneCenter": [],
+    "planes": [
+      {
+        "connectionName": "source_trace_12",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 16.000010388624133,
+          "y": -17.000010388624133,
+          "diameter": 0.4
+        },
+        "targetPours": 138,
+        "sameNetPours": 138,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_11",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 16.000010388624133,
+          "y": -14.500010388624133,
+          "diameter": 0.4
+        },
+        "targetPours": 138,
+        "sameNetPours": 138,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_17",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 11.500010388624133,
+          "y": -15.650010388624134,
+          "diameter": 0.4
+        },
+        "targetPours": 138,
+        "sameNetPours": 138,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_19",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 12.500010388624133,
+          "y": -15.650010388624134,
+          "diameter": 0.4
+        },
+        "targetPours": 138,
+        "sameNetPours": 138,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_16",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 8.305010388624133,
+          "y": -14.500010388624133,
+          "diameter": 0.4
+        },
+        "targetPours": 138,
+        "sameNetPours": 138,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_15",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 11.500010388624133,
+          "y": -14.000010388624133,
+          "diameter": 0.4
+        },
+        "targetPours": 138,
+        "sameNetPours": 138,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_9",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 12.500010388624133,
+          "y": -14.000010388624133,
+          "diameter": 0.4
+        },
+        "targetPours": 138,
+        "sameNetPours": 138,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_18",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 12.000010388624133,
+          "y": -12.350010388624133,
+          "diameter": 0.4
+        },
+        "targetPours": 138,
+        "sameNetPours": 138,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_0",
+        "targetLayer": "inner2",
+        "via": {
+          "x": 13.850010388624133,
+          "y": -15.500010388624133,
+          "diameter": 0.4
+        },
+        "targetPours": 773,
+        "sameNetPours": 94,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_3",
+        "targetLayer": "inner2",
+        "via": {
+          "x": 15.695010388624134,
+          "y": -15.000010388624133,
+          "diameter": 0.4
+        },
+        "targetPours": 773,
+        "sameNetPours": 94,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_4",
+        "targetLayer": "inner2",
+        "via": {
+          "x": 10.150010388624134,
+          "y": -15.000010388624133,
+          "diameter": 0.4
+        },
+        "targetPours": 773,
+        "sameNetPours": 94,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_8",
+        "targetLayer": "inner2",
+        "via": {
+          "x": 13.000010388624133,
+          "y": -12.350010388624133,
+          "diameter": 0.4
+        },
+        "targetPours": 773,
+        "sameNetPours": 367,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      }
+    ]
+  },
+  {
+    "board": "imx6",
+    "variant": "so",
+    "planeVias": 12,
+    "outsideDeclaredPlaneCenter": [],
+    "planes": [
+      {
+        "connectionName": "source_trace_12",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 16.000010388624133,
+          "y": -17.000010388624133,
+          "diameter": 0.4
+        },
+        "targetPours": 138,
+        "sameNetPours": 138,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_11",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 16.000010388624133,
+          "y": -14.500010388624133,
+          "diameter": 0.4
+        },
+        "targetPours": 138,
+        "sameNetPours": 138,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_17",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 11.500010388624133,
+          "y": -15.650010388624134,
+          "diameter": 0.4
+        },
+        "targetPours": 138,
+        "sameNetPours": 138,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_19",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 12.500010388624133,
+          "y": -15.650010388624134,
+          "diameter": 0.4
+        },
+        "targetPours": 138,
+        "sameNetPours": 138,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_16",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 8.305010388624133,
+          "y": -14.500010388624133,
+          "diameter": 0.4
+        },
+        "targetPours": 138,
+        "sameNetPours": 138,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_15",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 11.500010388624133,
+          "y": -14.000010388624133,
+          "diameter": 0.4
+        },
+        "targetPours": 138,
+        "sameNetPours": 138,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_9",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 12.500010388624133,
+          "y": -14.000010388624133,
+          "diameter": 0.4
+        },
+        "targetPours": 138,
+        "sameNetPours": 138,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_18",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 12.000010388624133,
+          "y": -12.350010388624133,
+          "diameter": 0.4
+        },
+        "targetPours": 138,
+        "sameNetPours": 138,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_0",
+        "targetLayer": "inner2",
+        "via": {
+          "x": 13.850010388624133,
+          "y": -15.500010388624133,
+          "diameter": 0.4
+        },
+        "targetPours": 773,
+        "sameNetPours": 94,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_3",
+        "targetLayer": "inner2",
+        "via": {
+          "x": 15.695010388624134,
+          "y": -15.000010388624133,
+          "diameter": 0.4
+        },
+        "targetPours": 773,
+        "sameNetPours": 94,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_4",
+        "targetLayer": "inner2",
+        "via": {
+          "x": 10.150010388624134,
+          "y": -15.000010388624133,
+          "diameter": 0.4
+        },
+        "targetPours": 773,
+        "sameNetPours": 94,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_8",
+        "targetLayer": "inner2",
+        "via": {
+          "x": 13.000010388624133,
+          "y": -12.350010388624133,
+          "diameter": 0.4
+        },
+        "targetPours": 773,
+        "sameNetPours": 367,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      }
+    ]
+  },
+  {
+    "board": "imx6",
+    "variant": "sob",
+    "planeVias": 12,
+    "outsideDeclaredPlaneCenter": [],
+    "planes": [
+      {
+        "connectionName": "source_trace_12",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 16.000010388624133,
+          "y": -17.000010388624133,
+          "diameter": 0.4
+        },
+        "targetPours": 138,
+        "sameNetPours": 138,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_11",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 16.000010388624133,
+          "y": -14.500010388624133,
+          "diameter": 0.4
+        },
+        "targetPours": 138,
+        "sameNetPours": 138,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_17",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 11.500010388624133,
+          "y": -15.650010388624134,
+          "diameter": 0.4
+        },
+        "targetPours": 138,
+        "sameNetPours": 138,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_19",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 12.500010388624133,
+          "y": -15.650010388624134,
+          "diameter": 0.4
+        },
+        "targetPours": 138,
+        "sameNetPours": 138,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_16",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 8.305010388624133,
+          "y": -14.500010388624133,
+          "diameter": 0.4
+        },
+        "targetPours": 138,
+        "sameNetPours": 138,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_15",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 11.500010388624133,
+          "y": -14.000010388624133,
+          "diameter": 0.4
+        },
+        "targetPours": 138,
+        "sameNetPours": 138,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_9",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 12.500010388624133,
+          "y": -14.000010388624133,
+          "diameter": 0.4
+        },
+        "targetPours": 138,
+        "sameNetPours": 138,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_18",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 12.000010388624133,
+          "y": -12.350010388624133,
+          "diameter": 0.4
+        },
+        "targetPours": 138,
+        "sameNetPours": 138,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_0",
+        "targetLayer": "inner2",
+        "via": {
+          "x": 13.850010388624133,
+          "y": -15.500010388624133,
+          "diameter": 0.4
+        },
+        "targetPours": 773,
+        "sameNetPours": 94,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_3",
+        "targetLayer": "inner2",
+        "via": {
+          "x": 15.695010388624134,
+          "y": -15.000010388624133,
+          "diameter": 0.4
+        },
+        "targetPours": 773,
+        "sameNetPours": 94,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_4",
+        "targetLayer": "inner2",
+        "via": {
+          "x": 10.150010388624134,
+          "y": -15.000010388624133,
+          "diameter": 0.4
+        },
+        "targetPours": 773,
+        "sameNetPours": 94,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_8",
+        "targetLayer": "inner2",
+        "via": {
+          "x": 13.000010388624133,
+          "y": -12.350010388624133,
+          "diameter": 0.4
+        },
+        "targetPours": 773,
+        "sameNetPours": 367,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      }
+    ]
+  },
+  {
+    "board": "imx6",
+    "variant": "sr",
+    "planeVias": 12,
+    "outsideDeclaredPlaneCenter": [],
+    "planes": [
+      {
+        "connectionName": "source_trace_12",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 16.000010388624133,
+          "y": -17.000010388624133,
+          "diameter": 0.4
+        },
+        "targetPours": 138,
+        "sameNetPours": 138,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_11",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 16.000010388624133,
+          "y": -14.500010388624133,
+          "diameter": 0.4
+        },
+        "targetPours": 138,
+        "sameNetPours": 138,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_17",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 11.500010388624133,
+          "y": -15.650010388624134,
+          "diameter": 0.4
+        },
+        "targetPours": 138,
+        "sameNetPours": 138,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_19",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 12.500010388624133,
+          "y": -15.650010388624134,
+          "diameter": 0.4
+        },
+        "targetPours": 138,
+        "sameNetPours": 138,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_16",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 8.305010388624133,
+          "y": -14.500010388624133,
+          "diameter": 0.4
+        },
+        "targetPours": 138,
+        "sameNetPours": 138,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_15",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 11.500010388624133,
+          "y": -14.000010388624133,
+          "diameter": 0.4
+        },
+        "targetPours": 138,
+        "sameNetPours": 138,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_9",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 12.500010388624133,
+          "y": -14.000010388624133,
+          "diameter": 0.4
+        },
+        "targetPours": 138,
+        "sameNetPours": 138,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_18",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 12.000010388624133,
+          "y": -12.350010388624133,
+          "diameter": 0.4
+        },
+        "targetPours": 138,
+        "sameNetPours": 138,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_0",
+        "targetLayer": "inner2",
+        "via": {
+          "x": 13.850010388624133,
+          "y": -15.500010388624133,
+          "diameter": 0.4
+        },
+        "targetPours": 773,
+        "sameNetPours": 94,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_3",
+        "targetLayer": "inner2",
+        "via": {
+          "x": 15.695010388624134,
+          "y": -15.000010388624133,
+          "diameter": 0.4
+        },
+        "targetPours": 773,
+        "sameNetPours": 94,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_4",
+        "targetLayer": "inner2",
+        "via": {
+          "x": 10.150010388624134,
+          "y": -15.000010388624133,
+          "diameter": 0.4
+        },
+        "targetPours": 773,
+        "sameNetPours": 94,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_8",
+        "targetLayer": "inner2",
+        "via": {
+          "x": 13.000010388624133,
+          "y": -12.350010388624133,
+          "diameter": 0.4
+        },
+        "targetPours": 773,
+        "sameNetPours": 367,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      }
+    ]
+  },
+  {
+    "board": "imx6",
+    "variant": "srb",
+    "planeVias": 12,
+    "outsideDeclaredPlaneCenter": [],
+    "planes": [
+      {
+        "connectionName": "source_trace_12",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 16.000010388624133,
+          "y": -17.000010388624133,
+          "diameter": 0.4
+        },
+        "targetPours": 138,
+        "sameNetPours": 138,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_11",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 16.000010388624133,
+          "y": -14.500010388624133,
+          "diameter": 0.4
+        },
+        "targetPours": 138,
+        "sameNetPours": 138,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_17",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 11.500010388624133,
+          "y": -15.650010388624134,
+          "diameter": 0.4
+        },
+        "targetPours": 138,
+        "sameNetPours": 138,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_19",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 12.500010388624133,
+          "y": -15.650010388624134,
+          "diameter": 0.4
+        },
+        "targetPours": 138,
+        "sameNetPours": 138,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_16",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 8.305010388624133,
+          "y": -14.500010388624133,
+          "diameter": 0.4
+        },
+        "targetPours": 138,
+        "sameNetPours": 138,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_15",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 11.500010388624133,
+          "y": -14.000010388624133,
+          "diameter": 0.4
+        },
+        "targetPours": 138,
+        "sameNetPours": 138,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_9",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 12.500010388624133,
+          "y": -14.000010388624133,
+          "diameter": 0.4
+        },
+        "targetPours": 138,
+        "sameNetPours": 138,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_18",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 12.000010388624133,
+          "y": -12.350010388624133,
+          "diameter": 0.4
+        },
+        "targetPours": 138,
+        "sameNetPours": 138,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_0",
+        "targetLayer": "inner2",
+        "via": {
+          "x": 13.850010388624133,
+          "y": -15.500010388624133,
+          "diameter": 0.4
+        },
+        "targetPours": 773,
+        "sameNetPours": 94,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_3",
+        "targetLayer": "inner2",
+        "via": {
+          "x": 15.695010388624134,
+          "y": -15.000010388624133,
+          "diameter": 0.4
+        },
+        "targetPours": 773,
+        "sameNetPours": 94,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_4",
+        "targetLayer": "inner2",
+        "via": {
+          "x": 10.150010388624134,
+          "y": -15.000010388624133,
+          "diameter": 0.4
+        },
+        "targetPours": 773,
+        "sameNetPours": 94,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_8",
+        "targetLayer": "inner2",
+        "via": {
+          "x": 13.000010388624133,
+          "y": -12.350010388624133,
+          "diameter": 0.4
+        },
+        "targetPours": 773,
+        "sameNetPours": 367,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      }
+    ]
+  },
+  {
+    "board": "imx6",
+    "variant": "original305",
+    "planeVias": 16,
+    "outsideDeclaredPlaneCenter": [],
+    "planes": [
+      {
+        "connectionName": "source_trace_5",
+        "targetLayer": "inner2",
+        "via": {
+          "x": 13.834024945,
+          "y": -12.55401039,
+          "diameter": 0.4
+        },
+        "targetPours": 773,
+        "sameNetPours": 367,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_0",
+        "targetLayer": "inner2",
+        "via": {
+          "x": 13.80601039,
+          "y": -15.722010390000001,
+          "diameter": 0.4
+        },
+        "targetPours": 773,
+        "sameNetPours": 94,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_2",
+        "targetLayer": "inner2",
+        "via": {
+          "x": 15.62401039,
+          "y": -16.50001039,
+          "diameter": 0.4
+        },
+        "targetPours": 773,
+        "sameNetPours": 94,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_12",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 15.69401039,
+          "y": -15.89801039,
+          "diameter": 0.4
+        },
+        "targetPours": 138,
+        "sameNetPours": 138,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_3",
+        "targetLayer": "inner2",
+        "via": {
+          "x": 15.69401039,
+          "y": -15.25001039,
+          "diameter": 0.4
+        },
+        "targetPours": 773,
+        "sameNetPours": 94,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_13",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 15.7532437,
+          "y": -14.55401039,
+          "diameter": 0.4
+        },
+        "targetPours": 138,
+        "sameNetPours": 138,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_8",
+        "targetLayer": "inner2",
+        "via": {
+          "x": 12.94601039,
+          "y": -12.35001039,
+          "diameter": 0.4
+        },
+        "targetPours": 773,
+        "sameNetPours": 367,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_4",
+        "targetLayer": "inner2",
+        "via": {
+          "x": 10.12401039,
+          "y": -15.00001039,
+          "diameter": 0.4
+        },
+        "targetPours": 773,
+        "sameNetPours": 94,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_19",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 12.75001039,
+          "y": -15.69401039,
+          "diameter": 0.4
+        },
+        "targetPours": 138,
+        "sameNetPours": 138,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_17",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 11.75001039,
+          "y": -15.69401039,
+          "diameter": 0.4
+        },
+        "targetPours": 138,
+        "sameNetPours": 138,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_9",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 13.62001039,
+          "y": -14.00001039,
+          "diameter": 0.4
+        },
+        "targetPours": 138,
+        "sameNetPours": 138,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_18",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 12.460691,
+          "y": -13.14701039,
+          "diameter": 0.4
+        },
+        "targetPours": 138,
+        "sameNetPours": 138,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_15",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 11.19401039,
+          "y": -14.10001039,
+          "diameter": 0.4
+        },
+        "targetPours": 138,
+        "sameNetPours": 138,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_6",
+        "targetLayer": "inner2",
+        "via": {
+          "x": 11.773850695,
+          "y": -14.14701039,
+          "diameter": 0.4
+        },
+        "targetPours": 773,
+        "sameNetPours": 367,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_7",
+        "targetLayer": "inner2",
+        "via": {
+          "x": 12.62401039,
+          "y": -13.94601039,
+          "diameter": 0.4
+        },
+        "targetPours": 773,
+        "sameNetPours": 367,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_16",
+        "targetLayer": "inner1",
+        "via": {
+          "x": 8.3055716,
+          "y": -14.75001039,
+          "diameter": 0.4
+        },
+        "targetPours": 138,
+        "sameNetPours": 138,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      }
+    ]
+  },
+  {
+    "board": "glider",
+    "variant": "original305",
+    "planeVias": 41,
+    "outsideDeclaredPlaneCenter": [],
+    "planes": [
+      {
+        "connectionName": "source_trace_12",
+        "targetLayer": "inner1",
+        "via": {
+          "x": -22.932499999999997,
+          "y": -30.6875,
+          "diameter": 0.45
+        },
+        "targetPours": 416,
+        "sameNetPours": 54,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_11",
+        "targetLayer": "inner1",
+        "via": {
+          "x": -22.932499999999997,
+          "y": -25.887500000000003,
+          "diameter": 0.45
+        },
+        "targetPours": 416,
+        "sameNetPours": 54,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_14",
+        "targetLayer": "inner1",
+        "via": {
+          "x": -25.332500000000003,
+          "y": -31.4525,
+          "diameter": 0.45
+        },
+        "targetPours": 416,
+        "sameNetPours": 54,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_39",
+        "targetLayer": "inner2",
+        "via": {
+          "x": -23.7675,
+          "y": -31.4525,
+          "diameter": 0.45
+        },
+        "targetPours": 160,
+        "sameNetPours": 160,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_8",
+        "targetLayer": "inner1",
+        "via": {
+          "x": -21.332500000000003,
+          "y": -25.887500000000003,
+          "diameter": 0.45
+        },
+        "targetPours": 416,
+        "sameNetPours": 54,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_29",
+        "targetLayer": "inner2",
+        "via": {
+          "x": -21.3675,
+          "y": -26.652500000000003,
+          "diameter": 0.45
+        },
+        "targetPours": 160,
+        "sameNetPours": 160,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_34",
+        "targetLayer": "inner2",
+        "via": {
+          "x": -22.9675,
+          "y": -31.4525,
+          "diameter": 0.45
+        },
+        "targetPours": 160,
+        "sameNetPours": 160,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_10",
+        "targetLayer": "inner1",
+        "via": {
+          "x": -15.7325,
+          "y": -30.6875,
+          "diameter": 0.45
+        },
+        "targetPours": 416,
+        "sameNetPours": 54,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_20",
+        "targetLayer": "inner2",
+        "via": {
+          "x": -17.3675,
+          "y": -30.6875,
+          "diameter": 0.45
+        },
+        "targetPours": 160,
+        "sameNetPours": 160,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_23",
+        "targetLayer": "inner2",
+        "via": {
+          "x": -18.167499999999997,
+          "y": -30.6875,
+          "diameter": 0.45
+        },
+        "targetPours": 160,
+        "sameNetPours": 160,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_3",
+        "targetLayer": "inner1",
+        "via": {
+          "x": -18.1325,
+          "y": -25.887500000000003,
+          "diameter": 0.45
+        },
+        "targetPours": 416,
+        "sameNetPours": 54,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_22",
+        "targetLayer": "inner2",
+        "via": {
+          "x": -18.167499999999997,
+          "y": -26.652500000000003,
+          "diameter": 0.45
+        },
+        "targetPours": 160,
+        "sameNetPours": 160,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_21",
+        "targetLayer": "inner2",
+        "via": {
+          "x": -18.15,
+          "y": -25.105,
+          "diameter": 0.45
+        },
+        "targetPours": 160,
+        "sameNetPours": 160,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_0",
+        "targetLayer": "inner1",
+        "via": {
+          "x": -15.75,
+          "y": -25.105,
+          "diameter": 0.45
+        },
+        "targetPours": 416,
+        "sameNetPours": 54,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_28",
+        "targetLayer": "inner2",
+        "via": {
+          "x": -21.35,
+          "y": -25.105,
+          "diameter": 0.45
+        },
+        "targetPours": 160,
+        "sameNetPours": 160,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_33",
+        "targetLayer": "inner2",
+        "via": {
+          "x": -22.95,
+          "y": -25.105,
+          "diameter": 0.45
+        },
+        "targetPours": 160,
+        "sameNetPours": 160,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_35",
+        "targetLayer": "inner2",
+        "via": {
+          "x": -23.7675,
+          "y": -25.8525,
+          "diameter": 0.45
+        },
+        "targetPours": 160,
+        "sameNetPours": 160,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_1",
+        "targetLayer": "inner1",
+        "via": {
+          "x": -17.332500000000003,
+          "y": -25.8525,
+          "diameter": 0.45
+        },
+        "targetPours": 416,
+        "sameNetPours": 54,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_19",
+        "targetLayer": "inner2",
+        "via": {
+          "x": -17.35,
+          "y": -25.105,
+          "diameter": 0.45
+        },
+        "targetPours": 160,
+        "sameNetPours": 160,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_15",
+        "targetLayer": "inner1",
+        "via": {
+          "x": -16.5325,
+          "y": -25.887500000000003,
+          "diameter": 0.45
+        },
+        "targetPours": 416,
+        "sameNetPours": 54,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_42",
+        "targetLayer": "inner2",
+        "via": {
+          "x": -26.9675,
+          "y": -32.25,
+          "diameter": 0.45
+        },
+        "targetPours": 160,
+        "sameNetPours": 160,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_17",
+        "targetLayer": "inner1",
+        "via": {
+          "x": -26.915,
+          "y": -31.47,
+          "diameter": 0.45
+        },
+        "targetPours": 416,
+        "sameNetPours": 54,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_16",
+        "targetLayer": "inner1",
+        "via": {
+          "x": -26.932499999999997,
+          "y": -25.8525,
+          "diameter": 0.45
+        },
+        "targetPours": 416,
+        "sameNetPours": 54,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_41",
+        "targetLayer": "inner2",
+        "via": {
+          "x": -26.95,
+          "y": -25.105,
+          "diameter": 0.45
+        },
+        "targetPours": 160,
+        "sameNetPours": 160,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_13",
+        "targetLayer": "inner1",
+        "via": {
+          "x": -25.332500000000003,
+          "y": -25.8525,
+          "diameter": 0.45
+        },
+        "targetPours": 416,
+        "sameNetPours": 54,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_38",
+        "targetLayer": "inner2",
+        "via": {
+          "x": -25.35,
+          "y": -25.105,
+          "diameter": 0.45
+        },
+        "targetPours": 160,
+        "sameNetPours": 160,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_25",
+        "targetLayer": "inner2",
+        "via": {
+          "x": -19.7675,
+          "y": -25.8525,
+          "diameter": 0.45
+        },
+        "targetPours": 160,
+        "sameNetPours": 160,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_6",
+        "targetLayer": "inner1",
+        "via": {
+          "x": -19.75,
+          "y": -25.105,
+          "diameter": 0.45
+        },
+        "targetPours": 416,
+        "sameNetPours": 54,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_5",
+        "targetLayer": "inner1",
+        "via": {
+          "x": -18.932499999999997,
+          "y": -32.25,
+          "diameter": 0.45
+        },
+        "targetPours": 416,
+        "sameNetPours": 54,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_4",
+        "targetLayer": "inner1",
+        "via": {
+          "x": -18.1325,
+          "y": -32.25,
+          "diameter": 0.45
+        },
+        "targetPours": 416,
+        "sameNetPours": 54,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_2",
+        "targetLayer": "inner1",
+        "via": {
+          "x": -17.332500000000003,
+          "y": -32.25,
+          "diameter": 0.45
+        },
+        "targetPours": 416,
+        "sameNetPours": 54,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_24",
+        "targetLayer": "inner2",
+        "via": {
+          "x": -18.985,
+          "y": -31.47,
+          "diameter": 0.45
+        },
+        "targetPours": 160,
+        "sameNetPours": 160,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_26",
+        "targetLayer": "inner2",
+        "via": {
+          "x": -19.7675,
+          "y": -30.6875,
+          "diameter": 0.45
+        },
+        "targetPours": 160,
+        "sameNetPours": 160,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_27",
+        "targetLayer": "inner2",
+        "via": {
+          "x": -19.7675,
+          "y": -32.25,
+          "diameter": 0.45
+        },
+        "targetPours": 160,
+        "sameNetPours": 160,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_18",
+        "targetLayer": "inner2",
+        "via": {
+          "x": -15.7675,
+          "y": -32.25,
+          "diameter": 0.45
+        },
+        "targetPours": 160,
+        "sameNetPours": 160,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_32",
+        "targetLayer": "inner2",
+        "via": {
+          "x": -14.985,
+          "y": -31.47,
+          "diameter": 0.45
+        },
+        "targetPours": 160,
+        "sameNetPours": 160,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_40",
+        "targetLayer": "inner2",
+        "via": {
+          "x": -14.744999999999997,
+          "y": -28.67,
+          "diameter": 0.45
+        },
+        "targetPours": 160,
+        "sameNetPours": 160,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_36",
+        "targetLayer": "inner2",
+        "via": {
+          "x": -15.75,
+          "y": -25.835,
+          "diameter": 0.45
+        },
+        "targetPours": 160,
+        "sameNetPours": 160,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_7",
+        "targetLayer": "inner1",
+        "via": {
+          "x": -20.685,
+          "y": -29.375,
+          "diameter": 0.45
+        },
+        "targetPours": 416,
+        "sameNetPours": 54,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_31",
+        "targetLayer": "inner2",
+        "via": {
+          "x": -19.785,
+          "y": -31.47,
+          "diameter": 0.45
+        },
+        "targetPours": 160,
+        "sameNetPours": 160,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      },
+      {
+        "connectionName": "source_trace_9",
+        "targetLayer": "inner1",
+        "via": {
+          "x": -20.95,
+          "y": -32.405,
+          "diameter": 0.45
+        },
+        "targetPours": 416,
+        "sameNetPours": 54,
+        "centerInsideSameNet": true,
+        "nearestDistance": 0,
+        "outerPadTouchesSameNet": true
+      }
+    ]
+  }
+]

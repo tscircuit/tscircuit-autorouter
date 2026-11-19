@@ -1,0 +1,68 @@
+[
+  {
+    "board": "orangecrab",
+    "buses": 259,
+    "planeBuses": 166,
+    "planesEligible": 0,
+    "maximumBusConnections": 8,
+    "densePlaneHints": 0,
+    "denseUnrestrictedHints": 0,
+    "sourcePathComparisons": 1992,
+    "sourcePathDifferences": 1328
+  },
+  {
+    "board": "h616",
+    "buses": 160,
+    "planeBuses": 62,
+    "planesEligible": 0,
+    "maximumBusConnections": 8,
+    "densePlaneHints": 0,
+    "denseUnrestrictedHints": 0,
+    "sourcePathComparisons": 744,
+    "sourcePathDifferences": 496
+  },
+  {
+    "board": "butterstick",
+    "buses": 77,
+    "planeBuses": 38,
+    "planesEligible": 0,
+    "maximumBusConnections": 8,
+    "densePlaneHints": 0,
+    "denseUnrestrictedHints": 0,
+    "sourcePathComparisons": 456,
+    "sourcePathDifferences": 304
+  },
+  {
+    "board": "glider",
+    "buses": 95,
+    "planeBuses": 43,
+    "planesEligible": 43,
+    "maximumBusConnections": 1,
+    "densePlaneHints": 0,
+    "denseUnrestrictedHints": 0,
+    "sourcePathComparisons": 516,
+    "sourcePathDifferences": 0
+  },
+  {
+    "board": "imx6",
+    "buses": 32,
+    "planeBuses": 20,
+    "planesEligible": 20,
+    "maximumBusConnections": 1,
+    "densePlaneHints": 0,
+    "denseUnrestrictedHints": 0,
+    "sourcePathComparisons": 240,
+    "sourcePathDifferences": 0
+  },
+  {
+    "board": "icepi",
+    "buses": 32,
+    "planeBuses": 20,
+    "planesEligible": 20,
+    "maximumBusConnections": 1,
+    "densePlaneHints": 0,
+    "denseUnrestrictedHints": 0,
+    "sourcePathComparisons": 240,
+    "sourcePathDifferences": 0
+  }
+]

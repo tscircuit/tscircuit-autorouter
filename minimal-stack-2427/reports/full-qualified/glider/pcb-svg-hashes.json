@@ -1,0 +1,7 @@
+{
+  "board": "glider",
+  "workerSvgSha256": "eccce9dabf891f1a2af237e8c2048a56fcc95963f26853d5d86f0b3982288f3c",
+  "baselineSvgSha256": "eccce9dabf891f1a2af237e8c2048a56fcc95963f26853d5d86f0b3982288f3c",
+  "sameWorkerSvgBytes": true,
+  "artifactMember": "glider/pcb.svg"
+}

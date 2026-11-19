@@ -1,0 +1,2918 @@
+{
+  "criterion": "First nonzero source-layer segment whose end leaves the original source obstacle; signed travel along explicitly declared bus direction must exceed1e-9mm. Physical DRC and finite-plane membership are independent checks.",
+  "rows": [
+    {
+      "board": "icepi",
+      "variant": "baseline",
+      "explicitPlaneRequests": 6,
+      "validHeadings": 4,
+      "violations": [
+        {
+          "connectionName": "source_trace_16",
+          "busId": "ESC_U22_pin6",
+          "requiredDirection": "up",
+          "lead": {
+            "start": {
+              "x": 1.989999999998758,
+              "y": 11.329999999999984
+            },
+            "end": {
+              "x": 1.2399999999987588,
+              "y": 10.579999999999984
+            }
+          },
+          "signedAxisTravel": -0.75,
+          "valid": false,
+          "violation": "opposite-axis"
+        },
+        {
+          "connectionName": "source_trace_18",
+          "busId": "ESC_U22_pin82",
+          "requiredDirection": "up",
+          "lead": {
+            "start": {
+              "x": -0.01000000000124146,
+              "y": 14.829999999999984
+            },
+            "end": {
+              "x": 0.7399999999987579,
+              "y": 14.079999999999984
+            }
+          },
+          "signedAxisTravel": -0.75,
+          "valid": false,
+          "violation": "opposite-axis"
+        }
+      ],
+      "requests": [
+        {
+          "connectionName": "source_trace_16",
+          "busId": "ESC_U22_pin6",
+          "requiredDirection": "up",
+          "lead": {
+            "start": {
+              "x": 1.989999999998758,
+              "y": 11.329999999999984
+            },
+            "end": {
+              "x": 1.2399999999987588,
+              "y": 10.579999999999984
+            }
+          },
+          "signedAxisTravel": -0.75,
+          "valid": false,
+          "violation": "opposite-axis"
+        },
+        {
+          "connectionName": "source_trace_3",
+          "busId": "ESC_U22_pin142",
+          "requiredDirection": "left",
+          "lead": {
+            "start": {
+              "x": 3.489999999998759,
+              "y": 17.829999999999984
+            },
+            "end": {
+              "x": 2.739999999998759,
+              "y": 18.579999999999984
+            }
+          },
+          "signedAxisTravel": 0.75,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_7",
+          "busId": "ESC_U22_pin65",
+          "requiredDirection": "left",
+          "lead": {
+            "start": {
+              "x": 2.4899999999987585,
+              "y": 13.829999999999984
+            },
+            "end": {
+              "x": 2.2399999999987585,
+              "y": 14.079999999999984
+            }
+          },
+          "signedAxisTravel": 0.25,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_15",
+          "busId": "ESC_U22_pin55",
+          "requiredDirection": "up",
+          "lead": {
+            "start": {
+              "x": 1.4899999999987583,
+              "y": 13.329999999999984
+            },
+            "end": {
+              "x": 1.2399999999987585,
+              "y": 13.579999999999984
+            }
+          },
+          "signedAxisTravel": 0.25,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_17",
+          "busId": "ESC_U22_pin73",
+          "requiredDirection": "up",
+          "lead": {
+            "start": {
+              "x": 2.4899999999987585,
+              "y": 14.329999999999984
+            },
+            "end": {
+              "x": 1.7399999999987594,
+              "y": 15.079999999999984
+            }
+          },
+          "signedAxisTravel": 0.75,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_18",
+          "busId": "ESC_U22_pin82",
+          "requiredDirection": "up",
+          "lead": {
+            "start": {
+              "x": -0.01000000000124146,
+              "y": 14.829999999999984
+            },
+            "end": {
+              "x": 0.7399999999987579,
+              "y": 14.079999999999984
+            }
+          },
+          "signedAxisTravel": -0.75,
+          "valid": false,
+          "violation": "opposite-axis"
+        }
+      ]
+    },
+    {
+      "board": "icepi",
+      "variant": "safeS",
+      "explicitPlaneRequests": 11,
+      "validHeadings": 7,
+      "violations": [
+        {
+          "connectionName": "source_trace_16",
+          "busId": "ESC_U22_pin6",
+          "requiredDirection": "up",
+          "lead": {
+            "start": {
+              "x": 1.989999999998758,
+              "y": 11.329999999999984
+            },
+            "end": {
+              "x": 1.2399999999987588,
+              "y": 10.579999999999984
+            }
+          },
+          "signedAxisTravel": -0.75,
+          "valid": false,
+          "violation": "opposite-axis"
+        },
+        {
+          "connectionName": "source_trace_18",
+          "busId": "ESC_U22_pin82",
+          "requiredDirection": "up",
+          "lead": {
+            "start": {
+              "x": -0.01000000000124146,
+              "y": 14.829999999999984
+            },
+            "end": {
+              "x": -0.26000000000124146,
+              "y": 14.579999999999984
+            }
+          },
+          "signedAxisTravel": -0.25,
+          "valid": false,
+          "violation": "opposite-axis"
+        },
+        {
+          "connectionName": "source_trace_19",
+          "busId": "ESC_U22_pin89",
+          "requiredDirection": "up",
+          "lead": {
+            "start": {
+              "x": 2.4899999999987585,
+              "y": 15.329999999999984
+            },
+            "end": {
+              "x": 2.9399999999987587,
+              "y": 15.329999999999984
+            }
+          },
+          "signedAxisTravel": 0,
+          "valid": false,
+          "violation": "zero-axis"
+        },
+        {
+          "connectionName": "source_trace_8",
+          "busId": "ESC_U22_pin90",
+          "requiredDirection": "left",
+          "lead": {
+            "start": {
+              "x": -0.01000000000124146,
+              "y": 15.329999999999984
+            },
+            "end": {
+              "x": 0.7399999999987579,
+              "y": 14.579999999999984
+            }
+          },
+          "signedAxisTravel": -0.7499999999999993,
+          "valid": false,
+          "violation": "opposite-axis"
+        }
+      ],
+      "requests": [
+        {
+          "connectionName": "source_trace_16",
+          "busId": "ESC_U22_pin6",
+          "requiredDirection": "up",
+          "lead": {
+            "start": {
+              "x": 1.989999999998758,
+              "y": 11.329999999999984
+            },
+            "end": {
+              "x": 1.2399999999987588,
+              "y": 10.579999999999984
+            }
+          },
+          "signedAxisTravel": -0.75,
+          "valid": false,
+          "violation": "opposite-axis"
+        },
+        {
+          "connectionName": "source_trace_3",
+          "busId": "ESC_U22_pin142",
+          "requiredDirection": "left",
+          "lead": {
+            "start": {
+              "x": 3.489999999998759,
+              "y": 17.829999999999984
+            },
+            "end": {
+              "x": 2.739999999998759,
+              "y": 18.579999999999984
+            }
+          },
+          "signedAxisTravel": 0.75,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_1",
+          "busId": "ESC_U22_pin115",
+          "requiredDirection": "left",
+          "lead": {
+            "start": {
+              "x": 2.9899999999987585,
+              "y": 16.829999999999984
+            },
+            "end": {
+              "x": 2.7399999999987585,
+              "y": 16.579999999999984
+            }
+          },
+          "signedAxisTravel": 0.25,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_7",
+          "busId": "ESC_U22_pin65",
+          "requiredDirection": "left",
+          "lead": {
+            "start": {
+              "x": 2.4899999999987585,
+              "y": 13.829999999999984
+            },
+            "end": {
+              "x": 2.2399999999987585,
+              "y": 14.079999999999984
+            }
+          },
+          "signedAxisTravel": 0.25,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_15",
+          "busId": "ESC_U22_pin55",
+          "requiredDirection": "up",
+          "lead": {
+            "start": {
+              "x": 1.4899999999987583,
+              "y": 13.329999999999984
+            },
+            "end": {
+              "x": 1.2399999999987585,
+              "y": 13.579999999999984
+            }
+          },
+          "signedAxisTravel": 0.25,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_17",
+          "busId": "ESC_U22_pin73",
+          "requiredDirection": "up",
+          "lead": {
+            "start": {
+              "x": 2.4899999999987585,
+              "y": 14.329999999999984
+            },
+            "end": {
+              "x": 1.7399999999987594,
+              "y": 15.079999999999984
+            }
+          },
+          "signedAxisTravel": 0.75,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_18",
+          "busId": "ESC_U22_pin82",
+          "requiredDirection": "up",
+          "lead": {
+            "start": {
+              "x": -0.01000000000124146,
+              "y": 14.829999999999984
+            },
+            "end": {
+              "x": -0.26000000000124146,
+              "y": 14.579999999999984
+            }
+          },
+          "signedAxisTravel": -0.25,
+          "valid": false,
+          "violation": "opposite-axis"
+        },
+        {
+          "connectionName": "source_trace_0",
+          "busId": "ESC_U22_pin101",
+          "requiredDirection": "left",
+          "lead": {
+            "start": {
+              "x": 0.48999999999875865,
+              "y": 15.829999999999984
+            },
+            "end": {
+              "x": 0.23999999999875887,
+              "y": 16.079999999999984
+            }
+          },
+          "signedAxisTravel": 0.24999999999999978,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_19",
+          "busId": "ESC_U22_pin89",
+          "requiredDirection": "up",
+          "lead": {
+            "start": {
+              "x": 2.4899999999987585,
+              "y": 15.329999999999984
+            },
+            "end": {
+              "x": 2.9399999999987587,
+              "y": 15.329999999999984
+            }
+          },
+          "signedAxisTravel": 0,
+          "valid": false,
+          "violation": "zero-axis"
+        },
+        {
+          "connectionName": "source_trace_8",
+          "busId": "ESC_U22_pin90",
+          "requiredDirection": "left",
+          "lead": {
+            "start": {
+              "x": -0.01000000000124146,
+              "y": 15.329999999999984
+            },
+            "end": {
+              "x": 0.7399999999987579,
+              "y": 14.579999999999984
+            }
+          },
+          "signedAxisTravel": -0.7499999999999993,
+          "valid": false,
+          "violation": "opposite-axis"
+        },
+        {
+          "connectionName": "source_trace_9",
+          "busId": "ESC_U22_pin100",
+          "requiredDirection": "up",
+          "lead": {
+            "start": {
+              "x": 0.9899999999987588,
+              "y": 15.829999999999984
+            },
+            "end": {
+              "x": 0.9899999999987588,
+              "y": 16.279999999999983
+            }
+          },
+          "signedAxisTravel": 0.4499999999999993,
+          "valid": true,
+          "violation": null
+        }
+      ]
+    },
+    {
+      "board": "icepi",
+      "variant": "safeSOB",
+      "explicitPlaneRequests": 11,
+      "validHeadings": 7,
+      "violations": [
+        {
+          "connectionName": "source_trace_16",
+          "busId": "ESC_U22_pin6",
+          "requiredDirection": "up",
+          "lead": {
+            "start": {
+              "x": 1.989999999998758,
+              "y": 11.329999999999984
+            },
+            "end": {
+              "x": 1.2399999999987588,
+              "y": 10.579999999999984
+            }
+          },
+          "signedAxisTravel": -0.75,
+          "valid": false,
+          "violation": "opposite-axis"
+        },
+        {
+          "connectionName": "source_trace_18",
+          "busId": "ESC_U22_pin82",
+          "requiredDirection": "up",
+          "lead": {
+            "start": {
+              "x": -0.01000000000124146,
+              "y": 14.829999999999984
+            },
+            "end": {
+              "x": -0.26000000000124146,
+              "y": 14.579999999999984
+            }
+          },
+          "signedAxisTravel": -0.25,
+          "valid": false,
+          "violation": "opposite-axis"
+        },
+        {
+          "connectionName": "source_trace_19",
+          "busId": "ESC_U22_pin89",
+          "requiredDirection": "up",
+          "lead": {
+            "start": {
+              "x": 2.4899999999987585,
+              "y": 15.329999999999984
+            },
+            "end": {
+              "x": 2.9399999999987587,
+              "y": 15.329999999999984
+            }
+          },
+          "signedAxisTravel": 0,
+          "valid": false,
+          "violation": "zero-axis"
+        },
+        {
+          "connectionName": "source_trace_8",
+          "busId": "ESC_U22_pin90",
+          "requiredDirection": "left",
+          "lead": {
+            "start": {
+              "x": -0.01000000000124146,
+              "y": 15.329999999999984
+            },
+            "end": {
+              "x": 0.7399999999987579,
+              "y": 14.579999999999984
+            }
+          },
+          "signedAxisTravel": -0.7499999999999993,
+          "valid": false,
+          "violation": "opposite-axis"
+        }
+      ],
+      "requests": [
+        {
+          "connectionName": "source_trace_16",
+          "busId": "ESC_U22_pin6",
+          "requiredDirection": "up",
+          "lead": {
+            "start": {
+              "x": 1.989999999998758,
+              "y": 11.329999999999984
+            },
+            "end": {
+              "x": 1.2399999999987588,
+              "y": 10.579999999999984
+            }
+          },
+          "signedAxisTravel": -0.75,
+          "valid": false,
+          "violation": "opposite-axis"
+        },
+        {
+          "connectionName": "source_trace_3",
+          "busId": "ESC_U22_pin142",
+          "requiredDirection": "left",
+          "lead": {
+            "start": {
+              "x": 3.489999999998759,
+              "y": 17.829999999999984
+            },
+            "end": {
+              "x": 2.739999999998759,
+              "y": 18.579999999999984
+            }
+          },
+          "signedAxisTravel": 0.75,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_1",
+          "busId": "ESC_U22_pin115",
+          "requiredDirection": "left",
+          "lead": {
+            "start": {
+              "x": 2.9899999999987585,
+              "y": 16.829999999999984
+            },
+            "end": {
+              "x": 2.7399999999987585,
+              "y": 16.579999999999984
+            }
+          },
+          "signedAxisTravel": 0.25,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_7",
+          "busId": "ESC_U22_pin65",
+          "requiredDirection": "left",
+          "lead": {
+            "start": {
+              "x": 2.4899999999987585,
+              "y": 13.829999999999984
+            },
+            "end": {
+              "x": 2.2399999999987585,
+              "y": 14.079999999999984
+            }
+          },
+          "signedAxisTravel": 0.25,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_15",
+          "busId": "ESC_U22_pin55",
+          "requiredDirection": "up",
+          "lead": {
+            "start": {
+              "x": 1.4899999999987583,
+              "y": 13.329999999999984
+            },
+            "end": {
+              "x": 1.2399999999987585,
+              "y": 13.579999999999984
+            }
+          },
+          "signedAxisTravel": 0.25,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_17",
+          "busId": "ESC_U22_pin73",
+          "requiredDirection": "up",
+          "lead": {
+            "start": {
+              "x": 2.4899999999987585,
+              "y": 14.329999999999984
+            },
+            "end": {
+              "x": 1.7399999999987594,
+              "y": 15.079999999999984
+            }
+          },
+          "signedAxisTravel": 0.75,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_18",
+          "busId": "ESC_U22_pin82",
+          "requiredDirection": "up",
+          "lead": {
+            "start": {
+              "x": -0.01000000000124146,
+              "y": 14.829999999999984
+            },
+            "end": {
+              "x": -0.26000000000124146,
+              "y": 14.579999999999984
+            }
+          },
+          "signedAxisTravel": -0.25,
+          "valid": false,
+          "violation": "opposite-axis"
+        },
+        {
+          "connectionName": "source_trace_0",
+          "busId": "ESC_U22_pin101",
+          "requiredDirection": "left",
+          "lead": {
+            "start": {
+              "x": 0.48999999999875865,
+              "y": 15.829999999999984
+            },
+            "end": {
+              "x": 0.23999999999875887,
+              "y": 16.079999999999984
+            }
+          },
+          "signedAxisTravel": 0.24999999999999978,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_19",
+          "busId": "ESC_U22_pin89",
+          "requiredDirection": "up",
+          "lead": {
+            "start": {
+              "x": 2.4899999999987585,
+              "y": 15.329999999999984
+            },
+            "end": {
+              "x": 2.9399999999987587,
+              "y": 15.329999999999984
+            }
+          },
+          "signedAxisTravel": 0,
+          "valid": false,
+          "violation": "zero-axis"
+        },
+        {
+          "connectionName": "source_trace_8",
+          "busId": "ESC_U22_pin90",
+          "requiredDirection": "left",
+          "lead": {
+            "start": {
+              "x": -0.01000000000124146,
+              "y": 15.329999999999984
+            },
+            "end": {
+              "x": 0.7399999999987579,
+              "y": 14.579999999999984
+            }
+          },
+          "signedAxisTravel": -0.7499999999999993,
+          "valid": false,
+          "violation": "opposite-axis"
+        },
+        {
+          "connectionName": "source_trace_9",
+          "busId": "ESC_U22_pin100",
+          "requiredDirection": "up",
+          "lead": {
+            "start": {
+              "x": 0.9899999999987588,
+              "y": 15.829999999999984
+            },
+            "end": {
+              "x": 0.9899999999987588,
+              "y": 16.279999999999983
+            }
+          },
+          "signedAxisTravel": 0.4499999999999993,
+          "valid": true,
+          "violation": null
+        }
+      ]
+    },
+    {
+      "board": "icepi",
+      "variant": "original305",
+      "explicitPlaneRequests": 15,
+      "validHeadings": 15,
+      "violations": [],
+      "requests": [
+        {
+          "connectionName": "source_trace_10",
+          "busId": "ESC_U22_pin127",
+          "requiredDirection": "up",
+          "lead": {
+            "start": {
+              "x": 3.989999999998759,
+              "y": 17.329999999999984
+            },
+            "end": {
+              "x": 4.239999999998773,
+              "y": 17.58
+            }
+          },
+          "signedAxisTravel": 0.2500000000000142,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_14",
+          "busId": "ESC_U22_pin32",
+          "requiredDirection": "up",
+          "lead": {
+            "start": {
+              "x": 2.9899999999987585,
+              "y": 12.329999999999984
+            },
+            "end": {
+              "x": 2.5049999999987413,
+              "y": 12.815000000000001
+            }
+          },
+          "signedAxisTravel": 0.4850000000000172,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_2",
+          "busId": "ESC_U22_pin129",
+          "requiredDirection": "left",
+          "lead": {
+            "start": {
+              "x": 2.989999999998759,
+              "y": 17.329999999999984
+            },
+            "end": {
+              "x": 2.8600000000000003,
+              "y": 17.200000000001225
+            }
+          },
+          "signedAxisTravel": 0.12999999999875866,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_19",
+          "busId": "ESC_U22_pin89",
+          "requiredDirection": "up",
+          "lead": {
+            "start": {
+              "x": 2.4899999999987585,
+              "y": 15.392499999999998
+            },
+            "end": {
+              "x": 2.5399999999987584,
+              "y": 15.442499999999999
+            }
+          },
+          "signedAxisTravel": 0.05000000000000071,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_9",
+          "busId": "ESC_U22_pin100",
+          "requiredDirection": "up",
+          "lead": {
+            "start": {
+              "x": 0.9899999999987588,
+              "y": 15.829999999999984
+            },
+            "end": {
+              "x": 0.99,
+              "y": 16.275
+            }
+          },
+          "signedAxisTravel": 0.4450000000000145,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_8",
+          "busId": "ESC_U22_pin90",
+          "requiredDirection": "left",
+          "lead": {
+            "start": {
+              "x": -0.01000000000124146,
+              "y": 15.329999999999984
+            },
+            "end": {
+              "x": -0.34000000000122554,
+              "y": 15
+            }
+          },
+          "signedAxisTravel": 0.3299999999999841,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_0",
+          "busId": "ESC_U22_pin101",
+          "requiredDirection": "left",
+          "lead": {
+            "start": {
+              "x": 0.4249999999993793,
+              "y": 15.829999999999984
+            },
+            "end": {
+              "x": 0.36,
+              "y": 15.894999999999364
+            }
+          },
+          "signedAxisTravel": 0.06499999999937933,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_18",
+          "busId": "ESC_U22_pin82",
+          "requiredDirection": "up",
+          "lead": {
+            "start": {
+              "x": -0.01000000000124146,
+              "y": 14.892499999999998
+            },
+            "end": {
+              "x": 0.03999999999875854,
+              "y": 14.942499999999999
+            }
+          },
+          "signedAxisTravel": 0.05000000000000071,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_6",
+          "busId": "ESC_U22_pin54",
+          "requiredDirection": "left",
+          "lead": {
+            "start": {
+              "x": 1.9899999999987585,
+              "y": 13.329999999999984
+            },
+            "end": {
+              "x": 1.785,
+              "y": 13.534999999998742
+            }
+          },
+          "signedAxisTravel": 0.20499999999875862,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_15",
+          "busId": "ESC_U22_pin55",
+          "requiredDirection": "up",
+          "lead": {
+            "start": {
+              "x": 1.4899999999987583,
+              "y": 13.329999999999984
+            },
+            "end": {
+              "x": 1.045,
+              "y": 13.774999999998743
+            }
+          },
+          "signedAxisTravel": 0.4449999999987586,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_3",
+          "busId": "ESC_U22_pin142",
+          "requiredDirection": "left",
+          "lead": {
+            "start": {
+              "x": 3.489999999998759,
+              "y": 17.829999999999984
+            },
+            "end": {
+              "x": 3.045,
+              "y": 18.275
+            }
+          },
+          "signedAxisTravel": 0.44499999999875905,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_11",
+          "busId": "ESC_U22_pin130",
+          "requiredDirection": "up",
+          "lead": {
+            "start": {
+              "x": 2.489999999998759,
+              "y": 17.329999999999984
+            },
+            "end": {
+              "x": 1.7199999999987416,
+              "y": 18.1
+            }
+          },
+          "signedAxisTravel": 0.7700000000000173,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_4",
+          "busId": "ESC_U22_pin144",
+          "requiredDirection": "left",
+          "lead": {
+            "start": {
+              "x": 2.489999999998759,
+              "y": 17.829999999999984
+            },
+            "end": {
+              "x": 2.2399999999987594,
+              "y": 18.079999999999984
+            }
+          },
+          "signedAxisTravel": 0.24999999999999956,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_7",
+          "busId": "ESC_U22_pin65",
+          "requiredDirection": "left",
+          "lead": {
+            "start": {
+              "x": 2.4899999999987585,
+              "y": 13.829999999999984
+            },
+            "end": {
+              "x": 1.8774999999987436,
+              "y": 14.442499999999999
+            }
+          },
+          "signedAxisTravel": 0.6125000000000149,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_17",
+          "busId": "ESC_U22_pin73",
+          "requiredDirection": "up",
+          "lead": {
+            "start": {
+              "x": 2.4899999999987585,
+              "y": 14.357500000001242
+            },
+            "end": {
+              "x": 1.8475000000000001,
+              "y": 15
+            }
+          },
+          "signedAxisTravel": 0.6424999999987584,
+          "valid": true,
+          "violation": null
+        }
+      ]
+    },
+    {
+      "board": "imx6",
+      "variant": "baseline",
+      "explicitPlaneRequests": 6,
+      "validHeadings": 1,
+      "violations": [
+        {
+          "connectionName": "source_trace_11",
+          "busId": "ESC_U10_pin130",
+          "requiredDirection": "down",
+          "lead": {
+            "start": {
+              "x": 14.750010388624133,
+              "y": -15.250010388624133
+            },
+            "end": {
+              "x": 15.500010388624133,
+              "y": -14.500010388624133
+            }
+          },
+          "signedAxisTravel": -0.75,
+          "valid": false,
+          "violation": "opposite-axis"
+        },
+        {
+          "connectionName": "source_trace_17",
+          "busId": "ESC_U10_pin73",
+          "requiredDirection": "down",
+          "lead": {
+            "start": {
+              "x": 11.750010388624133,
+              "y": -15.250010388624133
+            },
+            "end": {
+              "x": 12.500010388624133,
+              "y": -14.500010388624133
+            }
+          },
+          "signedAxisTravel": -0.75,
+          "valid": false,
+          "violation": "opposite-axis"
+        },
+        {
+          "connectionName": "source_trace_16",
+          "busId": "ESC_U10_pin6",
+          "requiredDirection": "down",
+          "lead": {
+            "start": {
+              "x": 8.750010388624133,
+              "y": -14.750010388624133
+            },
+            "end": {
+              "x": 8.305010388624133,
+              "y": -14.500010388624133
+            }
+          },
+          "signedAxisTravel": -0.25,
+          "valid": false,
+          "violation": "opposite-axis"
+        },
+        {
+          "connectionName": "source_trace_15",
+          "busId": "ESC_U10_pin55",
+          "requiredDirection": "down",
+          "lead": {
+            "start": {
+              "x": 10.750010388624133,
+              "y": -14.250010388624133
+            },
+            "end": {
+              "x": 11.000010388624133,
+              "y": -14.000010388624133
+            }
+          },
+          "signedAxisTravel": -0.25,
+          "valid": false,
+          "violation": "opposite-axis"
+        },
+        {
+          "connectionName": "source_trace_3",
+          "busId": "ESC_U10_pin144",
+          "requiredDirection": "down",
+          "lead": {
+            "start": {
+              "x": 15.250010388624133,
+              "y": -15.250010388624133
+            },
+            "end": {
+              "x": 15.695010388624134,
+              "y": -15.000010388624133
+            }
+          },
+          "signedAxisTravel": -0.25,
+          "valid": false,
+          "violation": "opposite-axis"
+        }
+      ],
+      "requests": [
+        {
+          "connectionName": "source_trace_12",
+          "busId": "ESC_U10_pin143",
+          "requiredDirection": "down",
+          "lead": {
+            "start": {
+              "x": 15.250010388624133,
+              "y": -15.750010388624133
+            },
+            "end": {
+              "x": 16.000010388624133,
+              "y": -16.500010388624133
+            }
+          },
+          "signedAxisTravel": 0.75,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_11",
+          "busId": "ESC_U10_pin130",
+          "requiredDirection": "down",
+          "lead": {
+            "start": {
+              "x": 14.750010388624133,
+              "y": -15.250010388624133
+            },
+            "end": {
+              "x": 15.500010388624133,
+              "y": -14.500010388624133
+            }
+          },
+          "signedAxisTravel": -0.75,
+          "valid": false,
+          "violation": "opposite-axis"
+        },
+        {
+          "connectionName": "source_trace_17",
+          "busId": "ESC_U10_pin73",
+          "requiredDirection": "down",
+          "lead": {
+            "start": {
+              "x": 11.750010388624133,
+              "y": -15.250010388624133
+            },
+            "end": {
+              "x": 12.500010388624133,
+              "y": -14.500010388624133
+            }
+          },
+          "signedAxisTravel": -0.75,
+          "valid": false,
+          "violation": "opposite-axis"
+        },
+        {
+          "connectionName": "source_trace_16",
+          "busId": "ESC_U10_pin6",
+          "requiredDirection": "down",
+          "lead": {
+            "start": {
+              "x": 8.750010388624133,
+              "y": -14.750010388624133
+            },
+            "end": {
+              "x": 8.305010388624133,
+              "y": -14.500010388624133
+            }
+          },
+          "signedAxisTravel": -0.25,
+          "valid": false,
+          "violation": "opposite-axis"
+        },
+        {
+          "connectionName": "source_trace_15",
+          "busId": "ESC_U10_pin55",
+          "requiredDirection": "down",
+          "lead": {
+            "start": {
+              "x": 10.750010388624133,
+              "y": -14.250010388624133
+            },
+            "end": {
+              "x": 11.000010388624133,
+              "y": -14.000010388624133
+            }
+          },
+          "signedAxisTravel": -0.25,
+          "valid": false,
+          "violation": "opposite-axis"
+        },
+        {
+          "connectionName": "source_trace_3",
+          "busId": "ESC_U10_pin144",
+          "requiredDirection": "down",
+          "lead": {
+            "start": {
+              "x": 15.250010388624133,
+              "y": -15.250010388624133
+            },
+            "end": {
+              "x": 15.695010388624134,
+              "y": -15.000010388624133
+            }
+          },
+          "signedAxisTravel": -0.25,
+          "valid": false,
+          "violation": "opposite-axis"
+        }
+      ]
+    },
+    {
+      "board": "imx6",
+      "variant": "safeS",
+      "explicitPlaneRequests": 12,
+      "validHeadings": 6,
+      "violations": [
+        {
+          "connectionName": "source_trace_11",
+          "busId": "ESC_U10_pin130",
+          "requiredDirection": "down",
+          "lead": {
+            "start": {
+              "x": 14.750010388624133,
+              "y": -15.250010388624133
+            },
+            "end": {
+              "x": 15.500010388624133,
+              "y": -14.500010388624133
+            }
+          },
+          "signedAxisTravel": -0.75,
+          "valid": false,
+          "violation": "opposite-axis"
+        },
+        {
+          "connectionName": "source_trace_16",
+          "busId": "ESC_U10_pin6",
+          "requiredDirection": "down",
+          "lead": {
+            "start": {
+              "x": 8.750010388624133,
+              "y": -14.750010388624133
+            },
+            "end": {
+              "x": 8.305010388624133,
+              "y": -14.500010388624133
+            }
+          },
+          "signedAxisTravel": -0.25,
+          "valid": false,
+          "violation": "opposite-axis"
+        },
+        {
+          "connectionName": "source_trace_15",
+          "busId": "ESC_U10_pin55",
+          "requiredDirection": "down",
+          "lead": {
+            "start": {
+              "x": 10.750010388624133,
+              "y": -14.250010388624133
+            },
+            "end": {
+              "x": 11.000010388624133,
+              "y": -14.000010388624133
+            }
+          },
+          "signedAxisTravel": -0.25,
+          "valid": false,
+          "violation": "opposite-axis"
+        },
+        {
+          "connectionName": "source_trace_18",
+          "busId": "ESC_U10_pin82",
+          "requiredDirection": "down",
+          "lead": {
+            "start": {
+              "x": 12.250010388624133,
+              "y": -12.750010388624133
+            },
+            "end": {
+              "x": 12.000010388624133,
+              "y": -12.500010388624133
+            }
+          },
+          "signedAxisTravel": -0.25,
+          "valid": false,
+          "violation": "opposite-axis"
+        },
+        {
+          "connectionName": "source_trace_0",
+          "busId": "ESC_U10_pin115",
+          "requiredDirection": "down",
+          "lead": {
+            "start": {
+              "x": 14.250010388624133,
+              "y": -15.750010388624133
+            },
+            "end": {
+              "x": 14.000010388624133,
+              "y": -15.500010388624133
+            }
+          },
+          "signedAxisTravel": -0.25,
+          "valid": false,
+          "violation": "opposite-axis"
+        },
+        {
+          "connectionName": "source_trace_3",
+          "busId": "ESC_U10_pin144",
+          "requiredDirection": "down",
+          "lead": {
+            "start": {
+              "x": 15.250010388624133,
+              "y": -15.250010388624133
+            },
+            "end": {
+              "x": 15.695010388624134,
+              "y": -15.000010388624133
+            }
+          },
+          "signedAxisTravel": -0.25,
+          "valid": false,
+          "violation": "opposite-axis"
+        }
+      ],
+      "requests": [
+        {
+          "connectionName": "source_trace_12",
+          "busId": "ESC_U10_pin143",
+          "requiredDirection": "down",
+          "lead": {
+            "start": {
+              "x": 15.250010388624133,
+              "y": -15.750010388624133
+            },
+            "end": {
+              "x": 16.000010388624133,
+              "y": -16.500010388624133
+            }
+          },
+          "signedAxisTravel": 0.75,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_11",
+          "busId": "ESC_U10_pin130",
+          "requiredDirection": "down",
+          "lead": {
+            "start": {
+              "x": 14.750010388624133,
+              "y": -15.250010388624133
+            },
+            "end": {
+              "x": 15.500010388624133,
+              "y": -14.500010388624133
+            }
+          },
+          "signedAxisTravel": -0.75,
+          "valid": false,
+          "violation": "opposite-axis"
+        },
+        {
+          "connectionName": "source_trace_17",
+          "busId": "ESC_U10_pin73",
+          "requiredDirection": "down",
+          "lead": {
+            "start": {
+              "x": 11.750010388624133,
+              "y": -15.250010388624133
+            },
+            "end": {
+              "x": 11.500010388624133,
+              "y": -15.500010388624133
+            }
+          },
+          "signedAxisTravel": 0.25,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_19",
+          "busId": "ESC_U10_pin89",
+          "requiredDirection": "down",
+          "lead": {
+            "start": {
+              "x": 12.750010388624133,
+              "y": -15.250010388624133
+            },
+            "end": {
+              "x": 12.500010388624133,
+              "y": -15.500010388624133
+            }
+          },
+          "signedAxisTravel": 0.25,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_16",
+          "busId": "ESC_U10_pin6",
+          "requiredDirection": "down",
+          "lead": {
+            "start": {
+              "x": 8.750010388624133,
+              "y": -14.750010388624133
+            },
+            "end": {
+              "x": 8.305010388624133,
+              "y": -14.500010388624133
+            }
+          },
+          "signedAxisTravel": -0.25,
+          "valid": false,
+          "violation": "opposite-axis"
+        },
+        {
+          "connectionName": "source_trace_15",
+          "busId": "ESC_U10_pin55",
+          "requiredDirection": "down",
+          "lead": {
+            "start": {
+              "x": 10.750010388624133,
+              "y": -14.250010388624133
+            },
+            "end": {
+              "x": 11.000010388624133,
+              "y": -14.000010388624133
+            }
+          },
+          "signedAxisTravel": -0.25,
+          "valid": false,
+          "violation": "opposite-axis"
+        },
+        {
+          "connectionName": "source_trace_9",
+          "busId": "ESC_U10_pin100",
+          "requiredDirection": "down",
+          "lead": {
+            "start": {
+              "x": 13.250010388624133,
+              "y": -13.750010388624133
+            },
+            "end": {
+              "x": 13.000010388624133,
+              "y": -14.000010388624133
+            }
+          },
+          "signedAxisTravel": 0.25,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_18",
+          "busId": "ESC_U10_pin82",
+          "requiredDirection": "down",
+          "lead": {
+            "start": {
+              "x": 12.250010388624133,
+              "y": -12.750010388624133
+            },
+            "end": {
+              "x": 12.000010388624133,
+              "y": -12.500010388624133
+            }
+          },
+          "signedAxisTravel": -0.25,
+          "valid": false,
+          "violation": "opposite-axis"
+        },
+        {
+          "connectionName": "source_trace_0",
+          "busId": "ESC_U10_pin115",
+          "requiredDirection": "down",
+          "lead": {
+            "start": {
+              "x": 14.250010388624133,
+              "y": -15.750010388624133
+            },
+            "end": {
+              "x": 14.000010388624133,
+              "y": -15.500010388624133
+            }
+          },
+          "signedAxisTravel": -0.25,
+          "valid": false,
+          "violation": "opposite-axis"
+        },
+        {
+          "connectionName": "source_trace_3",
+          "busId": "ESC_U10_pin144",
+          "requiredDirection": "down",
+          "lead": {
+            "start": {
+              "x": 15.250010388624133,
+              "y": -15.250010388624133
+            },
+            "end": {
+              "x": 15.695010388624134,
+              "y": -15.000010388624133
+            }
+          },
+          "signedAxisTravel": -0.25,
+          "valid": false,
+          "violation": "opposite-axis"
+        },
+        {
+          "connectionName": "source_trace_4",
+          "busId": "ESC_U10_pin34",
+          "requiredDirection": "down",
+          "lead": {
+            "start": {
+              "x": 9.750010388624133,
+              "y": -14.750010388624133
+            },
+            "end": {
+              "x": 10.000010388624133,
+              "y": -15.000010388624133
+            }
+          },
+          "signedAxisTravel": 0.25,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_8",
+          "busId": "ESC_U10_pin90",
+          "requiredDirection": "right",
+          "lead": {
+            "start": {
+              "x": 12.750010388624133,
+              "y": -12.750010388624133
+            },
+            "end": {
+              "x": 13.000010388624133,
+              "y": -12.500010388624133
+            }
+          },
+          "signedAxisTravel": 0.25,
+          "valid": true,
+          "violation": null
+        }
+      ]
+    },
+    {
+      "board": "imx6",
+      "variant": "safeSOB",
+      "explicitPlaneRequests": 12,
+      "validHeadings": 6,
+      "violations": [
+        {
+          "connectionName": "source_trace_11",
+          "busId": "ESC_U10_pin130",
+          "requiredDirection": "down",
+          "lead": {
+            "start": {
+              "x": 14.750010388624133,
+              "y": -15.250010388624133
+            },
+            "end": {
+              "x": 15.500010388624133,
+              "y": -14.500010388624133
+            }
+          },
+          "signedAxisTravel": -0.75,
+          "valid": false,
+          "violation": "opposite-axis"
+        },
+        {
+          "connectionName": "source_trace_16",
+          "busId": "ESC_U10_pin6",
+          "requiredDirection": "down",
+          "lead": {
+            "start": {
+              "x": 8.750010388624133,
+              "y": -14.750010388624133
+            },
+            "end": {
+              "x": 8.305010388624133,
+              "y": -14.500010388624133
+            }
+          },
+          "signedAxisTravel": -0.25,
+          "valid": false,
+          "violation": "opposite-axis"
+        },
+        {
+          "connectionName": "source_trace_15",
+          "busId": "ESC_U10_pin55",
+          "requiredDirection": "down",
+          "lead": {
+            "start": {
+              "x": 10.750010388624133,
+              "y": -14.250010388624133
+            },
+            "end": {
+              "x": 11.000010388624133,
+              "y": -14.000010388624133
+            }
+          },
+          "signedAxisTravel": -0.25,
+          "valid": false,
+          "violation": "opposite-axis"
+        },
+        {
+          "connectionName": "source_trace_18",
+          "busId": "ESC_U10_pin82",
+          "requiredDirection": "down",
+          "lead": {
+            "start": {
+              "x": 12.250010388624133,
+              "y": -12.750010388624133
+            },
+            "end": {
+              "x": 12.000010388624133,
+              "y": -12.500010388624133
+            }
+          },
+          "signedAxisTravel": -0.25,
+          "valid": false,
+          "violation": "opposite-axis"
+        },
+        {
+          "connectionName": "source_trace_0",
+          "busId": "ESC_U10_pin115",
+          "requiredDirection": "down",
+          "lead": {
+            "start": {
+              "x": 14.250010388624133,
+              "y": -15.750010388624133
+            },
+            "end": {
+              "x": 14.000010388624133,
+              "y": -15.500010388624133
+            }
+          },
+          "signedAxisTravel": -0.25,
+          "valid": false,
+          "violation": "opposite-axis"
+        },
+        {
+          "connectionName": "source_trace_3",
+          "busId": "ESC_U10_pin144",
+          "requiredDirection": "down",
+          "lead": {
+            "start": {
+              "x": 15.250010388624133,
+              "y": -15.250010388624133
+            },
+            "end": {
+              "x": 15.695010388624134,
+              "y": -15.000010388624133
+            }
+          },
+          "signedAxisTravel": -0.25,
+          "valid": false,
+          "violation": "opposite-axis"
+        }
+      ],
+      "requests": [
+        {
+          "connectionName": "source_trace_12",
+          "busId": "ESC_U10_pin143",
+          "requiredDirection": "down",
+          "lead": {
+            "start": {
+              "x": 15.250010388624133,
+              "y": -15.750010388624133
+            },
+            "end": {
+              "x": 16.000010388624133,
+              "y": -16.500010388624133
+            }
+          },
+          "signedAxisTravel": 0.75,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_11",
+          "busId": "ESC_U10_pin130",
+          "requiredDirection": "down",
+          "lead": {
+            "start": {
+              "x": 14.750010388624133,
+              "y": -15.250010388624133
+            },
+            "end": {
+              "x": 15.500010388624133,
+              "y": -14.500010388624133
+            }
+          },
+          "signedAxisTravel": -0.75,
+          "valid": false,
+          "violation": "opposite-axis"
+        },
+        {
+          "connectionName": "source_trace_17",
+          "busId": "ESC_U10_pin73",
+          "requiredDirection": "down",
+          "lead": {
+            "start": {
+              "x": 11.750010388624133,
+              "y": -15.250010388624133
+            },
+            "end": {
+              "x": 11.500010388624133,
+              "y": -15.500010388624133
+            }
+          },
+          "signedAxisTravel": 0.25,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_19",
+          "busId": "ESC_U10_pin89",
+          "requiredDirection": "down",
+          "lead": {
+            "start": {
+              "x": 12.750010388624133,
+              "y": -15.250010388624133
+            },
+            "end": {
+              "x": 12.500010388624133,
+              "y": -15.500010388624133
+            }
+          },
+          "signedAxisTravel": 0.25,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_16",
+          "busId": "ESC_U10_pin6",
+          "requiredDirection": "down",
+          "lead": {
+            "start": {
+              "x": 8.750010388624133,
+              "y": -14.750010388624133
+            },
+            "end": {
+              "x": 8.305010388624133,
+              "y": -14.500010388624133
+            }
+          },
+          "signedAxisTravel": -0.25,
+          "valid": false,
+          "violation": "opposite-axis"
+        },
+        {
+          "connectionName": "source_trace_15",
+          "busId": "ESC_U10_pin55",
+          "requiredDirection": "down",
+          "lead": {
+            "start": {
+              "x": 10.750010388624133,
+              "y": -14.250010388624133
+            },
+            "end": {
+              "x": 11.000010388624133,
+              "y": -14.000010388624133
+            }
+          },
+          "signedAxisTravel": -0.25,
+          "valid": false,
+          "violation": "opposite-axis"
+        },
+        {
+          "connectionName": "source_trace_9",
+          "busId": "ESC_U10_pin100",
+          "requiredDirection": "down",
+          "lead": {
+            "start": {
+              "x": 13.250010388624133,
+              "y": -13.750010388624133
+            },
+            "end": {
+              "x": 13.000010388624133,
+              "y": -14.000010388624133
+            }
+          },
+          "signedAxisTravel": 0.25,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_18",
+          "busId": "ESC_U10_pin82",
+          "requiredDirection": "down",
+          "lead": {
+            "start": {
+              "x": 12.250010388624133,
+              "y": -12.750010388624133
+            },
+            "end": {
+              "x": 12.000010388624133,
+              "y": -12.500010388624133
+            }
+          },
+          "signedAxisTravel": -0.25,
+          "valid": false,
+          "violation": "opposite-axis"
+        },
+        {
+          "connectionName": "source_trace_0",
+          "busId": "ESC_U10_pin115",
+          "requiredDirection": "down",
+          "lead": {
+            "start": {
+              "x": 14.250010388624133,
+              "y": -15.750010388624133
+            },
+            "end": {
+              "x": 14.000010388624133,
+              "y": -15.500010388624133
+            }
+          },
+          "signedAxisTravel": -0.25,
+          "valid": false,
+          "violation": "opposite-axis"
+        },
+        {
+          "connectionName": "source_trace_3",
+          "busId": "ESC_U10_pin144",
+          "requiredDirection": "down",
+          "lead": {
+            "start": {
+              "x": 15.250010388624133,
+              "y": -15.250010388624133
+            },
+            "end": {
+              "x": 15.695010388624134,
+              "y": -15.000010388624133
+            }
+          },
+          "signedAxisTravel": -0.25,
+          "valid": false,
+          "violation": "opposite-axis"
+        },
+        {
+          "connectionName": "source_trace_4",
+          "busId": "ESC_U10_pin34",
+          "requiredDirection": "down",
+          "lead": {
+            "start": {
+              "x": 9.750010388624133,
+              "y": -14.750010388624133
+            },
+            "end": {
+              "x": 10.000010388624133,
+              "y": -15.000010388624133
+            }
+          },
+          "signedAxisTravel": 0.25,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_8",
+          "busId": "ESC_U10_pin90",
+          "requiredDirection": "right",
+          "lead": {
+            "start": {
+              "x": 12.750010388624133,
+              "y": -12.750010388624133
+            },
+            "end": {
+              "x": 13.000010388624133,
+              "y": -12.500010388624133
+            }
+          },
+          "signedAxisTravel": 0.25,
+          "valid": true,
+          "violation": null
+        }
+      ]
+    },
+    {
+      "board": "imx6",
+      "variant": "original305",
+      "explicitPlaneRequests": 16,
+      "validHeadings": 16,
+      "violations": [],
+      "requests": [
+        {
+          "connectionName": "source_trace_5",
+          "busId": "ESC_U10_pin101",
+          "requiredDirection": "right",
+          "lead": {
+            "start": {
+              "x": 13.250010388624133,
+              "y": -13.250010388624133
+            },
+            "end": {
+              "x": 13.834024945,
+              "y": -12.665995832248267
+            }
+          },
+          "signedAxisTravel": 0.5840145563758661,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_0",
+          "busId": "ESC_U10_pin115",
+          "requiredDirection": "down",
+          "lead": {
+            "start": {
+              "x": 14.250010388624133,
+              "y": -15.750010388624133
+            },
+            "end": {
+              "x": 14.084436795495327,
+              "y": -15.91558398175294
+            }
+          },
+          "signedAxisTravel": 0.1655735931288067,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_2",
+          "busId": "ESC_U10_pin142",
+          "requiredDirection": "down",
+          "lead": {
+            "start": {
+              "x": 15.250010388624133,
+              "y": -16.250010388624133
+            },
+            "end": {
+              "x": 15.50001039,
+              "y": -16.50001039
+            }
+          },
+          "signedAxisTravel": 0.25000000137586653,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_12",
+          "busId": "ESC_U10_pin143",
+          "requiredDirection": "down",
+          "lead": {
+            "start": {
+              "x": 15.250010388624133,
+              "y": -15.838010389999999
+            },
+            "end": {
+              "x": 15.310010388624134,
+              "y": -15.89801039
+            }
+          },
+          "signedAxisTravel": 0.0600000000000005,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_3",
+          "busId": "ESC_U10_pin144",
+          "requiredDirection": "down",
+          "lead": {
+            "start": {
+              "x": 15.250010388624133,
+              "y": -15.250010388624133
+            },
+            "end": {
+              "x": 15.429583983128808,
+              "y": -15.429583983128808
+            }
+          },
+          "signedAxisTravel": 0.17957359450467436,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_13",
+          "busId": "ESC_U10_pin145",
+          "requiredDirection": "down",
+          "lead": {
+            "start": {
+              "x": 15.250010388624133,
+              "y": -14.750010388624133
+            },
+            "end": {
+              "x": 15.361200638128807,
+              "y": -14.861200638128807
+            }
+          },
+          "signedAxisTravel": 0.11119024950467349,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_8",
+          "busId": "ESC_U10_pin90",
+          "requiredDirection": "right",
+          "lead": {
+            "start": {
+              "x": 12.750010388624133,
+              "y": -12.750010388624133
+            },
+            "end": {
+              "x": 12.94601039,
+              "y": -12.554010387248267
+            }
+          },
+          "signedAxisTravel": 0.19600000137586626,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_4",
+          "busId": "ESC_U10_pin34",
+          "requiredDirection": "down",
+          "lead": {
+            "start": {
+              "x": 9.750010388624133,
+              "y": -14.750010388624133
+            },
+            "end": {
+              "x": 10.00001039,
+              "y": -15.00001039
+            }
+          },
+          "signedAxisTravel": 0.25000000137586653,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_19",
+          "busId": "ESC_U10_pin89",
+          "requiredDirection": "down",
+          "lead": {
+            "start": {
+              "x": 12.75001039,
+              "y": -15.25001039
+            },
+            "end": {
+              "x": 12.75001039,
+              "y": -15.69401039
+            }
+          },
+          "signedAxisTravel": 0.44400000000000084,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_17",
+          "busId": "ESC_U10_pin73",
+          "requiredDirection": "down",
+          "lead": {
+            "start": {
+              "x": 11.75001039,
+              "y": -15.25001039
+            },
+            "end": {
+              "x": 11.75001039,
+              "y": -15.69401039
+            }
+          },
+          "signedAxisTravel": 0.44400000000000084,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_9",
+          "busId": "ESC_U10_pin100",
+          "requiredDirection": "down",
+          "lead": {
+            "start": {
+              "x": 13.250010388624133,
+              "y": -13.750010388624133
+            },
+            "end": {
+              "x": 13.50001039,
+              "y": -14.00001039
+            }
+          },
+          "signedAxisTravel": 0.25000000137586653,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_18",
+          "busId": "ESC_U10_pin82",
+          "requiredDirection": "down",
+          "lead": {
+            "start": {
+              "x": 12.250010388624133,
+              "y": -12.750010388624133
+            },
+            "end": {
+              "x": 12.460691,
+              "y": -12.960691
+            }
+          },
+          "signedAxisTravel": 0.21068061137586724,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_15",
+          "busId": "ESC_U10_pin55",
+          "requiredDirection": "down",
+          "lead": {
+            "start": {
+              "x": 10.750010388624133,
+              "y": -14.250010388624133
+            },
+            "end": {
+              "x": 10.854583983128807,
+              "y": -14.354583983128807
+            }
+          },
+          "signedAxisTravel": 0.1045735945046733,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_6",
+          "busId": "ESC_U10_pin54",
+          "requiredDirection": "right",
+          "lead": {
+            "start": {
+              "x": 10.750010388624133,
+              "y": -14.750010388624133
+            },
+            "end": {
+              "x": 11.170850696375867,
+              "y": -14.750010388624133
+            }
+          },
+          "signedAxisTravel": 0.42084030775173353,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_7",
+          "busId": "ESC_U10_pin65",
+          "requiredDirection": "right",
+          "lead": {
+            "start": {
+              "x": 11.302510390687933,
+              "y": -15.267510389312067
+            },
+            "end": {
+              "x": 12.62401039,
+              "y": -13.94601039
+            }
+          },
+          "signedAxisTravel": 1.321499999312067,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_16",
+          "busId": "ESC_U10_pin6",
+          "requiredDirection": "down",
+          "lead": {
+            "start": {
+              "x": 8.750010388624133,
+              "y": -14.750010388624133
+            },
+            "end": {
+              "x": 8.570217400495327,
+              "y": -14.92980337675294
+            }
+          },
+          "signedAxisTravel": 0.17979298812880629,
+          "valid": true,
+          "violation": null
+        }
+      ]
+    },
+    {
+      "board": "glider",
+      "variant": "original305",
+      "explicitPlaneRequests": 41,
+      "validHeadings": 41,
+      "violations": [],
+      "requests": [
+        {
+          "connectionName": "source_trace_12",
+          "busId": "ESC_U12_pin59",
+          "requiredDirection": "left",
+          "lead": {
+            "start": {
+              "x": -22.549999999999994,
+              "y": -31.06999999999929
+            },
+            "end": {
+              "x": -22.932499999999997,
+              "y": -30.6875
+            }
+          },
+          "signedAxisTravel": 0.38250000000000384,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_11",
+          "busId": "ESC_U12_pin56",
+          "requiredDirection": "left",
+          "lead": {
+            "start": {
+              "x": -22.549999999999994,
+              "y": -26.269999999999293
+            },
+            "end": {
+              "x": -22.932499999999997,
+              "y": -25.887500000000003
+            }
+          },
+          "signedAxisTravel": 0.38250000000000384,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_14",
+          "busId": "ESC_U12_pin78",
+          "requiredDirection": "left",
+          "lead": {
+            "start": {
+              "x": -24.949999999999996,
+              "y": -31.86999999999929
+            },
+            "end": {
+              "x": -25.332500000000003,
+              "y": -31.487499999999283
+            }
+          },
+          "signedAxisTravel": 0.3825000000000074,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_39",
+          "busId": "ESC_U12_pin84",
+          "requiredDirection": "right",
+          "lead": {
+            "start": {
+              "x": -25.749999999999993,
+              "y": -31.86999999999929
+            },
+            "end": {
+              "x": -25.0063908729649,
+              "y": -32.61360912703438
+            }
+          },
+          "signedAxisTravel": 0.7436091270350929,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_8",
+          "busId": "ESC_U12_pin44",
+          "requiredDirection": "left",
+          "lead": {
+            "start": {
+              "x": -20.949999999999996,
+              "y": -26.269999999999293
+            },
+            "end": {
+              "x": -21.332500000000003,
+              "y": -25.887500000000003
+            }
+          },
+          "signedAxisTravel": 0.3825000000000074,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_29",
+          "busId": "ESC_U12_pin50",
+          "requiredDirection": "right",
+          "lead": {
+            "start": {
+              "x": -21.749999999999993,
+              "y": -26.269999999999293
+            },
+            "end": {
+              "x": -21.3675,
+              "y": -26.652500000000003
+            }
+          },
+          "signedAxisTravel": 0.3824999999999932,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_34",
+          "busId": "ESC_U12_pin66",
+          "requiredDirection": "right",
+          "lead": {
+            "start": {
+              "x": -23.349999999999994,
+              "y": -31.86999999999929
+            },
+            "end": {
+              "x": -22.9675,
+              "y": -31.487499999999297
+            }
+          },
+          "signedAxisTravel": 0.3824999999999932,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_10",
+          "busId": "ESC_U12_pin5",
+          "requiredDirection": "left",
+          "lead": {
+            "start": {
+              "x": -15.349999999999994,
+              "y": -31.06999999999929
+            },
+            "end": {
+              "x": -15.7325,
+              "y": -30.6875
+            }
+          },
+          "signedAxisTravel": 0.3825000000000056,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_20",
+          "busId": "ESC_U12_pin23",
+          "requiredDirection": "right",
+          "lead": {
+            "start": {
+              "x": -17.749999999999993,
+              "y": -31.06999999999929
+            },
+            "end": {
+              "x": -17.3675,
+              "y": -30.6875
+            }
+          },
+          "signedAxisTravel": 0.3824999999999932,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_23",
+          "busId": "ESC_U12_pin29",
+          "requiredDirection": "right",
+          "lead": {
+            "start": {
+              "x": -18.549999999999994,
+              "y": -31.06999999999929
+            },
+            "end": {
+              "x": -18.167499999999997,
+              "y": -30.6875
+            }
+          },
+          "signedAxisTravel": 0.38249999999999673,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_3",
+          "busId": "ESC_U12_pin20",
+          "requiredDirection": "left",
+          "lead": {
+            "start": {
+              "x": -17.749999999999993,
+              "y": -26.269999999999293
+            },
+            "end": {
+              "x": -18.1325,
+              "y": -25.887500000000003
+            }
+          },
+          "signedAxisTravel": 0.3825000000000074,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_22",
+          "busId": "ESC_U12_pin26",
+          "requiredDirection": "right",
+          "lead": {
+            "start": {
+              "x": -18.549999999999994,
+              "y": -26.269999999999293
+            },
+            "end": {
+              "x": -18.167499999999997,
+              "y": -26.652500000000003
+            }
+          },
+          "signedAxisTravel": 0.38249999999999673,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_21",
+          "busId": "ESC_U12_pin25",
+          "requiredDirection": "right",
+          "lead": {
+            "start": {
+              "x": -18.523749999999467,
+              "y": -25.47874999999947
+            },
+            "end": {
+              "x": -18.15,
+              "y": -25.105
+            }
+          },
+          "signedAxisTravel": 0.37374999999946823,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_0",
+          "busId": "ESC_U12_pin1",
+          "requiredDirection": "left",
+          "lead": {
+            "start": {
+              "x": -15.349999999999994,
+              "y": -25.469999999999292
+            },
+            "end": {
+              "x": -15.714999999999286,
+              "y": -25.105
+            }
+          },
+          "signedAxisTravel": 0.36499999999929145,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_28",
+          "busId": "ESC_U12_pin49",
+          "requiredDirection": "right",
+          "lead": {
+            "start": {
+              "x": -21.72374999999947,
+              "y": -25.47874999999947
+            },
+            "end": {
+              "x": -21.35,
+              "y": -25.105
+            }
+          },
+          "signedAxisTravel": 0.37374999999946823,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_33",
+          "busId": "ESC_U12_pin61",
+          "requiredDirection": "right",
+          "lead": {
+            "start": {
+              "x": -23.323749999999464,
+              "y": -25.478749999999465
+            },
+            "end": {
+              "x": -22.95,
+              "y": -25.105
+            }
+          },
+          "signedAxisTravel": 0.3737499999994647,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_35",
+          "busId": "ESC_U12_pin67",
+          "requiredDirection": "right",
+          "lead": {
+            "start": {
+              "x": -24.149999999999995,
+              "y": -25.469999999999292
+            },
+            "end": {
+              "x": -23.7675,
+              "y": -25.8525
+            }
+          },
+          "signedAxisTravel": 0.38249999999999673,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_1",
+          "busId": "ESC_U12_pin13",
+          "requiredDirection": "left",
+          "lead": {
+            "start": {
+              "x": -16.949999999999996,
+              "y": -25.469999999999292
+            },
+            "end": {
+              "x": -17.332500000000003,
+              "y": -25.8525
+            }
+          },
+          "signedAxisTravel": 0.3825000000000074,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_19",
+          "busId": "ESC_U12_pin19",
+          "requiredDirection": "right",
+          "lead": {
+            "start": {
+              "x": -17.72374999999947,
+              "y": -25.47874999999947
+            },
+            "end": {
+              "x": -17.35,
+              "y": -25.105
+            }
+          },
+          "signedAxisTravel": 0.37374999999946823,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_15",
+          "busId": "ESC_U12_pin8",
+          "requiredDirection": "left",
+          "lead": {
+            "start": {
+              "x": -16.149999999999995,
+              "y": -26.269999999999293
+            },
+            "end": {
+              "x": -16.5325,
+              "y": -25.887500000000003
+            }
+          },
+          "signedAxisTravel": 0.38250000000000384,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_42",
+          "busId": "ESC_U12_pin96",
+          "requiredDirection": "right",
+          "lead": {
+            "start": {
+              "x": -27.349999999999994,
+              "y": -31.86999999999929
+            },
+            "end": {
+              "x": -26.969999999999285,
+              "y": -32.25
+            }
+          },
+          "signedAxisTravel": 0.38000000000070955,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_17",
+          "busId": "ESC_U12_pin90",
+          "requiredDirection": "left",
+          "lead": {
+            "start": {
+              "x": -26.549999999999994,
+              "y": -31.86999999999929
+            },
+            "end": {
+              "x": -26.915,
+              "y": -31.504999999999285
+            }
+          },
+          "signedAxisTravel": 0.36500000000000554,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_16",
+          "busId": "ESC_U12_pin85",
+          "requiredDirection": "left",
+          "lead": {
+            "start": {
+              "x": -26.549999999999994,
+              "y": -25.469999999999292
+            },
+            "end": {
+              "x": -26.932499999999997,
+              "y": -25.8525
+            }
+          },
+          "signedAxisTravel": 0.38250000000000384,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_41",
+          "busId": "ESC_U12_pin91",
+          "requiredDirection": "right",
+          "lead": {
+            "start": {
+              "x": -27.323749999999464,
+              "y": -25.478749999999465
+            },
+            "end": {
+              "x": -26.95,
+              "y": -25.105
+            }
+          },
+          "signedAxisTravel": 0.3737499999994647,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_13",
+          "busId": "ESC_U12_pin73",
+          "requiredDirection": "left",
+          "lead": {
+            "start": {
+              "x": -24.949999999999996,
+              "y": -25.469999999999292
+            },
+            "end": {
+              "x": -25.332500000000003,
+              "y": -25.8525
+            }
+          },
+          "signedAxisTravel": 0.3825000000000074,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_38",
+          "busId": "ESC_U12_pin79",
+          "requiredDirection": "right",
+          "lead": {
+            "start": {
+              "x": -25.72374999999947,
+              "y": -25.47874999999947
+            },
+            "end": {
+              "x": -25.35,
+              "y": -25.105
+            }
+          },
+          "signedAxisTravel": 0.37374999999946823,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_25",
+          "busId": "ESC_U12_pin37",
+          "requiredDirection": "right",
+          "lead": {
+            "start": {
+              "x": -20.149999999999995,
+              "y": -25.469999999999292
+            },
+            "end": {
+              "x": -19.7675,
+              "y": -25.8525
+            }
+          },
+          "signedAxisTravel": 0.38249999999999673,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_6",
+          "busId": "ESC_U12_pin31",
+          "requiredDirection": "left",
+          "lead": {
+            "start": {
+              "x": -19.37625000000053,
+              "y": -25.478749999999472
+            },
+            "end": {
+              "x": -19.75,
+              "y": -25.105
+            }
+          },
+          "signedAxisTravel": 0.37374999999946823,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_5",
+          "busId": "ESC_U12_pin30",
+          "requiredDirection": "left",
+          "lead": {
+            "start": {
+              "x": -18.549999999999994,
+              "y": -31.86999999999929
+            },
+            "end": {
+              "x": -18.930000000000703,
+              "y": -32.25
+            }
+          },
+          "signedAxisTravel": 0.38000000000070955,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_4",
+          "busId": "ESC_U12_pin24",
+          "requiredDirection": "left",
+          "lead": {
+            "start": {
+              "x": -17.749999999999993,
+              "y": -31.86999999999929
+            },
+            "end": {
+              "x": -18.130000000000702,
+              "y": -32.25
+            }
+          },
+          "signedAxisTravel": 0.38000000000070955,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_2",
+          "busId": "ESC_U12_pin18",
+          "requiredDirection": "left",
+          "lead": {
+            "start": {
+              "x": -16.949999999999996,
+              "y": -31.86999999999929
+            },
+            "end": {
+              "x": -17.330000000000705,
+              "y": -32.25
+            }
+          },
+          "signedAxisTravel": 0.38000000000070955,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_24",
+          "busId": "ESC_U12_pin36",
+          "requiredDirection": "right",
+          "lead": {
+            "start": {
+              "x": -19.349999999999994,
+              "y": -31.86999999999929
+            },
+            "end": {
+              "x": -18.985,
+              "y": -31.504999999999296
+            }
+          },
+          "signedAxisTravel": 0.3649999999999949,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_26",
+          "busId": "ESC_U12_pin41",
+          "requiredDirection": "right",
+          "lead": {
+            "start": {
+              "x": -20.149999999999995,
+              "y": -31.06999999999929
+            },
+            "end": {
+              "x": -19.7675,
+              "y": -30.6875
+            }
+          },
+          "signedAxisTravel": 0.38249999999999673,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_27",
+          "busId": "ESC_U12_pin42",
+          "requiredDirection": "right",
+          "lead": {
+            "start": {
+              "x": -20.149999999999995,
+              "y": -31.86999999999929
+            },
+            "end": {
+              "x": -19.769999999999285,
+              "y": -32.25
+            }
+          },
+          "signedAxisTravel": 0.38000000000070955,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_18",
+          "busId": "ESC_U12_pin12",
+          "requiredDirection": "right",
+          "lead": {
+            "start": {
+              "x": -16.149999999999995,
+              "y": -31.86999999999929
+            },
+            "end": {
+              "x": -15.769999999999285,
+              "y": -32.25
+            }
+          },
+          "signedAxisTravel": 0.38000000000070955,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_32",
+          "busId": "ESC_U12_pin6",
+          "requiredDirection": "right",
+          "lead": {
+            "start": {
+              "x": -15.349999999999994,
+              "y": -31.86999999999929
+            },
+            "end": {
+              "x": -14.985,
+              "y": -31.504999999999296
+            }
+          },
+          "signedAxisTravel": 0.3649999999999949,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_40",
+          "busId": "ESC_U12_pin9",
+          "requiredDirection": "right",
+          "lead": {
+            "start": {
+              "x": -16.149999999999995,
+              "y": -27.06999999999929
+            },
+            "end": {
+              "x": -14.744999999999997,
+              "y": -28.474999999999287
+            }
+          },
+          "signedAxisTravel": 1.4049999999999976,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_36",
+          "busId": "ESC_U12_pin7",
+          "requiredDirection": "right",
+          "lead": {
+            "start": {
+              "x": -16.12375000000053,
+              "y": -25.46124999999947
+            },
+            "end": {
+              "x": -15.75,
+              "y": -25.835
+            }
+          },
+          "signedAxisTravel": 0.3737500000005305,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_7",
+          "busId": "ESC_U12_pin40",
+          "requiredDirection": "left",
+          "lead": {
+            "start": {
+              "x": -20.149999999999995,
+              "y": -30.269999999999293
+            },
+            "end": {
+              "x": -20.685,
+              "y": -29.73499999999929
+            }
+          },
+          "signedAxisTravel": 0.5350000000000037,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_31",
+          "busId": "ESC_U12_pin54",
+          "requiredDirection": "right",
+          "lead": {
+            "start": {
+              "x": -21.749999999999993,
+              "y": -31.86999999999929
+            },
+            "end": {
+              "x": -21.3500000000007,
+              "y": -31.47
+            }
+          },
+          "signedAxisTravel": 0.3999999999992916,
+          "valid": true,
+          "violation": null
+        },
+        {
+          "connectionName": "source_trace_9",
+          "busId": "ESC_U12_pin48",
+          "requiredDirection": "left",
+          "lead": {
+            "start": {
+              "x": -20.949999999999996,
+              "y": -31.86999999999929
+            },
+            "end": {
+              "x": -21.17860912703509,
+              "y": -32.098609127034386
+            }
+          },
+          "signedAxisTravel": 0.22860912703509584,
+          "valid": true,
+          "violation": null
+        }
+      ]
+    }
+  ]
+}

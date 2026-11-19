@@ -1,0 +1,8 @@
+{
+  "board": "orangecrab",
+  "baselinePhysicalCircuitSha256": "34c69bd82a531af922dcf310862284450b970a7829268e875cf42522cbf75180",
+  "physicalCircuitSha256": "34c69bd82a531af922dcf310862284450b970a7829268e875cf42522cbf75180",
+  "samePhysicalCircuit": true,
+  "inputSha256": "727660d7503438a3ab7618e2f8b52dde282f49cafb8b3f26783975dcd8642cc9",
+  "sameInput": true
+}

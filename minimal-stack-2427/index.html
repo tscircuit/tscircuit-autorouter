@@ -1,0 +1,35 @@
+<!doctype html><meta charset="utf-8"><title>Minimal fanout stack</title>
+<style>body{font:16px system-ui;color:#172033;max-width:1500px;margin:auto;padding:28px}table{border-collapse:collapse;width:100%;margin:18px 0}td,th{border:1px solid #d8dee8;padding:10px;text-align:left}img{max-width:100%;background:white}h2{margin-top:32px}code{overflow-wrap:anywhere}.note{color:#48566b}</style>
+<h1>Minimal fanout stack</h1>
+<p>Valid joint partial escapes increase 77→115 (+49.4%) across three original native captures; physical drills increase 69→96. All six full boards still stop at their first incomplete fanout. No committed traces/vias and no DDR bus phase.</p>
+<p><a href="analysis.json">Exact statistics</a> · <a href="provenance.json">Versions and runs</a> · <a href="all-boards.svg">All full-board PCB SVGs before/after</a></p>
+<p>Repros #304→#321, then fixes <a href="https://github.com/tscircuit/fanout-solver/pull/318">#318</a>→<a href="https://github.com/tscircuit/fanout-solver/pull/305">#305</a>→<a href="https://github.com/tscircuit/fanout-solver/pull/322">#322</a>. Each fix is one commit.</p>
+<h2>Joint native fanout captures</h2><p>Before is the request-safe site fix; after is the full stack. Every listed attempt passes copper DRC, original widths, explicit physical leads and finite same-net plane landings. These remain uncommitted partials.</p>
+<table><tr><th>Capture</th><th>Before</th><th>After</th><th>Improvement</th><th>Physical drills</th></tr>
+<tr><td>iCE/Pi CM0 SBC</td><td>10/32</td><td>18/32</td><td>+80.0%</td><td>10→15</td></tr>
+<tr><td>i.MX6 Demo Board</td><td>12/32</td><td>19/32</td><td>+58.3%</td><td>11→16</td></tr>
+<tr><td>Glider mainboard</td><td>55/95</td><td>78/95</td><td>+41.8%</td><td>48→65</td></tr>
+</table><p class="note">Blue discs are actual vias. Small colored dots are debug endpoints. The following views crop native SVGs to the same physical region; via, wire and obstacle geometry is unchanged.</p>
+<p>The new best partial retains 9 of the earlier 10 iCE/Pi requests and gains 9; retains all 12 i.MX6 requests and gains 7; retains 50 of the earlier 55 Glider requests and gains 28. These are changed best-partial memberships, not additional completed boards. The final extraction preserves the original #305’s exact request sets and drill counts on all three captures.</p>
+<h3>iCE/Pi CM0 SBC</h3><table><tr><th>Before</th><th>After</th></tr><tr><td><img src="figures/icepi-before.svg"></td><td><img src="figures/icepi-after.svg"></td></tr></table>
+<h3>i.MX6 Demo Board</h3><table><tr><th>Before</th><th>After</th></tr><tr><td><img src="figures/imx6-before.svg"></td><td><img src="figures/imx6-after.svg"></td></tr></table>
+<h2>Independent boundary requests</h2><p>235/300→247/300 accepted (+5.1%); 180→165 physical drills (−8.3%). Every accepted request passes physical DRC and its original resolved width. These 300 one-request controls overlap the joint cohort and must not be added to it.</p>
+<p>There are 13 gains and one OrangeCrab loss: breakout 5’s new rightward sites collide with C4. Explicit directions and ambiguous corner/interior inference retain their existing behavior.</p>
+<h2>Experiments retained in the minimal extraction</h2><table><tr><th>Experiment</th><th>Result</th><th>Decision</th></tr>
+<tr><td>Remove cached repair</td><td>iCE18→16;i.MX19→16;Glider78→75</td><td>Keep the bounded cached repair.</td></tr>
+<tr><td>Remove residual ordinary pass</td><td>Glider78→66</td><td>Keep the single residual pass.</td></tr>
+<tr><td>Use inferred free-heading tie order</td><td>Adding the boundary default drops Glider78→77</td><td>Use a stable cardinal order only for truly unconstrained requests; retain78 with either default.</td></tr>
+<tr><td>Remove blocked-layer pruning</td><td>Identical copper; small native searches take75–82s instead of15–17s</td><td>Keep the small original pruning fix. The coordinated pool retains every allowed layer.</td></tr></table>
+<p class="note">Timing comparisons are single paired Blacksmith replays to search exhaustion, not P50/P95 or full-board solve-time claims. All routing experiments use original physical rules. Earlier DRC-only counts that missed request-width/lead violations are superseded by the independent request audit.</p>
+<h2>Full-board results</h2><p>All source geometry, nets and rules match the captured originals. Original traces and vias are removed; original pours remain as geometry and plane targets. Every plan orders fanout before bus lanes before the remaining nets. The first atomic fanout is incomplete on every board, so the full emitted PCBs have no new traces or vias.</p>
+<table><tr><th>Board</th><th>Published baseline first-region partial</th><th>After stack</th><th>Committed traces/vias</th><th>Native PCB SVG</th></tr>
+<tr><td>OrangeCrab rev 0.2.1 ECP5 DDR3</td><td>122/273</td><td>134/273</td><td>0/0</td><td><a href="pcb/before/orangecrab.svg">Before</a> · <a href="pcb/after/orangecrab.svg">After</a></td></tr>
+<tr><td>Allwinner H616 Devboard DDR3</td><td>88/174</td><td>99/174</td><td>0/0</td><td><a href="pcb/before/h616.svg">Before</a> · <a href="pcb/after/h616.svg">After</a></td></tr>
+<tr><td>ButterStick r1.0</td><td>62/91</td><td>52/91</td><td>0/0</td><td><a href="pcb/before/butterstick.svg">Before</a> · <a href="pcb/after/butterstick.svg">After</a></td></tr>
+<tr><td>Glider mainboard</td><td>60/95</td><td>78/95</td><td>0/0</td><td><a href="pcb/before/glider.svg">Before</a> · <a href="pcb/after/glider.svg">After</a></td></tr>
+<tr><td>i.MX6 Demo Board</td><td>8/32</td><td>19/32</td><td>0/0</td><td><a href="pcb/before/imx6.svg">Before</a> · <a href="pcb/after/imx6.svg">After</a></td></tr>
+<tr><td>iCE/Pi CM0 SBC</td><td>7/32</td><td>18/32</td><td>0/0</td><td><a href="pcb/before/icepi.svg">Before</a> · <a href="pcb/after/icepi.svg">After</a></td></tr>
+</table><p>The published baseline partials include invalid copper or original-request violations; their raw counts are not valid complete-net totals. ButterStick also loses some previously clean requests, so its count reduction is not explained entirely by rejecting invalid vias. See the per-request DRC audit.</p>
+<h2>Regression qualification</h2><p>Frozen Fanout31: 30/72 solved before and after, 42 timeouts in each run; all 30 completed SVG hashes match. The final blocked-layer pruning predicate is false for all 72 cases. Literal PreparedBus byte equality is not claimed after the new readonly constraint markers.</p>
+<p>The original full #305 control passes all physical/request checks at 18/19/78. The extraction retains those yields, introduces no solver class, and keeps candidate generation, selection and repair in small modules. The incremental route generator yields between candidate and selection work.</p>
+<h2>All emitted full-board PCBs</h2><img src="all-boards.svg">

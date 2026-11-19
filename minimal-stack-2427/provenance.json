@@ -1,0 +1,63 @@
+{
+  "date": "2026-11-19",
+  "versions": {
+    "tscircuit": "0.0.3245",
+    "coreSource": "0.0.2427",
+    "fanoutBaseline": "0.0.91",
+    "capacityAutorouter": "0.0.1134",
+    "busLanes": "0.0.62",
+    "bun": "1.4.3"
+  },
+  "heads": {
+    "sites": "6acee28dcce9a61912625f3c5c0a189431ae42e6",
+    "coordination": "94a416d5b92ce3180907513dce144b9a93e9ac5f",
+    "boundary": "5e417426368e7d267e3cef930df5a505951a2b1c"
+  },
+  "coreSourceCommit": "75ab017cd6852dbe50516ee1f4ca9d1108c29985",
+  "routerCommit": "a4a8f3a71dd66c2cae01d6a7ade426efad833ff6",
+  "workflowRuns": {
+    "publishedBaseline": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44519377875",
+    "original305Control": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44544003763",
+    "initialSubsets": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44533142040",
+    "unscopedFrozenRejection": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44533882335",
+    "liveRepairRejection": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44535227074",
+    "ordinaryCandidateExperiments": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44538318306",
+    "cachedCandidateExperiments": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44542183395",
+    "permittedLayerExperiment": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44547259196",
+    "residualExperiment": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44549003751",
+    "geometryExtraction": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44551557611",
+    "constrainedNative": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44555832514",
+    "removePhaseAblations": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44556112835",
+    "canonicalHeadingOrder": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44557203119",
+    "originalWidthBoundaryChecks": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44557445173",
+    "blockedLayerPruning": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44559963832",
+    "siteOnlyGlider": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44560638936",
+    "frozenComparison": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44558884427",
+    "finalFullBoards": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44561556033"
+  },
+  "finalLibraryEquivalentMeasuredSources": {
+    "coordination": "2367832632bb657ecb3f4c9097a0fa6840db9ef6",
+    "boundary": "8df481befb5a6c33c2f172ef31322222d7436732"
+  },
+  "originalTsxSources": "https://github.com/tscircuit/tscircuit-autorouter/tree/a3416878451bbe69df04ab4d27a67ac2fa0446f4/rerun2427/sources",
+  "originalSourceArchive": "https://github.com/tscircuit/tscircuit-autorouter/blob/a3416878451bbe69df04ab4d27a67ac2fa0446f4/rerun2427/circuits-and-results.zip",
+  "checks": {
+    "318": {
+      "format": 44555281523,
+      "types": 44555281636,
+      "testShards": 44555281646
+    },
+    "305": {
+      "format": 44561557747,
+      "types": 44561557716,
+      "testShards": 44561557620
+    },
+    "322": {
+      "format": 44561560760,
+      "types": 44561560590,
+      "testShards": 44561560690
+    }
+  },
+  "checkOutcome": "All formatting, full typechecks and eight test shards pass on each final PR head.305/322 dependency-install404 failures passed on retry without source changes.",
+  "pcbPresentation": "Exact1600x1100 worker SVGs are preserved in reports/full-qualified; each equals its baseline worker export byte-for-byte. PCB views use the shared native1400x950 white rendering of the identical physical CircuitJson."
+}

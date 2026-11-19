@@ -1,0 +1,7 @@
+{
+  "board": "h616",
+  "workerSvgSha256": "5d5b8f5638b62db28a7964fa26c48ad8140e76f8e862daaaa0a3bc263a7d3874",
+  "baselineSvgSha256": "5d5b8f5638b62db28a7964fa26c48ad8140e76f8e862daaaa0a3bc263a7d3874",
+  "sameWorkerSvgBytes": true,
+  "artifactMember": "h616/pcb.svg"
+}

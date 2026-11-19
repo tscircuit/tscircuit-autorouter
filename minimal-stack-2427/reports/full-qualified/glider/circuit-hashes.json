@@ -1,0 +1,8 @@
+{
+  "board": "glider",
+  "baselinePhysicalCircuitSha256": "a100e237069976797d368cda7d06063b633005f527ce7f7234e14c9fd9bbd1d5",
+  "physicalCircuitSha256": "a100e237069976797d368cda7d06063b633005f527ce7f7234e14c9fd9bbd1d5",
+  "samePhysicalCircuit": true,
+  "inputSha256": "b407978a89550c8835548bd99252b8f042a167f50cd1a81adf8b234e85155f59",
+  "sameInput": true
+}

@@ -1,0 +1,12 @@
+{
+  "sourceSvgSha256": "507ea4bfbf7110f315298469d7c6e49d9abdb663294b4d71b8b5caf8de19710c",
+  "inputSha256": "f2c622bc288faaae5e505f62fe8803b465d1be0bc5752547ea9136438df40279",
+  "sharedBoundary": {
+    "minX": -2.8300000000012426,
+    "maxX": 5.339999999998759,
+    "minY": 10.479999999999983,
+    "maxY": 18.649999999999984
+  },
+  "worldExtentMm": 10.370000000000001,
+  "operation": "Crop viewport and white background; debug points keep2px display radii and equivalent portable hex colors. All copper/via/obstacle elements retained byte-for-byte."
+}

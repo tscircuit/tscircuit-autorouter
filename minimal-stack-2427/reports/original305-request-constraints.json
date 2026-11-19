@@ -1,0 +1,29 @@
+[
+  {
+    "board": "icepi",
+    "valid": true,
+    "checkedTraceCount": 18,
+    "checkedWireCount": 75,
+    "checkedExplicitLeads": 15,
+    "checkedPlaneLandings": 15,
+    "violations": []
+  },
+  {
+    "board": "imx6",
+    "valid": true,
+    "checkedTraceCount": 19,
+    "checkedWireCount": 83,
+    "checkedExplicitLeads": 16,
+    "checkedPlaneLandings": 16,
+    "violations": []
+  },
+  {
+    "board": "glider",
+    "valid": true,
+    "checkedTraceCount": 78,
+    "checkedWireCount": 386,
+    "checkedExplicitLeads": 41,
+    "checkedPlaneLandings": 41,
+    "violations": []
+  }
+]

@@ -1,0 +1,7 @@
+{
+  "board": "icepi",
+  "workerSvgSha256": "6597f24ad923386c271401e1496447be93a10e62083f239cafd4762cc2fa9e0e",
+  "baselineSvgSha256": "6597f24ad923386c271401e1496447be93a10e62083f239cafd4762cc2fa9e0e",
+  "sameWorkerSvgBytes": true,
+  "artifactMember": "icepi/pcb.svg"
+}

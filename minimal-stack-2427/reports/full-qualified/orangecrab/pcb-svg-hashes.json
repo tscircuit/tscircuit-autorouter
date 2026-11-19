@@ -1,0 +1,7 @@
+{
+  "board": "orangecrab",
+  "workerSvgSha256": "b5db098076c0911ebc7c9d197a5b5c99ede8a44135a4c39bcb41e0b6475504f1",
+  "baselineSvgSha256": "b5db098076c0911ebc7c9d197a5b5c99ede8a44135a4c39bcb41e0b6475504f1",
+  "sameWorkerSvgBytes": true,
+  "artifactMember": "orangecrab/pcb.svg"
+}

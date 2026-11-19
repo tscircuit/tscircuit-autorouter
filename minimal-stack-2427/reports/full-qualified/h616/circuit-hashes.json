@@ -1,0 +1,8 @@
+{
+  "board": "h616",
+  "baselinePhysicalCircuitSha256": "beec478c36363d647547ce0f836ec66dca7907ee47ae33177070f2f8a06277d4",
+  "physicalCircuitSha256": "beec478c36363d647547ce0f836ec66dca7907ee47ae33177070f2f8a06277d4",
+  "samePhysicalCircuit": true,
+  "inputSha256": "0aa625dd9c4fe551e6cdcd60574f5d57d0fce74d754a8c91d3b302676c7fa7db",
+  "sameInput": true
+}

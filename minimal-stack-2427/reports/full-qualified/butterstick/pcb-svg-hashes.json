@@ -1,0 +1,7 @@
+{
+  "board": "butterstick",
+  "workerSvgSha256": "5ff88c5313de2c15a5243e46aad819fe32399fd853e7ee329bfab83ab59458ee",
+  "baselineSvgSha256": "5ff88c5313de2c15a5243e46aad819fe32399fd853e7ee329bfab83ab59458ee",
+  "sameWorkerSvgBytes": true,
+  "artifactMember": "butterstick/pcb.svg"
+}

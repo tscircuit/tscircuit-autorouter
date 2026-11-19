@@ -1,0 +1,7 @@
+{
+  "board": "imx6",
+  "workerSvgSha256": "f830d71d7b5870d8911781f0614bda91562fcf3ac28b9a3f9ba0f184dbb00092",
+  "baselineSvgSha256": "f830d71d7b5870d8911781f0614bda91562fcf3ac28b9a3f9ba0f184dbb00092",
+  "sameWorkerSvgBytes": true,
+  "artifactMember": "imx6/pcb.svg"
+}

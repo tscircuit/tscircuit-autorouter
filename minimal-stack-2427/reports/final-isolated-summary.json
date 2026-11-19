@@ -1,0 +1,180 @@
+{
+  "boundaries": {
+    "baseline": {
+      "cases": 300,
+      "accepted": 235,
+      "viaEntries": 180,
+      "distinctDrills": 180
+    },
+    "sites": {
+      "cases": 300,
+      "accepted": 235,
+      "viaEntries": 180,
+      "distinctDrills": 180
+    },
+    "boundary": {
+      "cases": 300,
+      "accepted": 247,
+      "viaEntries": 165,
+      "distinctDrills": 165
+    }
+  },
+  "planes": {
+    "baseline": {
+      "cases": 349,
+      "accepted": 292,
+      "viaEntries": 292
+    },
+    "sites": {
+      "cases": 349,
+      "accepted": 293,
+      "viaEntries": 293
+    }
+  },
+  "boundaryTransitions": {
+    "baseline->sites": {
+      "gains": [],
+      "losses": [],
+      "retained": 235,
+      "retainedViasBefore": 180,
+      "retainedViasAfter": 180
+    },
+    "sites->boundary": {
+      "gains": [
+        {
+          "board": "h616",
+          "connection": "breakout:pcb_breakout_point_0",
+          "before": "failed",
+          "after": "solved"
+        },
+        {
+          "board": "h616",
+          "connection": "breakout:pcb_breakout_point_22",
+          "before": "failed",
+          "after": "solved"
+        },
+        {
+          "board": "h616",
+          "connection": "breakout:pcb_breakout_point_78",
+          "before": "failed",
+          "after": "solved"
+        },
+        {
+          "board": "h616",
+          "connection": "breakout:pcb_breakout_point_105",
+          "before": "failed",
+          "after": "solved"
+        },
+        {
+          "board": "icepi",
+          "connection": "breakout:pcb_breakout_point_0",
+          "before": "failed",
+          "after": "solved"
+        },
+        {
+          "board": "icepi",
+          "connection": "breakout:pcb_breakout_point_1",
+          "before": "failed",
+          "after": "solved"
+        },
+        {
+          "board": "imx6",
+          "connection": "breakout:pcb_breakout_point_0",
+          "before": "failed",
+          "after": "solved"
+        },
+        {
+          "board": "orangecrab",
+          "connection": "breakout:pcb_breakout_point_26",
+          "before": "failed",
+          "after": "solved"
+        },
+        {
+          "board": "orangecrab",
+          "connection": "breakout:pcb_breakout_point_32",
+          "before": "failed",
+          "after": "solved"
+        },
+        {
+          "board": "orangecrab",
+          "connection": "breakout:pcb_breakout_point_40",
+          "before": "failed",
+          "after": "solved"
+        },
+        {
+          "board": "orangecrab",
+          "connection": "breakout:pcb_breakout_point_50",
+          "before": "failed",
+          "after": "solved"
+        },
+        {
+          "board": "orangecrab",
+          "connection": "breakout:pcb_breakout_point_81",
+          "before": "failed",
+          "after": "solved"
+        },
+        {
+          "board": "orangecrab",
+          "connection": "breakout:pcb_breakout_point_83",
+          "before": "failed",
+          "after": "solved"
+        }
+      ],
+      "losses": [
+        {
+          "board": "orangecrab",
+          "connection": "breakout:pcb_breakout_point_5",
+          "before": "solved",
+          "after": "failed"
+        }
+      ],
+      "retained": 234,
+      "retainedViasBefore": 179,
+      "retainedViasAfter": 158
+    }
+  },
+  "boards": {
+    "butterstick": {
+      "boundaries-baseline": 30,
+      "boundaries-sites": 30,
+      "boundaries-boundary": 30,
+      "planes-baseline": 20,
+      "planes-sites": 20
+    },
+    "glider": {
+      "boundaries-baseline": 49,
+      "boundaries-sites": 49,
+      "boundaries-boundary": 49,
+      "planes-baseline": 43,
+      "planes-sites": 43
+    },
+    "h616": {
+      "boundaries-baseline": 74,
+      "boundaries-sites": 74,
+      "boundaries-boundary": 78,
+      "planes-baseline": 61,
+      "planes-sites": 62
+    },
+    "icepi": {
+      "boundaries-baseline": 1,
+      "boundaries-sites": 1,
+      "boundaries-boundary": 3,
+      "planes-baseline": 17,
+      "planes-sites": 17
+    },
+    "imx6": {
+      "boundaries-baseline": 2,
+      "boundaries-sites": 2,
+      "boundaries-boundary": 3,
+      "planes-baseline": 17,
+      "planes-sites": 17
+    },
+    "orangecrab": {
+      "boundaries-baseline": 79,
+      "boundaries-sites": 79,
+      "boundaries-boundary": 84,
+      "planes-baseline": 134,
+      "planes-sites": 134
+    }
+  }
+}

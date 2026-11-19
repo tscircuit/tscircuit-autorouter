@@ -1,0 +1,8 @@
+{
+  "board": "icepi",
+  "baselinePhysicalCircuitSha256": "e6e1048835308128142aab743308a686aa21b2f7aefc54fdb87688333297be1f",
+  "physicalCircuitSha256": "e6e1048835308128142aab743308a686aa21b2f7aefc54fdb87688333297be1f",
+  "samePhysicalCircuit": true,
+  "inputSha256": "f2c622bc288faaae5e505f62fe8803b465d1be0bc5752547ea9136438df40279",
+  "sameInput": true
+}
