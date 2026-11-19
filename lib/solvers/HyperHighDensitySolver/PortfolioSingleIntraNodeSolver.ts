@@ -1,3 +1,6 @@
+import type { StaticSegmentValidator } from "@tscircuit/high-density-a01"
+import type { Obstacle } from "lib/types"
+import { createIntraNodeSegmentValidator } from "./createIntraNodeSegmentValidator"
 import {
   HighDensitySolverA01,
   HighDensitySolverA03 as HighDensityA03Solver,
@@ -700,11 +703,29 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       if (preservePhysicalGeometry) {
         traceThickness = this.constructorParams.traceWidth ?? 0.15
       }
+      let staticSegmentValidator: StaticSegmentValidator | undefined
+      const fixedHdRoutes = this.constructorParams.fixedHdRoutes
+      if (fixedHdRoutes?.length) {
+        let obstacles: Obstacle[] = []
+        if (preservePhysicalGeometry) {
+          obstacles = this.constructorParams.obstacles ?? []
+        }
+        staticSegmentValidator = createIntraNodeSegmentValidator({
+          fixedHdRoutes,
+          obstacles,
+          connMap: this.connMap ?? new ConnectivityMap({}),
+          layerCount: this.constructorParams.layerCount ?? 2,
+          clearance: this.constructorParams.obstacleMargin ?? 0.1,
+          allowBlindAndBuriedVias:
+            this.constructorParams.allowBlindAndBuriedVias,
+        })
+      }
       const solver = new HighDensityA03Solver({
         nodeWithPortPoints: this.nodeWithPortPoints,
         highResolutionCellSize: 0.1,
         highResolutionCellThickness: 8,
         lowResolutionCellSize: 0.4,
+        staticSegmentValidator,
         viaDiameter: this.constructorParams.viaDiameter ?? 0.3,
         viaMinDistFromBorder: (this.constructorParams.viaDiameter ?? 0.3) / 2,
         traceMargin,
