@@ -216,11 +216,15 @@ const convertObstacleToB01Obstacle = ({
   node,
   connMap,
   layerCount,
+  traceToPadClearance,
+  viaToPadClearance,
 }: {
   obstacle: Obstacle
   node: NodeWithPortPoints
   connMap: ConnectivityMap
   layerCount: number
+  traceToPadClearance?: number
+  viaToPadClearance?: number
 }): HighDensityRectObstacle | undefined => {
   const availableZ = new Set(
     node.availableZ ?? node.portPoints.map((portPoint) => portPoint.z),
@@ -234,7 +238,7 @@ const convertObstacleToB01Obstacle = ({
     obstacle.connectedTo[0] ??
     obstacle.obstacleId ??
     `pipeline9_obstacle_${obstacle.center.x}_${obstacle.center.y}`
-  return {
+  const rectObstacle: HighDensityRectObstacle = {
     type: "rect",
     connectionName,
     rootConnectionName:
@@ -245,6 +249,16 @@ const convertObstacleToB01Obstacle = ({
     ccwRotationDegrees: obstacle.ccwRotationDegrees,
     zLayers,
   }
+  if (
+    obstacle.componentId &&
+    !obstacle.isFanoutSourceKeepout &&
+    !obstacle.isNonPlatedHole &&
+    !obstacle.isCopperPour
+  ) {
+    rectObstacle.traceClearanceMargin = traceToPadClearance
+    rectObstacle.viaClearanceMargin = viaToPadClearance
+  }
+  return rectObstacle
 }
 
 const addTerminalPcbPortIds = (
@@ -1261,6 +1275,8 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
           node,
           connMap: this.connMap,
           layerCount: this.layerCount,
+          traceToPadClearance: this.params.minClearance,
+          viaToPadClearance: this.viaToPadClearance,
         }),
       )
       .filter(
@@ -1284,12 +1300,6 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     let obstacleClearanceMargin = 0.15
     if (this.fixedHdRoutes.some((route) => route.isFixed === true)) {
       obstacleClearanceMargin = this.obstacleMargin
-    } else if (
-      this.layerCount === 1 &&
-      this.params.minClearance !== undefined
-    ) {
-      // B01 shares the obstacle margin with via clearance on multilayer boards.
-      obstacleClearanceMargin = this.params.minClearance
     }
     this.stats.b01NodeCount = Number(this.stats.b01NodeCount ?? 0) + 1
     this.activeB01Solver = new HighDensitySolverB01({
