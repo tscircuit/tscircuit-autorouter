@@ -1,0 +1,90 @@
+diff --git a/lib/route-multi-terminal-buses.ts b/lib/route-multi-terminal-buses.ts
+index 05447c0..ca93ddb 100644
+--- a/lib/route-multi-terminal-buses.ts
++++ b/lib/route-multi-terminal-buses.ts
+@@ -18,6 +18,7 @@ import type {
+ 
+ type ComponentId = NonNullable<Obstacle["componentId"]>
+ type CopperLayer = Terminal["layer"]
++type PackageDistance = { totalMm: number; terminalCount: number }
+ 
+ /** Board-world points in mm, +X right and +Y up. Route the main packages first,
+  * then attach each extra terminal through existing same-net copper.
+@@ -53,9 +54,9 @@ export function* routeMultiTerminalBuses(
+       (padCounts.get(obstacle.componentId) ?? 0) + 1,
+     )
+   }
+-  const connections = input.connections.map((connection) => ({
+-    ...connection,
+-    pointsToConnect: connection.pointsToConnect
++  const connectionsWithPads = input.connections.map((connection) => ({
++    connection,
++    terminals: connection.pointsToConnect
+       .map((terminal) => {
+         const pad = input.obstacles.find(
+           (obstacle) =>
+@@ -68,11 +69,61 @@ export function* routeMultiTerminalBuses(
+         )
+         let padCount = 0
+         if (pad?.componentId) padCount = padCounts.get(pad.componentId)!
+-        return { terminal, padCount }
++        return { terminal, padCount, componentId: pad?.componentId }
+       })
+-      .sort((a, b) => b.padCount - a.padCount)
+-      .map(({ terminal }) => terminal),
++      .sort((a, b) => b.padCount - a.padCount),
+   }))
++  // Keep the existing largest-package primary. Equal-size secondary packages
++  // share one mean distance so individual nets do not split the package order.
++  const packageDistances = new Map<
++    ComponentId,
++    Map<ComponentId, PackageDistance>
++  >()
++  for (const { terminals } of connectionsWithPads) {
++    const primary = terminals[0]
++    if (terminals.length <= 2 || !primary?.componentId) continue
++    const distances =
++      packageDistances.get(primary.componentId) ??
++      new Map<ComponentId, PackageDistance>()
++    for (const target of terminals.slice(1)) {
++      if (!target.componentId) continue
++      const distance = distances.get(target.componentId) ?? {
++        totalMm: 0,
++        terminalCount: 0,
++      }
++      distance.totalMm += Math.hypot(
++        target.terminal.x - primary.terminal.x,
++        target.terminal.y - primary.terminal.y,
++      )
++      distance.terminalCount++
++      distances.set(target.componentId, distance)
++    }
++    packageDistances.set(primary.componentId, distances)
++  }
++  const connections = connectionsWithPads.map(({ connection, terminals }) => {
++    const primary = terminals[0]
++    const distances = primary?.componentId
++      ? packageDistances.get(primary.componentId)
++      : undefined
++    const secondary = terminals.slice(1).sort((a, b) => {
++      const padCountDifference = b.padCount - a.padCount
++      if (padCountDifference || !a.componentId || !b.componentId)
++        return padCountDifference
++      const distanceA = distances?.get(a.componentId)
++      const distanceB = distances?.get(b.componentId)
++      if (!distanceA || !distanceB) return 0
++      return (
++        distanceA.totalMm / distanceA.terminalCount -
++        distanceB.totalMm / distanceB.terminalCount
++      )
++    })
++    return {
++      ...connection,
++      pointsToConnect: [...terminals.slice(0, 1), ...secondary].map(
++        ({ terminal }) => terminal,
++      ),
++    }
++  })
+   const completed: Trace[] = []
+   const physicalLayers = getCopperLayerNames(input.layerCount)
+   let groups: Connection[][] = [

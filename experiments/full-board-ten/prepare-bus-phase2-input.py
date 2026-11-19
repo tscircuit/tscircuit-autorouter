@@ -10,12 +10,12 @@ import zipfile
 
 output = Path(sys.argv[1])
 plan = json.loads(Path(__file__).with_name("bus-phase2-plan.json").read_text())
-assert plan["qualificationReady"] is True, "Pending-access structural capture remains held"
-pending_plan = json.loads(Path(__file__).with_name("pending-access-plan.json").read_text())
-assert plan["source"]["sourceCandidateCommit"] == pending_plan["source"]["candidateCommit"]
-assert plan["source"]["sourcePatchSha256"] == pending_plan["source"]["patchSha256"]
-assert plan["source"]["sourceMappingSha256"] == pending_plan["sourceMappingSha256"]
-assert plan["source"]["publishedPackages"] == pending_plan["runtime"]
+assert plan["qualificationReady"] is True, "Final-phase diagnostic remains held"
+source_plan = json.loads(Path(__file__).with_name("branch-order-plan.json").read_text())
+assert plan["source"]["sourceCandidateCommit"] == source_plan["source"]["candidateCommit"]
+assert plan["source"]["sourcePatchSha256"] == source_plan["source"]["patchSha256"]
+assert plan["source"]["sourceMappingSha256"] == source_plan["sourceMappingSha256"]
+assert plan["source"]["publishedPackages"] == source_plan["runtime"]
 output.mkdir(parents=True, exist_ok=True)
 artifact = plan["input"]["artifact"]
 endpoint = f"repos/tscircuit/tscircuit-autorouter/actions/artifacts/{artifact['id']}"

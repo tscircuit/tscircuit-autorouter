@@ -1,8 +1,8 @@
-name: Pending-access native child2 structural capture
+name: Branch-order native final-phase diagnostic
 
 on:
   push:
-    branches: [bench/pending-access-phase2-3236-20261118]
+    branches: [bench/branch-order-phase2-final-3236-20261119]
 
 permissions:
   contents: read
@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   observe:
-    if: github.ref == 'refs/heads/bench/pending-access-phase2-3236-20261118'
+    if: github.ref == 'refs/heads/bench/branch-order-phase2-final-3236-20261119'
     runs-on: blacksmith-8vcpu-ubuntu-2404-arm
     timeout-minutes: 30
     env:
@@ -26,13 +26,13 @@ jobs:
           sparse-checkout: |
             experiments/full-board-ten
             .github/workflows/bus-phase2-diagnostic.yml
-            .github/workflows/pending-access-screen.yml
+            .github/workflows/branch-order-screen.yml
             AGENTS.md
       - name: Require reviewed diagnostic qualification
         run: >-
           python3 -c 'import json; from pathlib import Path;
           plan=json.loads(Path("experiments/full-board-ten/bus-phase2-plan.json").read_text());
-          assert plan["qualificationReady"] is True, "Pending-access structural capture remains held"'
+          assert plan["qualificationReady"] is True, "Final-phase diagnostic remains held"'
       - uses: actions/checkout@v4
         with:
           repository: tscircuit/tscircuit-autorouter
@@ -66,27 +66,34 @@ jobs:
         run: |
           python3 experiments/full-board-ten/bootstrap.py --root "$FULL_BOARD_ROOT"
           bun experiments/full-board-ten/prepare-cases.ts "$FULL_BOARD_ROOT/sources/original/experiments/full-board-priority-analysis" "$FULL_BOARD_ROOT/sources/spaced" "$FULL_BOARD_ROOT/cases" butterstick
-          python3 experiments/full-board-ten/prepare-pending-access.py "$FULL_BOARD_ROOT" baseline butterstick spaced
-          python3 experiments/full-board-ten/prepare-pending-access.py "$FULL_BOARD_ROOT" source butterstick spaced
-          python3 experiments/full-board-ten/prepare-pending-access.py "$FULL_BOARD_ROOT" candidate butterstick spaced
+          python3 experiments/full-board-ten/prepare-branch-order.py "$FULL_BOARD_ROOT" baseline butterstick spaced
+          python3 experiments/full-board-ten/prepare-branch-order.py "$FULL_BOARD_ROOT" source butterstick spaced
+          python3 experiments/full-board-ten/prepare-branch-order.py "$FULL_BOARD_ROOT" candidate butterstick spaced
       - name: Authenticate captured byte1 and prepare observation copy
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           python3 experiments/full-board-ten/prepare-bus-phase2-input.py "$FULL_BOARD_ROOT/bus-phase2"
-          python3 experiments/full-board-ten/instrument-bus-phase2.py "$FULL_BOARD_ROOT/npm/core-pending-access/dist/index.js" "$FULL_BOARD_ROOT/npm/core-pending-access/dist/bus-phase2-observed.js" > "$FULL_BOARD_ROOT/bus-phase2/instrumentation-proof.json"
-      - name: Capture second branch after the first native child solves
+          python3 experiments/full-board-ten/instrument-bus-phase2.py "$FULL_BOARD_ROOT/npm/core-branch-order/dist/index.js" "$FULL_BOARD_ROOT/npm/core-branch-order/dist/bus-phase2-observed.js" > "$FULL_BOARD_ROOT/bus-phase2/instrumentation-proof.json"
+      - name: Run one native phase to final output or stop status
         id: observe
         continue-on-error: true
         run: >-
           timeout --signal=TERM --kill-after=10s 960s
           bun experiments/full-board-ten/run-bus-phase2-diagnostic.ts
-          "$FULL_BOARD_ROOT/npm/core-pending-access/dist/bus-phase2-observed.js"
+          "$FULL_BOARD_ROOT/npm/core-branch-order/dist/bus-phase2-observed.js"
           "$FULL_BOARD_ROOT/bus-phase2"
           "$FULL_BOARD_ROOT/candidate-runtime-manifest.json"
       - name: Restore and verify untouched published runtime
         if: ${{ !cancelled() && steps.observe.outcome != 'skipped' }}
-        run: python3 experiments/full-board-ten/prepare-pending-access.py "$FULL_BOARD_ROOT" restore butterstick spaced
+        run: python3 experiments/full-board-ten/prepare-branch-order.py "$FULL_BOARD_ROOT" restore butterstick spaced
+      - name: Validate accepted final output against all native demands
+        if: ${{ !cancelled() && steps.observe.outcome != 'skipped' }}
+        run: >-
+          timeout --signal=TERM --kill-after=10s 180s
+          bun experiments/full-board-ten/assess-bus-phase2-output.ts
+          "$FULL_BOARD_ROOT/npm/core-branch-order/dist/bus-phase2-observed.js"
+          "$FULL_BOARD_ROOT/bus-phase2"
       - name: Classify diagnostic outcome
         if: ${{ !cancelled() && steps.observe.outcome != 'skipped' }}
         env:
@@ -96,15 +103,15 @@ jobs:
         if: always()
         with:
           include-hidden-files: true
-          name: pending-access-native-byte1-child2-geometry-${{ github.run_attempt }}
+          name: branch-order-native-byte1-final-diagnostic-${{ github.run_attempt }}
           path: |
             .full-board-run/bus-phase2
             .full-board-run/*runtime-manifest.json
-            .full-board-run/pending-access/overlay-proof.json
-            .full-board-run/pending-access/source-mapping.json
-            .full-board-run/pending-access/assessment-runtime-restored.json
+            .full-board-run/branch-order/overlay-proof.json
+            .full-board-run/branch-order/source-mapping.json
+            .full-board-run/branch-order/assessment-runtime-restored.json
             experiments/full-board-ten/bus-phase2-plan.json
-            experiments/full-board-ten/pending-access-plan.json
+            experiments/full-board-ten/branch-order-plan.json
             .github/workflows/bus-phase2-diagnostic.yml
           retention-days: 7
           if-no-files-found: warn

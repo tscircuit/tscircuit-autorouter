@@ -1,17 +1,17 @@
 {
   "qualificationReady": true,
-  "status": "Qualified diagnostic capture; root verifies this commit and owns the only push/launch",
-  "branch": "bench/pending-access-phase2-3236-20261118",
+  "status": "Qualified for one exact final-phase diagnostic; root authorized local commit and owns push/launch",
+  "branch": "bench/branch-order-phase2-final-3236-20261119",
   "workflow": ".github/workflows/bus-phase2-diagnostic.yml",
-  "question": "After the first native byte1 child solves under520dd, capture the second child input before its first step and its prepared lane input after exactly one ordinary step.",
-  "scope": "Replay one authenticated captured candidate phase with bounded diagnostic observations. No fresh full-board routing, completion improvement, performance or dynamic neutrality claim. The replay has its own900s diagnostic window; it is not limited to the time remaining after byte0 in the full-board run.",
+  "question": "Does the authentic captured branch-order candidate byte1 phase finish within one fresh diagnostic900s window while preserving all native connections and retained copper?",
+  "scope": "One frozen3236 isolated final-phase diagnostic. Exact candidate byte1 input, source and native constructor/options; capture accepted final output or stop status. No fresh full-board routing, latest3242 efficacy, performance or dynamic-neutrality claim.",
   "source": {
-    "runtimeControllerCommit": "1557bd914a3344e51c35a7b3ef6d996511b9a5e8",
-    "sourceCandidateCommit": "520dd0fb4f7264ffa597782aff7f91313f5a78b9",
-    "sourceLibTree": "9d184f5ab67c296fb7f429f06576c3d8c6474c31",
-    "sourcePatchSha256": "53b225dd293b9e24ca1a63df92fa9f86723ab4d9ed88c32b95d9a7c047c4a5b4",
-    "sourceMappingSha256": "2360dcc29d123f85ec3ae33bf1aaccef4be9752432879040a23656adb9b902b2",
-    "candidateCoreSha256": "a02e5e4378214bd37bb0bdb2a59ec681b0ef400a58d553038755250f08875176",
+    "runtimeControllerCommit": "12ba4ec2b0783b4a156e37df630cadd9cb264973",
+    "sourceCandidateCommit": "8dfe935be7de1f2798221fef6de5117303d2fedf",
+    "sourceLibTree": "4693f0858d39a65a185f393f98ddd28931b0f904",
+    "sourcePatchSha256": "fcdcf53b371cb6a85967a54a47bfbc433a00e5919e243be62aceef456720ab76",
+    "sourceMappingSha256": "507b75a6e1d96e999c6e18ba4a918434e25270265de507d0b4ec163308acc6aa",
+    "candidateCoreSha256": "426044a899711814d034b6b0e3574e1de541252e03ed04263a3af83c610eb898",
     "publishedPackages": {
       "main": "0.0.3236",
       "core": "0.0.2418",
@@ -19,47 +19,62 @@
       "autorouter": "0.0.1129",
       "bus": "0.0.62",
       "publishedCoreSha256": "25f088d42671b5efbf026c70a1216d754c01179e7d767f37e83bef11a0e79fd9",
-      "candidateCoreSha256": "a02e5e4378214bd37bb0bdb2a59ec681b0ef400a58d553038755250f08875176"
+      "candidateCoreSha256": "426044a899711814d034b6b0e3574e1de541252e03ed04263a3af83c610eb898"
     },
     "adapter": "Existing getBusLanesInputFromSrj from this exact Core bundle",
-    "pipeline": "Existing BusLanesPipelineSolver, native options {}",
-    "runtimeGraph": "Reuse frozen published3236 bootstrap/locks and qualified pending-access overlay; every unrelated package, source case and dependency remains unchanged."
+    "pipeline": "Existing BusLanesPipelineSolver with options omitted, matching native caller defaults{}. Internal smoothTuning/denseSearch defaults remain unchanged.",
+    "runtimeGraph": "Exact frozen3236 qualified branch-order overlay; diagnostic only, superseded by latest3242.",
+    "diagnosticCoreSha256": "962fc9e75be5aca53dabd056c86a90977a67c43492c0b348e176a4157afac2fe",
+    "nativeOptionsMeaning": "nativeOptions:{} records caller defaults, not a replacement of internal production defaults.",
+    "runtimeControllerPlanSha256": "5580685f0e1e43da51dce550df9fa9c8dfae5ce44375daab7049ed3510e99b03"
   },
   "input": {
     "artifact": {
-      "id": 14477591408,
-      "node_id": "MDg6QXJ0aWZhY3QxNDQ3NzU5MTQwOA==",
-      "name": "pending-access-butterstick-spaced-candidate-1",
-      "size_in_bytes": 6833224,
-      "url": "https://api.github.com/repos/tscircuit/tscircuit-autorouter/actions/artifacts/14477591408",
-      "archive_download_url": "https://api.github.com/repos/tscircuit/tscircuit-autorouter/actions/artifacts/14477591408/zip",
+      "id": 14483665941,
+      "node_id": "MDg6QXJ0aWZhY3QxNDQ4MzY2NTk0MQ==",
+      "name": "branch-order-butterstick-spaced-candidate-1",
+      "size_in_bytes": 6827795,
+      "url": "https://api.github.com/repos/tscircuit/tscircuit-autorouter/actions/artifacts/14483665941",
+      "archive_download_url": "https://api.github.com/repos/tscircuit/tscircuit-autorouter/actions/artifacts/14483665941/zip",
       "expired": false,
-      "digest": "sha256:8d972ebedd99315b460b46616d22a74a4c88299af139725cc62f40c688df74c0",
-      "created_at": "2026-11-18T22:27:55Z",
-      "updated_at": "2026-11-18T22:27:55Z",
-      "expires_at": "2026-11-25T22:27:54Z",
+      "digest": "sha256:11d7ad14d60ef8d5fdfb1cd67b426fc70f509c9fc3df436d54bfb5748d07f242",
+      "created_at": "2026-11-18T23:53:38Z",
+      "updated_at": "2026-11-18T23:53:38Z",
+      "expires_at": "2026-11-25T23:53:37Z",
       "workflow_run": {
-        "id": 44406679839,
+        "id": 44420185273,
         "repository_id": 924883209,
         "head_repository_id": 924883209,
-        "head_branch": "bench/pending-access-3236-20261118",
-        "head_sha": "1557bd914a3344e51c35a7b3ef6d996511b9a5e8"
+        "head_branch": "bench/branch-order-3236-20261118",
+        "head_sha": "12ba4ec2b0783b4a156e37df630cadd9cb264973"
       }
     },
     "members": {
+      "results/butterstick/spaced/phase-1-input.srj.json.gz": {
+        "path": "results/butterstick/spaced/phase-1-input.srj.json.gz",
+        "bytes": 2059085,
+        "sha256": "425229028203e91a7854a4e10a1e7e3040163e23592b6bf68c12c46efcc5737d",
+        "jsonSha256": "78871ac62e4fdc8f1e7ae7f7aed8cfd53e8a8336a7681371d7f9e9d3285380b6"
+      },
       "results/butterstick/spaced/phase-2-input.srj.json.gz": {
         "path": "results/butterstick/spaced/phase-2-input.srj.json.gz",
-        "bytes": 2062367,
-        "sha256": "8c570d59a95204509b2645716ba409ca65d70b4e664dc6092141099b0168c702",
-        "jsonSha256": "cc7843ecfae413f5afc1eefc88fa5dcd92e152aba3bb97fa266bd6ef1cafb272"
+        "bytes": 2062032,
+        "sha256": "cd4f443a262e3bdd0b9528acc4fa4afc41b8e19b883f05e3bffe88bdd9a8b6f1",
+        "jsonSha256": "65254279ee79cb4df061b729ec567a60d39a23c1fedf2af18283773f23e9e642"
       },
       "results/butterstick/spaced/progress.json": {
         "path": "results/butterstick/spaced/progress.json",
-        "bytes": 12131,
-        "sha256": "ed58b0fa99339c4c8e4b70380d742304d3790b54ccd9c1b9733b81c65a7b52aa"
+        "bytes": 10643,
+        "sha256": "fa50813394935b1ed50120840ef1d8e94851e519ec179223a4e7378468b642f7"
+      },
+      "results/butterstick/spaced/circuit.json.gz": {
+        "path": "results/butterstick/spaced/circuit.json.gz",
+        "bytes": 290139,
+        "sha256": "67caf04ebb45f1d1f334e4034395425382853814b03397760004dc3bbb699b64",
+        "jsonSha256": "fa9b1458aa4a4f53dae4b091b5a1b59d9941cd6a4c4c2fc6dc9a6cb8c8da837e"
       }
     },
-    "rawSha256": "cc7843ecfae413f5afc1eefc88fa5dcd92e152aba3bb97fa266bd6ef1cafb272",
+    "rawSha256": "65254279ee79cb4df061b729ec567a60d39a23c1fedf2af18283773f23e9e642",
     "obstacles": 1720,
     "retainedTraces": 16,
     "retainedVias": 16,
@@ -75,40 +90,24 @@
       "source_net_308",
       "source_net_309"
     ],
-    "transformations": "Only exact native Core adapter; hash raw and adapted input before/after. No reordering, geometry or policy changes, and no byte0 reroute."
+    "transformations": "Exact native Core adapter only. Route8 byte1 connections/24terminals; retained byte0 remains copper. Never add validation-only byte0 demands to solver input."
   },
   "recommendedExecution": {
     "worker": "blacksmith-8vcpu-ubuntu-2404-arm",
     "bun": "1.4.3",
     "jobs": 1,
     "lanes": [
-      "geometry-capture"
+      "one-final-phase-diagnostic"
     ],
     "softCaptureMs": 900000,
     "hardCaptureSeconds": 960,
     "workflowTimeoutMinutes": 30,
     "productionRoutingBudgetOverrides": false,
     "controlLaneExecuted": false,
-    "stopCondition": "External driver stops immediately after the ordinary first child2 step supplies its prepared lane input, or when the first child fails;900/960 are emergency guards only.",
+    "stopCondition": "Only final pipeline solved/failed status, execution error, external900s soft guard or960s hard guard; no child-specific stop.",
     "externalDiagnosticWindowMs": 900000,
     "fullBoardRemainingBudgetEquivalent": false,
-    "parentFullBoardPhase2StartedMs": 232287.84429399998,
-    "parentFullBoardNominalRemainingMs": 667712.155706
-  },
-  "geometryCapture": {
-    "targetChildId": 2,
-    "requiredSolvedChildId": 1,
-    "expectedInputSha256": null,
-    "captureTiming": "Save child2 pristine input before its first _step; execute the original step once unchanged, retain prepared lane input/options, then stop externally.",
-    "retained": [
-      "child1-accepted-proof.json",
-      "child2-input.srj.json.gz",
-      "solved-child1-output.srj.json.gz",
-      "child2-geometry-proof.json",
-      "child2-lane-input.srj.json.gz",
-      "child2-lane-parameters.json"
-    ],
-    "geometryAssumption": "No historical child2 input hash, exact trace-count expectation or target-net-only diagnosis is imposed on the new source."
+    "assessmentHardSeconds": 180
   },
   "compactEvidence": {
     "always": [
@@ -117,24 +116,86 @@
       "start-proof.json",
       "report.json or checkpoint.json",
       "observation-proof.json",
-      "compressed phase2 input",
+      "compressed phase1/phase2 inputs and native circuit",
       "published/candidate/restored runtime manifests",
-      "source mapping and overlay/restore proofs"
+      "source mapping and overlay/restore proofs",
+      "physical-assessment.json (explicitly skipped without final output)"
     ],
-    "conditional": "Retain solved child1 and child2 geometry only if actually reached; report first-child failure, soft capture and interrupted capture separately.",
-    "storageGoal": "Bounded summaries and static captured inputs; no full Core bundle, raster or repeated grid dumps."
+    "conditional": "Only final accepted phase output is emitted as completed-output.srj.json.gz; partial root trace counts are observations, not accepted output.",
+    "storageGoal": "Bounded scalar checkpoints; no full Core bundle, raster or child/candidate graphs."
   },
   "neutralityChecks": [
     "Original qualified Core entry and frozen dependency graph unchanged before/after",
     "Raw input/native adapter/options and production routing budgets unchanged",
     "Observer errors and routing WASM attempts absent",
-    "Observation hooks do not query geometry or invoke a search solely for reporting"
+    "No production hooks or wrappers; only append-only exports and external public-step observation."
   ],
   "interpretation": [
-    "An observed successful child is not an independently validated full-board completion result.",
-    "First-child failure or missing child2 at an external deadline is a diagnostic outcome, not a successful geometry capture.",
-    "This source may change child1 output and child2 geometry; retain actual hashes without requiring historical geometry.",
-    "No all-ten run, source fix selection, routing improvement or repeatable speedup is established by this capture.",
-    "A900s fresh phase diagnostic window exceeds the parent full-board time remaining at byte1. Phase outcomes and timings cannot be treated as a same-budget full-board gain."
-  ]
+    "This is frozen3236 evidence; latest3242 baseline is separate.",
+    "A solved phase requires independent fullnative16net physical validation before a diagnostic-success statement.",
+    "No child completion is a stop condition or full-phase result.",
+    "One fresh900s phase window is not the original full-board remaining budget; no timing/completion gain claim.",
+    "Exactly one diagnostic may run after root verification; failure does not authorize another replay."
+  ],
+  "frozenFiles": {
+    "experiments/full-board-ten/bootstrap.py": "23de25ac8960be89afc57ba27b0d3fddb6e65dba593024be59ec5073d266164d",
+    "experiments/full-board-ten/prepare-cases.ts": "b72e632e9c9152c9e5daedf1bb60daa5d86c33fdcc454f2a7825827d24124330",
+    "experiments/full-board-ten/render-published.tsx": "a5c379d0682f8e72e4c54c4710e797836b71fbe779e5430e33f62286694057f9",
+    "experiments/full-board-ten/run-one.ts": "b3ac65f0a0e50e3759968cdd365df66d0cb1c446aef2b91e7e78ac87991fc101",
+    "experiments/full-board-ten/calibrate-assessment.tsx": "efeb820cf34239465df53ce4c7932293e41a14dcab4bedb823c3bc60cc9627a0",
+    "experiments/full-board-ten/createCoarseRoutingDiagnostics.ts": "dea45bba3386a9b55b7709834dff65468c421992808b406f54c6f9e556e8b618",
+    "experiments/full-board-ten/source-provenance.json": "bd24be29c5fdd5ae68ce15c5b2bc50f172ecdd325dcc1b57a80ec653d12570fb",
+    "experiments/full-board-ten/release.json": "02acd9d4eea8e583d506c7f43be119c9aa5f6e740496bc0032ce85febb43f738",
+    "experiments/full-board-ten/published-release-provenance.json": "1ec33d4dc1d1dcaf5986366823edd77b261f60a9e4826d4f7f8f92cba8f52ea8",
+    "experiments/full-board-ten/harness-provenance.json": "a11c1c8434d2143d56e5ce9322269479a2766d411865ddd46127b65c2c4ab29f",
+    "experiments/full-board-ten/runtime/package.json": "15215d5cd97fd8b6ce7b5070902bbeccb212c124e9899d1255d46aa9cb703d1d",
+    "experiments/full-board-ten/runtime/bun.lock": "06d711c1fec0d9098a68ca0fa233c3cac41cddbda5b1b7ee0238f459dbf6a5e0",
+    "experiments/full-board-ten/autorouter-dependencies/package.json": "7b4c1ecf979432e472a4f0589ed49976a8a1323ff7bf651a5938ee7006b61360",
+    "experiments/full-board-ten/autorouter-dependencies/bun.lock": "ec313c582c29c1e35bb31190151a5649198c177119d32fe311746c06e94e8c4e",
+    "experiments/full-board-ten/createBranchOrderOverlay.ts": "2ddbad0527ca4fe033c43164d9be5982cd9b56c983c9f4869911aa29938e5083",
+    "experiments/full-board-ten/branch-order-production.patch": "fcdcf53b371cb6a85967a54a47bfbc433a00e5919e243be62aceef456720ab76",
+    "experiments/full-board-ten/branch-order-source-mapping.json": "507b75a6e1d96e999c6e18ba4a918434e25270265de507d0b4ec163308acc6aa",
+    "experiments/full-board-ten/prepare-branch-order.py": "394645a0ef48cf2be3ffbf7f066e6230d85d49c6561db26ad1f8cd001d3221d8",
+    "experiments/full-board-ten/compare-branch-order.py": "2fe6802fbf7d9c9c8868a2d45f215d79f7a2c03f0cd77690af213cdaaa131623",
+    "experiments/full-board-ten/package.json": "469e1861d1259cd1307bca324fb0d8ba0a67ea0323d4e728a35c90a2bc92bdf3",
+    "experiments/full-board-ten/tsconfig.json": "2e881577c63bb6b62d14abd319240bbc6ae5e206ecb007dae80ab3ec922293c7",
+    ".github/workflows/branch-order-screen.yml": "3bb21a8921432dabadf50675e0aa72aefe3c0f21cc4b4af1cb9ed624fdf1f21f",
+    "experiments/full-board-ten/branch-order-plan.json": "5580685f0e1e43da51dce550df9fa9c8dfae5ce44375daab7049ed3510e99b03",
+    ".github/workflows/bus-phase2-diagnostic.yml": "a1fa7c0df0051b4d2859ecb5d41ca43c8f1240ceecbd4947c829ba4b4334f464",
+    "experiments/full-board-ten/instrument-bus-phase2.py": "75c041f9c98e664412108ea3fb87c65e99180a9ddfc9e99188cf2498e21d38be",
+    "experiments/full-board-ten/prepare-bus-phase2-input.py": "2b8e34973089fff21a10151bfb6030f55b70212f82944df11665a465550c750b",
+    "experiments/full-board-ten/run-bus-phase2-diagnostic.ts": "9ab246075332b8fff0fb0f19ce76c308919e7771b34b5180174d83017199dcee",
+    "experiments/full-board-ten/verify-bus-phase2-diagnostic.py": "645b71b488ed32463d2e76c21ee33afdfb8916bd72927f790f12f6af5a404740",
+    "experiments/full-board-ten/assess-bus-phase2-output.ts": "427a8eee2acf36edd206fc0bbb0d2f9150e876e48993af4c6ce4222edb73e004"
+  },
+  "validation": {
+    "scope": "Independent validation-only union of byte0+byte1 native demands. Never used for routing.",
+    "nativeNets": 16,
+    "nativeTerminals": 48,
+    "fullObstacles": 1720,
+    "retainedPreloads": 16,
+    "acceptedFinalOutputOnly": true,
+    "validators": "Exact embedded validateRoutedCopperDrc3 and validateOriginalEndpointConnectivity3 bindings, unchanged by overlay",
+    "membershipProof": {
+      "path": "/workspace/full-board-ten-20261119-3236/branch-order-phase2-preparation/independent-captured-input-review.json",
+      "sha256": "8fa54a9328efc9382402128cf63557ebdda887f2f8c3c2e0aada54650bee76ee",
+      "passed": true
+    },
+    "assessmentReview": {
+      "path": "/workspace/full-board-ten-20261119-3236/branch-order-phase2-preparation/independent-assessment-script-review.json",
+      "sha256": "6e20bb051ade09fced52eeec6817a381a7067dd55782b8781d985bac3187a534",
+      "passed": true
+    },
+    "assessmentContracts": {
+      "path": "/workspace/full-board-ten-20261119-3236/branch-order-phase2-preparation/assessment-controller-contracts.json",
+      "sha256": "53da4b5959743d34bf9f1895aaf7de988d8130111a804b419126e21dd53393fb",
+      "passed": true,
+      "routingExecuted": false
+    }
+  },
+  "release": {
+    "reviewedHeldPlanSha256": "fe2c468cdbd7c3370e7dcc460e326328dcea7837b114cc7095e3f6b55aa75388",
+    "rootAuthorized": true,
+    "scope": "Only this one frozen3236 phase diagnostic; no latest pairs, all-ten runs or production changes."
+  }
 }
