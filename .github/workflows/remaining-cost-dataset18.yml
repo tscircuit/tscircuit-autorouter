@@ -27,20 +27,26 @@ jobs:
           persist-credentials: false
       - uses: actions/checkout@v4
         with:
-          ref: 5e66758e5a632ad968ffe32eab43d694d3bb92af
+          ref: 3f5806dc9868299fe976f245f0ab8e8a21d5a4c1
           path: same-machine-pr
           persist-credentials: false
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.4.3
+      - name: Enable benchmark dependency lock
+        run: |
+          cat > install.toml <<'TOML'
+          [install.lockfile]
+          save = true
+          TOML
       - name: Install control dependencies
         working-directory: same-machine-base
-        run: bun install
+        run: bun install --config ../install.toml
       - name: Resolve candidate from the same dependency lock
         run: |
           cp same-machine-base/bun.lock same-machine-pr/bun.lock
           cd same-machine-pr
-          bun install
+          bun install --config ../install.toml
       - name: Verify dependency isolation
         run: |
           python3 - <<'PYTHON'
@@ -52,8 +58,8 @@ jobs:
           base=read('same-machine-base/bun.lock');candidate=read('same-machine-pr/bun.lock')
           changed=[key for key in set(base['packages'])|set(candidate['packages']) if base['packages'].get(key)!=candidate['packages'].get(key)]
           assert changed==['tiny-hypergraph'],changed
-          assert '27174da103a3408d31373035bb6cf0ffd79911df' in Path('same-machine-pr/package.json').read_text()
-          Path('dependency-proof.json').write_text(json.dumps({'base':'8bc7eeee1d42c94eb72f32460dc03f54add143e5','candidate':'5e66758e5a632ad968ffe32eab43d694d3bb92af','changedPackages':changed,'locks':{lane:hashlib.sha256(Path(f'same-machine-{lane}/bun.lock').read_bytes()).hexdigest() for lane in ['base','pr']}},indent=2))
+          assert 'cba224ed2ced6d8ed4184f551740d3e4e62c219f' in Path('same-machine-pr/package.json').read_text()
+          Path('dependency-proof.json').write_text(json.dumps({'base':'8bc7eeee1d42c94eb72f32460dc03f54add143e5','candidate':'3f5806dc9868299fe976f245f0ab8e8a21d5a4c1','changedPackages':changed,'locks':{lane:hashlib.sha256(Path(f'same-machine-{lane}/bun.lock').read_bytes()).hexdigest() for lane in ['base','pr']}},indent=2))
           PYTHON
       - name: Run stock same-machine benchmark
         working-directory: same-machine-controller
