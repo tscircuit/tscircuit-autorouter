@@ -1,0 +1,13 @@
+{
+  "board": "glider",
+  "baselinePhysicalCircuitSha256": "a100e237069976797d368cda7d06063b633005f527ce7f7234e14c9fd9bbd1d5",
+  "physicalCircuitSha256": "a100e237069976797d368cda7d06063b633005f527ce7f7234e14c9fd9bbd1d5",
+  "samePhysicalCircuit": true,
+  "inputSha256": "b407978a89550c8835548bd99252b8f042a167f50cd1a81adf8b234e85155f59",
+  "baselineInputSha256": "b407978a89550c8835548bd99252b8f042a167f50cd1a81adf8b234e85155f59",
+  "sameInput": true,
+  "workerSvgSha256": "eccce9dabf891f1a2af237e8c2048a56fcc95963f26853d5d86f0b3982288f3c",
+  "baselineWorkerSvgSha256": "eccce9dabf891f1a2af237e8c2048a56fcc95963f26853d5d86f0b3982288f3c",
+  "sameWorkerSvgBytes": true,
+  "artifactMember": "glider/pcb.svg"
+}

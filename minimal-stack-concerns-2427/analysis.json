@@ -1,0 +1,361 @@
+{
+  "schemaVersion": 1,
+  "sources": {
+    "core": "75ab017cd6852dbe50516ee1f4ca9d1108c29985",
+    "coreVersion": "0.0.2427",
+    "tscircuitVersion": "0.0.3245",
+    "autorouter": "a4a8f3a71dd66c2cae01d6a7ade426efad833ff6",
+    "busLanesVersion": "0.0.62",
+    "bunVersion": "1.4.3",
+    "finalPrHeads": {
+      "318": "e36bee5e1767d908dabbfd46d19da60600051046",
+      "305": "55e6041df2df390542848ece0ca3a79ab3714ff6",
+      "322": "18c3dd1d641c1e47dd7c062f59d8b62bfd6324d5"
+    },
+    "oldCombinedStack": "5e417426368e7d267e3cef930df5a505951a2b1c",
+    "benchmarkC": "e352b111ea36431f4e29005b443abaf679f80960",
+    "benchmarkB": "260446a9aebf51832a3f704c11f654253e45eef0",
+    "cProductionTree": "38b5902489386a45b061789156c850f2ddb35b39",
+    "benchmarkCProductionTree": "38b5902489386a45b061789156c850f2ddb35b39",
+    "bProductionTree": "eefc89afe9de5ab3aef62b78ce1c2f614984ac31",
+    "benchmarkBProductionTree": "eefc89afe9de5ab3aef62b78ce1c2f614984ac31"
+  },
+  "runs": {
+    "originalCapture": 44519377875,
+    "frozen72SourceCapture": 44415945774,
+    "finalNativeFrozenAndBoards": 44615955065,
+    "baselineNative": 44619611886,
+    "boundary300": 44621338299,
+    "formatAndTypes": 44622889186,
+    "dram143Snapshot": 44609494856
+  },
+  "benchmarkLocation": "Blacksmith",
+  "pipeline": "Fresh fanout, then bus lanes, then remaining nets. Original routes/vias removed; plane intent retained. No full board reaches the bus-lane phase.",
+  "nativeThree": {
+    "afterPr305": [
+      19,
+      19,
+      75
+    ],
+    "afterPr322": [
+      19,
+      19,
+      72
+    ],
+    "order": [
+      "icepi",
+      "imx6",
+      "glider"
+    ],
+    "totalRequests": 159,
+    "afterPr305Drills": [
+      16,
+      17,
+      63
+    ],
+    "afterPr322Drills": [
+      16,
+      16,
+      59
+    ],
+    "pr305RoutedChangePercent": 32.94117647058823,
+    "pr305Gains": 32,
+    "pr305Losses": 4,
+    "pr322GliderGains": 6,
+    "pr322GliderLosses": 9,
+    "qualification": "All listed native3 copper passes DRC, requested widths and modeled plane-contact checks. These are uncommitted partial fanouts, not connected electrical nets or completed boards.",
+    "afterPr318": [
+      11,
+      14,
+      60
+    ],
+    "afterPr318Drills": [
+      11,
+      13,
+      53
+    ],
+    "stages": {
+      "afterPr318": "e36bee5e1767d908dabbfd46d19da60600051046",
+      "afterPr305": "55e6041df2df390542848ece0ca3a79ab3714ff6",
+      "afterPr322": "18c3dd1d641c1e47dd7c062f59d8b62bfd6324d5"
+    }
+  },
+  "boundary300": {
+    "beforeAccepted": 276,
+    "afterAccepted": 276,
+    "sameRequestSet": true,
+    "beforeDrills": 199,
+    "afterDrills": 181,
+    "drillReductionPercent": 9.045226130653267,
+    "qualification": "Every accepted route passes copper and requested-width checks. Separate single-request cohort; it is not a joint-board solve-rate result."
+  },
+  "frozen72": {
+    "beforeCompleted": 30,
+    "afterCompleted": 30,
+    "qualifiedBefore": 30,
+    "qualifiedAfter": 30,
+    "identicalCompletedSvgCount": 30,
+    "caseDeadlineSeconds": 120,
+    "concurrency": 16,
+    "timing": [
+      {
+        "commit": "5e417426368e7d267e3cef930df5a505951a2b1c",
+        "completed": 30,
+        "p50SolvedMs": 41995,
+        "p95SolvedMs": 97021,
+        "meanSolvedMs": 48723.3,
+        "meanSolvedViaCount": 148.5,
+        "allCaseElapsedMs": 6503771
+      },
+      {
+        "commit": "260446a9aebf51832a3f704c11f654253e45eef0",
+        "completed": 30,
+        "p50SolvedMs": 43723,
+        "p95SolvedMs": 94901,
+        "meanSolvedMs": 49668.6,
+        "meanSolvedViaCount": 148.5,
+        "allCaseElapsedMs": 6532375
+      }
+    ],
+    "timingInterpretation": "Mixed timing: solved-case P50 and mean rise, P95 falls; no runtime improvement claimed. Retained for corrected width semantics, shared architecture, validated partial-route gains and identical completed-case geometry.",
+    "percentileMethod": "Nearest rank among completed samples"
+  },
+  "fullBoards": [
+    {
+      "board": "butterstick",
+      "inputRequests": 91,
+      "beforeRaw": 52,
+      "beforeQualifiedIndividualRequests": 32,
+      "afterRaw": 55,
+      "afterQualifiedIndividualRequests": 55,
+      "afterPhysicalDrills": 46,
+      "copperDrcValid": true,
+      "requestAuditValid": true,
+      "violations": [],
+      "committedPcbTraces": 0,
+      "committedPcbVias": 0,
+      "hashProof": {
+        "board": "butterstick",
+        "baselinePhysicalCircuitSha256": "78e03479709f023a90c0c95cecf206f65c07effe8838523a63db5ff7548e3dc9",
+        "physicalCircuitSha256": "78e03479709f023a90c0c95cecf206f65c07effe8838523a63db5ff7548e3dc9",
+        "samePhysicalCircuit": true,
+        "inputSha256": "0c572408c68a22db9a1e49f1dc6c3a5626d78f431bb6bb095c8a4b18d6c9baf7",
+        "baselineInputSha256": "0c572408c68a22db9a1e49f1dc6c3a5626d78f431bb6bb095c8a4b18d6c9baf7",
+        "sameInput": true,
+        "workerSvgSha256": "5ff88c5313de2c15a5243e46aad819fe32399fd853e7ee329bfab83ab59458ee",
+        "baselineWorkerSvgSha256": "5ff88c5313de2c15a5243e46aad819fe32399fd853e7ee329bfab83ab59458ee",
+        "sameWorkerSvgBytes": true,
+        "artifactMember": "butterstick/pcb.svg"
+      }
+    },
+    {
+      "board": "glider",
+      "inputRequests": 95,
+      "beforeRaw": 78,
+      "beforeQualifiedIndividualRequests": 78,
+      "afterRaw": 72,
+      "afterQualifiedIndividualRequests": 72,
+      "afterPhysicalDrills": 59,
+      "copperDrcValid": true,
+      "requestAuditValid": true,
+      "violations": [],
+      "committedPcbTraces": 0,
+      "committedPcbVias": 0,
+      "hashProof": {
+        "board": "glider",
+        "baselinePhysicalCircuitSha256": "a100e237069976797d368cda7d06063b633005f527ce7f7234e14c9fd9bbd1d5",
+        "physicalCircuitSha256": "a100e237069976797d368cda7d06063b633005f527ce7f7234e14c9fd9bbd1d5",
+        "samePhysicalCircuit": true,
+        "inputSha256": "b407978a89550c8835548bd99252b8f042a167f50cd1a81adf8b234e85155f59",
+        "baselineInputSha256": "b407978a89550c8835548bd99252b8f042a167f50cd1a81adf8b234e85155f59",
+        "sameInput": true,
+        "workerSvgSha256": "eccce9dabf891f1a2af237e8c2048a56fcc95963f26853d5d86f0b3982288f3c",
+        "baselineWorkerSvgSha256": "eccce9dabf891f1a2af237e8c2048a56fcc95963f26853d5d86f0b3982288f3c",
+        "sameWorkerSvgBytes": true,
+        "artifactMember": "glider/pcb.svg"
+      }
+    },
+    {
+      "board": "h616",
+      "inputRequests": 174,
+      "beforeRaw": 99,
+      "beforeQualifiedIndividualRequests": 52,
+      "afterRaw": 109,
+      "afterQualifiedIndividualRequests": 109,
+      "afterPhysicalDrills": 82,
+      "copperDrcValid": true,
+      "requestAuditValid": true,
+      "violations": [],
+      "committedPcbTraces": 0,
+      "committedPcbVias": 0,
+      "hashProof": {
+        "board": "h616",
+        "baselinePhysicalCircuitSha256": "beec478c36363d647547ce0f836ec66dca7907ee47ae33177070f2f8a06277d4",
+        "physicalCircuitSha256": "beec478c36363d647547ce0f836ec66dca7907ee47ae33177070f2f8a06277d4",
+        "samePhysicalCircuit": true,
+        "inputSha256": "0aa625dd9c4fe551e6cdcd60574f5d57d0fce74d754a8c91d3b302676c7fa7db",
+        "baselineInputSha256": "0aa625dd9c4fe551e6cdcd60574f5d57d0fce74d754a8c91d3b302676c7fa7db",
+        "sameInput": true,
+        "workerSvgSha256": "5d5b8f5638b62db28a7964fa26c48ad8140e76f8e862daaaa0a3bc263a7d3874",
+        "baselineWorkerSvgSha256": "5d5b8f5638b62db28a7964fa26c48ad8140e76f8e862daaaa0a3bc263a7d3874",
+        "sameWorkerSvgBytes": true,
+        "artifactMember": "h616/pcb.svg"
+      }
+    },
+    {
+      "board": "icepi",
+      "inputRequests": 32,
+      "beforeRaw": 18,
+      "beforeQualifiedIndividualRequests": 18,
+      "afterRaw": 19,
+      "afterQualifiedIndividualRequests": 19,
+      "afterPhysicalDrills": 16,
+      "copperDrcValid": true,
+      "requestAuditValid": true,
+      "violations": [],
+      "committedPcbTraces": 0,
+      "committedPcbVias": 0,
+      "hashProof": {
+        "board": "icepi",
+        "baselinePhysicalCircuitSha256": "e6e1048835308128142aab743308a686aa21b2f7aefc54fdb87688333297be1f",
+        "physicalCircuitSha256": "e6e1048835308128142aab743308a686aa21b2f7aefc54fdb87688333297be1f",
+        "samePhysicalCircuit": true,
+        "inputSha256": "f2c622bc288faaae5e505f62fe8803b465d1be0bc5752547ea9136438df40279",
+        "baselineInputSha256": "f2c622bc288faaae5e505f62fe8803b465d1be0bc5752547ea9136438df40279",
+        "sameInput": true,
+        "workerSvgSha256": "6597f24ad923386c271401e1496447be93a10e62083f239cafd4762cc2fa9e0e",
+        "baselineWorkerSvgSha256": "6597f24ad923386c271401e1496447be93a10e62083f239cafd4762cc2fa9e0e",
+        "sameWorkerSvgBytes": true,
+        "artifactMember": "icepi/pcb.svg"
+      }
+    },
+    {
+      "board": "imx6",
+      "inputRequests": 32,
+      "beforeRaw": 19,
+      "beforeQualifiedIndividualRequests": 19,
+      "afterRaw": 19,
+      "afterQualifiedIndividualRequests": 19,
+      "afterPhysicalDrills": 16,
+      "copperDrcValid": true,
+      "requestAuditValid": true,
+      "violations": [],
+      "committedPcbTraces": 0,
+      "committedPcbVias": 0,
+      "hashProof": {
+        "board": "imx6",
+        "baselinePhysicalCircuitSha256": "b28d96945a645b09e5b08c2331c434ca73c0ef606507ed7fe4900f4519e49664",
+        "physicalCircuitSha256": "b28d96945a645b09e5b08c2331c434ca73c0ef606507ed7fe4900f4519e49664",
+        "samePhysicalCircuit": true,
+        "inputSha256": "70c8dbdc3c3b66954d47334f6d92353df135ba8eb4a7edf344b40718e6b43fd5",
+        "baselineInputSha256": "70c8dbdc3c3b66954d47334f6d92353df135ba8eb4a7edf344b40718e6b43fd5",
+        "sameInput": true,
+        "workerSvgSha256": "f830d71d7b5870d8911781f0614bda91562fcf3ac28b9a3f9ba0f184dbb00092",
+        "baselineWorkerSvgSha256": "f830d71d7b5870d8911781f0614bda91562fcf3ac28b9a3f9ba0f184dbb00092",
+        "sameWorkerSvgBytes": true,
+        "artifactMember": "imx6/pcb.svg"
+      }
+    },
+    {
+      "board": "orangecrab",
+      "inputRequests": 273,
+      "beforeRaw": 134,
+      "beforeQualifiedIndividualRequests": 133,
+      "afterRaw": 143,
+      "afterQualifiedIndividualRequests": 142,
+      "afterPhysicalDrills": 124,
+      "copperDrcValid": true,
+      "requestAuditValid": false,
+      "violations": [
+        {
+          "connectionName": "source_trace_90",
+          "traceId": "fanout:source_trace_90:source-0",
+          "code": "plane-landing",
+          "targetLayer": "inner1",
+          "viaCenters": [
+            {
+              "x": -2.7100000000000093,
+              "y": -0.4500010000000141
+            }
+          ]
+        }
+      ],
+      "committedPcbTraces": 0,
+      "committedPcbVias": 0,
+      "hashProof": {
+        "board": "orangecrab",
+        "baselinePhysicalCircuitSha256": "34c69bd82a531af922dcf310862284450b970a7829268e875cf42522cbf75180",
+        "physicalCircuitSha256": "34c69bd82a531af922dcf310862284450b970a7829268e875cf42522cbf75180",
+        "samePhysicalCircuit": true,
+        "inputSha256": "727660d7503438a3ab7618e2f8b52dde282f49cafb8b3f26783975dcd8642cc9",
+        "baselineInputSha256": "727660d7503438a3ab7618e2f8b52dde282f49cafb8b3f26783975dcd8642cc9",
+        "sameInput": true,
+        "workerSvgSha256": "b5db098076c0911ebc7c9d197a5b5c99ede8a44135a4c39bcb41e0b6475504f1",
+        "baselineWorkerSvgSha256": "b5db098076c0911ebc7c9d197a5b5c99ede8a44135a4c39bcb41e0b6475504f1",
+        "sameWorkerSvgBytes": true,
+        "artifactMember": "orangecrab/pcb.svg"
+      }
+    }
+  ],
+  "fullBoardTotals": {
+    "requests": 697,
+    "beforeRaw": 400,
+    "afterRaw": 417,
+    "beforeQualifiedIndividualRequests": 332,
+    "afterQualifiedIndividualRequests": 416,
+    "qualifiedChangePercent": 25.301204819277107,
+    "beforeWrongWidthRequests": 67,
+    "afterWrongWidthRequests": 0,
+    "completeBoards": 0,
+    "committedPcbTraces": 0,
+    "committedPcbVias": 0,
+    "requestScope": "Captured first fanout region per full-board run; requests may share an electrical net."
+  },
+  "qualificationPolicy": "Requested effective nominal widths and standard copper DRC are strict. For finite modeled same-net plane copper, the terminal via outer disk must touch that copper. Plane direction remains the published search preference; direction changes are diagnostics, not violations. Qualified counts filter individual diagnostic requests and do not represent successful whole fanouts.",
+  "knownExistingIssue": {
+    "board": "orangecrab",
+    "connectionName": "source_trace_90",
+    "issue": "Terminal via misses modeled same-net finite plane copper. The full audit is expected to fail this existing issue; it is excluded from qualified counts.",
+    "beforeAndAfterViolationIdentical": true,
+    "violations": [
+      {
+        "connectionName": "source_trace_90",
+        "traceId": "fanout:source_trace_90:source-0",
+        "code": "plane-landing",
+        "targetLayer": "inner1",
+        "viaCenters": [
+          {
+            "x": -2.7100000000000093,
+            "y": -0.4500010000000141
+          }
+        ]
+      }
+    ]
+  },
+  "artifacts": {
+    "originalInputs": "https://raw.githubusercontent.com/tscircuit/tscircuit-autorouter/a3416878451bbe69df04ab4d27a67ac2fa0446f4/rerun2427/circuits-and-results.zip",
+    "originalTsxSources": "https://github.com/tscircuit/tscircuit-autorouter/tree/a3416878451bbe69df04ab4d27a67ac2fa0446f4/rerun2427/sources",
+    "fullPcbBeforeAfter": "https://raw.githubusercontent.com/tscircuit/tscircuit-autorouter/e03bd6341d2ea0930d53b3d77adf111a817ff063/minimal-stack-2427/all-boards.svg",
+    "fullPcbNote": "All six current raw PCB SVGs match the original baseline bytes; the existing immutable presentation is still accurate. Natural partial-fanout snapshots live in the fix/repro PRs.",
+    "rawReports": [
+      "native-before.json",
+      "native-after.json",
+      "boundary-300.json.gz",
+      "frozen72.json",
+      "old-stack-physical-audit.json",
+      "full-boards/"
+    ]
+  },
+  "fullBoardPlanMetadata": "Core and board source are frozen. The last run uses the original verified schedule metadata, with each source hash checked; actual circuits route fresh in timed workers. Each final plan.json records this provenance.",
+  "validation": {
+    "sourceFormatAndAllTypeModes": "pass on all five exact current heads, run44622889186",
+    "focusedRegressions": "pass; existing raw bottom-corner SVGs unchanged, small SRJ19 case DRC0/15of15/12drills/1.7percent shorter copper",
+    "repositoryTests": {
+      "304": "pass run44605038398",
+      "321": "pass run44604729617",
+      "318": "pass run44619256039",
+      "305": "pending run44622849733",
+      "322": "pending run44622847827"
+    }
+  }
+}

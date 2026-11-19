@@ -1,0 +1,57 @@
+{
+  "inputSha256": "f2c622bc288faaae5e505f62fe8803b465d1be0bc5752547ea9136438df40279",
+  "copperDrc": {
+    "valid": true,
+    "checkedTraceCount": 19,
+    "checkedSegmentCount": 40,
+    "checkedViaCount": 16,
+    "issues": []
+  },
+  "requestConstraints": {
+    "valid": true,
+    "checkedTraceCount": 19,
+    "checkedWireCount": 75,
+    "checkedExplicitLeads": 16,
+    "checkedPlaneLandings": 16,
+    "violations": [],
+    "directionPreferenceChanges": [
+      {
+        "connectionName": "source_trace_16",
+        "traceId": "fanout:source_trace_16:source-0",
+        "code": "explicit-lead-direction",
+        "requiredDirection": "up",
+        "signedAxisTravel": -0.75
+      },
+      {
+        "connectionName": "source_trace_19",
+        "traceId": "fanout:source_trace_19:source-0",
+        "code": "explicit-lead-direction",
+        "requiredDirection": "up",
+        "signedAxisTravel": 0
+      }
+    ]
+  },
+  "routedRequests": 19,
+  "connectionNames": [
+    "breakout:pcb_breakout_point_0",
+    "breakout:pcb_breakout_point_1",
+    "breakout:pcb_breakout_point_6",
+    "source_trace_16",
+    "source_trace_12",
+    "source_trace_15",
+    "source_trace_18",
+    "source_trace_5",
+    "source_trace_8",
+    "source_trace_0",
+    "source_trace_10",
+    "source_trace_11",
+    "source_trace_2",
+    "source_trace_1",
+    "source_trace_9",
+    "source_trace_19",
+    "source_trace_7",
+    "source_trace_6",
+    "source_trace_17"
+  ],
+  "distinctDrills": 16
+}

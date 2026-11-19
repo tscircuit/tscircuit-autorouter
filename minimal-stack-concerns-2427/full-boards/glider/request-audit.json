@@ -1,0 +1,194 @@
+{
+  "inputSha256": "b407978a89550c8835548bd99252b8f042a167f50cd1a81adf8b234e85155f59",
+  "copperDrc": {
+    "valid": true,
+    "checkedTraceCount": 72,
+    "checkedSegmentCount": 193,
+    "checkedViaCount": 59,
+    "issues": []
+  },
+  "requestConstraints": {
+    "valid": true,
+    "checkedTraceCount": 72,
+    "checkedWireCount": 328,
+    "checkedExplicitLeads": 41,
+    "checkedPlaneLandings": 41,
+    "violations": [],
+    "directionPreferenceChanges": [
+      {
+        "connectionName": "source_trace_36",
+        "traceId": "fanout:source_trace_36:source-0",
+        "code": "explicit-lead-direction",
+        "requiredDirection": "right",
+        "signedAxisTravel": -0.3999999999999986
+      },
+      {
+        "connectionName": "source_trace_29",
+        "traceId": "fanout:source_trace_29:source-0",
+        "code": "explicit-lead-direction",
+        "requiredDirection": "right",
+        "signedAxisTravel": -0.3999999999999986
+      },
+      {
+        "connectionName": "source_trace_33",
+        "traceId": "fanout:source_trace_33:source-0",
+        "code": "explicit-lead-direction",
+        "requiredDirection": "right",
+        "signedAxisTravel": -0.3999999999999986
+      },
+      {
+        "connectionName": "source_trace_16",
+        "traceId": "fanout:source_trace_16:source-0",
+        "code": "explicit-lead-direction",
+        "requiredDirection": "left",
+        "signedAxisTravel": 0
+      },
+      {
+        "connectionName": "source_trace_38",
+        "traceId": "fanout:source_trace_38:source-0",
+        "code": "explicit-lead-direction",
+        "requiredDirection": "right",
+        "signedAxisTravel": 0
+      },
+      {
+        "connectionName": "source_trace_41",
+        "traceId": "fanout:source_trace_41:source-0",
+        "code": "explicit-lead-direction",
+        "requiredDirection": "right",
+        "signedAxisTravel": -0.3999999999999986
+      },
+      {
+        "connectionName": "source_trace_13",
+        "traceId": "fanout:source_trace_13:source-0",
+        "code": "explicit-lead-direction",
+        "requiredDirection": "left",
+        "signedAxisTravel": -0.3999999999999986
+      },
+      {
+        "connectionName": "source_trace_37",
+        "traceId": "fanout:source_trace_37:source-0",
+        "code": "explicit-lead-direction",
+        "requiredDirection": "right",
+        "signedAxisTravel": -0.399999999999995
+      },
+      {
+        "connectionName": "source_trace_7",
+        "traceId": "fanout:source_trace_7:source-0",
+        "code": "explicit-lead-direction",
+        "requiredDirection": "left",
+        "signedAxisTravel": 0
+      },
+      {
+        "connectionName": "source_trace_5",
+        "traceId": "fanout:source_trace_5:source-0",
+        "code": "explicit-lead-direction",
+        "requiredDirection": "left",
+        "signedAxisTravel": -0.3999999999999986
+      },
+      {
+        "connectionName": "source_trace_32",
+        "traceId": "fanout:source_trace_32:source-0",
+        "code": "explicit-lead-direction",
+        "requiredDirection": "right",
+        "signedAxisTravel": -0.3999999999999986
+      },
+      {
+        "connectionName": "source_trace_18",
+        "traceId": "fanout:source_trace_18:source-0",
+        "code": "explicit-lead-direction",
+        "requiredDirection": "right",
+        "signedAxisTravel": -0.3999999999999986
+      },
+      {
+        "connectionName": "source_trace_11",
+        "traceId": "fanout:source_trace_11:source-0",
+        "code": "explicit-lead-direction",
+        "requiredDirection": "left",
+        "signedAxisTravel": -0.3999999999999986
+      },
+      {
+        "connectionName": "source_trace_42",
+        "traceId": "fanout:source_trace_42:source-0",
+        "code": "explicit-lead-direction",
+        "requiredDirection": "right",
+        "signedAxisTravel": -0.5360000000000014
+      }
+    ]
+  },
+  "routedRequests": 72,
+  "connectionNames": [
+    "breakout:pcb_breakout_point_0",
+    "breakout:pcb_breakout_point_1",
+    "breakout:pcb_breakout_point_50",
+    "source_trace_36",
+    "source_trace_14",
+    "breakout:pcb_breakout_point_32",
+    "breakout:pcb_breakout_point_33",
+    "source_trace_0",
+    "breakout:pcb_breakout_point_12",
+    "source_trace_29",
+    "source_trace_33",
+    "breakout:pcb_breakout_point_8",
+    "source_trace_4",
+    "source_trace_3",
+    "source_trace_21",
+    "source_trace_1",
+    "source_trace_19",
+    "breakout:pcb_breakout_point_7",
+    "source_trace_6",
+    "source_trace_15",
+    "breakout:pcb_breakout_point_26",
+    "source_trace_25",
+    "breakout:pcb_breakout_point_29",
+    "breakout:pcb_breakout_point_30",
+    "source_trace_16",
+    "source_trace_38",
+    "source_trace_41",
+    "breakout:pcb_breakout_point_13",
+    "breakout:pcb_breakout_point_23",
+    "source_trace_20",
+    "breakout:pcb_breakout_point_9",
+    "breakout:pcb_breakout_point_38",
+    "breakout:pcb_breakout_point_2",
+    "breakout:pcb_breakout_point_3",
+    "breakout:pcb_breakout_point_19",
+    "source_trace_13",
+    "breakout:pcb_breakout_point_18",
+    "source_trace_23",
+    "breakout:pcb_breakout_point_21",
+    "breakout:pcb_breakout_point_48",
+    "source_trace_17",
+    "source_trace_34",
+    "source_trace_37",
+    "breakout:pcb_breakout_point_14",
+    "breakout:pcb_breakout_point_16",
+    "source_trace_7",
+    "source_trace_28",
+    "breakout:pcb_breakout_point_20",
+    "source_trace_5",
+    "breakout:pcb_breakout_point_27",
+    "source_trace_32",
+    "breakout:pcb_breakout_point_11",
+    "source_trace_10",
+    "source_trace_18",
+    "source_trace_12",
+    "breakout:pcb_breakout_point_51",
+    "breakout:pcb_breakout_point_6",
+    "breakout:pcb_breakout_point_22",
+    "source_trace_24",
+    "breakout:pcb_breakout_point_5",
+    "source_trace_30",
+    "source_trace_11",
+    "source_trace_40",
+    "source_trace_9",
+    "source_trace_26",
+    "source_trace_8",
+    "source_trace_2",
+    "source_trace_27",
+    "source_trace_31",
+    "breakout:pcb_breakout_point_25",
+    "source_trace_42",
+    "source_trace_22"
+  ],
+  "distinctDrills": 59
+}

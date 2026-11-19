@@ -1,0 +1,13 @@
+{
+  "board": "butterstick",
+  "baselinePhysicalCircuitSha256": "78e03479709f023a90c0c95cecf206f65c07effe8838523a63db5ff7548e3dc9",
+  "physicalCircuitSha256": "78e03479709f023a90c0c95cecf206f65c07effe8838523a63db5ff7548e3dc9",
+  "samePhysicalCircuit": true,
+  "inputSha256": "0c572408c68a22db9a1e49f1dc6c3a5626d78f431bb6bb095c8a4b18d6c9baf7",
+  "baselineInputSha256": "0c572408c68a22db9a1e49f1dc6c3a5626d78f431bb6bb095c8a4b18d6c9baf7",
+  "sameInput": true,
+  "workerSvgSha256": "5ff88c5313de2c15a5243e46aad819fe32399fd853e7ee329bfab83ab59458ee",
+  "baselineWorkerSvgSha256": "5ff88c5313de2c15a5243e46aad819fe32399fd853e7ee329bfab83ab59458ee",
+  "sameWorkerSvgBytes": true,
+  "artifactMember": "butterstick/pcb.svg"
+}

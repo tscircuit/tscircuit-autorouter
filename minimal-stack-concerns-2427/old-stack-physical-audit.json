@@ -1,0 +1,1098 @@
+[
+  {
+    "board": "orangecrab",
+    "source": "5e417426368e7d267e3cef930df5a505951a2b1c",
+    "routed": 134,
+    "qualified": 133,
+    "requestConstraints": {
+      "valid": false,
+      "checkedTraceCount": 134,
+      "checkedWireCount": 567,
+      "checkedExplicitLeads": 74,
+      "checkedPlaneLandings": 74,
+      "violations": [
+        {
+          "connectionName": "source_trace_90",
+          "traceId": "fanout:source_trace_90:source-0",
+          "code": "plane-landing",
+          "targetLayer": "inner1",
+          "viaCenters": [
+            {
+              "x": -2.7100000000000093,
+              "y": -0.4500010000000141
+            }
+          ]
+        }
+      ],
+      "directionPreferenceChanges": [
+        {
+          "connectionName": "source_trace_35",
+          "traceId": "fanout:source_trace_35:source-0",
+          "code": "explicit-lead-direction",
+          "requiredDirection": "up",
+          "signedAxisTravel": -0.2499999999999991
+        },
+        {
+          "connectionName": "source_trace_90",
+          "traceId": "fanout:source_trace_90:source-0",
+          "code": "explicit-lead-direction",
+          "requiredDirection": "left",
+          "signedAxisTravel": -0.24999999999999956
+        },
+        {
+          "connectionName": "source_trace_10",
+          "traceId": "fanout:source_trace_10:source-0",
+          "code": "explicit-lead-direction",
+          "requiredDirection": "left",
+          "signedAxisTravel": -0.7499999999999987
+        },
+        {
+          "connectionName": "source_trace_114",
+          "traceId": "fanout:source_trace_114:source-0",
+          "code": "explicit-lead-direction",
+          "requiredDirection": "left",
+          "signedAxisTravel": -0.7499999999999987
+        },
+        {
+          "connectionName": "source_trace_125",
+          "traceId": "fanout:source_trace_125:source-0",
+          "code": "explicit-lead-direction",
+          "requiredDirection": "left",
+          "signedAxisTravel": -1.2499999999999978
+        },
+        {
+          "connectionName": "source_trace_99",
+          "traceId": "fanout:source_trace_99:source-0",
+          "code": "explicit-lead-direction",
+          "requiredDirection": "up",
+          "signedAxisTravel": 0
+        },
+        {
+          "connectionName": "source_trace_88",
+          "traceId": "fanout:source_trace_88:source-0",
+          "code": "explicit-lead-direction",
+          "requiredDirection": "left",
+          "signedAxisTravel": -0.24999999999999956
+        },
+        {
+          "connectionName": "source_trace_51",
+          "traceId": "fanout:source_trace_51:source-0",
+          "code": "explicit-lead-direction",
+          "requiredDirection": "left",
+          "signedAxisTravel": -0.24999999999999956
+        },
+        {
+          "connectionName": "source_trace_63",
+          "traceId": "fanout:source_trace_63:source-0",
+          "code": "explicit-lead-direction",
+          "requiredDirection": "left",
+          "signedAxisTravel": -0.24999999999999956
+        },
+        {
+          "connectionName": "source_trace_76",
+          "traceId": "fanout:source_trace_76:source-0",
+          "code": "explicit-lead-direction",
+          "requiredDirection": "up",
+          "signedAxisTravel": -0.2499999999999991
+        },
+        {
+          "connectionName": "source_trace_91",
+          "traceId": "fanout:source_trace_91:source-0",
+          "code": "explicit-lead-direction",
+          "requiredDirection": "up",
+          "signedAxisTravel": -0.25
+        },
+        {
+          "connectionName": "source_trace_96",
+          "traceId": "fanout:source_trace_96:source-0",
+          "code": "explicit-lead-direction",
+          "requiredDirection": "down",
+          "signedAxisTravel": -0.24999999999999956
+        },
+        {
+          "connectionName": "source_trace_9",
+          "traceId": "fanout:source_trace_9:source-0",
+          "code": "explicit-lead-direction",
+          "requiredDirection": "left",
+          "signedAxisTravel": -0.4999999999999991
+        },
+        {
+          "connectionName": "source_trace_124",
+          "traceId": "fanout:source_trace_124:source-0",
+          "code": "explicit-lead-direction",
+          "requiredDirection": "left",
+          "signedAxisTravel": -0.2499999999999991
+        },
+        {
+          "connectionName": "source_trace_162",
+          "traceId": "fanout:source_trace_162:source-0",
+          "code": "explicit-lead-direction",
+          "requiredDirection": "left",
+          "signedAxisTravel": -0.7499999999999987
+        },
+        {
+          "connectionName": "source_trace_36",
+          "traceId": "fanout:source_trace_36:source-0",
+          "code": "explicit-lead-direction",
+          "requiredDirection": "left",
+          "signedAxisTravel": -0.24999999999999956
+        },
+        {
+          "connectionName": "source_trace_62",
+          "traceId": "fanout:source_trace_62:source-0",
+          "code": "explicit-lead-direction",
+          "requiredDirection": "left",
+          "signedAxisTravel": -0.24999999999999956
+        },
+        {
+          "connectionName": "source_trace_93",
+          "traceId": "fanout:source_trace_93:source-0",
+          "code": "explicit-lead-direction",
+          "requiredDirection": "down",
+          "signedAxisTravel": -0.24999999999999956
+        },
+        {
+          "connectionName": "source_trace_112",
+          "traceId": "fanout:source_trace_112:source-0",
+          "code": "explicit-lead-direction",
+          "requiredDirection": "left",
+          "signedAxisTravel": -0.25
+        },
+        {
+          "connectionName": "source_trace_123",
+          "traceId": "fanout:source_trace_123:source-0",
+          "code": "explicit-lead-direction",
+          "requiredDirection": "left",
+          "signedAxisTravel": -1.2499999999999978
+        },
+        {
+          "connectionName": "source_trace_49",
+          "traceId": "fanout:source_trace_49:source-0",
+          "code": "explicit-lead-direction",
+          "requiredDirection": "left",
+          "signedAxisTravel": -0.24999999999999956
+        },
+        {
+          "connectionName": "source_trace_89",
+          "traceId": "fanout:source_trace_89:source-0",
+          "code": "explicit-lead-direction",
+          "requiredDirection": "down",
+          "signedAxisTravel": -0.4999999999999991
+        },
+        {
+          "connectionName": "source_trace_161",
+          "traceId": "fanout:source_trace_161:source-0",
+          "code": "explicit-lead-direction",
+          "requiredDirection": "left",
+          "signedAxisTravel": -0.24999999999999956
+        },
+        {
+          "connectionName": "source_trace_163",
+          "traceId": "fanout:source_trace_163:source-0",
+          "code": "explicit-lead-direction",
+          "requiredDirection": "up",
+          "signedAxisTravel": -0.25
+        },
+        {
+          "connectionName": "source_trace_122",
+          "traceId": "fanout:source_trace_122:source-0",
+          "code": "explicit-lead-direction",
+          "requiredDirection": "left",
+          "signedAxisTravel": -0.7499999999999987
+        },
+        {
+          "connectionName": "source_trace_27",
+          "traceId": "fanout:source_trace_27:source-0",
+          "code": "explicit-lead-direction",
+          "requiredDirection": "right",
+          "signedAxisTravel": -0.24999999999999956
+        },
+        {
+          "connectionName": "source_trace_34",
+          "traceId": "fanout:source_trace_34:source-0",
+          "code": "explicit-lead-direction",
+          "requiredDirection": "left",
+          "signedAxisTravel": -0.7499999999999987
+        },
+        {
+          "connectionName": "source_trace_47",
+          "traceId": "fanout:source_trace_47:source-0",
+          "code": "explicit-lead-direction",
+          "requiredDirection": "left",
+          "signedAxisTravel": -0.7499999999999987
+        },
+        {
+          "connectionName": "source_trace_54",
+          "traceId": "fanout:source_trace_54:source-0",
+          "code": "explicit-lead-direction",
+          "requiredDirection": "right",
+          "signedAxisTravel": -0.24999999999999956
+        },
+        {
+          "connectionName": "source_trace_61",
+          "traceId": "fanout:source_trace_61:source-0",
+          "code": "explicit-lead-direction",
+          "requiredDirection": "left",
+          "signedAxisTravel": -0.7499999999999987
+        },
+        {
+          "connectionName": "source_trace_65",
+          "traceId": "fanout:source_trace_65:source-0",
+          "code": "explicit-lead-direction",
+          "requiredDirection": "right",
+          "signedAxisTravel": -0.24999999999999956
+        },
+        {
+          "connectionName": "source_trace_80",
+          "traceId": "fanout:source_trace_80:source-0",
+          "code": "explicit-lead-direction",
+          "requiredDirection": "down",
+          "signedAxisTravel": -0.24999999999999956
+        },
+        {
+          "connectionName": "source_trace_81",
+          "traceId": "fanout:source_trace_81:source-0",
+          "code": "explicit-lead-direction",
+          "requiredDirection": "down",
+          "signedAxisTravel": -0.24999999999999956
+        },
+        {
+          "connectionName": "source_trace_116",
+          "traceId": "fanout:source_trace_116:source-0",
+          "code": "explicit-lead-direction",
+          "requiredDirection": "up",
+          "signedAxisTravel": -0.2499999999999991
+        },
+        {
+          "connectionName": "source_trace_118",
+          "traceId": "fanout:source_trace_118:source-0",
+          "code": "explicit-lead-direction",
+          "requiredDirection": "up",
+          "signedAxisTravel": -1.2499999999999973
+        },
+        {
+          "connectionName": "source_trace_127",
+          "traceId": "fanout:source_trace_127:source-0",
+          "code": "explicit-lead-direction",
+          "requiredDirection": "right",
+          "signedAxisTravel": -0.24999999999999956
+        },
+        {
+          "connectionName": "source_trace_55",
+          "traceId": "fanout:source_trace_55:source-0",
+          "code": "explicit-lead-direction",
+          "requiredDirection": "right",
+          "signedAxisTravel": -0.24999999999999956
+        }
+      ]
+    },
+    "copperDrc": {
+      "valid": true,
+      "checkedTraceCount": 134,
+      "checkedSegmentCount": 308,
+      "checkedViaCount": 124,
+      "issues": []
+    }
+  },
+  {
+    "board": "h616",
+    "source": "5e417426368e7d267e3cef930df5a505951a2b1c",
+    "routed": 99,
+    "qualified": 52,
+    "requestConstraints": {
+      "valid": false,
+      "checkedTraceCount": 99,
+      "checkedWireCount": 458,
+      "checkedExplicitLeads": 47,
+      "checkedPlaneLandings": 47,
+      "violations": [
+        {
+          "connectionName": "source_trace_0",
+          "traceId": "fanout:source_trace_0:source-0",
+          "code": "wire-width",
+          "expectedWidth": 0.1,
+          "actualWidths": [
+            0.08
+          ]
+        },
+        {
+          "connectionName": "source_trace_1",
+          "traceId": "fanout:source_trace_1:source-0",
+          "code": "wire-width",
+          "expectedWidth": 0.1,
+          "actualWidths": [
+            0.08
+          ]
+        },
+        {
+          "connectionName": "source_trace_11",
+          "traceId": "fanout:source_trace_11:source-0",
+          "code": "wire-width",
+          "expectedWidth": 0.1,
+          "actualWidths": [
+            0.08
+          ]
+        },
+        {
+          "connectionName": "source_trace_53",
+          "traceId": "fanout:source_trace_53:source-0",
+          "code": "wire-width",
+          "expectedWidth": 0.1,
+          "actualWidths": [
+            0.08
+          ]
+        },
+        {
+          "connectionName": "source_trace_30",
+          "traceId": "fanout:source_trace_30:source-0",
+          "code": "wire-width",
+          "expectedWidth": 0.1,
+          "actualWidths": [
+            0.08
+          ]
+        },
+        {
+          "connectionName": "source_trace_52",
+          "traceId": "fanout:source_trace_52:source-0",
+          "code": "wire-width",
+          "expectedWidth": 0.1,
+          "actualWidths": [
+            0.08
+          ]
+        },
+        {
+          "connectionName": "source_trace_54",
+          "traceId": "fanout:source_trace_54:source-0",
+          "code": "wire-width",
+          "expectedWidth": 0.1,
+          "actualWidths": [
+            0.08
+          ]
+        },
+        {
+          "connectionName": "source_trace_55",
+          "traceId": "fanout:source_trace_55:source-0",
+          "code": "wire-width",
+          "expectedWidth": 0.1,
+          "actualWidths": [
+            0.08
+          ]
+        },
+        {
+          "connectionName": "source_trace_56",
+          "traceId": "fanout:source_trace_56:source-0",
+          "code": "wire-width",
+          "expectedWidth": 0.1,
+          "actualWidths": [
+            0.08
+          ]
+        },
+        {
+          "connectionName": "source_trace_3",
+          "traceId": "fanout:source_trace_3:source-0",
+          "code": "wire-width",
+          "expectedWidth": 0.1,
+          "actualWidths": [
+            0.08
+          ]
+        },
+        {
+          "connectionName": "source_trace_4",
+          "traceId": "fanout:source_trace_4:source-0",
+          "code": "wire-width",
+          "expectedWidth": 0.1,
+          "actualWidths": [
+            0.08
+          ]
+        },
+        {
+          "connectionName": "source_trace_2",
+          "traceId": "fanout:source_trace_2:source-0",
+          "code": "wire-width",
+          "expectedWidth": 0.1,
+          "actualWidths": [
+            0.08
+          ]
+        },
+        {
+          "connectionName": "source_trace_5",
+          "traceId": "fanout:source_trace_5:source-0",
+          "code": "wire-width",
+          "expectedWidth": 0.1,
+          "actualWidths": [
+            0.08
+          ]
+        },
+        {
+          "connectionName": "source_trace_6",
+          "traceId": "fanout:source_trace_6:source-0",
+          "code": "wire-width",
+          "expectedWidth": 0.1,
+          "actualWidths": [
+            0.08
+          ]
+        },
+        {
+          "connectionName": "source_trace_7",
+          "traceId": "fanout:source_trace_7:source-0",
+          "code": "wire-width",
+          "expectedWidth": 0.1,
+          "actualWidths": [
+            0.08
+          ]
+        },
+        {
+          "connectionName": "source_trace_12",
+          "traceId": "fanout:source_trace_12:source-0",
+          "code": "wire-width",
+          "expectedWidth": 0.1,
+          "actualWidths": [
+            0.08
+          ]
+        },
+        {
+          "connectionName": "source_trace_13",
+          "traceId": "fanout:source_trace_13:source-0",
+          "code": "wire-width",
+          "expectedWidth": 0.1,
+          "actualWidths": [
+            0.08
+          ]
+        },
+        {
+          "connectionName": "source_trace_18",
+          "traceId": "fanout:source_trace_18:source-0",
+          "code": "wire-width",
+          "expectedWidth": 0.1,
+          "actualWidths": [
+            0.08
+          ]
+        },
+        {
+          "connectionName": "source_trace_19",
+          "traceId": "fanout:source_trace_19:source-0",
+          "code": "wire-width",
+          "expectedWidth": 0.1,
+          "actualWidths": [
+            0.08
+          ]
+        },
+        {
+          "connectionName": "source_trace_20",
+          "traceId": "fanout:source_trace_20:source-0",
+          "code": "wire-width",
+          "expectedWidth": 0.1,
+          "actualWidths": [
+            0.08
+          ]
+        },
+        {
+          "connectionName": "source_trace_21",
+          "traceId": "fanout:source_trace_21:source-0",
+          "code": "wire-width",
+          "expectedWidth": 0.1,
+          "actualWidths": [
+            0.08
+          ]
+        },
+        {
+          "connectionName": "source_trace_24",
+          "traceId": "fanout:source_trace_24:source-0",
+          "code": "wire-width",
+          "expectedWidth": 0.1,
+          "actualWidths": [
+            0.08
+          ]
+        },
+        {
+          "connectionName": "source_trace_61",
+          "traceId": "fanout:source_trace_61:source-0",
+          "code": "wire-width",
+          "expectedWidth": 0.15,
+          "actualWidths": [
+            0.08
+          ]
+        },
+        {
+          "connectionName": "source_trace_26",
+          "traceId": "fanout:source_trace_26:source-0",
+          "code": "wire-width",
+          "expectedWidth": 0.1,
+          "actualWidths": [
+            0.08
+          ]
+        },
+        {
+          "connectionName": "source_trace_59",
+          "traceId": "fanout:source_trace_59:source-0",
+          "code": "wire-width",
+          "expectedWidth": 0.15,
+          "actualWidths": [
+            0.08
+          ]
+        },
+        {
+          "connectionName": "source_trace_60",
+          "traceId": "fanout:source_trace_60:source-0",
+          "code": "wire-width",
+          "expectedWidth": 0.15,
+          "actualWidths": [
+            0.08
+          ]
+        },
+        {
+          "connectionName": "source_trace_27",
+          "traceId": "fanout:source_trace_27:source-0",
+          "code": "wire-width",
+          "expectedWidth": 0.1,
+          "actualWidths": [
+            0.08
+          ]
+        },
+        {
+          "connectionName": "source_trace_28",
+          "traceId": "fanout:source_trace_28:source-0",
+          "code": "wire-width",
+          "expectedWidth": 0.1,
+          "actualWidths": [
+            0.08
+          ]
+        },
+        {
+          "connectionName": "source_trace_29",
+          "traceId": "fanout:source_trace_29:source-0",
+          "code": "wire-width",
+          "expectedWidth": 0.1,
+          "actualWidths": [
+            0.08
+          ]
+        },
+        {
+          "connectionName": "source_trace_31",
+          "traceId": "fanout:source_trace_31:source-0",
+          "code": "wire-width",
+          "expectedWidth": 0.1,
+          "actualWidths": [
+            0.08
+          ]
+        },
+        {
+          "connectionName": "source_trace_32",
+          "traceId": "fanout:source_trace_32:source-0",
+          "code": "wire-width",
+          "expectedWidth": 0.1,
+          "actualWidths": [
+            0.08
+          ]
+        },
+        {
+          "connectionName": "source_trace_33",
+          "traceId": "fanout:source_trace_33:source-0",
+          "code": "wire-width",
+          "expectedWidth": 0.1,
+          "actualWidths": [
+            0.08
+          ]
+        },
+        {
+          "connectionName": "source_trace_34",
+          "traceId": "fanout:source_trace_34:source-0",
+          "code": "wire-width",
+          "expectedWidth": 0.1,
+          "actualWidths": [
+            0.08
+          ]
+        },
+        {
+          "connectionName": "source_trace_35",
+          "traceId": "fanout:source_trace_35:source-0",
+          "code": "wire-width",
+          "expectedWidth": 0.1,
+          "actualWidths": [
+            0.08
+          ]
+        },
+        {
+          "connectionName": "source_trace_36",
+          "traceId": "fanout:source_trace_36:source-0",
+          "code": "wire-width",
+          "expectedWidth": 0.1,
+          "actualWidths": [
+            0.08
+          ]
+        },
+        {
+          "connectionName": "source_trace_38",
+          "traceId": "fanout:source_trace_38:source-0",
+          "code": "wire-width",
+          "expectedWidth": 0.1,
+          "actualWidths": [
+            0.08
+          ]
+        },
+        {
+          "connectionName": "source_trace_37",
+          "traceId": "fanout:source_trace_37:source-0",
+          "code": "wire-width",
+          "expectedWidth": 0.1,
+          "actualWidths": [
+            0.08
+          ]
+        },
+        {
+          "connectionName": "source_trace_39",
+          "traceId": "fanout:source_trace_39:source-0",
+          "code": "wire-width",
+          "expectedWidth": 0.1,
+          "actualWidths": [
+            0.08
+          ]
+        },
+        {
+          "connectionName": "source_trace_40",
+          "traceId": "fanout:source_trace_40:source-0",
+          "code": "wire-width",
+          "expectedWidth": 0.1,
+          "actualWidths": [
+            0.08
+          ]
+        },
+        {
+          "connectionName": "source_trace_41",
+          "traceId": "fanout:source_trace_41:source-0",
+          "code": "wire-width",
+          "expectedWidth": 0.1,
+          "actualWidths": [
+            0.08
+          ]
+        },
+        {
+          "connectionName": "source_trace_42",
+          "traceId": "fanout:source_trace_42:source-0",
+          "code": "wire-width",
+          "expectedWidth": 0.1,
+          "actualWidths": [
+            0.08
+          ]
+        },
+        {
+          "connectionName": "source_trace_43",
+          "traceId": "fanout:source_trace_43:source-0",
+          "code": "wire-width",
+          "expectedWidth": 0.1,
+          "actualWidths": [
+            0.08
+          ]
+        },
+        {
+          "connectionName": "source_trace_44",
+          "traceId": "fanout:source_trace_44:source-0",
+          "code": "wire-width",
+          "expectedWidth": 0.1,
+          "actualWidths": [
+            0.08
+          ]
+        },
+        {
+          "connectionName": "source_trace_45",
+          "traceId": "fanout:source_trace_45:source-0",
+          "code": "wire-width",
+          "expectedWidth": 0.1,
+          "actualWidths": [
+            0.08
+          ]
+        },
+        {
+          "connectionName": "source_trace_47",
+          "traceId": "fanout:source_trace_47:source-0",
+          "code": "wire-width",
+          "expectedWidth": 0.1,
+          "actualWidths": [
+            0.08
+          ]
+        },
+        {
+          "connectionName": "source_trace_48",
+          "traceId": "fanout:source_trace_48:source-0",
+          "code": "wire-width",
+          "expectedWidth": 0.1,
+          "actualWidths": [
+            0.08
+          ]
+        },
+        {
+          "connectionName": "source_trace_49",
+          "traceId": "fanout:source_trace_49:source-0",
+          "code": "wire-width",
+          "expectedWidth": 0.1,
+          "actualWidths": [
+            0.08
+          ]
+        }
+      ],
+      "directionPreferenceChanges": [
+        {
+          "connectionName": "source_trace_1",
+          "traceId": "fanout:source_trace_1:source-0",
+          "code": "explicit-lead-direction",
+          "requiredDirection": "left",
+          "signedAxisTravel": -0.3249999999999993
+        },
+        {
+          "connectionName": "source_trace_11",
+          "traceId": "fanout:source_trace_11:source-0",
+          "code": "explicit-lead-direction",
+          "requiredDirection": "left",
+          "signedAxisTravel": -0.4510000000000005
+        },
+        {
+          "connectionName": "source_trace_24",
+          "traceId": "fanout:source_trace_24:source-0",
+          "code": "explicit-lead-direction",
+          "requiredDirection": "left",
+          "signedAxisTravel": 0
+        },
+        {
+          "connectionName": "source_trace_61",
+          "traceId": "fanout:source_trace_61:source-0",
+          "code": "explicit-lead-direction",
+          "requiredDirection": "down",
+          "signedAxisTravel": -0.3249999999999993
+        },
+        {
+          "connectionName": "source_trace_43",
+          "traceId": "fanout:source_trace_43:source-0",
+          "code": "explicit-lead-direction",
+          "requiredDirection": "left",
+          "signedAxisTravel": -0.3249999999999993
+        },
+        {
+          "connectionName": "source_trace_44",
+          "traceId": "fanout:source_trace_44:source-0",
+          "code": "explicit-lead-direction",
+          "requiredDirection": "left",
+          "signedAxisTravel": -0.3249999999999993
+        },
+        {
+          "connectionName": "source_trace_49",
+          "traceId": "fanout:source_trace_49:source-0",
+          "code": "explicit-lead-direction",
+          "requiredDirection": "left",
+          "signedAxisTravel": -0.3249999999999993
+        }
+      ]
+    },
+    "copperDrc": {
+      "valid": true,
+      "checkedTraceCount": 99,
+      "checkedSegmentCount": 280,
+      "checkedViaCount": 72,
+      "issues": []
+    }
+  },
+  {
+    "board": "butterstick",
+    "source": "5e417426368e7d267e3cef930df5a505951a2b1c",
+    "routed": 52,
+    "qualified": 32,
+    "requestConstraints": {
+      "valid": false,
+      "checkedTraceCount": 52,
+      "checkedWireCount": 298,
+      "checkedExplicitLeads": 20,
+      "checkedPlaneLandings": 20,
+      "violations": [
+        {
+          "connectionName": "source_trace_11",
+          "traceId": "fanout:source_trace_11:source-0",
+          "code": "wire-width",
+          "expectedWidth": 0.1,
+          "actualWidths": [
+            0.089
+          ]
+        },
+        {
+          "connectionName": "source_trace_0",
+          "traceId": "fanout:source_trace_0:source-0",
+          "code": "wire-width",
+          "expectedWidth": 0.1,
+          "actualWidths": [
+            0.089
+          ]
+        },
+        {
+          "connectionName": "source_trace_13",
+          "traceId": "fanout:source_trace_13:source-0",
+          "code": "wire-width",
+          "expectedWidth": 0.1,
+          "actualWidths": [
+            0.089
+          ]
+        },
+        {
+          "connectionName": "source_trace_17",
+          "traceId": "fanout:source_trace_17:source-0",
+          "code": "wire-width",
+          "expectedWidth": 0.1,
+          "actualWidths": [
+            0.089
+          ]
+        },
+        {
+          "connectionName": "source_trace_1",
+          "traceId": "fanout:source_trace_1:source-0",
+          "code": "wire-width",
+          "expectedWidth": 0.1,
+          "actualWidths": [
+            0.089
+          ]
+        },
+        {
+          "connectionName": "source_trace_2",
+          "traceId": "fanout:source_trace_2:source-0",
+          "code": "wire-width",
+          "expectedWidth": 0.1,
+          "actualWidths": [
+            0.089
+          ]
+        },
+        {
+          "connectionName": "source_trace_3",
+          "traceId": "fanout:source_trace_3:source-0",
+          "code": "wire-width",
+          "expectedWidth": 0.1,
+          "actualWidths": [
+            0.089
+          ]
+        },
+        {
+          "connectionName": "source_trace_4",
+          "traceId": "fanout:source_trace_4:source-0",
+          "code": "wire-width",
+          "expectedWidth": 0.1,
+          "actualWidths": [
+            0.089
+          ]
+        },
+        {
+          "connectionName": "source_trace_5",
+          "traceId": "fanout:source_trace_5:source-0",
+          "code": "wire-width",
+          "expectedWidth": 0.1,
+          "actualWidths": [
+            0.089
+          ]
+        },
+        {
+          "connectionName": "source_trace_6",
+          "traceId": "fanout:source_trace_6:source-0",
+          "code": "wire-width",
+          "expectedWidth": 0.1,
+          "actualWidths": [
+            0.089
+          ]
+        },
+        {
+          "connectionName": "source_trace_7",
+          "traceId": "fanout:source_trace_7:source-0",
+          "code": "wire-width",
+          "expectedWidth": 0.1,
+          "actualWidths": [
+            0.089
+          ]
+        },
+        {
+          "connectionName": "source_trace_8",
+          "traceId": "fanout:source_trace_8:source-0",
+          "code": "wire-width",
+          "expectedWidth": 0.1,
+          "actualWidths": [
+            0.089
+          ]
+        },
+        {
+          "connectionName": "source_trace_9",
+          "traceId": "fanout:source_trace_9:source-0",
+          "code": "wire-width",
+          "expectedWidth": 0.1,
+          "actualWidths": [
+            0.089
+          ]
+        },
+        {
+          "connectionName": "source_trace_10",
+          "traceId": "fanout:source_trace_10:source-0",
+          "code": "wire-width",
+          "expectedWidth": 0.1,
+          "actualWidths": [
+            0.089
+          ]
+        },
+        {
+          "connectionName": "source_trace_12",
+          "traceId": "fanout:source_trace_12:source-0",
+          "code": "wire-width",
+          "expectedWidth": 0.1,
+          "actualWidths": [
+            0.089
+          ]
+        },
+        {
+          "connectionName": "source_trace_14",
+          "traceId": "fanout:source_trace_14:source-0",
+          "code": "wire-width",
+          "expectedWidth": 0.1,
+          "actualWidths": [
+            0.089
+          ]
+        },
+        {
+          "connectionName": "source_trace_15",
+          "traceId": "fanout:source_trace_15:source-0",
+          "code": "wire-width",
+          "expectedWidth": 0.1,
+          "actualWidths": [
+            0.089
+          ]
+        },
+        {
+          "connectionName": "source_trace_16",
+          "traceId": "fanout:source_trace_16:source-0",
+          "code": "wire-width",
+          "expectedWidth": 0.1,
+          "actualWidths": [
+            0.089
+          ]
+        },
+        {
+          "connectionName": "source_trace_18",
+          "traceId": "fanout:source_trace_18:source-0",
+          "code": "wire-width",
+          "expectedWidth": 0.1,
+          "actualWidths": [
+            0.089
+          ]
+        },
+        {
+          "connectionName": "source_trace_19",
+          "traceId": "fanout:source_trace_19:source-0",
+          "code": "wire-width",
+          "expectedWidth": 0.1,
+          "actualWidths": [
+            0.089
+          ]
+        }
+      ],
+      "directionPreferenceChanges": [
+        {
+          "connectionName": "source_trace_11",
+          "traceId": "fanout:source_trace_11:source-0",
+          "code": "explicit-lead-direction",
+          "requiredDirection": "left",
+          "signedAxisTravel": -0.39999999999999947
+        },
+        {
+          "connectionName": "source_trace_0",
+          "traceId": "fanout:source_trace_0:source-0",
+          "code": "explicit-lead-direction",
+          "requiredDirection": "left",
+          "signedAxisTravel": -0.39999999999999947
+        },
+        {
+          "connectionName": "source_trace_4",
+          "traceId": "fanout:source_trace_4:source-0",
+          "code": "explicit-lead-direction",
+          "requiredDirection": "left",
+          "signedAxisTravel": -0.39999999999999947
+        },
+        {
+          "connectionName": "source_trace_12",
+          "traceId": "fanout:source_trace_12:source-0",
+          "code": "explicit-lead-direction",
+          "requiredDirection": "left",
+          "signedAxisTravel": -0.39999999999999947
+        },
+        {
+          "connectionName": "source_trace_18",
+          "traceId": "fanout:source_trace_18:source-0",
+          "code": "explicit-lead-direction",
+          "requiredDirection": "left",
+          "signedAxisTravel": -0.48990000000000045
+        }
+      ]
+    },
+    "copperDrc": {
+      "valid": true,
+      "checkedTraceCount": 52,
+      "checkedSegmentCount": 193,
+      "checkedViaCount": 50,
+      "issues": []
+    }
+  },
+  {
+    "board": "glider",
+    "source": "5e417426368e7d267e3cef930df5a505951a2b1c",
+    "routed": 78,
+    "qualified": 78,
+    "requestConstraints": {
+      "valid": true,
+      "checkedTraceCount": 78,
+      "checkedWireCount": 383,
+      "checkedExplicitLeads": 41,
+      "checkedPlaneLandings": 41,
+      "violations": [],
+      "directionPreferenceChanges": []
+    },
+    "copperDrc": {
+      "valid": true,
+      "checkedTraceCount": 78,
+      "checkedSegmentCount": 228,
+      "checkedViaCount": 65,
+      "issues": []
+    }
+  },
+  {
+    "board": "imx6",
+    "source": "5e417426368e7d267e3cef930df5a505951a2b1c",
+    "routed": 19,
+    "qualified": 19,
+    "requestConstraints": {
+      "valid": true,
+      "checkedTraceCount": 19,
+      "checkedWireCount": 83,
+      "checkedExplicitLeads": 16,
+      "checkedPlaneLandings": 16,
+      "violations": [],
+      "directionPreferenceChanges": []
+    },
+    "copperDrc": {
+      "valid": true,
+      "checkedTraceCount": 19,
+      "checkedSegmentCount": 43,
+      "checkedViaCount": 16,
+      "issues": []
+    }
+  },
+  {
+    "board": "icepi",
+    "source": "5e417426368e7d267e3cef930df5a505951a2b1c",
+    "routed": 18,
+    "qualified": 18,
+    "requestConstraints": {
+      "valid": true,
+      "checkedTraceCount": 18,
+      "checkedWireCount": 75,
+      "checkedExplicitLeads": 15,
+      "checkedPlaneLandings": 15,
+      "violations": [],
+      "directionPreferenceChanges": []
+    },
+    "copperDrc": {
+      "valid": true,
+      "checkedTraceCount": 18,
+      "checkedSegmentCount": 39,
+      "checkedViaCount": 15,
+      "issues": []
+    }
+  }
+]

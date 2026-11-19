@@ -1,0 +1,71 @@
+{
+  "inputSha256": "70c8dbdc3c3b66954d47334f6d92353df135ba8eb4a7edf344b40718e6b43fd5",
+  "copperDrc": {
+    "valid": true,
+    "checkedTraceCount": 19,
+    "checkedSegmentCount": 42,
+    "checkedViaCount": 16,
+    "issues": []
+  },
+  "requestConstraints": {
+    "valid": true,
+    "checkedTraceCount": 19,
+    "checkedWireCount": 77,
+    "checkedExplicitLeads": 16,
+    "checkedPlaneLandings": 16,
+    "violations": [],
+    "directionPreferenceChanges": [
+      {
+        "connectionName": "source_trace_16",
+        "traceId": "fanout:source_trace_16:source-0",
+        "code": "explicit-lead-direction",
+        "requiredDirection": "down",
+        "signedAxisTravel": -0.25
+      },
+      {
+        "connectionName": "source_trace_18",
+        "traceId": "fanout:source_trace_18:source-0",
+        "code": "explicit-lead-direction",
+        "requiredDirection": "down",
+        "signedAxisTravel": -0.25
+      },
+      {
+        "connectionName": "source_trace_3",
+        "traceId": "fanout:source_trace_3:source-0",
+        "code": "explicit-lead-direction",
+        "requiredDirection": "down",
+        "signedAxisTravel": -0.25
+      },
+      {
+        "connectionName": "source_trace_11",
+        "traceId": "fanout:source_trace_11:source-0",
+        "code": "explicit-lead-direction",
+        "requiredDirection": "down",
+        "signedAxisTravel": -1.25
+      }
+    ]
+  },
+  "routedRequests": 19,
+  "connectionNames": [
+    "breakout:pcb_breakout_point_0",
+    "breakout:pcb_breakout_point_4",
+    "breakout:pcb_breakout_point_8",
+    "source_trace_16",
+    "source_trace_9",
+    "source_trace_18",
+    "source_trace_8",
+    "source_trace_12",
+    "source_trace_5",
+    "source_trace_6",
+    "source_trace_15",
+    "source_trace_4",
+    "source_trace_0",
+    "source_trace_1",
+    "source_trace_3",
+    "source_trace_11",
+    "source_trace_7",
+    "source_trace_17",
+    "source_trace_19"
+  ],
+  "distinctDrills": 16
+}

@@ -1,0 +1,10 @@
+{
+  "id": "butterstick",
+  "mode": "fanout-bus-first",
+  "exitCode": 0,
+  "timedOut": false,
+  "wallMs": 336833.576816,
+  "routingBudgetMs": 600000,
+  "hardProcessBudgetMs": 660000,
+  "concurrency": 1
+}
