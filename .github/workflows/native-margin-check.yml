@@ -1,4 +1,4 @@
-name: Verify bounded shared-via clearance repair
+name: Verify existing fixed-copper guard for all pad interactions
 on:
   push:
     branches: [analysis/native-complete-cleanup-context]
@@ -12,8 +12,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        source: [09bd0812beff4b44f03cf5e2e5881b3186655558, 0f98be6237dfa0a852360b07d38f0e2fbee5f92d]
-        movement: [scaled, deficit]
+        source: [1a2e757a0230bae0e8f915023485978587d7fe14, 0f98be6237dfa0a852360b07d38f0e2fbee5f92d]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -22,32 +21,33 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: '1.4.3'
-      - run: bun install
-      - name: Isolate the existing repair helper's shared-site movement
-        env:
-          MOVEMENT: ${{ matrix.movement }}
+      - name: Test the existing improvement guard on all pad copper
         run: |
           python3 - <<'PY'
-          import os
           from pathlib import Path
-          p=Path("node_modules/high-density-repair03/lib/solvers/GlobalDrcForceImproveSolver/solverHelpers.ts")
+          import re
+          p=Path("lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensityForceImproveSolver.ts")
           s=p.read_text()
-          start=s.index("const moveViaAwayFromPoint = (")
-          end=s.index("\ntype SegmentContact",start)
-          helper=s[start:end]
-          assert "  return moveVia(" in helper
-          helper=helper.replace("  srj: SimpleRouteJson,\n) =>","  srj: SimpleRouteJson,\n  scale = 1,\n) =>",1)
-          helper=helper.replace("  return moveVia(","  return translateSameRootViaSite(",1).replace("directionX * MAX_ERROR_MOVE,","directionX * MAX_ERROR_MOVE * scale,",1).replace("directionY * MAX_ERROR_MOVE,","directionY * MAX_ERROR_MOVE * scale,",1)
-          s=s[:start]+helper+s[end:]
-          old="moveViaAwayFromPoint(routes, nearestVia, repulsionPoint, srj) ||"
-          assert s.count(old)==2
-          movement="scale"
-          if os.environ["MOVEMENT"]=="deficit":
-            movement="typeof error.minimum_clearance === 'number' && typeof error.actual_clearance === 'number' ? Math.min(1, Math.max(0, error.minimum_clearance - error.actual_clearance + 1e-5) / MAX_ERROR_MOVE) : scale"
-          s=s.replace(old,"moveViaAwayFromPoint(routes, nearestVia, repulsionPoint, srj, "+movement+") ||",1)
+          start=s.index("    this.fixedViaObstacleIndexes = new Set(")
+          end=s.index("    this.evaluateFixedObstacles",start)
+          s=s[:start]+"    this.fixedViaObstacleIndexes = new Set(params.inputSrj.obstacles.map((_, index) => index))\n"+s[end:]
+          s,n=re.subn(r'violation.kind === "via" &&\s*',"",s)
+          assert n==2
           p.write_text(s)
           PY
-      - name: Keep the original full-board assertions
+      - run: bun install
+      - name: Keep original connectivity, clearance and via-count assertions
         env:
           BUN_UPDATE_SNAPSHOTS: '1'
-        run: bun test --timeout 9999999 tests/bugs/bugreport96-full-gameboy-no-breakout.test.ts tests/bugs/usb-dp-phase-detour.test.ts tests/repro/pipeline9-h616-portfolio-candidate-clearance.test.ts
+        run: bun test --timeout 9999999 tests/bugs/bugreport96-full-gameboy-no-breakout.test.ts tests/bugs/usb-dp-phase-detour.test.ts tests/repro/pipeline9-h616-portfolio-candidate-clearance.test.ts tests/features/pipeline9-orangecrab-native-fixed-traces.test.ts
+      - name: Report actual OrangeCrab DRC count
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import re
+          from pathlib import Path
+          p=Path("tests/features/__snapshots__/pipeline9-orangecrab-native-fixed-traces.snap.svg")
+          if p.exists():
+            m=re.search(r"Relaxed DRC errors: (\d+)",p.read_text())
+            if m: print("ORANGECRAB_DRC_COUNT",int(m.group(1)))
+          PY
