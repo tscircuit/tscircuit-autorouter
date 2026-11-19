@@ -10,7 +10,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        revision: [48958e9b68adc1fb77a823064d3b80b92efff52b, 803dea15f920595230763ed9f15f7e7b3985ebac]
+        revision: [48958e9b68adc1fb77a823064d3b80b92efff52b, d92cf7dc60300e61d402fc699ff566408dc57b98]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -43,7 +43,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: tscircuit/fanout-solver
-          ref: 803dea15f920595230763ed9f15f7e7b3985ebac
+          ref: d92cf7dc60300e61d402fc699ff566408dc57b98
           path: after
       - uses: actions/download-artifact@v4
         with:
