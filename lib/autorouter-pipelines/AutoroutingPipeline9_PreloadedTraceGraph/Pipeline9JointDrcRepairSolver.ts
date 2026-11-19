@@ -2177,7 +2177,6 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     // Movable preloaded sections are already in the repair routes. Keep only
     // the remaining earlier copper fixed, with its original net and drill span.
     this.boundedRegionalParams = {
-      lockedConnectionNames: this.syntheticConnectionNames,
       connMap: this.params.connMap,
       originalSrj: {
         ...this.params.originalSrj,
