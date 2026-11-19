@@ -17,8 +17,8 @@
     "dependencyGraphPolicy": "Exact frozen3243 release and lockfiles from baseline14176a10; no independent transitive refresh."
   },
   "assessmentPolicy": "Restore exact published runtime before independent physical connectivity and geometry assessment; report gained/lost names and partial/deadline states.",
-  "qualificationReady": false,
-  "status": "HELD_PENDING_NARROW_CONTROLLER_REVIEW",
+  "qualificationReady": true,
+  "status": "READY_ROOT_RELEASED",
   "branch": "bench/full-board-port-capacity-3243-20261119",
   "workflow": ".github/workflows/full-board-port-capacity.yml",
   "baselineController": "14176a107694e38d70afc7e6653cf4bb6755e869",
