@@ -707,6 +707,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       if (preservePhysicalGeometry && fixedHdRoutes?.length) {
         staticSegmentValidator = createIntraNodeSegmentValidator({
           fixedHdRoutes,
+          obstacles: this.constructorParams.obstacles ?? [],
           connMap: this.connMap ?? new ConnectivityMap({}),
           layerCount: this.constructorParams.layerCount ?? 2,
           clearance: this.constructorParams.obstacleMargin ?? 0.1,
