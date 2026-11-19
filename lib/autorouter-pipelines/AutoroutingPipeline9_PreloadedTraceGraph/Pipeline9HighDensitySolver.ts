@@ -799,7 +799,13 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       nodePfById: this.nodePfById,
       obstacles: this.obstacles,
       boardObstacles: this.obstacles,
-      fixedHdRoutes: [...this.activeFallbackFixedObstacleRoutes, ...routedObstacleRoutes],
+      fixedHdRoutes: [
+        ...this.activeFallbackFixedObstacleRoutes,
+        ...routedObstacleRoutes,
+      ],
+      immutableHdRoutes: this.activeFallbackFixedObstacleRoutes.filter(
+        (route) => route.isFixed === true || route.isThroughObstacle === true,
+      ),
       movablePreloadedConnectionNames: movableFixedRouteConnectionNames,
       viaToPadClearance: this.viaToPadClearance,
       layerCount: this.layerCount,

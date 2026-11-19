@@ -35,6 +35,7 @@ type Pipeline9RegionalFallbackSolverParams = {
   obstacles: Obstacle[]
   boardObstacles?: Obstacle[]
   fixedHdRoutes?: HighDensityRoute[]
+  immutableHdRoutes?: HighDensityRoute[]
   movablePreloadedConnectionNames?: ReadonlySet<string>
   viaToPadClearance?: number
   layerCount: number
@@ -190,7 +191,7 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
 
   private validateCandidateRoutes(routes: HighDensityRoute[]): boolean {
     for (const route of routes) {
-      for (const fixedRoute of this.params.fixedHdRoutes ?? []) {
+      for (const fixedRoute of this.params.immutableHdRoutes ?? []) {
         if (arePipeline9RoutesOnSameNet(route, fixedRoute, this.params.connMap)) {
           continue
         }
@@ -244,6 +245,7 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
     const forceImproveSolver = new RegionalForceImproveSolver({
       nodeWithPortPoints: [this.params.nodeWithPortPoints],
       hdRoutes: routedCandidate,
+      preserveTopologyPortAnchors: true,
       colorMap: this.params.colorMap,
       totalStepsPerNode: Math.max(12, Math.round(20 * this.params.effort)),
       nodeAssignmentMargin: this.params.obstacleMargin,
