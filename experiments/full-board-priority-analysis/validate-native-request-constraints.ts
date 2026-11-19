@@ -3,7 +3,7 @@ import type {
   SimplifiedPcbTrace,
 } from "@tscircuit/capacity-autorouter"
 import { getFanoutExitPositionConfig } from "./lib/fanout-exit-position"
-import { pointIsInsideObstacle } from "./lib/geometry"
+import { distancePointToObstacle, pointIsInsideObstacle } from "./lib/geometry"
 import { obstacleSharesElectricalNet } from "./lib/net-identity"
 import { prepareFanoutBuses } from "./lib/prepare-buses"
 import type { FanoutBusSpec, FanoutDirection, FanoutSolverOptions, Point2D } from "./lib/types"
@@ -45,6 +45,7 @@ export function validateNativeRequestConstraints(params: {
   checkedExplicitLeads: number
   checkedPlaneLandings: number
   violations: RequestConstraintViolation[]
+  directionPreferenceChanges: RequestConstraintViolation[]
 } {
   const { inputSrj, solverOptions, traces } = params
   const specs = (solverOptions.buses ?? inputSrj.buses ?? []) as FanoutBusSpec[]
@@ -57,6 +58,7 @@ export function validateNativeRequestConstraints(params: {
     ),
   )
   const violations: RequestConstraintViolation[] = []
+  const directionPreferenceChanges: RequestConstraintViolation[] = []
   let checkedWireCount = 0
   let checkedExplicitLeads = 0
   let checkedPlaneLandings = 0
@@ -106,9 +108,13 @@ export function validateNativeRequestConstraints(params: {
       checkedPlaneLandings += terminalVias.length
       if (
         terminalVias.length === 0 ||
-        targetPours.length > 0 && terminalVias.some((via) =>
-          !sameNetPours.some((pour) => pointIsInsideObstacle(via, pour)),
-        )
+        sameNetPours.length > 0 && terminalVias.some((via) => {
+          // Use the same outer copper disk as the via-clearance model.
+          const diameter = via.via_diameter ?? solverOptions.viaDiameter ?? inputSrj.minViaPadDiameter
+          return !sameNetPours.some((pour) =>
+            distancePointToObstacle(via, pour) < diameter / 2 - 1e-9,
+          )
+        })
       ) {
         violations.push({
           ...identity, code: "plane-landing", targetLayer,
@@ -150,10 +156,13 @@ export function validateNativeRequestConstraints(params: {
       ? getSignedLeadTravel(lead, requiredDirection)
       : null
     if (signedAxisTravel === null || signedAxisTravel <= 1e-9) {
-      violations.push({
+      const issue: RequestConstraintViolation = {
         ...identity, code: "explicit-lead-direction", requiredDirection,
         signedAxisTravel,
-      })
+      }
+      // Plane directions retain the published planner's preference semantics.
+      if (bus.termination.type === "plane") directionPreferenceChanges.push(issue)
+      else violations.push(issue)
     }
   }
   return {
@@ -163,5 +172,6 @@ export function validateNativeRequestConstraints(params: {
     checkedExplicitLeads,
     checkedPlaneLandings,
     violations,
+    directionPreferenceChanges,
   }
 }
