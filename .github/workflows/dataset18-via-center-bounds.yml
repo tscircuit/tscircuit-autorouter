@@ -85,10 +85,32 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.4.2
+      - name: Enable lock saving in an external install config
+        run: |
+          python3 - <<'PY'
+          import hashlib, json, os, tomllib
+          from pathlib import Path
+          original = Path('same-machine-base/bunfig.toml').read_bytes()
+          assert Path('same-machine-pr/bunfig.toml').read_bytes() == original
+          before = tomllib.loads(original.decode())
+          assert before['install']['lockfile']['save'] is False
+          assert original.count(b'[install.lockfile]\nsave = false') == 1
+          configured = original.replace(b'[install.lockfile]\nsave = false', b'[install.lockfile]\nsave = true', 1)
+          expected = tomllib.loads(original.decode())
+          expected['install']['lockfile']['save'] = True
+          assert tomllib.loads(configured.decode()) == expected
+          evidence = Path('dataset18-source-proof')
+          config = (evidence / 'install-bunfig.toml').resolve()
+          config.write_bytes(configured)
+          sha = lambda data: hashlib.sha256(data).hexdigest()
+          (evidence / 'install-config-proof.json').write_text(json.dumps({'originalBunfigSha256': sha(original), 'installConfigSha256': sha(configured), 'onlyChange': 'install.lockfile.save=false -> true', 'sameExternalConfigForBothInstalls': True}, indent=2) + '\n')
+          with open(os.environ['GITHUB_ENV'], 'a') as env:
+              env.write(f'DATASET18_INSTALL_CONFIG={config}\n')
+          PY
       - name: Resolve the base dependency graph once
         working-directory: same-machine-base
         run: |
-          bun install --save --save-text-lockfile
+          bun --config="$DATASET18_INSTALL_CONFIG" install --save-text-lockfile
           test -s bun.lock
       - name: Reuse the base lock for the candidate
         run: |
@@ -96,7 +118,7 @@ jobs:
           cp same-machine-base/bun.lock same-machine-pr/bun.lock
           cp same-machine-base/bun.lock dataset18-source-proof/bun.lock
           cd same-machine-pr
-          bun install --frozen-lockfile
+          bun --config="$DATASET18_INSTALL_CONFIG" install --frozen-lockfile
       - name: Verify matching dependencies and source before routing
         run: |
           python3 - <<'PYTHON'
@@ -104,9 +126,12 @@ jobs:
           from pathlib import Path
           plan = json.loads(Path('dataset18-source-proof/plan.json').read_text())
           sha = lambda data: hashlib.sha256(data).hexdigest()
+          install_config = json.loads(Path('dataset18-source-proof/install-config-proof.json').read_text())
+          assert sha(Path(os.environ['DATASET18_INSTALL_CONFIG']).read_bytes()) == install_config['installConfigSha256']
           lock = Path('dataset18-source-proof/bun.lock').read_bytes()
           assert platform.machine() in ['aarch64', 'arm64'] and os.cpu_count() == 8
           for lane, key in [('same-machine-base', 'baseSha256'), ('same-machine-pr', 'candidateSha256')]:
+              assert sha((Path(lane) / 'bunfig.toml').read_bytes()) == install_config['originalBunfigSha256']
               assert (Path(lane) / 'bun.lock').read_bytes() == lock
               assert sha((Path(lane) / 'package.json').read_bytes()) == plan['packageJsonSha256']
               assert sha((Path(lane) / plan['benchmarkHelper']).read_bytes()) == plan['benchmarkHelperSha256']
