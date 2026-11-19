@@ -1,0 +1,80 @@
+name: Route original six full boards with the qualified minimal stack
+on:
+  push:
+    branches: [codex/ddr2427-concerns-deadline-case]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  matched-frozen:
+    strategy:
+      fail-fast: false
+      matrix:
+        pair: [sites, ordinary, inference, width_copy]
+        include:
+          - pair: sites
+            before: 5e417426368e7d267e3cef930df5a505951a2b1c
+            after: 66b1f5ec09731837a991ddee489cb7ce3949a964
+          - pair: ordinary
+            before: 5e417426368e7d267e3cef930df5a505951a2b1c
+            after: 2280363a17aec48409653b8abd0ce4d22a70ef7b
+          - pair: inference
+            before: 5e417426368e7d267e3cef930df5a505951a2b1c
+            after: ff2f931affb820e21517c471d5670f67d1112ced
+          - pair: width_copy
+            before: 5e417426368e7d267e3cef930df5a505951a2b1c
+            after: 24726ad7b30f2c2b73efb8bb7050584836fb67f3
+    runs-on: blacksmith-32vcpu-ubuntu-2404-arm
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: ${{ matrix.before }}
+          path: original
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: ${{ matrix.after }}
+          path: cleanup
+      - uses: actions/download-artifact@v4
+        with:
+          name: guard-0
+          run-id: 44415945774
+          github-token: ${{ github.token }}
+          path: frozen
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - run: |
+          for revision in original cleanup; do
+            (cd "$revision" && bun install --frozen-lockfile --ignore-scripts)
+            python3 -c 'from pathlib import Path; import sys; Path(sys.argv[1]).write_text(Path("experiments/full-board-priority-analysis/replay-frozen-fanout31.ts").read_text().replace("sampleTimeoutSeconds: 120", "sampleTimeoutSeconds: 180"))' "$revision/replay-frozen-fanout31.ts"
+          done
+          python3 experiments/full-board-priority-analysis/add-frozen-physical-audit.py original cleanup
+      - name: Run all frozen cases before and after the cleanup on the same worker
+        run: |
+          for revision in original cleanup; do
+            (cd "$revision" && bun replay-frozen-fanout31.ts "$GITHUB_WORKSPACE/frozen/inputs" "$GITHUB_WORKSPACE/matched/$revision" 1 "22-rk3308-left-bottom-offset")
+          done
+      - name: Export reports and routed SVG hashes
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          for folder in [*Path('matched').glob('*'),*Path('probes').glob('*/*')]:
+              report=folder/'benchmark.json'
+              if not report.exists():continue
+              print('MATCHED_FANOUT31_RESULT',json.dumps({'cohort':str(folder),'report':json.loads(report.read_text()),'svgs':{path.name:hashlib.sha256(path.read_bytes()).hexdigest() for path in folder.glob('*.svg')}},separators=(',',':')))
+          print('FROZEN_INPUT_HASHES',json.dumps({path.name:hashlib.sha256(path.read_bytes()).hexdigest() for path in Path('frozen/inputs').glob('*.json')},separators=(',',':')))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: reviewed-stack-frozen-${{ matrix.pair }}
+          path: |
+            matched
+            probes
+
