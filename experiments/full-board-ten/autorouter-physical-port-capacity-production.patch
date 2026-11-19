@@ -1,0 +1,40 @@
+diff --git a/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts b/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts
+index 33158fd2..11f1a4b6 100644
+--- a/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts
++++ b/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts
+@@ -554,6 +554,11 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
+             preserveTerminalPcbPortIds: true,
+             captureSearchDebug: cms.opts.captureSearchDebug ?? false,
+             minViaPadDiameter: cms.viaDiameter,
++            minPortSpacing:
++              cms.minTraceWidth +
++              (cms.srj.minTraceToPadEdgeClearance ??
++                cms.srj.defaultObstacleMargin ??
++                0.15),
+             flags: {
+               FORCE_CENTER_FIRST: true,
+               RIPPING_ENABLED: true,
+diff --git a/lib/solvers/PortPointPathingSolver/hgportpointpathingsolver/types.ts b/lib/solvers/PortPointPathingSolver/hgportpointpathingsolver/types.ts
+index fe65ec22..85904857 100644
+--- a/lib/solvers/PortPointPathingSolver/hgportpointpathingsolver/types.ts
++++ b/lib/solvers/PortPointPathingSolver/hgportpointpathingsolver/types.ts
+@@ -98,6 +98,7 @@ export interface HgPortPointPathingSolverParams {
+   effort: number
+   preserveTerminalPcbPortIds?: boolean
+   minViaPadDiameter?: number
++  minPortSpacing?: number
+   flags: {
+     FORCE_CENTER_FIRST: boolean
+     RIPPING_ENABLED: boolean
+diff --git a/lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver.ts b/lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver.ts
+index ea1be885..16627746 100644
+--- a/lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver.ts
++++ b/lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver.ts
+@@ -1144,6 +1144,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
+       serializedGraph,
+       {
+         duplicatePortProximity: 0.05,
++        minPortSpacing: params.minPortSpacing,
+         useSerializedPortPenalties: false,
+         routeSolveOptions: {
+           ...getTinyViaSizeOptions(params.minViaPadDiameter),

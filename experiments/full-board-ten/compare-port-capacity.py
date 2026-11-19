@@ -1,7 +1,7 @@
 """Offline all-ten comparison; reads retained ZIPs, never routes or downloads.
 
-Usage: python3 compare-cramped-guard.py REQUEST.json
-The request supplies candidateRunId, candidateHead, baselineHandoffPath,
+Usage: python3 compare-port-capacity.py REQUEST.json
+The request supplies candidateRunId, candidateHead, baselineHandoffPath, baselineHandoffSha256,
 outputPath, and ten cases. Each case has board, cohort, nativeSourcePath,
 baselineCaseProof, baselineSummaryProof, candidateCase and candidateSummary.
 Candidate archive references contain archivePath and metadataPath.
@@ -17,9 +17,9 @@ import sys
 import zipfile
 
 
-CONTROL_RUN = 44423458886
-CONTROL_HEAD = "49e9de35db347f94eeeaef9bca48d821ed3be51e"
-CONTROL_HANDOFF_SHA = "647fd215058c7a2609c757732e8a2f1d57dcad4bc8784da5a3ba14855970cd36"
+CONTROL_RUN = 44471059539
+CONTROL_HEAD = "14176a107694e38d70afc7e6653cf4bb6755e869"
+CONTROL_CONTROLLER_HANDOFF_SHA = "6fcf5354b6e8e0d91ff9fa9f35d608802d51e99ca4f2c615d7c22e2b04692a49"
 COUNTS = {"h616": 121, "butterstick": 317, "glider": 356, "imx6": 404, "icepi": 230}
 GEOMETRY_TYPES = {"pcb_board", "pcb_component", "pcb_smtpad", "pcb_plated_hole", "pcb_hole", "pcb_port"}
 PHYSICAL_GROUPS = {
@@ -86,7 +86,7 @@ def package_identity(manifest):
 
 def verify_runtime(manifest, expected):
     release, autorouter_sha, baseline, entry_delta = expected
-    assert manifest["mainVersion"] == release["mainVersion"] == "0.0.3242"
+    assert manifest["mainVersion"] == release["mainVersion"] == "0.0.3243"
     packages = {row["name"]: row for row in manifest["packages"]}
     assert len(packages) == len(manifest["packages"]) == 4
     for row in release["packages"]:
@@ -140,25 +140,24 @@ def verify_assessment_helper(helper, expected):
     core = next(row for row in expected["packages"] if row["name"] == "@tscircuit/core")
     assert helper["coreIdentity"]["entrySha256"] == core["entrySha256"]
     assert helper["files"] and all(row["prefixExact"] is True for row in helper["files"])
-    return {"coreSha256": core["entrySha256"], "files": helper["files"]}
+    assert len({row["name"] for row in helper["files"]}) == len(helper["files"])
+    return {"coreSha256": core["entrySha256"], "files": sorted(helper["files"], key=lambda row: row["name"])}
 
 
 def verify_candidate_proofs(archive, context):
     plan, mapping = context["plan"], context["mapping"]
-    for name in ["cramped-guard-all-ten-plan.json", "cramped-port-capacity-source-mapping.json", "release.json",
-                 "source-provenance.json", "harness-provenance.json", "baseline-run-plan.json", "published-baseline-handoff.json"]:
-        assert archive.data("cramped-guard/controller/" + name) == (CONTROLLER / name).read_bytes()
+    for name in ["port-capacity-all-ten-plan.json", "physical-port-capacity-source-mapping.json", "release.json",
+                 "source-provenance.json", "harness-provenance.json", "baseline-run-plan.json", "published-baseline-controller-handoff.json"]:
+        assert archive.data("port-capacity/controller/" + name) == (CONTROLLER / name).read_bytes()
     published_bytes = archive.data("published-runtime-manifest.json")
     candidate_bytes = archive.data("candidate-runtime-manifest.json")
     published, candidate = json.loads(published_bytes), json.loads(candidate_bytes)
     assert archive.data("runtime-manifest.json") == published_bytes
-    assert archive.data("cramped-guard/source-mapping.json") == context["mappingBytes"]
+    assert archive.data("port-capacity/source-mapping.json") == context["mappingBytes"]
     override = candidate["routingSourceOverride"]
     source = plan["source"]
     expected_override = {
-        "kind": "qualified-embedded-source-overlay", "package": "@tscircuit/capacity-autorouter", "embeddedPackage": "tiny-hypergraph",
-        "embeddedBaseCommit": source["baseCommit"], "sourceBaseCommit": source["baseCommit"],
-        "sourceCandidateCommit": source["candidateCommit"], "sourcePatchSha256": source["patchSha256"],
+        "kind": "qualified-source-overlay", "package": "@tscircuit/capacity-autorouter", "source": mapping["source"],
         "publishedAutorouterSha256": mapping["originalAutorouterSha256"], "candidateAutorouterSha256": mapping["candidateAutorouterSha256"],
         "publishedCoreSha256": plan["runtime"]["publishedCoreSha256"],
         "changedDeclarations": plan["overlay"]["replace"] + plan["overlay"]["insert"],
@@ -166,9 +165,9 @@ def verify_candidate_proofs(archive, context):
         "coreSourceOverride": False, "unchangedRuntimeDependencies": True,
     }
     assert override == expected_override
-    assert candidate["experiment"] == "cramped-guard" and candidate["sourceOverrides"] is True
+    assert candidate["experiment"] == "port-capacity" and candidate["sourceOverrides"] is True
     assert candidate["dependencyOverrides"] == [override]
-    proof = archive.json("cramped-guard/overlay-proof.json")
+    proof = archive.json("port-capacity/overlay-proof.json")
     assert proof["schemaVersion"] == 2 and proof["routingSourceOverride"] == override
     for field in ["onlyReviewedEmbeddedDeclarationsChanged", "allPackageFilesVerified", "unchangedDependencyGraphExceptAutorouterAlias",
                   "mainCoreAndEvalResolveSelectedAutorouter", "publishedCoreUnchanged", "autorouterDependencyLinkPreserved", "publishedAssessmentHelperPreserved"]:
@@ -176,16 +175,16 @@ def verify_candidate_proofs(archive, context):
     for field in ["sourceMappingSha256", "publishedAutorouterSha256", "candidateAutorouterSha256", "publishedCoreSha256", "changedDeclarations"]:
         assert proof[field] == override[field]
     assert proof["replacedDeclarations"] == plan["overlay"]["replace"] and proof["insertedDeclarations"] == plan["overlay"]["insert"]
-    restoration = archive.json("cramped-guard/assessment-runtime-restored.json")
+    restoration = archive.json("port-capacity/assessment-runtime-restored.json")
     assert restoration["publishedAliasesRestored"] is True and restoration["allPublishedFilesVerified"] is True
     assert restoration["routingSourceOverride"] is None
     for record in [proof, restoration]:
         assert record["publishedManifestSha256"] == digest(published_bytes)
         assert record["candidateManifestSha256"] == digest(candidate_bytes)
-    baseline_proof = archive.json("cramped-guard/published-baseline-proof.json")
+    baseline_proof = archive.json("port-capacity/published-baseline-proof.json")
     assert baseline_proof["allPublishedFilesVerified"] is True and baseline_proof["historicalBaselineIsReferenceOnly"] is True
     assert baseline_proof["publishedManifestSha256"] == digest(published_bytes)
-    assert baseline_proof["runtimeGuardSha256"] == digest(archive.data("cramped-guard/runtime-guard.json.gz"))
+    assert baseline_proof["runtimeGuardSha256"] == digest(archive.data("port-capacity/runtime-guard.json.gz"))
     aliases_before, aliases_after = published["packageAliases"], candidate["packageAliases"]
     assert len(aliases_before) == len(aliases_after)
     changed = 0
@@ -291,8 +290,8 @@ def compare_case(spec, context):
     for field, name, control in [
         ("baselineCaseProof", f"full-board-{board}-published-{cohort}", True),
         ("baselineSummaryProof", f"full-board-{board}-published-summary", True),
-        ("candidateCase", f"cramped-guard-{board}-{cohort}-case", False),
-        ("candidateSummary", f"cramped-guard-{board}-{cohort}-summary", False),
+        ("candidateCase", f"port-capacity-{board}-{cohort}-case", False),
+        ("candidateSummary", f"port-capacity-{board}-{cohort}-summary", False),
     ]:
         archives.append(Archive(spec[field], {"name": name, "run": CONTROL_RUN if control else context["request"]["candidateRunId"],
                          "head": CONTROL_HEAD if control else context["request"]["candidateHead"],
@@ -308,8 +307,7 @@ def compare_case(spec, context):
             verify_published(manifest)
             verify_runtime(manifest, (release, mapping["originalAutorouterSha256"], base_manifest, 0))
         assert package_identity(base_manifest) == package_identity(published)
-        span = mapping["spans"][0]
-        entry_delta = len(span["replacementText"].encode()) - len(span["originalText"].encode())
+        entry_delta = sum(len(span["replacementText"].encode()) - len(span["originalText"].encode()) for span in mapping["spans"])
         verify_runtime(candidate, (release, mapping["candidateAutorouterSha256"], base_manifest, entry_delta))
         override = candidate["routingSourceOverride"]
         helper_before = verify_assessment_helper(base_summary.json(".full-board-run/cases/assessment-helper-proof.json"), release)
@@ -322,7 +320,7 @@ def compare_case(spec, context):
         before = read_lane(base_case, {**shared, "manifest": base_manifest})
         after = read_lane(candidate_case, {**shared, "manifest": candidate})
         task = candidate_summary.json(f"lanes/candidate/cases/{board}-{cohort}.json")
-        assert task["experiment"] == "cramped-guard" and task["routingSourceOverride"] == override and task["dependencyOverrides"] == [override]
+        assert task["experiment"] == "port-capacity" and task["routingSourceOverride"] == override and task["dependencyOverrides"] == [override]
         assert task["restorePublishedCoreBeforeAssessment"] and task["runtimeManifestPath"].endswith("/candidate-runtime-manifest.json")
         verify_case_descriptor(task, before, after)
         if after["progress"]:
@@ -358,22 +356,35 @@ def compare_case(spec, context):
 
 def main(request_path):
     request = read_json(request_path)
-    plan = read_json(CONTROLLER / "cramped-guard-all-ten-plan.json")
+    plan = read_json(CONTROLLER / "port-capacity-all-ten-plan.json")
     assert isinstance(request["candidateRunId"], int) and request["candidateRunId"] > 0
     assert re.fullmatch(r"[0-9a-f]{40}", request["candidateHead"])
     cases = request["cases"]
     expected_cases = {(board, cohort) for board in COUNTS for cohort in ["original", "spaced"]}
     assert len(cases) == 10 and {(row["board"], row["cohort"]) for row in cases} == expected_cases
-    handoff_data = Path(request.get("baselineHandoffPath", CONTROLLER / plan["historicalBaseline"]["handoffFile"])).read_bytes()
-    assert digest(handoff_data) == CONTROL_HANDOFF_SHA
-    assert plan["historicalBaseline"]["handoffSha256"] == CONTROL_HANDOFF_SHA
+    assert plan["historicalBaseline"]["runId"] == CONTROL_RUN and plan["historicalBaseline"]["head"] == CONTROL_HEAD
+    controller_handoff_data = (CONTROLLER / "published-baseline-controller-handoff.json").read_bytes()
+    assert digest(controller_handoff_data) == CONTROL_CONTROLLER_HANDOFF_SHA == plan["historicalBaseline"]["controllerHandoffSha256"]
+    controller_handoff = json.loads(controller_handoff_data)
+    assert controller_handoff["controllerCommit"] == CONTROL_HEAD and controller_handoff["mainVersion"] == "0.0.3243"
+    # The baseline and candidate may run concurrently. Its completed artifact
+    # handoff is supplied after authentication, while run/head/runtime are pinned.
+    handoff_data = Path(request["baselineHandoffPath"]).read_bytes()
+    assert re.fullmatch(r"[0-9a-f]{64}", request["baselineHandoffSha256"])
+    assert digest(handoff_data) == request["baselineHandoffSha256"]
     handoff = json.loads(handoff_data)
     assert handoff["runId"] == CONTROL_RUN and handoff["head"] == CONTROL_HEAD
-    mapping_bytes = (CONTROLLER / "cramped-port-capacity-source-mapping.json").read_bytes()
+    assert handoff["mainVersion"] == "0.0.3243" and handoff["allArtifactsRetainedAndAuthenticated"] is True
+    assert len(handoff["artifacts"]) == len({row["artifactId"] for row in handoff["artifacts"]}) == 15
+    mapping_bytes = (CONTROLLER / "physical-port-capacity-source-mapping.json").read_bytes()
     mapping = json.loads(mapping_bytes)
     assert digest(mapping_bytes) == plan["sourceMappingSha256"]
     assert mapping["passed"] is True and mapping["sourceFrozen"] is True
-    assert len(mapping["spans"]) == 1 and mapping["spans"][0]["name"] == "DuplicateCongestedPortSolver.duplicateCongestedPorts"
+    assert mapping["source"] == plan["source"]
+    assert len(mapping["spans"]) == 4
+    assert [row["name"] for row in mapping["spans"] if row["kind"] == "replace"] == plan["overlay"]["replace"]
+    assert [row["name"] for row in mapping["spans"] if row["kind"] == "insert"] == plan["overlay"]["insert"]
+    assert len(plan["overlay"]["replace"]) == 3 and len(plan["overlay"]["insert"]) == 1
     context = {"request": request, "plan": plan, "mapping": mapping, "mappingBytes": mapping_bytes,
                "release": read_json(CONTROLLER / "release.json"), "provenance": read_json(CONTROLLER / "source-provenance.json"),
                "controlArtifacts": {row["artifactId"]: row for row in handoff["artifacts"]}}
@@ -382,6 +393,7 @@ def main(request_path):
     result = {"schemaVersion": 1, "controlRun": CONTROL_RUN, "controlHead": CONTROL_HEAD,
               "candidateRun": request["candidateRunId"], "candidateHead": request["candidateHead"],
               "mappingSha256": digest(mapping_bytes), "source": mapping["source"],
+              "baselineArtifactHandoffSha256": digest(handoff_data), "baselineControllerHandoffSha256": digest(controller_handoff_data),
               "authenticatedCases": len(rows), "expectedNativeNets": 2856,
               "comparisonComplete": len(available) == len(rows),
               "comparableCases": len(available), "comparableNativeNets": sum(row["requestedNets"] for row in available),
@@ -392,12 +404,12 @@ def main(request_path):
               "gainedNativeNets": sum(len(row["gainedNativeNets"]) for row in available) if len(available) == len(rows) else None,
               "lostNativeNets": sum(len(row["lostNativeNets"]) for row in available) if len(available) == len(rows) else None,
               "cases": rows,
-              "scope": "Fresh candidate full circuits compared with authenticated retained published3242 cases. Only native physical-assessor connectivity counts; incomplete captures and physical findings remain explicit. No later-phase input equality, speedup, or blanket physical-regression claim."}
+              "scope": "Fresh candidate full circuits compared with authenticated retained published3243 cases. Only native physical-assessor connectivity counts; incomplete captures and physical findings remain explicit. No later-phase input equality, speedup, or blanket physical-regression claim."}
     assert sum(row["requestedNets"] for row in rows) == 2856
     Path(request["outputPath"]).write_text(json.dumps(result, indent=2) + "\n")
     print(json.dumps({key: value for key, value in result.items() if key not in ["cases", "source"]}))
 
 
 if __name__ == "__main__":
-    assert len(sys.argv) == 2, "Usage: compare-cramped-guard.py REQUEST.json"
+    assert len(sys.argv) == 2, "Usage: compare-port-capacity.py REQUEST.json"
     main(sys.argv[1])

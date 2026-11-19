@@ -1,7 +1,7 @@
-name: Published3242 full-board cramped-port guard comparison
+name: Published3243 full-board physical port-capacity comparison
 on:
   push:
-    branches: [bench/full-board-cramped-guard-3242-20261119]
+    branches: [bench/full-board-port-capacity-3243-20261119]
 permissions:
   contents: read
 jobs:
@@ -39,14 +39,14 @@ jobs:
           sparse-checkout: |
             experiments/full-board-ten
             .github/workflows/full-board-ten.yml
-            .github/workflows/full-board-cramped-guard.yml
+            .github/workflows/full-board-port-capacity.yml
             AGENTS.md
       - name: Require the reviewed ten-case plan
         run: |
           python3 - <<'PY'
           import json
           from pathlib import Path
-          plan = json.loads(Path('experiments/full-board-ten/cramped-guard-all-ten-plan.json').read_text())
+          plan = json.loads(Path('experiments/full-board-ten/port-capacity-all-ten-plan.json').read_text())
           assert plan['qualificationReady'] is True, 'HELD: full-ten candidate run is not released'
           assert plan['jobs'] == 10 and plan['maxParallel'] == 5 and plan['laneOrder'] == ['candidate']
           PY
@@ -80,6 +80,18 @@ jobs:
           persist-credentials: false
           sparse-checkout-cone-mode: false
           sparse-checkout: lib/DuplicateCongestedPortSolver.ts
+      - name: Checkout published autorouter source
+        uses: actions/checkout@v4
+        with:
+          repository: tscircuit/tscircuit-autorouter
+          ref: a4f2778cb40bbc9c147b95a4e48ef0b32f1dd08f
+          path: .full-board-run/source-autorouter
+          persist-credentials: false
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver.ts
+            lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts
+            lib/solvers/PortPointPathingSolver/hgportpointpathingsolver/types.ts
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.4.3
@@ -91,9 +103,9 @@ jobs:
             "$FULL_BOARD_ROOT/sources/spaced" "$FULL_BOARD_ROOT/cases" "$BOARD"
       - name: Authenticate the published graph and activate only the reviewed source
         run: |
-          python3 experiments/full-board-ten/prepare-cramped-guard.py "$FULL_BOARD_ROOT" baseline "$BOARD" "$COHORT"
-          python3 experiments/full-board-ten/prepare-cramped-guard.py "$FULL_BOARD_ROOT" source "$BOARD" "$COHORT"
-          python3 experiments/full-board-ten/prepare-cramped-guard.py "$FULL_BOARD_ROOT" candidate "$BOARD" "$COHORT"
+          python3 experiments/full-board-ten/prepare-port-capacity.py "$FULL_BOARD_ROOT" baseline "$BOARD" "$COHORT"
+          python3 experiments/full-board-ten/prepare-port-capacity.py "$FULL_BOARD_ROOT" source "$BOARD" "$COHORT"
+          python3 experiments/full-board-ten/prepare-port-capacity.py "$FULL_BOARD_ROOT" candidate "$BOARD" "$COHORT"
       - name: Run the full native circuit and published physical assessment
         id: route
         continue-on-error: true
@@ -106,7 +118,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           include-hidden-files: true
-          name: cramped-guard-${{ matrix.board }}-${{ matrix.cohort }}-case-${{ github.run_attempt }}
+          name: port-capacity-${{ matrix.board }}-${{ matrix.cohort }}-case-${{ github.run_attempt }}
           path: .full-board-run/results/${{ matrix.board }}/${{ matrix.cohort }}
           compression-level: 0
           retention-days: 7
@@ -114,23 +126,23 @@ jobs:
       - name: Preserve the frozen comparison identities
         if: always()
         run: |
-          mkdir -p "$FULL_BOARD_ROOT/cramped-guard/controller"
-          for name in cramped-guard-all-ten-plan.json cramped-port-capacity-source-mapping.json release.json source-provenance.json harness-provenance.json baseline-run-plan.json published-baseline-handoff.json; do
-            cp "experiments/full-board-ten/$name" "$FULL_BOARD_ROOT/cramped-guard/controller/$name"
+          mkdir -p "$FULL_BOARD_ROOT/port-capacity/controller"
+          for name in port-capacity-all-ten-plan.json physical-port-capacity-source-mapping.json release.json source-provenance.json harness-provenance.json baseline-run-plan.json published-baseline-controller-handoff.json; do
+            cp "experiments/full-board-ten/$name" "$FULL_BOARD_ROOT/port-capacity/controller/$name"
           done
       - name: Preserve runtime, source and restoration proofs
         if: always()
         uses: actions/upload-artifact@v4
         with:
           include-hidden-files: true
-          name: cramped-guard-${{ matrix.board }}-${{ matrix.cohort }}-summary-${{ github.run_attempt }}
+          name: port-capacity-${{ matrix.board }}-${{ matrix.cohort }}-summary-${{ github.run_attempt }}
           path: |
             .full-board-run/runtime-manifest.json
             .full-board-run/published-runtime-manifest.json
             .full-board-run/candidate-runtime-manifest.json
-            .full-board-run/cramped-guard/*.json
-            .full-board-run/cramped-guard/runtime-guard.json.gz
-            .full-board-run/cramped-guard/controller
+            .full-board-run/port-capacity/*.json
+            .full-board-run/port-capacity/runtime-guard.json.gz
+            .full-board-run/port-capacity/controller
             .full-board-run/lanes/candidate/cases/${{ matrix.board }}-${{ matrix.cohort }}.json
             .full-board-run/cases/assessment-helper-proof.json
           retention-days: 7

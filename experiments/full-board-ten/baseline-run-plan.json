@@ -1,14 +1,16 @@
 {
   "schemaVersion": 1,
-  "purpose": "Frozen latest published full native ten-board baseline for comparison with published3236",
-  "mainVersion": "0.0.3242",
+  "purpose": "Frozen latest published full native ten-board baseline for comparison with retained published3242",
+  "mainVersion": "0.0.3243",
   "priorBaseline": {
-    "mainVersion": "0.0.3236",
-    "controllerCommit": "500b7b89a7e748e601285e349e3266086c6b2614",
-    "runId": 44380970575
+    "mainVersion": "0.0.3242",
+    "controllerCommit": "49e9de35db347f94eeeaef9bca48d821ed3be51e",
+    "runId": 44423458886,
+    "handoffSha256": "647fd215058c7a2609c757732e8a2f1d57dcad4bc8784da5a3ba14855970cd36",
+    "rerouted": false
   },
   "workflow": ".github/workflows/full-board-ten.yml",
-  "branch": "bench/full-board-ten-3242-20261118",
+  "branch": "bench/full-board-ten-3243-20261119",
   "runner": "blacksmith-8vcpu-ubuntu-2404-arm",
   "jobs": 5,
   "maxParallel": 5,
@@ -79,7 +81,7 @@
   "dependencyOverrides": [],
   "originalGeometryPolicy": "phased native, fanout false, planes true",
   "spacedGeometryPolicy": "phased native, fanout false, planes false",
-  "assessmentPolicy": "Authentic cohort assessor sources and controller policy are unchanged. Assessors resolve the published3242 runtime, including Checks282 and the published Core2424 copper helper.",
+  "assessmentPolicy": "Authentic cohort assessor sources and controller policy are unchanged. Assessors resolve published3243, including unchanged Checks282 and published Core2425 copper helper. All actual package graph changes are recorded; no source overrides.",
   "unchangedNativeFiles": [
     "bootstrap.py",
     "prepare-cases.ts",
@@ -94,7 +96,7 @@
   ],
   "frozenFiles": {
     ".github/workflows/full-board-ten.yml": {
-      "sha256": "4cc59922690f566f4e5e8b7948a83cbcdf4489d00f23db7efaa23a7303c156a7",
+      "sha256": "1e77f7eb83b879d81d1a5860ebaa63aaeb379aac36945c7d0845d89ec548de21",
       "bytes": 5858
     },
     "experiments/full-board-ten/bootstrap.py": {
@@ -138,7 +140,7 @@
       "bytes": 208
     },
     "experiments/full-board-ten/release.json": {
-      "sha256": "5eece79b055b28bd17e321140949a66f036ceb28573adf108419b5f2f64ddbd4",
+      "sha256": "06ab74d85086008fda992c11fb391d37c37cb7dcd08ac5e1587ced492218f1ff",
       "bytes": 5677
     },
     "experiments/full-board-ten/harness-provenance.json": {
@@ -146,15 +148,15 @@
       "bytes": 1479
     },
     "experiments/full-board-ten/published-release-provenance.json": {
-      "sha256": "89326fdcc1e99945b98798b0b5b95c60560be6f1f3789184e3bda84464577dc3",
-      "bytes": 19481
+      "sha256": "f3da70f1c717d53f78acaaccd9428e463d98e1d235792c1fd3340d6012449eba",
+      "bytes": 11984
     },
     "experiments/full-board-ten/runtime/package.json": {
-      "sha256": "c0542a47684ae97ccbe3670fbd2555c3ce0b935e00e8c13aff983442426decda",
+      "sha256": "ccd64599a0851ee1ed7b4c8ec3c18487f7eab6b2ffec7920bc39b007bae12bdb",
       "bytes": 2804
     },
     "experiments/full-board-ten/runtime/bun.lock": {
-      "sha256": "cdf19ae5668a61815a76f9d912b1fbc88907b1f029b2f3dd955f6f81a6cb7b57",
+      "sha256": "1a539e10575d08ee53d4ea289ed9b56975129123336ba552ff0792fb8bba97e2",
       "bytes": 72080
     },
     "experiments/full-board-ten/autorouter-dependencies/package.json": {
@@ -165,5 +167,6 @@
       "sha256": "ec313c582c29c1e35bb31190151a5649198c177119d32fe311746c06e94e8c4e",
       "bytes": 13144
     }
-  }
+  },
+  "comparisonPolicy": "Compare actual native connected identities and physical findings with authenticated retained3242 run44423458886. Preserve timeout/incomplete states; no later-phase input equality or timing-gain claim."
 }

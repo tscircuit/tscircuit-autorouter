@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Authenticate one full native case and the reviewed cramped-port overlay."""
+"""Authenticate one full native case and the reviewed physical port-capacity overlay."""
 import argparse
 import copy
 import gzip
@@ -94,32 +94,33 @@ parser.add_argument("cohort", choices=["original", "spaced"])
 args = parser.parse_args()
 root = args.root.resolve()
 controller = Path(__file__).resolve().parent
-plan = json.loads((controller / "cramped-guard-all-ten-plan.json").read_text())
+plan = json.loads((controller / "port-capacity-all-ten-plan.json").read_text())
 if plan["qualificationReady"] is not True:
-    raise RuntimeError("Tiny source and exact autorouter mapping are pending; controller held")
-assert len(plan["source"]["candidateCommit"]) == 40
+    raise RuntimeError("Reviewed source and exact autorouter mapping are pending; controller held")
+assert len(plan["source"]["repositories"]) == 2
+assert all(len(row["candidateCommit"]) == 40 for row in plan["source"]["repositories"])
 selected_cases = [case for case in plan["cases"] if case["board"] == args.board and case["cohort"] == args.cohort]
 assert len(selected_cases) == 1, "Case is outside the reviewed ten-case screen"
 assert len(plan["cases"]) == 10 and sum(case["expectedRoutableNets"] for case in plan["cases"]) == 2856
 assert set(plan["frozenFiles"]) == {"experiments/full-board-ten/" + name for name in plan["frozenHarnessFiles"]} | {plan["workflow"]}
 for name, digest in plan["frozenFiles"].items():
     assert sha(controller.parents[1] / name) == digest, f"Reviewed controller changed: {name}"
-assert sha(controller / "createCrampedPortCapacityOverlay.ts") == plan["sourceMappingToolSha256"]
-assert sha(controller / "cramped-port-capacity-source-mapping.json") == plan["sourceMappingSha256"]
-proof = root / "cramped-guard"
+assert sha(controller / "createPhysicalPortCapacityOverlay.ts") == plan["sourceMappingToolSha256"]
+assert sha(controller / "physical-port-capacity-source-mapping.json") == plan["sourceMappingSha256"]
+proof = root / "port-capacity"
 proof.mkdir(exist_ok=True)
 manifest_path = root / "runtime-manifest.json"
 published_path = root / "published-runtime-manifest.json"
 candidate_path = root / "candidate-runtime-manifest.json"
 original = root / "npm/autorouter"
-overlay = root / "npm/autorouter-cramped-guard"
+overlay = root / "npm/autorouter-port-capacity"
 alias = root / "runtime/node_modules/@tscircuit/capacity-autorouter"
 
 if args.operation == "baseline":
     manifest = json.loads(manifest_path.read_text())
     assert not manifest["sourceOverrides"] and not manifest["dependencyOverrides"] and manifest["experiment"] == "published"
     versions = {row["name"]: row["version"] for row in manifest["packages"]}
-    assert versions == {"tscircuit": "0.0.3242", "@tscircuit/core": "0.0.2424", "@tscircuit/eval": "0.0.1818", "@tscircuit/capacity-autorouter": "0.0.1132"}
+    assert versions == {"tscircuit": "0.0.3243", "@tscircuit/core": "0.0.2425", "@tscircuit/eval": "0.0.1818", "@tscircuit/capacity-autorouter": "0.0.1133"}
     assert manifest["runner"]["architecture"] in ["arm64", "aarch64"] and manifest["runner"]["bun"] == "1.4.3"
     assert manifest["runner"]["cpuCount"] == 8 and manifest["runner"]["artificialMemoryLimitApplied"] is False
     verify_packages(manifest)
@@ -170,40 +171,30 @@ assert core["entrySha256"] == plan["runtime"]["publishedCoreSha256"]
 if args.operation == "source":
     verify_packages(published)
     verify_graph()
-    source = root / "source-tiny"
-    assert subprocess.check_output(["git", "-C", str(source), "rev-parse", "HEAD"], text=True).strip() == plan["source"]["baseCommit"]
-    assert not subprocess.check_output(["git", "-C", str(source), "status", "--porcelain"], text=True).strip()
-    base = proof / "source-base"
-    for relative, row in plan["source"]["files"].items():
-        if row["beforeSha256"] is None:
-            assert not (source / relative).exists(), f"New source path already exists: {relative}"
-        else:
-            assert sha(source / relative) == row["beforeSha256"]
-            target = base / relative
-            target.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copyfile(source / relative, target)
-    patch = controller / "tiny-cramped-port-capacity-production.patch"
-    assert sha(patch) == plan["source"]["patchSha256"]
-    subprocess.run(["git", "apply", "--index", "--check", str(patch)], cwd=source, check=True)
-    subprocess.run(["git", "apply", "--index", str(patch)], cwd=source, check=True)
-    assert set(subprocess.check_output(["git", "diff", "--cached", "--name-only"], cwd=source, text=True).splitlines()) == set(plan["source"]["files"])
-    assert not subprocess.check_output(["git", "diff", "--name-only"], cwd=source, text=True).strip()
-    assert not subprocess.check_output(["git", "ls-files", "--others", "--exclude-standard"], cwd=source, text=True).strip()
-    assert subprocess.check_output(["git", "write-tree", "--prefix=lib/"], cwd=source, text=True).strip() == plan["source"]["candidateLibTree"]
-    for relative, row in plan["source"]["files"].items():
-        assert sha(source / relative) == row["afterSha256"]
+    mapping = json.loads((controller / "physical-port-capacity-source-mapping.json").read_text())
+    assert mapping["schemaVersion"] == 2 and mapping["passed"] and mapping["sourceFrozen"]
+    assert mapping["source"] == plan["source"]
+    source_paths = {"tscircuit/tiny-hypergraph": root / "source-tiny", "tscircuit/tscircuit-autorouter": root / "source-autorouter"}
+    assert {row["repository"] for row in mapping["source"]["repositories"]} == set(source_paths)
+    for repository in mapping["source"]["repositories"]:
+        source = source_paths[repository["repository"]]
+        assert subprocess.check_output(["git", "-C", str(source), "rev-parse", "HEAD"], text=True).strip() == repository["publishedBaseCommit"]
+        assert not subprocess.check_output(["git", "-C", str(source), "status", "--porcelain"], text=True).strip()
+        files = repository["changedFiles"]
+        for row in files:
+            assert sha(source / row["relative"]) == row["beforeSha256"]
+        patch = controller / repository["productionPatchFile"]
+        assert sha(patch) == repository["productionPatchSha256"]
+        subprocess.run(["git", "apply", "--index", "--check", str(patch)], cwd=source, check=True)
+        subprocess.run(["git", "apply", "--index", str(patch)], cwd=source, check=True)
+        assert set(subprocess.check_output(["git", "diff", "--cached", "--name-only"], cwd=source, text=True).splitlines()) == {row["relative"] for row in files}
+        assert not subprocess.check_output(["git", "diff", "--name-only"], cwd=source, text=True).strip()
+        assert not subprocess.check_output(["git", "ls-files", "--others", "--exclude-standard"], cwd=source, text=True).strip()
+        for row in files:
+            assert sha(source / row["relative"]) == row["afterSha256"]
     source_map = original / "dist/index.js.map"
     assert sha(source_map) == plan["overlay"]["publishedSourceMapSha256"]
-    mapping = json.loads((controller / "cramped-port-capacity-source-mapping.json").read_text())
-    assert mapping["schemaVersion"] == 2 and mapping["passed"] and mapping["sourceFrozen"]
-    assert len(mapping["source"]["repositories"]) == 1
-    mapped_source = mapping["source"]["repositories"][0]
-    assert mapped_source["repository"] == plan["source"]["repository"]
-    assert mapped_source["publishedBaseCommit"] == plan["source"]["baseCommit"]
-    assert mapped_source["candidateCommit"] == plan["source"]["candidateCommit"]
-    assert mapped_source["productionPatchSha256"] == plan["source"]["patchSha256"]
-    assert {row["relative"]: {"beforeSha256": row["beforeSha256"], "afterSha256": row["afterSha256"]} for row in mapped_source["changedFiles"]} == plan["source"]["files"]
-    shutil.copyfile(controller / "cramped-port-capacity-source-mapping.json", proof / "source-mapping.json")
+    shutil.copyfile(controller / "physical-port-capacity-source-mapping.json", proof / "source-mapping.json")
     verify_packages(published)
     verify_graph()
     raise SystemExit(0)
@@ -227,23 +218,34 @@ verify_graph()
 assert sha(proof / "source-mapping.json") == plan["sourceMappingSha256"]
 mapping = json.loads((proof / "source-mapping.json").read_text())
 assert mapping["passed"] and mapping["sourceFrozen"] and mapping["schemaVersion"] == 2
-assert len(mapping["spans"]) == 1
-row = mapping["spans"][0]
-assert row["kind"] == "replace" and row["name"] == plan["overlay"]["replace"][0]
-assert row["compiledBaseEquivalent"] is True and not plan["overlay"]["insert"]
+assert mapping["source"] == plan["source"]
+assert len(mapping["spans"]) == 4
+assert [(row["kind"], row["name"]) for row in mapping["spans"] if row["kind"] == "replace"] == [("replace", name) for name in plan["overlay"]["replace"]]
+assert [(row["kind"], row["name"]) for row in mapping["spans"] if row["kind"] == "insert"] == [("insert", name) for name in plan["overlay"]["insert"]]
+assert len(plan["overlay"]["replace"]) == 3 and len(plan["overlay"]["insert"]) == 1
 before = Path(autorouter["entry"]).read_bytes()
 assert hashlib.sha256(before).hexdigest() == mapping["originalAutorouterSha256"] == plan["runtime"]["publishedAutorouterSha256"]
-start, end = row["startByte"], row["endByte"]
-old, new = row["originalText"].encode(), row["replacementText"].encode()
-assert 0 <= start < end <= len(before) and before[start:end] == old
-assert hashlib.sha256(old).hexdigest() == row["originalSha256"]
-assert hashlib.sha256(new).hexdigest() == row["replacementSha256"]
-after = before[:start] + new + before[end:]
-expected_segments = [
-    {"startByte": 0, "endByte": start, "candidateStartByte": 0, "candidateEndByte": start, "sha256": hashlib.sha256(before[:start]).hexdigest()},
-    {"startByte": end, "endByte": len(before), "candidateStartByte": start + len(new), "candidateEndByte": len(after), "sha256": hashlib.sha256(before[end:]).hexdigest()},
-]
-assert mapping["unchangedSegments"] == expected_segments and mapping["qualification"]["allOutsideBytesUnchanged"]
+parts = []
+cursor = 0
+for row in mapping["spans"]:
+    start, end = row["startByte"], row["endByte"]
+    old, new = row["originalText"].encode(), row["replacementText"].encode()
+    assert 0 <= cursor <= start <= end <= len(before) and before[start:end] == old
+    assert hashlib.sha256(old).hexdigest() == row["originalSha256"]
+    assert hashlib.sha256(new).hexdigest() == row["replacementSha256"]
+    if row["kind"] == "replace":
+        assert old and row["compiledBaseEquivalent"] is True
+    else:
+        assert row["kind"] == "insert" and start == end and not old
+    parts += [before[cursor:start], new]
+    cursor = end
+parts.append(before[cursor:])
+after = b"".join(parts)
+assert mapping["qualification"]["allOutsideBytesUnchanged"]
+for row in mapping["unchangedSegments"]:
+    original_segment = before[row["startByte"]:row["endByte"]]
+    assert original_segment == after[row["candidateStartByte"]:row["candidateEndByte"]]
+    assert hashlib.sha256(original_segment).hexdigest() == row["sha256"]
 assert hashlib.sha256(after).hexdigest() == mapping["candidateAutorouterSha256"] == plan["runtime"]["candidateAutorouterSha256"]
 overlay.mkdir()
 files = []
@@ -261,7 +263,7 @@ assert alias.is_symlink() and alias.resolve() == original
 alias.unlink()
 alias.symlink_to(overlay)
 changed_declarations = plan["overlay"]["replace"] + plan["overlay"]["insert"]
-override = {"kind": "qualified-embedded-source-overlay", "package": "@tscircuit/capacity-autorouter", "embeddedPackage": "tiny-hypergraph", "embeddedBaseCommit": plan["source"]["baseCommit"], "sourceBaseCommit": plan["source"]["baseCommit"], "sourceCandidateCommit": plan["source"]["candidateCommit"], "sourcePatchSha256": plan["source"]["patchSha256"], "publishedAutorouterSha256": mapping["originalAutorouterSha256"], "candidateAutorouterSha256": mapping["candidateAutorouterSha256"], "publishedCoreSha256": plan["runtime"]["publishedCoreSha256"], "changedDeclarations": changed_declarations, "sourceMappingSha256": plan["sourceMappingSha256"], "autorouterSourceOverride": True, "coreSourceOverride": False, "unchangedRuntimeDependencies": True}
+override = {"kind": "qualified-source-overlay", "package": "@tscircuit/capacity-autorouter", "source": mapping["source"], "publishedAutorouterSha256": mapping["originalAutorouterSha256"], "candidateAutorouterSha256": mapping["candidateAutorouterSha256"], "publishedCoreSha256": plan["runtime"]["publishedCoreSha256"], "changedDeclarations": changed_declarations, "sourceMappingSha256": plan["sourceMappingSha256"], "autorouterSourceOverride": True, "coreSourceOverride": False, "unchangedRuntimeDependencies": True}
 candidate = copy.deepcopy(published)
 candidate.update(sourceOverrides=True, experiment=plan["experiment"], dependencyOverrides=[override], routingSourceOverride=override)
 for row in candidate["packages"]:

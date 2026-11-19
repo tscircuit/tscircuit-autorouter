@@ -1,0 +1,228 @@
+{
+  "schemaVersion": 1,
+  "runner": "blacksmith-8vcpu-ubuntu-2404-arm",
+  "budgetsMs": {
+    "capture": 900000,
+    "hardKill": 960000,
+    "assessment": 180000
+  },
+  "runtime": {
+    "main": "0.0.3243",
+    "core": "0.0.2425",
+    "autorouter": "0.0.1133",
+    "eval": "0.0.1818",
+    "publishedCoreSha256": "889b3cf17684cec24dae36ebf7da06c85dd0713e093b2665b66de696bacb7f03",
+    "publishedAutorouterSha256": "44e2cc5a759e11f3982a876733d0f224dcb901c0ac0840e2ff1ec5be434a4285",
+    "candidateAutorouterSha256": "9158336cfc09f41bf0f5c93dbf0af4f393f9f3b86080d8db329fb50b7f754337",
+    "dependencyGraphPolicy": "Exact frozen3243 release and lockfiles from baseline14176a10; no independent transitive refresh."
+  },
+  "assessmentPolicy": "Restore exact published runtime before independent physical connectivity and geometry assessment; report gained/lost names and partial/deadline states.",
+  "qualificationReady": false,
+  "status": "HELD_PENDING_NARROW_CONTROLLER_REVIEW",
+  "branch": "bench/full-board-port-capacity-3243-20261119",
+  "workflow": ".github/workflows/full-board-port-capacity.yml",
+  "baselineController": "14176a107694e38d70afc7e6653cf4bb6755e869",
+  "aliasHarnessController": "95ed0ac7",
+  "historicalBaseline": {
+    "runId": 44471059539,
+    "head": "14176a107694e38d70afc7e6653cf4bb6755e869",
+    "rerouted": false,
+    "scope": "New latest3243 published baseline, pending run identity and result artifacts. Compare native completion/physical findings without timing-gain claim.",
+    "controllerHandoffSha256": "6fcf5354b6e8e0d91ff9fa9f35d608802d51e99ca4f2c615d7c22e2b04692a49",
+    "attempt": 1,
+    "controllerHandoffFile": "published-baseline-controller-handoff.json",
+    "resultHandoffPolicy": "After the latest baseline completes, the offline request supplies its authenticated result handoff and explicit SHA256. Every baseline archive is independently checked against pinned run/head/name/digest and exact latest runtime/source/case identities."
+  },
+  "experiment": "port-capacity",
+  "cases": [
+    {
+      "board": "h616",
+      "cohort": "original",
+      "expectedRoutableNets": 121
+    },
+    {
+      "board": "h616",
+      "cohort": "spaced",
+      "expectedRoutableNets": 121
+    },
+    {
+      "board": "butterstick",
+      "cohort": "original",
+      "expectedRoutableNets": 317
+    },
+    {
+      "board": "butterstick",
+      "cohort": "spaced",
+      "expectedRoutableNets": 317
+    },
+    {
+      "board": "glider",
+      "cohort": "original",
+      "expectedRoutableNets": 356
+    },
+    {
+      "board": "glider",
+      "cohort": "spaced",
+      "expectedRoutableNets": 356
+    },
+    {
+      "board": "imx6",
+      "cohort": "original",
+      "expectedRoutableNets": 404
+    },
+    {
+      "board": "imx6",
+      "cohort": "spaced",
+      "expectedRoutableNets": 404
+    },
+    {
+      "board": "icepi",
+      "cohort": "original",
+      "expectedRoutableNets": 230
+    },
+    {
+      "board": "icepi",
+      "cohort": "spaced",
+      "expectedRoutableNets": 230
+    }
+  ],
+  "expectedRoutableNetsTotal": 2856,
+  "laneOrder": [
+    "candidate"
+  ],
+  "jobs": 10,
+  "maxParallel": 5,
+  "jobTimeoutMinutes": 30,
+  "sourceMappingSha256": "edaa5b0add54d3256afcf97f27ffc221bda7d2d21ef8e669f9de10d05bb842c1",
+  "sourceMappingToolSha256": "f1e811349a59432599618ec2ad38b6fbecc9dfb4a3660563882ef0f9e2065bd3",
+  "source": {
+    "repositories": [
+      {
+        "repository": "tscircuit/tiny-hypergraph",
+        "sourceBaseCommit": "f1fe8edcfb3dfde8fd644d09d81bad18743144b3",
+        "publishedBaseCommit": "f1fe8edcfb3dfde8fd644d09d81bad18743144b3",
+        "productionPatchFile": "tiny-physical-port-capacity-production.patch",
+        "changedFiles": [
+          {
+            "relative": "lib/DuplicateCongestedPortSolver.ts",
+            "beforeSha256": "12801e8d12f34b93c0f4b78a551b2bb567a29df9f99d6831ce0c8ee2d2a86b65",
+            "afterSha256": "29a1d331d863adc07a255bb555510da25c6a9816b853a664f368fb81757317f0"
+          }
+        ],
+        "candidateCommit": "59e1afdda629854d22b660470dfba48e1fb83d7d",
+        "productionPatchSha256": "798eace779c58295609c2086166ed7d1034171bd081fc0d5de66319bcdc1a020"
+      },
+      {
+        "repository": "tscircuit/tscircuit-autorouter",
+        "sourceBaseCommit": "a4f2778cb40bbc9c147b95a4e48ef0b32f1dd08f",
+        "publishedBaseCommit": "a4f2778cb40bbc9c147b95a4e48ef0b32f1dd08f",
+        "productionPatchFile": "autorouter-physical-port-capacity-production.patch",
+        "changedFiles": [
+          {
+            "relative": "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver.ts",
+            "beforeSha256": "f7f9254152a9639b2cf4dc5b915c10bf4856d014178a99ef9e8c26fcbd6894da",
+            "afterSha256": "ad7f2fffdfa0ee8e7f349c4ea4edd62dbae47793416e579ff96774c5832c5306"
+          },
+          {
+            "relative": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts",
+            "beforeSha256": "ae83c7785c32a12580c4eb8859a7de6d93acb7220d863d93aa29dd3e8d3a1456",
+            "afterSha256": "bbebe53bbc50203a08bfc641708d37c5ab2021aceeef975927569967d236c6ac"
+          },
+          {
+            "relative": "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver/types.ts",
+            "beforeSha256": "1c6aa58984ea5391e888ac56fb330a1cab79f5df3716f45faad06a50d72ae59d",
+            "afterSha256": "3cb278e20e9620e49a9a9fd64b0e0a50f08eb32e1ef1b3fff57aaf04c85709ff"
+          }
+        ],
+        "candidateCommit": "41e0570c85c46ba3ada1133ec5b4aa874873fb03",
+        "productionPatchSha256": "8e6ad047964903b8f71e97e225932959f47ed0dc3d8400b022e8431fc2daca30"
+      }
+    ]
+  },
+  "overlay": {
+    "schemaVersion": 2,
+    "replace": [
+      "DuplicateCongestedPortSolver.duplicateCongestedPorts",
+      "TinyHypergraphPortPointPathingSolver.constructor",
+      "AutoroutingPipelineSolver9_PreloadedTraceGraph.pipelineDef.portPointPathingSolver"
+    ],
+    "insert": [
+      "getSharedBoundaryLength"
+    ],
+    "publishedSourceMapSha256": "aec2fc7d644bba32defd9e4fa7ec957c78ffdeb37fbfe83d0de780bd5311d5f7",
+    "strategy": "Source-qualified Tiny count-only physical port capacity and explicit AR width-plus-clearance wiring in publishedAR1133. Three replacements and one pure helper insertion. All outside AR bytes and Core unchanged; no cramped guard stack, B/A03/Uniform or budget changes."
+  },
+  "nativePolicies": "All ten complete original/spaced circuits,2856 native demands, same source IDs/options/phase ordering and900/960/180-second budgets. No saved/pre-routed board import, cramped guard stack, B/A03/Uniform changes or routing WASM.",
+  "observerPolicy": "Exact native baseline observer targets/hooks and15s circuit capture remain; no optional edge capture or observer changes.",
+  "comparisonPolicy": "Offline authenticated baseline/candidate case and summary ZIPs; all ten native membership/geometry/completion/physical findings and exact gained/lost names. Later phase inputs/preloads may change; no timing-gain or equivalent-later-input assumption.",
+  "frozenHarnessFiles": {
+    "autorouter-dependencies/bun.lock": "ec313c582c29c1e35bb31190151a5649198c177119d32fe311746c06e94e8c4e",
+    "autorouter-dependencies/package.json": "7b4c1ecf979432e472a4f0589ed49976a8a1323ff7bf651a5938ee7006b61360",
+    "autorouter-physical-port-capacity-production.patch": "8e6ad047964903b8f71e97e225932959f47ed0dc3d8400b022e8431fc2daca30",
+    "baseline-run-plan.json": "0c6b5737f53e1f79f0416162dd8c6aff6d0feb64f6f0758d3b102199103af7b3",
+    "bootstrap.py": "23de25ac8960be89afc57ba27b0d3fddb6e65dba593024be59ec5073d266164d",
+    "calibrate-assessment.tsx": "efeb820cf34239465df53ce4c7932293e41a14dcab4bedb823c3bc60cc9627a0",
+    "compare-port-capacity.py": "cd6a79bbd9d5828c9ac69613705017929a40d1287b29fe04bb21076ccbd30adf",
+    "createCoarseRoutingDiagnostics.ts": "dea45bba3386a9b55b7709834dff65468c421992808b406f54c6f9e556e8b618",
+    "createPhysicalPortCapacityOverlay.ts": "f1e811349a59432599618ec2ad38b6fbecc9dfb4a3660563882ef0f9e2065bd3",
+    "harness-provenance.json": "fc4b9191002e33b0561d50a2208d38848d81da0735869bb4f563bb9afe1b7405",
+    "mapping-source-handoff.json": "143b415b46934a331c74c9cc869b37f74c88f1e1ab18caa6aa3cc5b130270ff1",
+    "package.json": "469e1861d1259cd1307bca324fb0d8ba0a67ea0323d4e728a35c90a2bc92bdf3",
+    "physical-port-capacity-source-mapping.json": "edaa5b0add54d3256afcf97f27ffc221bda7d2d21ef8e669f9de10d05bb842c1",
+    "prepare-cases.ts": "b72e632e9c9152c9e5daedf1bb60daa5d86c33fdcc454f2a7825827d24124330",
+    "prepare-port-capacity.py": "b552bc5757d5b8e68e1572ef07b8544745edf0cfa1ca5ce1294fca5ae40e9ca4",
+    "published-baseline-controller-handoff.json": "6fcf5354b6e8e0d91ff9fa9f35d608802d51e99ca4f2c615d7c22e2b04692a49",
+    "published-release-provenance.json": "f3da70f1c717d53f78acaaccd9428e463d98e1d235792c1fd3340d6012449eba",
+    "release.json": "06ab74d85086008fda992c11fb391d37c37cb7dcd08ac5e1587ced492218f1ff",
+    "render-published.tsx": "e12628dfd6560dfb526392d22f8724c062054e54716d4439e5a91a397b2f231e",
+    "report.py": "3fa537cd30224a1bdf10a6acd7e293a0a5e8e187c1e2c210b0ed83370a153b5d",
+    "run-one.ts": "ffb651a80a61312f61d738c635a1d93d1281bfbda29fd6e01871d8e2be536d99",
+    "runtime/bun.lock": "1a539e10575d08ee53d4ea289ed9b56975129123336ba552ff0792fb8bba97e2",
+    "runtime/package.json": "ccd64599a0851ee1ed7b4c8ec3c18487f7eab6b2ffec7920bc39b007bae12bdb",
+    "source-provenance.json": "bd24be29c5fdd5ae68ce15c5b2bc50f172ecdd325dcc1b57a80ec653d12570fb",
+    "tiny-physical-port-capacity-production.patch": "798eace779c58295609c2086166ed7d1034171bd081fc0d5de66319bcdc1a020",
+    "tsconfig.json": "2e881577c63bb6b62d14abd319240bbc6ae5e206ecb007dae80ab3ec922293c7"
+  },
+  "frozenFiles": {
+    "experiments/full-board-ten/autorouter-dependencies/bun.lock": "ec313c582c29c1e35bb31190151a5649198c177119d32fe311746c06e94e8c4e",
+    "experiments/full-board-ten/autorouter-dependencies/package.json": "7b4c1ecf979432e472a4f0589ed49976a8a1323ff7bf651a5938ee7006b61360",
+    "experiments/full-board-ten/autorouter-physical-port-capacity-production.patch": "8e6ad047964903b8f71e97e225932959f47ed0dc3d8400b022e8431fc2daca30",
+    "experiments/full-board-ten/baseline-run-plan.json": "0c6b5737f53e1f79f0416162dd8c6aff6d0feb64f6f0758d3b102199103af7b3",
+    "experiments/full-board-ten/bootstrap.py": "23de25ac8960be89afc57ba27b0d3fddb6e65dba593024be59ec5073d266164d",
+    "experiments/full-board-ten/calibrate-assessment.tsx": "efeb820cf34239465df53ce4c7932293e41a14dcab4bedb823c3bc60cc9627a0",
+    "experiments/full-board-ten/compare-port-capacity.py": "cd6a79bbd9d5828c9ac69613705017929a40d1287b29fe04bb21076ccbd30adf",
+    "experiments/full-board-ten/createCoarseRoutingDiagnostics.ts": "dea45bba3386a9b55b7709834dff65468c421992808b406f54c6f9e556e8b618",
+    "experiments/full-board-ten/createPhysicalPortCapacityOverlay.ts": "f1e811349a59432599618ec2ad38b6fbecc9dfb4a3660563882ef0f9e2065bd3",
+    "experiments/full-board-ten/harness-provenance.json": "fc4b9191002e33b0561d50a2208d38848d81da0735869bb4f563bb9afe1b7405",
+    "experiments/full-board-ten/mapping-source-handoff.json": "143b415b46934a331c74c9cc869b37f74c88f1e1ab18caa6aa3cc5b130270ff1",
+    "experiments/full-board-ten/package.json": "469e1861d1259cd1307bca324fb0d8ba0a67ea0323d4e728a35c90a2bc92bdf3",
+    "experiments/full-board-ten/physical-port-capacity-source-mapping.json": "edaa5b0add54d3256afcf97f27ffc221bda7d2d21ef8e669f9de10d05bb842c1",
+    "experiments/full-board-ten/prepare-cases.ts": "b72e632e9c9152c9e5daedf1bb60daa5d86c33fdcc454f2a7825827d24124330",
+    "experiments/full-board-ten/prepare-port-capacity.py": "b552bc5757d5b8e68e1572ef07b8544745edf0cfa1ca5ce1294fca5ae40e9ca4",
+    "experiments/full-board-ten/published-baseline-controller-handoff.json": "6fcf5354b6e8e0d91ff9fa9f35d608802d51e99ca4f2c615d7c22e2b04692a49",
+    "experiments/full-board-ten/published-release-provenance.json": "f3da70f1c717d53f78acaaccd9428e463d98e1d235792c1fd3340d6012449eba",
+    "experiments/full-board-ten/release.json": "06ab74d85086008fda992c11fb391d37c37cb7dcd08ac5e1587ced492218f1ff",
+    "experiments/full-board-ten/render-published.tsx": "e12628dfd6560dfb526392d22f8724c062054e54716d4439e5a91a397b2f231e",
+    "experiments/full-board-ten/report.py": "3fa537cd30224a1bdf10a6acd7e293a0a5e8e187c1e2c210b0ed83370a153b5d",
+    "experiments/full-board-ten/run-one.ts": "ffb651a80a61312f61d738c635a1d93d1281bfbda29fd6e01871d8e2be536d99",
+    "experiments/full-board-ten/runtime/bun.lock": "1a539e10575d08ee53d4ea289ed9b56975129123336ba552ff0792fb8bba97e2",
+    "experiments/full-board-ten/runtime/package.json": "ccd64599a0851ee1ed7b4c8ec3c18487f7eab6b2ffec7920bc39b007bae12bdb",
+    "experiments/full-board-ten/source-provenance.json": "bd24be29c5fdd5ae68ce15c5b2bc50f172ecdd325dcc1b57a80ec653d12570fb",
+    "experiments/full-board-ten/tiny-physical-port-capacity-production.patch": "798eace779c58295609c2086166ed7d1034171bd081fc0d5de66319bcdc1a020",
+    "experiments/full-board-ten/tsconfig.json": "2e881577c63bb6b62d14abd319240bbc6ae5e206ecb007dae80ab3ec922293c7",
+    ".github/workflows/full-board-port-capacity.yml": "e290732aec2e6d2a334e537d0d7a52a357344323bf834c3c874c5045da51af4b"
+  },
+  "qualification": {
+    "scope": "Exact latest3243 graph transplanted from baseline14176a10. Two frozen source patches and qualified3+1span overlay bound; narrow activation/comparator review pending. No native execution or dependency install by preparer.",
+    "nativeRoutingExecuted": false,
+    "dependencyInstallsExecutedLocally": false,
+    "artifactDownloadsExecutedLocally": false,
+    "evidence": [
+      {
+        "path": "/tmp/full-board-ten-port-capacity-3243-preparation/narrow-controller-checks.json",
+        "sha256": "0aeaff5352f1aee9834c5224a835772f47b7a1521411f3c1e12005a252a8f731"
+      }
+    ]
+  },
+  "reuseController": "4bf798713c6d2656c34c1e1b9de11a9c3170333f"
+}

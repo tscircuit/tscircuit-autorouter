@@ -1,0 +1,292 @@
+{
+  "schemaVersion": 2,
+  "passed": true,
+  "sourceFrozen": true,
+  "originalAutorouterSha256": "44e2cc5a759e11f3982a876733d0f224dcb901c0ac0840e2ff1ec5be434a4285",
+  "candidateAutorouterSha256": "9158336cfc09f41bf0f5c93dbf0af4f393f9f3b86080d8db329fb50b7f754337",
+  "sourceMapSha256": "aec2fc7d644bba32defd9e4fa7ec957c78ffdeb37fbfe83d0de780bd5311d5f7",
+  "source": {
+    "repositories": [
+      {
+        "repository": "tscircuit/tiny-hypergraph",
+        "sourceBaseCommit": "f1fe8edcfb3dfde8fd644d09d81bad18743144b3",
+        "publishedBaseCommit": "f1fe8edcfb3dfde8fd644d09d81bad18743144b3",
+        "productionPatchFile": "tiny-physical-port-capacity-production.patch",
+        "changedFiles": [
+          {
+            "relative": "lib/DuplicateCongestedPortSolver.ts",
+            "beforeSha256": "12801e8d12f34b93c0f4b78a551b2bb567a29df9f99d6831ce0c8ee2d2a86b65",
+            "afterSha256": "29a1d331d863adc07a255bb555510da25c6a9816b853a664f368fb81757317f0"
+          }
+        ],
+        "candidateCommit": "59e1afdda629854d22b660470dfba48e1fb83d7d",
+        "productionPatchSha256": "798eace779c58295609c2086166ed7d1034171bd081fc0d5de66319bcdc1a020"
+      },
+      {
+        "repository": "tscircuit/tscircuit-autorouter",
+        "sourceBaseCommit": "a4f2778cb40bbc9c147b95a4e48ef0b32f1dd08f",
+        "publishedBaseCommit": "a4f2778cb40bbc9c147b95a4e48ef0b32f1dd08f",
+        "productionPatchFile": "autorouter-physical-port-capacity-production.patch",
+        "changedFiles": [
+          {
+            "relative": "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver.ts",
+            "beforeSha256": "f7f9254152a9639b2cf4dc5b915c10bf4856d014178a99ef9e8c26fcbd6894da",
+            "afterSha256": "ad7f2fffdfa0ee8e7f349c4ea4edd62dbae47793416e579ff96774c5832c5306"
+          },
+          {
+            "relative": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts",
+            "beforeSha256": "ae83c7785c32a12580c4eb8859a7de6d93acb7220d863d93aa29dd3e8d3a1456",
+            "afterSha256": "bbebe53bbc50203a08bfc641708d37c5ab2021aceeef975927569967d236c6ac"
+          },
+          {
+            "relative": "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver/types.ts",
+            "beforeSha256": "1c6aa58984ea5391e888ac56fb330a1cab79f5df3716f45faad06a50d72ae59d",
+            "afterSha256": "3cb278e20e9620e49a9a9fd64b0e0a50f08eb32e1ef1b3fff57aaf04c85709ff"
+          }
+        ],
+        "candidateCommit": "41e0570c85c46ba3ada1133ec5b4aa874873fb03",
+        "productionPatchSha256": "8e6ad047964903b8f71e97e225932959f47ed0dc3d8400b022e8431fc2daca30"
+      }
+    ]
+  },
+  "spans": [
+    {
+      "kind": "insert",
+      "name": "getSharedBoundaryLength",
+      "sourceRepository": "tscircuit/tiny-hypergraph",
+      "sourceRelative": "lib/DuplicateCongestedPortSolver.ts",
+      "startCharacter": 2094230,
+      "endCharacter": 2094230,
+      "startByte": 2094289,
+      "endByte": 2094289,
+      "originalText": "",
+      "replacementText": "getSharedBoundaryLength=(binding0,binding1)=>{const binding2=binding0=>{const binding1=binding0?.d?.bounds;if(iK(binding1)&&\"number\"==typeof binding1.minX&&\"number\"==typeof binding1.maxX&&\"number\"==typeof binding1.minY&&\"number\"==typeof binding1.maxY)return{minX:binding1.minX,maxX:binding1.maxX,minY:binding1.minY,maxY:binding1.maxY};const binding2=binding0?.d?.center,binding3=aK(binding0?.d?.width),binding4=aK(binding0?.d?.height);if(iK(binding2)){const binding0=aK(binding2.x),binding1=aK(binding2.y);return{minX:binding0-binding3/2,maxX:binding0+binding3/2,minY:binding1-binding4/2,maxY:binding1+binding4/2}}return{minX:0,maxX:0,minY:0,maxY:0}},binding3=binding2(binding1.get(binding0.region1Id)),binding4=binding2(binding1.get(binding0.region2Id)),binding5=1e-6;return Math.abs(binding3.maxX-binding4.minX)<=binding5||Math.abs(binding4.maxX-binding3.minX)<=binding5?Math.max(0,Math.min(binding3.maxY,binding4.maxY)-Math.max(binding3.minY,binding4.minY)):Math.abs(binding3.maxY-binding4.minY)<=binding5||Math.abs(binding4.maxY-binding3.minY)<=binding5?Math.max(0,Math.min(binding3.maxX,binding4.maxX)-Math.max(binding3.minX,binding4.minX)):0},",
+      "originalSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "replacementSha256": "9b7fdc96a02af9418f68821d547e68ebdceb14c96a0455e4d189846f656ddebb",
+      "compiledBaseEquivalent": null
+    },
+    {
+      "kind": "replace",
+      "name": "DuplicateCongestedPortSolver.duplicateCongestedPorts",
+      "sourceRepository": "tscircuit/tiny-hypergraph",
+      "sourceRelative": "lib/DuplicateCongestedPortSolver.ts",
+      "startCharacter": 2095219,
+      "endCharacter": 2096736,
+      "startByte": 2095278,
+      "endByte": 2096795,
+      "originalText": "duplicateCongestedPorts(e){const t=this.getDuplicatePortProximity();if(!(t>0))throw new Error(\"duplicatePortProximity must be greater than zero\");const{solvedRoutes:n,...o}=this.serializedHyperGraph,i=this.serializedHyperGraph.regions.map(e=>({...e,pointIds:[...e.pointIds],d:rK(e.d)})),r=this.serializedHyperGraph.ports.map(e=>({...e,d:rK(e.d)})),s=new Map(i.map(e=>[e.regionId,e])),a=new Map(r.map(e=>[e.portId,e])),c=(e=>{const t=new Map;for(const n of e){const e=lK(n),o=t.get(e);o?o.push(n):t.set(e,[n])}return t})(this.serializedHyperGraph.ports),l=new Set(r.map(e=>e.portId)),h=[];for(const[n,o]of[...e.entries()].sort(([e],[t])=>e.localeCompare(t))){if(o<=1)continue;const e=a.get(n);if(!e)continue;const i=o-1,d=c.get(lK(e));if(!d)throw new Error(`No boundary ports found for \"${n}\"`);const u=pK(e,d),p=mK(e,u,s),m=cK(e),g=[];for(let s=1;s<=i;s++){const a=gK(n,s,l),c=t*s/(i+1),h=sK(rK(e.d));h.x=m.x+p.x*c,h.y=m.y+p.y*c,h.duplicatedFromPortId=n,h.duplicateIndex=s,h.duplicatePortUseCount=o,h.duplicatePortProximity=t,h.repairReason=\"congested-port\",r.push({...e,portId:a,d:h}),g.push(a)}for(const t of[e.region1Id,e.region2Id]){const e=s.get(t);e&&fK(e.pointIds,n,g)}h.push({sourcePortId:n,duplicatePortIds:g,useCount:o})}return this.report={portUseCounts:Object.fromEntries([...e.entries()].sort()),duplicatedPorts:h,routeSearchIterations:this.report.routeSearchIterations},{...o,regions:i,ports:r,connections:void 0===this.serializedHyperGraph.connections?void 0:rK(this.serializedHyperGraph.connections)}}",
+      "replacementText": "duplicateCongestedPorts(binding0){const binding1=this.getDuplicatePortProximity();if(!(binding1>0))throw new Error(\"duplicatePortProximity must be greater than zero\");const binding2=this.options.minPortSpacing;if(void 0!==binding2&&(!Number.isFinite(binding2)||binding2<=0))throw new Error(\"minPortSpacing must be finite and greater than zero\");const{solvedRoutes:binding3,...binding4}=this.serializedHyperGraph,binding5=this.serializedHyperGraph.regions.map(binding0=>({...binding0,pointIds:[...binding0.pointIds],d:rK(binding0.d)})),binding6=this.serializedHyperGraph.ports.map(binding0=>({...binding0,d:rK(binding0.d)})),binding7=new Map(binding5.map(binding0=>[binding0.regionId,binding0])),binding8=new Map(binding6.map(binding0=>[binding0.portId,binding0])),binding9=(binding0=>{const binding1=new Map;for(const binding2 of binding0){const binding0=lK(binding2),binding3=binding1.get(binding0);binding3?binding3.push(binding2):binding1.set(binding0,[binding2])}return binding1})(this.serializedHyperGraph.ports),binding10=new Set(binding6.map(binding0=>binding0.portId)),binding11=[],binding12=new Map;for(const[binding3,binding4]of[...binding0.entries()].sort(([binding0],[binding1])=>binding0.localeCompare(binding1))){if(binding4<=1)continue;const binding0=binding8.get(binding3);if(!binding0)continue;let binding5=binding4-1;const binding13=binding9.get(lK(binding0));if(!binding13)throw new Error(`No boundary ports found for \"${binding3}\"`);if(void 0!==binding2){const binding1=aK(binding0.d?.z),binding3=`${lK(binding0)}:${binding1}`,binding4=binding12.get(binding3)??binding13.filter(binding0=>aK(binding0.d?.z)===binding1).length,binding6=Math.floor(getSharedBoundaryLength(binding0,binding7)/binding2);if(binding5=Math.min(binding5,Math.max(0,binding6-binding4)),0===binding5)continue;binding12.set(binding3,binding4+binding5)}const binding14=pK(binding0,binding13),binding15=mK(binding0,binding14,binding7),binding16=cK(binding0),binding17=[];for(let binding2=1;binding2<=binding5;binding2++){const binding7=gK(binding3,binding2,binding10),binding8=binding1*binding2/(binding5+1),binding9=sK(rK(binding0.d));binding9.x=binding16.x+binding15.x*binding8,binding9.y=binding16.y+binding15.y*binding8,binding9.duplicatedFromPortId=binding3,binding9.duplicateIndex=binding2,binding9.duplicatePortUseCount=binding4,binding9.duplicatePortProximity=binding1,binding9.repairReason=\"congested-port\",binding6.push({...binding0,portId:binding7,d:binding9}),binding17.push(binding7)}for(const binding1 of[binding0.region1Id,binding0.region2Id]){const binding0=binding7.get(binding1);binding0&&fK(binding0.pointIds,binding3,binding17)}binding11.push({sourcePortId:binding3,duplicatePortIds:binding17,useCount:binding4})}return this.report={portUseCounts:Object.fromEntries([...binding0.entries()].sort()),duplicatedPorts:binding11,routeSearchIterations:this.report.routeSearchIterations},{...binding4,regions:binding5,ports:binding6,connections:void 0===this.serializedHyperGraph.connections?void 0:rK(this.serializedHyperGraph.connections)}}",
+      "originalSha256": "ae8ca0a92a451819ae4781cabca8490c2b87bfe335858be8422d503ba4a8752f",
+      "replacementSha256": "dfd79afb5d554e507b76fc10e7b5e37995020cff3b9cd58e9bdc6c0916b394a1",
+      "compiledBaseEquivalent": true,
+      "baseCanonicalSha256": "8bae98286e14c81c4e0747edb07ed668e0caef32e860a70e40c8afc44ae65028",
+      "aliases": {
+        "cloneSerializableValue": "rK",
+        "getBoundaryKey": "lK",
+        "findNearestPortOnSameBoundary": "pK",
+        "getDuplicateDirection": "mK",
+        "getPortPoint": "cK",
+        "createDuplicatePortId": "gK",
+        "toObjectRecord": "sK",
+        "insertDuplicatePortIdsAfterSource": "fK"
+      }
+    },
+    {
+      "kind": "replace",
+      "name": "TinyHypergraphPortPointPathingSolver.constructor",
+      "sourceRepository": "tscircuit/tscircuit-autorouter",
+      "sourceRelative": "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver.ts",
+      "startCharacter": 2136766,
+      "endCharacter": 2141591,
+      "startByte": 2136825,
+      "endByte": 2141650,
+      "originalText": "constructor(e){super(),this.params=e;const t=(e=>e.map(e=>{const t=e.simpleRouteConnection;if(!t)throw new Error(`TinyHypergraphPortPointPathingSolver requires a SimpleRouteConnection for \"${e.connectionId}\"`);const n=e.mutuallyConnectedNetworkId;if(!n)throw new Error(`TinyHypergraphPortPointPathingSolver requires a net ID for \"${e.connectionId}\"`);return{...e,mutuallyConnectedNetworkId:n,simpleRouteConnection:t}}))(e.connections),n=e.flags.USE_SELECTIVE_RERIP_ROUTING?function(e,t){const n=new Map;for(const o of e){const e=t(o);n.set(e,(n.get(e)??0)+1)}return e.map((e,t)=>({connection:e,index:t})).sort((e,o)=>(n.get(t(o.connection))??0)-(n.get(t(e.connection))??0)||e.index-o.index).map(({connection:e})=>e)}(t,_0):t;this.rootConnectionNameByConnectionId=new Map(n.map(e=>[e.connectionId,e.simpleRouteConnection.__rootConnectionNames?.[0]])),this.simpleRouteConnectionById=new Map(n.map(e=>[e.connectionId,e.simpleRouteConnection]));const o=S0({...e,connections:n});this.originalPreloadedSegmentKeysByConnectionId=(e=>{const t=new Map;for(const n of e.connections??[])t0(n)&&t.set(n.connectionId,new Set);for(const n of e.regions)for(const e of n.assignments??[]){const o=t.get(e.connectionId);if(!o)continue;const[i,r]=[e.regionPort1Id,e.regionPort2Id].sort();o.add(JSON.stringify([n.regionId,i,r]))}return t})(o);const i=a0(o),r=i.preloadedPortCount>0,s=r&&!0===e.flags.USE_PARTIAL_RIP_ROUTING_WITH_PRELOADED_TRACES,a=s?Math.max(o.connections?.length??0,i.preloadedAssignmentCount):void 0;let c=o;const l=new xK(o,{duplicatePortProximity:.05,useSerializedPortPenalties:!1,routeSolveOptions:{...m0(e.minViaPadDiameter),USE_SPARSE_CANDIDATE_STORAGE:!1,ACCEPT_BEST_SOLUTION_ON_TIMEOUT:!0,GREEDY_FINAL_ROUTE_ITERS:4,MAX_ITERATIONS:Math.ceil(2e6*p0(e.effort)),RIP_THRESHOLD_RAMP_ATTEMPTS:0,STATIC_REACHABILITY_PRECHECK:!0}});if(l.solve(),l.failed)this.duplicateCongestedPortError=l.error??\"unknown error\";else{this.duplicateCongestedPortReport=l.report,c=l.getOutput();for(const e of c.ports){const t=l0(e.d);\"string\"==typeof t.duplicatedFromPortId&&(delete t._preloadedFixedNetIds,delete t._preloadedTracePortAssignments)}}this.duplicatedPortCount=this.duplicateCongestedPortReport?.duplicatedPorts.reduce((e,t)=>e+t.duplicatePortIds.length,0)??0;const h=((e,t,n,o=!0,i)=>{const r=e.connections?.length??0,s=i??r,a=d0.PARTIAL_RIP_MIN_ROUTE_COUNT??0,c=d0.PARTIAL_RIP_MAX_ROUTE_COUNT??Number.POSITIVE_INFINITY,l=o&&s>=a&&s<=c;return{serializedHyperGraph:e,createSectionMask:({topology:e})=>new Int8Array(e.portCount),solveGraphOptions:{...g0({effort:t,portCount:e.ports.length,minViaPadDiameter:n}),...l?{PARTIAL_RIP_MIN_ROUTE_COUNT:0,PARTIAL_RIP_MAX_ROUTE_COUNT:Number.POSITIVE_INFINITY,PARTIAL_RIP_COMPLEXITY_SELECTION_MIN_ROUTE_COUNT:0}:{PARTIAL_RIP_ENABLED:!1,OUTSIDE_IN_ROUTING:!1}},sectionSolverOptions:{...f0(t,n)}}})({...c,solvedRoutes:o.solvedRoutes},e.effort,e.minViaPadDiameter,!r||s,a);this.tinyPipelineSolver=new w0(h,!0===e.flags.USE_SELECTIVE_RERIP_ROUTING,!0===e.flags.USE_PREPARED_PORT_POINT_ROUTING),this.primaryTinyPipelineSolver=this.tinyPipelineSolver,n.length>=30&&n.length<=99&&(this.alternativeTinyPipelineInput={...h,solveGraphOptions:{...h.solveGraphOptions,TRACE_DENSITY_COST_FACTOR:1}}),this.MAX_ITERATIONS=y0(h)*(this.alternativeTinyPipelineInput?2:1),this.originalRegionById=new Map(e.graph.regions.map(e=>[e.regionId,e])),this.originalRegionIds=new Set(this.originalRegionById.keys()),this.inputNodeWithPortPoints=((e,t)=>{const n=new Map(t.regions.map(e=>[e.regionId,e])),o=new Map(t.ports.map(e=>[e.portId,e]));return e.graph.regions.map(e=>{const t=n.get(e.regionId),i=(t?.pointIds??e.ports.map(e=>e.d.portId)).map(e=>o.get(e)).filter(e=>e&&!l0(e.d)._tinyTerminal).map(e=>{const t=e,o=l0(t.d),i=n.get(t.region1Id),r=n.get(t.region2Id),s=Boolean(c0(i?.d)._offBoardConnectionId??c0(r?.d)._offBoardConnectionId);return{portPointId:t.portId,x:Number(o.x??0),y:Number(o.y??0),z:Number(o.z??0),prevPortPointId:\"string\"==typeof o.prevPortPointId?o.prevPortPointId:void 0,nextPortPointId:\"string\"==typeof o.nextPortPointId?o.nextPortPointId:void 0,connectionNodeIds:[t.region1Id,t.region2Id],distToCentermostPortOnZ:Number(o.distToCentermostPortOnZ??0),cramped:Boolean(o.cramped),connectsToOffBoardNode:s}});return{capacityMeshNodeId:e.d.capacityMeshNodeId,center:e.d.center,width:e.d.width,height:e.d.height,portPoints:i,availableZ:e.d.availableZ,_containsObstacle:e.d._containsObstacle,_containsTarget:e.d._containsTarget,_offBoardConnectionId:e.d._offBoardConnectionId,_offBoardConnectedCapacityMeshNodeIds:e.d._offBoardConnectedCapacityMeshNodeIds,_qfpRegionType:e.d._qfpRegionType,_isNarrowQfpPadGap:e.d._isNarrowQfpPadGap}})})(e,c),Object.defineProperty(this,\"stats\",{configurable:!0,enumerable:!0,get:()=>this.getStatsSnapshot(),set:e=>{this.statsSnapshot=e,this.statsSnapshotDirty=!1}})}",
+      "replacementText": "constructor(binding0){super(),this.params=binding0;const binding1=(binding0=>binding0.map(binding0=>{const binding1=binding0.simpleRouteConnection;if(!binding1)throw new Error(`TinyHypergraphPortPointPathingSolver requires a SimpleRouteConnection for \"${binding0.connectionId}\"`);const binding2=binding0.mutuallyConnectedNetworkId;if(!binding2)throw new Error(`TinyHypergraphPortPointPathingSolver requires a net ID for \"${binding0.connectionId}\"`);return{...binding0,mutuallyConnectedNetworkId:binding2,simpleRouteConnection:binding1}}))(binding0.connections),binding2=binding0.flags.USE_SELECTIVE_RERIP_ROUTING?function(binding0,binding1){const binding2=new Map;for(const binding3 of binding0){const binding0=binding1(binding3);binding2.set(binding0,(binding2.get(binding0)??0)+1)}return binding0.map((binding0,binding1)=>({connection:binding0,index:binding1})).sort((binding0,binding3)=>(binding2.get(binding1(binding3.connection))??0)-(binding2.get(binding1(binding0.connection))??0)||binding0.index-binding3.index).map(({connection:binding0})=>binding0)}(binding1,_0):binding1;this.rootConnectionNameByConnectionId=new Map(binding2.map(binding0=>[binding0.connectionId,binding0.simpleRouteConnection.__rootConnectionNames?.[0]])),this.simpleRouteConnectionById=new Map(binding2.map(binding0=>[binding0.connectionId,binding0.simpleRouteConnection]));const binding3=S0({...binding0,connections:binding2});this.originalPreloadedSegmentKeysByConnectionId=(binding0=>{const binding1=new Map;for(const binding2 of binding0.connections??[])t0(binding2)&&binding1.set(binding2.connectionId,new Set);for(const binding2 of binding0.regions)for(const binding0 of binding2.assignments??[]){const binding3=binding1.get(binding0.connectionId);if(!binding3)continue;const[binding4,binding5]=[binding0.regionPort1Id,binding0.regionPort2Id].sort();binding3.add(JSON.stringify([binding2.regionId,binding4,binding5]))}return binding1})(binding3);const binding4=a0(binding3),binding5=binding4.preloadedPortCount>0,binding6=binding5&&!0===binding0.flags.USE_PARTIAL_RIP_ROUTING_WITH_PRELOADED_TRACES,binding7=binding6?Math.max(binding3.connections?.length??0,binding4.preloadedAssignmentCount):void 0;let binding8=binding3;const binding9=new xK(binding3,{duplicatePortProximity:.05,minPortSpacing:binding0.minPortSpacing,useSerializedPortPenalties:!1,routeSolveOptions:{...m0(binding0.minViaPadDiameter),USE_SPARSE_CANDIDATE_STORAGE:!1,ACCEPT_BEST_SOLUTION_ON_TIMEOUT:!0,GREEDY_FINAL_ROUTE_ITERS:4,MAX_ITERATIONS:Math.ceil(2e6*p0(binding0.effort)),RIP_THRESHOLD_RAMP_ATTEMPTS:0,STATIC_REACHABILITY_PRECHECK:!0}});if(binding9.solve(),binding9.failed)this.duplicateCongestedPortError=binding9.error??\"unknown error\";else{this.duplicateCongestedPortReport=binding9.report,binding8=binding9.getOutput();for(const binding0 of binding8.ports){const binding1=l0(binding0.d);\"string\"==typeof binding1.duplicatedFromPortId&&(delete binding1._preloadedFixedNetIds,delete binding1._preloadedTracePortAssignments)}}this.duplicatedPortCount=this.duplicateCongestedPortReport?.duplicatedPorts.reduce((binding0,binding1)=>binding0+binding1.duplicatePortIds.length,0)??0;const binding10=((binding0,binding1,binding2,binding3=!0,binding4)=>{const binding5=binding0.connections?.length??0,binding6=binding4??binding5,binding7=d0.PARTIAL_RIP_MIN_ROUTE_COUNT??0,binding8=d0.PARTIAL_RIP_MAX_ROUTE_COUNT??Number.POSITIVE_INFINITY,binding9=binding3&&binding6>=binding7&&binding6<=binding8;return{serializedHyperGraph:binding0,createSectionMask:({topology:binding0})=>new Int8Array(binding0.portCount),solveGraphOptions:{...g0({effort:binding1,portCount:binding0.ports.length,minViaPadDiameter:binding2}),...binding9?{PARTIAL_RIP_MIN_ROUTE_COUNT:0,PARTIAL_RIP_MAX_ROUTE_COUNT:Number.POSITIVE_INFINITY,PARTIAL_RIP_COMPLEXITY_SELECTION_MIN_ROUTE_COUNT:0}:{PARTIAL_RIP_ENABLED:!1,OUTSIDE_IN_ROUTING:!1}},sectionSolverOptions:{...f0(binding1,binding2)}}})({...binding8,solvedRoutes:binding3.solvedRoutes},binding0.effort,binding0.minViaPadDiameter,!binding5||binding6,binding7);this.tinyPipelineSolver=new w0(binding10,!0===binding0.flags.USE_SELECTIVE_RERIP_ROUTING,!0===binding0.flags.USE_PREPARED_PORT_POINT_ROUTING),this.primaryTinyPipelineSolver=this.tinyPipelineSolver,binding2.length>=30&&binding2.length<=99&&(this.alternativeTinyPipelineInput={...binding10,solveGraphOptions:{...binding10.solveGraphOptions,TRACE_DENSITY_COST_FACTOR:1}}),this.MAX_ITERATIONS=y0(binding10)*(this.alternativeTinyPipelineInput?2:1),this.originalRegionById=new Map(binding0.graph.regions.map(binding0=>[binding0.regionId,binding0])),this.originalRegionIds=new Set(this.originalRegionById.keys()),this.inputNodeWithPortPoints=((binding0,binding1)=>{const binding2=new Map(binding1.regions.map(binding0=>[binding0.regionId,binding0])),binding3=new Map(binding1.ports.map(binding0=>[binding0.portId,binding0]));return binding0.graph.regions.map(binding0=>{const binding1=binding2.get(binding0.regionId),binding4=(binding1?.pointIds??binding0.ports.map(binding0=>binding0.d.portId)).map(binding0=>binding3.get(binding0)).filter(binding0=>binding0&&!l0(binding0.d)._tinyTerminal).map(binding0=>{const binding1=binding0,binding3=l0(binding1.d),binding4=binding2.get(binding1.region1Id),binding5=binding2.get(binding1.region2Id),binding6=Boolean(c0(binding4?.d)._offBoardConnectionId??c0(binding5?.d)._offBoardConnectionId);return{portPointId:binding1.portId,x:Number(binding3.x??0),y:Number(binding3.y??0),z:Number(binding3.z??0),prevPortPointId:\"string\"==typeof binding3.prevPortPointId?binding3.prevPortPointId:void 0,nextPortPointId:\"string\"==typeof binding3.nextPortPointId?binding3.nextPortPointId:void 0,connectionNodeIds:[binding1.region1Id,binding1.region2Id],distToCentermostPortOnZ:Number(binding3.distToCentermostPortOnZ??0),cramped:Boolean(binding3.cramped),connectsToOffBoardNode:binding6}});return{capacityMeshNodeId:binding0.d.capacityMeshNodeId,center:binding0.d.center,width:binding0.d.width,height:binding0.d.height,portPoints:binding4,availableZ:binding0.d.availableZ,_containsObstacle:binding0.d._containsObstacle,_containsTarget:binding0.d._containsTarget,_offBoardConnectionId:binding0.d._offBoardConnectionId,_offBoardConnectedCapacityMeshNodeIds:binding0.d._offBoardConnectedCapacityMeshNodeIds,_qfpRegionType:binding0.d._qfpRegionType,_isNarrowQfpPadGap:binding0.d._isNarrowQfpPadGap}})})(binding0,binding8),Object.defineProperty(this,\"stats\",{configurable:!0,enumerable:!0,get:()=>this.getStatsSnapshot(),set:binding0=>{this.statsSnapshot=binding0,this.statsSnapshotDirty=!1}})}",
+      "originalSha256": "aa30f6833c626d307d473d0d68f8bc49cb1211395a5572f186f0e488fca4f9d9",
+      "replacementSha256": "a75627ad3637af030e4abd5da4acf6d446d6e5fcf4fca49376b9a320f313ce84",
+      "compiledBaseEquivalent": true,
+      "baseCanonicalSha256": "36be7d832c38d50830471ad37c20934b9f3ccf7cb9692660495ffe96b77e1ee1",
+      "aliases": {
+        "getTinyRouteConnectionNetId": "_0",
+        "buildSerializedTinyGraph": "S0",
+        "hasPreloadedTraceSectionMetadata": "t0",
+        "getSerializedPreloadedTraceStats": "a0",
+        "DuplicateCongestedPortSolver": "xK",
+        "getTinyViaSizeOptions": "m0",
+        "getEffortScale": "p0",
+        "asTinyPortMetadata": "l0",
+        "TINY_SOLVE_GRAPH_BASE_OPTIONS": "d0",
+        "getTinyHyperGraphSolveGraphOptions": "g0",
+        "getTinyHyperGraphSectionSolverOptions": "f0",
+        "TinyHyperGraphSectionPipelineWithTerminalNetIds": "w0",
+        "getTinyHyperGraphPipelineMaxIterations": "y0",
+        "asTinyRegionMetadata": "c0"
+      }
+    },
+    {
+      "kind": "replace",
+      "name": "AutoroutingPipelineSolver9_PreloadedTraceGraph.pipelineDef.portPointPathingSolver",
+      "sourceRepository": "tscircuit/tscircuit-autorouter",
+      "sourceRelative": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts",
+      "startCharacter": 3075219,
+      "endCharacter": 3076454,
+      "startByte": 3075278,
+      "endByte": 3076513,
+      "originalText": "e=>{const t=e.sharedEdgeSegmentsWithNecessaryCrampedPortPoints??e.necessaryCrampedPortPointSolver?.getOutput()??e.availableSegmentPointSolver.getOutput(),{graph:n,connections:o}=vZ({capacityMeshNodes:e.capacityNodes,layerCount:e.srj.layerCount,connectivityMap:e.connMap,segmentPortPoints:t.flatMap(e=>e.portPoints),simpleRouteJsonConnections:e.srjWithPointPairs.connections,existingViaInPadByPcbPortId:Goe(e.srjWithPointPairs)});return[{graph:n,connections:o,layerCount:e.srj.layerCount,effort:Math.min(1,e.effort),preserveTerminalPcbPortIds:!0,captureSearchDebug:e.opts.captureSearchDebug??!1,minViaPadDiameter:e.viaDiameter,flags:{FORCE_CENTER_FIRST:!0,RIPPING_ENABLED:!0,USE_SELECTIVE_RERIP_ROUTING:!0,USE_PREPARED_PORT_POINT_ROUTING:!0,USE_PARTIAL_RIP_ROUTING_WITH_PRELOADED_TRACES:!0},weights:{SHUFFLE_SEED:0,MEMORY_PF_FACTOR:4,CENTER_OFFSET_DIST_PENALTY_FACTOR:0,CENTER_OFFSET_FOCUS_SHIFT:0,NODE_PF_FACTOR:0,LAYER_CHANGE_COST:0,RIPPING_PF_COST:0,NODE_PF_MAX_PENALTY:100,BASE_CANDIDATE_COST:.6,MAX_ITERATIONS_PER_PATH:0,RANDOM_WALK_DISTANCE:0,START_RIPPING_PF_THRESHOLD:.3,END_RIPPING_PF_THRESHOLD:1,MAX_RIPS:1e3,RANDOM_RIP_FRACTION:.3,STRAIGHT_LINE_DEVIATION_PENALTY_FACTOR:4,GREEDY_MULTIPLIER:.7,MIN_ALLOWED_BOARD_SCORE:-1e4}}]}",
+      "replacementText": "binding0=>{const binding1=binding0.sharedEdgeSegmentsWithNecessaryCrampedPortPoints??binding0.necessaryCrampedPortPointSolver?.getOutput()??binding0.availableSegmentPointSolver.getOutput(),{graph:binding2,connections:binding3}=vZ({capacityMeshNodes:binding0.capacityNodes,layerCount:binding0.srj.layerCount,connectivityMap:binding0.connMap,segmentPortPoints:binding1.flatMap(binding0=>binding0.portPoints),simpleRouteJsonConnections:binding0.srjWithPointPairs.connections,existingViaInPadByPcbPortId:Goe(binding0.srjWithPointPairs)});return[{graph:binding2,connections:binding3,layerCount:binding0.srj.layerCount,effort:Math.min(1,binding0.effort),preserveTerminalPcbPortIds:!0,captureSearchDebug:binding0.opts.captureSearchDebug??!1,minViaPadDiameter:binding0.viaDiameter,minPortSpacing:binding0.minTraceWidth+(binding0.srj.minTraceToPadEdgeClearance??binding0.srj.defaultObstacleMargin??.15),flags:{FORCE_CENTER_FIRST:!0,RIPPING_ENABLED:!0,USE_SELECTIVE_RERIP_ROUTING:!0,USE_PREPARED_PORT_POINT_ROUTING:!0,USE_PARTIAL_RIP_ROUTING_WITH_PRELOADED_TRACES:!0},weights:{SHUFFLE_SEED:0,MEMORY_PF_FACTOR:4,CENTER_OFFSET_DIST_PENALTY_FACTOR:0,CENTER_OFFSET_FOCUS_SHIFT:0,NODE_PF_FACTOR:0,LAYER_CHANGE_COST:0,RIPPING_PF_COST:0,NODE_PF_MAX_PENALTY:100,BASE_CANDIDATE_COST:.6,MAX_ITERATIONS_PER_PATH:0,RANDOM_WALK_DISTANCE:0,START_RIPPING_PF_THRESHOLD:.3,END_RIPPING_PF_THRESHOLD:1,MAX_RIPS:1e3,RANDOM_RIP_FRACTION:.3,STRAIGHT_LINE_DEVIATION_PENALTY_FACTOR:4,GREEDY_MULTIPLIER:.7,MIN_ALLOWED_BOARD_SCORE:-1e4}}]}",
+      "originalSha256": "5fb975da88191c554c1d3cd4ab8f697674a174315a344e300eb9e2f4f7c7aa7f",
+      "replacementSha256": "2e33fe22191ed213432d5b693c2c1f02ddafc964a6d6c28012beb51bb2488366",
+      "compiledBaseEquivalent": true,
+      "baseCanonicalSha256": "50b3c16cd6527bd2a0a1f60160400e4743e04c11b147d78b9c5cc1c0281a5273",
+      "aliases": {
+        "buildHyperGraph": "vZ",
+        "getExistingViaInPadByPcbPortId": "Goe"
+      }
+    }
+  ],
+  "unchangedSegments": [
+    {
+      "startByte": 0,
+      "endByte": 2094289,
+      "candidateStartByte": 0,
+      "candidateEndByte": 2094289,
+      "sha256": "c360c73004c4e2de6c2a95184ea869271b1dd7b877b6c557b26e253efb017ec8"
+    },
+    {
+      "startByte": 2094289,
+      "endByte": 2095278,
+      "candidateStartByte": 2095438,
+      "candidateEndByte": 2096427,
+      "sha256": "9190b909acf9a1e1980212b8904b400118e675ea98e2bc3489de9a9ba06d554a"
+    },
+    {
+      "startByte": 2096795,
+      "endByte": 2136825,
+      "candidateStartByte": 2099471,
+      "candidateEndByte": 2139501,
+      "sha256": "4c494167a3c8374ac680de87138b2d106aca335f229c1f658b75901e80d11fa0"
+    },
+    {
+      "startByte": 2141650,
+      "endByte": 3075278,
+      "candidateStartByte": 2146043,
+      "candidateEndByte": 3079671,
+      "sha256": "2d378a0ab5a309e21edb5888c4a7e6c6ddc9f42d193c85d17d225fa116c1bd95"
+    },
+    {
+      "startByte": 3076513,
+      "endByte": 3344971,
+      "candidateStartByte": 3081174,
+      "candidateEndByte": 3349632,
+      "sha256": "7e157ef547d94ff38e494c2265d5e4b7da01e1b52c53af82ab80dc10a9a84fd8"
+    }
+  ],
+  "qualification": {
+    "allOutsideBytesUnchanged": true,
+    "unrelatedSourceRuntimeUnchanged": true,
+    "compiledBaseEquivalent": true,
+    "sourceMapGeneratedOffsetsUsed": false,
+    "typeErasure": "TypeScript5.9.3 transpileModule targeting ESNext; no Bun syntax optimization",
+    "canonicalizer": "Terser5.51.2 three compression passes and deterministic lexical names; differing free bindings mapped bijectively; properties and local bindings must match exactly",
+    "sourceAliases": [
+      {
+        "relative": "lib/DuplicateCongestedPortSolver.ts",
+        "aliases": {
+          "cloneSerializableValue": "rK",
+          "getBoundaryKey": "lK",
+          "findNearestPortOnSameBoundary": "pK",
+          "getDuplicateDirection": "mK",
+          "getPortPoint": "cK",
+          "createDuplicatePortId": "gK",
+          "toObjectRecord": "sK",
+          "insertDuplicatePortIdsAfterSource": "fK",
+          "normalize": "dK",
+          "getRegionCenter": "uK",
+          "isRecord": "iK",
+          "getNumber": "aK",
+          "getSharedBoundaryLength": "getSharedBoundaryLength"
+        }
+      },
+      {
+        "relative": "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver.ts",
+        "aliases": {
+          "getTinyRouteConnectionNetId": "_0",
+          "buildSerializedTinyGraph": "S0",
+          "hasPreloadedTraceSectionMetadata": "t0",
+          "getSerializedPreloadedTraceStats": "a0",
+          "DuplicateCongestedPortSolver": "xK",
+          "getTinyViaSizeOptions": "m0",
+          "getEffortScale": "p0",
+          "asTinyPortMetadata": "l0",
+          "TINY_SOLVE_GRAPH_BASE_OPTIONS": "d0",
+          "getTinyHyperGraphSolveGraphOptions": "g0",
+          "getTinyHyperGraphSectionSolverOptions": "f0",
+          "TinyHyperGraphSectionPipelineWithTerminalNetIds": "w0",
+          "getTinyHyperGraphPipelineMaxIterations": "y0",
+          "asTinyRegionMetadata": "c0"
+        }
+      },
+      {
+        "relative": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts",
+        "aliases": {
+          "buildHyperGraph": "vZ",
+          "getExistingViaInPadByPcbPortId": "Goe"
+        }
+      }
+    ],
+    "unchangedHelperQualification": [
+      {
+        "name": "getDuplicateDirection",
+        "publishedName": "mK",
+        "compiledBaseEquivalent": true,
+        "sourceSha256": "30f9f6bf900ac1f2d2d92f32fa1cce3cb531b3cec08f70ff90d3d6f31b99b29e",
+        "sourceDependencies": [
+          "getFallbackBoundaryDirection"
+        ],
+        "aliases": {
+          "getPortPoint": "cK",
+          "normalize": "dK",
+          "getRegionCenter": "uK"
+        },
+        "baseCanonicalSha256": "305af398cb5f736e9ff6c1d1edb4babab9f7db8e41f24edc9b90758daa05108c",
+        "publishedCanonicalSha256": "46334e9b5d14041e9cb4054c9629b01d3d22fefa8d3b9c51f1e720e5860f2377"
+      },
+      {
+        "name": "getRegionCenter",
+        "publishedName": "uK",
+        "compiledBaseEquivalent": true,
+        "sourceSha256": "935a589e673327b073abeea30511b514e5bb0060d5f7e2ab6ad2006728619ec4",
+        "sourceDependencies": [
+          "getRegionBounds"
+        ],
+        "aliases": {
+          "isRecord": "iK",
+          "getNumber": "aK"
+        },
+        "baseCanonicalSha256": "93b98c9fb957ab129579f2385a7c9f4d8146ffdb26f32f2a05f1b5710a98f39d",
+        "publishedCanonicalSha256": "2f21921cf26a0564f85bb808ccec562d24b238c2ed06b9dc87d1941133a32409"
+      }
+    ],
+    "unchangedImportedHelper": {
+      "name": "orderConnectionsByNetCardinality",
+      "relative": "lib/selective-rerip-tiny-hyper-graph-solver.ts",
+      "sourceBaseCommit": "f1fe8edcfb3dfde8fd644d09d81bad18743144b3",
+      "sourceMapIndex": 1248,
+      "sourceFileSha256": "0cb3bbc6219861b71e1cbd6a46f3d9de89d31f7803953c727b2780f1ef204da5",
+      "declarationSha256": "050354c93f3db691a828fb5c3f88956e0dc2bbd69d5351a29bcb2ed9afff9d8e",
+      "qualification": "Included unchanged in complete adapter constructor baseline equivalence"
+    },
+    "localizedUnchangedBoundsReader": {
+      "name": "getRegionBounds",
+      "sourceSha256": "d84640ec72f910cf7d703753b7136b5f09666d7202649a61ae5c8bedfec6d1dc",
+      "scope": "Pure unchanged bounds reader is declared inside the inserted shared-boundary helper; no global state"
+    },
+    "bun": "1.4.3",
+    "typescript": "5.9.3",
+    "terser": "5.51.2"
+  },
+  "sourceHandoffSha256": "143b415b46934a331c74c9cc869b37f74c88f1e1ab18caa6aa3cc5b130270ff1",
+  "mapperSha256": "f1e811349a59432599618ec2ad38b6fbecc9dfb4a3660563882ef0f9e2065bd3",
+  "moduleImported": false,
+  "nativeRoutingExecuted": false
+}

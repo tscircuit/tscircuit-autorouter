@@ -1,0 +1,109 @@
+diff --git a/lib/DuplicateCongestedPortSolver.ts b/lib/DuplicateCongestedPortSolver.ts
+index 7295967..0b20bf5 100644
+--- a/lib/DuplicateCongestedPortSolver.ts
++++ b/lib/DuplicateCongestedPortSolver.ts
+@@ -11,11 +11,15 @@ import type { PortId, RouteId } from "./types"
+ 
+ type SerializedPort = SerializedHyperGraph["ports"][number]
+ type SerializedRegion = SerializedHyperGraph["regions"][number]
++type SerializedRegionId = SerializedRegion["regionId"]
++type LayerBoundaryKey = string
+ 
+ export const DUPLICATE_PORT_PROXIMITY = 0.05
+ 
+ export interface DuplicateCongestedPortSolverOptions {
+   duplicatePortProximity?: number
++  /** Minimum center-to-center spacing, including trace width and clearance. */
++  minPortSpacing?: number
+   routeSolveOptions?: TinyHyperGraphSolverOptions
+   /** Ignore serialized port penalties while estimating shared-port use. */
+   useSerializedPortPenalties?: boolean
+@@ -171,6 +175,34 @@ const getRegionCenter = (region: SerializedRegion | undefined): Point => {
+   }
+ }
+ 
++const getSharedBoundaryLength = (
++  sourcePort: SerializedPort,
++  regionById: Map<SerializedRegionId, SerializedRegion>,
++): number => {
++  const first = getRegionBounds(regionById.get(sourcePort.region1Id))
++  const second = getRegionBounds(regionById.get(sourcePort.region2Id))
++  const tolerance = 1e-6
++  if (
++    Math.abs(first.maxX - second.minX) <= tolerance ||
++    Math.abs(second.maxX - first.minX) <= tolerance
++  ) {
++    return Math.max(
++      0,
++      Math.min(first.maxY, second.maxY) - Math.max(first.minY, second.minY),
++    )
++  }
++  if (
++    Math.abs(first.maxY - second.minY) <= tolerance ||
++    Math.abs(second.maxY - first.minY) <= tolerance
++  ) {
++    return Math.max(
++      0,
++      Math.min(first.maxX, second.maxX) - Math.max(first.minX, second.minX),
++    )
++  }
++  return 0
++}
++
+ const findNearestPortOnSameBoundary = (
+   sourcePort: SerializedPort,
+   boundaryPorts: SerializedPort[],
+@@ -394,6 +426,13 @@ export class DuplicateCongestedPortSolver extends BaseSolver {
+     if (!(duplicatePortProximity > 0)) {
+       throw new Error("duplicatePortProximity must be greater than zero")
+     }
++    const minPortSpacing = this.options.minPortSpacing
++    if (
++      minPortSpacing !== undefined &&
++      (!Number.isFinite(minPortSpacing) || minPortSpacing <= 0)
++    ) {
++      throw new Error("minPortSpacing must be finite and greater than zero")
++    }
+ 
+     const { solvedRoutes: _solvedRoutes, ...restHyperGraph } =
+       this.serializedHyperGraph
+@@ -421,6 +460,7 @@ export class DuplicateCongestedPortSolver extends BaseSolver {
+     )
+     const usedPortIds = new Set(ports.map((port) => port.portId))
+     const duplicatedPorts: DuplicatedPortSummary[] = []
++    const portCountByLayerBoundary = new Map<LayerBoundaryKey, number>()
+ 
+     for (const [sourcePortId, useCount] of [...portUseCounts.entries()].sort(
+       ([leftPortId], [rightPortId]) => leftPortId.localeCompare(rightPortId),
+@@ -430,11 +470,30 @@ export class DuplicateCongestedPortSolver extends BaseSolver {
+       const sourcePort = sourcePortById.get(sourcePortId)
+       if (!sourcePort) continue
+ 
+-      const duplicateCount = useCount - 1
++      let duplicateCount = useCount - 1
+       const boundaryPorts = portsByBoundary.get(getBoundaryKey(sourcePort))
+       if (!boundaryPorts) {
+         throw new Error(`No boundary ports found for "${sourcePortId}"`)
+       }
++      if (minPortSpacing !== undefined) {
++        const z = getNumber(sourcePort.d?.z)
++        const layerBoundaryKey: LayerBoundaryKey = `${getBoundaryKey(sourcePort)}:${z}`
++        const existingPortCount =
++          portCountByLayerBoundary.get(layerBoundaryKey) ??
++          boundaryPorts.filter((port) => getNumber(port.d?.z) === z).length
++        const capacity = Math.floor(
++          getSharedBoundaryLength(sourcePort, regionById) / minPortSpacing,
++        )
++        duplicateCount = Math.min(
++          duplicateCount,
++          Math.max(0, capacity - existingPortCount),
++        )
++        if (duplicateCount === 0) continue
++        portCountByLayerBoundary.set(
++          layerBoundaryKey,
++          existingPortCount + duplicateCount,
++        )
++      }
+       const nearestBoundaryPort = findNearestPortOnSameBoundary(
+         sourcePort,
+         boundaryPorts,
