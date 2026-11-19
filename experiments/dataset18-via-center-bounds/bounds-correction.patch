@@ -1,0 +1,58 @@
+diff --git a/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/markNodesWithoutViaSite.ts b/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/markNodesWithoutViaSite.ts
+index 48ef7aace..967fac772 100644
+--- a/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/markNodesWithoutViaSite.ts
++++ b/lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/markNodesWithoutViaSite.ts
+@@ -115,20 +115,20 @@ const hasViaSiteInCell = (
+ }
+ 
+ /**
+- * Mark free-space nodes that can hold a via but have no legal place for one,
++ * Mark free-space nodes that have no legal via center,
+  * so path planning prices a layer change there far above its area cost.
+  *
+  * Global free-space nodes may border copper directly, and the high-density
+- * solvers keep a via inside its node. A node therefore offers a via only where
++ * solvers keep a via center inside its node. A node therefore offers a via where
+  * a via center inside it keeps the via-to-pad clearance from the copper of nets
+  * this request does not route, such as pads and traces fixed by earlier
+  * phases, on the layers the node offers. Copper of nets it routes is skipped:
+  * their own vias may sit beside it. Copper on layers the node does not offer,
+  * such as a plane, is left to the stages that already handle vias through it.
+  * Component topology nodes, which apply their own via rules, are left
+- * unchanged. So are nodes narrower than a via: marking them too (about 2,000
+- * nodes on H616) raised H616's full-board DRC findings from 43 to 113, and
+- * A13's from 7 to 10. Board coordinates in mm, +X right, +Y up.
++ * unchanged. A via's copper may extend beyond the artificial node boundary,
++ * so narrow nodes are checked against the same physical obstacle clearance.
++ * Board coordinates in mm, +X right, +Y up.
+  */
+ export const markNodesWithoutViaSite = ({
+   nodes,
+@@ -160,10 +160,10 @@ export const markNodesWithoutViaSite = ({
+     )
+       return node
+     const centers: Bounds = {
+-      minX: node.center.x - node.width / 2 + viaDiameter / 2,
+-      maxX: node.center.x + node.width / 2 - viaDiameter / 2,
+-      minY: node.center.y - node.height / 2 + viaDiameter / 2,
+-      maxY: node.center.y + node.height / 2 - viaDiameter / 2,
++      minX: node.center.x - node.width / 2,
++      maxX: node.center.x + node.width / 2,
++      minY: node.center.y - node.height / 2,
++      maxY: node.center.y + node.height / 2,
+     }
+     if (centers.minX > centers.maxX || centers.minY > centers.maxY) return node
+     const nearby = hardObstacles.filter(
+diff --git a/lib/types/capacity-mesh-types.ts b/lib/types/capacity-mesh-types.ts
+index 66c2e6434..900120701 100644
+--- a/lib/types/capacity-mesh-types.ts
++++ b/lib/types/capacity-mesh-types.ts
+@@ -34,7 +34,7 @@ export interface CapacityMeshNode {
+   _soicRegionType?: "center" | "pad" | "pad-gap"
+   _isComponentTopologyNode?: boolean
+   _connectedTo?: string[]
+-  /** The node can hold a via, but every via center inside it is closer than the
++  /** Every via center inside the node places via copper closer than the
+    * via-to-pad clearance to copper its vias cannot touch. */
+   _lacksViaSite?: true
+ 

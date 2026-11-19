@@ -1,0 +1,178 @@
+name: Dataset18 via-center bounds source comparison
+on:
+  push:
+    branches: [bench/dataset18-via-center-bounds-20261119]
+permissions:
+  contents: read
+jobs:
+  compare:
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 360
+    env:
+      BENCHMARK_TASK_TIMEOUT_PER_EFFORT_MS: ${{ vars.BENCHMARK_TASK_TIMEOUT_PER_EFFORT_MS || vars.BENCHMARK_TASK_TIMEOUT_MS || '60000' }}
+      BENCHMARK_HEARTBEAT_INTERVAL_MS: ${{ vars.BENCHMARK_HEARTBEAT_INTERVAL_MS || '30000' }}
+      BENCHMARK_TERMINATE_TIMEOUT_MS: ${{ vars.BENCHMARK_TERMINATE_TIMEOUT_MS || '1000' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: source-controller
+          persist-credentials: false
+          sparse-checkout: |
+            experiments/dataset18-via-center-bounds
+            .github/workflows/dataset18-via-center-bounds.yml
+      - name: Require the held plan to be released
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          plan = json.loads(Path('source-controller/experiments/dataset18-via-center-bounds/plan.json').read_text())
+          assert plan['qualificationReady'] is True, 'HELD: Dataset18 comparison is not released'
+          PY
+      - uses: actions/checkout@v4
+        with:
+          ref: a4f2778cb40bbc9c147b95a4e48ef0b32f1dd08f
+          path: same-machine-base
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: a4f2778cb40bbc9c147b95a4e48ef0b32f1dd08f
+          path: same-machine-pr
+          persist-credentials: false
+      - name: Apply the shared feature and isolated bounds correction
+        run: |
+          python3 - <<'PYTHON'
+          import hashlib, json, shutil, subprocess
+          from pathlib import Path
+          controller = Path('source-controller/experiments/dataset18-via-center-bounds')
+          plan = json.loads((controller / 'plan.json').read_text())
+          sha = lambda data: hashlib.sha256(data).hexdigest()
+          feature = controller / 'feature-base.patch'
+          correction = controller / 'bounds-correction.patch'
+          assert sha(feature.read_bytes()) == plan['featurePatchSha256']
+          assert sha(correction.read_bytes()) == plan['correctionPatchSha256']
+          for lane in ['same-machine-base', 'same-machine-pr']:
+              assert subprocess.check_output(['git', '-C', lane, 'rev-parse', 'HEAD'], text=True).strip() == plan['publishedCommit']
+              assert subprocess.check_output(['git', '-C', lane, 'status', '--porcelain'], text=True) == ''
+              assert sha((Path(lane) / 'package.json').read_bytes()) == plan['publishedPackageJsonSha256']
+              assert sha((Path(lane) / plan['benchmarkHelper']).read_bytes()) == plan['benchmarkHelperSha256']
+              for entry in plan['changedFiles']:
+                  path = Path(lane) / entry['relative']
+                  if entry['publishedSha256'] is None:
+                      assert not path.exists()
+                  else:
+                      assert sha(path.read_bytes()) == entry['publishedSha256']
+              subprocess.run(['git', '-C', lane, 'apply', '--index', '--check', str(feature.resolve())], check=True)
+              subprocess.run(['git', '-C', lane, 'apply', '--index', str(feature.resolve())], check=True)
+              for entry in plan['changedFiles']:
+                  assert sha((Path(lane) / entry['relative']).read_bytes()) == entry['baseSha256']
+          subprocess.run(['git', '-C', 'same-machine-pr', 'apply', '--index', '--check', str(correction.resolve())], check=True)
+          subprocess.run(['git', '-C', 'same-machine-pr', 'apply', '--index', str(correction.resolve())], check=True)
+          for lane, key in [('same-machine-base', 'baseSha256'), ('same-machine-pr', 'candidateSha256')]:
+              changed = subprocess.check_output(['git', '-C', lane, 'diff', 'HEAD', '--name-only'], text=True).splitlines()
+              assert sorted(changed) == sorted(entry['relative'] for entry in plan['changedFiles'])
+              for entry in plan['changedFiles']:
+                  assert sha((Path(lane) / entry['relative']).read_bytes()) == entry[key]
+              package = json.loads((Path(lane) / 'package.json').read_text())
+              assert package['version'] == plan['packageVersion']
+              assert package['devDependencies']['dataset-srj18'] == plan['datasetDependency']
+              assert package['devDependencies']['tiny-hypergraph'] == plan['tiny']['dependency']
+          evidence = Path('dataset18-source-proof')
+          evidence.mkdir()
+          for name in ['plan.json', 'feature-base.patch', 'bounds-correction.patch']:
+              shutil.copyfile(controller / name, evidence / name)
+          (evidence / 'source-proof.json').write_text(json.dumps({'publishedCommit': plan['publishedCommit'], 'featureBaseCommit': plan['featureBaseCommit'], 'candidateCommit': plan['candidateCommit'], 'featurePatchSha256': plan['featurePatchSha256'], 'correctionPatchSha256': plan['correctionPatchSha256'], 'changedFiles': plan['changedFiles'], 'benchmarkHelperSha256': plan['benchmarkHelperSha256'], 'normalDirectSourceImports': True, 'sameTinyPinInBothLanes': True}, indent=2) + '\n')
+          PYTHON
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - name: Resolve the base dependency graph once
+        working-directory: same-machine-base
+        run: |
+          bun install --save --save-text-lockfile
+          test -s bun.lock
+      - name: Reuse the base lock for the candidate
+        run: |
+          test "$(bun --version)" = 1.4.2
+          cp same-machine-base/bun.lock same-machine-pr/bun.lock
+          cp same-machine-base/bun.lock dataset18-source-proof/bun.lock
+          cd same-machine-pr
+          bun install --frozen-lockfile
+      - name: Verify matching dependencies and source before routing
+        run: |
+          python3 - <<'PYTHON'
+          import hashlib, json, os, platform, subprocess
+          from pathlib import Path
+          plan = json.loads(Path('dataset18-source-proof/plan.json').read_text())
+          sha = lambda data: hashlib.sha256(data).hexdigest()
+          lock = Path('dataset18-source-proof/bun.lock').read_bytes()
+          assert platform.machine() in ['aarch64', 'arm64'] and os.cpu_count() == 8
+          for lane, key in [('same-machine-base', 'baseSha256'), ('same-machine-pr', 'candidateSha256')]:
+              assert (Path(lane) / 'bun.lock').read_bytes() == lock
+              assert sha((Path(lane) / 'package.json').read_bytes()) == plan['packageJsonSha256']
+              assert sha((Path(lane) / plan['benchmarkHelper']).read_bytes()) == plan['benchmarkHelperSha256']
+              for entry in plan['changedFiles']:
+                  assert sha((Path(lane) / entry['relative']).read_bytes()) == entry[key]
+              for entry in plan['tiny']['featureSourceFiles']:
+                  assert sha((Path(lane) / 'node_modules/tiny-hypergraph' / entry['relative']).read_bytes()) == entry['sha256']
+              expected = sorted(entry['relative'] for entry in plan['changedFiles'])
+              assert sorted(subprocess.check_output(['git', '-C', lane, 'diff', 'HEAD', '--name-only'], text=True).splitlines()) == expected
+              subprocess.run(['git', '-C', lane, 'diff', '--exit-code'], check=True)
+          Path('dataset18-source-proof/dependency-proof.json').write_text(json.dumps({'bunVersion': '1.4.2', 'architecture': platform.machine(), 'cpuCount': os.cpu_count(), 'packageJsonSha256': plan['packageJsonSha256'], 'lockSha256': sha(lock), 'candidateFrozenLockfile': True, 'tiny': plan['tiny'], 'scope': plan['dependencyPolicy']}, indent=2) + '\n')
+          PYTHON
+      - name: Run the conventional comparison on one machine
+        working-directory: same-machine-base
+        env:
+          BENCHMARK_DATASET: srj18
+          BENCHMARK_ARGS_JSON: '["--pipeline","9","--dataset","18","--effort","1","--threads","1","--concurrency","auto","--sample-timeout","360s"]'
+        run: bun scripts/benchmark/runSameMachineBenchmarks.ts
+      - name: Check all sixteen samples and retain outcome changes
+        run: |
+          python3 - <<'PY'
+          import hashlib, json
+          from pathlib import Path
+          plan = json.loads(Path('dataset18-source-proof/plan.json').read_text())
+          reports = {}
+          hashes = {}
+          for lane in ['base', 'pr']:
+              path = Path('same-machine-results') / lane / 'benchmark-result.json'
+              data = path.read_bytes()
+              report = json.loads(data)
+              assert report['version'] == 1 and report['datasetName'] == 'srj18'
+              assert report['scenarioCount'] == 16 and report['effortLabel'] == '1x effort'
+              runtime = report['runtime']
+              assert runtime['bunVersion'] == '1.4.2' and runtime['architecture'] == 'arm64'
+              assert runtime['threadsPerSample'] == runtime['effectiveThreadsPerSample'] == 1
+              tests = sorted(report['tests'], key=lambda item: item['sampleNumber'])
+              assert len(tests) == 16 and [item['sampleNumber'] for item in tests] == list(range(1, 17))
+              assert [item['scenarioName'] for item in tests] == plan['samples']
+              assert all(item['solverName'] == 'AutoroutingPipelineSolver9_PreloadedTraceGraph' and item['sampleTimeoutMs'] == 360000 for item in tests)
+              reports[lane] = {**report, 'tests': tests}
+              hashes[lane] = hashlib.sha256(data).hexdigest()
+          assert reports['base']['runtime'] == reports['pr']['runtime']
+          lock = Path('dataset18-source-proof/bun.lock').read_bytes()
+          for lane, key in [('same-machine-base', 'baseSha256'), ('same-machine-pr', 'candidateSha256')]:
+              assert (Path(lane) / 'bun.lock').read_bytes() == lock
+              assert hashlib.sha256((Path(lane) / 'package.json').read_bytes()).hexdigest() == plan['packageJsonSha256']
+              assert hashlib.sha256((Path(lane) / plan['benchmarkHelper']).read_bytes()).hexdigest() == plan['benchmarkHelperSha256']
+              for entry in plan['changedFiles']:
+                  assert hashlib.sha256((Path(lane) / entry['relative']).read_bytes()).hexdigest() == entry[key]
+              for entry in plan['tiny']['featureSourceFiles']:
+                  assert hashlib.sha256((Path(lane) / 'node_modules/tiny-hypergraph' / entry['relative']).read_bytes()).hexdigest() == entry['sha256']
+          fields = ['didSolve', 'didTimeout', 'relaxedDrcPassed', 'elapsedTimeMs', 'viaCount', 'drcErrorCount', 'errorPhaseName', 'errorSolverName', 'error']
+          rows = [{'sample': before['scenarioName'], 'base': {key: before.get(key) for key in fields}, 'candidate': {key: after.get(key) for key in fields}} for before, after in zip(reports['base']['tests'], reports['pr']['tests'])]
+          changes = {}
+          for metric in ['didSolve', 'relaxedDrcPassed', 'didTimeout']:
+              changes[metric] = {direction: [row['sample'] for row in rows if bool(row['candidate'][metric]) is target and bool(row['base'][metric]) is not target] for direction, target in [('gained', True), ('lost', False)]}
+          result = {'scope': plan['scope'], 'featureBaseCommit': plan['featureBaseCommit'], 'candidateCommit': plan['candidateCommit'], 'correctionPatchSha256': plan['correctionPatchSha256'], 'allSixteenSamplesVerified': True, 'reportSha256': hashes, 'runtime': reports['base']['runtime'], 'changes': changes, 'samples': rows, 'acceptance': 'Existing benchmark completion and relaxed DRC only; not whole-board physical acceptance.'}
+          Path('dataset18-source-proof/comparison.json').write_text(json.dumps(result, indent=2) + '\n')
+          PY
+      - name: Preserve source, lock and standard benchmark evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dataset18-via-center-bounds-${{ github.run_attempt }}
+          path: |
+            dataset18-source-proof
+            same-machine-results
+          retention-days: 7
+          if-no-files-found: warn

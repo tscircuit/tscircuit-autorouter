@@ -1,0 +1,149 @@
+{
+  "schemaVersion": 1,
+  "qualificationReady": false,
+  "scope": "Standard Dataset18 source comparison isolating the four via-center bounds corrections. Both lanes include existing PR3906 on published AR1133 plus identical merged Tiny6a00; distinct from native full-board qualification.",
+  "publishedCommit": "a4f2778cb40bbc9c147b95a4e48ef0b32f1dd08f",
+  "featureBaseCommit": "6dd514c6f8a8624deec3ebc6e6db4f806cd797ca",
+  "candidateCommit": "f362c3ab026c8498c9ccb4ed1b1144f650ee187a",
+  "correctionSourceCommit": "87b21ddf3ebf434fc7464a56506d22280dc595e5",
+  "featureSourceHead": "b5da75872b055772189be9ee5289ab55f0c6c7c5",
+  "featurePatchSha256": "dce22cfaff0b66932669a4538a87890870069d5bba5cb75b70c84fe6e0b6bfe2",
+  "correctionPatchSha256": "b5b048080141de9b220c3168b26f37137f108b142761ebc46e61e015400cb307",
+  "changedFiles": [
+    {
+      "relative": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts",
+      "publishedSha256": "ae83c7785c32a12580c4eb8859a7de6d93acb7220d863d93aa29dd3e8d3a1456",
+      "baseSha256": "6563f048503ffbec87570dfa3c9241cb2c34ac7fadc5a77ec368994479431eab",
+      "candidateSha256": "6563f048503ffbec87570dfa3c9241cb2c34ac7fadc5a77ec368994479431eab"
+    },
+    {
+      "relative": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9RegionalFallbackSolver.ts",
+      "publishedSha256": "a21d1c1c07175216b88922acdb4dbe9911fa931dc255ed53ebe4e97654ad8863",
+      "baseSha256": "4dc27ddfe3021ac257b16947a101f8ae7f3c3f9f2919d1db8ec7d172b4680f39",
+      "candidateSha256": "4dc27ddfe3021ac257b16947a101f8ae7f3c3f9f2919d1db8ec7d172b4680f39"
+    },
+    {
+      "relative": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/markNodesWithoutViaSite.ts",
+      "publishedSha256": null,
+      "baseSha256": "743182ee34f452740269300da7070bbff2ec96f5ab6cb830a1e2d48c762e98c0",
+      "candidateSha256": "452abf37c02b98496224360453ed9374a723d6f6055c28d6cd8813a608e2a56b"
+    },
+    {
+      "relative": "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver.ts",
+      "publishedSha256": "f7f9254152a9639b2cf4dc5b915c10bf4856d014178a99ef9e8c26fcbd6894da",
+      "baseSha256": "dc7b3e4d31631725d069d38d667f24c274e92a56b7978249a06ee9a141cd2152",
+      "candidateSha256": "dc7b3e4d31631725d069d38d667f24c274e92a56b7978249a06ee9a141cd2152"
+    },
+    {
+      "relative": "lib/types/capacity-mesh-types.ts",
+      "publishedSha256": "cb19b41d0ea6daf658d483d9cf66c45d7de4aa3bad84c1fbe82ec7df3e49a41f",
+      "baseSha256": "a7b47183be6d30b18cbe4ecac5b590ff0b9c6dcf6983256bfbc48bcef7e0f0ae",
+      "candidateSha256": "af6c4667f44f7050006d62c02af66ca6b7cbd8d72647caf13d46011884024318"
+    },
+    {
+      "relative": "package.json",
+      "publishedSha256": "f1caf72cf0804be3dcafb895c5195fa7f278a11072938e38f6308c363e77bd65",
+      "baseSha256": "504a44c75029957daeab8b2cde630058e9e2e042e2ead826a501f247915ee4b6",
+      "candidateSha256": "504a44c75029957daeab8b2cde630058e9e2e042e2ead826a501f247915ee4b6"
+    }
+  ],
+  "correctionFiles": [
+    "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/markNodesWithoutViaSite.ts",
+    "lib/types/capacity-mesh-types.ts"
+  ],
+  "packageVersion": "0.0.1133",
+  "publishedPackageJsonSha256": "f1caf72cf0804be3dcafb895c5195fa7f278a11072938e38f6308c363e77bd65",
+  "packageJsonSha256": "504a44c75029957daeab8b2cde630058e9e2e042e2ead826a501f247915ee4b6",
+  "tiny": {
+    "commit": "6a00f0406e131a2765179e052e45f07efd2f5ae7",
+    "dependency": "git+https://github.com/tscircuit/tiny-hypergraph.git#6a00f0406e131a2765179e052e45f07efd2f5ae7",
+    "samePinInBothLanes": true,
+    "featureSourceFiles": [
+      {
+        "relative": "lib/compat/loadSerializedHyperGraph.ts",
+        "sha256": "23b2abb1334de7d4804b476306674373a3486aae67dc5eb81d12d66126d716cb"
+      },
+      {
+        "relative": "lib/computeRegionCost.ts",
+        "sha256": "3b91aa3e7d9e221d623ea6c369ee4fd67404e78903cf431bc67a7c941d7147f9"
+      },
+      {
+        "relative": "lib/core.ts",
+        "sha256": "0cbfa9c9a306d9f1d3a7caf3c530888d62735c391b85eeefec30d5c855788e0d"
+      },
+      {
+        "relative": "lib/poly.ts",
+        "sha256": "cf8df984ed4cf5d7d26f1120f97c134d0488d64c1bf1fab790ffa3d4d3fa3f6c"
+      },
+      {
+        "relative": "lib/prepared/DenseRoutingWorkspace.ts",
+        "sha256": "257650714f31770696aa46a00702e41ae5fa9470f33a4fa8445180064f438267"
+      }
+    ]
+  },
+  "dataset": "srj18",
+  "datasetDependency": "git+https://github.com/tscircuit/dataset-srj18.git#100e8957ce789b5b288e14c476dc83f4efc5214b",
+  "samples": [
+    "sample001",
+    "sample002",
+    "sample003",
+    "sample004",
+    "sample005",
+    "sample006",
+    "sample007",
+    "sample008",
+    "sample009",
+    "sample010",
+    "sample011",
+    "sample012",
+    "sample013",
+    "sample014",
+    "sample015",
+    "sample016"
+  ],
+  "benchmarkArgs": [
+    "--pipeline",
+    "9",
+    "--dataset",
+    "18",
+    "--effort",
+    "1",
+    "--threads",
+    "1",
+    "--concurrency",
+    "auto",
+    "--sample-timeout",
+    "360s"
+  ],
+  "runner": "blacksmith-8vcpu-ubuntu-2404-arm",
+  "bunVersion": "1.4.2",
+  "benchmarkHelper": "scripts/benchmark/runSameMachineBenchmarks.ts",
+  "benchmarkHelperSha256": "afdff0474d998f3c504a56bd869656f0c54906eeb3920eecf13201c7ee6d9641",
+  "dependencyPolicy": "Resolve feature-base once with bun install --save --save-text-lockfile; copy its fresh bun.lock to candidate and install --frozen-lockfile. Both manifests are identical published1133 except the same Tiny6a00 pin. Verify source, manifests, byte-identical locks, and the five Tiny viaAreaFraction source files before and after routing. Other installed dependency bytes are not audited; this is not the exact Main3243 runtime closure.",
+  "workflow": ".github/workflows/dataset18-via-center-bounds.yml",
+  "branch": "bench/dataset18-via-center-bounds-20261119",
+  "localQualification": {
+    "dependenciesInstalled": false,
+    "benchmarkExecuted": false,
+    "remotePublished": false
+  },
+  "nativeReleaseCondition": "HELD until root accepts paired native feature-base versus corrected H616 results. No automatic release, push, or dispatch.",
+  "focusedSourceChecks": {
+    "command": "bun test tests/features/mark-nodes-without-via-site-{center-bounds,circle-pad,rotated-pad,z-layers}.test.ts --timeout 9999999",
+    "runtime": "Bun1.3.1 x64 shared dependencies",
+    "pass": 4,
+    "fail": 0,
+    "assertions": 7,
+    "beforeMarks": [
+      false,
+      true,
+      false
+    ],
+    "candidateMarks": [
+      true,
+      false,
+      false
+    ],
+    "notRepeatedForWrapperPreparation": true
+  }
+}
