@@ -1281,16 +1281,15 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       node,
       this.connMap,
     )
-    const declaredPadClearance =
-      this.params.minClearance ?? this.viaToPadClearance
     let obstacleClearanceMargin = 0.15
     if (this.fixedHdRoutes.some((route) => route.isFixed === true)) {
       obstacleClearanceMargin = this.obstacleMargin
-    } else if (declaredPadClearance !== undefined) {
-      obstacleClearanceMargin = Math.max(
-        declaredPadClearance,
-        this.viaToPadClearance ?? declaredPadClearance,
-      )
+    } else if (
+      this.layerCount === 1 &&
+      this.params.minClearance !== undefined
+    ) {
+      // B01 shares the obstacle margin with via clearance on multilayer boards.
+      obstacleClearanceMargin = this.params.minClearance
     }
     this.stats.b01NodeCount = Number(this.stats.b01NodeCount ?? 0) + 1
     this.activeB01Solver = new HighDensitySolverB01({
