@@ -6,23 +6,42 @@ import {
 
 test("pipeline9 DRC candidate that adds a contact is not better when new contacts are rejected", () => {
   const clearanceError: Pipeline9DrcError = { type: "pcb_trace_error" }
-  const traceOnPad1: Pipeline9DrcError = {
+  const traceAOnPad1: Pipeline9DrcError = {
     type: "pcb_trace_error",
-    contact_ids: ["tA", "pad1"],
+    pcb_trace_id: "tA",
+    pcb_smtpad_id: "pad1",
+    actual_clearance: -0.02,
   }
-  const pad1UnderTrace: Pipeline9DrcError = {
+  const traceAOnTraceB: Pipeline9DrcError = {
     type: "pcb_trace_error",
-    contact_ids: ["pad1", "tA"],
+    pcb_trace_id: "tA",
+    pcb_trace_ids: ["tA", "tB"],
+    actual_clearance: -0.02,
   }
-  const traceOnPad2: Pipeline9DrcError = {
+  // tB touching tA's via shorts the same two traces as tA touching tB.
+  const traceBOnViaOfTraceA: Pipeline9DrcError = {
     type: "pcb_trace_error",
-    contact_ids: ["tA", "pad2"],
+    pcb_trace_id: "tB",
+    pcb_via_id: "via_3",
+    pcb_trace_ids: ["tB", "tA"],
+    actual_clearance: -0.01,
   }
-  const current = [traceOnPad1, clearanceError, clearanceError]
-  // Each candidate has one error fewer than the current routes.
-  const newContact = [traceOnPad2, clearanceError]
-  const reorderedContact = [pad1UnderTrace, clearanceError]
-  const clearanceErrorsOnly = [clearanceError]
+  const traceAOnPad2: Pipeline9DrcError = {
+    type: "pcb_trace_error",
+    pcb_trace_id: "tA",
+    pcb_smtpad_id: "pad2",
+    actual_clearance: -0.02,
+  }
+  // The same objects 0.05mm apart: a clearance error, not a contact.
+  const traceANearPad2: Pipeline9DrcError = {
+    ...traceAOnPad2,
+    actual_clearance: 0.05,
+  }
+  const current = [traceAOnPad1, traceAOnTraceB, clearanceError, clearanceError]
+  // Each candidate has fewer errors than the current routes.
+  const newContact = [traceAOnPad1, traceAOnTraceB, traceAOnPad2]
+  const sameContacts = [traceAOnPad1, traceBOnViaOfTraceA, clearanceError]
+  const clearanceErrorsOnly = [clearanceError, traceANearPad2]
 
   const rejectNewContacts = { rejectNewContacts: true }
 
@@ -32,9 +51,9 @@ test("pipeline9 DRC candidate that adds a contact is not better when new contact
   // Without the option, a new contact is counted like any other error.
   expect(isPipeline9DrcCandidateBetter(newContact, current)).toBe(true)
   expect(
-    isPipeline9DrcCandidateBetter(reorderedContact, current, rejectNewContacts),
+    isPipeline9DrcCandidateBetter(sameContacts, current, rejectNewContacts),
   ).toBe(true)
-  // Errors without contact_ids are clearance errors and are only counted.
+  // Clearance errors, near-misses included, are only counted.
   expect(
     isPipeline9DrcCandidateBetter(
       clearanceErrorsOnly,

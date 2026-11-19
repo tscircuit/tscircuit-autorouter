@@ -9,8 +9,6 @@ export type Pipeline9CollapsedTraceParticipant = {
 
 export type Pipeline9DrcError = Record<string, unknown> & {
   __collapsed_trace_participants?: Pipeline9CollapsedTraceParticipant[]
-  /** Set when copper touches: the two objects in contact. */
-  contact_ids?: readonly [string, string]
 }
 
 export type Pipeline9PreloadRepairTraceIds = ReadonlySet<string> & {
@@ -131,12 +129,34 @@ const getDrcIssueScore = (errors: Pipeline9DrcError[]) =>
     return score + 1
   }, 0)
 
+/**
+ * Identifies a short on a trace error by the objects touching, whichever
+ * side reported it. Undefined when the error is not copper in contact.
+ */
+export const getPipeline9DrcContactKey = (
+  error: Pipeline9DrcError,
+): string | undefined => {
+  const isContact =
+    error.type === "pcb_trace_error" &&
+    typeof error.actual_clearance === "number" &&
+    error.actual_clearance < 0
+  if (!isContact) return undefined
+  if (typeof error.pcb_smtpad_id === "string") {
+    return `${error.pcb_trace_id} touches ${error.pcb_smtpad_id}`
+  }
+  if (typeof error.pcb_plated_hole_id === "string") {
+    return `${error.pcb_trace_id} touches ${error.pcb_plated_hole_id}`
+  }
+  // A trace touching another trace or its via: both traces are listed.
+  if (!Array.isArray(error.pcb_trace_ids)) return undefined
+  return [...error.pcb_trace_ids].sort().join(" touches ")
+}
+
 const getContactKeys = (errors: Pipeline9DrcError[]): Set<string> => {
   const contactKeys = new Set<string>()
   for (const error of errors) {
-    if (!error.contact_ids) continue
-    const [firstId, secondId] = [...error.contact_ids].sort()
-    contactKeys.add(`${firstId}\n${secondId}`)
+    const contactKey = getPipeline9DrcContactKey(error)
+    if (contactKey) contactKeys.add(contactKey)
   }
   return contactKeys
 }
