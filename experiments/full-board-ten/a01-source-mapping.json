@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "passed": true,
+  "source": {
+    "repository": "tscircuit/high-density-a01",
+    "relative": "lib/HighDensitySolverA01/HighDensitySolverA01.ts",
+    "baseCommit": "85ee23a25403bbb79be14b6d0783e592928a85a0",
+    "candidateCommit": "66f344d9e23ae636c0ab3a6154dd51dec3ae46b6",
+    "baseSha256": "d9ddf24d2cef76012e7be01427c11429e86162dfbf74aa74a0b443493cddc114",
+    "candidateSha256": "c2965fd33f7618f4b8477e91cb4cab62676ee5d3c133ef95052b1f12d857f81e"
+  },
+  "originalAutorouterSha256": "5695c6361c0f7a7dc26ddd1b9264b8a8c122e5f7b9610cf24c6af3b99c545df1",
+  "candidateAutorouterSha256": "0773246dba7966d972d68f312104690a84c73184e4e638d36d98167b0f3f1519",
+  "sourceMapSha256": "9edff1c06b9a33231e581e2aae1115cfd96213f28df65eb3d56d7d78b078241d",
+  "span": {
+    "startByte": 220936,
+    "endByte": 221703,
+    "startCharacter": 220936,
+    "endCharacter": 221703,
+    "oldText": "getOutput(){const e=this.gridToBoundsTransform,t=[];for(const[n,o]of this.solvedRoutes??[]){const i=this.connIdToName[n];for(const r of o){const o=r.cells.map(t=>{const n=this.gridOrigin.x+(t.col+.5)*this.cellSizeMm,o=this.gridOrigin.y+(t.row+.5)*this.cellSizeMm,i=Ii(e,{x:n,y:o});return{x:i.x,y:i.y,z:this.layerToZ.get(t.z)??t.z}});o.length>0&&(o[0]={...r.startPoint},o.length>1&&(o[o.length-1]={...r.endPoint})),t.push({connectionName:i,rootConnectionName:this.connIdToRootNet[n],regionId:this.nodeWithPortPoints.capacityMeshNodeId,traceThickness:this.traceThickness,viaDiameter:this.viaDiameter,route:o,vias:r.viaCells.map(t=>{const n=this.gridOrigin.x+(t.col+.5)*this.cellSizeMm,o=this.gridOrigin.y+(t.row+.5)*this.cellSizeMm;return Ii(e,{x:n,y:o})})})}}return t}",
+    "newText": "getOutput() {\n    const t = this.gridToBoundsTransform, result = [];\n    for (const [connId, routes] of this.solvedRoutes ?? []) {\n      const connName = this.connIdToName[connId];\n      for (const route of routes) {\n        const points = route.cells.map((cell) => {\n          const rawX = this.gridOrigin.x + (cell.col + 0.5) * this.cellSizeMm, rawY = this.gridOrigin.y + (cell.row + 0.5) * this.cellSizeMm, tp = Ii(t, { x: rawX, y: rawY });\n          return { x: tp.x, y: tp.y, z: this.layerToZ.get(cell.z) ?? cell.z };\n        });\n        if (points.length === 1) {\n          points[0] = { ...route.startPoint };\n          points.push({ ...route.endPoint });\n        } else if (points.length > 1) {\n          points[0] = { ...route.startPoint };\n          points[points.length - 1] = { ...route.endPoint };\n        }\n        result.push({\n          connectionName: connName,\n          rootConnectionName: this.connIdToRootNet[connId],\n          regionId: this.nodeWithPortPoints.capacityMeshNodeId,\n          traceThickness: this.traceThickness,\n          viaDiameter: this.viaDiameter,\n          route: points,\n          vias: route.viaCells.map((via) => {\n            const rawX = this.gridOrigin.x + (via.col + 0.5) * this.cellSizeMm, rawY = this.gridOrigin.y + (via.row + 0.5) * this.cellSizeMm;\n            return Ii(t, { x: rawX, y: rawY });\n          })\n        });\n      }\n    }\n    return result;\n  }",
+    "oldSha256": "a7c1aabe33cf5ef428644a34a9bcc7831bdaf6313df9cad7bbe4ac52a772ffab",
+    "newSha256": "c8df3f1c6c689434aad6ba44746328fd677f36863c129b3fbb26aea78c830924"
+  },
+  "unchangedPrefixSha256": "095fb4f67d59aa0e6ff72becf5becb1852a8cec65fb97d425639dbb42424235c",
+  "unchangedSuffixSha256": "068f9edf210b22d9b0957571a78cca6442ad3a3ac289ed1d53a20a3d293f48e7",
+  "qualification": {
+    "publishedSourceExact": true,
+    "publishedSourceMapMember": "../node_modules/@tscircuit/high-density-a01/lib/HighDensitySolverA01/HighDensitySolverA01.ts",
+    "onlySourceMethodChanged": true,
+    "compiledBaseEquivalent": true,
+    "baseCanonicalSha256": "056be50c9938a42efd529330d2901f4083dfc2456f13dcb7446fa682e3d651b0",
+    "canonicalizer": "Terser5.51.2, three compress passes and deterministic lexical names on both independently compiled base and published method",
+    "sourceMethodBeforeSha256": "308dc370c56230c742f89c3401eef74f62467caf9decbd812130bd62fb964a6a",
+    "sourceMethodAfterSha256": "0269bab40d5fc6c51b440af4d629f25a79b352ed6973c40be0f0eee78e0ffe01",
+    "classBinding": "Oi",
+    "affineSourceSymbol": "applyAffineTransformToPoint",
+    "affinePublishedBinding": "Ii",
+    "affineBindingSha256": "3f4b93b223501b45f28f3bacd7cad3f693cfd1cca6f0873a13d11a25d47607ac",
+    "lexicalAliasReferences": 2,
+    "allOutsideBytesUnchanged": true,
+    "sourceMapGeneratedOffsetsUsed": false,
+    "bun": "1.4.3",
+    "typescript": "5.9.3"
+  },
+  "scope": "Only A01.getOutput is replaced. All other published AR bytes and every Core/Main/Eval entry and package alias stay unchanged. No hooks, solver option or budget changes.",
+  "moduleImported": false,
+  "nativeRoutingExecuted": false
+}

@@ -1,0 +1,21 @@
+diff --git a/lib/HighDensitySolverA01/HighDensitySolverA01.ts b/lib/HighDensitySolverA01/HighDensitySolverA01.ts
+index c8a2e92..e936cb2 100644
+--- a/lib/HighDensitySolverA01/HighDensitySolverA01.ts
++++ b/lib/HighDensitySolverA01/HighDensitySolverA01.ts
+@@ -1753,11 +1753,12 @@ export class HighDensitySolverA01 extends BaseSolver {
+           const tp = applyAffineTransformToPoint(t, { x: rawX, y: rawY })
+           return { x: tp.x, y: tp.y, z: this.layerToZ.get(cell.z) ?? cell.z }
+         })
+-        if (points.length > 0) {
++        if (points.length === 1) {
+           points[0] = { ...route.startPoint }
+-          if (points.length > 1) {
+-            points[points.length - 1] = { ...route.endPoint }
+-          }
++          points.push({ ...route.endPoint })
++        } else if (points.length > 1) {
++          points[0] = { ...route.startPoint }
++          points[points.length - 1] = { ...route.endPoint }
+         }
+         result.push({
+           connectionName: connName,
