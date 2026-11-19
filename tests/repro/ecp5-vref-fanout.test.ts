@@ -20,7 +20,9 @@ import { MultiHeadPolyLineIntraNodeSolver3 } from "lib/solvers/HighDensitySolver
 import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 import type { NodeWithPortPoints } from "lib/types/high-density-types"
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
-import nodeFixture from "tests/fixtures/ecp5-vref-fanout-node.json" with { type: "json" }
+import nodeFixture from "tests/fixtures/ecp5-vref-fanout-node.json" with {
+  type: "json",
+}
 import { getEcp5VrefFanoutPcbSvg } from "tests/fixtures/getEcp5VrefFanoutPcbSvg"
 import { replaceNativePcbTraces } from "tests/fixtures/replaceNativePcbTraces"
 
@@ -78,7 +80,9 @@ test("reproduces the native C2/C3/R1/R2 VREF fanout rejection", async (): Promis
     }),
   )
   const circuitJson = replaceNativePcbTraces({ ...fixture, traces })
-  const nativePortIds = new Set(node.portPoints.map((port) => port.pcb_port_id!))
+  const nativePortIds = new Set(
+    node.portPoints.map((port) => port.pcb_port_id!),
+  )
   expect(nativePortIds.size).toBe(4)
   const pcbMap = new PcbConnectivityMap(circuitJson)
   const traceIds = traces.map((trace) => trace.pcb_trace_id).sort()
