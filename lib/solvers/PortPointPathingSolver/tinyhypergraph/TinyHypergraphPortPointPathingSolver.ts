@@ -403,6 +403,7 @@ const toSerializedRegionData = (
     },
     width: region.d.width,
     height: region.d.height,
+    viaAreaFraction: region.d.viaAreaFraction,
     availableZ: [...region.d.availableZ],
     ...(bounds
       ? {
