@@ -4,7 +4,7 @@ import {
   type Pipeline9DrcError,
 } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9JointDrcRepairUtils"
 
-test("pipeline9 DRC candidate with fewer errors is not better when it adds a contact", () => {
+test("pipeline9 DRC candidate that adds a contact is not better when new contacts are rejected", () => {
   const clearanceError: Pipeline9DrcError = { type: "pcb_trace_error" }
   const traceOnPad1: Pipeline9DrcError = {
     type: "pcb_trace_error",
@@ -24,8 +24,22 @@ test("pipeline9 DRC candidate with fewer errors is not better when it adds a con
   const reorderedContact = [pad1UnderTrace, clearanceError]
   const clearanceErrorsOnly = [clearanceError]
 
-  expect(isPipeline9DrcCandidateBetter(newContact, current)).toBe(false)
-  expect(isPipeline9DrcCandidateBetter(reorderedContact, current)).toBe(true)
+  const rejectNewContacts = { rejectNewContacts: true }
+
+  expect(
+    isPipeline9DrcCandidateBetter(newContact, current, rejectNewContacts),
+  ).toBe(false)
+  // Without the option, a new contact is counted like any other error.
+  expect(isPipeline9DrcCandidateBetter(newContact, current)).toBe(true)
+  expect(
+    isPipeline9DrcCandidateBetter(reorderedContact, current, rejectNewContacts),
+  ).toBe(true)
   // Errors without contact_ids are clearance errors and are only counted.
-  expect(isPipeline9DrcCandidateBetter(clearanceErrorsOnly, current)).toBe(true)
+  expect(
+    isPipeline9DrcCandidateBetter(
+      clearanceErrorsOnly,
+      current,
+      rejectNewContacts,
+    ),
+  ).toBe(true)
 })

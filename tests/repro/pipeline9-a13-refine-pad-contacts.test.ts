@@ -5,7 +5,6 @@ import type { AnyCircuitElement } from "circuit-json"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { convertCircuitJsonToPcbSvg } from "circuit-to-svg"
 import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
-import type { Pipeline9DrcError } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9JointDrcRepairUtils"
 import { createPipeline9AutoroutingDrcEvaluator } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/createPipeline9AutoroutingDrcEvaluator"
 import { Pipeline9JointDrcRepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9JointDrcRepairSolver"
 import type {
@@ -14,6 +13,11 @@ import type {
   SimplifiedPcbTrace,
 } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
+import {
+  AutoroutingDrcEngine,
+  type SimpleRouteJson as RepairSimpleRouteJson,
+  type SimplifiedPcbTraces as RepairSimplifiedPcbTraces,
+} from "high-density-repair03/lib"
 import { createPcbBoardElement } from "lib/utils/convertToCircuitJson"
 
 type JointRepairFixture = {
@@ -121,8 +125,17 @@ test("A13 joint repair moves a trace onto pads of other nets", async (): Promise
       defaultViaHoleDiameter: fixture.defaultViaHoleDiameter,
       connMap,
     })
-  const getContactKeys = (errors: Pipeline9DrcError[]): string[] => {
+  // Contacts as the DRC engine joint repair compares candidates with.
+  const drcEngine = new AutoroutingDrcEngine(
+    {
+      ...fixture.srj,
+      obstacles: fixture.originalSrj.obstacles,
+    } as RepairSimpleRouteJson,
+    { connMap },
+  )
+  const getContactKeys = (traces: SimplifiedPcbTrace[]): string[] => {
     const contactKeys: string[] = []
+    const { errors } = drcEngine.evaluate(traces as RepairSimplifiedPcbTraces)
     for (const error of errors) {
       if (!error.contact_ids) continue
       contactKeys.push([...error.contact_ids].sort().join(" touches "))
@@ -133,8 +146,8 @@ test("A13 joint repair moves a trace onto pads of other nets", async (): Promise
   const outputTraces = toTraces(joint.getOutput())
   const before = evaluate(inputTraces)
   const after = evaluate(outputTraces)
-  const inputContacts = new Set(getContactKeys(before.errors))
-  const newContacts = getContactKeys(after.errors).filter(
+  const inputContacts = new Set(getContactKeys(inputTraces))
+  const newContacts = getContactKeys(outputTraces).filter(
     (contact) => !inputContacts.has(contact),
   )
 

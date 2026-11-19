@@ -495,7 +495,10 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
         )
         if (
           getViaIssueCount(errors) <= getViaIssueCount(cleanup.errors) &&
-          isPipeline9DrcCandidateBetter(errors, cleanup.errors) &&
+          // Refine is the last step, so nothing after it removes a new short.
+          isPipeline9DrcCandidateBetter(errors, cleanup.errors, {
+            rejectNewContacts: true,
+          }) &&
           !this.introducesViaInPad(refinedRoutes)
         ) {
           cleanup.routes = refinedRoutes

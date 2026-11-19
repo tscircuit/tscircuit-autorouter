@@ -141,19 +141,30 @@ const getContactKeys = (errors: Pipeline9DrcError[]): Set<string> => {
   return contactKeys
 }
 
-/**
- * A candidate is better when it has fewer DRC errors, or as many with a lower
- * score, and it puts no two objects in contact that were not already touching.
- * Fewer errors never justifies a new short.
- */
-export const isPipeline9DrcCandidateBetter = (
+const hasNewContact = (
   candidateErrors: Pipeline9DrcError[],
   currentErrors: Pipeline9DrcError[],
 ): boolean => {
   const currentContactKeys = getContactKeys(currentErrors)
-  const candidateContactKeys = getContactKeys(candidateErrors)
-  for (const contactKey of candidateContactKeys) {
-    if (!currentContactKeys.has(contactKey)) return false
+  for (const contactKey of getContactKeys(candidateErrors)) {
+    if (!currentContactKeys.has(contactKey)) return true
+  }
+  return false
+}
+
+/**
+ * A candidate is better when it has fewer DRC errors, or as many with a lower
+ * score. With rejectNewContacts, a candidate that puts two objects in contact
+ * that were not already touching is never better: use it where no later step
+ * can remove the short.
+ */
+export const isPipeline9DrcCandidateBetter = (
+  candidateErrors: Pipeline9DrcError[],
+  currentErrors: Pipeline9DrcError[],
+  { rejectNewContacts = false }: { rejectNewContacts?: boolean } = {},
+): boolean => {
+  if (rejectNewContacts && hasNewContact(candidateErrors, currentErrors)) {
+    return false
   }
   return (
     candidateErrors.length < currentErrors.length ||
