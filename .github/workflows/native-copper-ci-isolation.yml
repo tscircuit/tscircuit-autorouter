@@ -1,0 +1,62 @@
+name: Isolate native-path CI failures
+on:
+  push:
+    branches: [analysis/native-copper-ci-isolation]
+    paths: [.github/workflows/native-copper-ci-isolation.yml]
+permissions:
+  contents: read
+jobs:
+  focused:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        variant: [control, a03-base, repair04-base, tiny-base, repair-context-base]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: e0641e36e11b35d2d590ccdb8ef6749511493b39
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.4.3'
+      - name: Change exactly one source of behavior
+        env:
+          VARIANT: ${{ matrix.variant }}
+        run: |
+          python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          variant = os.environ["VARIANT"]
+          p = Path("package.json")
+          package = json.loads(p.read_text())
+          overrides = {
+            "a03-base": ("@tscircuit/high-density-a01", "git+https://github.com/tscircuit/high-density-a01.git#85ee23a25403bbb79be14b6d0783e592928a85a0"),
+            "repair04-base": ("@tscircuit/repair04", "https://codeload.github.com/tscircuit/repair04/tar.gz/1b33fe703438890adc52abbb7a8f18eb6f88ec70"),
+            "tiny-base": ("tiny-hypergraph", "git+https://github.com/tscircuit/tiny-hypergraph.git#f1fe8edcfb3dfde8fd644d09d81bad18743144b3"),
+          }
+          if variant in overrides:
+            name, version = overrides[variant]
+            package["devDependencies"][name] = version
+            p.write_text(json.dumps(package, indent=2)+"\n")
+          if variant == "repair-context-base":
+            p = Path("lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts")
+            source = p.read_text()
+            old = "fixedHdRoutes: cms.highDensityRouteSolver!.getUpdatedFixedHdRoutes(),"
+            assert source.count(old) == 1
+            p.write_text(source.replace(old, "fixedHdRoutes: [],"))
+          print("ISOLATION_VARIANT="+variant)
+          PY
+      - run: bun install
+      - name: Run unchanged functional checks
+        env:
+          BUN_UPDATE_SNAPSHOTS: '1'
+        run: |
+          bun test --timeout 9999999 \
+            tests/bugs/t113-linux-exact-pipeline9-root.test.ts \
+            tests/bugs/bugreport96-full-gameboy-no-breakout.test.ts \
+            tests/repro/pipeline9-h616-staged-regional-clearance.test.ts \
+            tests/repro/pipeline9-h616-preload-reachability.test.ts \
+            tests/features/pipeline9-srj33-sample37-pair-repair.test.ts
