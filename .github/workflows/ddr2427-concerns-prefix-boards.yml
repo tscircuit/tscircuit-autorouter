@@ -1,0 +1,119 @@
+name: Route original six full boards with the qualified minimal stack
+on:
+  push:
+    branches: [codex/ddr2427-concerns-prefix-boards]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  boards:
+    strategy:
+      fail-fast: false
+      matrix:
+        board: [h616, butterstick, glider, imx6, icepi]
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          ref: a4a8f3a71dd66c2cae01d6a7ade426efad833ff6
+          path: router
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/core
+          ref: 75ab017cd6852dbe50516ee1f4ca9d1108c29985
+          path: core
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Build the frozen stack with the selected fanout revision
+        run: |
+          python3 - <<'PYFANOUT'
+          import json
+          from pathlib import Path
+          path=Path('core/package.json');package=json.loads(path.read_text())
+          assert package['devDependencies']['@tscircuit/fanout-solver']=='0.0.91'
+          package['devDependencies']['@tscircuit/fanout-solver']='https://codeload.github.com/tscircuit/fanout-solver/tar.gz/3b2f58037d4bf284f389c7359f6a0e228a9f5e61'
+          path.write_text(json.dumps(package,indent=2)+'\n')
+          PYFANOUT
+          for folder in router core; do (cd "$folder" && bun install --ignore-scripts); done
+          (cd router && bun build lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts --target bun --packages external --outfile benchmark-runtime/pipeline9.js)
+          cd experiments/full-board-priority-analysis
+          python3 - <<'PYDEPS'
+          import json
+          from pathlib import Path
+          path=Path('package.json');package=json.loads(path.read_text());package['dependencies']['tscircuit']='0.0.3245';path.write_text(json.dumps(package,indent=2)+'\n')
+          PYDEPS
+          bun install --ignore-scripts
+          bun build-core.ts ../../core
+      - name: Verify fanout then buses then remaining nets, and route fresh
+        working-directory: experiments/full-board-priority-analysis
+        env:
+          BOARD_ID: ${{ matrix.board }}
+          FULL_BOARD_CAPTURE_STAGE_INPUTS: "1"
+          FULL_BOARD_FANOUT_VERSION: "0.0.91+3b2f58037d4bf284f389c7359f6a0e228a9f5e61"
+        run: |
+          export FULL_BOARD_CORE_SOURCE="$GITHUB_WORKSPACE/core"
+          export FULL_BOARD_CORE_MODULE="$PWD/patched-core/index.js"
+          export FULL_BOARD_COPPER_MODULE="$PWD/patched-core/find-floating-copper.js"
+          export FULL_BOARD_ROUTER_MODULE="$GITHUB_WORKSPACE/router/benchmark-runtime/pipeline9.js"
+          export FULL_BOARD_ROUTER_COMMIT="a4a8f3a71dd66c2cae01d6a7ade426efad833ff6"
+          mkdir -p "$GITHUB_WORKSPACE/results/$BOARD_ID"
+          cp patched-core/build.json "$GITHUB_WORKSPACE/results/$BOARD_ID/core-build.json"
+          cp "$GITHUB_WORKSPACE/core/package.json" "$GITHUB_WORKSPACE/results/$BOARD_ID/core-package.json"
+          cp package.json "$GITHUB_WORKSPACE/results/$BOARD_ID/runtime-package.json"
+          cp bun.lock "$GITHUB_WORKSPACE/results/$BOARD_ID/runtime-bun.lock"
+          bun inspect-routing-workflow.tsx "$BOARD_ID" "$GITHUB_WORKSPACE/results/$BOARD_ID/plan.json"
+          bun run-fanout-bus-first.ts "$BOARD_ID" "$GITHUB_WORKSPACE/results/$BOARD_ID"
+      - name: Independently audit actual partial copper
+        if: always()
+        env:
+          BOARD_ID: ${{ matrix.board }}
+        run: |
+          python3 - <<'PYAUDIT'
+          import os,subprocess
+          from pathlib import Path
+          root=Path.cwd()
+          source=(root/'core/node_modules/@tscircuit/fanout-solver').resolve()
+          scripts=root/'experiments/full-board-priority-analysis'
+          for name in ['audit-stack-captured.ts','validate-native-request-constraints.ts']:
+              (source/name).write_bytes((scripts/name).read_bytes())
+          output=root/'results'/os.environ['BOARD_ID']
+          subprocess.run(['bun','audit-stack-captured.ts',str(output/'fanout-1-input.json.gz'),str(output/'fanout-best-output.srj.json.gz'),str(output/'request-audit.json')],cwd=source,check=True)
+          PYAUDIT
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: reviewed-stack-board-${{ matrix.board }}
+          path: results
+          retention-days: 14
+      - name: Export native PCB output and diagnostics
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import base64,gzip,hashlib,io,json,zipfile
+          from pathlib import Path
+          stream=io.BytesIO()
+          for captured in Path('results').rglob('fanout-1-input.json.gz'):
+              output=captured.parent/'fanout-best-output.srj.json.gz'
+              if not output.exists(): continue
+              inputs=json.loads(gzip.decompress(captured.read_bytes()))
+              routed=json.loads(gzip.decompress(output.read_bytes()))
+              original=inputs['solverParams']['obstacles']
+              assert routed['obstacles'][:len(original)]==original
+              routed['obstacles']=routed['obstacles'][len(original):]
+              patch={'inputSha256':hashlib.sha256(captured.read_bytes()).hexdigest(),'retainedInputObstacleCount':len(original),'outputWithAppendedObstaclesOnly':routed,'originalCompressedOutputSha256':hashlib.sha256(output.read_bytes()).hexdigest()}
+              (captured.parent/'fanout-output-patch.json.gz').write_bytes(gzip.compress(json.dumps(patch,separators=(',',':')).encode(),mtime=0))
+          names={'core-build.json','core-package.json','plan.json','progress.json','assessment.json','diagnostics.json','process.json','circuit.json','pcb.svg','worker.log','runtime-package.json','runtime-bun.lock','request-audit.json'}
+          with zipfile.ZipFile(stream,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=9) as archive:
+              for path in Path('results').rglob('*'):
+                  if path.is_file() and (path.name in names or path.name=='fanout-output-patch.json.gz'):
+                      archive.writestr(str(path.relative_to('results')),path.read_bytes())
+          print('FANOUT_BUS_FIRST_EVIDENCE_BEGIN')
+          encoded=base64.b64encode(stream.getvalue()).decode()
+          for offset in range(0,len(encoded),8000): print(encoded[offset:offset+8000])
+          print('FANOUT_BUS_FIRST_EVIDENCE_END')
+          PY
+
+
