@@ -1,0 +1,130 @@
+import { expect, test } from "bun:test"
+import { readFileSync } from "node:fs"
+import { gunzipSync } from "node:zlib"
+import {
+  checkDanglingTraces,
+  checkDifferentNetViaSpacing,
+  checkEachPcbTraceNonOverlapping,
+  checkHoleTraceClearance,
+  checkPadTraceClearance,
+  checkPcbTracesOutOfBoard,
+  checkTracesAreContiguous,
+  checkViaPadClearance,
+  checkViaTraceClearance,
+  checkViasInPads,
+  checkViasOffBoard,
+} from "@tscircuit/checks"
+import type { AnyCircuitElement } from "circuit-json"
+import { PcbConnectivityMap } from "circuit-json-to-connectivity-map"
+import { MultiHeadPolyLineIntraNodeSolver3 } from "lib/solvers/HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/MultiHeadPolyLineIntraNodeSolver3_ViaPossibilitiesSolverIntegration"
+import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
+import type { NodeWithPortPoints } from "lib/types/high-density-types"
+import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
+import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
+import { getEcp5FeedbackFanoutPcbSvg } from "tests/fixtures/getEcp5FeedbackFanoutPcbSvg"
+import { replaceNativePcbTraces } from "tests/fixtures/replaceNativePcbTraces"
+
+test("routes the native C18/R37/R38 feedback fanout without false via obstacles", async (): Promise<void> => {
+  const fixture = JSON.parse(
+    gunzipSync(
+      new Uint8Array(
+        readFileSync(
+          new URL(
+            "../fixtures/assets/ecp5-regulator-feedback.json.gz",
+            import.meta.url,
+          ),
+        ),
+      ),
+    ).toString(),
+  ) as {
+    circuitJson: AnyCircuitElement[]
+    srj: SimpleRouteJson
+    node: NodeWithPortPoints
+  }
+  const { node, srj } = fixture
+  const original = structuredClone(node)
+  const rootConnectionName = node.portPoints[0]!.rootConnectionName
+  const referenceNet = fixture.circuitJson.find(
+    (element) =>
+      element.type === "source_net" &&
+      element.source_net_id === rootConnectionName,
+  )
+  if (
+    !referenceNet ||
+    referenceNet.type !== "source_net" ||
+    referenceNet.trace_width === undefined
+  ) {
+    throw new Error("Missing the native feedback net")
+  }
+  const solver = new MultiHeadPolyLineIntraNodeSolver3({
+    nodeWithPortPoints: node,
+    connMap: getConnectivityMapFromSimpleRouteJson(srj),
+    viaDiameter: srj.minViaPadDiameter,
+  })
+  solver.traceWidth = referenceNet.trace_width
+  solver.solve()
+
+  expect(solver.solved).toBeFalse()
+  expect(solver.error).toContain("Exceeded max via count")
+  expect(node).toEqual(original)
+  const traces = solver.solvedRoutes.map(
+    (route): SimplifiedPcbTrace => ({
+      type: "pcb_trace",
+      pcb_trace_id: route.connectionName,
+      connection_name: referenceNet.source_net_id,
+      route: convertHdRouteToSimplifiedRoute(route, srj.layerCount),
+    }),
+  )
+  const circuitJson = replaceNativePcbTraces({ ...fixture, traces })
+  const nativePortIds = new Set(
+    node.portPoints.map((point) => point.pcb_port_id!),
+  )
+  expect(nativePortIds.size).toBe(3)
+  const pcbMap = new PcbConnectivityMap(circuitJson)
+  const traceIds = traces.map((trace) => trace.pcb_trace_id).sort()
+  for (const portId of nativePortIds) {
+    expect(
+      pcbMap
+        .getAllTracesConnectedToPort(portId)
+        .map((trace) => trace.pcb_trace_id)
+        .sort(),
+    ).toEqual(traceIds)
+  }
+  expect(solver.solvedRoutes.flatMap((route) => route.vias)).toEqual([])
+  expect(
+    circuitJson.filter(
+      (element) => element.type !== "pcb_trace" && element.type !== "pcb_via",
+    ),
+  ).toEqual(
+    fixture.circuitJson.filter(
+      (element) => element.type !== "pcb_trace" && element.type !== "pcb_via",
+    ),
+  )
+  const clearanceOptions = { minClearance: srj.minTraceToPadEdgeClearance! }
+  const findings = [
+    ...checkEachPcbTraceNonOverlapping(circuitJson, clearanceOptions),
+    ...checkPadTraceClearance(circuitJson, clearanceOptions),
+    ...checkViaTraceClearance(circuitJson, clearanceOptions),
+    ...checkViaPadClearance(circuitJson, clearanceOptions),
+    ...checkDifferentNetViaSpacing(circuitJson),
+    ...checkHoleTraceClearance(circuitJson, clearanceOptions),
+    ...checkTracesAreContiguous(circuitJson),
+    ...checkDanglingTraces(circuitJson),
+    ...checkPcbTracesOutOfBoard(circuitJson),
+    ...checkViasOffBoard(circuitJson),
+    ...checkViasInPads(circuitJson),
+  ]
+  expect(findings).toEqual([])
+  const view = {
+    circuitJson,
+    node,
+    routedBranchCount: traces.length,
+  }
+  await expect(getEcp5FeedbackFanoutPcbSvg(view)).toMatchSvgSnapshot(
+    import.meta.path,
+    { scale: 1 },
+  )
+  await expect(
+    getEcp5FeedbackFanoutPcbSvg({ ...view, focused: true }),
+  ).toMatchSvgSnapshot(import.meta.path, { svgName: "focused", scale: 1 })
+})
