@@ -16,7 +16,9 @@ test("Pipeline 9 ignores the allowed layer for a two-connection bus", async (): 
   const traces = solver.getOutputSimplifiedPcbTraces()
   expect(traces).toHaveLength(2)
   const routePoints = traces.flatMap((trace) => trace.route)
-  expect(routePoints.filter((point) => point.route_type === "via")).toHaveLength(0)
+  expect(
+    routePoints.filter((point) => point.route_type === "via"),
+  ).toHaveLength(0)
   expect(
     new Set(
       routePoints
