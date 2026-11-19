@@ -1,355 +1,3986 @@
 {
-  "schemaVersion": 1,
-  "mainVersion": "0.0.3243",
-  "registryFrozenAt": "2026-11-19T06:11:14.613580+00:00",
-  "selectedPackages": {
-    "tscircuit": {
-      "name": "tscircuit",
-      "version": "0.0.3243",
-      "gitHead": "ec0c9778775d4bb816fa100163a697fea0ae4072"
-    },
-    "core": {
-      "name": "@tscircuit/core",
-      "version": "0.0.2425",
-      "gitHead": "1799ee7e500a4de9d76a308286787307c4face1e",
-      "declaredByMain": "^0.0.2425"
-    },
-    "eval": {
-      "name": "@tscircuit/eval",
-      "version": "0.0.1818",
-      "gitHead": "f2a5b80dd2c0bf5436929ac96a9c7bc0993405ff",
-      "declaredByMain": "^0.0.1818"
-    },
-    "autorouter": {
-      "name": "@tscircuit/capacity-autorouter",
-      "version": "0.0.1133",
-      "gitHead": "a4f2778cb40bbc9c147b95a4e48ef0b32f1dd08f",
-      "declaredByMain": "^0.0.1133"
-    },
-    "runframe": {
-      "name": "@tscircuit/runframe",
-      "version": "0.0.3296",
-      "gitHead": "3850aaf07aa854a7639be959afb98afc2ddaed05",
-      "declaredByMain": "^0.0.3296"
-    },
-    "checks": {
-      "name": "@tscircuit/checks",
-      "version": "0.0.282",
-      "gitHead": "8515c1204b476762d6c8ea18b71197a24a08985e",
-      "declaredByMain": "^0.0.282"
-    },
-    "fanout": {
-      "name": "@tscircuit/fanout-solver",
-      "version": "0.0.89",
-      "gitHead": "65b4a7f28f1d49e402a37d3b48973f54b32d2004",
-      "declaredByMain": "0.0.89"
-    },
-    "props": {
-      "name": "@tscircuit/props",
-      "version": "0.0.735",
-      "gitHead": "4b7b7b826d61e03ac70dce69e2160178671a0d3d",
-      "declaredByMain": "^0.0.735"
-    },
-    "circuit-json": {
-      "name": "circuit-json",
-      "version": "0.0.552",
-      "gitHead": "1738f520d987f30cd148f079292c32ff0fce42d5",
-      "declaredByMain": "0.0.552"
-    },
-    "cli": {
-      "name": "@tscircuit/cli",
-      "version": "0.1.2475",
-      "gitHead": "f1ddf660cb6044df9c818f6c1c58872fe2f99e55",
-      "declaredByMain": "^0.1.2475"
-    },
-    "spice": {
-      "name": "circuit-json-to-spice",
-      "version": "0.0.48",
-      "gitHead": "1d01e90f3f170cf88f1a48b9d204541a25d16b63",
-      "declaredByMain": "^0.0.48"
-    },
-    "ngspice": {
-      "name": "@tscircuit/ngspice-spice-engine",
-      "version": "0.0.23",
-      "gitHead": "44d1bf8904128f791612fa78ae2f40ab7c5a0341",
-      "declaredByMain": "^0.0.23"
-    },
-    "runframe-eval": {
-      "name": "@tscircuit/eval",
-      "version": "0.0.1817",
-      "gitHead": "d22bf970ba426b7f80db259fe658c01b2cae4ca5",
-      "declaredByRunframe": "0.0.1817"
+  "selection": {
+    "frozenAt": "2026-11-19T11:14:35.738398+00:00",
+    "mainVersion": "0.0.3244",
+    "selectedPackages": {
+      "tscircuit": {
+        "name": "tscircuit",
+        "version": "0.0.3244",
+        "gitHead": "0060ee57190e0bf7103d59044c91f527734e381d"
+      },
+      "core": {
+        "name": "@tscircuit/core",
+        "version": "0.0.2426",
+        "gitHead": "7614f02af40163da1dc2934d2ec5fa4665ae697e",
+        "declaredByMain": "^0.0.2426"
+      },
+      "eval": {
+        "name": "@tscircuit/eval",
+        "version": "0.0.1819",
+        "gitHead": "c97b135ddf8421b4ca7e7084cad49fb61bae6f13",
+        "declaredByMain": "^0.0.1819"
+      },
+      "autorouter": {
+        "name": "@tscircuit/capacity-autorouter",
+        "version": "0.0.1133",
+        "gitHead": "a4f2778cb40bbc9c147b95a4e48ef0b32f1dd08f",
+        "declaredByMain": "^0.0.1133"
+      },
+      "runframe": {
+        "name": "@tscircuit/runframe",
+        "version": "0.0.3297",
+        "gitHead": "b344498f4c7f695c47d065cfd19ca0174b5d73ca",
+        "declaredByMain": "^0.0.3297"
+      },
+      "checks": {
+        "name": "@tscircuit/checks",
+        "version": "0.0.282",
+        "gitHead": "8515c1204b476762d6c8ea18b71197a24a08985e",
+        "declaredByMain": "^0.0.282"
+      },
+      "fanout": {
+        "name": "@tscircuit/fanout-solver",
+        "version": "0.0.90",
+        "gitHead": "e6fe9d6fbf52e9239d3d3db8626876e082518bbf",
+        "declaredByMain": "0.0.90"
+      },
+      "props": {
+        "name": "@tscircuit/props",
+        "version": "0.0.735",
+        "gitHead": "4b7b7b826d61e03ac70dce69e2160178671a0d3d",
+        "declaredByMain": "^0.0.735"
+      },
+      "circuit-json": {
+        "name": "circuit-json",
+        "version": "0.0.552",
+        "gitHead": "1738f520d987f30cd148f079292c32ff0fce42d5",
+        "declaredByMain": "0.0.552"
+      },
+      "cli": {
+        "name": "@tscircuit/cli",
+        "version": "0.1.2475",
+        "gitHead": "f1ddf660cb6044df9c818f6c1c58872fe2f99e55",
+        "declaredByMain": "^0.1.2475"
+      },
+      "spice": {
+        "name": "circuit-json-to-spice",
+        "version": "0.0.48",
+        "gitHead": "1d01e90f3f170cf88f1a48b9d204541a25d16b63",
+        "declaredByMain": "^0.0.48"
+      },
+      "ngspice": {
+        "name": "@tscircuit/ngspice-spice-engine",
+        "version": "0.0.23",
+        "gitHead": "44d1bf8904128f791612fa78ae2f40ab7c5a0341",
+        "declaredByMain": "^0.0.23"
+      },
+      "runframe-eval": {
+        "name": "@tscircuit/eval",
+        "version": "0.0.1818",
+        "gitHead": "f2a5b80dd2c0bf5436929ac96a9c7bc0993405ff",
+        "declaredByRunframe": "0.0.1818"
+      }
     }
   },
-  "baseController": "49e9de35db347f94eeeaef9bca48d821ed3be51e",
-  "retainedBaseline": {
-    "runId": 44423458886,
-    "head": "49e9de35db347f94eeeaef9bca48d821ed3be51e",
-    "handoffSha256": "647fd215058c7a2609c757732e8a2f1d57dcad4bc8784da5a3ba14855970cd36",
-    "rerouted": false
+  "dependencyRefresh": {
+    "baseController": "/tmp/full-board-ten-3243-20261119",
+    "mainVersion": "0.0.3244",
+    "packageDeclarationChanges": {
+      "tscircuit": [
+        "0.0.3243",
+        "0.0.3244"
+      ],
+      "@tscircuit/core": [
+        "0.0.2425",
+        "0.0.2426"
+      ],
+      "@tscircuit/eval": [
+        "0.0.1818",
+        "0.0.1819"
+      ],
+      "@tscircuit/capacity-autorouter": [
+        "0.0.1133",
+        "0.0.1133"
+      ],
+      "@tscircuit/runframe": [
+        "^0.0.3296",
+        "^0.0.3297"
+      ],
+      "@tscircuit/checks": [
+        "^0.0.282",
+        "^0.0.282"
+      ],
+      "@tscircuit/fanout-solver": [
+        "0.0.89",
+        "0.0.90"
+      ],
+      "circuit-json-to-spice": [
+        "^0.0.48",
+        "^0.0.48"
+      ],
+      "@tscircuit/ngspice-spice-engine": [
+        "^0.0.23",
+        "^0.0.23"
+      ]
+    },
+    "oldLockRecordCount": 279,
+    "newLockRecordCount": 279,
+    "changedLockRecords": {
+      "tscircuit": {
+        "before": [
+          "tscircuit@0.0.3243",
+          "",
+          {
+            "dependencies": {
+              "zod": "^3.25.67",
+              "debug": "^4.3.6",
+              "react": "^19.1.0",
+              "tslib": "^2.8.1",
+              "rollup": "^4.53.2",
+              "spicey": "^0.0.14",
+              "comlink": "^4.4.2",
+              "kicadts": "^0.0.53",
+              "poppygl": "0.0.38",
+              "spicets": "^0.0.4",
+              "sucrase": "^3.35.0",
+              "flatbush": "^4.5.0",
+              "bpc-graph": "^0.0.57",
+              "gl-matrix": "^3.4.4",
+              "react-dom": "^19.1.0",
+              "@lume/kiwi": "^0.4.3",
+              "css-select": "5.1.0",
+              "jscad-fiber": "^0.0.93",
+              "minicssgrid": "^0.0.9",
+              "circuit-json": "0.0.552",
+              "s-expression": "^3.1.1",
+              "jscad-planner": "^0.0.21",
+              "@dagrejs/dagre": "^2.0.4",
+              "@tscircuit/cli": "^0.1.2475",
+              "circuit-to-svg": "^0.0.460",
+              "format-si-unit": "^0.0.12",
+              "graphics-debug": "^0.0.99",
+              "@resvg/resvg-js": "^2.6.2",
+              "@tscircuit/core": "^0.0.2425",
+              "@tscircuit/eval": "^0.0.1818",
+              "calculate-elbow": "^0.0.12",
+              "performance-now": "^2.1.0",
+              "@flatten-js/core": "^1.6.2",
+              "@tscircuit/props": "^0.0.735",
+              "connectivity-map": "^1.0.1",
+              "@tscircuit/checks": "^0.0.282",
+              "calculate-packing": "^0.0.90",
+              "rollup-plugin-dts": "^6.2.3",
+              "schematic-symbols": "^0.0.251",
+              "svg-path-commander": "^2.1.11",
+              "@rollup/plugin-json": "^6.1.0",
+              "@tscircuit/alphabet": "0.0.25",
+              "@tscircuit/krt-wasm": "^0.1.1",
+              "@tscircuit/miniflex": "^0.0.4",
+              "@tscircuit/runframe": "^0.0.3296",
+              "circuit-json-to-bpc": "^0.0.13",
+              "@tscircuit/matchpack": "^0.0.100",
+              "@tscircuit/soup-util": "^0.0.41",
+              "circuit-json-to-gltf": "^0.0.164",
+              "@tscircuit/math-utils": "0.0.39",
+              "circuit-json-to-spice": "^0.0.48",
+              "kicad-to-circuit-json": "^0.0.149",
+              "transformation-matrix": "^2.16.1",
+              "@tscircuit/footprinter": "^0.0.451",
+              "@tscircuit/image-utils": "^0.0.8",
+              "@tscircuit/manifold-2d": "^0.0.8",
+              "@rollup/plugin-commonjs": "^29.0.0",
+              "@tscircuit/modelprinter": "^0.0.37",
+              "@tscircuit/solver-utils": "^0.0.16",
+              "circuit-json-to-pnp-csv": "^0.0.20",
+              "@tscircuit/fanout-solver": "0.0.89",
+              "@tscircuit/simple-3d-svg": "^0.0.41",
+              "@rollup/plugin-typescript": "^12.3.0",
+              "calculate-cell-boundaries": "^0.0.25",
+              "circuit-json-to-simple-3d": "^0.0.9",
+              "kicad-component-converter": "^0.1.40",
+              "@rollup/plugin-node-resolve": "^16.0.3",
+              "@tscircuit/circuit-json-util": "^0.0.131",
+              "@tscircuit/copper-pour-solver": "^0.0.74",
+              "@tscircuit/capacity-autorouter": "^0.0.1133",
+              "@tscircuit/infgrid-ijump-astar": "^0.0.35",
+              "@tscircuit/create-fdm-enclosure": "0.0.6",
+              "@tscircuit/ngspice-spice-engine": "^0.0.23",
+              "@tscircuit/schematic-match-adapt": "^0.0.18",
+              "circuit-json-to-connectivity-map": "^0.0.33",
+              "@tscircuit/internal-dynamic-import": "^0.0.11",
+              "@tscircuit/infer-cable-insertion-point": "^0.0.5"
+            },
+            "peerDependencies": {
+              "typescript": "^5.0.0"
+            },
+            "bin": {
+              "tsci": "cli.mjs",
+              "tscircuit": "cli.mjs"
+            }
+          },
+          "sha512-K4uRlwE6jnlqFwFeVvu5irZ5AqWgWZrIZpH5o6Il/cvZAKc9fu/gIXhTtccROMiZ0vpJCkj6Ta63anarna/uJQ=="
+        ],
+        "after": [
+          "tscircuit@0.0.3244",
+          "",
+          {
+            "dependencies": {
+              "zod": "^3.25.67",
+              "debug": "^4.3.6",
+              "react": "^19.1.0",
+              "tslib": "^2.8.1",
+              "rollup": "^4.53.2",
+              "spicey": "^0.0.14",
+              "comlink": "^4.4.2",
+              "kicadts": "^0.0.53",
+              "poppygl": "0.0.38",
+              "spicets": "^0.0.4",
+              "sucrase": "^3.35.0",
+              "flatbush": "^4.5.0",
+              "bpc-graph": "^0.0.57",
+              "gl-matrix": "^3.4.4",
+              "react-dom": "^19.1.0",
+              "@lume/kiwi": "^0.4.3",
+              "css-select": "5.1.0",
+              "jscad-fiber": "^0.0.93",
+              "minicssgrid": "^0.0.9",
+              "circuit-json": "0.0.552",
+              "s-expression": "^3.1.1",
+              "jscad-planner": "^0.0.21",
+              "@dagrejs/dagre": "^2.0.4",
+              "@tscircuit/cli": "^0.1.2475",
+              "circuit-to-svg": "^0.0.460",
+              "format-si-unit": "^0.0.12",
+              "graphics-debug": "^0.0.99",
+              "@resvg/resvg-js": "^2.6.2",
+              "@tscircuit/core": "^0.0.2426",
+              "@tscircuit/eval": "^0.0.1819",
+              "calculate-elbow": "^0.0.12",
+              "performance-now": "^2.1.0",
+              "@flatten-js/core": "^1.6.2",
+              "@tscircuit/props": "^0.0.735",
+              "connectivity-map": "^1.0.1",
+              "@tscircuit/checks": "^0.0.282",
+              "calculate-packing": "^0.0.90",
+              "rollup-plugin-dts": "^6.2.3",
+              "schematic-symbols": "^0.0.251",
+              "svg-path-commander": "^2.1.11",
+              "@rollup/plugin-json": "^6.1.0",
+              "@tscircuit/alphabet": "0.0.25",
+              "@tscircuit/krt-wasm": "^0.1.1",
+              "@tscircuit/miniflex": "^0.0.4",
+              "@tscircuit/runframe": "^0.0.3297",
+              "circuit-json-to-bpc": "^0.0.13",
+              "@tscircuit/matchpack": "^0.0.100",
+              "@tscircuit/soup-util": "^0.0.41",
+              "circuit-json-to-gltf": "^0.0.164",
+              "@tscircuit/math-utils": "0.0.39",
+              "circuit-json-to-spice": "^0.0.48",
+              "kicad-to-circuit-json": "^0.0.149",
+              "transformation-matrix": "^2.16.1",
+              "@tscircuit/footprinter": "^0.0.451",
+              "@tscircuit/image-utils": "^0.0.8",
+              "@tscircuit/manifold-2d": "^0.0.8",
+              "@rollup/plugin-commonjs": "^29.0.0",
+              "@tscircuit/modelprinter": "^0.0.37",
+              "@tscircuit/solver-utils": "^0.0.16",
+              "circuit-json-to-pnp-csv": "^0.0.20",
+              "@tscircuit/fanout-solver": "0.0.90",
+              "@tscircuit/simple-3d-svg": "^0.0.41",
+              "@rollup/plugin-typescript": "^12.3.0",
+              "calculate-cell-boundaries": "^0.0.25",
+              "circuit-json-to-simple-3d": "^0.0.9",
+              "kicad-component-converter": "^0.1.40",
+              "@rollup/plugin-node-resolve": "^16.0.3",
+              "@tscircuit/circuit-json-util": "^0.0.131",
+              "@tscircuit/copper-pour-solver": "^0.0.74",
+              "@tscircuit/capacity-autorouter": "^0.0.1133",
+              "@tscircuit/infgrid-ijump-astar": "^0.0.35",
+              "@tscircuit/create-fdm-enclosure": "0.0.6",
+              "@tscircuit/ngspice-spice-engine": "^0.0.23",
+              "@tscircuit/schematic-match-adapt": "^0.0.18",
+              "circuit-json-to-connectivity-map": "^0.0.33",
+              "@tscircuit/internal-dynamic-import": "^0.0.11",
+              "@tscircuit/infer-cable-insertion-point": "^0.0.5"
+            },
+            "peerDependencies": {
+              "typescript": "^5.0.0"
+            },
+            "bin": {
+              "tsci": "cli.mjs",
+              "tscircuit": "cli.mjs"
+            }
+          },
+          "sha512-W82ENNmYVX4mGq71XYAzqJ60GshN7KjblwqTemqo1nrJ2cRBUSeOeSYSUFvTTGvCSictdu0hZz9OhOQROoVBwg=="
+        ]
+      },
+      "@tscircuit/core": {
+        "before": [
+          "@tscircuit/core@0.0.2425",
+          "",
+          {
+            "dependencies": {
+              "zod": "^3.25.67",
+              "nanoid": "^5.0.7",
+              "poppygl": "0.0.38",
+              "gl-matrix": "^3.4.4",
+              "@lume/kiwi": "^0.4.3",
+              "css-select": "5.1.0",
+              "jscad-fiber": "^0.0.93",
+              "jscad-planner": "^0.0.21",
+              "@dagrejs/dagre": "^2.0.4",
+              "format-si-unit": "^0.0.12",
+              "@jscad/modeling": "^2.13.0",
+              "performance-now": "^2.1.0",
+              "@flatten-js/core": "^1.6.2",
+              "react-reconciler": "^0.32.0",
+              "calculate-packing": "^0.0.90",
+              "svg-path-commander": "^2.1.11",
+              "transformation-matrix": "^2.16.1",
+              "calculate-cell-boundaries": "^0.0.25"
+            },
+            "peerDependencies": {
+              "spicets": "*",
+              "bpc-graph": "*",
+              "typescript": "^5.0.0",
+              "circuit-json": "*",
+              "@tscircuit/props": "*",
+              "@tscircuit/checks": "*",
+              "schematic-symbols": "*",
+              "circuit-json-to-bpc": "*",
+              "@tscircuit/matchpack": "*",
+              "@tscircuit/math-utils": "*",
+              "circuit-json-to-spice": "*",
+              "@tscircuit/footprinter": "*",
+              "@tscircuit/manifold-2d": "*",
+              "@tscircuit/cableprinter": "*",
+              "@tscircuit/modelprinter": "*",
+              "@tscircuit/circuit-json-util": "*",
+              "@tscircuit/capacity-autorouter": "*",
+              "@tscircuit/infgrid-ijump-astar": "*",
+              "@tscircuit/create-fdm-enclosure": "*",
+              "@tscircuit/schematic-match-adapt": "*",
+              "circuit-json-to-connectivity-map": "*"
+            }
+          },
+          "sha512-LN7wEd9sjAAx5A92dvN8JeA7v9NIqAYMF54FXjJUNRglRKULoCvz8+CgV5huvbeYIkqK4VqUJLSWF9G5o+L90A=="
+        ],
+        "after": [
+          "@tscircuit/core@0.0.2426",
+          "",
+          {
+            "dependencies": {
+              "zod": "^3.25.67",
+              "nanoid": "^5.0.7",
+              "poppygl": "0.0.38",
+              "gl-matrix": "^3.4.4",
+              "@lume/kiwi": "^0.4.3",
+              "css-select": "5.1.0",
+              "jscad-fiber": "^0.0.93",
+              "jscad-planner": "^0.0.21",
+              "@dagrejs/dagre": "^2.0.4",
+              "format-si-unit": "^0.0.12",
+              "@jscad/modeling": "^2.13.0",
+              "performance-now": "^2.1.0",
+              "@flatten-js/core": "^1.6.2",
+              "react-reconciler": "^0.32.0",
+              "calculate-packing": "^0.0.90",
+              "svg-path-commander": "^2.1.11",
+              "transformation-matrix": "^2.16.1",
+              "calculate-cell-boundaries": "^0.0.25"
+            },
+            "peerDependencies": {
+              "spicets": "*",
+              "bpc-graph": "*",
+              "typescript": "^5.0.0",
+              "circuit-json": "*",
+              "@tscircuit/props": "*",
+              "@tscircuit/checks": "*",
+              "schematic-symbols": "*",
+              "circuit-json-to-bpc": "*",
+              "@tscircuit/matchpack": "*",
+              "@tscircuit/math-utils": "*",
+              "circuit-json-to-spice": "*",
+              "@tscircuit/footprinter": "*",
+              "@tscircuit/manifold-2d": "*",
+              "@tscircuit/cableprinter": "*",
+              "@tscircuit/modelprinter": "*",
+              "@tscircuit/circuit-json-util": "*",
+              "@tscircuit/capacity-autorouter": "*",
+              "@tscircuit/infgrid-ijump-astar": "*",
+              "@tscircuit/create-fdm-enclosure": "*",
+              "@tscircuit/schematic-match-adapt": "*",
+              "circuit-json-to-connectivity-map": "*"
+            }
+          },
+          "sha512-78dF87gV5Pix+c1iFSV/B5HD/tyt8E2yTy824SpPInCNUhq/O60r64RUlKyOfzrHyE9AOIomIWkBVRPfS6q+hQ=="
+        ]
+      },
+      "@tscircuit/eval": {
+        "before": [
+          "@tscircuit/eval@0.0.1818",
+          "",
+          {
+            "peerDependencies": {
+              "zod": "3",
+              "typescript": "^5.0.0",
+              "circuit-json": "*",
+              "@tscircuit/core": ">=0.0.1906"
+            }
+          },
+          "sha512-ar70mlpktg682FACZ2lxIRtaYKoB97fEcF3TxsBzAQd31Gz8NqkptLDE8vmjMZWyMzmx9k6uaExISHjPCzXUuA=="
+        ],
+        "after": [
+          "@tscircuit/eval@0.0.1819",
+          "",
+          {
+            "peerDependencies": {
+              "zod": "3",
+              "typescript": "^5.0.0",
+              "circuit-json": "*",
+              "@tscircuit/core": ">=0.0.1906"
+            }
+          },
+          "sha512-D+O4tV3B/724sySeTmIxVUfR6Qe/Yfx+SplkzTRbz1jOdNwULNJKNX+mo3y6IGLxrNk5ynBuMQt9BaZmca5oPw=="
+        ]
+      },
+      "@tscircuit/runframe": {
+        "before": [
+          "@tscircuit/runframe@0.0.3296",
+          "",
+          {
+            "dependencies": {
+              "debug": "^4.4.0",
+              "format-si-unit": "^0.0.12",
+              "@tscircuit/core": "^0.0.2293",
+              "@tscircuit/eval": "0.0.1817",
+              "schematic-symbols": "^0.0.251",
+              "@tscircuit/solver-utils": "^0.0.16"
+            }
+          },
+          "sha512-3mTqSELbEhzsQZSSyLbFMRefkxDHWcv+XBooWa/j/bhkT29TAtNma/sS+hBeFkjO+aXDz96yHGadbqHoAG+DKQ=="
+        ],
+        "after": [
+          "@tscircuit/runframe@0.0.3297",
+          "",
+          {
+            "dependencies": {
+              "debug": "^4.4.0",
+              "format-si-unit": "^0.0.12",
+              "@tscircuit/core": "^0.0.2293",
+              "@tscircuit/eval": "0.0.1818",
+              "schematic-symbols": "^0.0.251",
+              "@tscircuit/solver-utils": "^0.0.16"
+            }
+          },
+          "sha512-zYzViGaeIjppHfrZcMQq/qKL2qfy7HaYbpqdctdvgh2dH3jjVLQI6yBGXIS2ur//76QXN8GHRa4hbpp8srv4nQ=="
+        ]
+      },
+      "@tscircuit/fanout-solver": {
+        "before": [
+          "@tscircuit/fanout-solver@0.0.89",
+          "",
+          {
+            "dependencies": {
+              "graphics-debug": "0.0.99",
+              "@tscircuit/solver-utils": "0.0.19",
+              "@tscircuit/capacity-autorouter": "0.0.718"
+            },
+            "peerDependencies": {
+              "typescript": "^5"
+            }
+          },
+          "sha512-APDrhTwTxadAJcq9VDwfQtXqC4lCaNUmuNed5peins0xk441NTsqip10mpHQKJtfsNMZb0Bu+vIrFFRELMaQ5Q=="
+        ],
+        "after": [
+          "@tscircuit/fanout-solver@0.0.90",
+          "",
+          {
+            "dependencies": {
+              "graphics-debug": "0.0.99",
+              "@tscircuit/solver-utils": "0.0.19",
+              "@tscircuit/capacity-autorouter": "0.0.718"
+            },
+            "peerDependencies": {
+              "typescript": "^5"
+            }
+          },
+          "sha512-mmUHkoLOUeurTcNw3KzHRCmqdXvSZ7EPk8yPW9KnfpARbqQ8EWwfIPO6o6RGmeIYfiiIv9xAdMJVWMejsdaCTg=="
+        ]
+      },
+      "@tscircuit/runframe/@tscircuit/eval": {
+        "before": [
+          "@tscircuit/eval@0.0.1817",
+          "",
+          {
+            "peerDependencies": {
+              "zod": "3",
+              "typescript": "^5.0.0",
+              "circuit-json": "*",
+              "@tscircuit/core": ">=0.0.1906"
+            }
+          },
+          "sha512-9+u0AnFys+WTD87Kp0YVhsPW00VUeXDenYMz8KIj9J0gyCW5k+70gyWhRK89o0JRcrSeQWGAkN4Tn6VxaI2ueA=="
+        ],
+        "after": [
+          "@tscircuit/eval@0.0.1818",
+          "",
+          {
+            "peerDependencies": {
+              "zod": "3",
+              "typescript": "^5.0.0",
+              "circuit-json": "*",
+              "@tscircuit/core": ">=0.0.1906"
+            }
+          },
+          "sha512-ar70mlpktg682FACZ2lxIRtaYKoB97fEcF3TxsBzAQd31Gz8NqkptLDE8vmjMZWyMzmx9k6uaExISHjPCzXUuA=="
+        ]
+      }
+    },
+    "beforePackageSha256": "ccd64599a0851ee1ed7b4c8ec3c18487f7eab6b2ffec7920bc39b007bae12bdb",
+    "afterPackageSha256": "13b96086943c581a495b937ced1c75b0767a3e2af7b707e4f53a816ab3ead3d7",
+    "beforeLockSha256": "1a539e10575d08ee53d4ea289ed9b56975129123336ba552ff0792fb8bba97e2",
+    "afterLockSha256": "1427b095c748f72640c558e57ee58b8e765f8489d46f8e1333bdc58e3b107b3d",
+    "autorouterDependenciesUnchanged": true,
+    "autorouterDependenciesPackageSha256": "7b4c1ecf979432e472a4f0589ed49976a8a1323ff7bf651a5938ee7006b61360",
+    "autorouterDependenciesLockSha256": "ec313c582c29c1e35bb31190151a5649198c177119d32fe311746c06e94e8c4e",
+    "noInstallBuildRouting": true,
+    "resolutionPolicy": "Preserve all still-compatible frozen transitive records from3243; update only exact newly selected published packages and nested Runframe Eval. No independent latest transitive refresh."
   },
-  "changedTarballs": {
-    "fanout-tarball-proof": {
-      "name": "@tscircuit/fanout-solver",
-      "version": "0.0.89",
-      "entrySha256": "ee06af452060e90d70c49f00a37cf516638f7649817fc4e94decb39da4d07cf9",
-      "integrity": "sha512-APDrhTwTxadAJcq9VDwfQtXqC4lCaNUmuNed5peins0xk441NTsqip10mpHQKJtfsNMZb0Bu+vIrFFRELMaQ5Q==",
-      "integrityVerified": true,
-      "proofSha256": "e73304a13a1c27dd88348e1e61f1b85cb9b0122f93680606c7a58ad715495ec4"
-    },
-    "runframe-tarball-proof": {
-      "name": "@tscircuit/runframe",
-      "version": "0.0.3296",
-      "entrySha256": "46db1cdbce2f72229ce9ef070672b130e622a0aed84c9236556a4e91a421cb4c",
-      "integrity": "sha512-3mTqSELbEhzsQZSSyLbFMRefkxDHWcv+XBooWa/j/bhkT29TAtNma/sS+hBeFkjO+aXDz96yHGadbqHoAG+DKQ==",
-      "integrityVerified": true,
-      "proofSha256": "0c03c956c9b6fbb2d8f291cf33d1c4dbdd5381368320d0af9729aa2b518071c7"
-    },
-    "autorouter-tarball-proof": {
-      "name": "@tscircuit/capacity-autorouter",
-      "version": "0.0.1133",
-      "entrySha256": "44e2cc5a759e11f3982a876733d0f224dcb901c0ac0840e2ff1ec5be434a4285",
-      "integrity": "sha512-8SngU7pQFRRK0DjX+/c2SyWHJXcoc26bKfRmXAMC+C3gA0g+n9lmRHxaC2fTtA406ACXZZpAJPjuxl6K/M4gtA==",
-      "integrityVerified": true,
-      "proofSha256": "888894c31488760b96a5a801ba3dd2068f62426583db7bf41a43d91576642b43"
-    },
-    "core-tarball-proof": {
-      "name": "@tscircuit/core",
-      "version": "0.0.2425",
-      "entrySha256": "889b3cf17684cec24dae36ebf7da06c85dd0713e093b2665b66de696bacb7f03",
-      "integrity": "sha512-LN7wEd9sjAAx5A92dvN8JeA7v9NIqAYMF54FXjJUNRglRKULoCvz8+CgV5huvbeYIkqK4VqUJLSWF9G5o+L90A==",
-      "integrityVerified": true,
-      "proofSha256": "78a2a36d90302c5a869d402f107c6df45485ba031e12b59c67ee5cb7c9b2044c"
-    },
-    "tscircuit-tarball-proof": {
-      "name": "tscircuit",
-      "version": "0.0.3243",
-      "entrySha256": "cfd669f2d96ac77eb054aab53ff34a80120bcd3db72b87f969b3d8b8d2af78a3",
-      "integrity": "sha512-K4uRlwE6jnlqFwFeVvu5irZ5AqWgWZrIZpH5o6Il/cvZAKc9fu/gIXhTtccROMiZ0vpJCkj6Ta63anarna/uJQ==",
-      "integrityVerified": true,
-      "proofSha256": "07dd622578fc517c6aaddafc545d9a236b826a4fc6a076ab0be1c0e235ab4fa7"
-    }
+  "directGraph": {
+    "bun": "1.3.1",
+    "jsoncParsed": true,
+    "checkedDeclarations": 419,
+    "directDependencies": 75,
+    "records": 279,
+    "checked": [
+      {
+        "owner": "",
+        "name": "zod",
+        "range": "^3.25.67",
+        "kind": "root",
+        "key": "zod",
+        "version": "3.25.76"
+      },
+      {
+        "owner": "",
+        "name": "debug",
+        "range": "^4.3.6",
+        "kind": "root",
+        "key": "debug",
+        "version": "4.4.3"
+      },
+      {
+        "owner": "",
+        "name": "react",
+        "range": "^19.1.0",
+        "kind": "root",
+        "key": "react",
+        "version": "19.3.1"
+      },
+      {
+        "owner": "",
+        "name": "tslib",
+        "range": "^2.8.1",
+        "kind": "root",
+        "key": "tslib",
+        "version": "2.9.1"
+      },
+      {
+        "owner": "",
+        "name": "spicey",
+        "range": "^0.0.14",
+        "kind": "root",
+        "key": "spicey",
+        "version": "0.0.14"
+      },
+      {
+        "owner": "",
+        "name": "comlink",
+        "range": "^4.4.2",
+        "kind": "root",
+        "key": "comlink",
+        "version": "4.4.2"
+      },
+      {
+        "owner": "",
+        "name": "kicadts",
+        "range": "^0.0.53",
+        "kind": "root",
+        "key": "kicadts",
+        "version": "0.0.53"
+      },
+      {
+        "owner": "",
+        "name": "poppygl",
+        "range": "0.0.38",
+        "kind": "root",
+        "key": "poppygl",
+        "version": "0.0.38"
+      },
+      {
+        "owner": "",
+        "name": "spicets",
+        "range": "^0.0.4",
+        "kind": "root",
+        "key": "spicets",
+        "version": "0.0.4"
+      },
+      {
+        "owner": "",
+        "name": "sucrase",
+        "range": "^3.35.0",
+        "kind": "root",
+        "key": "sucrase",
+        "version": "3.35.1"
+      },
+      {
+        "owner": "",
+        "name": "flatbush",
+        "range": "^4.5.0",
+        "kind": "root",
+        "key": "flatbush",
+        "version": "4.7.0"
+      },
+      {
+        "owner": "",
+        "name": "bpc-graph",
+        "range": "^0.0.57",
+        "kind": "root",
+        "key": "bpc-graph",
+        "version": "0.0.57"
+      },
+      {
+        "owner": "",
+        "name": "gl-matrix",
+        "range": "^3.4.4",
+        "kind": "root",
+        "key": "gl-matrix",
+        "version": "3.4.4"
+      },
+      {
+        "owner": "",
+        "name": "react-dom",
+        "range": "^19.1.0",
+        "kind": "root",
+        "key": "react-dom",
+        "version": "19.3.1"
+      },
+      {
+        "owner": "",
+        "name": "@lume/kiwi",
+        "range": "^0.4.3",
+        "kind": "root",
+        "key": "@lume/kiwi",
+        "version": "0.4.4"
+      },
+      {
+        "owner": "",
+        "name": "css-select",
+        "range": "5.1.0",
+        "kind": "root",
+        "key": "css-select",
+        "version": "5.1.0"
+      },
+      {
+        "owner": "",
+        "name": "jscad-fiber",
+        "range": "^0.0.93",
+        "kind": "root",
+        "key": "jscad-fiber",
+        "version": "0.0.93"
+      },
+      {
+        "owner": "",
+        "name": "minicssgrid",
+        "range": "^0.0.9",
+        "kind": "root",
+        "key": "minicssgrid",
+        "version": "0.0.9"
+      },
+      {
+        "owner": "",
+        "name": "circuit-json",
+        "range": "0.0.552",
+        "kind": "root",
+        "key": "circuit-json",
+        "version": "0.0.552"
+      },
+      {
+        "owner": "",
+        "name": "s-expression",
+        "range": "^3.1.1",
+        "kind": "root",
+        "key": "s-expression",
+        "version": "3.1.1"
+      },
+      {
+        "owner": "",
+        "name": "jscad-planner",
+        "range": "^0.0.21",
+        "kind": "root",
+        "key": "jscad-planner",
+        "version": "0.0.21"
+      },
+      {
+        "owner": "",
+        "name": "@dagrejs/dagre",
+        "range": "^2.0.4",
+        "kind": "root",
+        "key": "@dagrejs/dagre",
+        "version": "2.0.4"
+      },
+      {
+        "owner": "",
+        "name": "circuit-to-svg",
+        "range": "^0.0.460",
+        "kind": "root",
+        "key": "circuit-to-svg",
+        "version": "0.0.460"
+      },
+      {
+        "owner": "",
+        "name": "format-si-unit",
+        "range": "^0.0.12",
+        "kind": "root",
+        "key": "format-si-unit",
+        "version": "0.0.12"
+      },
+      {
+        "owner": "",
+        "name": "graphics-debug",
+        "range": "^0.0.99",
+        "kind": "root",
+        "key": "graphics-debug",
+        "version": "0.0.99"
+      },
+      {
+        "owner": "",
+        "name": "@resvg/resvg-js",
+        "range": "^2.6.2",
+        "kind": "root",
+        "key": "@resvg/resvg-js",
+        "version": "2.6.2"
+      },
+      {
+        "owner": "",
+        "name": "calculate-elbow",
+        "range": "^0.0.12",
+        "kind": "root",
+        "key": "calculate-elbow",
+        "version": "0.0.12"
+      },
+      {
+        "owner": "",
+        "name": "performance-now",
+        "range": "^2.1.0",
+        "kind": "root",
+        "key": "performance-now",
+        "version": "2.1.0"
+      },
+      {
+        "owner": "",
+        "name": "@flatten-js/core",
+        "range": "^1.6.2",
+        "kind": "root",
+        "key": "@flatten-js/core",
+        "version": "1.6.15"
+      },
+      {
+        "owner": "",
+        "name": "@tscircuit/props",
+        "range": "^0.0.735",
+        "kind": "root",
+        "key": "@tscircuit/props",
+        "version": "0.0.735"
+      },
+      {
+        "owner": "",
+        "name": "connectivity-map",
+        "range": "^1.0.1",
+        "kind": "root",
+        "key": "connectivity-map",
+        "version": "1.0.1"
+      },
+      {
+        "owner": "",
+        "name": "@tscircuit/checks",
+        "range": "^0.0.282",
+        "kind": "root",
+        "key": "@tscircuit/checks",
+        "version": "0.0.282"
+      },
+      {
+        "owner": "",
+        "name": "calculate-packing",
+        "range": "^0.0.90",
+        "kind": "root",
+        "key": "calculate-packing",
+        "version": "0.0.90"
+      },
+      {
+        "owner": "",
+        "name": "schematic-symbols",
+        "range": "^0.0.251",
+        "kind": "root",
+        "key": "schematic-symbols",
+        "version": "0.0.251"
+      },
+      {
+        "owner": "",
+        "name": "svg-path-commander",
+        "range": "^2.1.11",
+        "kind": "root",
+        "key": "svg-path-commander",
+        "version": "2.3.4"
+      },
+      {
+        "owner": "",
+        "name": "@tscircuit/alphabet",
+        "range": "0.0.25",
+        "kind": "root",
+        "key": "@tscircuit/alphabet",
+        "version": "0.0.25"
+      },
+      {
+        "owner": "",
+        "name": "@tscircuit/krt-wasm",
+        "range": "^0.1.1",
+        "kind": "root",
+        "key": "@tscircuit/krt-wasm",
+        "version": "0.1.9"
+      },
+      {
+        "owner": "",
+        "name": "@tscircuit/miniflex",
+        "range": "^0.0.4",
+        "kind": "root",
+        "key": "@tscircuit/miniflex",
+        "version": "0.0.4"
+      },
+      {
+        "owner": "",
+        "name": "@tscircuit/runframe",
+        "range": "^0.0.3297",
+        "kind": "root",
+        "key": "@tscircuit/runframe",
+        "version": "0.0.3297"
+      },
+      {
+        "owner": "",
+        "name": "circuit-json-to-bpc",
+        "range": "^0.0.13",
+        "kind": "root",
+        "key": "circuit-json-to-bpc",
+        "version": "0.0.13"
+      },
+      {
+        "owner": "",
+        "name": "@tscircuit/matchpack",
+        "range": "^0.0.100",
+        "kind": "root",
+        "key": "@tscircuit/matchpack",
+        "version": "0.0.100"
+      },
+      {
+        "owner": "",
+        "name": "@tscircuit/soup-util",
+        "range": "^0.0.41",
+        "kind": "root",
+        "key": "@tscircuit/soup-util",
+        "version": "0.0.41"
+      },
+      {
+        "owner": "",
+        "name": "circuit-json-to-gltf",
+        "range": "^0.0.164",
+        "kind": "root",
+        "key": "circuit-json-to-gltf",
+        "version": "0.0.164"
+      },
+      {
+        "owner": "",
+        "name": "@tscircuit/math-utils",
+        "range": "0.0.39",
+        "kind": "root",
+        "key": "@tscircuit/math-utils",
+        "version": "0.0.39"
+      },
+      {
+        "owner": "",
+        "name": "circuit-json-to-spice",
+        "range": "^0.0.48",
+        "kind": "root",
+        "key": "circuit-json-to-spice",
+        "version": "0.0.48"
+      },
+      {
+        "owner": "",
+        "name": "kicad-to-circuit-json",
+        "range": "^0.0.149",
+        "kind": "root",
+        "key": "kicad-to-circuit-json",
+        "version": "0.0.149"
+      },
+      {
+        "owner": "",
+        "name": "transformation-matrix",
+        "range": "^2.16.1",
+        "kind": "root",
+        "key": "transformation-matrix",
+        "version": "2.16.1"
+      },
+      {
+        "owner": "",
+        "name": "@tscircuit/footprinter",
+        "range": "^0.0.451",
+        "kind": "root",
+        "key": "@tscircuit/footprinter",
+        "version": "0.0.451"
+      },
+      {
+        "owner": "",
+        "name": "@tscircuit/image-utils",
+        "range": "^0.0.8",
+        "kind": "root",
+        "key": "@tscircuit/image-utils",
+        "version": "0.0.8"
+      },
+      {
+        "owner": "",
+        "name": "@tscircuit/manifold-2d",
+        "range": "^0.0.8",
+        "kind": "root",
+        "key": "@tscircuit/manifold-2d",
+        "version": "0.0.8"
+      },
+      {
+        "owner": "",
+        "name": "@tscircuit/modelprinter",
+        "range": "^0.0.37",
+        "kind": "root",
+        "key": "@tscircuit/modelprinter",
+        "version": "0.0.37"
+      },
+      {
+        "owner": "",
+        "name": "@tscircuit/solver-utils",
+        "range": "^0.0.16",
+        "kind": "root",
+        "key": "@tscircuit/solver-utils",
+        "version": "0.0.16"
+      },
+      {
+        "owner": "",
+        "name": "circuit-json-to-pnp-csv",
+        "range": "^0.0.20",
+        "kind": "root",
+        "key": "circuit-json-to-pnp-csv",
+        "version": "0.0.20"
+      },
+      {
+        "owner": "",
+        "name": "@tscircuit/fanout-solver",
+        "range": "0.0.90",
+        "kind": "root",
+        "key": "@tscircuit/fanout-solver",
+        "version": "0.0.90"
+      },
+      {
+        "owner": "",
+        "name": "@tscircuit/simple-3d-svg",
+        "range": "^0.0.41",
+        "kind": "root",
+        "key": "@tscircuit/simple-3d-svg",
+        "version": "0.0.41"
+      },
+      {
+        "owner": "",
+        "name": "calculate-cell-boundaries",
+        "range": "^0.0.25",
+        "kind": "root",
+        "key": "calculate-cell-boundaries",
+        "version": "0.0.25"
+      },
+      {
+        "owner": "",
+        "name": "circuit-json-to-simple-3d",
+        "range": "^0.0.9",
+        "kind": "root",
+        "key": "circuit-json-to-simple-3d",
+        "version": "0.0.9"
+      },
+      {
+        "owner": "",
+        "name": "kicad-component-converter",
+        "range": "^0.1.40",
+        "kind": "root",
+        "key": "kicad-component-converter",
+        "version": "0.1.41"
+      },
+      {
+        "owner": "",
+        "name": "@tscircuit/circuit-json-util",
+        "range": "^0.0.131",
+        "kind": "root",
+        "key": "@tscircuit/circuit-json-util",
+        "version": "0.0.131"
+      },
+      {
+        "owner": "",
+        "name": "@tscircuit/copper-pour-solver",
+        "range": "^0.0.74",
+        "kind": "root",
+        "key": "@tscircuit/copper-pour-solver",
+        "version": "0.0.74"
+      },
+      {
+        "owner": "",
+        "name": "@tscircuit/infgrid-ijump-astar",
+        "range": "^0.0.35",
+        "kind": "root",
+        "key": "@tscircuit/infgrid-ijump-astar",
+        "version": "0.0.35"
+      },
+      {
+        "owner": "",
+        "name": "@tscircuit/create-fdm-enclosure",
+        "range": "0.0.6",
+        "kind": "root",
+        "key": "@tscircuit/create-fdm-enclosure",
+        "version": "0.0.6"
+      },
+      {
+        "owner": "",
+        "name": "@tscircuit/ngspice-spice-engine",
+        "range": "^0.0.23",
+        "kind": "root",
+        "key": "@tscircuit/ngspice-spice-engine",
+        "version": "0.0.23"
+      },
+      {
+        "owner": "",
+        "name": "@tscircuit/schematic-match-adapt",
+        "range": "^0.0.18",
+        "kind": "root",
+        "key": "@tscircuit/schematic-match-adapt",
+        "version": "0.0.18"
+      },
+      {
+        "owner": "",
+        "name": "circuit-json-to-connectivity-map",
+        "range": "^0.0.33",
+        "kind": "root",
+        "key": "circuit-json-to-connectivity-map",
+        "version": "0.0.33"
+      },
+      {
+        "owner": "",
+        "name": "@tscircuit/internal-dynamic-import",
+        "range": "^0.0.11",
+        "kind": "root",
+        "key": "@tscircuit/internal-dynamic-import",
+        "version": "0.0.11"
+      },
+      {
+        "owner": "",
+        "name": "@tscircuit/infer-cable-insertion-point",
+        "range": "^0.0.5",
+        "kind": "root",
+        "key": "@tscircuit/infer-cable-insertion-point",
+        "version": "0.0.5"
+      },
+      {
+        "owner": "",
+        "name": "nanoid",
+        "range": "^5.0.7",
+        "kind": "root",
+        "key": "nanoid",
+        "version": "5.1.16"
+      },
+      {
+        "owner": "",
+        "name": "@jscad/modeling",
+        "range": "^2.13.0",
+        "kind": "root",
+        "key": "@jscad/modeling",
+        "version": "2.13.0"
+      },
+      {
+        "owner": "",
+        "name": "react-reconciler",
+        "range": "^0.32.0",
+        "kind": "root",
+        "key": "react-reconciler",
+        "version": "0.32.0"
+      },
+      {
+        "owner": "",
+        "name": "@tscircuit/mm",
+        "range": "0.0.9",
+        "kind": "root",
+        "key": "@tscircuit/mm",
+        "version": "0.0.9"
+      },
+      {
+        "owner": "",
+        "name": "tscircuit",
+        "range": "0.0.3244",
+        "kind": "root",
+        "key": "tscircuit",
+        "version": "0.0.3244"
+      },
+      {
+        "owner": "",
+        "name": "@tscircuit/core",
+        "range": "0.0.2426",
+        "kind": "root",
+        "key": "@tscircuit/core",
+        "version": "0.0.2426"
+      },
+      {
+        "owner": "",
+        "name": "@tscircuit/eval",
+        "range": "0.0.1819",
+        "kind": "root",
+        "key": "@tscircuit/eval",
+        "version": "0.0.1819"
+      },
+      {
+        "owner": "",
+        "name": "@tscircuit/capacity-autorouter",
+        "range": "0.0.1133",
+        "kind": "root",
+        "key": "@tscircuit/capacity-autorouter",
+        "version": "0.0.1133"
+      },
+      {
+        "owner": "@babel/code-frame",
+        "name": "@babel/helper-validator-identifier",
+        "range": "^8.0.6",
+        "kind": "dependency",
+        "key": "@babel/helper-validator-identifier",
+        "version": "8.0.6"
+      },
+      {
+        "owner": "@babel/code-frame",
+        "name": "js-tokens",
+        "range": "^10.0.0",
+        "kind": "dependency",
+        "key": "@babel/code-frame/js-tokens",
+        "version": "10.0.0"
+      },
+      {
+        "owner": "@dagrejs/dagre",
+        "name": "@dagrejs/graphlib",
+        "range": "3.0.4",
+        "kind": "dependency",
+        "key": "@dagrejs/graphlib",
+        "version": "3.0.4"
+      },
+      {
+        "owner": "@flatten-js/core",
+        "name": "@flatten-js/interval-tree",
+        "range": "^2.0.0",
+        "kind": "dependency",
+        "key": "@flatten-js/interval-tree",
+        "version": "2.0.3"
+      },
+      {
+        "owner": "@flatten-js/interval-tree",
+        "name": "tslib",
+        "range": "^2.8.1",
+        "kind": "dependency",
+        "key": "tslib",
+        "version": "2.9.1"
+      },
+      {
+        "owner": "@jridgewell/gen-mapping",
+        "name": "@jridgewell/sourcemap-codec",
+        "range": "^1.5.0",
+        "kind": "dependency",
+        "key": "@jridgewell/sourcemap-codec",
+        "version": "1.6.0"
+      },
+      {
+        "owner": "@jridgewell/gen-mapping",
+        "name": "@jridgewell/trace-mapping",
+        "range": "^0.3.24",
+        "kind": "dependency",
+        "key": "@jridgewell/trace-mapping",
+        "version": "0.3.31"
+      },
+      {
+        "owner": "@jridgewell/remapping",
+        "name": "@jridgewell/gen-mapping",
+        "range": "^0.3.5",
+        "kind": "dependency",
+        "key": "@jridgewell/gen-mapping",
+        "version": "0.3.13"
+      },
+      {
+        "owner": "@jridgewell/remapping",
+        "name": "@jridgewell/trace-mapping",
+        "range": "^0.3.24",
+        "kind": "dependency",
+        "key": "@jridgewell/trace-mapping",
+        "version": "0.3.31"
+      },
+      {
+        "owner": "@jridgewell/trace-mapping",
+        "name": "@jridgewell/resolve-uri",
+        "range": "^3.1.0",
+        "kind": "dependency",
+        "key": "@jridgewell/resolve-uri",
+        "version": "3.1.3"
+      },
+      {
+        "owner": "@jridgewell/trace-mapping",
+        "name": "@jridgewell/sourcemap-codec",
+        "range": "^1.4.14",
+        "kind": "dependency",
+        "key": "@jridgewell/sourcemap-codec",
+        "version": "1.6.0"
+      },
+      {
+        "owner": "@react-hook/resize-observer",
+        "name": "@react-hook/latest",
+        "range": "^1.0.2",
+        "kind": "dependency",
+        "key": "@react-hook/latest",
+        "version": "1.0.3"
+      },
+      {
+        "owner": "@react-hook/resize-observer",
+        "name": "@react-hook/passive-layout-effect",
+        "range": "^1.2.0",
+        "kind": "dependency",
+        "key": "@react-hook/passive-layout-effect",
+        "version": "1.2.1"
+      },
+      {
+        "owner": "@rollup/plugin-commonjs",
+        "name": "@rollup/pluginutils",
+        "range": "^5.0.1",
+        "kind": "dependency",
+        "key": "@rollup/pluginutils",
+        "version": "5.5.1"
+      },
+      {
+        "owner": "@rollup/plugin-commonjs",
+        "name": "commondir",
+        "range": "^1.0.1",
+        "kind": "dependency",
+        "key": "commondir",
+        "version": "1.0.1"
+      },
+      {
+        "owner": "@rollup/plugin-commonjs",
+        "name": "estree-walker",
+        "range": "^2.0.2",
+        "kind": "dependency",
+        "key": "estree-walker",
+        "version": "2.0.2"
+      },
+      {
+        "owner": "@rollup/plugin-commonjs",
+        "name": "fdir",
+        "range": "^6.2.0",
+        "kind": "dependency",
+        "key": "fdir",
+        "version": "6.5.0"
+      },
+      {
+        "owner": "@rollup/plugin-commonjs",
+        "name": "is-reference",
+        "range": "1.2.1",
+        "kind": "dependency",
+        "key": "is-reference",
+        "version": "1.2.1"
+      },
+      {
+        "owner": "@rollup/plugin-commonjs",
+        "name": "magic-string",
+        "range": "^0.30.3",
+        "kind": "dependency",
+        "key": "magic-string",
+        "version": "0.30.21"
+      },
+      {
+        "owner": "@rollup/plugin-commonjs",
+        "name": "picomatch",
+        "range": "^4.0.2",
+        "kind": "dependency",
+        "key": "picomatch",
+        "version": "4.0.7"
+      },
+      {
+        "owner": "@rollup/plugin-json",
+        "name": "@rollup/pluginutils",
+        "range": "^5.1.0",
+        "kind": "dependency",
+        "key": "@rollup/pluginutils",
+        "version": "5.5.1"
+      },
+      {
+        "owner": "@rollup/plugin-node-resolve",
+        "name": "@rollup/pluginutils",
+        "range": "^5.0.1",
+        "kind": "dependency",
+        "key": "@rollup/pluginutils",
+        "version": "5.5.1"
+      },
+      {
+        "owner": "@rollup/plugin-node-resolve",
+        "name": "@types/resolve",
+        "range": "1.20.2",
+        "kind": "dependency",
+        "key": "@types/resolve",
+        "version": "1.20.2"
+      },
+      {
+        "owner": "@rollup/plugin-node-resolve",
+        "name": "deepmerge",
+        "range": "^4.2.2",
+        "kind": "dependency",
+        "key": "deepmerge",
+        "version": "4.3.1"
+      },
+      {
+        "owner": "@rollup/plugin-node-resolve",
+        "name": "is-module",
+        "range": "^1.0.0",
+        "kind": "dependency",
+        "key": "is-module",
+        "version": "1.0.0"
+      },
+      {
+        "owner": "@rollup/plugin-node-resolve",
+        "name": "resolve",
+        "range": "^1.22.1",
+        "kind": "dependency",
+        "key": "resolve",
+        "version": "1.22.14"
+      },
+      {
+        "owner": "@rollup/plugin-typescript",
+        "name": "@rollup/pluginutils",
+        "range": "^5.1.0",
+        "kind": "dependency",
+        "key": "@rollup/pluginutils",
+        "version": "5.5.1"
+      },
+      {
+        "owner": "@rollup/plugin-typescript",
+        "name": "resolve",
+        "range": "^1.22.1",
+        "kind": "dependency",
+        "key": "resolve",
+        "version": "1.22.14"
+      },
+      {
+        "owner": "@rollup/pluginutils",
+        "name": "@types/estree",
+        "range": "^1.0.0",
+        "kind": "dependency",
+        "key": "@types/estree",
+        "version": "1.0.10"
+      },
+      {
+        "owner": "@rollup/pluginutils",
+        "name": "estree-walker",
+        "range": "^2.0.2",
+        "kind": "dependency",
+        "key": "estree-walker",
+        "version": "2.0.2"
+      },
+      {
+        "owner": "@rollup/pluginutils",
+        "name": "picomatch",
+        "range": "^4.0.2",
+        "kind": "dependency",
+        "key": "picomatch",
+        "version": "4.0.7"
+      },
+      {
+        "owner": "@tscircuit/cableprinter",
+        "name": "zod",
+        "range": "^3.25.76",
+        "kind": "dependency",
+        "key": "zod",
+        "version": "3.25.76"
+      },
+      {
+        "owner": "@tscircuit/capacity-autorouter",
+        "name": "stack-svgs",
+        "range": "^0.0.1",
+        "kind": "dependency",
+        "key": "stack-svgs",
+        "version": "0.0.1"
+      },
+      {
+        "owner": "@tscircuit/capacity-autorouter",
+        "name": "object-hash",
+        "range": "^3.0.0",
+        "kind": "dependency",
+        "key": "object-hash",
+        "version": "3.0.0"
+      },
+      {
+        "owner": "@tscircuit/capacity-autorouter",
+        "name": "@tscircuit/solver-utils",
+        "range": "^0.0.23",
+        "kind": "dependency",
+        "key": "@tscircuit/capacity-autorouter/@tscircuit/solver-utils",
+        "version": "0.0.23"
+      },
+      {
+        "owner": "@tscircuit/capacity-autorouter",
+        "name": "fast-json-stable-stringify",
+        "range": "^2.1.0",
+        "kind": "dependency",
+        "key": "fast-json-stable-stringify",
+        "version": "2.1.0"
+      },
+      {
+        "owner": "@tscircuit/checks",
+        "name": "flatbush",
+        "range": "^4.6.2",
+        "kind": "dependency",
+        "key": "flatbush",
+        "version": "4.7.0"
+      },
+      {
+        "owner": "@tscircuit/circuit-json-util",
+        "name": "@flatten-js/core",
+        "range": "^1.6.14",
+        "kind": "dependency",
+        "key": "@flatten-js/core",
+        "version": "1.6.15"
+      },
+      {
+        "owner": "@tscircuit/circuit-json-util",
+        "name": "parsel-js",
+        "range": "^1.1.2",
+        "kind": "dependency",
+        "key": "parsel-js",
+        "version": "1.2.3"
+      },
+      {
+        "owner": "@tscircuit/cli",
+        "name": "typescript",
+        "range": "~5.9.3",
+        "kind": "dependency",
+        "key": "typescript",
+        "version": "5.9.3"
+      },
+      {
+        "owner": "@tscircuit/copper-pour-solver",
+        "name": "@tscircuit/manifold-2d",
+        "range": "^0.0.6",
+        "kind": "dependency",
+        "key": "@tscircuit/copper-pour-solver/@tscircuit/manifold-2d",
+        "version": "0.0.6"
+      },
+      {
+        "owner": "@tscircuit/core",
+        "name": "zod",
+        "range": "^3.25.67",
+        "kind": "dependency",
+        "key": "zod",
+        "version": "3.25.76"
+      },
+      {
+        "owner": "@tscircuit/core",
+        "name": "nanoid",
+        "range": "^5.0.7",
+        "kind": "dependency",
+        "key": "nanoid",
+        "version": "5.1.16"
+      },
+      {
+        "owner": "@tscircuit/core",
+        "name": "poppygl",
+        "range": "0.0.38",
+        "kind": "dependency",
+        "key": "poppygl",
+        "version": "0.0.38"
+      },
+      {
+        "owner": "@tscircuit/core",
+        "name": "gl-matrix",
+        "range": "^3.4.4",
+        "kind": "dependency",
+        "key": "gl-matrix",
+        "version": "3.4.4"
+      },
+      {
+        "owner": "@tscircuit/core",
+        "name": "@lume/kiwi",
+        "range": "^0.4.3",
+        "kind": "dependency",
+        "key": "@lume/kiwi",
+        "version": "0.4.4"
+      },
+      {
+        "owner": "@tscircuit/core",
+        "name": "css-select",
+        "range": "5.1.0",
+        "kind": "dependency",
+        "key": "css-select",
+        "version": "5.1.0"
+      },
+      {
+        "owner": "@tscircuit/core",
+        "name": "jscad-fiber",
+        "range": "^0.0.93",
+        "kind": "dependency",
+        "key": "jscad-fiber",
+        "version": "0.0.93"
+      },
+      {
+        "owner": "@tscircuit/core",
+        "name": "jscad-planner",
+        "range": "^0.0.21",
+        "kind": "dependency",
+        "key": "jscad-planner",
+        "version": "0.0.21"
+      },
+      {
+        "owner": "@tscircuit/core",
+        "name": "@dagrejs/dagre",
+        "range": "^2.0.4",
+        "kind": "dependency",
+        "key": "@dagrejs/dagre",
+        "version": "2.0.4"
+      },
+      {
+        "owner": "@tscircuit/core",
+        "name": "format-si-unit",
+        "range": "^0.0.12",
+        "kind": "dependency",
+        "key": "format-si-unit",
+        "version": "0.0.12"
+      },
+      {
+        "owner": "@tscircuit/core",
+        "name": "@jscad/modeling",
+        "range": "^2.13.0",
+        "kind": "dependency",
+        "key": "@jscad/modeling",
+        "version": "2.13.0"
+      },
+      {
+        "owner": "@tscircuit/core",
+        "name": "performance-now",
+        "range": "^2.1.0",
+        "kind": "dependency",
+        "key": "performance-now",
+        "version": "2.1.0"
+      },
+      {
+        "owner": "@tscircuit/core",
+        "name": "@flatten-js/core",
+        "range": "^1.6.2",
+        "kind": "dependency",
+        "key": "@flatten-js/core",
+        "version": "1.6.15"
+      },
+      {
+        "owner": "@tscircuit/core",
+        "name": "react-reconciler",
+        "range": "^0.32.0",
+        "kind": "dependency",
+        "key": "react-reconciler",
+        "version": "0.32.0"
+      },
+      {
+        "owner": "@tscircuit/core",
+        "name": "calculate-packing",
+        "range": "^0.0.90",
+        "kind": "dependency",
+        "key": "calculate-packing",
+        "version": "0.0.90"
+      },
+      {
+        "owner": "@tscircuit/core",
+        "name": "svg-path-commander",
+        "range": "^2.1.11",
+        "kind": "dependency",
+        "key": "svg-path-commander",
+        "version": "2.3.4"
+      },
+      {
+        "owner": "@tscircuit/core",
+        "name": "transformation-matrix",
+        "range": "^2.16.1",
+        "kind": "dependency",
+        "key": "transformation-matrix",
+        "version": "2.16.1"
+      },
+      {
+        "owner": "@tscircuit/core",
+        "name": "calculate-cell-boundaries",
+        "range": "^0.0.25",
+        "kind": "dependency",
+        "key": "calculate-cell-boundaries",
+        "version": "0.0.25"
+      },
+      {
+        "owner": "@tscircuit/create-fdm-enclosure",
+        "name": "@tscircuit/solver-utils",
+        "range": "^0.0.19",
+        "kind": "dependency",
+        "key": "@tscircuit/create-fdm-enclosure/@tscircuit/solver-utils",
+        "version": "0.0.19"
+      },
+      {
+        "owner": "@tscircuit/create-fdm-enclosure",
+        "name": "format-si-unit",
+        "range": "^0.0.12",
+        "kind": "dependency",
+        "key": "format-si-unit",
+        "version": "0.0.12"
+      },
+      {
+        "owner": "@tscircuit/create-fdm-enclosure",
+        "name": "graphics-debug",
+        "range": "^0.0.99",
+        "kind": "dependency",
+        "key": "graphics-debug",
+        "version": "0.0.99"
+      },
+      {
+        "owner": "@tscircuit/create-fdm-enclosure",
+        "name": "jscad-planner",
+        "range": "^0.0.14",
+        "kind": "dependency",
+        "key": "@tscircuit/create-fdm-enclosure/jscad-planner",
+        "version": "0.0.14"
+      },
+      {
+        "owner": "@tscircuit/fanout-solver",
+        "name": "graphics-debug",
+        "range": "0.0.99",
+        "kind": "dependency",
+        "key": "graphics-debug",
+        "version": "0.0.99"
+      },
+      {
+        "owner": "@tscircuit/fanout-solver",
+        "name": "@tscircuit/solver-utils",
+        "range": "0.0.19",
+        "kind": "dependency",
+        "key": "@tscircuit/fanout-solver/@tscircuit/solver-utils",
+        "version": "0.0.19"
+      },
+      {
+        "owner": "@tscircuit/fanout-solver",
+        "name": "@tscircuit/capacity-autorouter",
+        "range": "0.0.718",
+        "kind": "dependency",
+        "key": "@tscircuit/fanout-solver/@tscircuit/capacity-autorouter",
+        "version": "0.0.718"
+      },
+      {
+        "owner": "@tscircuit/footprinter",
+        "name": "@tscircuit/mm",
+        "range": "^0.0.8",
+        "kind": "dependency",
+        "key": "@tscircuit/footprinter/@tscircuit/mm",
+        "version": "0.0.8"
+      },
+      {
+        "owner": "@tscircuit/footprinter",
+        "name": "zod",
+        "range": "^3.23.8",
+        "kind": "dependency",
+        "key": "zod",
+        "version": "3.25.76"
+      },
+      {
+        "owner": "@tscircuit/image-utils",
+        "name": "@flatten-js/core",
+        "range": "^1.6.2",
+        "kind": "dependency",
+        "key": "@flatten-js/core",
+        "version": "1.6.15"
+      },
+      {
+        "owner": "@tscircuit/image-utils",
+        "name": "color-diff",
+        "range": "^1.4.0",
+        "kind": "dependency",
+        "key": "color-diff",
+        "version": "1.4.0"
+      },
+      {
+        "owner": "@tscircuit/image-utils",
+        "name": "fast-png",
+        "range": "^8.0.0",
+        "kind": "dependency",
+        "key": "fast-png",
+        "version": "8.0.0"
+      },
+      {
+        "owner": "@tscircuit/image-utils",
+        "name": "svg-path-commander",
+        "range": "^2.1.11",
+        "kind": "dependency",
+        "key": "svg-path-commander",
+        "version": "2.3.4"
+      },
+      {
+        "owner": "@tscircuit/image-utils",
+        "name": "transformation-matrix",
+        "range": "^2.16.1",
+        "kind": "dependency",
+        "key": "transformation-matrix",
+        "version": "2.16.1"
+      },
+      {
+        "owner": "@tscircuit/jscad",
+        "name": "@jscad/modeling",
+        "range": "2.13.0",
+        "kind": "dependency",
+        "key": "@jscad/modeling",
+        "version": "2.13.0"
+      },
+      {
+        "owner": "@tscircuit/modelprinter",
+        "name": "@tscircuit/mm",
+        "range": "^0.0.9",
+        "kind": "dependency",
+        "key": "@tscircuit/mm",
+        "version": "0.0.9"
+      },
+      {
+        "owner": "@tscircuit/runframe",
+        "name": "debug",
+        "range": "^4.4.0",
+        "kind": "dependency",
+        "key": "debug",
+        "version": "4.4.3"
+      },
+      {
+        "owner": "@tscircuit/runframe",
+        "name": "format-si-unit",
+        "range": "^0.0.12",
+        "kind": "dependency",
+        "key": "format-si-unit",
+        "version": "0.0.12"
+      },
+      {
+        "owner": "@tscircuit/runframe",
+        "name": "@tscircuit/core",
+        "range": "^0.0.2293",
+        "kind": "dependency",
+        "key": "@tscircuit/runframe/@tscircuit/core",
+        "version": "0.0.2293"
+      },
+      {
+        "owner": "@tscircuit/runframe",
+        "name": "@tscircuit/eval",
+        "range": "0.0.1818",
+        "kind": "dependency",
+        "key": "@tscircuit/runframe/@tscircuit/eval",
+        "version": "0.0.1818"
+      },
+      {
+        "owner": "@tscircuit/runframe",
+        "name": "schematic-symbols",
+        "range": "^0.0.251",
+        "kind": "dependency",
+        "key": "schematic-symbols",
+        "version": "0.0.251"
+      },
+      {
+        "owner": "@tscircuit/runframe",
+        "name": "@tscircuit/solver-utils",
+        "range": "^0.0.16",
+        "kind": "dependency",
+        "key": "@tscircuit/solver-utils",
+        "version": "0.0.16"
+      },
+      {
+        "owner": "@tscircuit/simple-3d-svg",
+        "name": "fast-xml-parser",
+        "range": "^5.2.5",
+        "kind": "dependency",
+        "key": "fast-xml-parser",
+        "version": "5.12.1"
+      },
+      {
+        "owner": "@tscircuit/simple-3d-svg",
+        "name": "fflate",
+        "range": "^0.8.2",
+        "kind": "dependency",
+        "key": "fflate",
+        "version": "0.8.3"
+      },
+      {
+        "owner": "@tscircuit/soup-util",
+        "name": "parsel-js",
+        "range": "^1.1.2",
+        "kind": "dependency",
+        "key": "parsel-js",
+        "version": "1.2.3"
+      },
+      {
+        "owner": "@types/node",
+        "name": "undici-types",
+        "range": "~6.21.0",
+        "kind": "dependency",
+        "key": "undici-types",
+        "version": "6.21.0"
+      },
+      {
+        "owner": "@types/react",
+        "name": "csstype",
+        "range": "^3.2.2",
+        "kind": "dependency",
+        "key": "csstype",
+        "version": "3.2.3"
+      },
+      {
+        "owner": "@types/react-router",
+        "name": "@types/history",
+        "range": "^4.7.11",
+        "kind": "dependency",
+        "key": "@types/history",
+        "version": "4.7.11"
+      },
+      {
+        "owner": "@types/react-router",
+        "name": "@types/react",
+        "range": "*",
+        "kind": "dependency",
+        "key": "@types/react",
+        "version": "19.3.0"
+      },
+      {
+        "owner": "@types/react-router-dom",
+        "name": "@types/history",
+        "range": "^4.7.11",
+        "kind": "dependency",
+        "key": "@types/history",
+        "version": "4.7.11"
+      },
+      {
+        "owner": "@types/react-router-dom",
+        "name": "@types/react",
+        "range": "*",
+        "kind": "dependency",
+        "key": "@types/react",
+        "version": "19.3.0"
+      },
+      {
+        "owner": "@types/react-router-dom",
+        "name": "@types/react-router",
+        "range": "*",
+        "kind": "dependency",
+        "key": "@types/react-router",
+        "version": "5.1.20"
+      },
+      {
+        "owner": "abort-controller",
+        "name": "event-target-shim",
+        "range": "^5.0.0",
+        "kind": "dependency",
+        "key": "event-target-shim",
+        "version": "5.0.1"
+      },
+      {
+        "owner": "buffer",
+        "name": "base64-js",
+        "range": "^1.3.1",
+        "kind": "dependency",
+        "key": "base64-js",
+        "version": "1.5.1"
+      },
+      {
+        "owner": "buffer",
+        "name": "ieee754",
+        "range": "^1.2.1",
+        "kind": "dependency",
+        "key": "ieee754",
+        "version": "1.2.1"
+      },
+      {
+        "owner": "bun-types",
+        "name": "@types/node",
+        "range": "*",
+        "kind": "dependency",
+        "key": "bun-types/@types/node",
+        "version": "26.6.6"
+      },
+      {
+        "owner": "bun-types",
+        "name": "undici-types",
+        "range": "*",
+        "kind": "dependency",
+        "key": "bun-types/undici-types",
+        "version": "8.12.4"
+      },
+      {
+        "owner": "calculate-cell-boundaries",
+        "name": "@tscircuit/solver-utils",
+        "range": "^0.0.19",
+        "kind": "dependency",
+        "key": "calculate-cell-boundaries/@tscircuit/solver-utils",
+        "version": "0.0.19"
+      },
+      {
+        "owner": "calculate-cell-boundaries",
+        "name": "lucide-react",
+        "range": "^1.17.0",
+        "kind": "dependency",
+        "key": "lucide-react",
+        "version": "1.73.0"
+      },
+      {
+        "owner": "calculate-cell-boundaries",
+        "name": "react",
+        "range": "^18.3.1",
+        "kind": "dependency",
+        "key": "calculate-cell-boundaries/react",
+        "version": "18.3.1"
+      },
+      {
+        "owner": "calculate-cell-boundaries",
+        "name": "react-dom",
+        "range": "^18.3.1",
+        "kind": "dependency",
+        "key": "calculate-cell-boundaries/react-dom",
+        "version": "18.3.1"
+      },
+      {
+        "owner": "circuit-json",
+        "name": "zod",
+        "range": "3",
+        "kind": "dependency",
+        "key": "zod",
+        "version": "3.25.76"
+      },
+      {
+        "owner": "circuit-json-to-connectivity-map",
+        "name": "@tscircuit/math-utils",
+        "range": "^0.0.9",
+        "kind": "dependency",
+        "key": "circuit-json-to-connectivity-map/@tscircuit/math-utils",
+        "version": "0.0.9"
+      },
+      {
+        "owner": "circuit-json-to-gltf",
+        "name": "@jscad/modeling",
+        "range": "^2.12.6",
+        "kind": "dependency",
+        "key": "@jscad/modeling",
+        "version": "2.13.0"
+      },
+      {
+        "owner": "circuit-json-to-gltf",
+        "name": "@tscircuit/alphabet",
+        "range": "^0.0.25",
+        "kind": "dependency",
+        "key": "@tscircuit/alphabet",
+        "version": "0.0.25"
+      },
+      {
+        "owner": "circuit-json-to-gltf",
+        "name": "@tscircuit/cableprinter",
+        "range": "^0.0.6",
+        "kind": "dependency",
+        "key": "@tscircuit/cableprinter",
+        "version": "0.0.6"
+      },
+      {
+        "owner": "circuit-json-to-gltf",
+        "name": "@tscircuit/footprinter",
+        "range": "^0.0.431",
+        "kind": "dependency",
+        "key": "circuit-json-to-gltf/@tscircuit/footprinter",
+        "version": "0.0.431"
+      },
+      {
+        "owner": "circuit-json-to-gltf",
+        "name": "earcut",
+        "range": "^3.0.2",
+        "kind": "dependency",
+        "key": "earcut",
+        "version": "3.2.4"
+      },
+      {
+        "owner": "circuit-json-to-gltf",
+        "name": "gl-matrix",
+        "range": "^3.4.4",
+        "kind": "dependency",
+        "key": "gl-matrix",
+        "version": "3.4.4"
+      },
+      {
+        "owner": "circuit-json-to-gltf",
+        "name": "jscad-electronics",
+        "range": "^0.0.243",
+        "kind": "dependency",
+        "key": "jscad-electronics",
+        "version": "0.0.243"
+      },
+      {
+        "owner": "circuit-json-to-gltf",
+        "name": "jscad-planner",
+        "range": "^0.0.19",
+        "kind": "dependency",
+        "key": "circuit-json-to-gltf/jscad-planner",
+        "version": "0.0.19"
+      },
+      {
+        "owner": "circuit-json-to-gltf",
+        "name": "jscad-to-gltf",
+        "range": "^0.0.5",
+        "kind": "dependency",
+        "key": "jscad-to-gltf",
+        "version": "0.0.5"
+      },
+      {
+        "owner": "circuit-json-to-gltf",
+        "name": "occt-import-js",
+        "range": "^0.0.23",
+        "kind": "dependency",
+        "key": "occt-import-js",
+        "version": "0.0.23"
+      },
+      {
+        "owner": "circuit-json-to-pnp-csv",
+        "name": "papaparse",
+        "range": "^5.4.1",
+        "kind": "dependency",
+        "key": "papaparse",
+        "version": "5.7.1"
+      },
+      {
+        "owner": "circuit-json-to-spice",
+        "name": "circuit-json-to-connectivity-map",
+        "range": "^0.0.22",
+        "kind": "dependency",
+        "key": "circuit-json-to-spice/circuit-json-to-connectivity-map",
+        "version": "0.0.22"
+      },
+      {
+        "owner": "circuit-to-svg",
+        "name": "@types/node",
+        "range": "^22.5.5",
+        "kind": "dependency",
+        "key": "@types/node",
+        "version": "22.20.5"
+      },
+      {
+        "owner": "circuit-to-svg",
+        "name": "bun-types",
+        "range": "^1.1.40",
+        "kind": "dependency",
+        "key": "bun-types",
+        "version": "1.4.4"
+      },
+      {
+        "owner": "circuit-to-svg",
+        "name": "calculate-elbow",
+        "range": "0.0.12",
+        "kind": "dependency",
+        "key": "calculate-elbow",
+        "version": "0.0.12"
+      },
+      {
+        "owner": "circuit-to-svg",
+        "name": "color",
+        "range": "^5.0.3",
+        "kind": "dependency",
+        "key": "color",
+        "version": "5.0.3"
+      },
+      {
+        "owner": "circuit-to-svg",
+        "name": "debug",
+        "range": "^4.4.3",
+        "kind": "dependency",
+        "key": "debug",
+        "version": "4.4.3"
+      },
+      {
+        "owner": "circuit-to-svg",
+        "name": "svg-path-commander",
+        "range": "^2.1.11",
+        "kind": "dependency",
+        "key": "svg-path-commander",
+        "version": "2.3.4"
+      },
+      {
+        "owner": "circuit-to-svg",
+        "name": "svgson",
+        "range": "^5.3.1",
+        "kind": "dependency",
+        "key": "svgson",
+        "version": "5.3.1"
+      },
+      {
+        "owner": "circuit-to-svg",
+        "name": "transformation-matrix",
+        "range": "^2.16.1",
+        "kind": "dependency",
+        "key": "transformation-matrix",
+        "version": "2.16.1"
+      },
+      {
+        "owner": "color",
+        "name": "color-convert",
+        "range": "^3.1.3",
+        "kind": "dependency",
+        "key": "color-convert",
+        "version": "3.1.3"
+      },
+      {
+        "owner": "color",
+        "name": "color-string",
+        "range": "^2.1.3",
+        "kind": "dependency",
+        "key": "color-string",
+        "version": "2.1.4"
+      },
+      {
+        "owner": "color-convert",
+        "name": "color-name",
+        "range": "^2.0.0",
+        "kind": "dependency",
+        "key": "color-name",
+        "version": "2.1.1"
+      },
+      {
+        "owner": "color-string",
+        "name": "color-name",
+        "range": "^2.0.0",
+        "kind": "dependency",
+        "key": "color-name",
+        "version": "2.1.1"
+      },
+      {
+        "owner": "css-select",
+        "name": "boolbase",
+        "range": "^1.0.0",
+        "kind": "dependency",
+        "key": "boolbase",
+        "version": "1.0.0"
+      },
+      {
+        "owner": "css-select",
+        "name": "css-what",
+        "range": "^6.1.0",
+        "kind": "dependency",
+        "key": "css-what",
+        "version": "6.2.2"
+      },
+      {
+        "owner": "css-select",
+        "name": "domhandler",
+        "range": "^5.0.2",
+        "kind": "dependency",
+        "key": "domhandler",
+        "version": "5.0.3"
+      },
+      {
+        "owner": "css-select",
+        "name": "domutils",
+        "range": "^3.0.1",
+        "kind": "dependency",
+        "key": "domutils",
+        "version": "3.2.2"
+      },
+      {
+        "owner": "css-select",
+        "name": "nth-check",
+        "range": "^2.0.1",
+        "kind": "dependency",
+        "key": "nth-check",
+        "version": "2.1.1"
+      },
+      {
+        "owner": "debug",
+        "name": "ms",
+        "range": "^2.1.3",
+        "kind": "dependency",
+        "key": "ms",
+        "version": "2.1.3"
+      },
+      {
+        "owner": "deep-rename-keys",
+        "name": "kind-of",
+        "range": "^3.0.2",
+        "kind": "dependency",
+        "key": "kind-of",
+        "version": "3.2.2"
+      },
+      {
+        "owner": "deep-rename-keys",
+        "name": "rename-keys",
+        "range": "^1.1.2",
+        "kind": "dependency",
+        "key": "rename-keys",
+        "version": "1.2.0"
+      },
+      {
+        "owner": "dom-serializer",
+        "name": "domelementtype",
+        "range": "^2.3.0",
+        "kind": "dependency",
+        "key": "domelementtype",
+        "version": "2.3.0"
+      },
+      {
+        "owner": "dom-serializer",
+        "name": "domhandler",
+        "range": "^5.0.2",
+        "kind": "dependency",
+        "key": "domhandler",
+        "version": "5.0.3"
+      },
+      {
+        "owner": "dom-serializer",
+        "name": "entities",
+        "range": "^4.2.0",
+        "kind": "dependency",
+        "key": "entities",
+        "version": "4.5.0"
+      },
+      {
+        "owner": "domhandler",
+        "name": "domelementtype",
+        "range": "^2.3.0",
+        "kind": "dependency",
+        "key": "domelementtype",
+        "version": "2.3.0"
+      },
+      {
+        "owner": "domutils",
+        "name": "dom-serializer",
+        "range": "^2.0.0",
+        "kind": "dependency",
+        "key": "dom-serializer",
+        "version": "2.0.0"
+      },
+      {
+        "owner": "domutils",
+        "name": "domelementtype",
+        "range": "^2.3.0",
+        "kind": "dependency",
+        "key": "domelementtype",
+        "version": "2.3.0"
+      },
+      {
+        "owner": "domutils",
+        "name": "domhandler",
+        "range": "^5.0.3",
+        "kind": "dependency",
+        "key": "domhandler",
+        "version": "5.0.3"
+      },
+      {
+        "owner": "fast-png",
+        "name": "fflate",
+        "range": "^0.8.2",
+        "kind": "dependency",
+        "key": "fflate",
+        "version": "0.8.3"
+      },
+      {
+        "owner": "fast-png",
+        "name": "iobuffer",
+        "range": "^6.0.1",
+        "kind": "dependency",
+        "key": "iobuffer",
+        "version": "6.0.1"
+      },
+      {
+        "owner": "fast-xml-builder",
+        "name": "path-expression-matcher",
+        "range": "^1.6.2",
+        "kind": "dependency",
+        "key": "path-expression-matcher",
+        "version": "1.6.2"
+      },
+      {
+        "owner": "fast-xml-builder",
+        "name": "xml-naming",
+        "range": "^0.3.0",
+        "kind": "dependency",
+        "key": "xml-naming",
+        "version": "0.3.0"
+      },
+      {
+        "owner": "fast-xml-parser",
+        "name": "@nodable/entities",
+        "range": "^3.1.0",
+        "kind": "dependency",
+        "key": "@nodable/entities",
+        "version": "3.1.0"
+      },
+      {
+        "owner": "fast-xml-parser",
+        "name": "fast-xml-builder",
+        "range": "^1.3.2",
+        "kind": "dependency",
+        "key": "fast-xml-builder",
+        "version": "1.3.2"
+      },
+      {
+        "owner": "fast-xml-parser",
+        "name": "is-unsafe",
+        "range": "^2.0.3",
+        "kind": "dependency",
+        "key": "is-unsafe",
+        "version": "2.0.3"
+      },
+      {
+        "owner": "fast-xml-parser",
+        "name": "path-expression-matcher",
+        "range": "^1.6.2",
+        "kind": "dependency",
+        "key": "path-expression-matcher",
+        "version": "1.6.2"
+      },
+      {
+        "owner": "fast-xml-parser",
+        "name": "strnum",
+        "range": "^2.5.1",
+        "kind": "dependency",
+        "key": "strnum",
+        "version": "2.5.1"
+      },
+      {
+        "owner": "fast-xml-parser",
+        "name": "xml-naming",
+        "range": "^0.3.0",
+        "kind": "dependency",
+        "key": "xml-naming",
+        "version": "0.3.0"
+      },
+      {
+        "owner": "flatbush",
+        "name": "flatqueue",
+        "range": "^3.1.0",
+        "kind": "dependency",
+        "key": "flatqueue",
+        "version": "3.1.0"
+      },
+      {
+        "owner": "graphics-debug",
+        "name": "@react-hook/resize-observer",
+        "range": "^2.0.2",
+        "kind": "dependency",
+        "key": "@react-hook/resize-observer",
+        "version": "2.0.2"
+      },
+      {
+        "owner": "graphics-debug",
+        "name": "@tscircuit/alphabet",
+        "range": "^0.0.25",
+        "kind": "dependency",
+        "key": "@tscircuit/alphabet",
+        "version": "0.0.25"
+      },
+      {
+        "owner": "graphics-debug",
+        "name": "@types/react-router-dom",
+        "range": "^5.3.3",
+        "kind": "dependency",
+        "key": "@types/react-router-dom",
+        "version": "5.3.3"
+      },
+      {
+        "owner": "graphics-debug",
+        "name": "fast-png",
+        "range": "^8.0.0",
+        "kind": "dependency",
+        "key": "fast-png",
+        "version": "8.0.0"
+      },
+      {
+        "owner": "graphics-debug",
+        "name": "polished",
+        "range": "^4.3.1",
+        "kind": "dependency",
+        "key": "polished",
+        "version": "4.3.1"
+      },
+      {
+        "owner": "graphics-debug",
+        "name": "react-router-dom",
+        "range": "^6.28.0",
+        "kind": "dependency",
+        "key": "react-router-dom",
+        "version": "6.30.6"
+      },
+      {
+        "owner": "graphics-debug",
+        "name": "react-supergrid",
+        "range": "^1.0.10",
+        "kind": "dependency",
+        "key": "react-supergrid",
+        "version": "1.0.10"
+      },
+      {
+        "owner": "graphics-debug",
+        "name": "svgson",
+        "range": "^5.3.1",
+        "kind": "dependency",
+        "key": "svgson",
+        "version": "5.3.1"
+      },
+      {
+        "owner": "graphics-debug",
+        "name": "transformation-matrix",
+        "range": "^3.0.0",
+        "kind": "dependency",
+        "key": "graphics-debug/transformation-matrix",
+        "version": "3.1.0"
+      },
+      {
+        "owner": "graphics-debug",
+        "name": "use-mouse-matrix-transform",
+        "range": "^1.3.0",
+        "kind": "dependency",
+        "key": "use-mouse-matrix-transform",
+        "version": "1.3.5"
+      },
+      {
+        "owner": "hasown",
+        "name": "function-bind",
+        "range": "^1.1.2",
+        "kind": "dependency",
+        "key": "function-bind",
+        "version": "1.1.2"
+      },
+      {
+        "owner": "is-core-module",
+        "name": "hasown",
+        "range": "^2.0.4",
+        "kind": "dependency",
+        "key": "hasown",
+        "version": "2.0.4"
+      },
+      {
+        "owner": "is-reference",
+        "name": "@types/estree",
+        "range": "*",
+        "kind": "dependency",
+        "key": "@types/estree",
+        "version": "1.0.10"
+      },
+      {
+        "owner": "jscad-electronics",
+        "name": "@tscircuit/jscad",
+        "range": "^0.0.6",
+        "kind": "dependency",
+        "key": "@tscircuit/jscad",
+        "version": "0.0.6"
+      },
+      {
+        "owner": "jscad-electronics",
+        "name": "@tscircuit/mm",
+        "range": "^0.0.8",
+        "kind": "dependency",
+        "key": "jscad-electronics/@tscircuit/mm",
+        "version": "0.0.8"
+      },
+      {
+        "owner": "jscad-electronics",
+        "name": "earcut",
+        "range": "^3.2.3",
+        "kind": "dependency",
+        "key": "earcut",
+        "version": "3.2.4"
+      },
+      {
+        "owner": "jscad-electronics",
+        "name": "jscad-fiber",
+        "range": "^0.0.93",
+        "kind": "dependency",
+        "key": "jscad-fiber",
+        "version": "0.0.93"
+      },
+      {
+        "owner": "jscad-electronics",
+        "name": "zod",
+        "range": "^3.25.67",
+        "kind": "dependency",
+        "key": "zod",
+        "version": "3.25.76"
+      },
+      {
+        "owner": "jscad-fiber",
+        "name": "@tscircuit/jscad",
+        "range": "^0.0.6",
+        "kind": "dependency",
+        "key": "@tscircuit/jscad",
+        "version": "0.0.6"
+      },
+      {
+        "owner": "jscad-fiber",
+        "name": "color",
+        "range": "^4.2.3",
+        "kind": "dependency",
+        "key": "jscad-fiber/color",
+        "version": "4.2.3"
+      },
+      {
+        "owner": "jscad-fiber",
+        "name": "jscad-planner",
+        "range": "^0.0.21",
+        "kind": "dependency",
+        "key": "jscad-planner",
+        "version": "0.0.21"
+      },
+      {
+        "owner": "jscad-planner",
+        "name": "gl-matrix",
+        "range": "^3.4.4",
+        "kind": "dependency",
+        "key": "gl-matrix",
+        "version": "3.4.4"
+      },
+      {
+        "owner": "jscad-to-gltf",
+        "name": "@jscad/modeling",
+        "range": "^2.12.6",
+        "kind": "dependency",
+        "key": "@jscad/modeling",
+        "version": "2.13.0"
+      },
+      {
+        "owner": "jscad-to-gltf",
+        "name": "jscad-planner",
+        "range": "^0.0.13",
+        "kind": "dependency",
+        "key": "jscad-to-gltf/jscad-planner",
+        "version": "0.0.13"
+      },
+      {
+        "owner": "kind-of",
+        "name": "is-buffer",
+        "range": "^1.1.5",
+        "kind": "dependency",
+        "key": "is-buffer",
+        "version": "1.1.6"
+      },
+      {
+        "owner": "loose-envify",
+        "name": "js-tokens",
+        "range": "^3.0.0 || ^4.0.0",
+        "kind": "dependency",
+        "key": "js-tokens",
+        "version": "4.0.0"
+      },
+      {
+        "owner": "magic-string",
+        "name": "@jridgewell/sourcemap-codec",
+        "range": "^1.5.5",
+        "kind": "dependency",
+        "key": "@jridgewell/sourcemap-codec",
+        "version": "1.6.0"
+      },
+      {
+        "owner": "mz",
+        "name": "any-promise",
+        "range": "^1.0.0",
+        "kind": "dependency",
+        "key": "any-promise",
+        "version": "1.3.0"
+      },
+      {
+        "owner": "mz",
+        "name": "object-assign",
+        "range": "^4.0.1",
+        "kind": "dependency",
+        "key": "object-assign",
+        "version": "4.1.1"
+      },
+      {
+        "owner": "mz",
+        "name": "thenify-all",
+        "range": "^1.0.0",
+        "kind": "dependency",
+        "key": "thenify-all",
+        "version": "1.6.0"
+      },
+      {
+        "owner": "nth-check",
+        "name": "boolbase",
+        "range": "^1.0.0",
+        "kind": "dependency",
+        "key": "boolbase",
+        "version": "1.0.0"
+      },
+      {
+        "owner": "polished",
+        "name": "@babel/runtime",
+        "range": "^7.17.8",
+        "kind": "dependency",
+        "key": "@babel/runtime",
+        "version": "7.29.14"
+      },
+      {
+        "owner": "poppygl",
+        "name": "earcut",
+        "range": "^3.2.4",
+        "kind": "dependency",
+        "key": "earcut",
+        "version": "3.2.4"
+      },
+      {
+        "owner": "poppygl",
+        "name": "fast-png",
+        "range": "^8.0.0",
+        "kind": "dependency",
+        "key": "fast-png",
+        "version": "8.0.0"
+      },
+      {
+        "owner": "poppygl",
+        "name": "gl-matrix",
+        "range": "^3.4.4",
+        "kind": "dependency",
+        "key": "gl-matrix",
+        "version": "3.4.4"
+      },
+      {
+        "owner": "poppygl",
+        "name": "pureimage",
+        "range": "^0.4.18",
+        "kind": "dependency",
+        "key": "pureimage",
+        "version": "0.4.20"
+      },
+      {
+        "owner": "poppygl",
+        "name": "readable-stream",
+        "range": "^4.7.0",
+        "kind": "dependency",
+        "key": "readable-stream",
+        "version": "4.8.0"
+      },
+      {
+        "owner": "pureimage",
+        "name": "jpeg-js",
+        "range": "^0.4.4",
+        "kind": "dependency",
+        "key": "jpeg-js",
+        "version": "0.4.4"
+      },
+      {
+        "owner": "pureimage",
+        "name": "opentype.js",
+        "range": "^0.4.3",
+        "kind": "dependency",
+        "key": "opentype.js",
+        "version": "0.4.11"
+      },
+      {
+        "owner": "pureimage",
+        "name": "pngjs",
+        "range": "^7.0.0",
+        "kind": "dependency",
+        "key": "pngjs",
+        "version": "7.0.0"
+      },
+      {
+        "owner": "react-dom",
+        "name": "scheduler",
+        "range": "^0.28.0",
+        "kind": "dependency",
+        "key": "scheduler",
+        "version": "0.28.0"
+      },
+      {
+        "owner": "react-reconciler",
+        "name": "scheduler",
+        "range": "^0.26.0",
+        "kind": "dependency",
+        "key": "react-reconciler/scheduler",
+        "version": "0.26.0"
+      },
+      {
+        "owner": "react-router",
+        "name": "@remix-run/router",
+        "range": "1.23.4",
+        "kind": "dependency",
+        "key": "@remix-run/router",
+        "version": "1.23.4"
+      },
+      {
+        "owner": "react-router-dom",
+        "name": "@remix-run/router",
+        "range": "1.23.4",
+        "kind": "dependency",
+        "key": "@remix-run/router",
+        "version": "1.23.4"
+      },
+      {
+        "owner": "react-router-dom",
+        "name": "react-router",
+        "range": "6.30.6",
+        "kind": "dependency",
+        "key": "react-router",
+        "version": "6.30.6"
+      },
+      {
+        "owner": "readable-stream",
+        "name": "abort-controller",
+        "range": "^3.0.0",
+        "kind": "dependency",
+        "key": "abort-controller",
+        "version": "3.0.0"
+      },
+      {
+        "owner": "readable-stream",
+        "name": "buffer",
+        "range": "^6.0.3",
+        "kind": "dependency",
+        "key": "buffer",
+        "version": "6.0.3"
+      },
+      {
+        "owner": "readable-stream",
+        "name": "events",
+        "range": "^3.3.0",
+        "kind": "dependency",
+        "key": "events",
+        "version": "3.3.0"
+      },
+      {
+        "owner": "readable-stream",
+        "name": "process",
+        "range": "^0.11.10",
+        "kind": "dependency",
+        "key": "process",
+        "version": "0.11.10"
+      },
+      {
+        "owner": "readable-stream",
+        "name": "string_decoder",
+        "range": "^1.3.0",
+        "kind": "dependency",
+        "key": "string_decoder",
+        "version": "1.3.0"
+      },
+      {
+        "owner": "resolve",
+        "name": "es-errors",
+        "range": "^1.3.0",
+        "kind": "dependency",
+        "key": "es-errors",
+        "version": "1.3.0"
+      },
+      {
+        "owner": "resolve",
+        "name": "is-core-module",
+        "range": "^2.18.0",
+        "kind": "dependency",
+        "key": "is-core-module",
+        "version": "2.18.0"
+      },
+      {
+        "owner": "resolve",
+        "name": "path-parse",
+        "range": "^1.0.7",
+        "kind": "dependency",
+        "key": "path-parse",
+        "version": "1.0.7"
+      },
+      {
+        "owner": "resolve",
+        "name": "supports-preserve-symlinks-flag",
+        "range": "^1.0.0",
+        "kind": "dependency",
+        "key": "supports-preserve-symlinks-flag",
+        "version": "1.0.0"
+      },
+      {
+        "owner": "rollup",
+        "name": "@types/estree",
+        "range": "^1.0.10",
+        "kind": "dependency",
+        "key": "@types/estree",
+        "version": "1.0.10"
+      },
+      {
+        "owner": "rollup-plugin-dts",
+        "name": "@jridgewell/remapping",
+        "range": "^2.3.5",
+        "kind": "dependency",
+        "key": "@jridgewell/remapping",
+        "version": "2.3.5"
+      },
+      {
+        "owner": "rollup-plugin-dts",
+        "name": "@jridgewell/sourcemap-codec",
+        "range": "^1.5.5",
+        "kind": "dependency",
+        "key": "@jridgewell/sourcemap-codec",
+        "version": "1.6.0"
+      },
+      {
+        "owner": "rollup-plugin-dts",
+        "name": "convert-source-map",
+        "range": "^2.0.0",
+        "kind": "dependency",
+        "key": "convert-source-map",
+        "version": "2.0.0"
+      },
+      {
+        "owner": "rollup-plugin-dts",
+        "name": "magic-string",
+        "range": "^0.30.21",
+        "kind": "dependency",
+        "key": "magic-string",
+        "version": "0.30.21"
+      },
+      {
+        "owner": "simple-swizzle",
+        "name": "is-arrayish",
+        "range": "^0.3.1",
+        "kind": "dependency",
+        "key": "is-arrayish",
+        "version": "0.3.4"
+      },
+      {
+        "owner": "string_decoder",
+        "name": "safe-buffer",
+        "range": "~5.2.0",
+        "kind": "dependency",
+        "key": "safe-buffer",
+        "version": "5.2.1"
+      },
+      {
+        "owner": "strnum",
+        "name": "anynum",
+        "range": "^1.0.1",
+        "kind": "dependency",
+        "key": "anynum",
+        "version": "1.0.1"
+      },
+      {
+        "owner": "sucrase",
+        "name": "@jridgewell/gen-mapping",
+        "range": "^0.3.2",
+        "kind": "dependency",
+        "key": "@jridgewell/gen-mapping",
+        "version": "0.3.13"
+      },
+      {
+        "owner": "sucrase",
+        "name": "commander",
+        "range": "^4.0.0",
+        "kind": "dependency",
+        "key": "commander",
+        "version": "4.1.1"
+      },
+      {
+        "owner": "sucrase",
+        "name": "lines-and-columns",
+        "range": "^1.1.6",
+        "kind": "dependency",
+        "key": "lines-and-columns",
+        "version": "1.2.4"
+      },
+      {
+        "owner": "sucrase",
+        "name": "mz",
+        "range": "^2.7.0",
+        "kind": "dependency",
+        "key": "mz",
+        "version": "2.7.0"
+      },
+      {
+        "owner": "sucrase",
+        "name": "pirates",
+        "range": "^4.0.1",
+        "kind": "dependency",
+        "key": "pirates",
+        "version": "4.0.7"
+      },
+      {
+        "owner": "sucrase",
+        "name": "tinyglobby",
+        "range": "^0.2.11",
+        "kind": "dependency",
+        "key": "tinyglobby",
+        "version": "0.2.17"
+      },
+      {
+        "owner": "sucrase",
+        "name": "ts-interface-checker",
+        "range": "^0.1.9",
+        "kind": "dependency",
+        "key": "ts-interface-checker",
+        "version": "0.1.13"
+      },
+      {
+        "owner": "svg-path-commander",
+        "name": "@thednp/dommatrix",
+        "range": "^3.1.3",
+        "kind": "dependency",
+        "key": "@thednp/dommatrix",
+        "version": "3.1.4"
+      },
+      {
+        "owner": "svgson",
+        "name": "deep-rename-keys",
+        "range": "^0.2.1",
+        "kind": "dependency",
+        "key": "deep-rename-keys",
+        "version": "0.2.1"
+      },
+      {
+        "owner": "svgson",
+        "name": "xml-reader",
+        "range": "2.4.3",
+        "kind": "dependency",
+        "key": "xml-reader",
+        "version": "2.4.3"
+      },
+      {
+        "owner": "thenify",
+        "name": "any-promise",
+        "range": "^1.0.0",
+        "kind": "dependency",
+        "key": "any-promise",
+        "version": "1.3.0"
+      },
+      {
+        "owner": "thenify-all",
+        "name": "thenify",
+        "range": ">= 3.1.0 < 4",
+        "kind": "dependency",
+        "key": "thenify",
+        "version": "3.3.1"
+      },
+      {
+        "owner": "tinyglobby",
+        "name": "fdir",
+        "range": "^6.5.0",
+        "kind": "dependency",
+        "key": "fdir",
+        "version": "6.5.0"
+      },
+      {
+        "owner": "tinyglobby",
+        "name": "picomatch",
+        "range": "^4.0.4",
+        "kind": "dependency",
+        "key": "picomatch",
+        "version": "4.0.7"
+      },
+      {
+        "owner": "tscircuit",
+        "name": "zod",
+        "range": "^3.25.67",
+        "kind": "dependency",
+        "key": "zod",
+        "version": "3.25.76"
+      },
+      {
+        "owner": "tscircuit",
+        "name": "debug",
+        "range": "^4.3.6",
+        "kind": "dependency",
+        "key": "debug",
+        "version": "4.4.3"
+      },
+      {
+        "owner": "tscircuit",
+        "name": "react",
+        "range": "^19.1.0",
+        "kind": "dependency",
+        "key": "react",
+        "version": "19.3.1"
+      },
+      {
+        "owner": "tscircuit",
+        "name": "tslib",
+        "range": "^2.8.1",
+        "kind": "dependency",
+        "key": "tslib",
+        "version": "2.9.1"
+      },
+      {
+        "owner": "tscircuit",
+        "name": "rollup",
+        "range": "^4.53.2",
+        "kind": "dependency",
+        "key": "rollup",
+        "version": "4.68.3"
+      },
+      {
+        "owner": "tscircuit",
+        "name": "spicey",
+        "range": "^0.0.14",
+        "kind": "dependency",
+        "key": "spicey",
+        "version": "0.0.14"
+      },
+      {
+        "owner": "tscircuit",
+        "name": "comlink",
+        "range": "^4.4.2",
+        "kind": "dependency",
+        "key": "comlink",
+        "version": "4.4.2"
+      },
+      {
+        "owner": "tscircuit",
+        "name": "kicadts",
+        "range": "^0.0.53",
+        "kind": "dependency",
+        "key": "kicadts",
+        "version": "0.0.53"
+      },
+      {
+        "owner": "tscircuit",
+        "name": "poppygl",
+        "range": "0.0.38",
+        "kind": "dependency",
+        "key": "poppygl",
+        "version": "0.0.38"
+      },
+      {
+        "owner": "tscircuit",
+        "name": "spicets",
+        "range": "^0.0.4",
+        "kind": "dependency",
+        "key": "spicets",
+        "version": "0.0.4"
+      },
+      {
+        "owner": "tscircuit",
+        "name": "sucrase",
+        "range": "^3.35.0",
+        "kind": "dependency",
+        "key": "sucrase",
+        "version": "3.35.1"
+      },
+      {
+        "owner": "tscircuit",
+        "name": "flatbush",
+        "range": "^4.5.0",
+        "kind": "dependency",
+        "key": "flatbush",
+        "version": "4.7.0"
+      },
+      {
+        "owner": "tscircuit",
+        "name": "bpc-graph",
+        "range": "^0.0.57",
+        "kind": "dependency",
+        "key": "bpc-graph",
+        "version": "0.0.57"
+      },
+      {
+        "owner": "tscircuit",
+        "name": "gl-matrix",
+        "range": "^3.4.4",
+        "kind": "dependency",
+        "key": "gl-matrix",
+        "version": "3.4.4"
+      },
+      {
+        "owner": "tscircuit",
+        "name": "react-dom",
+        "range": "^19.1.0",
+        "kind": "dependency",
+        "key": "react-dom",
+        "version": "19.3.1"
+      },
+      {
+        "owner": "tscircuit",
+        "name": "@lume/kiwi",
+        "range": "^0.4.3",
+        "kind": "dependency",
+        "key": "@lume/kiwi",
+        "version": "0.4.4"
+      },
+      {
+        "owner": "tscircuit",
+        "name": "css-select",
+        "range": "5.1.0",
+        "kind": "dependency",
+        "key": "css-select",
+        "version": "5.1.0"
+      },
+      {
+        "owner": "tscircuit",
+        "name": "jscad-fiber",
+        "range": "^0.0.93",
+        "kind": "dependency",
+        "key": "jscad-fiber",
+        "version": "0.0.93"
+      },
+      {
+        "owner": "tscircuit",
+        "name": "minicssgrid",
+        "range": "^0.0.9",
+        "kind": "dependency",
+        "key": "minicssgrid",
+        "version": "0.0.9"
+      },
+      {
+        "owner": "tscircuit",
+        "name": "circuit-json",
+        "range": "0.0.552",
+        "kind": "dependency",
+        "key": "circuit-json",
+        "version": "0.0.552"
+      },
+      {
+        "owner": "tscircuit",
+        "name": "s-expression",
+        "range": "^3.1.1",
+        "kind": "dependency",
+        "key": "s-expression",
+        "version": "3.1.1"
+      },
+      {
+        "owner": "tscircuit",
+        "name": "jscad-planner",
+        "range": "^0.0.21",
+        "kind": "dependency",
+        "key": "jscad-planner",
+        "version": "0.0.21"
+      },
+      {
+        "owner": "tscircuit",
+        "name": "@dagrejs/dagre",
+        "range": "^2.0.4",
+        "kind": "dependency",
+        "key": "@dagrejs/dagre",
+        "version": "2.0.4"
+      },
+      {
+        "owner": "tscircuit",
+        "name": "@tscircuit/cli",
+        "range": "^0.1.2475",
+        "kind": "dependency",
+        "key": "@tscircuit/cli",
+        "version": "0.1.2475"
+      },
+      {
+        "owner": "tscircuit",
+        "name": "circuit-to-svg",
+        "range": "^0.0.460",
+        "kind": "dependency",
+        "key": "circuit-to-svg",
+        "version": "0.0.460"
+      },
+      {
+        "owner": "tscircuit",
+        "name": "format-si-unit",
+        "range": "^0.0.12",
+        "kind": "dependency",
+        "key": "format-si-unit",
+        "version": "0.0.12"
+      },
+      {
+        "owner": "tscircuit",
+        "name": "graphics-debug",
+        "range": "^0.0.99",
+        "kind": "dependency",
+        "key": "graphics-debug",
+        "version": "0.0.99"
+      },
+      {
+        "owner": "tscircuit",
+        "name": "@resvg/resvg-js",
+        "range": "^2.6.2",
+        "kind": "dependency",
+        "key": "@resvg/resvg-js",
+        "version": "2.6.2"
+      },
+      {
+        "owner": "tscircuit",
+        "name": "@tscircuit/core",
+        "range": "^0.0.2426",
+        "kind": "dependency",
+        "key": "@tscircuit/core",
+        "version": "0.0.2426"
+      },
+      {
+        "owner": "tscircuit",
+        "name": "@tscircuit/eval",
+        "range": "^0.0.1819",
+        "kind": "dependency",
+        "key": "@tscircuit/eval",
+        "version": "0.0.1819"
+      },
+      {
+        "owner": "tscircuit",
+        "name": "calculate-elbow",
+        "range": "^0.0.12",
+        "kind": "dependency",
+        "key": "calculate-elbow",
+        "version": "0.0.12"
+      },
+      {
+        "owner": "tscircuit",
+        "name": "performance-now",
+        "range": "^2.1.0",
+        "kind": "dependency",
+        "key": "performance-now",
+        "version": "2.1.0"
+      },
+      {
+        "owner": "tscircuit",
+        "name": "@flatten-js/core",
+        "range": "^1.6.2",
+        "kind": "dependency",
+        "key": "@flatten-js/core",
+        "version": "1.6.15"
+      },
+      {
+        "owner": "tscircuit",
+        "name": "@tscircuit/props",
+        "range": "^0.0.735",
+        "kind": "dependency",
+        "key": "@tscircuit/props",
+        "version": "0.0.735"
+      },
+      {
+        "owner": "tscircuit",
+        "name": "connectivity-map",
+        "range": "^1.0.1",
+        "kind": "dependency",
+        "key": "connectivity-map",
+        "version": "1.0.1"
+      },
+      {
+        "owner": "tscircuit",
+        "name": "@tscircuit/checks",
+        "range": "^0.0.282",
+        "kind": "dependency",
+        "key": "@tscircuit/checks",
+        "version": "0.0.282"
+      },
+      {
+        "owner": "tscircuit",
+        "name": "calculate-packing",
+        "range": "^0.0.90",
+        "kind": "dependency",
+        "key": "calculate-packing",
+        "version": "0.0.90"
+      },
+      {
+        "owner": "tscircuit",
+        "name": "rollup-plugin-dts",
+        "range": "^6.2.3",
+        "kind": "dependency",
+        "key": "rollup-plugin-dts",
+        "version": "6.5.1"
+      },
+      {
+        "owner": "tscircuit",
+        "name": "schematic-symbols",
+        "range": "^0.0.251",
+        "kind": "dependency",
+        "key": "schematic-symbols",
+        "version": "0.0.251"
+      },
+      {
+        "owner": "tscircuit",
+        "name": "svg-path-commander",
+        "range": "^2.1.11",
+        "kind": "dependency",
+        "key": "svg-path-commander",
+        "version": "2.3.4"
+      },
+      {
+        "owner": "tscircuit",
+        "name": "@rollup/plugin-json",
+        "range": "^6.1.0",
+        "kind": "dependency",
+        "key": "@rollup/plugin-json",
+        "version": "6.1.0"
+      },
+      {
+        "owner": "tscircuit",
+        "name": "@tscircuit/alphabet",
+        "range": "0.0.25",
+        "kind": "dependency",
+        "key": "@tscircuit/alphabet",
+        "version": "0.0.25"
+      },
+      {
+        "owner": "tscircuit",
+        "name": "@tscircuit/krt-wasm",
+        "range": "^0.1.1",
+        "kind": "dependency",
+        "key": "@tscircuit/krt-wasm",
+        "version": "0.1.9"
+      },
+      {
+        "owner": "tscircuit",
+        "name": "@tscircuit/miniflex",
+        "range": "^0.0.4",
+        "kind": "dependency",
+        "key": "@tscircuit/miniflex",
+        "version": "0.0.4"
+      },
+      {
+        "owner": "tscircuit",
+        "name": "@tscircuit/runframe",
+        "range": "^0.0.3297",
+        "kind": "dependency",
+        "key": "@tscircuit/runframe",
+        "version": "0.0.3297"
+      },
+      {
+        "owner": "tscircuit",
+        "name": "circuit-json-to-bpc",
+        "range": "^0.0.13",
+        "kind": "dependency",
+        "key": "circuit-json-to-bpc",
+        "version": "0.0.13"
+      },
+      {
+        "owner": "tscircuit",
+        "name": "@tscircuit/matchpack",
+        "range": "^0.0.100",
+        "kind": "dependency",
+        "key": "@tscircuit/matchpack",
+        "version": "0.0.100"
+      },
+      {
+        "owner": "tscircuit",
+        "name": "@tscircuit/soup-util",
+        "range": "^0.0.41",
+        "kind": "dependency",
+        "key": "@tscircuit/soup-util",
+        "version": "0.0.41"
+      },
+      {
+        "owner": "tscircuit",
+        "name": "circuit-json-to-gltf",
+        "range": "^0.0.164",
+        "kind": "dependency",
+        "key": "circuit-json-to-gltf",
+        "version": "0.0.164"
+      },
+      {
+        "owner": "tscircuit",
+        "name": "@tscircuit/math-utils",
+        "range": "0.0.39",
+        "kind": "dependency",
+        "key": "@tscircuit/math-utils",
+        "version": "0.0.39"
+      },
+      {
+        "owner": "tscircuit",
+        "name": "circuit-json-to-spice",
+        "range": "^0.0.48",
+        "kind": "dependency",
+        "key": "circuit-json-to-spice",
+        "version": "0.0.48"
+      },
+      {
+        "owner": "tscircuit",
+        "name": "kicad-to-circuit-json",
+        "range": "^0.0.149",
+        "kind": "dependency",
+        "key": "kicad-to-circuit-json",
+        "version": "0.0.149"
+      },
+      {
+        "owner": "tscircuit",
+        "name": "transformation-matrix",
+        "range": "^2.16.1",
+        "kind": "dependency",
+        "key": "transformation-matrix",
+        "version": "2.16.1"
+      },
+      {
+        "owner": "tscircuit",
+        "name": "@tscircuit/footprinter",
+        "range": "^0.0.451",
+        "kind": "dependency",
+        "key": "@tscircuit/footprinter",
+        "version": "0.0.451"
+      },
+      {
+        "owner": "tscircuit",
+        "name": "@tscircuit/image-utils",
+        "range": "^0.0.8",
+        "kind": "dependency",
+        "key": "@tscircuit/image-utils",
+        "version": "0.0.8"
+      },
+      {
+        "owner": "tscircuit",
+        "name": "@tscircuit/manifold-2d",
+        "range": "^0.0.8",
+        "kind": "dependency",
+        "key": "@tscircuit/manifold-2d",
+        "version": "0.0.8"
+      },
+      {
+        "owner": "tscircuit",
+        "name": "@rollup/plugin-commonjs",
+        "range": "^29.0.0",
+        "kind": "dependency",
+        "key": "@rollup/plugin-commonjs",
+        "version": "29.0.3"
+      },
+      {
+        "owner": "tscircuit",
+        "name": "@tscircuit/modelprinter",
+        "range": "^0.0.37",
+        "kind": "dependency",
+        "key": "@tscircuit/modelprinter",
+        "version": "0.0.37"
+      },
+      {
+        "owner": "tscircuit",
+        "name": "@tscircuit/solver-utils",
+        "range": "^0.0.16",
+        "kind": "dependency",
+        "key": "@tscircuit/solver-utils",
+        "version": "0.0.16"
+      },
+      {
+        "owner": "tscircuit",
+        "name": "circuit-json-to-pnp-csv",
+        "range": "^0.0.20",
+        "kind": "dependency",
+        "key": "circuit-json-to-pnp-csv",
+        "version": "0.0.20"
+      },
+      {
+        "owner": "tscircuit",
+        "name": "@tscircuit/fanout-solver",
+        "range": "0.0.90",
+        "kind": "dependency",
+        "key": "@tscircuit/fanout-solver",
+        "version": "0.0.90"
+      },
+      {
+        "owner": "tscircuit",
+        "name": "@tscircuit/simple-3d-svg",
+        "range": "^0.0.41",
+        "kind": "dependency",
+        "key": "@tscircuit/simple-3d-svg",
+        "version": "0.0.41"
+      },
+      {
+        "owner": "tscircuit",
+        "name": "@rollup/plugin-typescript",
+        "range": "^12.3.0",
+        "kind": "dependency",
+        "key": "@rollup/plugin-typescript",
+        "version": "12.3.1"
+      },
+      {
+        "owner": "tscircuit",
+        "name": "calculate-cell-boundaries",
+        "range": "^0.0.25",
+        "kind": "dependency",
+        "key": "calculate-cell-boundaries",
+        "version": "0.0.25"
+      },
+      {
+        "owner": "tscircuit",
+        "name": "circuit-json-to-simple-3d",
+        "range": "^0.0.9",
+        "kind": "dependency",
+        "key": "circuit-json-to-simple-3d",
+        "version": "0.0.9"
+      },
+      {
+        "owner": "tscircuit",
+        "name": "kicad-component-converter",
+        "range": "^0.1.40",
+        "kind": "dependency",
+        "key": "kicad-component-converter",
+        "version": "0.1.41"
+      },
+      {
+        "owner": "tscircuit",
+        "name": "@rollup/plugin-node-resolve",
+        "range": "^16.0.3",
+        "kind": "dependency",
+        "key": "@rollup/plugin-node-resolve",
+        "version": "16.0.3"
+      },
+      {
+        "owner": "tscircuit",
+        "name": "@tscircuit/circuit-json-util",
+        "range": "^0.0.131",
+        "kind": "dependency",
+        "key": "@tscircuit/circuit-json-util",
+        "version": "0.0.131"
+      },
+      {
+        "owner": "tscircuit",
+        "name": "@tscircuit/copper-pour-solver",
+        "range": "^0.0.74",
+        "kind": "dependency",
+        "key": "@tscircuit/copper-pour-solver",
+        "version": "0.0.74"
+      },
+      {
+        "owner": "tscircuit",
+        "name": "@tscircuit/capacity-autorouter",
+        "range": "^0.0.1133",
+        "kind": "dependency",
+        "key": "@tscircuit/capacity-autorouter",
+        "version": "0.0.1133"
+      },
+      {
+        "owner": "tscircuit",
+        "name": "@tscircuit/infgrid-ijump-astar",
+        "range": "^0.0.35",
+        "kind": "dependency",
+        "key": "@tscircuit/infgrid-ijump-astar",
+        "version": "0.0.35"
+      },
+      {
+        "owner": "tscircuit",
+        "name": "@tscircuit/create-fdm-enclosure",
+        "range": "0.0.6",
+        "kind": "dependency",
+        "key": "@tscircuit/create-fdm-enclosure",
+        "version": "0.0.6"
+      },
+      {
+        "owner": "tscircuit",
+        "name": "@tscircuit/ngspice-spice-engine",
+        "range": "^0.0.23",
+        "kind": "dependency",
+        "key": "@tscircuit/ngspice-spice-engine",
+        "version": "0.0.23"
+      },
+      {
+        "owner": "tscircuit",
+        "name": "@tscircuit/schematic-match-adapt",
+        "range": "^0.0.18",
+        "kind": "dependency",
+        "key": "@tscircuit/schematic-match-adapt",
+        "version": "0.0.18"
+      },
+      {
+        "owner": "tscircuit",
+        "name": "circuit-json-to-connectivity-map",
+        "range": "^0.0.33",
+        "kind": "dependency",
+        "key": "circuit-json-to-connectivity-map",
+        "version": "0.0.33"
+      },
+      {
+        "owner": "tscircuit",
+        "name": "@tscircuit/internal-dynamic-import",
+        "range": "^0.0.11",
+        "kind": "dependency",
+        "key": "@tscircuit/internal-dynamic-import",
+        "version": "0.0.11"
+      },
+      {
+        "owner": "tscircuit",
+        "name": "@tscircuit/infer-cable-insertion-point",
+        "range": "^0.0.5",
+        "kind": "dependency",
+        "key": "@tscircuit/infer-cable-insertion-point",
+        "version": "0.0.5"
+      },
+      {
+        "owner": "use-mouse-matrix-transform",
+        "name": "transformation-matrix",
+        "range": "^3.0.0",
+        "kind": "dependency",
+        "key": "use-mouse-matrix-transform/transformation-matrix",
+        "version": "3.1.0"
+      },
+      {
+        "owner": "xml-lexer",
+        "name": "eventemitter3",
+        "range": "^2.0.0",
+        "kind": "dependency",
+        "key": "eventemitter3",
+        "version": "2.0.3"
+      },
+      {
+        "owner": "xml-reader",
+        "name": "eventemitter3",
+        "range": "^2.0.0",
+        "kind": "dependency",
+        "key": "eventemitter3",
+        "version": "2.0.3"
+      },
+      {
+        "owner": "xml-reader",
+        "name": "xml-lexer",
+        "range": "^0.2.2",
+        "kind": "dependency",
+        "key": "xml-lexer",
+        "version": "0.2.2"
+      },
+      {
+        "owner": "@tscircuit/fanout-solver/@tscircuit/capacity-autorouter",
+        "name": "fast-json-stable-stringify",
+        "range": "^2.1.0",
+        "kind": "dependency",
+        "key": "fast-json-stable-stringify",
+        "version": "2.1.0"
+      },
+      {
+        "owner": "@tscircuit/fanout-solver/@tscircuit/capacity-autorouter",
+        "name": "object-hash",
+        "range": "^3.0.0",
+        "kind": "dependency",
+        "key": "object-hash",
+        "version": "3.0.0"
+      },
+      {
+        "owner": "@tscircuit/fanout-solver/@tscircuit/capacity-autorouter",
+        "name": "stack-svgs",
+        "range": "^0.0.1",
+        "kind": "dependency",
+        "key": "stack-svgs",
+        "version": "0.0.1"
+      },
+      {
+        "owner": "@tscircuit/runframe/@tscircuit/core",
+        "name": "@dagrejs/dagre",
+        "range": "^2.0.4",
+        "kind": "dependency",
+        "key": "@dagrejs/dagre",
+        "version": "2.0.4"
+      },
+      {
+        "owner": "@tscircuit/runframe/@tscircuit/core",
+        "name": "@flatten-js/core",
+        "range": "^1.6.2",
+        "kind": "dependency",
+        "key": "@flatten-js/core",
+        "version": "1.6.15"
+      },
+      {
+        "owner": "@tscircuit/runframe/@tscircuit/core",
+        "name": "@jscad/modeling",
+        "range": "^2.13.0",
+        "kind": "dependency",
+        "key": "@jscad/modeling",
+        "version": "2.13.0"
+      },
+      {
+        "owner": "@tscircuit/runframe/@tscircuit/core",
+        "name": "@lume/kiwi",
+        "range": "^0.4.3",
+        "kind": "dependency",
+        "key": "@lume/kiwi",
+        "version": "0.4.4"
+      },
+      {
+        "owner": "@tscircuit/runframe/@tscircuit/core",
+        "name": "calculate-cell-boundaries",
+        "range": "^0.0.25",
+        "kind": "dependency",
+        "key": "calculate-cell-boundaries",
+        "version": "0.0.25"
+      },
+      {
+        "owner": "@tscircuit/runframe/@tscircuit/core",
+        "name": "calculate-packing",
+        "range": "^0.0.90",
+        "kind": "dependency",
+        "key": "calculate-packing",
+        "version": "0.0.90"
+      },
+      {
+        "owner": "@tscircuit/runframe/@tscircuit/core",
+        "name": "css-select",
+        "range": "5.1.0",
+        "kind": "dependency",
+        "key": "css-select",
+        "version": "5.1.0"
+      },
+      {
+        "owner": "@tscircuit/runframe/@tscircuit/core",
+        "name": "format-si-unit",
+        "range": "^0.0.12",
+        "kind": "dependency",
+        "key": "format-si-unit",
+        "version": "0.0.12"
+      },
+      {
+        "owner": "@tscircuit/runframe/@tscircuit/core",
+        "name": "gl-matrix",
+        "range": "^3.4.4",
+        "kind": "dependency",
+        "key": "gl-matrix",
+        "version": "3.4.4"
+      },
+      {
+        "owner": "@tscircuit/runframe/@tscircuit/core",
+        "name": "jscad-fiber",
+        "range": "^0.0.93",
+        "kind": "dependency",
+        "key": "jscad-fiber",
+        "version": "0.0.93"
+      },
+      {
+        "owner": "@tscircuit/runframe/@tscircuit/core",
+        "name": "jscad-planner",
+        "range": "^0.0.21",
+        "kind": "dependency",
+        "key": "jscad-planner",
+        "version": "0.0.21"
+      },
+      {
+        "owner": "@tscircuit/runframe/@tscircuit/core",
+        "name": "nanoid",
+        "range": "^5.0.7",
+        "kind": "dependency",
+        "key": "nanoid",
+        "version": "5.1.16"
+      },
+      {
+        "owner": "@tscircuit/runframe/@tscircuit/core",
+        "name": "performance-now",
+        "range": "^2.1.0",
+        "kind": "dependency",
+        "key": "performance-now",
+        "version": "2.1.0"
+      },
+      {
+        "owner": "@tscircuit/runframe/@tscircuit/core",
+        "name": "poppygl",
+        "range": "0.0.38",
+        "kind": "dependency",
+        "key": "poppygl",
+        "version": "0.0.38"
+      },
+      {
+        "owner": "@tscircuit/runframe/@tscircuit/core",
+        "name": "react-reconciler",
+        "range": "^0.32.0",
+        "kind": "dependency",
+        "key": "react-reconciler",
+        "version": "0.32.0"
+      },
+      {
+        "owner": "@tscircuit/runframe/@tscircuit/core",
+        "name": "svg-path-commander",
+        "range": "^2.1.11",
+        "kind": "dependency",
+        "key": "svg-path-commander",
+        "version": "2.3.4"
+      },
+      {
+        "owner": "@tscircuit/runframe/@tscircuit/core",
+        "name": "transformation-matrix",
+        "range": "^2.16.1",
+        "kind": "dependency",
+        "key": "transformation-matrix",
+        "version": "2.16.1"
+      },
+      {
+        "owner": "@tscircuit/runframe/@tscircuit/core",
+        "name": "zod",
+        "range": "^3.25.67",
+        "kind": "dependency",
+        "key": "zod",
+        "version": "3.25.76"
+      },
+      {
+        "owner": "bun-types/@types/node",
+        "name": "undici-types",
+        "range": "~8.9.0",
+        "kind": "dependency",
+        "key": "bun-types/@types/node/undici-types",
+        "version": "8.9.0"
+      },
+      {
+        "owner": "calculate-cell-boundaries/react",
+        "name": "loose-envify",
+        "range": "^1.1.0",
+        "kind": "dependency",
+        "key": "loose-envify",
+        "version": "1.4.0"
+      },
+      {
+        "owner": "calculate-cell-boundaries/react-dom",
+        "name": "loose-envify",
+        "range": "^1.1.0",
+        "kind": "dependency",
+        "key": "loose-envify",
+        "version": "1.4.0"
+      },
+      {
+        "owner": "calculate-cell-boundaries/react-dom",
+        "name": "scheduler",
+        "range": "^0.23.2",
+        "kind": "dependency",
+        "key": "calculate-cell-boundaries/react-dom/scheduler",
+        "version": "0.23.2"
+      },
+      {
+        "owner": "circuit-json-to-gltf/@tscircuit/footprinter",
+        "name": "@tscircuit/mm",
+        "range": "^0.0.8",
+        "kind": "dependency",
+        "key": "circuit-json-to-gltf/@tscircuit/footprinter/@tscircuit/mm",
+        "version": "0.0.8"
+      },
+      {
+        "owner": "circuit-json-to-gltf/@tscircuit/footprinter",
+        "name": "zod",
+        "range": "^3.23.8",
+        "kind": "dependency",
+        "key": "zod",
+        "version": "3.25.76"
+      },
+      {
+        "owner": "circuit-json-to-gltf/jscad-planner",
+        "name": "gl-matrix",
+        "range": "^3.4.4",
+        "kind": "dependency",
+        "key": "gl-matrix",
+        "version": "3.4.4"
+      },
+      {
+        "owner": "circuit-json-to-spice/circuit-json-to-connectivity-map",
+        "name": "@tscircuit/math-utils",
+        "range": "^0.0.9",
+        "kind": "dependency",
+        "key": "circuit-json-to-spice/circuit-json-to-connectivity-map/@tscircuit/math-utils",
+        "version": "0.0.9"
+      },
+      {
+        "owner": "jscad-fiber/color",
+        "name": "color-convert",
+        "range": "^2.0.1",
+        "kind": "dependency",
+        "key": "jscad-fiber/color/color-convert",
+        "version": "2.0.1"
+      },
+      {
+        "owner": "jscad-fiber/color",
+        "name": "color-string",
+        "range": "^1.9.0",
+        "kind": "dependency",
+        "key": "jscad-fiber/color/color-string",
+        "version": "1.9.1"
+      },
+      {
+        "owner": "calculate-cell-boundaries/react-dom/scheduler",
+        "name": "loose-envify",
+        "range": "^1.1.0",
+        "kind": "dependency",
+        "key": "loose-envify",
+        "version": "1.4.0"
+      },
+      {
+        "owner": "jscad-fiber/color/color-convert",
+        "name": "color-name",
+        "range": "~1.1.4",
+        "kind": "dependency",
+        "key": "jscad-fiber/color/color-convert/color-name",
+        "version": "1.1.4"
+      },
+      {
+        "owner": "jscad-fiber/color/color-string",
+        "name": "color-name",
+        "range": "^1.0.0",
+        "kind": "dependency",
+        "key": "jscad-fiber/color/color-string/color-name",
+        "version": "1.1.4"
+      },
+      {
+        "owner": "jscad-fiber/color/color-string",
+        "name": "simple-swizzle",
+        "range": "^0.2.2",
+        "kind": "dependency",
+        "key": "simple-swizzle",
+        "version": "0.2.4"
+      }
+    ],
+    "installExecuted": false,
+    "note": "Every root dependency and package dependency edge passes semver against the frozen279-record graph. Optional and peer dependency edges are not included in this static count. ARM bootstrap still must pass actual frozen-lockfile install."
   },
-  "graphPolicy": "Preserve all still-compatible3242 lock records; update exact Main3243 declared package changes and nested Runframe Eval. No independent transitive refresh.",
-  "runtimeRecords": 279,
-  "updatedRecords": [
-    "tscircuit",
-    "@tscircuit/core",
-    "@tscircuit/capacity-autorouter",
-    "@tscircuit/runframe",
-    "@tscircuit/fanout-solver",
-    "@tscircuit/runframe/@tscircuit/eval"
-  ],
-  "requiredAndRootEdges": 419,
-  "allPackageEdges": 575,
-  "preExistingPeerWarnings": [
-    {
-      "owner": "circuit-json-to-gltf",
-      "name": "@resvg/resvg-wasm",
-      "range": "2",
-      "kind": "peerDependencies",
-      "key": null,
-      "version": null,
-      "satisfied": false
-    },
-    {
-      "owner": "debug",
-      "name": "supports-color",
-      "range": "*",
-      "kind": "peerDependencies",
-      "key": null,
-      "version": null,
-      "satisfied": false
-    },
-    {
-      "owner": "jscad-electronics",
-      "name": "@tscircuit/alphabet",
-      "range": "^0.0.24",
-      "kind": "peerDependencies",
-      "key": "@tscircuit/alphabet",
-      "version": "0.0.25",
-      "satisfied": false
-    },
-    {
-      "owner": "jscad-electronics",
-      "name": "circuit-json",
-      "range": "^0.0.426",
-      "kind": "peerDependencies",
-      "key": "circuit-json",
-      "version": "0.0.552",
-      "satisfied": false
-    },
-    {
-      "owner": "jscad-electronics",
-      "name": "react",
-      "range": "19.1.0",
-      "kind": "peerDependencies",
-      "key": "react",
-      "version": "19.3.1",
-      "satisfied": false
-    },
-    {
-      "owner": "jscad-electronics",
-      "name": "react-dom",
-      "range": "19.1.0",
-      "kind": "peerDependencies",
-      "key": "react-dom",
-      "version": "19.3.1",
-      "satisfied": false
-    },
-    {
-      "owner": "jscad-fiber",
-      "name": "react",
-      "range": "19.1.0",
-      "kind": "peerDependencies",
-      "key": "react",
-      "version": "19.3.1",
-      "satisfied": false
-    },
-    {
-      "owner": "jscad-fiber",
-      "name": "react-dom",
-      "range": "19.1.0",
-      "kind": "peerDependencies",
-      "key": "react-dom",
-      "version": "19.3.1",
-      "satisfied": false
-    },
-    {
-      "owner": "rollup-plugin-dts",
-      "name": "@typescript/typescript6",
-      "range": "^6",
-      "kind": "peerDependencies",
-      "key": null,
-      "version": null,
-      "satisfied": false
-    },
-    {
-      "owner": "use-mouse-matrix-transform",
-      "name": "react",
-      "range": "^18.2.0",
-      "kind": "peerDependencies",
-      "key": "react",
-      "version": "19.3.1",
-      "satisfied": false
-    }
-  ],
-  "peerWarningsUnchanged": true,
-  "ARM64FrozenLockOnlyPassed": true,
-  "fullDependencyInstallPerformed": false,
-  "noRoutingExecuted": true,
-  "coreAssessmentCompatibility": {
-    "getBusLanesInputFromSrj": {
-      "exactPriorDeclarationRetained": true,
-      "bytes": 1583,
-      "sha256": "95d4c1866edcc7d3021d14abc455d673d60eccc321b4e8d2752ce56e914db658",
-      "characterOffset": 5082368
-    },
-    "findFloatingCopper": {
-      "exactPriorDeclarationRetained": true,
-      "bytes": 9149,
-      "sha256": "e304e2c1358c41fc35027ea624dc6854d6150c7ce618b59b8649534da0b4c024",
-      "characterOffset": 6050765
-    },
-    "Flatbush3Import": {
-      "exactPriorDeclarationRetained": true,
-      "bytes": 33,
-      "sha256": "e2db3be81a3a5c4ccd5848ee2d3cbdfcf82dee41118be4cb061f76460c8c5bd7",
-      "characterOffset": 6048915
-    }
-  },
-  "files": {
-    "release/runframe-eval-metadata.json": {
-      "bytes": 10162,
-      "sha256": "d6ebbf67afee80c8e9be9e6e006ca6cccb6784264d1c00debedc9608fed89fab"
-    },
-    "release/ngspice-metadata.json": {
-      "bytes": 2972,
-      "sha256": "0a6483aad754d654568a7192c08414f65f9c7698841cbd404e1ef0150cf06688"
-    },
-    "release/spice-metadata.json": {
-      "bytes": 3125,
-      "sha256": "33652029232575c55a957f0e62f793ee6108578fec8bb7b2440ac35d17f107d8"
-    },
-    "release/cli-metadata.json": {
-      "bytes": 6347,
-      "sha256": "4fa08c99ca57e761bd7e36ac95ed6a8edb5a82a3d6073504a38fd86456a3b0a2"
-    },
-    "release/circuit-json-metadata.json": {
-      "bytes": 3063,
-      "sha256": "0948f5f2c01379191760aaa31437dc1d8aeab5e1818199b9ec6c71308d480de7"
-    },
-    "release/props-metadata.json": {
-      "bytes": 3282,
-      "sha256": "49b3fcea29f7379adea27b91c8786cc950260d9a0e10473f38fc4aff56491e81"
-    },
-    "release/fanout-metadata.json": {
-      "bytes": 4341,
-      "sha256": "680cc4b900c6f40e64190052b5845a647510bd703b35f8833fd30bb58f16e432"
-    },
-    "release/checks-metadata.json": {
-      "bytes": 3815,
-      "sha256": "d86c5cbe2bc9b0dfdd43b6f365f0ed2f60fe924d2e96683120db21173b1729d2"
-    },
-    "release/runframe-metadata.json": {
-      "bytes": 7411,
-      "sha256": "f01c300d0b9ec1bccc5a36ee124c13722599f10f3e80024070f269085f56c71f"
-    },
-    "release/autorouter-metadata.json": {
-      "bytes": 10275,
-      "sha256": "7d6a4c70e8739a0efd65992dd65f3f4cf5e790108d6fd98e78c1386034c40b79"
-    },
-    "release/eval-metadata.json": {
-      "bytes": 10161,
-      "sha256": "d9de65be122402abcab10d85e865a653f02bdba2074989229a3bf9d2d3b620a2"
-    },
-    "release/core-metadata.json": {
-      "bytes": 10047,
-      "sha256": "a0288494f4a5f46448e7e30a4d27e64d8169f7c85c6f31244c8d5a497b846364"
-    },
-    "release/tscircuit-metadata.json": {
-      "bytes": 6180,
-      "sha256": "75b0c95dbacd575a52e12d94523c6b7d29afb6c053e13bd89809998caabb1d24"
-    },
-    "release/fanout-tarball-proof.json": {
-      "bytes": 21809,
-      "sha256": "e73304a13a1c27dd88348e1e61f1b85cb9b0122f93680606c7a58ad715495ec4"
-    },
-    "release/runframe-tarball-proof.json": {
-      "bytes": 4751,
-      "sha256": "0c03c956c9b6fbb2d8f291cf33d1c4dbdd5381368320d0af9729aa2b518071c7"
-    },
-    "release/autorouter-tarball-proof.json": {
-      "bytes": 3034,
-      "sha256": "888894c31488760b96a5a801ba3dd2068f62426583db7bf41a43d91576642b43"
-    },
-    "release/core-tarball-proof.json": {
-      "bytes": 2311,
-      "sha256": "78a2a36d90302c5a869d402f107c6df45485ba031e12b59c67ee5cb7c9b2044c"
-    },
-    "release/tscircuit-tarball-proof.json": {
-      "bytes": 2219,
-      "sha256": "07dd622578fc517c6aaddafc545d9a236b826a4fc6a076ab0be1c0e235ab4fa7"
-    },
-    "release/release-selection.json": {
-      "bytes": 2479,
-      "sha256": "aefc2abdbb8de34f70fe6623bd8cb55f1f489513bf9eb338d4864b5f73b068d8"
-    },
-    "baseline-plan/runtime-lock-refresh.json": {
-      "bytes": 16991,
-      "sha256": "98d06895114248a7f2eab73164eca1993e59b7cca64770cfa79310b682619bad"
-    },
-    "baseline-plan/direct-graph-preflight.json": {
-      "bytes": 80059,
-      "sha256": "35bda47ddfe4302c63bc3992735a19b0dc11868ec7ef92e343b1be1e4a2d79e9"
-    },
-    "baseline-plan/all-dependency-edges-preflight.json": {
-      "bytes": 131210,
-      "sha256": "b73b51b4b4de27a25ca4489c8c2bc115064471837aa4b7840889e8d5905e1611"
-    },
-    "baseline-plan/bun-frozen-lock-preflight.json": {
-      "bytes": 853,
-      "sha256": "72efbd8998f3799ea52af4fd97b2e4fa554d65f0aec3ffb0300e754259bfab8f"
-    }
+  "observerSmoke": {
+    "equalOutputAndIterations": true,
+    "iterations": 3863,
+    "outputSha256": "166c83b0d379bfc7b1d578b14b2b07aea97fb46dbdf9cf6cdf3b9f8fc5b65b2a",
+    "stages": 25,
+    "classes": [
+      "Use",
+      "Zee",
+      "Gee",
+      "X0",
+      "MF",
+      "_te",
+      "Jn",
+      "Xt",
+      "Bt",
+      "Yt",
+      "Be",
+      "X",
+      "Le",
+      "ht",
+      "Ree",
+      "mte",
+      "Uq",
+      "bi",
+      "ui",
+      "sZ",
+      "Gse",
+      "N0",
+      "UQ",
+      "DK",
+      "bo",
+      "Pipeline9HighDensitySolver",
+      "UB",
+      "WB",
+      "Voe",
+      "H2",
+      "O2",
+      "m5",
+      "gY",
+      "Tj",
+      "Ij",
+      "dY",
+      "Uj",
+      "$j",
+      "Dj",
+      "vY",
+      "ZR",
+      "Pipeline9JointDrcRepairSolver",
+      "Pipeline9BoundedRegionalRepairSolver",
+      "$re",
+      "_b",
+      "NegotiateTraceClearanceSolver",
+      "PairedClearancePathSolver",
+      "FindClearancePathSolver",
+      "JR",
+      "qR",
+      "Pipeline9RegionalB01RepairSolver",
+      "xre",
+      "Sre",
+      "OB",
+      "qr",
+      "Fr",
+      "cse",
+      "oT",
+      "Roe",
+      "X8",
+      "poe"
+    ],
+    "observationMs": 83.82318500001657,
+    "captures": 71,
+    "omittedCaptures": 0,
+    "scope": "observer smoke on published AR1133 with available local external dependencies; not native board qualification"
   }
 }

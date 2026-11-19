@@ -3,6 +3,7 @@ import { mkdirSync, readFileSync, realpathSync, renameSync, writeFileSync } from
 import { dirname, join, resolve } from "node:path"
 import { fileURLToPath, pathToFileURL } from "node:url"
 import { gzipSync, gunzipSync } from "node:zlib"
+import { createProcessDiagnostics, createBusDiagnostics } from "./createProcessDiagnostics.mjs"
 import { createCoarseRoutingDiagnostics } from "./createCoarseRoutingDiagnostics"
 
 const [casePath, output, executionMode = "full"] = process.argv.slice(2)
@@ -97,9 +98,17 @@ const atomic = (name: string, value: Uint8Array | string): void => {
   writeFileSync(join(output, `${name}.tmp`), value)
   renameSync(join(output, `${name}.tmp`), join(output, name))
 }
+let processObserver: ReturnType<typeof createProcessDiagnostics> | ReturnType<typeof createBusDiagnostics> | undefined
+const processReports: object[] = []
+const finishProcess = (): void => {
+  if (processObserver) processReports.push(processObserver.finish())
+  processObserver = undefined
+  atomic("process-diagnostics.json", JSON.stringify({ reports: processReports }, null, 2))
+}
 let lastCircuitSave = -Infinity
 const save = (withCircuit = false): void => {
   progress.elapsedMs = performance.now() - started
+  if (processObserver) atomic("process-diagnostics.json", JSON.stringify({ reports: [...processReports, processObserver.snapshot()] }, null, 2))
   progress.wasmUsage = wasmUsage
   if (withCircuit || performance.now() - lastCircuitSave >= 15000) {
     const json = circuit.getCircuitJson()
@@ -110,11 +119,7 @@ const save = (withCircuit = false): void => {
   atomic("progress.json", JSON.stringify(progress, null, 2))
 }
 const running = (): any => progress.phases.findLast((phase: any) => phase.status === "running")
-const diagnosticTargets: Record<string, string> = {
-  "butterstick-original": "plane_escape", "icepi-original": "plane_escape",
-  "glider-spaced": "other_signals", "imx6-spaced": "remaining", "butterstick-spaced": "*",
-}
-const targetPhase = executionMode === "full" ? diagnosticTargets[`${task.id}-${task.cohort}`] : undefined
+const targetPhase = executionMode === "full" ? "*" : undefined
 progress.coarseRoutingInstrumentation = { enabled: Boolean(targetPhase), targetPhase: targetPhase ?? null, mode: "observational published-instance lifecycle hooks" }
 const coarseReports: Record<string, any>[] = []
 let coarseObserver: ReturnType<typeof createCoarseRoutingDiagnostics> | undefined
@@ -160,6 +165,22 @@ circuit.on("solver:started", (event: any): void => {
   const options = event.solverParams?.options
   if (options?.cacheProvider) throw new Error("Unexpected solver cache provider")
   const phaseName = running()?.name
+  if (event.solverName === "AutoroutingPipelineSolver9_PreloadedTraceGraph") {
+    finishProcess()
+    processObserver = createProcessDiagnostics({
+      pipelineClass: PublishedPipeline9, registeredPipelineClass: SOLVERS.AutoroutingPipelineSolver9_PreloadedTraceGraph,
+      onSnapshot: (report: object): void => atomic("process-diagnostics.json", JSON.stringify({ reports: [...processReports, report] }, null, 2)),
+      phase: { name: phaseName, index: running()?.index }, deep: task.id === "h616" && task.cohort === "spaced",
+      write: (name: string, bytes: string, compressed: boolean): void => atomic(name, compressed ? gzipSync(bytes, { level: 1 }) : bytes),
+    })
+  }
+  if (event.solverName === "BusLanesPipelineSolver") {
+    finishProcess()
+    processObserver = createBusDiagnostics({ pipelineClass: SOLVERS.BusLanesPipelineSolver,
+      phase: { name: phaseName, index: running()?.index },
+      onSnapshot: (report: object): void => atomic("process-diagnostics.json", JSON.stringify({ reports: [...processReports, report] }, null, 2)),
+    })
+  }
   if (event.solverName === "AutoroutingPipelineSolver9_PreloadedTraceGraph" && targetPhase && (targetPhase === "*" || phaseName === targetPhase)) {
     finishCoarseDiagnostics()
     coarseObserver = createCoarseRoutingDiagnostics({
@@ -181,6 +202,7 @@ const captureDeadline = setTimeout((): void => {
   progress.status = "capture_deadline"
   progress.errors.push("900 second external capture deadline; solver budgets unchanged")
   finishCoarseDiagnostics()
+  finishProcess()
   save(true)
   process.exit(124)
 }, 900000)
@@ -198,6 +220,7 @@ try {
   clearInterval(heartbeat)
   clearTimeout(captureDeadline)
   finishCoarseDiagnostics()
+  finishProcess()
   save(true)
   try {
     atomic("pcb.svg.gz", gzipSync(convertCircuitJsonToPcbSvg(circuit.getCircuitJson(), { width: 1600, height: 1100, backgroundColor: "white", shouldDrawRatsNest: false, shouldDrawErrors: false, showPcbGroups: false }), { level: 1 }))

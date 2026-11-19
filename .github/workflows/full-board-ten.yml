@@ -1,8 +1,8 @@
-name: Published3243 full-board ten-case benchmark
+name: Published3244 full-board pipeline process analysis
 
 on:
   push:
-    branches: [bench/full-board-ten-3243-20261119]
+    branches: [bench/full-board-process-3244-20261119]
 
 permissions:
   contents: read
@@ -135,6 +135,8 @@ jobs:
             .full-board-run/results/${{ matrix.board }}/summary.json
             .full-board-run/results/${{ matrix.board }}/*/result.json
             .full-board-run/results/${{ matrix.board }}/*/assessment.json
+            .full-board-run/results/${{ matrix.board }}/*/process-diagnostics.json
+            .full-board-run/results/${{ matrix.board }}/*/coarse-diagnostics.json
             .full-board-run/results/${{ matrix.board }}/*/process.json
             .full-board-run/results/${{ matrix.board }}/*/progress.json
             .full-board-run/runtime-manifest.json

@@ -1,35 +1,35 @@
 {
-  "mainVersion": "0.0.3243",
+  "mainVersion": "0.0.3244",
   "packages": [
     {
       "label": "tscircuit",
       "name": "tscircuit",
-      "version": "0.0.3243",
-      "gitHead": "ec0c9778775d4bb816fa100163a697fea0ae4072",
+      "version": "0.0.3244",
+      "gitHead": "0060ee57190e0bf7103d59044c91f527734e381d",
       "entryRelative": "dist/index.js",
       "entrySha256": "cfd669f2d96ac77eb054aab53ff34a80120bcd3db72b87f969b3d8b8d2af78a3",
-      "tarball": "https://registry.npmjs.org/tscircuit/-/tscircuit-0.0.3243.tgz",
-      "integrity": "sha512-K4uRlwE6jnlqFwFeVvu5irZ5AqWgWZrIZpH5o6Il/cvZAKc9fu/gIXhTtccROMiZ0vpJCkj6Ta63anarna/uJQ=="
+      "tarball": "https://registry.npmjs.org/tscircuit/-/tscircuit-0.0.3244.tgz",
+      "integrity": "sha512-W82ENNmYVX4mGq71XYAzqJ60GshN7KjblwqTemqo1nrJ2cRBUSeOeSYSUFvTTGvCSictdu0hZz9OhOQROoVBwg=="
     },
     {
       "label": "core",
       "name": "@tscircuit/core",
-      "version": "0.0.2425",
-      "gitHead": "1799ee7e500a4de9d76a308286787307c4face1e",
+      "version": "0.0.2426",
+      "gitHead": "7614f02af40163da1dc2934d2ec5fa4665ae697e",
       "entryRelative": "dist/index.js",
-      "entrySha256": "889b3cf17684cec24dae36ebf7da06c85dd0713e093b2665b66de696bacb7f03",
-      "tarball": "https://registry.npmjs.org/@tscircuit/core/-/core-0.0.2425.tgz",
-      "integrity": "sha512-LN7wEd9sjAAx5A92dvN8JeA7v9NIqAYMF54FXjJUNRglRKULoCvz8+CgV5huvbeYIkqK4VqUJLSWF9G5o+L90A=="
+      "entrySha256": "b7bb4334b2a0db5820796b28dd9dd0b60340c10807a18dbd4768f07b86aa05af",
+      "tarball": "https://registry.npmjs.org/@tscircuit/core/-/core-0.0.2426.tgz",
+      "integrity": "sha512-78dF87gV5Pix+c1iFSV/B5HD/tyt8E2yTy824SpPInCNUhq/O60r64RUlKyOfzrHyE9AOIomIWkBVRPfS6q+hQ=="
     },
     {
       "label": "eval",
       "name": "@tscircuit/eval",
-      "version": "0.0.1818",
-      "gitHead": "f2a5b80dd2c0bf5436929ac96a9c7bc0993405ff",
+      "version": "0.0.1819",
+      "gitHead": "c97b135ddf8421b4ca7e7084cad49fb61bae6f13",
       "entryRelative": "dist/lib/index.js",
       "entrySha256": "71517bf85bef897c0a658f69fba77e69dc6599f82f701ce966fa6af370991465",
-      "tarball": "https://registry.npmjs.org/@tscircuit/eval/-/eval-0.0.1818.tgz",
-      "integrity": "sha512-ar70mlpktg682FACZ2lxIRtaYKoB97fEcF3TxsBzAQd31Gz8NqkptLDE8vmjMZWyMzmx9k6uaExISHjPCzXUuA=="
+      "tarball": "https://registry.npmjs.org/@tscircuit/eval/-/eval-0.0.1819.tgz",
+      "integrity": "sha512-D+O4tV3B/724sySeTmIxVUfR6Qe/Yfx+SplkzTRbz1jOdNwULNJKNX+mo3y6IGLxrNk5ynBuMQt9BaZmca5oPw=="
     },
     {
       "label": "autorouter",
@@ -46,12 +46,12 @@
     {
       "label": "runframe",
       "name": "@tscircuit/runframe",
-      "version": "0.0.3296",
-      "gitHead": "3850aaf07aa854a7639be959afb98afc2ddaed05",
+      "version": "0.0.3297",
+      "gitHead": "b344498f4c7f695c47d065cfd19ca0174b5d73ca",
       "entryRelative": "dist/preview.js",
-      "entrySha256": "46db1cdbce2f72229ce9ef070672b130e622a0aed84c9236556a4e91a421cb4c",
-      "tarball": "https://registry.npmjs.org/@tscircuit/runframe/-/runframe-0.0.3296.tgz",
-      "integrity": "sha512-3mTqSELbEhzsQZSSyLbFMRefkxDHWcv+XBooWa/j/bhkT29TAtNma/sS+hBeFkjO+aXDz96yHGadbqHoAG+DKQ=="
+      "entrySha256": "e6f32531b17e8708d220fe7000b97b0181972e19ea07b1b3514bbb92c2172cbc",
+      "tarball": "https://registry.npmjs.org/@tscircuit/runframe/-/runframe-0.0.3297.tgz",
+      "integrity": "sha512-zYzViGaeIjppHfrZcMQq/qKL2qfy7HaYbpqdctdvgh2dH3jjVLQI6yBGXIS2ur//76QXN8GHRa4hbpp8srv4nQ=="
     },
     {
       "label": "circuit-json",
@@ -96,12 +96,12 @@
     {
       "label": "fanout",
       "name": "@tscircuit/fanout-solver",
-      "version": "0.0.89",
-      "gitHead": "65b4a7f28f1d49e402a37d3b48973f54b32d2004",
+      "version": "0.0.90",
+      "gitHead": "e6fe9d6fbf52e9239d3d3db8626876e082518bbf",
       "entryRelative": "lib/index.ts",
       "entrySha256": "ee06af452060e90d70c49f00a37cf516638f7649817fc4e94decb39da4d07cf9",
-      "tarball": "https://registry.npmjs.org/@tscircuit/fanout-solver/-/fanout-solver-0.0.89.tgz",
-      "integrity": "sha512-APDrhTwTxadAJcq9VDwfQtXqC4lCaNUmuNed5peins0xk441NTsqip10mpHQKJtfsNMZb0Bu+vIrFFRELMaQ5Q=="
+      "tarball": "https://registry.npmjs.org/@tscircuit/fanout-solver/-/fanout-solver-0.0.90.tgz",
+      "integrity": "sha512-mmUHkoLOUeurTcNw3KzHRCmqdXvSZ7EPk8yPW9KnfpARbqQ8EWwfIPO6o6RGmeIYfiiIv9xAdMJVWMejsdaCTg=="
     },
     {
       "label": "ngspice",
