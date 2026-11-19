@@ -251,6 +251,7 @@ const convertObstacleToB01Obstacle = ({
   }
   if (
     obstacle.componentId &&
+    obstacle.connectedTo.length > 0 &&
     !obstacle.isFanoutSourceKeepout &&
     !obstacle.isNonPlatedHole &&
     !obstacle.isCopperPour
