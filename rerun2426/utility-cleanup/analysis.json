@@ -1,0 +1,65 @@
+{
+  "head": "64176a781276e5f5bf5332a6ef2a246f706a7b73",
+  "baseline": "e6fe9d6fbf52e9239d3d3db8626876e082518bbf",
+  "workflow": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44513363296",
+  "pairedNativeSearches": {
+    "icepi": {
+      "beforeMs": [
+        40916.212766,
+        42369.681877,
+        42266.95999
+      ],
+      "afterMs": [
+        31992.242763000002,
+        32644.425337,
+        33551.675330000005
+      ],
+      "beforeMedianMs": 42266.95999,
+      "afterMedianMs": 32644.425337,
+      "medianReductionPercent": 22.76609118629921,
+      "beforeP95Ms": 42359.4096883,
+      "afterP95Ms": 33460.950330700005,
+      "p95ReductionPercent": 21.007042881567394,
+      "beforeMeanMs": 41850.95154433334,
+      "afterMeanMs": 32729.44781,
+      "inputSha256": "f2c622bc288faaae5e505f62fe8803b465d1be0bc5752547ea9136438df40279",
+      "copperSha256": "c5e6fec206c3acc8192b3b06ea1998bdeb1b69484f784b5f8db5edc82813ca38",
+      "throughVias": 7,
+      "independentDrcIssues": 0,
+      "iterations": 26131,
+      "partialEscapes": 7,
+      "requestedConnections": 32,
+      "fullSolve": false
+    },
+    "imx6": {
+      "beforeMs": [
+        43004.125373,
+        44238.668916999995,
+        47519.790031000004
+      ],
+      "afterMs": [
+        35688.966813,
+        34981.283505,
+        37238.505099
+      ],
+      "beforeMedianMs": 44238.668916999995,
+      "afterMedianMs": 35688.966813,
+      "medianReductionPercent": 19.326309568764,
+      "beforeP95Ms": 47191.677919600006,
+      "afterP95Ms": 37083.5512704,
+      "p95ReductionPercent": 21.41929911121432,
+      "beforeMeanMs": 44920.861440333334,
+      "afterMeanMs": 35969.585139,
+      "inputSha256": "70c8dbdc3c3b66954d47334f6d92353df135ba8eb4a7edf344b40718e6b43fd5",
+      "copperSha256": "3e9f3f16c10788016184d4ff5f391e13e68c1acb5667db6f98f80f5eb2a63f51",
+      "throughVias": 7,
+      "independentDrcIssues": 0,
+      "iterations": 26131,
+      "partialEscapes": 8,
+      "requestedConnections": 32,
+      "fullSolve": false
+    }
+  },
+  "copperMatchesPreviousImplementation": true,
+  "method": "Three serial matched pairs per scene, alternating order on one Blacksmith worker. P95 uses linear interpolation. These are failed native fanout searches, not completed full boards."
+}

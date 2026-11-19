@@ -1,0 +1,254 @@
+[
+  {
+    "trial": "trial-1",
+    "revision": "after",
+    "elapsedMs": 35688.966813,
+    "inputSha256": "70c8dbdc3c3b66954d47334f6d92353df135ba8eb4a7edf344b40718e6b43fd5",
+    "copperSha256": "3e9f3f16c10788016184d4ff5f391e13e68c1acb5667db6f98f80f5eb2a63f51",
+    "bestPartial": {
+      "routed": 8,
+      "planes": 6,
+      "boundary": 2,
+      "vias": 7,
+      "connectionNames": [
+        "breakout:pcb_breakout_point_4",
+        "breakout:pcb_breakout_point_8",
+        "source_trace_12",
+        "source_trace_11",
+        "source_trace_17",
+        "source_trace_16",
+        "source_trace_15",
+        "source_trace_3"
+      ],
+      "planeBuses": [
+        "ESC_U10_pin143",
+        "ESC_U10_pin130",
+        "ESC_U10_pin73",
+        "ESC_U10_pin6",
+        "ESC_U10_pin55",
+        "ESC_U10_pin144"
+      ]
+    },
+    "copperDrc": {
+      "valid": true,
+      "checkedTraceCount": 8,
+      "checkedSegmentCount": 14,
+      "checkedViaCount": 7,
+      "issues": []
+    },
+    "failed": true,
+    "solved": false,
+    "error": "FanoutSolver: best layer assignment routed 8/32 connections",
+    "iterations": 26131
+  },
+  {
+    "trial": "trial-1",
+    "revision": "before",
+    "elapsedMs": 43004.125373,
+    "inputSha256": "70c8dbdc3c3b66954d47334f6d92353df135ba8eb4a7edf344b40718e6b43fd5",
+    "copperSha256": "3e9f3f16c10788016184d4ff5f391e13e68c1acb5667db6f98f80f5eb2a63f51",
+    "bestPartial": {
+      "routed": 8,
+      "planes": 6,
+      "boundary": 2,
+      "vias": 7,
+      "connectionNames": [
+        "breakout:pcb_breakout_point_4",
+        "breakout:pcb_breakout_point_8",
+        "source_trace_12",
+        "source_trace_11",
+        "source_trace_17",
+        "source_trace_16",
+        "source_trace_15",
+        "source_trace_3"
+      ],
+      "planeBuses": [
+        "ESC_U10_pin143",
+        "ESC_U10_pin130",
+        "ESC_U10_pin73",
+        "ESC_U10_pin6",
+        "ESC_U10_pin55",
+        "ESC_U10_pin144"
+      ]
+    },
+    "copperDrc": {
+      "valid": true,
+      "checkedTraceCount": 8,
+      "checkedSegmentCount": 14,
+      "checkedViaCount": 7,
+      "issues": []
+    },
+    "failed": true,
+    "solved": false,
+    "error": "FanoutSolver: best layer assignment routed 8/32 connections",
+    "iterations": 26131
+  },
+  {
+    "trial": "trial-2",
+    "revision": "after",
+    "elapsedMs": 34981.283505,
+    "inputSha256": "70c8dbdc3c3b66954d47334f6d92353df135ba8eb4a7edf344b40718e6b43fd5",
+    "copperSha256": "3e9f3f16c10788016184d4ff5f391e13e68c1acb5667db6f98f80f5eb2a63f51",
+    "bestPartial": {
+      "routed": 8,
+      "planes": 6,
+      "boundary": 2,
+      "vias": 7,
+      "connectionNames": [
+        "breakout:pcb_breakout_point_4",
+        "breakout:pcb_breakout_point_8",
+        "source_trace_12",
+        "source_trace_11",
+        "source_trace_17",
+        "source_trace_16",
+        "source_trace_15",
+        "source_trace_3"
+      ],
+      "planeBuses": [
+        "ESC_U10_pin143",
+        "ESC_U10_pin130",
+        "ESC_U10_pin73",
+        "ESC_U10_pin6",
+        "ESC_U10_pin55",
+        "ESC_U10_pin144"
+      ]
+    },
+    "copperDrc": {
+      "valid": true,
+      "checkedTraceCount": 8,
+      "checkedSegmentCount": 14,
+      "checkedViaCount": 7,
+      "issues": []
+    },
+    "failed": true,
+    "solved": false,
+    "error": "FanoutSolver: best layer assignment routed 8/32 connections",
+    "iterations": 26131
+  },
+  {
+    "trial": "trial-2",
+    "revision": "before",
+    "elapsedMs": 44238.668916999995,
+    "inputSha256": "70c8dbdc3c3b66954d47334f6d92353df135ba8eb4a7edf344b40718e6b43fd5",
+    "copperSha256": "3e9f3f16c10788016184d4ff5f391e13e68c1acb5667db6f98f80f5eb2a63f51",
+    "bestPartial": {
+      "routed": 8,
+      "planes": 6,
+      "boundary": 2,
+      "vias": 7,
+      "connectionNames": [
+        "breakout:pcb_breakout_point_4",
+        "breakout:pcb_breakout_point_8",
+        "source_trace_12",
+        "source_trace_11",
+        "source_trace_17",
+        "source_trace_16",
+        "source_trace_15",
+        "source_trace_3"
+      ],
+      "planeBuses": [
+        "ESC_U10_pin143",
+        "ESC_U10_pin130",
+        "ESC_U10_pin73",
+        "ESC_U10_pin6",
+        "ESC_U10_pin55",
+        "ESC_U10_pin144"
+      ]
+    },
+    "copperDrc": {
+      "valid": true,
+      "checkedTraceCount": 8,
+      "checkedSegmentCount": 14,
+      "checkedViaCount": 7,
+      "issues": []
+    },
+    "failed": true,
+    "solved": false,
+    "error": "FanoutSolver: best layer assignment routed 8/32 connections",
+    "iterations": 26131
+  },
+  {
+    "trial": "trial-3",
+    "revision": "after",
+    "elapsedMs": 37238.505099,
+    "inputSha256": "70c8dbdc3c3b66954d47334f6d92353df135ba8eb4a7edf344b40718e6b43fd5",
+    "copperSha256": "3e9f3f16c10788016184d4ff5f391e13e68c1acb5667db6f98f80f5eb2a63f51",
+    "bestPartial": {
+      "routed": 8,
+      "planes": 6,
+      "boundary": 2,
+      "vias": 7,
+      "connectionNames": [
+        "breakout:pcb_breakout_point_4",
+        "breakout:pcb_breakout_point_8",
+        "source_trace_12",
+        "source_trace_11",
+        "source_trace_17",
+        "source_trace_16",
+        "source_trace_15",
+        "source_trace_3"
+      ],
+      "planeBuses": [
+        "ESC_U10_pin143",
+        "ESC_U10_pin130",
+        "ESC_U10_pin73",
+        "ESC_U10_pin6",
+        "ESC_U10_pin55",
+        "ESC_U10_pin144"
+      ]
+    },
+    "copperDrc": {
+      "valid": true,
+      "checkedTraceCount": 8,
+      "checkedSegmentCount": 14,
+      "checkedViaCount": 7,
+      "issues": []
+    },
+    "failed": true,
+    "solved": false,
+    "error": "FanoutSolver: best layer assignment routed 8/32 connections",
+    "iterations": 26131
+  },
+  {
+    "trial": "trial-3",
+    "revision": "before",
+    "elapsedMs": 47519.790031000004,
+    "inputSha256": "70c8dbdc3c3b66954d47334f6d92353df135ba8eb4a7edf344b40718e6b43fd5",
+    "copperSha256": "3e9f3f16c10788016184d4ff5f391e13e68c1acb5667db6f98f80f5eb2a63f51",
+    "bestPartial": {
+      "routed": 8,
+      "planes": 6,
+      "boundary": 2,
+      "vias": 7,
+      "connectionNames": [
+        "breakout:pcb_breakout_point_4",
+        "breakout:pcb_breakout_point_8",
+        "source_trace_12",
+        "source_trace_11",
+        "source_trace_17",
+        "source_trace_16",
+        "source_trace_15",
+        "source_trace_3"
+      ],
+      "planeBuses": [
+        "ESC_U10_pin143",
+        "ESC_U10_pin130",
+        "ESC_U10_pin73",
+        "ESC_U10_pin6",
+        "ESC_U10_pin55",
+        "ESC_U10_pin144"
+      ]
+    },
+    "copperDrc": {
+      "valid": true,
+      "checkedTraceCount": 8,
+      "checkedSegmentCount": 14,
+      "checkedViaCount": 7,
+      "issues": []
+    },
+    "failed": true,
+    "solved": false,
+    "error": "FanoutSolver: best layer assignment routed 8/32 connections",
+    "iterations": 26131
+  }
+]

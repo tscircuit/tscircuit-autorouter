@@ -1,0 +1,12 @@
+{
+  "previousHead": "3ddf9d1a7c8fd863eab9af5af4ba308956ab365c",
+  "cleanupHead": "64176a781276e5f5bf5332a6ef2a246f706a7b73",
+  "utility": "@tscircuit/math-utils@0.0.39 getBoundsFromPoints",
+  "sourceChanges": "Replace four manual segment bounds with the shared utility; declare the direct runtime dependency. Conservative obstacle expansion and exact nearby checks unchanged.",
+  "focusedTests": 5,
+  "assertions": 4141,
+  "nativeSvgUnchanged": true,
+  "nativeSvgBlob": "438e9074920af185f9e60f8b0375436fc993ff5e",
+  "formatFullTypecheckAndFocusedTestsRun": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44513363296",
+  "baselineRepro": "ec4aebf6223827a681aaebd908e903396b774777"
+}
