@@ -1,3 +1,4 @@
+import { validateNativeRequestConstraints } from "./validate-native-request-constraints"
 import { FanoutSolver } from "./lib/index"
 import type { SimpleRouteJson } from "@tscircuit/capacity-autorouter"
 import type { FanoutRoutePlan } from "./lib/types"
@@ -30,6 +31,20 @@ const copperDrc = validateRoutedCopperDrc({
   clearance: captured.solverParams.minViaEdgeToPadEdgeClearance,
   allowBlindAndBuriedVias: false,
 })
+const actualTraces = bestAttempt.plans.flatMap((plan) => [
+  plan.trace,
+  ...(plan.planeEndpointTrace ? [plan.planeEndpointTrace] : []),
+])
+const requestConstraints = validateNativeRequestConstraints({
+  inputSrj: captured.solverParams,
+  solverOptions: captured.solverOptions,
+  traces: actualTraces,
+})
+const distinctDrills = new Set(actualTraces.flatMap((trace) =>
+  trace.route.filter((point) => point.route_type === "via").map((via) =>
+    JSON.stringify([Math.round(via.x * 1e9), Math.round(via.y * 1e9)]),
+  ),
+)).size
 const graphics = solver.visualize()
 const report = {
   inputSha256: createHash("sha256").update(serialized).digest("hex"),
@@ -37,6 +52,8 @@ const report = {
   budgetMs,
   timedOut: !solver.solved && !solver.failed,
   copperDrc,
+  requestConstraints,
+  distinctDrills,
   bestPartial: {
     routed: bestAttempt.plans.length,
     planes: bestAttempt.plans.filter((plan) => plan.termination.type === "plane").length,
@@ -60,3 +77,5 @@ writeFileSync(`${output}/fanout.svg`, getSvgFromGraphicsObject(graphics, { backg
 console.log("STACK_NATIVE_RESULT", JSON.stringify(report))
 
 if (!copperDrc.valid) throw new Error("Native best partial fanout failed copper DRC")
+
+if (!requestConstraints.valid) throw new Error("Native best partial violates physical request constraints")
