@@ -542,12 +542,27 @@ function createSourceTraces(
       connections.map((connection) => [connection.name, connection]),
     )
     for (const trace of hdRoutes as SimplifiedPcbTrace[]) {
-      const connectedSourcePortIds = [
-        ...new Set(
-          (trace.connectsTo ?? []).filter((id) => declaredPcbPortIds.has(id)),
-        ),
-      ]
-      const connectedSourcePortIdSet = new Set(connectedSourcePortIds)
+      const declaredSourceTraceId = resolveCircuitJsonSourceTraceId(
+        circuitJsonSourceTraceIdResolver,
+        trace.connection_name,
+      )
+      const connectedSourcePortIdSet = new Set(
+        (trace.connectsTo ?? []).filter((id) => declaredPcbPortIds.has(id)),
+      )
+      // Completed routing phases can omit their nets from the active requests.
+      // Their pad ownership still exists in the SRJ connectivity map.
+      if (declaredSourceTraceId === undefined) {
+        const connMap = circuitJsonSourceTraceIdResolver.connMap
+        const traceNetId = connMap.getNetConnectedToId(trace.connection_name)
+        if (traceNetId) {
+          for (const reference of connMap.netMap[traceNetId]!) {
+            if (declaredPcbPortIds.has(reference)) {
+              connectedSourcePortIdSet.add(reference)
+            }
+          }
+        }
+      }
+      const connectedSourcePortIds = [...connectedSourcePortIdSet]
       const connectedSourceNetIds = [
         ...new Set(
           (trace.connectsTo ?? []).filter(
@@ -563,10 +578,7 @@ function createSourceTraces(
 
       const connection = connectionByName.get(trace.connection_name)
       const sourceTraceId =
-        resolveCircuitJsonSourceTraceId(
-          circuitJsonSourceTraceIdResolver,
-          trace.connection_name,
-        ) ??
+        declaredSourceTraceId ??
         trace.connectsTo
           ?.map((connectionId) =>
             resolveCircuitJsonSourceTraceId(
