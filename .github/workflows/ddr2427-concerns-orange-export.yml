@@ -1,0 +1,27 @@
+name: Inspect the DRAM actual snapshot from the source check
+on:
+  push:
+    branches: [codex/ddr2427-concerns-orange-export]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  export:
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: reviewed-stack-board-orangecrab
+          run-id: 44604795691
+          repository: tscircuit/tscircuit-autorouter
+          github-token: ${{ github.token }}
+          path: actual
+      - run: |
+          python3 - <<'PYEXPORT'
+          import json
+          from pathlib import Path
+          for name in ['worker.log','progress.json','process.json','diagnostics.json']:
+              paths=list(Path('actual').rglob(name))
+              assert len(paths)==1
+              print('ORANGE_PROCESS_DIAGNOSTIC',json.dumps({'name':name,'contents':paths[0].read_text()}))
+          PYEXPORT
