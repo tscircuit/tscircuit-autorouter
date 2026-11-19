@@ -5,15 +5,15 @@
     {
       "path": "lib/distance-aware-tiny-hypergraph-solver.ts",
       "beforeSha256": "68465bf106dbaecbc8f64d2615d2de9a785c77f3e337fbe19f51630e6dd3d3e0",
-      "afterSha256": "3a2ef93b77a978d288ebfc05c28943fde4c5c61305c9c5725fc2475c12941701"
+      "afterSha256": "17fa0c6a4059d3bacc6ab8b93c05d7676c92a5014fca09c9f937da69a9cdbad2"
     },
     {
-      "path": "lib/getRemainingPortCosts.ts",
-      "afterSha256": "20269441ae0ad26e9e887e350fc83f2115859e2b561560ceb9a64f24f4a6fe4b"
+      "path": "lib/createRemainingCostLookup.ts",
+      "afterSha256": "e067a076eaa727c9ce4222338395c45880e9823179c0b304cce44e4677659b50"
     }
   ],
   "publishedEntrySha256": "44e2cc5a759e11f3982a876733d0f224dcb901c0ac0840e2ff1ec5be434a4285",
-  "candidateEntrySha256": "096597ad8503d977f79256a4f0db5f750a6e7355712479549e6b8a6e327155b2",
+  "candidateEntrySha256": "e1fd6c41fd9f0ff5c98860eb659d6373fc9c024063e1e1c03c094a0047b3c956",
   "publishedClass": "kQ",
   "publishedHeap": "fJ",
   "aliases": {

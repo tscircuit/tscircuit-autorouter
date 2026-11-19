@@ -1,8 +1,8 @@
-name: Native DDR port-cost comparison
+name: Native DDR remaining-cost comparison
 
 on:
   push:
-    branches: [bench/native-port-cost-3244-20261119]
+    branches: [bench/native-remaining-cost-3244-20261119]
 
 permissions:
   contents: read
@@ -66,7 +66,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: tscircuit/tiny-hypergraph
-          ref: cba224ed2ced6d8ed4184f551740d3e4e62c219f
+          ref: 27174da103a3408d31373035bb6cf0ffd79911df
           path: .full-board-run/source-tiny
           persist-credentials: false
           sparse-checkout: lib

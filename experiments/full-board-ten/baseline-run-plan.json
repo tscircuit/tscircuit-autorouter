@@ -1,5 +1,5 @@
 {
-  "sourceCommit": "cba224ed2ced6d8ed4184f551740d3e4e62c219f",
+  "sourceCommit": "27174da103a3408d31373035bb6cf0ffd79911df",
   "sourceRepository": "tscircuit/tiny-hypergraph",
   "scope": "3 native cases, paired fresh published3244 then source-only candidate; identical900s/960s limits,8ARMcores,Bun1.4.3",
   "noCompletionClaimBeforeRun": true,
@@ -23,11 +23,11 @@
   "publishedTinyBase": "f1fe8edcfb3dfde8fd644d09d81bad18743144b3",
   "sourcePRBase": "6a00f0406e131a2765179e052e45f07efd2f5ae7",
   "scopeQualification": "Only the two changed source files are applied to the verified published1133 bundle. Other main-branch changes are excluded.",
-  "candidateSha256": "096597ad8503d977f79256a4f0db5f750a6e7355712479549e6b8a6e327155b2",
-  "purpose": "Paired native completion comparison for remaining-port-cost heuristic",
+  "candidateSha256": "e1fd6c41fd9f0ff5c98860eb659d6373fc9c024063e1e1c03c094a0047b3c956",
+  "purpose": "Compare attempt-specific remaining costs on three primary native failures",
   "mainVersion": "0.0.3244",
   "runner": "blacksmith-8vcpu-ubuntu-2404-arm",
-  "branch": "bench/native-port-cost-3244-20261119",
+  "branch": "bench/native-remaining-cost-3244-20261119",
   "captureDeadlineMs": 900000,
   "hardDeadlineMs": 960000,
   "sourceOverrides": {
