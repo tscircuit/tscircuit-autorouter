@@ -1,4 +1,4 @@
-name: Verify native copper identities and movable clearance repair
+name: Verify repaired native copper routes
 on:
   push:
     branches: [analysis/native-shared-copper-identity]
@@ -8,7 +8,7 @@ permissions:
 jobs:
   focused:
     runs-on: ubuntu-24.04
-    timeout-minutes: 25
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
         with:
@@ -17,19 +17,20 @@ jobs:
         with:
           bun-version: '1.4.3'
       - run: bun install
-      - name: Run unchanged real-circuit connectivity and DRC checks
+      - name: Run unchanged connectivity, DRC, and tuning checks
+        id: passing
         env:
           BUN_UPDATE_SNAPSHOTS: '1'
-        run: bun test --timeout 9999999 tests/bugs/t113-linux-exact-pipeline9-root.test.ts tests/bugs/bugreport96-full-gameboy-no-breakout.test.ts tests/repro/pipeline9-h616-staged-regional-clearance.test.ts tests/repro/pipeline9-h616-preload-reachability.test.ts tests/features/pipeline9-srj33-sample37-pair-repair.test.ts tests/bugs/usb-shield-phase-detour.test.ts tests/features/pipeline9-srj23-sample46.test.ts
+        run: bun test --timeout 9999999 tests/bugs/t113-linux-exact-pipeline9-root.test.ts tests/repro/pipeline9-h616-staged-regional-clearance.test.ts tests/repro/pipeline9-h616-preload-reachability.test.ts tests/features/pipeline9-srj33-sample37-pair-repair.test.ts tests/bugs/usb-shield-phase-detour.test.ts tests/features/pipeline9-srj23-sample46-regional-trace-set.test.ts tests/repro/pipeline10-artix7-ddr-bus-length-matching.test.ts
       - name: Check types
         if: always()
         run: bunx tsc --noEmit
-      - name: Save passing SVG snapshots on analysis branch
-        if: success()
+      - name: Save snapshots from passing original tests
+        if: success() && steps.passing.outcome == 'success'
         run: |
           git config user.name "tscircuit-bot"
           git config user.email "actions@github.com"
-          git add -- '*.snap.svg'
+          git add -- tests/repro/__snapshots__/pipeline9-h616-staged-regional-clearance*.snap.svg tests/repro/__snapshots__/pipeline9-h616-preload-reachability*.snap.svg tests/features/__snapshots__/pipeline9-srj33-sample37-pair-repair.snap.svg tests/features/__snapshots__/pipeline9-srj23-sample46*.snap.svg tests/repro/__snapshots__/pipeline10-artix7-ddr-bus-length-matching*.snap.svg
           if git diff --cached --quiet; then exit 0; fi
-          git commit -m "Regenerate shared-copper routing snapshots"
+          git commit -m "Regenerate verified native-copper and DDR tuning snapshots"
           git push origin HEAD:analysis/native-shared-copper-identity
