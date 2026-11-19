@@ -12,6 +12,8 @@ import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "./runtime.mjs"
 
 const [id, output, mode = "fanout"] = process.argv.slice(2)
 const source: FullBoardSource = JSON.parse(readFileSync(new URL(`./${id}/source.json`, import.meta.url), "utf8"))
+const runtimePackage = JSON.parse(readFileSync(new URL("./package.json", import.meta.url), "utf8"))
+const coreBuild = JSON.parse(readFileSync(new URL("./patched-core/build.json", import.meta.url), "utf8"))
 mkdirSync(output, { recursive: true })
 const circuit = new RootCircuit()
 // Fanout follow-up stages must use the same workspace router as explicit phases.
@@ -25,7 +27,7 @@ const progress = {
   id, mode, status: "running", renderCompleted: false, elapsedMs: 0,
   phases: [] as { name: string; solver: string; status: string; connections: number; startedMs: number; elapsedMs?: number }[],
   errors: [] as string[], stage: "initializing", initialCopperElements: null as number | null,
-  runtime: { tscircuit: "0.0.3243", core: "0.0.2425", fanout: process.env.FULL_BOARD_FANOUT_VERSION ?? "0.0.89", busLanes: "0.0.62", autorouter: "workspace Pipeline 9", routerCommit: process.env.FULL_BOARD_ROUTER_COMMIT ?? "workspace checkout; see runtime.mjs" },
+  runtime: { tscircuit: runtimePackage.dependencies.tscircuit, core: coreBuild.coreVersion, fanout: process.env.FULL_BOARD_FANOUT_VERSION ?? "0.0.90", busLanes: "0.0.62", autorouter: "workspace Pipeline 9", routerCommit: process.env.FULL_BOARD_ROUTER_COMMIT ?? "workspace checkout; see runtime.mjs" },
   planeIntent: { enabled: mode !== "legacy", zones: source.planeIntent.zones.length, importedSavedCopper: source.planeIntent.savedCopperImported },
 }
 const diagnostics = {
