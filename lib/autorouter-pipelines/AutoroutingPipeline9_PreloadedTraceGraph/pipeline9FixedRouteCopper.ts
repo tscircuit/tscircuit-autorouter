@@ -167,18 +167,13 @@ export const arePipeline9RoutesOnSameNet = (
   right: Pick<HighDensityRoute, "connectionName" | "rootConnectionName">,
   connMap: ConnectivityMap,
 ): boolean => {
-  const leftIds = [left.connectionName, left.rootConnectionName].filter(
-    (id): id is string => typeof id === "string",
-  )
-  const rightIds = [right.connectionName, right.rootConnectionName].filter(
-    (id): id is string => typeof id === "string",
-  )
-  return leftIds.some((leftId) =>
-    rightIds.some(
-      (rightId) =>
-        leftId === rightId || connMap.areIdsConnected(leftId, rightId),
-    ),
-  )
+  const leftNetIds = [left.connectionName, left.rootConnectionName]
+    .filter((id): id is string => typeof id === "string")
+    .map((id) => connMap.getNetConnectedToId(id) ?? id)
+  const rightNetIds = [right.connectionName, right.rootConnectionName]
+    .filter((id): id is string => typeof id === "string")
+    .map((id) => connMap.getNetConnectedToId(id) ?? id)
+  return leftNetIds.some((netId) => rightNetIds.includes(netId))
 }
 
 const boundsOverlap = (
