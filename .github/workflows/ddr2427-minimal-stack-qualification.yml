@@ -1,0 +1,97 @@
+name: Qualify minimal combined fanout stack on frozen benchmark inputs
+on:
+  push:
+    branches: [codex/ddr2427-minimal-stack-qualification]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  matched-frozen:
+    runs-on: blacksmith-32vcpu-ubuntu-2404-arm
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: 3258e97a80f0239c0c92de072c4cba5d559935ce
+          path: original
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: 18b7cb3640a4661203003bfa8a9c9c1572d56976
+          path: cleanup
+      - uses: actions/download-artifact@v4
+        with:
+          name: guard-0
+          run-id: 44415945774
+          github-token: ${{ github.token }}
+          path: frozen
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - run: |
+          for revision in original cleanup; do
+            (cd "$revision" && bun install --frozen-lockfile --ignore-scripts)
+            cp experiments/full-board-priority-analysis/replay-frozen-fanout31.ts "$revision/replay-frozen-fanout31.ts"
+          done
+      - name: Run all frozen cases before and after the cleanup on the same worker
+        run: |
+          for revision in original cleanup; do
+            (cd "$revision" && bun replay-frozen-fanout31.ts "$GITHUB_WORKSPACE/frozen/inputs" "$GITHUB_WORKSPACE/matched/$revision" 16)
+          done
+      - name: Export reports and routed SVG hashes
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          for folder in [*Path('matched').glob('*'),*Path('probes').glob('*/*')]:
+              report=folder/'benchmark.json'
+              if not report.exists():continue
+              print('MATCHED_FANOUT31_RESULT',json.dumps({'cohort':str(folder),'report':json.loads(report.read_text()),'svgs':{path.name:hashlib.sha256(path.read_bytes()).hexdigest() for path in folder.glob('*.svg')}},separators=(',',':')))
+          print('FROZEN_INPUT_HASHES',json.dumps({path.name:hashlib.sha256(path.read_bytes()).hexdigest() for path in Path('frozen/inputs').glob('*.json')},separators=(',',':')))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: minimal-stack-matched-fanout31
+          path: |
+            matched
+            probes
+
+
+  audit-frozen-policy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: 3258e97a80f0239c0c92de072c4cba5d559935ce
+          path: before
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: 18b7cb3640a4661203003bfa8a9c9c1572d56976
+          path: after
+      - uses: actions/download-artifact@v4
+        with:
+          name: guard-0
+          run-id: 44415945774
+          github-token: ${{ github.token }}
+          path: frozen
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - run: |
+          for revision in before after; do
+            (cd "$revision" && bun install --frozen-lockfile --ignore-scripts)
+          done
+      - name: Audit actual eligibility and prepared bus equality for every frozen input
+        run: bun experiments/full-board-priority-analysis/audit-minimal-stack-frozen.ts "$PWD/before" "$PWD/after" "$PWD/frozen/inputs"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: minimal-stack-frozen-policy-audit
+          path: minimal-stack-frozen-policy.json
