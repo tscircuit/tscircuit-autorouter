@@ -1,6 +1,8 @@
 name: Verify port cost snapshots
 on:
   workflow_dispatch:
+  push:
+    branches: [verify/port-cost-snapshots-20261119]
 jobs:
   focused:
     runs-on: ubuntu-24.04
