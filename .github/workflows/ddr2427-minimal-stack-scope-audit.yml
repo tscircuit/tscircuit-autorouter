@@ -1,0 +1,42 @@
+name: Audit actual minimal fanout eligibility in frozen inputs
+on:
+  push:
+    branches: [codex/ddr2427-minimal-stack-scope-audit]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  audit-frozen-policy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: 3258e97a80f0239c0c92de072c4cba5d559935ce
+          path: before
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: 18b7cb3640a4661203003bfa8a9c9c1572d56976
+          path: after
+      - uses: actions/download-artifact@v4
+        with:
+          name: guard-0
+          run-id: 44415945774
+          github-token: ${{ github.token }}
+          path: frozen
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - run: |
+          for revision in before after; do
+            (cd "$revision" && bun install --frozen-lockfile --ignore-scripts)
+          done
+      - name: Audit actual eligibility and prepared bus equality for every frozen input
+        run: bun experiments/full-board-priority-analysis/audit-minimal-stack-frozen.ts "$PWD/before" "$PWD/after" "$PWD/frozen/inputs"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: minimal-stack-frozen-policy-audit
+          path: minimal-stack-frozen-policy.json
