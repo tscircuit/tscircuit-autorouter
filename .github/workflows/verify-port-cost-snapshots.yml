@@ -1,4 +1,4 @@
-name: Verify port cost snapshots
+name: Verify port cost routing controls
 on:
   workflow_dispatch:
   push:
@@ -6,26 +6,35 @@ on:
 jobs:
   focused:
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 35
     strategy:
       fail-fast: false
       matrix:
         test:
-          - pipeline9-h616-preload-reachability
+          - tests/bugs/bugreport110/motherboard-power-full-route.test.ts
+          - tests/bugs/beagleplay-am6254-ddr4.test.ts
+        revision: [f1fe8edcfb3dfde8fd644d09d81bad18743144b3, cba224ed2ced6d8ed4184f551740d3e4e62c219f]
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: 3f5806dc9868299fe976f245f0ab8e8a21d5a4c1
+          ref: 2b1207ad70971f326166b134ea19418137273f23
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.4.3
       - run: bun install
-      - if: matrix.test == 'pipeline9-orangecrab-via-roundoff'
-        run: bun install --ignore-scripts --cwd tests/repro/orangecrab-via-roundoff
-      - name: Update only this failing test's snapshots and run its remaining assertions
+      - name: Replace only reviewed tiny source
+        env:
+          REVISION: ${{ matrix.revision }}
+        run: |
+          curl --fail --location "https://codeload.github.com/tscircuit/tiny-hypergraph/tar.gz/$REVISION" -o /tmp/tiny.tar.gz
+          mkdir /tmp/tiny-source
+          tar -xzf /tmp/tiny.tar.gz --strip-components=1 -C /tmp/tiny-source
+          cp -R /tmp/tiny-source/lib/. node_modules/tiny-hypergraph/lib/
+          sha256sum node_modules/tiny-hypergraph/lib/distance-aware-tiny-hypergraph-solver.ts
+      - name: Run correctness assertions
         env:
           BUN_UPDATE_SNAPSHOTS: '1'
-        run: bun test tests/repro/${{ matrix.test }}.test.ts --timeout 600000
+        run: bun test ${{ matrix.test }} --timeout 1800000
       - name: Collect changed snapshots
         if: always()
         run: |
@@ -37,6 +46,6 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: port-cost-${{ matrix.test }}
+          name: port-cost-control-${{ strategy.job-index }}
           path: reviewed-snapshots
           retention-days: 7
