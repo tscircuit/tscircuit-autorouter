@@ -2,7 +2,7 @@
   "schemaVersion": 2,
   "purpose": "One isolated diagnostic of the authenticated published3242 H616-spaced phase4. Observe primary source_net_1_mst0 separately from fallback cmn_162; not a new whole-board baseline or completion benchmark.",
   "qualificationReady": true,
-  "status": "READY_FOR_ROOT_VERIFICATION_UNPUSHED",
+  "status": "READY_FOR_ROOT_REVIEW_SELECTED_NODE_CAPTURE",
   "runtimeController": "49e9de35db347f94eeeaef9bca48d821ed3be51e",
   "mainVersion": "0.0.3242",
   "branch": "bench/h616-hd-capture-3242-20261119",
@@ -199,8 +199,8 @@
       "bytes": 6651
     },
     "experiments/full-board-ten/run-hd-capture.ts": {
-      "sha256": "a351eae997190afa2da4cdbc89669bd74e2884ba3b1e866c4b1e19dfe8a422c8",
-      "bytes": 28383
+      "sha256": "53942bb7f17432f418c9725acda8e433c18e7e35db4ccaf1e8a2d7d62cce1d37",
+      "bytes": 29170
     }
   },
   "frozenBaselinePlan": {
@@ -210,7 +210,7 @@
   "qualification": {
     "nativeRoutingExecuted": false,
     "pushPerformed": false,
-    "independentReview": "PASS",
+    "independentReview": "PASS: original controller plus narrow selected-node correction",
     "scope": "Controller preparation only; no production source changes, topology overrides, solver option changes, or input transformations.",
     "evidence": {
       "native-call-capture-handoff.json": {
@@ -232,10 +232,26 @@
       "independent-controller-review.json": {
         "path": "/workspace/full-board-ten-20261118-3242/h616-hd-capture-preparation/independent-controller-review.json",
         "sha256": "8f534ea2e80f67ec9426aaf064fa108821bd24bd44ef5bc6edc314953684bd93"
+      },
+      "selected-node-observer-contracts.json": {
+        "path": "/workspace/full-board-ten-20261118-3242/h616-hd-selected-node-preparation/observer-contracts.json",
+        "sha256": "b3e07f67b2207ea70f1b553dc0851ebdb8897a8361b06040adcbd79a3f215c07"
+      },
+      "independent-correction-review.json": {
+        "path": "/workspace/full-board-ten-20261118-3242/h616-hd-selected-node-preparation/independent-correction-review.json",
+        "sha256": "2afe323591c063c737de638e5334a4e6ed1d9626e67e6caa8a6d098fe2846f56"
       }
     },
     "controllerContracts": "12 passed; authentic archive and all four published entries, no imports/routing/network",
-    "observerContracts": "9 passed; synthetic lifecycle observers only, including fifth target failure continuation; no routing/imports",
-    "releaseAuthorization": "Root authorized readiness and local commit; root must verify committed identities before any push or run."
-  }
+    "observerContracts": "11 passed; synthetic lifecycle and selected-node bounds/late-alias capture; no routing/imports",
+    "releaseAuthorization": "Root authorized one reviewed diagnostic correction and one repeat; root verifies the local commit before pushing."
+  },
+  "previousDiagnostic": {
+    "runId": 44438253479,
+    "controllerCommit": "7241206782e8cbd7b971cedaa76dac0c5a79f895",
+    "outcome": "Observer exceeded24MiB while copying all Uniform input nodes; no native HD result",
+    "authenticationReport": "/workspace/full-board-ten-20261118-3242/h616-hd-run44438253479/authenticated-summary.json",
+    "authenticationReportSha256": "96bd92f70b0d51ebfb75d4947fab96faee50983b6c1c5ff3685ac5b50599454a"
+  },
+  "captureCorrection": "Retain only selected source1/pre-Uniform node IDs and cmn_162, adding matching input nodes on demand for later alias-selected attempts. Full per-target constructor scenes and24MiB limit unchanged."
 }

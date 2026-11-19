@@ -258,15 +258,19 @@ function observeBefore(): void {
       })
     }
     preUniformNodes = copyData(uniform.input.nodeWithPortPoints)
-    uniformInputNodes = copyData(uniform.input.inputNodesWithPortPoints)
+    uniformInputNodes = uniform.input.inputNodesWithPortPoints
+    const selectedPreUniformNodes = preUniformNodes.filter((node: RuntimeObject) => node.capacityMeshNodeId === fallbackTargetNode || node.portPoints.some((point: RuntimeObject) => point.connectionName === primaryTargetConnection || point.rootConnectionName === targetRoot))
+    const selectedNodeIds = new Set(selectedPreUniformNodes.map((node: RuntimeObject) => node.capacityMeshNodeId))
+    selectedNodeIds.add(fallbackTargetNode)
     const pairs = pipeline.srjWithPointPairs.connections.filter((connection: RuntimeObject) => connection.name === primaryTargetConnection || connection.rootConnectionName === targetRoot || connection.name.startsWith(`${targetRoot}_mst`))
     assert.equal(pairs.filter((connection: RuntimeObject) => connection.name === primaryTargetConnection).length, 1, "Exact native target MST pair is missing")
     nativePathCapture = storeRecordFields({
       primaryTargetConnection,
       sourceConnection: copyData(input.connections.find((connection: RuntimeObject) => connection.name === targetRoot)),
       pointPairs: copyData(pairs),
-      preUniformNodes: copyData(preUniformNodes.filter((node: RuntimeObject) => node.capacityMeshNodeId === fallbackTargetNode || node.portPoints.some((point: RuntimeObject) => point.connectionName === primaryTargetConnection || point.rootConnectionName === targetRoot))),
-      inputNodesWithPortPoints: copyData(uniformInputNodes),
+      preUniformNodes: copyData(selectedPreUniformNodes),
+      inputNodeScope: "Selected source1/pre-Uniform node IDs plus cmn_162 only; full native phase SRJ is authenticated separately.",
+      selectedInputNodesWithPortPoints: copyData(uniformInputNodes.filter((node: RuntimeObject) => selectedNodeIds.has(node.capacityMeshNodeId))),
     })
     uniformCaptured = true
   }
@@ -317,6 +321,8 @@ function observeBefore(): void {
       primaryPointPair: copyData(pipeline.srjWithPointPairs.connections.find((connection: RuntimeObject) => connection.name === primaryTargetConnection)),
       preUniformNode: copyData(preUniformNodes.find((node: RuntimeObject) => node.capacityMeshNodeId === hd.activeNode.capacityMeshNodeId)),
       postUniformNode: copyData(uniform.redistributedNodes.find((node: RuntimeObject) => node.capacityMeshNodeId === hd.activeNode.capacityMeshNodeId)),
+      inputNodeScope: "Native input nodes matching this selected attempt, including later connectivity-alias matches.",
+      selectedInputNodesWithPortPoints: copyData(uniformInputNodes.filter((node: RuntimeObject) => node.capacityMeshNodeId === hd.activeNode.capacityMeshNodeId || node.capacityMeshNodeId === params.nodeWithPortPoints.capacityMeshNodeId)),
       node: copyData(hd.activeNode),
       constructorParameters: copyParameters(params),
       MAX_RIPS: kind === "b01" ? solver.MAX_RIPS : null,
