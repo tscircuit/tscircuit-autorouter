@@ -1,0 +1,34 @@
+name: Validate reviewed fanout source
+on:
+  push:
+    branches: [codex/ddr2427-concerns-source]
+permissions:
+  contents: read
+jobs:
+  source-check:
+    strategy:
+      fail-fast: false
+      matrix:
+        revision: ["b59ba59f62fa498f5bfe83daae42f711246aef34", "03b408f3094180b917735890c1eb257001fe960c", "cf0c250510594e2f7aa61eb6027373cc6eeda9e7"]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: ${{ matrix.revision }}
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - run: bun install --frozen-lockfile --ignore-scripts
+      - run: bun run format:check
+      - if: always()
+        run: bun run typecheck
+      - if: always()
+        run: |
+          bun test --timeout 9999999 tests/two-via-windows.test.ts tests/native-boundary-contact.test.ts tests/singleton-trace-width.test.ts tests/bus-trace-width.test.ts
+          if [[ -f tests/boundary-contact-direction-overrides.test.ts ]]; then
+            bun test --timeout 9999999 tests/boundary-contact-direction-overrides.test.ts
+          fi
+          if [[ -f tests/boundary-point-direction.test.ts ]]; then
+            bun test --timeout 9999999 tests/boundary-point-direction.test.ts
+          fi
