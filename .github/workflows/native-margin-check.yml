@@ -1,4 +1,4 @@
-name: Verify declared clearance for editable saved copper
+name: Locate native Game Boy clearance regression by stage
 on:
   push:
     branches: [analysis/native-complete-cleanup-context]
@@ -6,13 +6,13 @@ on:
 permissions:
   contents: read
 jobs:
-  regression:
+  routing:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
-        source: [7b5f98e1785f9fcf3751448de03f58603afbf0d6, 75a6381c6985cd48f91b30516a828f6a771cfce0]
+        source: [8bc7eeee1d42c94eb72f32460dc03f54add143e5, 7b5f98e1785f9fcf3751448de03f58603afbf0d6, 75a6381c6985cd48f91b30516a828f6a771cfce0]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -21,17 +21,43 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: '1.4.3'
-      - name: Use declared clearance with native copper regardless of immutability
+      - name: Measure counts without exporting route geometry or identifiers
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          p=Path("lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts")
+          p=Path("tests/bugs/bugreport96-full-gameboy-no-breakout.test.ts")
           s=p.read_text()
-          assert s.count("          hasImmutablePreloadedCopper &&")==1
-          p.write_text(s.replace("          hasImmutablePreloadedCopper &&","          fixedHdRoutes.length > 0 &&",1))
+          s='import { evaluateRelaxedDrc as evaluateStage } from "lib/testing/evaluate-relaxed-drc"\n'+s
+          old="  solver.solve()"
+          new="""  while (!solver.solved && !solver.failed) {
+              const before = solver.currentPipelineStepIndex
+              const stage = solver.pipelineDef[before]?.solverName
+              solver.step()
+              if (solver.currentPipelineStepIndex === before) continue
+              if (!["highDensityRouteSolver", "highDensityForceImproveSolver", "highDensityRepairSolver", "highDensityStitchSolver", "globalDrcForceImproveSolver", "pipeline9JointDrcRepairSolver"].includes(stage!)) continue
+              const preloaded = solver.getUpdatedPreloadedTraces()
+              const checked = evaluateStage({
+                inputSrj: {...srj, traces: preloaded},
+                srjWithPointPairs: {...solver.srjWithPointPairs!, traces: preloaded},
+                routedTraces: solver.getNewTracesBeforePowerExpansion(),
+                drcOptions: {includeTraceContinuity:false},
+              })
+              const counts: Record<string, number> = {}
+              for (const error of checked.errors) counts[error.type] = (counts[error.type] ?? 0) + 1
+              const stats = solver.pipeline9JointDrcRepairSolver?.stats ?? {}
+              console.log("STAGE_CLEARANCE_COUNTS", JSON.stringify({stage, count:checked.errors.length, counts,
+                initialJoint:stats.initialJointDrcIssueCount,
+                baselineJoint:stats.baselineJointDrcIssueCount,
+                referenceJoint:stats.postExactReferenceDrcIssueCount,
+                contactChecks:stats.traceContactRepairCandidateChecks,
+                contactAccepted:stats.traceContactRepairAccepted,
+              }))
+            }"""
+          assert s.count(old)==1
+          p.write_text(s.replace(old,new))
           PY
       - run: bun install
-      - name: Keep original Game Boy routing and DRC assertions
+      - name: Keep original completion, clearance and via-count assertions
         env:
           BUN_UPDATE_SNAPSHOTS: '1'
         run: bun test --timeout 9999999 tests/bugs/bugreport96-full-gameboy-no-breakout.test.ts
