@@ -1,0 +1,30 @@
+name: Verify complete native trace cleanup
+on:
+  push:
+    branches: [analysis/native-complete-cleanup-context]
+    paths: [.github/workflows/native-anchor-compatibility.yml]
+permissions:
+  contents: read
+jobs:
+  focused:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.4.3'
+      - run: bun install
+      - name: Run original routing, physical-clearance and length-matching checks
+        env:
+          BUN_UPDATE_SNAPSHOTS: '1'
+        run: bun test --timeout 9999999 tests/bugs/bugreport96-full-gameboy-no-breakout.test.ts tests/bugs/t113-linux-exact-pipeline9-root.test.ts tests/repro/pipeline9-h616-staged-regional-clearance.test.ts tests/repro/pipeline9-h616-preload-reachability.test.ts tests/features/pipeline9-srj33-sample37-pair-repair.test.ts tests/features/pipeline9-srj23-sample46-regional-trace-set.test.ts tests/repro/pipeline10-artix7-ddr-bus-length-matching.test.ts
+      - name: Verify the real OrangeCrab native-trace reproduction
+        if: always()
+        env:
+          BUN_UPDATE_SNAPSHOTS: '1'
+        run: bun test --timeout 9999999 tests/features/pipeline9-orangecrab-native-fixed-traces.test.ts
+      - name: Check types
+        if: always()
+        run: bunx tsc --noEmit
