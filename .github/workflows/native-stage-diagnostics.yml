@@ -1,4 +1,4 @@
-name: Verify clean native ownership across all autorouter tests
+name: Verify sample 52 test plan and snapshots
 on:
   push:
     branches: [analysis/native-copper-stage-diagnostics]
@@ -12,7 +12,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: c7dbc2ce0114fc2f575db2ddd88da5a2b15e0b90
+          ref: fa3234753cd55a3732d90e0de17629eac2343f4c
           persist-credentials: false
       - uses: oven-sh/setup-bun@v2
         with:
@@ -26,11 +26,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node: [1,2,3,4,5,6,7,8,9]
+        node: [5]
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: c7dbc2ce0114fc2f575db2ddd88da5a2b15e0b90
+          ref: fa3234753cd55a3732d90e0de17629eac2343f4c
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: '1.4.3'
