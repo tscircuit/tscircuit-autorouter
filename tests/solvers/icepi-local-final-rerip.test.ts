@@ -27,8 +27,9 @@ test("IcePi local other_signals reaches detailed routing", async (): Promise<voi
   const pathing = solver.portPointPathingSolver
   expect(pathing).toBeDefined()
   if (!pathing) throw new Error("IcePi did not reach port-point pathing")
-  expect(pathing.solved).toBe(false)
-  expect(solver.failed).toBe(true)
+  expect(pathing.solved).toBe(true)
+  expect(solver.failed).toBe(false)
+  expect(solver.highDensityRouteSolver).toBeDefined()
   expect(graph?.problem.routeCount).toBe(355)
   if (!graph) throw new Error("IcePi did not reach graph routing")
   await expect(
