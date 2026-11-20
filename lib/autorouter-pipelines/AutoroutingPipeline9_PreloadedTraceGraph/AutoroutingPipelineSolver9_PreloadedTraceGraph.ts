@@ -74,6 +74,7 @@ import { TraceSimplificationSolver } from "@tscircuit/trace-simplification-solve
 import { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolver"
 import { LengthMatchingPostProcessingSolver } from "../../solvers/length-matching-post-processing-solver"
 import { applyFixedRouteReplacementsToPreloadedTraces } from "./applyFixedRouteReplacementsToPreloadedTraces"
+import { applyPipeline9PowerTraceWidthTargets } from "./applyPipeline9PowerTraceWidthTargets"
 import { assignUniquePcbTraceIdsToNewTraces } from "./assignUniquePcbTraceIdsToNewTraces"
 import { getTerminalLayerIndicesByPcbPortId } from "./getTerminalLayerIndicesByPcbPortId"
 import { getPipeline9NetByConnectionName } from "./getPipeline9NetByConnectionName"
@@ -362,6 +363,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           inputSrj,
           cms.colorMap,
           getInitiallyConnectedMapFromSimpleRouteJson(inputSrj),
+          { collectPowerTraceWidthTargets: true },
         ]
       },
       {
@@ -1681,15 +1683,26 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       throw new Error("Cannot get new traces before high-density routing")
     }
 
+    const connections = this.netToPointPairsSolver?.newConnections ?? []
+    const hdRoutes = canonicalizePipeline9HdRoutes(this._getOutputHdRoutes())
     const routedTraces = convertPipeline7HdRoutesToSimplifiedPcbTraces({
-      connections: this.netToPointPairsSolver?.newConnections ?? [],
+      connections,
       originalConnections: this.originalSrj.connections,
-      hdRoutes: canonicalizePipeline9HdRoutes(this._getOutputHdRoutes()),
+      hdRoutes,
       layerCount: this.srj.layerCount,
       obstacles: this.srj.obstacles,
       defaultViaHoleDiameter: this.viaHoleDiameter,
       connMap: this.connMap,
     })
+    const widthTargets = this.netToPointPairsSolver?.powerTraceWidthTargets
+    if (widthTargets?.size) {
+      applyPipeline9PowerTraceWidthTargets({
+        connections,
+        hdRoutes,
+        routedTraces,
+        widthTargets,
+      })
+    }
     return assignUniquePcbTraceIdsToNewTraces(
       routedTraces,
       this.originalSrj.traces ?? [],
