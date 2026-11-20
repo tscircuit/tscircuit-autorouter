@@ -1,0 +1,78 @@
+{
+  "baseline": {
+    "tscircuit": "0.0.3252",
+    "core": "0.0.2434",
+    "fanout": "0.0.93",
+    "capacityAutorouter": "0.0.1135",
+    "boards": 19,
+    "fullyRouted": 0,
+    "outerSecondsPerBoard": 600,
+    "stages": {
+      "bus_lanes:budget": 2,
+      "fanout:failure": 4,
+      "highDensityRouteSolver:budget": 3,
+      "portPointPathingSolver:failure": 3,
+      "highDensityRouteSolver:failure": 3,
+      "fanout:budget": 2,
+      "edgeSolver:budget": 1,
+      "portPointPathingSolver:budget": 1
+    },
+    "run": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44741935392",
+    "artifactId": 14631807241,
+    "artifactSha256": "5bc8055d18adc1ae758201e437fef3577e15790004aebe2fce7423c6d2338629"
+  },
+  "rootCause": {
+    "circuit": "icepi-local",
+    "phase": "other_signals",
+    "inputSha256": "7ecfd0059023cb446b96c53a15881f8bac9fd03643a63fdc5bc489f3115e3b2d",
+    "graphRoutes": 355,
+    "finalReripPendingBeforeReset": 3,
+    "finalReripPendingAfterReset": 352,
+    "pipelineGraphPendingBeforeFix": 61,
+    "pipelineGraphPendingAfterFix": 0,
+    "recoveryIterationsAfterFix": 2156,
+    "productionChanges": "Move the two existing exhaustion checks before super.onOutOfCandidates and check the prospective rerip count",
+    "fullPipelineAfterFix": {
+      "seconds": 168.769488557,
+      "solved": false,
+      "failed": true,
+      "error": "Pipeline9 primary high-density routing failed: B01 failed: No path found for source_net_34_mst5; regional fallback failed: Failed to solve 1 nodes, topology_merge_13096. err0: GrowShrinkHighDensityIntraNodeSolver failed after resizing to 16x. Last error: All solvers failed in hyper solver. Example failures: Candidate solution rejected by validator, , Candidate solution rejected by validator, Candidate solution rejected by validator, Ran out of candidate nodes to explore.",
+      "phase": "highDensityRouteSolver",
+      "stats": {}
+    }
+  },
+  "srj18": {
+    "samples": 8,
+    "solvedBefore": 8,
+    "solvedAfter": 8,
+    "graphRoutes": 2001,
+    "identicalMetrics": [
+      "status",
+      "iterations",
+      "connectionCount",
+      "solvedRouteCount",
+      "avgRouteHops",
+      "requiredRipRouteCount",
+      "baselineMaxRegionCost",
+      "finalMaxRegionCost"
+    ],
+    "runs": [
+      44745038185,
+      44745043462
+    ],
+    "timingLimitation": "Separate Blacksmith jobs. No causal speedup claimed."
+  },
+  "validation": {
+    "tinyTests": 175,
+    "tinyTypecheck": "pass",
+    "capFocusedControls": 7,
+    "capBuild": "pass",
+    "capTypecheck": "pass"
+  },
+  "pullRequests": {
+    "tinyRepro": 335,
+    "tinyFix": 336,
+    "capacityRepro": 4009,
+    "capacityFix": 4010
+  }
+}
