@@ -21,6 +21,7 @@ import {
 } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver"
 import { MultiGraphTopologyPlannerSolver } from "lib/solvers/TopologyPlanningSolver/MultiGraphTopologyPlannerSolver"
 import { TopologyMergingSolver } from "lib/solvers/TopologyMergingSolver/TopologyMergingSolver"
+import { splitNodesWithoutThroughViaSite } from "./splitNodesWithoutThroughViaSite"
 import { createPreloadedPortValidator } from "./createPreloadedPortValidator"
 import { reservePreloadedCopperPorts } from "./reservePreloadedCopperPorts"
 import { UniformPortDistributionSolver } from "lib/solvers/UniformPortDistributionSolver/UniformPortDistributionSolver"
@@ -440,7 +441,12 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       ],
       {
         onSolved: (cms) => {
-          cms.capacityNodes = cms.nodeDimensionSubdivisionSolver!.outputNodes
+          cms.capacityNodes = splitNodesWithoutThroughViaSite({
+            nodes: cms.nodeDimensionSubdivisionSolver!.outputNodes,
+            srj: cms.originalSrj,
+            connMap: cms.connMap,
+            viaDiameter: cms.viaDiameter,
+          })
         },
       },
     ),
