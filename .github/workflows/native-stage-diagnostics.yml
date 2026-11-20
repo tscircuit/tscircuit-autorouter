@@ -14,11 +14,11 @@ jobs:
       matrix:
         include:
           - variant: parent
-            source: 1a2e757a0230bae0e8f915023485978587d7fe14
+            source: a3011ea856de9661404a115ed2050d9e0a1bff77
           - variant: native
-            source: 0f98be6237dfa0a852360b07d38f0e2fbee5f92d
+            source: 93f449589c8748916c2105a5efab437c0908269a
           - variant: guard
-            source: 0f98be6237dfa0a852360b07d38f0e2fbee5f92d
+            source: 93f449589c8748916c2105a5efab437c0908269a
     steps:
       - uses: actions/checkout@v4
         with:
@@ -83,6 +83,13 @@ jobs:
                       }
                       if (!worsensViaClearance && allowsNativeCopper) return"""
                   p.write_text(s.replace(old,new,1))
+          p=Path("lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9RegionalFallbackSolver.ts")
+          s=p.read_text()
+          # Movable legacy preloads are not immutable repair constraints.
+          s=s.replace("      fixedHdRoutes: this.params.fixedHdRoutes,", """      fixedHdRoutes: this.params.preservePhysicalGeometry
+                  ? this.params.fixedHdRoutes
+                  : undefined,""")
+          p.write_text(s)
           PY
       - run: bun install
       - name: Keep original board clearance, via-count and preservation assertions
