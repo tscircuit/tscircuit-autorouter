@@ -16,5 +16,13 @@
   "retainedPartialRequestsBefore": 398,
   "retainedPartialRequestsAfter": 398,
   "obliquePlansBefore": 11,
-  "obliquePlansAfter": 0
+  "obliquePlansAfter": 0,
+  "reproCi": {
+    "run": 44723802833,
+    "allEightShards": "success"
+  },
+  "fixCi": {
+    "run": 44723834363,
+    "allEightShards": "success"
+  }
 }
