@@ -1,0 +1,327 @@
+{
+  "sample": "icepi-original",
+  "checkedExits": 12,
+  "exitsConflictingWithForeignPours": 6,
+  "exitsInsideForeignPours": 6,
+  "checkedAgainst": "Unmodified FanoutSolver input and the native electrical-net and obstacle-distance predicates",
+  "exits": [
+    {
+      "connection": "breakout:pcb_breakout_point_0",
+      "source": "undefined.BALL_A5",
+      "point": {
+        "x": 1.4191666666654248,
+        "y": 10.480099999999982,
+        "layer": "bottom",
+        "pointId": "pcb_breakout_point_0"
+      },
+      "requiredTraceToCopperGap": 0.1,
+      "foreignPourCount": 0,
+      "insideForeignPour": false,
+      "foreignPourExamples": []
+    },
+    {
+      "connection": "breakout:pcb_breakout_point_1",
+      "source": "undefined.BALL_A3",
+      "point": {
+        "x": 2.269166666665425,
+        "y": 10.480099999999982,
+        "layer": "bottom",
+        "pointId": "pcb_breakout_point_1"
+      },
+      "requiredTraceToCopperGap": 0.1,
+      "foreignPourCount": 0,
+      "insideForeignPour": false,
+      "foreignPourExamples": []
+    },
+    {
+      "connection": "breakout:pcb_breakout_point_2",
+      "source": "undefined.BALL_K5",
+      "point": {
+        "x": 3.119166666665425,
+        "y": 10.480099999999982,
+        "layer": "bottom",
+        "pointId": "pcb_breakout_point_2"
+      },
+      "requiredTraceToCopperGap": 0.1,
+      "foreignPourCount": 0,
+      "insideForeignPour": false,
+      "foreignPourExamples": []
+    },
+    {
+      "connection": "breakout:pcb_breakout_point_3",
+      "source": "undefined.BALL_B5",
+      "point": {
+        "x": 1.844166666665425,
+        "y": 10.480099999999982,
+        "layer": "inner1",
+        "pointId": "pcb_breakout_point_3"
+      },
+      "requiredTraceToCopperGap": 0.1,
+      "foreignPourCount": 2,
+      "insideForeignPour": true,
+      "foreignPourExamples": [
+        {
+          "center": {
+            "x": -5.684341886080802e-14,
+            "y": 10.250000000000057
+          },
+          "width": 85.00000000000111,
+          "height": 0.5,
+          "layers": [
+            "inner1"
+          ],
+          "distance": 0
+        },
+        {
+          "center": {
+            "x": -4.973799150320701e-14,
+            "y": 10.750000000000057
+          },
+          "width": 85.00000000000117,
+          "height": 0.5,
+          "layers": [
+            "inner1"
+          ],
+          "distance": 0.019900000000074414
+        }
+      ]
+    },
+    {
+      "connection": "breakout:pcb_breakout_point_4",
+      "source": "undefined.BALL_B3",
+      "point": {
+        "x": 2.694166666665425,
+        "y": 10.480099999999982,
+        "layer": "inner1",
+        "pointId": "pcb_breakout_point_4"
+      },
+      "requiredTraceToCopperGap": 0.1,
+      "foreignPourCount": 2,
+      "insideForeignPour": true,
+      "foreignPourExamples": [
+        {
+          "center": {
+            "x": -5.684341886080802e-14,
+            "y": 10.250000000000057
+          },
+          "width": 85.00000000000111,
+          "height": 0.5,
+          "layers": [
+            "inner1"
+          ],
+          "distance": 0
+        },
+        {
+          "center": {
+            "x": -4.973799150320701e-14,
+            "y": 10.750000000000057
+          },
+          "width": 85.00000000000117,
+          "height": 0.5,
+          "layers": [
+            "inner1"
+          ],
+          "distance": 0.019900000000074414
+        }
+      ]
+    },
+    {
+      "connection": "breakout:pcb_breakout_point_5",
+      "source": "undefined.BALL_M5",
+      "point": {
+        "x": 3.5441666666654252,
+        "y": 10.480099999999982,
+        "layer": "inner1",
+        "pointId": "pcb_breakout_point_5"
+      },
+      "requiredTraceToCopperGap": 0.1,
+      "foreignPourCount": 2,
+      "insideForeignPour": true,
+      "foreignPourExamples": [
+        {
+          "center": {
+            "x": -5.684341886080802e-14,
+            "y": 10.250000000000057
+          },
+          "width": 85.00000000000111,
+          "height": 0.5,
+          "layers": [
+            "inner1"
+          ],
+          "distance": 0
+        },
+        {
+          "center": {
+            "x": -4.973799150320701e-14,
+            "y": 10.750000000000057
+          },
+          "width": 85.00000000000117,
+          "height": 0.5,
+          "layers": [
+            "inner1"
+          ],
+          "distance": 0.019900000000074414
+        }
+      ]
+    },
+    {
+      "connection": "breakout:pcb_breakout_point_6",
+      "source": "undefined.BALL_A4",
+      "point": {
+        "x": 2.269166666665425,
+        "y": 10.480099999999982,
+        "layer": "inner2",
+        "pointId": "pcb_breakout_point_6"
+      },
+      "requiredTraceToCopperGap": 0.1,
+      "foreignPourCount": 2,
+      "insideForeignPour": true,
+      "foreignPourExamples": [
+        {
+          "center": {
+            "x": 1.9964380025333357,
+            "y": 10.299999999999983
+          },
+          "width": 10.933643708576781,
+          "height": 0.5,
+          "layers": [
+            "inner2"
+          ],
+          "distance": 0
+        },
+        {
+          "center": {
+            "x": 1.9986564784175327,
+            "y": 10.799999999999983
+          },
+          "width": 10.935433406870654,
+          "height": 0.5,
+          "layers": [
+            "inner2"
+          ],
+          "distance": 0.06990000000000052
+        }
+      ]
+    },
+    {
+      "connection": "breakout:pcb_breakout_point_7",
+      "source": "undefined.BALL_B2",
+      "point": {
+        "x": 3.119166666665425,
+        "y": 10.480099999999982,
+        "layer": "inner2",
+        "pointId": "pcb_breakout_point_7"
+      },
+      "requiredTraceToCopperGap": 0.1,
+      "foreignPourCount": 2,
+      "insideForeignPour": true,
+      "foreignPourExamples": [
+        {
+          "center": {
+            "x": 1.9964380025333357,
+            "y": 10.299999999999983
+          },
+          "width": 10.933643708576781,
+          "height": 0.5,
+          "layers": [
+            "inner2"
+          ],
+          "distance": 0
+        },
+        {
+          "center": {
+            "x": 1.9986564784175327,
+            "y": 10.799999999999983
+          },
+          "width": 10.935433406870654,
+          "height": 0.5,
+          "layers": [
+            "inner2"
+          ],
+          "distance": 0.06990000000000052
+        }
+      ]
+    },
+    {
+      "connection": "breakout:pcb_breakout_point_8",
+      "source": "undefined.BALL_M6",
+      "point": {
+        "x": 3.969166666665425,
+        "y": 10.480099999999982,
+        "layer": "inner2",
+        "pointId": "pcb_breakout_point_8"
+      },
+      "requiredTraceToCopperGap": 0.1,
+      "foreignPourCount": 2,
+      "insideForeignPour": true,
+      "foreignPourExamples": [
+        {
+          "center": {
+            "x": 1.9964380025333357,
+            "y": 10.299999999999983
+          },
+          "width": 10.933643708576781,
+          "height": 0.5,
+          "layers": [
+            "inner2"
+          ],
+          "distance": 0
+        },
+        {
+          "center": {
+            "x": 1.9986564784175327,
+            "y": 10.799999999999983
+          },
+          "width": 10.935433406870654,
+          "height": 0.5,
+          "layers": [
+            "inner2"
+          ],
+          "distance": 0.06990000000000052
+        }
+      ]
+    },
+    {
+      "connection": "breakout:pcb_breakout_point_9",
+      "source": "undefined.BALL_B6",
+      "point": {
+        "x": 2.694166666665425,
+        "y": 10.480099999999982,
+        "layer": "top",
+        "pointId": "pcb_breakout_point_9"
+      },
+      "requiredTraceToCopperGap": 0.1,
+      "foreignPourCount": 0,
+      "insideForeignPour": false,
+      "foreignPourExamples": []
+    },
+    {
+      "connection": "breakout:pcb_breakout_point_10",
+      "source": "undefined.BALL_B4",
+      "point": {
+        "x": 3.5441666666654252,
+        "y": 10.480099999999982,
+        "layer": "top",
+        "pointId": "pcb_breakout_point_10"
+      },
+      "requiredTraceToCopperGap": 0.1,
+      "foreignPourCount": 0,
+      "insideForeignPour": false,
+      "foreignPourExamples": []
+    },
+    {
+      "connection": "breakout:pcb_breakout_point_11",
+      "source": "undefined.BALL_C2",
+      "point": {
+        "x": 4.394166666665425,
+        "y": 10.480099999999982,
+        "layer": "top",
+        "pointId": "pcb_breakout_point_11"
+      },
+      "requiredTraceToCopperGap": 0.1,
+      "foreignPourCount": 0,
+      "insideForeignPour": false,
+      "foreignPourExamples": []
+    }
+  ]
+}

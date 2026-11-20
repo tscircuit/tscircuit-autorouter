@@ -1,6 +1,12 @@
 {
   "sample": "icepi-original",
   "source": "U22.B5",
+  "declaredExit": {
+    "x": 1.844166666665425,
+    "y": 10.480099999999982,
+    "layer": "inner1",
+    "pointId": "pcb_breakout_point_3"
+  },
   "sourceCorridorOnly": true,
   "fullDeclaredExitNotRouted": true,
   "unchangedWidth": 0.1,

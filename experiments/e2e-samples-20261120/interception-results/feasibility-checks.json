@@ -1,5 +1,19 @@
 [
   {
+    "sample": "icepi-spaced",
+    "checkedExits": 92,
+    "exitsConflictingWithForeignPours": 0,
+    "exitsInsideForeignPours": 0,
+    "checkedAgainst": "Unmodified FanoutSolver input and the native electrical-net and obstacle-distance predicates"
+  },
+  {
+    "sample": "imx6-original",
+    "checkedExits": 12,
+    "exitsConflictingWithForeignPours": 8,
+    "exitsInsideForeignPours": 8,
+    "checkedAgainst": "Unmodified FanoutSolver input and the native electrical-net and obstacle-distance predicates"
+  },
+  {
     "sample": "imx6-original",
     "isolatedFanoutOnly": true,
     "baselineEscapes": 9,
@@ -76,6 +90,27 @@
     "policy": "Enclosure proof applies to the captured baseline's surface-trace and via rules, not arbitrary PCB manufacturing assumptions or the same-net experiment."
   },
   {
+    "sample": "butterstick-original",
+    "checkedExits": 53,
+    "exitsConflictingWithForeignPours": 8,
+    "exitsInsideForeignPours": 8,
+    "checkedAgainst": "Unmodified FanoutSolver input and the native electrical-net and obstacle-distance predicates"
+  },
+  {
+    "sample": "glider-original",
+    "checkedExits": 52,
+    "exitsConflictingWithForeignPours": 16,
+    "exitsInsideForeignPours": 16,
+    "checkedAgainst": "Unmodified FanoutSolver input and the native electrical-net and obstacle-distance predicates"
+  },
+  {
+    "sample": "imx6-spaced",
+    "checkedExits": 32,
+    "exitsConflictingWithForeignPours": 0,
+    "exitsInsideForeignPours": 0,
+    "checkedAgainst": "Unmodified FanoutSolver input and the native electrical-net and obstacle-distance predicates"
+  },
+  {
     "sample": "imx6-spaced",
     "isolatedFanoutOnly": true,
     "baselineEscapes": 7,
@@ -84,6 +119,20 @@
     "independentlyCheckedVias": 5,
     "viaInPadFindingCount": 0,
     "viaInPadFindings": []
+  },
+  {
+    "sample": "butterstick-spaced",
+    "checkedExits": 91,
+    "exitsConflictingWithForeignPours": 0,
+    "exitsInsideForeignPours": 0,
+    "checkedAgainst": "Unmodified FanoutSolver input and the native electrical-net and obstacle-distance predicates"
+  },
+  {
+    "sample": "icepi-original",
+    "checkedExits": 12,
+    "exitsConflictingWithForeignPours": 6,
+    "exitsInsideForeignPours": 6,
+    "checkedAgainst": "Unmodified FanoutSolver input and the native electrical-net and obstacle-distance predicates"
   },
   {
     "sample": "icepi-original",
@@ -120,6 +169,12 @@
   {
     "sample": "icepi-original",
     "source": "U22.B5",
+    "declaredExit": {
+      "x": 1.844166666665425,
+      "y": 10.480099999999982,
+      "layer": "inner1",
+      "pointId": "pcb_breakout_point_3"
+    },
     "sourceCorridorOnly": true,
     "fullDeclaredExitNotRouted": true,
     "unchangedWidth": 0.1,
@@ -156,5 +211,19 @@
         "staticClearancePass": true
       }
     ]
+  },
+  {
+    "sample": "h616-original",
+    "checkedExits": 112,
+    "exitsConflictingWithForeignPours": 53,
+    "exitsInsideForeignPours": 53,
+    "checkedAgainst": "Unmodified FanoutSolver input and the native electrical-net and obstacle-distance predicates"
+  },
+  {
+    "sample": "h616-spaced",
+    "checkedExits": 174,
+    "exitsConflictingWithForeignPours": 0,
+    "exitsInsideForeignPours": 0,
+    "checkedAgainst": "Unmodified FanoutSolver input and the native electrical-net and obstacle-distance predicates"
   }
 ]
