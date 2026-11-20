@@ -9,12 +9,14 @@ import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject
 
 test("IcePi local other_signals reaches detailed routing", async (): Promise<void> => {
   // Full original other_signals phase, including all prior routed copper.
+  const compressed = readFileSync(
+    new URL(
+      "../fixtures/icepi-local-other-signals.json.gz",
+      import.meta.url,
+    ),
+  )
   const input = JSON.parse(
-    gunzipSync(
-      readFileSync(
-        new URL("../fixtures/icepi-local-other-signals.json.gz", import.meta.url),
-      ),
-    ).toString("utf8"),
+    gunzipSync(new Uint8Array(compressed)).toString("utf8"),
   ) as SimpleRouteJson
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(input, {
     cacheProvider: null,
