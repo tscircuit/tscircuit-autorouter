@@ -1,0 +1,11 @@
+{
+  "base": "55efcc291478346dad631b1ad2fe0c5fa36d9be9",
+  "candidate": "8a2e17c51244b29689f5e2cc805aa3343ed0dfa1",
+  "files": [
+    {
+      "path": "lib/route-bus/route-analytic-boundary-alternatives.ts",
+      "beforeSha256": "20d80b5a2b0a4c6f78d3651e50af7ce1aac948d4130e4fb30370c9a76f3c132a",
+      "afterSha256": "e824d63a075f6aa3f70de27de3754129bee70eb259c14b1a54517718133773e6"
+    }
+  ]
+}
