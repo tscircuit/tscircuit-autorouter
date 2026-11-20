@@ -1,6 +1,7 @@
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs"
 import { gunzipSync } from "node:zlib"
 import { join } from "node:path"
+import { isDeepStrictEqual } from "node:util"
 import { checkViasInPads } from "@tscircuit/checks"
 import { getSvgFromGraphicsObject } from "graphics-debug"
 import { getPlanVias } from "../node_modules/@tscircuit/fanout-solver/lib/route-bus/plan-copper"
@@ -12,11 +13,13 @@ mkdirSync(output, { recursive: true })
 const read = (path: string) => JSON.parse(readFileSync(path, "utf8"))
 const readGzip = (path: string) => JSON.parse(gunzipSync(readFileSync(path)).toString())
 const statistics = []
+const constructorInputs = []
 for (const mode of ["before", "after"]) {
   const folder = join(process.cwd(), mode, "icepi-original")
   const report = read(join(folder, "report.json"))
   const solver = report.solvers.find((solver: any) => solver.name === "FanoutSolver")
   const [input, options] = readGzip(join(folder, `solver-${solver.id}-input.json.gz`))
+  constructorInputs.push([input, options])
   const state = readGzip(join(folder, `solver-${solver.id}-state.json.gz`))
   const best = state.bestAttempt
   if (!best?.plans?.length) throw new Error("Captured best fanout attempt is missing")
@@ -34,5 +37,9 @@ for (const mode of ["before", "after"]) {
   writeFileSync(join(output, `${mode}.svg`), getSvgFromGraphicsObject(graphics, { backgroundColor: "white", svgWidth: 1000, svgHeight: 1000 }))
   writeFileSync(join(output, `${mode}.json`), JSON.stringify(summary, null, 2))
 }
+if (!isDeepStrictEqual(constructorInputs[0], constructorInputs[1])) {
+  throw new Error("Before and after fanout constructor inputs differ")
+}
+console.log("SOURCE_TURN_INPUTS_IDENTICAL", true)
 writeFileSync(join(output, "statistics.json"), JSON.stringify(statistics, null, 2))
 console.log("SOURCE_TURN_PHYSICAL", JSON.stringify(statistics))
