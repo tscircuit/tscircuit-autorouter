@@ -78,6 +78,11 @@ import { assignUniquePcbTraceIdsToNewTraces } from "./assignUniquePcbTraceIdsToN
 import { getTerminalLayerIndicesByPcbPortId } from "./getTerminalLayerIndicesByPcbPortId"
 import { getPipeline9NetByConnectionName } from "./getPipeline9NetByConnectionName"
 import {
+  getBusRoutingLayers,
+  findRouteOutsideBusLayers,
+  type BusRoutingLayers,
+} from "./busRoutingLayers"
+import {
   getMaterializedPreloadedSectionHdRoutes,
   removeChangedSectionsFromFixedHdRoutes,
 } from "./materializeHypergraphPreloadedTraceSections"
@@ -106,6 +111,8 @@ import {
   preparePipeline7PowerTraceExpansionInput,
   type Pipeline7PowerTraceExpansionInput,
 } from "../AutoroutingPipeline7_MultiGraph/prepare-pipeline7-power-trace-expansion-input"
+
+const DEFAULT_VIA_TO_PAD_CLEARANCE = 0.15
 
 interface CapacityMeshSolverOptions {
   capacityDepth?: number
@@ -311,6 +318,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   /** Available segment points after non-component cramped points are filtered. */
   sharedEdgeSegmentsWithNecessaryCrampedPortPoints?: SharedEdgeSegment[]
   highDensityNodePortPoints?: NodeWithPortPoints[]
+  private busRoutingLayers: BusRoutingLayers = new Map()
+  private constrainedHdRoutes: HighDensityRoute[] = []
 
   cacheProvider: CacheProvider | null = null
   pipelineDef = [
@@ -368,6 +377,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         onSolved: (cms) => {
           cms.srjWithPointPairs =
             cms.netToPointPairsSolver?.getNewSimpleRouteJson()
+          cms.busRoutingLayers = getBusRoutingLayers(cms.srjWithPointPairs!)
           cms.colorMap = getColorMap(cms.srjWithPointPairs!, cms.connMap)
           cms.connMap = getConnectivityMapFromSimpleRouteJson(
             cms.srjWithPointPairs!,
@@ -581,6 +591,14 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
               GREEDY_MULTIPLIER: 0.7,
               MIN_ALLOWED_BOARD_SCORE: -10000,
             },
+            busConstraints: {
+              layers: cms.busRoutingLayers,
+              escapeViaClearance:
+                cms.viaDiameter +
+                (cms.srj.minViaEdgeToPadEdgeClearance ??
+                  cms.srj.defaultObstacleMargin ??
+                  DEFAULT_VIA_TO_PAD_CLEARANCE),
+            },
           },
         ]
       },
@@ -790,6 +808,22 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             (route) => !materializedConnectionNames.has(route.connectionName),
           ),
         )
+        const routesToSimplify: HighDensityRoute[] = []
+        cms.constrainedHdRoutes = []
+        for (const route of newHdRoutes) {
+          const layers = cms.busRoutingLayers.get(route.connectionName)
+          if (
+            layers &&
+            route.route.length > 0 &&
+            (!layers.has(route.route[0]!.z) ||
+              !layers.has(route.route.at(-1)!.z))
+          ) {
+            cms.constrainedHdRoutes.push(route)
+          } else {
+            routesToSimplify.push(route)
+          }
+        }
+        const otherHdRoutes = [...preloadedHdRoutes, ...cms.constrainedHdRoutes]
         const netByConnectionName = getPipeline9NetByConnectionName(
           [...newHdRoutes, ...preloadedHdRoutes],
           cms.connMap,
@@ -797,7 +831,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
 
         return [
           {
-            hdRoutes: newHdRoutes,
+            hdRoutes: routesToSimplify,
             obstacles: cms.srj.obstacles,
             connMap: cms.connMap,
             colorMap: cms.colorMap,
@@ -806,7 +840,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             layerCount: cms.srj.layerCount,
             minTraceToPadEdgeClearance: cms.srj.minTraceToPadEdgeClearance,
             minBoardEdgeClearance: cms.srj.minBoardEdgeClearance,
-            otherHdRoutes: preloadedHdRoutes,
+            otherHdRoutes,
             netByConnectionName,
             enableCrossingViaReduction: true,
             terminalLayerIndicesByPcbPortId: getTerminalLayerIndicesByPcbPortId(
@@ -829,7 +863,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         )
         const otherHdRoutes = [
           ...preparedSections.immutableHdRoutes,
-          ...cms.traceSimplificationSolver!.simplifiedHdRoutes,
+          ...cms.getSimplifiedHdRoutes()!,
         ]
         return [
           {
@@ -857,7 +891,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     ),
     definePipelineStep("traceWidthSolver", TraceWidthSolver, (cms) => [
       {
-        hdRoutes: cms.traceSimplificationSolver!.simplifiedHdRoutes,
+        hdRoutes: cms.getSimplifiedHdRoutes()!,
         obstacles: cms.srj.obstacles,
         connMap: cms.connMap,
         colorMap: cms.colorMap,
@@ -1019,6 +1053,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
               }
             },
             isValid: (routes: HighDensityRoute[]): boolean =>
+              !findRouteOutsideBusLayers(routes, cms.busRoutingLayers) &&
               evaluateCleanupDrc(convert(routes)).errors.length === 0,
             refineTraceWidths: (
               routes: HighDensityRoute[],
@@ -1076,6 +1111,20 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             obstacleMargin: cms.srj.minTraceToPadEdgeClearance ?? 0.15,
           },
         ]
+      },
+      {
+        onSolved: (cms) => {
+          const { hdRoutes } =
+            cms.lengthMatchingPostProcessingSolver!.getOutput()
+          const invalidRoute = findRouteOutsideBusLayers(
+            hdRoutes,
+            cms.busRoutingLayers,
+          )
+          if (invalidRoute) {
+            cms.failed = true
+            cms.error = `Pipeline9 could not honor the bus routing layers for "${invalidRoute.connectionName}"`
+          }
+        },
       },
     ),
     definePipelineStep(
@@ -1541,9 +1590,15 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       this.pipeline9JointDrcRepairSolver?.getOutput() ??
       this.globalDrcForceImproveSolver?.getOutput() ??
       this.traceWidthSolver?.getHdRoutesWithWidths() ??
-      this.traceSimplificationSolver?.simplifiedHdRoutes ??
+      this.getSimplifiedHdRoutes() ??
       this.highDensityStitchSolver!.mergedHdRoutes
     )
+  }
+
+  private getSimplifiedHdRoutes(): HighDensityRoute[] | undefined {
+    const routes = this.traceSimplificationSolver?.simplifiedHdRoutes
+    if (!routes || this.constrainedHdRoutes.length === 0) return routes
+    return [...routes, ...this.constrainedHdRoutes]
   }
 
   private getOriginalFixedHdRoutes(): PreloadedHighDensityRoute[] {

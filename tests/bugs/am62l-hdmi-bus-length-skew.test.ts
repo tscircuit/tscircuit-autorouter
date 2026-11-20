@@ -47,6 +47,16 @@ test("AM62L HDMI clock pair stays within its maximum length skew", async () => {
   expect(clockBus.maxLengthSkew).toBe(0.5)
 
   const routedTraces = solver.getOutputSimplifiedPcbTraces()
+  const clockTraceLayers = new Set(
+    routedTraces
+      .filter((trace) => CLOCK_PAIR_CONNECTIONS.includes(trace.connection_name))
+      .flatMap((trace) =>
+        trace.route
+          .filter((point) => point.route_type === "wire")
+          .map((point) => point.layer),
+      ),
+  )
+  expect(clockTraceLayers).toEqual(new Set(["top"]))
   const routedLengths = CLOCK_PAIR_CONNECTIONS.map((connectionName) =>
     routedTraces
       .filter((trace) => trace.connection_name === connectionName)
