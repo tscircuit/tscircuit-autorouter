@@ -1,0 +1,98 @@
+name: Compare shared breakout layer loads on ten full circuits
+on:
+  push:
+    branches: [analysis/e2e-shared-layer-pair-20261120]
+concurrency:
+  group: e2e-uploaded-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+jobs:
+  baseline:
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        sample: ["butterstick-original", "butterstick-spaced", "glider-original", "glider-spaced", "h616-original", "h616-spaced", "icepi-original", "icepi-spaced", "imx6-original", "imx6-spaced"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/core
+          ref: 351e73d665fad37577c47fcbff2e4c29eb377467
+          path: core
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/winding-breakout-point-solver
+          ref: 3752c2d3b75d8c24019a793425b430a082a26726
+          path: winding-candidate
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Install pinned latest core dependencies
+        run: |
+          python3 - <<'PYSETUP'
+          from pathlib import Path
+          config=Path('core/bunfig.toml');config.write_text(config.read_text().replace('save = false','save = true'))
+          PYSETUP
+          bun install --ignore-scripts
+          (cd core && bun install --ignore-scripts)
+          bun build lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts --target bun --packages external --outfile benchmark-runtime/pipeline9.js
+      - name: Prepare exact uploaded sources and record dependency revisions
+        run: |
+          python3 - <<'PYSAMPLES'
+          import hashlib,json,shutil,zipfile
+          from pathlib import Path
+          source=Path('experiments/e2e-samples-20261120');runtime=Path('core/e2e-runtime');runtime.mkdir()
+          for name in ['worker.tsx','run.py','assess.ts','correct-workflow.tsx','connectivity.ts','pair-winding.py']:shutil.copyfile(source/name,runtime/name)
+          import gzip
+          (runtime/'expected-circuits.json').write_bytes(gzip.decompress((source/'expected-circuits.json.gz').read_bytes()))
+          manifest=json.loads((source/'inputs.json').read_text())
+          assert hashlib.sha256((source/'samples.zip').read_bytes()).hexdigest()==manifest['archiveSha256']
+          with zipfile.ZipFile(source/'samples.zip') as z:
+              for entry in manifest['samples']:
+                  content=z.read(entry['name'])
+                  assert hashlib.sha256(content).hexdigest()==entry['sha256']
+                  target=runtime/'samples'/entry['name'];target.parent.mkdir(exist_ok=True);target.write_bytes(content)
+          revisions={'core':'351e73d665fad37577c47fcbff2e4c29eb377467','router':'2b1207ad70971f326166b134ea19418137273f23','winding':'202dbe9eb0088633b6fa094120dba6f2f41f8803','sampleMode':'fanout_first','archiveSha256':manifest['archiveSha256'],'coreLockSha256':hashlib.sha256(Path('core/bun.lock').read_bytes()).hexdigest()}
+          for package in ['@tscircuit/fanout-solver','@tscircuit/winding-breakout-point-solver','@tscircuit/capacity-autorouter','@tscircuit/props','@tscircuit/bus-lanes-solver','@tscircuit/checks','circuit-to-svg','react']:
+              revisions[package]=json.loads((Path('core/node_modules')/package/'package.json').read_text())['version']
+          assert revisions['@tscircuit/fanout-solver']=='0.0.93'
+          assert revisions['@tscircuit/capacity-autorouter']=='0.0.1135'
+          (runtime/'revisions.json').write_text(json.dumps(revisions,indent=2)+'\n')
+          print(json.dumps(revisions))
+          PYSAMPLES
+      - name: Compare before and after on one machine with counterbalanced order
+        env:
+          E2E_SAMPLE: ${{ matrix.sample }}
+          E2E_WORKFLOW: fanout_first
+        run: |
+          export E2E_ROUTER_MODULE="$GITHUB_WORKSPACE/benchmark-runtime/pipeline9.js"
+          cd core/e2e-runtime
+          python3 pair-winding.py "$E2E_SAMPLE"
+      - name: Publish complete stage captures and PCB SVG
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-shared-layer-pair-${{ matrix.sample }}
+          path: results
+          if-no-files-found: error
+      - name: Export captured evidence
+        if: always()
+        env:
+          E2E_SAMPLE: ${{ matrix.sample }}
+        run: |
+          python3 - <<'PYEXPORT'
+          import base64,io,os,zipfile
+          from pathlib import Path
+          root=Path('results')
+          stream=io.BytesIO()
+          with zipfile.ZipFile(stream,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=9) as z:
+              for p in root.rglob('*'):
+                  if p.name in ['report.json','process.json','assessment.json']:z.writestr(str(p.relative_to(root)),p.read_bytes())
+          print('E2E_EVIDENCE_BEGIN')
+          encoded=base64.b64encode(stream.getvalue()).decode()
+          for offset in range(0,len(encoded),8000):print(encoded[offset:offset+8000])
+          print('E2E_EVIDENCE_END')
+          PYEXPORT

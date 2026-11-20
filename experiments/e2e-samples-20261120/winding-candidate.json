@@ -1,0 +1,11 @@
+{
+  "base": "202dbe9eb0088633b6fa094120dba6f2f41f8803",
+  "candidate": "3752c2d3b75d8c24019a793425b430a082a26726",
+  "files": [
+    {
+      "path": "lib/layer-assignment/assign-connection-layers.ts",
+      "beforeSha256": "bff58c0f66c54786ed6e221aebdc8e34a187585833a793269b1095faa9acd133",
+      "afterSha256": "887ba3d1de22c329e8ed3bc682107f25127a3a53e3a0e02b42388bef1fefa1f8"
+    }
+  ]
+}
