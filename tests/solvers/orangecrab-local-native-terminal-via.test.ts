@@ -22,7 +22,10 @@ test("OrangeCrab exposes A01's missing terminal via", async (): Promise<void> =>
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(input, {
     cacheProvider: null,
   })
-  expect(() => solver.solve()).toThrow("without an explicit via")
+  expect(() => solver.solve()).not.toThrow()
+  expect(solver.failed).toBeTrue()
+  expect(solver.error).toContain("Unrelated route terminals overlap")
+  expect(solver.error).not.toContain("without an explicit via")
   await expect(
     getSvgFromGraphicsObject(convertSrjToGraphicsObject(input), {
       backgroundColor: "white",
