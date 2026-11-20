@@ -27,12 +27,21 @@ export const createIntraNodeSegmentValidator = ({
       vias: [],
     }
     if (segment.start.z !== segment.end.z) route.vias.push(segment.start)
+    const radius =
+      Math.max(segment.traceThickness, segment.viaDiameter) / 2 + clearance
+    const bounds = {
+      minX: Math.min(segment.start.x, segment.end.x) - radius,
+      maxX: Math.max(segment.start.x, segment.end.x) + radius,
+      minY: Math.min(segment.start.y, segment.end.y) - radius,
+      maxY: Math.max(segment.start.y, segment.end.y) + radius,
+    }
     for (const fixed of fixedHdRoutes) {
       if (arePipeline9RoutesOnSameNet(route, fixed, connMap)) continue
       if (
         doPipeline9RoutesHaveCopperConflict({
-          left: route,
-          right: fixed,
+          left: fixed,
+          right: route,
+          leftBounds: bounds,
           clearance,
           layerCount,
           allowBlindAndBuriedVias,
