@@ -291,11 +291,16 @@ const addTerminalPcbPortIds = <Route extends HighDensityRoute>({
         terminal.z === end.z,
     )
 
-    return {
-      ...route,
-      startPcbPortId: route.startPcbPortId ?? startTerminal?.pcb_port_id,
-      endPcbPortId: route.endPcbPortId ?? endTerminal?.pcb_port_id,
+    const startPcbPortId =
+      route.startPcbPortId ?? startTerminal?.pcb_port_id
+    const endPcbPortId = route.endPcbPortId ?? endTerminal?.pcb_port_id
+    if (
+      startPcbPortId === route.startPcbPortId &&
+      endPcbPortId === route.endPcbPortId
+    ) {
+      return route
     }
+    return { ...route, startPcbPortId, endPcbPortId }
   })
 }
 
