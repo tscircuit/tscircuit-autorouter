@@ -2,7 +2,7 @@
 
 All ten circuits from the uploaded ZIP were run with the agreed **fanout → DDR bus lanes → remaining routing** workflow. **0/10 complete.** No production routing fix is claimed in this report.
 
-The strongest finding is upstream of fanout: **91 of 241 captured signal breakout exits in the five original boards (37.8%) lie inside foreign copper-pour obstacles.** These synthesized endpoints are constraints supplied to fanout; the consumer cannot safely route to them while respecting that fixed copper.
+**91 of 241 provisional signal breakout points (37.8%) lie inside foreign copper-pour obstacles. This does not establish a routing failure:** the affected singleton fanout targets have `hasExplicitLayeredExitTarget: false`, and the fanout solver may replace their position and layer. The captured U22.B5 candidate already routes on top despite its provisional inner1 point. A subsequent Core layer-filtering experiment did not improve iCE/Pi's 9/32 partial result and regressed a routed BGA control from 16 to 12 escapes; that approach is rejected.
 
 | Circuit | Best partial fanout escapes | Generated exits inside foreign pours | Run outcome | Native SVGs |
 | --- | ---: | ---: | --- | --- |
@@ -27,11 +27,11 @@ The completed final snapshots contain no newly emitted routed traces or vias. Th
 
 ## What the interception establishes
 
-**1. Automatic exit placement needs copper feasibility.** The five original captured fanout inputs contain these invalid endpoints: ButterStick 8/53, Glider 16/52, H616 53/112, iCE/Pi 6/12 and i.MX6 8/12. The spaced inputs have no foreign-pour conflicts because those samples omit pours.
+**1. Provisional-point overlap is an observation, not a proven cause.** The five original captured fanout inputs contain these overlapping points: ButterStick 8/53, Glider 16/52, H616 53/112, iCE/Pi 6/12 and i.MX6 8/12. The spaced inputs have no foreign-pour conflicts because those samples omit pours.
 
-For example, iCE/Pi U22.B5 is assigned the generated exit at approximately (1.8442, 10.4801) mm on inner1, inside foreign copper. The supplied inner1 GND zone is explicitly unbroken. The winding adapter passes regions, endpoints, layer preferences and spacing; it does not pass copper obstacles. A successful placement therefore does not establish a routable endpoint.
+For example, iCE/Pi U22.B5 has a provisional point near (1.8442, 10.4801) mm on inner1, inside an unbroken GND zone. Its prepared fanout connection does not have an explicit layered exit target. Native fanout candidates can end on another layer, and Core synchronizes successful exits downstream. The winding adapter has no obstacle input, but this observation alone does not justify constraining its automatic layer choices.
 
-The relevant Core boundaries are [automatic layer-candidate creation](https://github.com/tscircuit/core/blob/351e73d665fad37577c47fcbff2e4c29eb377467/lib/components/primitive-components/Breakout/create-implicit-breakout-point-solver-input.ts#L821) and the [winding adapter](https://github.com/tscircuit/core/blob/351e73d665fad37577c47fcbff2e4c29eb377467/lib/components/primitive-components/Breakout/default-implicit-breakout-point-solver.ts#L19). Each sample has an exit-obstacle-audit.json with coordinates, layers and the original conflicting obstacles. These are routing-model conflicts; the audit does not silently erase or refill a pour.
+The relevant Core boundaries are [automatic layer-candidate creation](https://github.com/tscircuit/core/blob/351e73d665fad37577c47fcbff2e4c29eb377467/lib/components/primitive-components/Breakout/create-implicit-breakout-point-solver-input.ts#L821) and the [winding adapter](https://github.com/tscircuit/core/blob/351e73d665fad37577c47fcbff2e4c29eb377467/lib/components/primitive-components/Breakout/default-implicit-breakout-point-solver.ts#L19). Each sample has an exit-obstacle-audit.json with coordinates, layers and the original conflicting obstacles. The audit describes the initial coordinates, not mandatory fanout terminal layers. It does not erase or refill a pour.
 
 **2. Some current candidates fail before congestion.** Native per-bus preflight, with no accepted escape routes, finds no successful layer for nine buses in iCE/Pi original and nine in i.MX6 original. The captured examples include U22.B5 approaching U22.A5 with only 0.029 mm gap against a 0.1 mm requirement, and U10.B2 approaching U10.A2 with 0.011 mm against 0.119 mm. The clearance rejections are correct.
 
@@ -39,7 +39,7 @@ The relevant Core boundaries are [automatic layer-candidate creation](https://gi
 
 These are native segments and pad geometry from the supplied circuit, not a newly constructed repro.
 
-A separate hand-constructed source corridor for the actual U22.B5 pin passes the unchanged static-clearance predicate on bottom, with the same 0.1 mm trace, 0.1 mm clearance and 0.45 mm via. It does not reach the declared inner1 exit and is **not a completed connection or solver improvement**. It helps isolate the bad layer/endpoint constraint: [source-corridor check](icepi-original/source-corridor-check.json).
+A separate hand-constructed source corridor for the actual U22.B5 pin passes the unchanged static-clearance predicate on bottom, with the same 0.1 mm trace, 0.1 mm clearance and 0.45 mm via. It does not reach the declared inner1 exit and is **not a completed connection or solver improvement**. It establishes a possible local source escape; it does not establish a bad mandatory layer constraint: [source-corridor check](icepi-original/source-corridor-check.json).
 
 The i.MX6 U10.B2 case has another limitation. Its eight foreign 0.25 mm pads form a closed ring on a 0.5 mm grid under the captured 0.119 mm trace/clearance rules. The inflated forbidden radius for a trace centre is 0.3035 mm, so adjacent forbidden regions overlap. Under the captured baseline's via-in-pad and same-net policy, the 0.4 mm via also has no permitted escape inside the ring. This is a proof about those modeled rules, not an assertion that the real hardware is universally unroutable: [source enclosure proof](imx6-original/source-enclosure-proof.json).
 
@@ -55,7 +55,7 @@ All three remain failed fanout phases. The independent check uses the original f
 
 ## Fix priority and reproducibility
 
-The first implementation target should be **legal automatic breakout exit placement/layer selection in Core**, respecting foreign fixed copper while preserving explicit user constraints. That directly addresses invalid synthesized inputs affecting all five originals. Then reassess source-escape candidates and the same-net via/pad exemption with independent checks. Increasing assignment limits, accepting partial output or weakening clearance checks does not resolve these constraints.
+The Core layer-filtering approach has been tested and rejected. The current experiment instead changes the existing fanout candidate generator: same-layer routes may turn immediately out of the source pad, and mixed-pad gaps receive midpoint candidates before unchanged clearance validation. On the actual captured U22.B5 input this produces two statically legal, zero-via top-layer candidates where the original generator produced none. This is a local candidate result; the fresh ten-circuit run must establish its wider routing impact. No full-board improvement is claimed yet. Increasing assignment limits, accepting partial output or weakening clearance checks is not part of this experiment.
 
 The circuits, widths, clearances, via sizes, pads and component positions were retained. Core is pinned to 351e73d (0.0.2434), fanout to 0.0.93, bus lanes to 0.0.62, and the shipped winding dependency to 202dbe9. The archive SHA-256 is 1991ad1891a953dcd660818aaceb73f7aa42dbf704e677e635753b9159f7a6b7.
 
