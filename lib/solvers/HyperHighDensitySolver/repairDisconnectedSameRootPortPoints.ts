@@ -13,6 +13,27 @@ const routeEndpoints = (route: HighDensityIntraNodeRoute) => [
   route.route[route.route.length - 1],
 ]
 
+const getPortInsideEndCap = ({
+  endpoint,
+  ports,
+  radius,
+}: {
+  endpoint: Pick<PortPoint, "x" | "y" | "z">
+  ports: PortPoint[]
+  radius: number
+}): PortPoint | undefined => {
+  let closest: PortPoint | undefined
+  let closestDistance = radius
+  for (const port of ports) {
+    if (port.z !== endpoint.z) continue
+    const distance = Math.hypot(port.x - endpoint.x, port.y - endpoint.y)
+    if (distance > closestDistance) continue
+    closest = port
+    closestDistance = distance
+  }
+  return closest
+}
+
 const getConnectedPointKeysForConnection = (
   routes: HighDensityIntraNodeRoute[],
   connectionName: string,
@@ -125,6 +146,8 @@ export const repairDisconnectedSameRootPortPoints = (
       const portPointKey = pointKey(portPoint)
       if (connectedKeys.has(portPointKey)) continue
 
+      let bridgeStartPort: PortPoint | undefined
+      let bridgeEndPort: PortPoint | undefined
       const bridgeRoute = repairedRoutes.find((route) => {
         if (
           (route.rootConnectionName ?? route.connectionName) !==
@@ -135,28 +158,63 @@ export const repairDisconnectedSameRootPortPoints = (
         if (route.connectionName === connectionName) return false
         const [start, end] = routeEndpoints(route)
         if (!start || !end) return false
-        const startKey = pointKey(start)
-        const endKey = pointKey(end)
-        return (
+        const startPort = getPortInsideEndCap({
+          endpoint: start,
+          ports: portPoints,
+          radius: route.traceThickness / 2,
+        })
+        const endPort = getPortInsideEndCap({
+          endpoint: end,
+          ports: portPoints,
+          radius: route.traceThickness / 2,
+        })
+        const startKey = pointKey(startPort ?? start)
+        const endKey = pointKey(endPort ?? end)
+        const connectsPort =
           (connectedKeys.has(startKey) && endKey === portPointKey) ||
           (connectedKeys.has(endKey) && startKey === portPointKey) ||
           (targetPortKeys.has(startKey) &&
             targetPortKeys.has(endKey) &&
             (startKey === portPointKey || endKey === portPointKey))
-        )
+        if (!connectsPort) return false
+        bridgeStartPort = startPort
+        bridgeEndPort = endPort
+        return true
       })
 
       if (!bridgeRoute) continue
+
+      const bridgePoints = bridgeRoute.route.map((point) => ({
+        ...point,
+        connectionName,
+        rootConnectionName,
+      }))
+      if (
+        bridgeStartPort &&
+        pointKey(bridgeStartPort) !== pointKey(bridgePoints[0]!)
+      ) {
+        bridgePoints.unshift({
+          ...bridgeStartPort,
+          connectionName,
+          rootConnectionName,
+        })
+      }
+      if (
+        bridgeEndPort &&
+        pointKey(bridgeEndPort) !== pointKey(bridgePoints.at(-1)!)
+      ) {
+        bridgePoints.push({
+          ...bridgeEndPort,
+          connectionName,
+          rootConnectionName,
+        })
+      }
 
       repairedRoutes.push({
         ...bridgeRoute,
         connectionName,
         rootConnectionName,
-        route: bridgeRoute.route.map((point) => ({
-          ...point,
-          connectionName,
-          rootConnectionName,
-        })),
+        route: bridgePoints,
         vias: bridgeRoute.vias.map((via) => ({ ...via })),
         jumpers: bridgeRoute.jumpers?.map((jumper) => ({
           ...jumper,

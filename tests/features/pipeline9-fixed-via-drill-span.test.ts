@@ -2,7 +2,6 @@ import { expect, test } from "bun:test"
 import type { PreloadedHighDensityRoute } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/convertPreloadedTraceToHdRoutes"
 import {
   doPipeline9RoutesHaveCopperConflict,
-  getPipeline9FixedRouteObstacles,
   getPipeline9RouteCopperGeometry,
 } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9FixedRouteCopper"
 import type { HighDensityRoute } from "lib/types/high-density-types"
@@ -44,17 +43,6 @@ test("Pipeline9 fixed copper uses the drill span without changing signal layers"
   // Reuse the same route across policies to catch stale geometry-cache entries.
   for (const allowBlindAndBuriedVias of [true, false, undefined, true]) {
     const board = { layerCount: 4, allowBlindAndBuriedVias }
-    const expectedLayers = allowBlindAndBuriedVias
-      ? ["top", "inner1"]
-      : ["top", "inner1", "inner2", "bottom"]
-    const obstacles = getPipeline9FixedRouteObstacles({
-      fixedObstacleRoutes: [viaRoute],
-      ...board,
-    })
-    expect(
-      obstacles.find((obstacle) => obstacle.obstacleId?.endsWith("via_0"))
-        ?.layers,
-    ).toEqual(expectedLayers)
     expect(getPipeline9RouteCopperGeometry(viaRoute, board).viaSpans).toEqual([
       {
         center: { x: 0, y: 0 },

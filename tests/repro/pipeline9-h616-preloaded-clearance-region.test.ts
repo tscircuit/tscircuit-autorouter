@@ -69,7 +69,7 @@ test("routes the H616 SVREF boundary beside a preloaded DDR via", async (): Prom
   const boardClearance = board.srj.minTraceToPadEdgeClearance!
   for (const [index, left] of routes.entries()) {
     for (const right of routes.slice(index + 1)) {
-      if (arePipeline9RoutesOnSameNet(left, right, solver.connMap)) continue
+      if (arePipeline9RoutesOnSameNet({ left, right }, solver.connMap)) continue
       expect(
         doPipeline9RoutesHaveCopperConflict({
           left,

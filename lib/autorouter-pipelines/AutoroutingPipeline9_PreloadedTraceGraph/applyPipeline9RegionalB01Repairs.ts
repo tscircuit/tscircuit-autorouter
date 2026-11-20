@@ -7,7 +7,6 @@ import {
   arePipeline9RoutesOnSameNet,
   doPipeline9RoutesHaveCopperConflict,
   getPipeline9AxisAlignedWireApproximations,
-  getPipeline9FixedRouteObstacles,
   getPipeline9RouteCopperGeometry,
   type Pipeline9AxisAlignedRect,
   type Pipeline9RouteViaSpan,
@@ -91,8 +90,6 @@ const FIXED_ROUTE_INDEX_CELL_SIZE = 4
 const REGIONAL_REPAIR_SEARCH_VOLUME = 7_000
 const MIN_REGIONAL_REPAIR_SEARCH_BUDGET = 16
 const MAX_REGIONAL_REPAIR_SEARCH_BUDGET = 192
-
-export { getPipeline9FixedRouteObstacles }
 
 export const getPipeline9RegionalRepairSearchBudget = (
   routeCount: number,
@@ -371,7 +368,12 @@ const candidateConflictsWithFixedRoutes = ({
 }): boolean => {
   for (const candidateRoute of candidateRoutes) {
     for (const fixedRoute of fixedObstacleRoutes) {
-      if (arePipeline9RoutesOnSameNet(candidateRoute, fixedRoute, connMap)) {
+      if (
+        arePipeline9RoutesOnSameNet(
+          { left: candidateRoute, right: fixedRoute },
+          connMap,
+        )
+      ) {
         continue
       }
       if (
@@ -561,11 +563,6 @@ export const preparePipeline9RegularRegionalCandidate = ({
   }
   const localFixedObstacleRoutes =
     fixedRouteCopperSpatialIndex.getRoutesOverlappingBounds(candidateBounds)
-  const fixedRouteObstacles = getPipeline9FixedRouteObstacles({
-    fixedObstacleRoutes: localFixedObstacleRoutes,
-    layerCount: srj.layerCount,
-    allowBlindAndBuriedVias: srj.allowBlindAndBuriedVias,
-  })
   const solver = new Pipeline9RegionalFallbackSolver({
     nodeWithPortPoints: problem.nodeWithPortPoints,
     colorMap,
@@ -574,7 +571,11 @@ export const preparePipeline9RegularRegionalCandidate = ({
     traceWidth,
     obstacleMargin,
     effort,
-    obstacles: [...srj.obstacles, ...fixedRouteObstacles],
+    obstacles: srj.obstacles,
+    fixedHdRoutes: localFixedObstacleRoutes,
+    immutableHdRoutes: localFixedObstacleRoutes.filter(
+      (route) => route.isFixed || route.isThroughObstacle,
+    ),
     layerCount: srj.layerCount,
     allowBlindAndBuriedVias: srj.allowBlindAndBuriedVias,
   })

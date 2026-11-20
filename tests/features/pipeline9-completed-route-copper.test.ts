@@ -63,10 +63,7 @@ test("regional repair receives completed ordinary copper constraints", (): void 
   expect(solver.routes[0]!.connectionName).toBe("horizontal")
   const regionalSolver = solver.activeFallbackSolver!
   expect(regionalSolver).toBeDefined()
-  expect(
-    regionalSolver.params.obstacles.some((obstacle) =>
-      obstacle.connectedTo.includes("horizontal"),
-    ),
-  ).toBeTrue()
+  expect(regionalSolver.params.obstacles).toEqual([])
+  expect(regionalSolver.params.fixedHdRoutes).toContainEqual(solver.routes[0]!)
   expect(solver.getUpdatedFixedHdRoutes()).toHaveLength(1)
 })

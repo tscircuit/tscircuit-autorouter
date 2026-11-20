@@ -1,4 +1,7 @@
-import { pointToSegmentDistance } from "@tscircuit/math-utils"
+import {
+  getSegmentIntersection,
+  pointToSegmentDistance,
+} from "@tscircuit/math-utils"
 import Flatbush from "flatbush"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import type {
@@ -10,6 +13,10 @@ import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { minimumDistanceBetweenSegments } from "lib/utils/minimumDistanceBetweenSegments"
+import {
+  createPreloadedCopperLookup,
+  type PreloadedCopperLookup,
+} from "./createPreloadedCopperLookup"
 
 type Point = { x: number; y: number }
 type RoutePoint = SimplifiedPcbTrace["route"][number]
@@ -192,6 +199,54 @@ const getClosestPortPoint = (
         ),
     )[0]?.portPoint
 
+const getFixedTracePortPoint = ({
+  segment,
+  primitive,
+  z,
+}: {
+  segment: SharedEdgeSegment
+  primitive: PreloadedTracePrimitive
+  z: number
+}): SegmentPortPoint | undefined => {
+  const crossing = getSegmentIntersection(
+    primitive.start,
+    primitive.end,
+    segment.start,
+    segment.end,
+  )
+  // A collinear trace has no unique crossing along the shared edge.
+  if (!crossing) return getClosestPortPoint(segment, primitive, z)
+
+  const existing = segment.portPoints.find(
+    (candidate) =>
+      candidate.availableZ.includes(z) &&
+      Math.hypot(candidate.x - crossing.x, candidate.y - crossing.y) <
+        GEOMETRIC_TOLERANCE,
+  )
+  if (existing) return existing
+
+  const edgeCenter = {
+    x: (segment.start.x + segment.end.x) / 2,
+    y: (segment.start.y + segment.end.y) / 2,
+  }
+  const portPoint: SegmentPortPoint = {
+    segmentPortPointId: `${segment.edgeId}_fixed${segment.portPoints.length}_z${z}`,
+    x: crossing.x,
+    y: crossing.y,
+    availableZ: [z],
+    nodeIds: segment.nodeIds,
+    edgeId: segment.edgeId,
+    connectionName: null,
+    distToCentermostPortOnZ: Math.hypot(
+      crossing.x - edgeCenter.x,
+      crossing.y - edgeCenter.y,
+    ),
+    cramped: false,
+  }
+  segment.portPoints.push(portPoint)
+  return portPoint
+}
+
 const preloadPort = (
   portPoint: SegmentPortPoint,
   primitive: PreloadedTracePrimitive,
@@ -256,8 +311,8 @@ const preloadPort = (
 }
 
 /**
- * Loads fixed copper onto existing capacity-graph boundary ports. Capacity
- * regions, edges, and ports are never added or removed.
+ * Loads saved copper onto capacity-graph boundary ports. Empty clearance gaps
+ * receive crossing ports without changing the mesh regions or trace geometry.
  */
 export class PreloadedTraceGraphSolver extends BaseSolver {
   private readonly primitives: PreloadedTracePrimitive[]
@@ -292,6 +347,10 @@ export class PreloadedTraceGraphSolver extends BaseSolver {
   }
 
   override _step(): void {
+    const inputPortCount = this.sharedEdgeSegments.reduce(
+      (count, segment) => count + segment.portPoints.length,
+      0,
+    )
     let boundaryDistanceCheckCount: number = 0
     for (const primitive of this.primitives) {
       if (this.boundaryIndex === null) break
@@ -321,12 +380,18 @@ export class PreloadedTraceGraphSolver extends BaseSolver {
 
         for (const z of primitive.zLayers) {
           if (!segment.availableZ.includes(z)) continue
-          const portPoint = getClosestPortPoint(segment, primitive, z)
+          let portPoint: SegmentPortPoint | undefined
+          if (primitive.isFixed) {
+            portPoint = getFixedTracePortPoint({ segment, primitive, z })
+          } else {
+            portPoint = getClosestPortPoint(segment, primitive, z)
+          }
           if (portPoint) preloadPort(portPoint, primitive, z)
         }
       }
     }
 
+    this.addClearanceGapPorts()
     const portPoints = this.sharedEdgeSegments.flatMap(
       (segment) => segment.portPoints,
     )
@@ -339,7 +404,7 @@ export class PreloadedTraceGraphSolver extends BaseSolver {
       preloadedTraceShapeCount: this.primitives.length,
       inputBoundaryCount: this.sharedEdgeSegments.length,
       outputBoundaryCount: this.sharedEdgeSegments.length,
-      inputPortCount: portPoints.length,
+      inputPortCount,
       outputPortCount: portPoints.length,
       preloadedPortCount: preloadedPortPoints.length,
       tracePortAssignmentCount: preloadedPortPoints.reduce(
@@ -347,9 +412,73 @@ export class PreloadedTraceGraphSolver extends BaseSolver {
           count + (portPoint._preloadedTracePortAssignments?.length ?? 0),
         0,
       ),
-      topologyChanged: false,
+      topologyChanged: portPoints.length !== inputPortCount,
     }
     this.solved = true
+  }
+
+  private addClearanceGapPorts(): void {
+    if (!this.srj.traces?.some((trace) => trace.isFixed)) return
+    const copperLookup = createPreloadedCopperLookup({
+      srj: this.srj,
+      connMap: getConnectivityMapFromSimpleRouteJson(this.srj),
+      traceWidth: this.srj.minTraceWidth,
+      viaDiameter: this.srj.minViaDiameter ?? 0.3,
+    })
+    for (const segment of this.sharedEdgeSegments) {
+      for (const z of segment.availableZ) {
+        this.addLayerClearanceGapPorts({ segment, z, copperLookup })
+      }
+    }
+  }
+
+  private addLayerClearanceGapPorts({
+    segment,
+    z,
+    copperLookup,
+  }: {
+    segment: SharedEdgeSegment
+    z: number
+    copperLookup: PreloadedCopperLookup
+  }): void {
+    const dx = segment.end.x - segment.start.x
+    const dy = segment.end.y - segment.start.y
+    const lengthSquared = dx * dx + dy * dy
+    if (lengthSquared === 0) return
+    const length = Math.sqrt(lengthSquared)
+    const layerPorts = segment.portPoints.filter((port) =>
+      port.availableZ.includes(z),
+    )
+    const template = layerPorts[0]
+    if (!template) return
+    const freePortFractions = layerPorts
+      .filter((port) => !port._preloadedTracePortAssignments?.length)
+      .map(
+        (port) =>
+          ((port.x - segment.start.x) * dx + (port.y - segment.start.y) * dy) /
+          lengthSquared,
+      )
+    const clearSpans = copperLookup.getClearSpans({ ...segment, z })
+    for (const [index, [start, end]] of clearSpans.entries()) {
+      if ((end - start) * length <= GEOMETRIC_TOLERANCE) continue
+      const hasFreePort = freePortFractions.some(
+        (fraction) => fraction > start + 1e-9 && fraction < end - 1e-9,
+      )
+      if (hasFreePort) continue
+      const fraction = (start + end) / 2
+      segment.portPoints.push({
+        ...template,
+        segmentPortPointId: `${segment.edgeId}_preloadgap${index}_z${z}`,
+        x: segment.start.x + dx * fraction,
+        y: segment.start.y + dy * fraction,
+        availableZ: [z],
+        connectionName: null,
+        rootConnectionName: undefined,
+        _preloadedFixedNetIds: undefined,
+        _preloadedTracePortAssignments: undefined,
+        distToCentermostPortOnZ: Math.abs(fraction - 0.5) * length,
+      })
+    }
   }
 
   getOutput(): SharedEdgeSegment[] {

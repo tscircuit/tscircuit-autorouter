@@ -59,7 +59,7 @@ test("routes the failed SVREF region in the full H616 circuit", async (): Promis
   ).toEqual([])
   for (const left of changedRoutes) {
     for (const right of [...fixedRoutes, ...solver.routes]) {
-      if (arePipeline9RoutesOnSameNet(left, right, solver.connMap)) continue
+      if (arePipeline9RoutesOnSameNet({ left, right }, solver.connMap)) continue
       expect(
         doPipeline9RoutesHaveCopperConflict({
           left,
