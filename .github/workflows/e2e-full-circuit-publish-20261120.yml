@@ -1,0 +1,80 @@
+name: Publish actual full-circuit pipeline investigation
+on:
+  push:
+    branches: [analysis/e2e-full-circuit-publish-20261120]
+permissions:
+  contents: write
+  actions: read
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - name: Wait for captured-input diagnoses and extended timeout check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh run watch 44780661381 --interval 30 --exit-status
+          gh run watch 44780667160 --interval 30
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: 44778112884
+          pattern: full-circuit-interception-*
+          path: captures
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: 44780661381
+          pattern: full-circuit-diagnosis-*
+          path: diagnoses
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: 44780667160
+          name: full-circuit-interception-extended-butterstick-spaced
+          path: extended
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/core
+          ref: 351e73d665fad37577c47fcbff2e4c29eb377467
+          path: core
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Collect original results and render actual rejected segments
+        run: |
+          cd core
+          for attempt in 1 2 3; do
+            if bun install --ignore-scripts; then break; fi
+            if [ "$attempt" = 3 ]; then exit 1; fi
+          done
+          cd ..
+          python3 experiments/e2e-samples-20261120/publish-deep-interception.py
+          bun experiments/e2e-samples-20261120/render-actual-rejections.ts
+          git fetch origin main --depth=1
+          git switch --detach origin/main
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add experiments/e2e-samples-20261120/interception-results
+          git commit -m 'Record actual ten-circuit placement and fanout failure geometry'
+          git push origin HEAD:refs/heads/analysis/e2e-full-circuit-interception-results-20261120
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: actual-full-circuit-interception-results
+          path: experiments/e2e-samples-20261120/interception-results
+      - name: Export compact actual-circuit results
+        if: always()
+        run: |
+          python3 - <<'PYEXPORT'
+          from pathlib import Path
+          import base64,gzip
+          p=Path('experiments/e2e-samples-20261120/interception-results/statistics.json')
+          if p.exists():
+              encoded=base64.b64encode(gzip.compress(p.read_bytes(),mtime=0)).decode()
+              print('E2E_DEEP_FINAL_BEGIN')
+              for offset in range(0,len(encoded),8000):print(encoded[offset:offset+8000])
+              print('E2E_DEEP_FINAL_END')
+          PYEXPORT
