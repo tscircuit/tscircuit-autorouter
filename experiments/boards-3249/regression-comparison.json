@@ -1,0 +1,22 @@
+{
+  "pairs": 81,
+  "statusesBefore": {
+    "solved": 77,
+    "failed": 4
+  },
+  "statusesAfter": {
+    "solved": 77,
+    "failed": 4
+  },
+  "requests": 4922,
+  "routesBefore": 4913,
+  "routesAfter": 4913,
+  "changedResults": [],
+  "changedCopper": [
+    "neighborhood-am62l-local",
+    "neighborhood-k230-all-singletons",
+    "reg-same-net-plane-terminations-01"
+  ],
+  "cpuBefore": 213.261329,
+  "cpuAfter": 196.732107
+}

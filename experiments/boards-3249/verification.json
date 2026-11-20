@@ -1,0 +1,20 @@
+{
+  "tscircuit": "0.0.3249",
+  "core": "0.0.2433",
+  "fanout": "0.0.92",
+  "autorouter": "0.0.1135",
+  "boardRun": 44722826341,
+  "artifactId": 14623687180,
+  "artifactSha256": "6884a00dbd12a06bfa07fa87865932f64302c5176f0cf92986adf96dae44f832",
+  "baseSource": "9e771f68dca591642fca3b97187e14404c16c5aa",
+  "fixSource": "6c5fd60c002879ce0898c5fd50cb524d4499c39e",
+  "finalFixHead": "a75eb27bc2fbf54a646b0e94d83090ebe61a3b7e",
+  "productionIdenticalToBenchmarkedFix": true,
+  "renderBudgetSeconds": 600,
+  "boardCount": 19,
+  "nativePairedBoards": 6,
+  "retainedPartialRequestsBefore": 398,
+  "retainedPartialRequestsAfter": 398,
+  "obliquePlansBefore": 11,
+  "obliquePlansAfter": 0
+}

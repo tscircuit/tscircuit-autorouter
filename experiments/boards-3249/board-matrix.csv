@@ -1,0 +1,26 @@
+board,variant,stop,stage,ordinal,phaseCount,completedStages,seconds,traces,vias,partialFanout,obliquePlanCount,partialMeasurement
+butterstick-native,fix,settled,fanout,1,10,0,333.947,0,0,60,0,terminal
+glider-native,fix,settled,fanout,1,8,0,521.761,0,0,72,0,terminal
+h616-native,fix,600-second render budget,fanout,1,8,0,600.23,,,107,0,checkpoint before outer budget
+icepi-native,fix,settled,fanout,1,10,0,165.099,0,0,9,0,terminal
+imx6-native,fix,settled,fanout,1,10,0,298.959,0,0,9,0,terminal
+orangecrab-native,fix,600-second render budget,fanout,1,8,0,600.131,,,141,0,checkpoint before outer budget
+butterstick-local,main,600-second render budget,bus_lanes,1,5,0,600.66,,,,,
+butterstick-native,main,settled,fanout,1,10,0,369.315,0,0,60,1,terminal
+butterstick-spaced,main,600-second render budget,bus_lanes,2,5,1,600.822,,,,,
+glider-local,main,600-second render budget,tscircuit,4,5,3,600.525,,,,,
+glider-native,main,settled,fanout,1,8,0,563.292,0,0,72,1,terminal
+glider-spaced,main,settled,tscircuit,4,5,3,164.62,53,111,,,
+h616-default-order-local,main,settled,tscircuit,5,5,4,350.364,142,167,,,
+h616-local,main,settled,tscircuit,5,5,4,533.214,142,159,,,
+h616-native,main,600-second render budget,fanout,1,8,0,600.61,,,107,4,checkpoint before outer budget
+h616-spaced,main,600-second render budget,tscircuit,4,5,3,600.441,,,,,
+icepi-local,main,settled,tscircuit,4,5,3,319.199,52,116,,,
+icepi-native,main,settled,fanout,1,10,0,176.607,0,0,9,0,terminal
+icepi-spaced,main,settled,tscircuit,4,5,3,284.97,52,112,,,
+imx6-local,main,600-second render budget,tscircuit,4,5,3,600.772,,,,,
+imx6-native,main,settled,fanout,1,10,0,322.889,0,0,9,2,terminal
+imx6-spaced,main,600-second render budget,tscircuit,4,5,3,600.477,,,,,
+orangecrab-local,main,settled,tscircuit,4,5,3,235.344,52,103,,,
+orangecrab-native,main,600-second render budget,fanout,1,8,0,600.369,,,141,3,checkpoint before outer budget
+orangecrab-spaced,main,600-second render budget,tscircuit,4,5,3,600.947,,,,,

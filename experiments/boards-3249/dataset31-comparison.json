@@ -1,0 +1,25 @@
+{
+  "commits": [
+    "ac7e0e6c0755d7f66433a5a7eb04fdfe2a0ff5b3",
+    "6c5fd60c002879ce0898c5fd50cb524d4499c39e"
+  ],
+  "statuses": [
+    {
+      "solved": 30,
+      "timeout": 42
+    },
+    {
+      "solved": 30,
+      "timeout": 42
+    }
+  ],
+  "changes": [],
+  "inputsIdentical": 72,
+  "commonSolvedSVGs": 30,
+  "changedSVGs": [],
+  "wallSeconds": [
+    246.208,
+    246.449
+  ],
+  "medianPairedSolvedTimeRatio": 1.0011247253789866
+}

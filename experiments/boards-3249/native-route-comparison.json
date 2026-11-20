@@ -1,0 +1,50 @@
+[
+  {
+    "board": "butterstick-native",
+    "before": 60,
+    "after": 60,
+    "gained": [],
+    "lost": [],
+    "movedVias": []
+  },
+  {
+    "board": "glider-native",
+    "before": 72,
+    "after": 72,
+    "gained": [],
+    "lost": [],
+    "movedVias": []
+  },
+  {
+    "board": "h616-native",
+    "before": 107,
+    "after": 107,
+    "gained": [],
+    "lost": [],
+    "movedVias": []
+  },
+  {
+    "board": "icepi-native",
+    "before": 9,
+    "after": 9,
+    "gained": [],
+    "lost": [],
+    "movedVias": []
+  },
+  {
+    "board": "imx6-native",
+    "before": 9,
+    "after": 9,
+    "gained": [],
+    "lost": [],
+    "movedVias": []
+  },
+  {
+    "board": "orangecrab-native",
+    "before": 141,
+    "after": 141,
+    "gained": [],
+    "lost": [],
+    "movedVias": []
+  }
+]

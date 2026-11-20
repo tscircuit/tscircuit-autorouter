@@ -1,0 +1,138 @@
+[
+  {
+    "variant": "main",
+    "board": "icepi-native",
+    "requests": 32,
+    "retained": 9,
+    "badWidths": [],
+    "oblique": [],
+    "drcValid": true,
+    "issues": []
+  },
+  {
+    "variant": "main",
+    "board": "butterstick-native",
+    "requests": 91,
+    "retained": 60,
+    "badWidths": [],
+    "oblique": [
+      "source_trace_18"
+    ],
+    "drcValid": true,
+    "issues": []
+  },
+  {
+    "variant": "main",
+    "board": "glider-native",
+    "requests": 95,
+    "retained": 72,
+    "badWidths": [],
+    "oblique": [
+      "source_trace_42"
+    ],
+    "drcValid": true,
+    "issues": []
+  },
+  {
+    "variant": "main",
+    "board": "orangecrab-native",
+    "requests": 273,
+    "retained": 141,
+    "badWidths": [],
+    "oblique": [
+      "source_trace_10",
+      "source_trace_24",
+      "source_trace_38"
+    ],
+    "drcValid": true,
+    "issues": []
+  },
+  {
+    "variant": "main",
+    "board": "imx6-native",
+    "requests": 32,
+    "retained": 9,
+    "badWidths": [],
+    "oblique": [
+      "source_trace_16",
+      "source_trace_3"
+    ],
+    "drcValid": true,
+    "issues": []
+  },
+  {
+    "variant": "main",
+    "board": "h616-native",
+    "requests": 174,
+    "retained": 107,
+    "badWidths": [],
+    "oblique": [
+      "source_trace_47",
+      "source_trace_48",
+      "source_trace_51",
+      "source_trace_11"
+    ],
+    "drcValid": true,
+    "issues": []
+  },
+  {
+    "variant": "fix",
+    "board": "icepi-native",
+    "requests": 32,
+    "retained": 9,
+    "badWidths": [],
+    "oblique": [],
+    "drcValid": true,
+    "issues": []
+  },
+  {
+    "variant": "fix",
+    "board": "butterstick-native",
+    "requests": 91,
+    "retained": 60,
+    "badWidths": [],
+    "oblique": [],
+    "drcValid": true,
+    "issues": []
+  },
+  {
+    "variant": "fix",
+    "board": "glider-native",
+    "requests": 95,
+    "retained": 72,
+    "badWidths": [],
+    "oblique": [],
+    "drcValid": true,
+    "issues": []
+  },
+  {
+    "variant": "fix",
+    "board": "orangecrab-native",
+    "requests": 273,
+    "retained": 141,
+    "badWidths": [],
+    "oblique": [],
+    "drcValid": true,
+    "issues": []
+  },
+  {
+    "variant": "fix",
+    "board": "imx6-native",
+    "requests": 32,
+    "retained": 9,
+    "badWidths": [],
+    "oblique": [],
+    "drcValid": true,
+    "issues": []
+  },
+  {
+    "variant": "fix",
+    "board": "h616-native",
+    "requests": 174,
+    "retained": 107,
+    "badWidths": [],
+    "oblique": [],
+    "drcValid": true,
+    "issues": []
+  }
+]

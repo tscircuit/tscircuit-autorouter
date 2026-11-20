@@ -1,0 +1,3398 @@
+{
+  "rows": [
+    {
+      "board": "butterstick-native",
+      "variant": "fix",
+      "exit": 0,
+      "seconds": 333.947,
+      "stop": "settled",
+      "elements": 14207,
+      "traces": 0,
+      "vias": 0,
+      "circuitSha256": "e92f25285648b28b972ab43f8773dd0239b109f0817ebab25769ee570cad7326",
+      "errors": {
+        "pcb_autorouting_error": 1,
+        "pcb_port_not_connected_error": 2063,
+        "pcb_trace_missing_error": 328
+      },
+      "stage": "fanout",
+      "ordinal": 1,
+      "phaseCount": 10,
+      "completedStages": 0,
+      "error": {
+        "message": "Fanout failed for U11: only 60 of 91 connections could escape to the breakout boundary. The breakout boundary is 0.7mm from the pads at its narrowest point, which all 91 escapes have to share. Give the fanout more room by increasing the breakout's padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors) so their pads sit inside the boundary instead of against it."
+      },
+      "fanoutRuns": [
+        {
+          "requests": 91,
+          "best": 60,
+          "attempts": 256,
+          "cpuMs": 212177.095,
+          "solved": false,
+          "failed": true
+        }
+      ],
+      "partialFanout": 60,
+      "obliquePlanCount": 0,
+      "obliquePlans": [],
+      "partialMeasurement": "terminal",
+      "densityFailures": []
+    },
+    {
+      "board": "glider-native",
+      "variant": "fix",
+      "exit": 0,
+      "seconds": 521.761,
+      "stop": "settled",
+      "elements": 15055,
+      "traces": 0,
+      "vias": 0,
+      "circuitSha256": "99795da0d6e2c95640739f8413f360c8fa35dd8334e894d08596bf5436dda371",
+      "errors": {
+        "pcb_autorouting_error": 1,
+        "pcb_port_not_connected_error": 1976,
+        "pcb_trace_missing_error": 199
+      },
+      "stage": "fanout",
+      "ordinal": 1,
+      "phaseCount": 8,
+      "completedStages": 0,
+      "error": {
+        "message": "Fanout failed for U12: only 72 of 95 connections could escape to the breakout boundary. The breakout boundary is 0.7mm from the pads at its narrowest point, which all 95 escapes have to share. Give the fanout more room by increasing the breakout's padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors) so their pads sit inside the boundary instead of against it."
+      },
+      "fanoutRuns": [
+        {
+          "requests": 95,
+          "best": 72,
+          "attempts": 256,
+          "cpuMs": 435057.844,
+          "solved": false,
+          "failed": true
+        }
+      ],
+      "partialFanout": 72,
+      "obliquePlanCount": 0,
+      "obliquePlans": [],
+      "partialMeasurement": "terminal",
+      "densityFailures": []
+    },
+    {
+      "board": "h616-native",
+      "variant": "fix",
+      "exit": -15,
+      "seconds": 600.23,
+      "stop": "600-second render budget",
+      "stage": "fanout",
+      "ordinal": 1,
+      "phaseCount": 8,
+      "completedStages": 0,
+      "error": null,
+      "fanoutRuns": [],
+      "partialFanout": 107,
+      "obliquePlanCount": 0,
+      "obliquePlans": [],
+      "partialMeasurement": "checkpoint before outer budget",
+      "densityFailures": []
+    },
+    {
+      "board": "icepi-native",
+      "variant": "fix",
+      "exit": 0,
+      "seconds": 165.099,
+      "stop": "settled",
+      "elements": 13042,
+      "traces": 0,
+      "vias": 0,
+      "circuitSha256": "51636162694204ada0c54a81aae8e5467235609895bc7b19a4ea503fa5c95a67",
+      "errors": {
+        "pcb_autorouting_error": 1,
+        "pcb_port_not_connected_error": 1765,
+        "pcb_trace_missing_error": 223
+      },
+      "stage": "fanout",
+      "ordinal": 1,
+      "phaseCount": 10,
+      "completedStages": 0,
+      "error": {
+        "message": "Fanout failed for U22: only 9 of 32 connections could escape to the breakout boundary. The breakout boundary is 0.7mm from the pads at its narrowest point, which all 32 escapes have to share. Give the fanout more room by increasing the breakout's padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors) so their pads sit inside the boundary instead of against it."
+      },
+      "fanoutRuns": [
+        {
+          "requests": 32,
+          "best": 9,
+          "attempts": 256,
+          "cpuMs": 39120.099,
+          "solved": false,
+          "failed": true
+        }
+      ],
+      "partialFanout": 9,
+      "obliquePlanCount": 0,
+      "obliquePlans": [],
+      "partialMeasurement": "terminal",
+      "densityFailures": []
+    },
+    {
+      "board": "imx6-native",
+      "variant": "fix",
+      "exit": 0,
+      "seconds": 298.959,
+      "stop": "settled",
+      "elements": 18724,
+      "traces": 0,
+      "vias": 0,
+      "circuitSha256": "e0f3b3790eb8ff55499a6791240f5fa3dd6b52a72021e3f5c2bd75bb0a13668c",
+      "errors": {
+        "pcb_autorouting_error": 2,
+        "pcb_port_not_connected_error": 2247,
+        "pcb_trace_missing_error": 265,
+        "pcb_placement_error": 1
+      },
+      "stage": "fanout",
+      "ordinal": 1,
+      "phaseCount": 10,
+      "completedStages": 0,
+      "error": {
+        "message": "Fanout failed for U10: only 9 of 32 connections could escape to the breakout boundary. The breakout boundary is 0.7mm from the pads at its narrowest point, which all 32 escapes have to share. Give the fanout more room by increasing the breakout's padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors) so their pads sit inside the boundary instead of against it."
+      },
+      "fanoutRuns": [
+        {
+          "requests": 32,
+          "best": 9,
+          "attempts": 256,
+          "cpuMs": 39902.903,
+          "solved": false,
+          "failed": true
+        }
+      ],
+      "partialFanout": 9,
+      "obliquePlanCount": 0,
+      "obliquePlans": [],
+      "partialMeasurement": "terminal",
+      "densityFailures": []
+    },
+    {
+      "board": "orangecrab-native",
+      "variant": "fix",
+      "exit": -15,
+      "seconds": 600.131,
+      "stop": "600-second render budget",
+      "stage": "fanout",
+      "ordinal": 1,
+      "phaseCount": 8,
+      "completedStages": 0,
+      "error": null,
+      "fanoutRuns": [],
+      "partialFanout": 141,
+      "obliquePlanCount": 0,
+      "obliquePlans": [],
+      "partialMeasurement": "checkpoint before outer budget",
+      "densityFailures": []
+    },
+    {
+      "board": "butterstick-local",
+      "variant": "main",
+      "exit": -15,
+      "seconds": 600.66,
+      "stop": "600-second render budget",
+      "stage": "bus_lanes",
+      "ordinal": 1,
+      "phaseCount": 5,
+      "completedStages": 0,
+      "error": null,
+      "fanoutRuns": [],
+      "densityFailures": []
+    },
+    {
+      "board": "butterstick-native",
+      "variant": "main",
+      "exit": 0,
+      "seconds": 369.315,
+      "stop": "settled",
+      "elements": 14207,
+      "traces": 0,
+      "vias": 0,
+      "circuitSha256": "e92f25285648b28b972ab43f8773dd0239b109f0817ebab25769ee570cad7326",
+      "errors": {
+        "pcb_autorouting_error": 1,
+        "pcb_port_not_connected_error": 2063,
+        "pcb_trace_missing_error": 328
+      },
+      "stage": "fanout",
+      "ordinal": 1,
+      "phaseCount": 10,
+      "completedStages": 0,
+      "error": {
+        "message": "Fanout failed for U11: only 60 of 91 connections could escape to the breakout boundary. The breakout boundary is 0.7mm from the pads at its narrowest point, which all 91 escapes have to share. Give the fanout more room by increasing the breakout's padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors) so their pads sit inside the boundary instead of against it."
+      },
+      "fanoutRuns": [
+        {
+          "requests": 91,
+          "best": 60,
+          "attempts": 256,
+          "cpuMs": 219668.615,
+          "solved": false,
+          "failed": true
+        }
+      ],
+      "partialFanout": 60,
+      "obliquePlanCount": 1,
+      "obliquePlans": [
+        "source_trace_18"
+      ],
+      "partialMeasurement": "terminal",
+      "densityFailures": []
+    },
+    {
+      "board": "butterstick-spaced",
+      "variant": "main",
+      "exit": -15,
+      "seconds": 600.822,
+      "stop": "600-second render budget",
+      "stage": "bus_lanes",
+      "ordinal": 2,
+      "phaseCount": 5,
+      "completedStages": 1,
+      "error": null,
+      "fanoutRuns": [],
+      "densityFailures": []
+    },
+    {
+      "board": "glider-local",
+      "variant": "main",
+      "exit": -15,
+      "seconds": 600.525,
+      "stop": "600-second render budget",
+      "stage": "tscircuit",
+      "ordinal": 4,
+      "phaseCount": 5,
+      "completedStages": 3,
+      "error": null,
+      "fanoutRuns": [],
+      "densityFailures": []
+    },
+    {
+      "board": "glider-native",
+      "variant": "main",
+      "exit": 0,
+      "seconds": 563.292,
+      "stop": "settled",
+      "elements": 15055,
+      "traces": 0,
+      "vias": 0,
+      "circuitSha256": "99795da0d6e2c95640739f8413f360c8fa35dd8334e894d08596bf5436dda371",
+      "errors": {
+        "pcb_autorouting_error": 1,
+        "pcb_port_not_connected_error": 1976,
+        "pcb_trace_missing_error": 199
+      },
+      "stage": "fanout",
+      "ordinal": 1,
+      "phaseCount": 8,
+      "completedStages": 0,
+      "error": {
+        "message": "Fanout failed for U12: only 72 of 95 connections could escape to the breakout boundary. The breakout boundary is 0.7mm from the pads at its narrowest point, which all 95 escapes have to share. Give the fanout more room by increasing the breakout's padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors) so their pads sit inside the boundary instead of against it."
+      },
+      "fanoutRuns": [
+        {
+          "requests": 95,
+          "best": 72,
+          "attempts": 256,
+          "cpuMs": 469046.391,
+          "solved": false,
+          "failed": true
+        }
+      ],
+      "partialFanout": 72,
+      "obliquePlanCount": 1,
+      "obliquePlans": [
+        "source_trace_42"
+      ],
+      "partialMeasurement": "terminal",
+      "densityFailures": []
+    },
+    {
+      "board": "glider-spaced",
+      "variant": "main",
+      "exit": 0,
+      "seconds": 164.62,
+      "stop": "settled",
+      "elements": 13271,
+      "traces": 53,
+      "vias": 111,
+      "circuitSha256": "c96cbfdb4a8920a2d091bf632a44afb259d624c49f0b4f6ceebeea80c8040e74",
+      "errors": {
+        "pcb_autorouting_error": 1,
+        "pcb_port_not_connected_error": 1465
+      },
+      "stage": "tscircuit",
+      "ordinal": 4,
+      "phaseCount": 5,
+      "completedStages": 3,
+      "error": {
+        "message": "ZQ ran out of iterations (capacity-autorouter@0.0.1135)"
+      },
+      "fanoutRuns": [],
+      "densityFailures": []
+    },
+    {
+      "board": "h616-default-order-local",
+      "variant": "main",
+      "exit": 0,
+      "seconds": 350.364,
+      "stop": "settled",
+      "elements": 5359,
+      "traces": 142,
+      "vias": 167,
+      "circuitSha256": "112d4d726b29a4445657bc00959d68fa7e11f2b971301092e068ca0d3daf2379",
+      "errors": {
+        "pcb_autorouting_error": 1,
+        "pcb_port_not_connected_error": 341
+      },
+      "stage": "tscircuit",
+      "ordinal": 5,
+      "phaseCount": 5,
+      "completedStages": 4,
+      "error": {
+        "message": "Pipeline9 primary high-density routing failed: B01 failed: No path found for source_net_8_mst13; regional fallback failed: Failed to solve 1 nodes, topology_merge_17939. err0: GrowShrinkHighDensityIntraNodeSolver failed after resizing to 16x. Last error: All solvers failed in hyper solver. Example failures: Candidate solution rejected by validator, , Candidate solution rejected by validator, Candidate solution rejected by validator, Candidate solution rejected by validator. (capacity-autorouter@0.0.1135)"
+      },
+      "fanoutRuns": [],
+      "densityFailures": [
+        {
+          "key": "density-failure",
+          "seconds": 274.71919201299994,
+          "error": "Pipeline9 B01 failed: No path found for pipeline9_preloaded_drc_3",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for pipeline9_preloaded_drc_3",
+              "iterations": 101
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 274.763437986,
+          "error": "Pipeline9 B01 failed: No path found for pipeline9_preloaded_drc_3",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for pipeline9_preloaded_drc_3",
+              "iterations": 137
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 274.82274344999996,
+          "error": "Pipeline9 B01 failed: No path found for pipeline9_preloaded_drc_3",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for pipeline9_preloaded_drc_3",
+              "iterations": 38
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 274.889009509,
+          "error": "Pipeline9 B01 failed: No path found for pipeline9_preloaded_drc_3",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for pipeline9_preloaded_drc_3",
+              "iterations": 22
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 275.020117088,
+          "error": "Pipeline9 B01 failed: No path found for pipeline9_preloaded_drc_3",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for pipeline9_preloaded_drc_3",
+              "iterations": 3155
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 275.05975340399993,
+          "error": "Pipeline9 B01 failed: No path found for source_net_115",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_115",
+              "iterations": 39
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 275.20808773199997,
+          "error": "Pipeline9 B01 failed: No path found for source_net_115",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_115",
+              "iterations": 5
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 275.27841420899995,
+          "error": "Pipeline9 B01 failed: No path found for source_net_115",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_115",
+              "iterations": 5
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 275.349181505,
+          "error": "Pipeline9 B01 failed: No path found for source_net_115",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_115",
+              "iterations": 5
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 275.394278558,
+          "error": "Pipeline9 B01 failed: No path found for pipeline9_preloaded_drc_6",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for pipeline9_preloaded_drc_6",
+              "iterations": 3
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 275.43175879399996,
+          "error": "Pipeline9 B01 failed: No path found for pipeline9_preloaded_drc_6",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for pipeline9_preloaded_drc_6",
+              "iterations": 3
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 275.478684086,
+          "error": "Pipeline9 B01 failed: No path found for pipeline9_preloaded_drc_6",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for pipeline9_preloaded_drc_6",
+              "iterations": 3
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 275.53728048899995,
+          "error": "Pipeline9 B01 failed: No path found for pipeline9_preloaded_drc_6",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for pipeline9_preloaded_drc_6",
+              "iterations": 3
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 275.60710918599995,
+          "error": "Pipeline9 B01 failed: No path found for pipeline9_preloaded_drc_6",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for pipeline9_preloaded_drc_6",
+              "iterations": 3
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 275.636411248,
+          "error": "Pipeline9 B01 failed: No path found for source_net_1_mst5",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_1_mst5",
+              "iterations": 236
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 275.69972060899994,
+          "error": "Pipeline9 B01 failed: No path found for source_net_1_mst5",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_1_mst5",
+              "iterations": 583
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 275.770226026,
+          "error": "Pipeline9 B01 failed: No path found for source_net_1_mst5",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_1_mst5",
+              "iterations": 2754
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 276.019732752,
+          "error": "Pipeline9 B01 failed: No path found for source_net_1_mst5",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_1_mst5",
+              "iterations": 6121
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 276.04695543599996,
+          "error": "Pipeline9 B01 failed: No path found for source_net_49",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_49",
+              "iterations": 1659
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 276.078410036,
+          "error": "Pipeline9 B01 failed: No path found for source_net_49",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_49",
+              "iterations": 2332
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 276.12419714799995,
+          "error": "Pipeline9 B01 failed: No path found for source_net_49",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_49",
+              "iterations": 4625
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 276.17905091399996,
+          "error": "Pipeline9 B01 failed: No path found for source_net_49",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_49",
+              "iterations": 6081
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 276.285478208,
+          "error": "Pipeline9 B01 failed: No path found for source_net_49",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_49",
+              "iterations": 8488
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 276.44554622899994,
+          "error": "Pipeline9 B01 failed: No path found for pipeline9_preloaded_drc_10",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for pipeline9_preloaded_drc_10",
+              "iterations": 155
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 276.642541168,
+          "error": "Pipeline9 B01 failed: No path found for pipeline9_preloaded_drc_10",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for pipeline9_preloaded_drc_10",
+              "iterations": 28
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 276.657383678,
+          "error": "Pipeline9 B01 failed: No path found for source_net_116",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_116",
+              "iterations": 3
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 276.675238067,
+          "error": "Pipeline9 B01 failed: No path found for source_net_116",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_116",
+              "iterations": 3
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 276.700500891,
+          "error": "Pipeline9 B01 failed: No path found for source_net_116",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_116",
+              "iterations": 28
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 276.733022151,
+          "error": "Pipeline9 B01 failed: No path found for source_net_116",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_116",
+              "iterations": 33
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 276.803593247,
+          "error": "Pipeline9 B01 failed: No path found for source_net_116",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_116",
+              "iterations": 6
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 276.85098493799995,
+          "error": "Pipeline9 B01 failed: No path found for pipeline9_preloaded_drc_3",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for pipeline9_preloaded_drc_3",
+              "iterations": 101
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 276.89761651,
+          "error": "Pipeline9 B01 failed: No path found for pipeline9_preloaded_drc_3",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for pipeline9_preloaded_drc_3",
+              "iterations": 137
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 276.957760873,
+          "error": "Pipeline9 B01 failed: No path found for pipeline9_preloaded_drc_3",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for pipeline9_preloaded_drc_3",
+              "iterations": 38
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 277.02740313,
+          "error": "Pipeline9 B01 failed: No path found for pipeline9_preloaded_drc_3",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for pipeline9_preloaded_drc_3",
+              "iterations": 22
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 277.150341953,
+          "error": "Pipeline9 B01 failed: No path found for pipeline9_preloaded_drc_3",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for pipeline9_preloaded_drc_3",
+              "iterations": 2679
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 277.18249905299996,
+          "error": "Pipeline9 B01 failed: No path found for source_net_115",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_115",
+              "iterations": 39
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 277.31918314899997,
+          "error": "Pipeline9 B01 failed: No path found for source_net_115",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_115",
+              "iterations": 5
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 277.38873046599997,
+          "error": "Pipeline9 B01 failed: No path found for source_net_115",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_115",
+              "iterations": 5
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 277.48144304999994,
+          "error": "Pipeline9 B01 failed: No path found for source_net_115",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_115",
+              "iterations": 5
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 277.506865414,
+          "error": "Pipeline9 B01 failed: No path found for source_net_49",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_49",
+              "iterations": 1659
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 277.53799477399997,
+          "error": "Pipeline9 B01 failed: No path found for source_net_49",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_49",
+              "iterations": 2332
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 277.582090307,
+          "error": "Pipeline9 B01 failed: No path found for source_net_49",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_49",
+              "iterations": 4625
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 277.636572634,
+          "error": "Pipeline9 B01 failed: No path found for source_net_49",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_49",
+              "iterations": 6081
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 277.7233841,
+          "error": "Pipeline9 B01 failed: No path found for source_net_49",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_49",
+              "iterations": 8488
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 277.737227832,
+          "error": "Pipeline9 B01 failed: No path found for source_net_116",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_116",
+              "iterations": 3
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 277.75745275899993,
+          "error": "Pipeline9 B01 failed: No path found for source_net_116",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_116",
+              "iterations": 3
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 277.78699390099996,
+          "error": "Pipeline9 B01 failed: No path found for source_net_116",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_116",
+              "iterations": 28
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 277.83244183299996,
+          "error": "Pipeline9 B01 failed: No path found for source_net_116",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_116",
+              "iterations": 33
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 345.76379703699996,
+          "error": "Pipeline9 primary high-density routing failed: B01 failed: No path found for source_net_8_mst13; regional fallback failed: Failed to solve 1 nodes, topology_merge_17939. err0: GrowShrinkHighDensityIntraNodeSolver failed after resizing to 16x. Last error: All solvers failed in hyper solver. Example failures: Candidate solution rejected by validator, , Candidate solution rejected by validator, Candidate solution rejected by validator, Candidate solution rejected by validator.",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst180",
+              "iterations": 4770
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_8_mst15",
+              "iterations": 37
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst11",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst143",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst109",
+              "iterations": 14
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst11",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst11",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst11",
+              "iterations": 4
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_8_mst13",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst50",
+              "iterations": 9
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst50",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst50",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst11",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst11",
+              "iterations": 6
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_8_mst13",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_8_mst13",
+              "iterations": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "board": "h616-local",
+      "variant": "main",
+      "exit": 0,
+      "seconds": 533.214,
+      "stop": "settled",
+      "elements": 5352,
+      "traces": 142,
+      "vias": 159,
+      "circuitSha256": "d4b0734751271db9c68be1eefc1c81e77fd22ddc76c558c3d10f55580452f489",
+      "errors": {
+        "pcb_autorouting_error": 1,
+        "pcb_port_not_connected_error": 341
+      },
+      "stage": "tscircuit",
+      "ordinal": 5,
+      "phaseCount": 5,
+      "completedStages": 4,
+      "error": {
+        "message": "Pipeline9 primary high-density routing failed: B01 failed: No path found for source_net_0_mst22; regional fallback failed: Failed to solve 1 nodes, cmn_2. err0: GrowShrinkHighDensityIntraNodeSolver failed after resizing to 8x. Last error: All solvers failed in hyper solver. Example failures: ViaPossibilitiesSolver2 failed with: Exceeded max via count of 5, ViaPossibilitiesSolver2 failed with: Exceeded max via count of 5, HighDensitySolverA01 ran out of iterations, HighDensitySolverA01 ran out of iterations, HighDensitySolverA01 ran out of iterations. (capacity-autorouter@0.0.1135)"
+      },
+      "fanoutRuns": [],
+      "densityFailures": [
+        {
+          "key": "density-failure",
+          "seconds": 527.555645913,
+          "error": "Pipeline9 primary high-density routing failed: B01 failed: No path found for source_net_0_mst22; regional fallback failed: Failed to solve 1 nodes, cmn_2. err0: GrowShrinkHighDensityIntraNodeSolver failed after resizing to 8x. Last error: All solvers failed in hyper solver. Example failures: ViaPossibilitiesSolver2 failed with: Exceeded max via count of 5, ViaPossibilitiesSolver2 failed with: Exceeded max via count of 5, HighDensitySolverA01 ran out of iterations, HighDensitySolverA01 ran out of iterations, HighDensitySolverA01 ran out of iterations.",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst161",
+              "iterations": 22
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst50",
+              "iterations": 126
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst11",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst143",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst109",
+              "iterations": 32
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst11",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst50",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst11",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst11",
+              "iterations": 4
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst11",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst11",
+              "iterations": 6
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst178",
+              "iterations": 909
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst138",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_8_mst8",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst117",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst160",
+              "iterations": 69
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_8_mst8",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst117",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst50",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_8_mst8",
+              "iterations": 15
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst117",
+              "iterations": 7
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst117",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_3_mst11",
+              "iterations": 10
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst79",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_3_mst11",
+              "iterations": 9
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_54",
+              "iterations": 11
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_54",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst50",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_54",
+              "iterations": 11
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_54",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_54",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_3_mst5",
+              "iterations": 250
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst176",
+              "iterations": 2461
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_3_mst11",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_3_mst11",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_3_mst11",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_3_mst11",
+              "iterations": 11
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst79",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_3_mst11",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst50",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_3_mst11",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_54",
+              "iterations": 7
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst79",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst50",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_3_mst11",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst50",
+              "iterations": 5
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_3_mst11",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_3_mst11",
+              "iterations": 5
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst69",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_54",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst69",
+              "iterations": 6
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_54",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_8_mst13",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_8_mst11",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_8_mst11",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_8_mst11",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_8_mst11",
+              "iterations": 6
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_3_mst11",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst142",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst142",
+              "iterations": 6
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_6_mst12",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_6_mst12",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst79",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_54",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_3_mst11",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_3_mst11",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_6_mst12",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_6_mst10",
+              "iterations": 9
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_6_mst10",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst79",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_54",
+              "iterations": 6
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_3_mst11",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst176",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst178",
+              "iterations": 51
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_8_mst8",
+              "iterations": 10
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_8_mst13",
+              "iterations": 59
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_8_mst13",
+              "iterations": 120
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_8_mst8",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_3_mst5",
+              "iterations": 7
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst138",
+              "iterations": 348
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_8_mst8",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_5_mst13",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst178",
+              "iterations": 21
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_5_mst13",
+              "iterations": 12
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst50",
+              "iterations": 11
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_5_mst13",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_8_mst13",
+              "iterations": 10
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_3_mst9",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst90",
+              "iterations": 12
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst90",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_6_mst17",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_8_mst13",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_5_mst13",
+              "iterations": 1279
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_3_mst9",
+              "iterations": 18
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_8_mst13",
+              "iterations": 10
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_3_mst9",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst90",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst90",
+              "iterations": 18
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_8_mst13",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst79",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_6_mst17",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_8_mst13",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_6_mst17",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_8_mst13",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_6_mst17",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_8_mst13",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_6_mst17",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_8_mst13",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_6_mst17",
+              "iterations": 6
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_8_mst13",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_8_mst13",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_8_mst13",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_8_mst8",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_8_mst8",
+              "iterations": 94
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_5_mst13",
+              "iterations": 32
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_5_mst13",
+              "iterations": 165
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst79",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst79",
+              "iterations": 15
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst79",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst79",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_3_mst12",
+              "iterations": 58
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_3_mst9",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst54",
+              "iterations": 22
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst54",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst54",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_3_mst9",
+              "iterations": 5
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_4_mst31",
+              "iterations": 32
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst8",
+              "iterations": 13
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst108",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst6",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst6",
+              "iterations": 13
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst176",
+              "iterations": 97
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_55_mst1",
+              "iterations": 14
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst8",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst108",
+              "iterations": 11
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst125",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "Convergence failure: exceeded MAX_RIPS 200",
+              "iterations": 105873
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst166",
+              "iterations": 34
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst8",
+              "iterations": 9
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst108",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_55_mst1",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst8",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst108",
+              "iterations": 14
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_55_mst1",
+              "iterations": 14
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst125",
+              "iterations": 5
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst119",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst57",
+              "iterations": 15
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_55_mst1",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst6",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst6",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_55_mst1",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst6",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst141",
+              "iterations": 12
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_55_mst1",
+              "iterations": 13
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst8",
+              "iterations": 14
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst9",
+              "iterations": 7
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst9",
+              "iterations": 7
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst119",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst6",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst6",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst154",
+              "iterations": 10
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst125",
+              "iterations": 5
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst125",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst125",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst8",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst125",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst134",
+              "iterations": 12
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst6",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst9",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst108",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst9",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst108",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst119",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst108",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst119",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst9",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst119",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst9",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst9",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst6",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst9",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst154",
+              "iterations": 2892
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst77",
+              "iterations": 6
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst75",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst3",
+              "iterations": 11
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst134",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst134",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst134",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst119",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst166",
+              "iterations": 52
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst154",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst77",
+              "iterations": 5
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst75",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst3",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst3",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst120",
+              "iterations": 5
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst120",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst134",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst75",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst120",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst120",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst148",
+              "iterations": 6
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst125",
+              "iterations": 9
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst125",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst134",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst76",
+              "iterations": 14
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst74",
+              "iterations": 5
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst77",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst120",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst148",
+              "iterations": 4
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst76",
+              "iterations": 12
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst148",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst76",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst125",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst148",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst76",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst115",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst119",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst119",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst119",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst85",
+              "iterations": 14
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst148",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst148",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst148",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst115",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst115",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst119",
+              "iterations": 8
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst148",
+              "iterations": 8
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst148",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst148",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst148",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst148",
+              "iterations": 13
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst148",
+              "iterations": 12
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst115",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst115",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_4_mst19",
+              "iterations": 92
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_4_mst25",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst74",
+              "iterations": 680
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_0_mst22",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_0_mst22",
+              "iterations": 4
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_0_mst22",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst148",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_0_mst22",
+              "iterations": 9
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst6",
+              "iterations": 68
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_3_mst12",
+              "iterations": 4238
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst163",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_4_mst23",
+              "iterations": 23
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_4_mst25",
+              "iterations": 17
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_4_mst19",
+              "iterations": 443
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst147",
+              "iterations": 131
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst147",
+              "iterations": 75
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst73",
+              "iterations": 1108
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_2_mst42",
+              "iterations": 78
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "Convergence failure: exceeded MAX_RIPS 200",
+              "iterations": 138175
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_0_mst22",
+              "iterations": 554
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "board": "h616-native",
+      "variant": "main",
+      "exit": -15,
+      "seconds": 600.61,
+      "stop": "600-second render budget",
+      "stage": "fanout",
+      "ordinal": 1,
+      "phaseCount": 8,
+      "completedStages": 0,
+      "error": null,
+      "fanoutRuns": [],
+      "partialFanout": 107,
+      "obliquePlanCount": 4,
+      "obliquePlans": [
+        "source_trace_47",
+        "source_trace_48",
+        "source_trace_51",
+        "source_trace_11"
+      ],
+      "partialMeasurement": "checkpoint before outer budget",
+      "densityFailures": []
+    },
+    {
+      "board": "h616-spaced",
+      "variant": "main",
+      "exit": -15,
+      "seconds": 600.441,
+      "stop": "600-second render budget",
+      "stage": "tscircuit",
+      "ordinal": 4,
+      "phaseCount": 5,
+      "completedStages": 3,
+      "error": null,
+      "fanoutRuns": [],
+      "densityFailures": [
+        {
+          "key": "density-failure",
+          "seconds": 505.28325975100006,
+          "error": "Pipeline9 B01 failed: No path found for source_net_68",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_68",
+              "iterations": 44105
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 505.29812721499997,
+          "error": "Pipeline9 B01 failed: No path found for source_net_69",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_69",
+              "iterations": 37
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 505.342905126,
+          "error": "Pipeline9 B01 failed: No path found for source_net_69",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_69",
+              "iterations": 2385
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 505.422872985,
+          "error": "Pipeline9 B01 failed: No path found for source_net_69",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_69",
+              "iterations": 3779
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 505.52531505,
+          "error": "Pipeline9 B01 failed: No path found for source_net_69",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_69",
+              "iterations": 4760
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 505.61628357100005,
+          "error": "Pipeline9 B01 failed: No path found for source_net_69",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_69",
+              "iterations": 7352
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 505.649752319,
+          "error": "Pipeline9 B01 failed: No path found for source_net_68",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_68",
+              "iterations": 1580
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 505.692205349,
+          "error": "Pipeline9 B01 failed: No path found for source_net_68",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_68",
+              "iterations": 2399
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 505.739926221,
+          "error": "Pipeline9 B01 failed: No path found for source_net_68",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_68",
+              "iterations": 3634
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 505.804148677,
+          "error": "Pipeline9 B01 failed: No path found for source_net_68",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_68",
+              "iterations": 4765
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 505.88797409700004,
+          "error": "Pipeline9 B01 failed: No path found for source_net_68",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_68",
+              "iterations": 7357
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "board": "icepi-local",
+      "variant": "main",
+      "exit": 0,
+      "seconds": 319.199,
+      "stop": "settled",
+      "elements": 10448,
+      "traces": 52,
+      "vias": 116,
+      "circuitSha256": "e943f851df5693e44796cf3845e15cbfbb9b0e274e82d96607f9e6b15dba9b9c",
+      "errors": {
+        "pcb_autorouting_error": 1,
+        "pcb_port_not_connected_error": 1046
+      },
+      "stage": "tscircuit",
+      "ordinal": 4,
+      "phaseCount": 5,
+      "completedStages": 3,
+      "error": {
+        "message": "ZQ ran out of iterations (capacity-autorouter@0.0.1135)"
+      },
+      "fanoutRuns": [],
+      "densityFailures": []
+    },
+    {
+      "board": "icepi-native",
+      "variant": "main",
+      "exit": 0,
+      "seconds": 176.607,
+      "stop": "settled",
+      "elements": 13042,
+      "traces": 0,
+      "vias": 0,
+      "circuitSha256": "51636162694204ada0c54a81aae8e5467235609895bc7b19a4ea503fa5c95a67",
+      "errors": {
+        "pcb_autorouting_error": 1,
+        "pcb_port_not_connected_error": 1765,
+        "pcb_trace_missing_error": 223
+      },
+      "stage": "fanout",
+      "ordinal": 1,
+      "phaseCount": 10,
+      "completedStages": 0,
+      "error": {
+        "message": "Fanout failed for U22: only 9 of 32 connections could escape to the breakout boundary. The breakout boundary is 0.7mm from the pads at its narrowest point, which all 32 escapes have to share. Give the fanout more room by increasing the breakout's padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors) so their pads sit inside the boundary instead of against it."
+      },
+      "fanoutRuns": [
+        {
+          "requests": 32,
+          "best": 9,
+          "attempts": 256,
+          "cpuMs": 40103.759,
+          "solved": false,
+          "failed": true
+        }
+      ],
+      "partialFanout": 9,
+      "obliquePlanCount": 0,
+      "obliquePlans": [],
+      "partialMeasurement": "terminal",
+      "densityFailures": []
+    },
+    {
+      "board": "icepi-spaced",
+      "variant": "main",
+      "exit": 0,
+      "seconds": 284.97,
+      "stop": "settled",
+      "elements": 10436,
+      "traces": 52,
+      "vias": 112,
+      "circuitSha256": "467a0aadf01d38610b9e6d778451994a69e75616657e94d5d703debdcc224ad2",
+      "errors": {
+        "pcb_autorouting_error": 1,
+        "pcb_port_not_connected_error": 1046
+      },
+      "stage": "tscircuit",
+      "ordinal": 4,
+      "phaseCount": 5,
+      "completedStages": 3,
+      "error": {
+        "message": "ZQ ran out of iterations (capacity-autorouter@0.0.1135)"
+      },
+      "fanoutRuns": [],
+      "densityFailures": [
+        {
+          "key": "density-failure",
+          "seconds": 199.999977555,
+          "error": "Pipeline9 B01 failed: No path found for source_net_57",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_57",
+              "iterations": 42
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 200.056138581,
+          "error": "Pipeline9 B01 failed: No path found for source_net_57",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_57",
+              "iterations": 3
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 200.109079808,
+          "error": "Pipeline9 B01 failed: No path found for source_net_57",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_57",
+              "iterations": 3
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 200.174340288,
+          "error": "Pipeline9 B01 failed: No path found for source_net_57",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_57",
+              "iterations": 3
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 200.235027791,
+          "error": "Pipeline9 B01 failed: No path found for source_net_57",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_57",
+              "iterations": 3
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 200.288766838,
+          "error": "Pipeline9 B01 failed: No path found for source_net_25",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_25",
+              "iterations": 3
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 200.347149302,
+          "error": "Pipeline9 B01 failed: No path found for source_net_25",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_25",
+              "iterations": 3
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 200.40975170299998,
+          "error": "Pipeline9 B01 failed: No path found for source_net_25",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_25",
+              "iterations": 3
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 200.47371636399998,
+          "error": "Pipeline9 B01 failed: No path found for source_net_25",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_25",
+              "iterations": 3
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 200.547754678,
+          "error": "Pipeline9 B01 failed: No path found for source_net_25",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_25",
+              "iterations": 3
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 200.587498414,
+          "error": "Pipeline9 B01 failed: No path found for source_net_57",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_57",
+              "iterations": 28
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 200.63919224199998,
+          "error": "Pipeline9 B01 failed: No path found for source_net_57",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_57",
+              "iterations": 3
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 200.70092570399999,
+          "error": "Pipeline9 B01 failed: No path found for source_net_57",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_57",
+              "iterations": 3
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 200.76878252199998,
+          "error": "Pipeline9 B01 failed: No path found for source_net_57",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_57",
+              "iterations": 3
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 200.840831278,
+          "error": "Pipeline9 B01 failed: No path found for source_net_57",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_57",
+              "iterations": 3
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 200.880163153,
+          "error": "Pipeline9 B01 failed: No path found for source_net_25",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_25",
+              "iterations": 3
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 200.93276540099998,
+          "error": "Pipeline9 B01 failed: No path found for source_net_25",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_25",
+              "iterations": 3
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 200.99889468,
+          "error": "Pipeline9 B01 failed: No path found for source_net_25",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_25",
+              "iterations": 3
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 201.070864936,
+          "error": "Pipeline9 B01 failed: No path found for source_net_25",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_25",
+              "iterations": 3
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 201.137162055,
+          "error": "Pipeline9 B01 failed: No path found for source_net_25",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_25",
+              "iterations": 3
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 201.17257739299998,
+          "error": "Pipeline9 B01 failed: No path found for source_net_57",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_57",
+              "iterations": 22
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 201.21880906500002,
+          "error": "Pipeline9 B01 failed: No path found for source_net_57",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_57",
+              "iterations": 47
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 201.286268663,
+          "error": "Pipeline9 B01 failed: No path found for source_net_57",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_57",
+              "iterations": 3
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 201.359593838,
+          "error": "Pipeline9 B01 failed: No path found for source_net_57",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_57",
+              "iterations": 3
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 201.43898222899998,
+          "error": "Pipeline9 B01 failed: No path found for source_net_57",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_57",
+              "iterations": 3
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 201.475056307,
+          "error": "Pipeline9 B01 failed: No path found for source_net_13",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_13",
+              "iterations": 3
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 201.521185858,
+          "error": "Pipeline9 B01 failed: No path found for source_net_13",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_13",
+              "iterations": 3
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 201.58570615899998,
+          "error": "Pipeline9 B01 failed: No path found for source_net_13",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_13",
+              "iterations": 3
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 201.660493132,
+          "error": "Pipeline9 B01 failed: No path found for source_net_13",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_13",
+              "iterations": 3
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 201.747385619,
+          "error": "Pipeline9 B01 failed: No path found for source_net_13",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_13",
+              "iterations": 3
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 201.782224337,
+          "error": "Pipeline9 B01 failed: No path found for source_net_57",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_57",
+              "iterations": 44
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 201.82504683099998,
+          "error": "Pipeline9 B01 failed: No path found for source_net_57",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_57",
+              "iterations": 3
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 201.88824695199997,
+          "error": "Pipeline9 B01 failed: No path found for source_net_57",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_57",
+              "iterations": 3
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 201.950286494,
+          "error": "Pipeline9 B01 failed: No path found for source_net_57",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_57",
+              "iterations": 3
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 202.024030768,
+          "error": "Pipeline9 B01 failed: No path found for source_net_57",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_57",
+              "iterations": 3
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 202.26380630100002,
+          "error": "Pipeline9 B01 failed: No path found for source_net_12",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_12",
+              "iterations": 3
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 202.32296736499998,
+          "error": "Pipeline9 B01 failed: No path found for source_net_20",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_20",
+              "iterations": 3
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 202.372081194,
+          "error": "Pipeline9 B01 failed: No path found for source_net_20",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_20",
+              "iterations": 3
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 202.432203877,
+          "error": "Pipeline9 B01 failed: No path found for source_net_20",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_20",
+              "iterations": 3
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 202.501296634,
+          "error": "Pipeline9 B01 failed: No path found for source_net_20",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_20",
+              "iterations": 4
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 202.57950404599998,
+          "error": "Pipeline9 B01 failed: No path found for source_net_20",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_20",
+              "iterations": 3
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 202.61914974200002,
+          "error": "Pipeline9 B01 failed: No path found for source_net_12",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_12",
+              "iterations": 3
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 202.669545931,
+          "error": "Pipeline9 B01 failed: No path found for source_net_12",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_12",
+              "iterations": 3
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 202.73550883000001,
+          "error": "Pipeline9 B01 failed: No path found for source_net_12",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_12",
+              "iterations": 3
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 202.81196020299998,
+          "error": "Pipeline9 B01 failed: No path found for source_net_12",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_12",
+              "iterations": 3
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 202.892029274,
+          "error": "Pipeline9 B01 failed: No path found for source_net_12",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_12",
+              "iterations": 3
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 202.917416958,
+          "error": "Pipeline9 B01 failed: No path found for source_net_57",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_57",
+              "iterations": 3
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 202.94650356,
+          "error": "Pipeline9 B01 failed: No path found for source_net_57",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_57",
+              "iterations": 3
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 202.98465097699997,
+          "error": "Pipeline9 B01 failed: No path found for source_net_57",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_57",
+              "iterations": 3
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 203.03221306799998,
+          "error": "Pipeline9 B01 failed: No path found for source_net_57",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_57",
+              "iterations": 3
+            }
+          ]
+        },
+        {
+          "key": "density-failure",
+          "seconds": 203.09871828599998,
+          "error": "Pipeline9 B01 failed: No path found for source_net_57",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_57",
+              "iterations": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "board": "imx6-local",
+      "variant": "main",
+      "exit": -15,
+      "seconds": 600.772,
+      "stop": "600-second render budget",
+      "stage": "tscircuit",
+      "ordinal": 4,
+      "phaseCount": 5,
+      "completedStages": 3,
+      "error": null,
+      "fanoutRuns": [],
+      "densityFailures": []
+    },
+    {
+      "board": "imx6-native",
+      "variant": "main",
+      "exit": 0,
+      "seconds": 322.889,
+      "stop": "settled",
+      "elements": 18724,
+      "traces": 0,
+      "vias": 0,
+      "circuitSha256": "e0f3b3790eb8ff55499a6791240f5fa3dd6b52a72021e3f5c2bd75bb0a13668c",
+      "errors": {
+        "pcb_autorouting_error": 2,
+        "pcb_port_not_connected_error": 2247,
+        "pcb_trace_missing_error": 265,
+        "pcb_placement_error": 1
+      },
+      "stage": "fanout",
+      "ordinal": 1,
+      "phaseCount": 10,
+      "completedStages": 0,
+      "error": {
+        "message": "Fanout failed for U10: only 9 of 32 connections could escape to the breakout boundary. The breakout boundary is 0.7mm from the pads at its narrowest point, which all 32 escapes have to share. Give the fanout more room by increasing the breakout's padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors) so their pads sit inside the boundary instead of against it."
+      },
+      "fanoutRuns": [
+        {
+          "requests": 32,
+          "best": 9,
+          "attempts": 256,
+          "cpuMs": 41523.668,
+          "solved": false,
+          "failed": true
+        }
+      ],
+      "partialFanout": 9,
+      "obliquePlanCount": 2,
+      "obliquePlans": [
+        "source_trace_16",
+        "source_trace_3"
+      ],
+      "partialMeasurement": "terminal",
+      "densityFailures": []
+    },
+    {
+      "board": "imx6-spaced",
+      "variant": "main",
+      "exit": -15,
+      "seconds": 600.477,
+      "stop": "600-second render budget",
+      "stage": "tscircuit",
+      "ordinal": 4,
+      "phaseCount": 5,
+      "completedStages": 3,
+      "error": null,
+      "fanoutRuns": [],
+      "densityFailures": []
+    },
+    {
+      "board": "orangecrab-local",
+      "variant": "main",
+      "exit": 0,
+      "seconds": 235.344,
+      "stop": "settled",
+      "elements": 6413,
+      "traces": 52,
+      "vias": 103,
+      "circuitSha256": "1cde55db60279ef92b1f807df46764868ffa443b360eb6f18eba8ddf5f2af503",
+      "errors": {
+        "pcb_autorouting_error": 1,
+        "pcb_port_not_connected_error": 658
+      },
+      "stage": "tscircuit",
+      "ordinal": 4,
+      "phaseCount": 5,
+      "completedStages": 3,
+      "error": {
+        "message": "Pipeline9 primary high-density routing failed: B01 failed: No path found for source_net_10; regional fallback failed: Failed to solve 1 nodes, cmn_259. err0: GrowShrinkHighDensityIntraNodeSolver failed after resizing to 8x. Last error: All solvers failed in hyper solver. Example failures: Candidate solution rejected by validator, Candidate solution rejected by validator, Ran out of candidate nodes to explore, Ran out of candidate nodes to explore, Ran out of candidate nodes to explore. (capacity-autorouter@0.0.1135)"
+      },
+      "fanoutRuns": [],
+      "densityFailures": [
+        {
+          "key": "density-failure",
+          "seconds": 220.362300206,
+          "error": "Pipeline9 primary high-density routing failed: B01 failed: No path found for source_net_10; regional fallback failed: Failed to solve 1 nodes, cmn_259. err0: GrowShrinkHighDensityIntraNodeSolver failed after resizing to 8x. Last error: All solvers failed in hyper solver. Example failures: Candidate solution rejected by validator, Candidate solution rejected by validator, Ran out of candidate nodes to explore, Ran out of candidate nodes to explore, Ran out of candidate nodes to explore.",
+          "failed": [
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_89_mst1",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_64_mst10",
+              "iterations": 547
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_10",
+              "iterations": 707
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_89_mst1",
+              "iterations": 55
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_138_mst1",
+              "iterations": 666
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_138_mst1",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_8",
+              "iterations": 3
+            },
+            {
+              "name": "HighDensitySolverB01",
+              "error": "No path found for source_net_10",
+              "iterations": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "board": "orangecrab-native",
+      "variant": "main",
+      "exit": -15,
+      "seconds": 600.369,
+      "stop": "600-second render budget",
+      "stage": "fanout",
+      "ordinal": 1,
+      "phaseCount": 8,
+      "completedStages": 0,
+      "error": null,
+      "fanoutRuns": [],
+      "partialFanout": 141,
+      "obliquePlanCount": 3,
+      "obliquePlans": [
+        "source_trace_10",
+        "source_trace_24",
+        "source_trace_38"
+      ],
+      "partialMeasurement": "checkpoint before outer budget",
+      "densityFailures": []
+    },
+    {
+      "board": "orangecrab-spaced",
+      "variant": "main",
+      "exit": -15,
+      "seconds": 600.947,
+      "stop": "600-second render budget",
+      "stage": "tscircuit",
+      "ordinal": 4,
+      "phaseCount": 5,
+      "completedStages": 3,
+      "error": null,
+      "fanoutRuns": [],
+      "densityFailures": []
+    }
+  ],
+  "counts": {
+    "main": {
+      "bus_lanes (budget)": 2,
+      "fanout": 4,
+      "tscircuit (budget)": 5,
+      "tscircuit": 6,
+      "fanout (budget)": 2
+    },
+    "fix": {
+      "fanout": 4,
+      "fanout (budget)": 2
+    }
+  },
+  "settled": {
+    "main": 10,
+    "fix": 4
+  }
+}
