@@ -1,0 +1,75 @@
+name: Verify identical full-circuit inputs and physical copper in every capture
+on:
+  push:
+    branches: [analysis/e2e-prune-layer-validation-20261120]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Wait for every candidate capture
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh run watch 44821265233 -R tscircuit/tscircuit-autorouter --exit-status
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/core
+          ref: 780b91845a73f2b1990d33170a99ab035d208532
+          path: core
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - run: cd core && bun install --ignore-scripts
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 44819438953
+          pattern: full-circuit-interception-*
+          path: core/e2e-runtime/before
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 44821265233
+          pattern: full-circuit-interception-*
+          path: core/e2e-runtime/after
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Check original pads and exact captured fanout inputs
+        run: |
+          cp experiments/e2e-samples-20261120/check-prune-layer-results.ts experiments/e2e-samples-20261120/inputs.json core/e2e-runtime/
+          cd core/e2e-runtime
+          bun check-prune-layer-results.ts "$GITHUB_WORKSPACE/results"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: prune-layer-physical-results
+          path: results
+      - name: Export machine-readable findings
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import base64,gzip
+          from pathlib import Path
+          p=Path('results/prune-layer-final-statistics.json')
+          if p.exists():
+              print('PRUNE_LAYER_RESULTS_BEGIN')
+              encoded=base64.b64encode(gzip.compress(p.read_bytes(),mtime=0)).decode()
+              for offset in range(0,len(encoded),8000):print(encoded[offset:offset+8000])
+              print('PRUNE_LAYER_RESULTS_END')
+          PY
+  source-checks:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: 19319ba473852662fc0b5078746550e2e01259a9
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - run: bun install --frozen-lockfile
+      - run: bun run typecheck
+      - run: bun test tests/repro-imx6-impossible-layer-assignments.test.ts --timeout 9999999
