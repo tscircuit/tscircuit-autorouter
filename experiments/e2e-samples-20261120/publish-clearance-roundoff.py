@@ -28,7 +28,16 @@ for capture in sorted(Path('captures').glob('*/after/*')):
         if variant == 'after': assert report['revisions']['corePatchApplied'] is False
         assert report['revisions']['router'] == {'before':'2b1207ad70971f326166b134ea19418137273f23','after':'f9c08dcd41bfd84beb0b17bdf8b75215a4701ac6'}[variant]
         row[variant] = result
-    assert row['before']['report']['revisions']['coreLockSha256'] == row['after']['report']['revisions']['coreLockSha256'], (sample, 'Changed Core dependencies')
+    before_revisions = row['before']['report']['revisions']
+    after_revisions = row['after']['report']['revisions']
+    packages = ['@tscircuit/fanout-solver', '@tscircuit/winding-breakout-point-solver', '@tscircuit/capacity-autorouter', '@tscircuit/props', '@tscircuit/bus-lanes-solver', '@tscircuit/checks', 'circuit-to-svg', 'react']
+    assert all(before_revisions[package] == after_revisions[package] for package in packages), (sample, 'Recorded dependency version changed')
+    row['comparison'] = {
+        'sameCoreLock': before_revisions['coreLockSha256'] == after_revisions['coreLockSha256'],
+        'recordedPackageVersionsMatch': True,
+        'matchedPerformanceComparison': False,
+        'policy': 'Historical baseline and independent current run. Lock hashes are retained; no latency or causal performance claim.',
+    }
     rows.append(row)
 assert len(rows) == 10, f'Expected ten boards, got {len(rows)}'
 (destination / 'summary.json').write_text(json.dumps(rows, indent=2) + '\n')
