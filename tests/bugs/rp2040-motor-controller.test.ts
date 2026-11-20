@@ -3,9 +3,31 @@ import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-p
 import { getPendingEffectsFromSolverTree } from "lib/solvers/getPendingEffectsFromSolverTree"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { getBugReportSnapshotSvg } from "lib/testing/getBugReportSnapshotSvg"
-import type { SimpleRouteJson } from "lib/types"
+import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 import capturedInput from "../../fixtures/bug-reports/rp2040-motor-controller/rp2040-motor-controller.srj.json" with {
   type: "json",
+}
+
+function getPowerCopperAtTargetWidth(
+  traces: readonly SimplifiedPcbTrace[],
+): number {
+  let length = 0
+  for (const trace of traces) {
+    const width = trace.nominalTraceWidth
+    if (width === undefined || width < 0.8) continue
+    for (const [index, start] of trace.route.entries()) {
+      const end = trace.route[index + 1]
+      if (
+        start.route_type === "wire" &&
+        end?.route_type === "wire" &&
+        start.layer === end.layer &&
+        start.width >= width
+      ) {
+        length += Math.hypot(end.x - start.x, end.y - start.y)
+      }
+    }
+  }
+  return length
 }
 
 // Captured from imrishabh18/rp2040-motor-controller v1.0.58 with saved routes removed.
@@ -47,29 +69,15 @@ test("RP2040 motor controller: default Pipeline 9 relaxed DRC", async (): Promis
       trace.connectsTo.includes("pcb_port_261"),
   )
   expect(vmHfTrace?.nominalTraceWidth).toBe(0.8)
-  const vmHfWireWidths = vmHfTrace?.route.flatMap((point, index) => {
-    const end = vmHfTrace.route[index + 1]
-    if (
-      point.route_type === "wire" &&
-      end?.route_type === "wire" &&
-      point.layer === end.layer &&
-      (point.x !== end.x || point.y !== end.y)
-    ) {
-      return [point.width]
-    }
-    return []
-  })
+  expect(getPowerCopperAtTargetWidth(routedTraces)).toBeGreaterThan(
+    getPowerCopperAtTargetWidth(solver.getNewTracesBeforePowerExpansion()),
+  )
   // Native routing can produce different route variants across platforms.
   const snapshotPath =
     process.platform === "linux"
       ? import.meta.path.replace(/\.test\.ts$/, "-linux.test.ts")
       : import.meta.path
-  await expect(
-    getBugReportSnapshotSvg({
-      inputSrj: input,
-      srjWithPointPairs: solver.srjWithPointPairs!,
-      routedTraces,
-    }),
-  ).toMatchSvgSnapshot(snapshotPath)
-  expect(vmHfWireWidths).toContain(0.8)
+  await expect(getBugReportSnapshotSvg(drcInput)).toMatchSvgSnapshot(
+    snapshotPath,
+  )
 })
