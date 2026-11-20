@@ -37,7 +37,7 @@ test("flexible fanout buses share capacity with fixed-top controls", async () =>
         name="CONTROLLER"
         pcbX={-5}
         width={6}
-        height={3.6}
+        height={4}
         fanoutRoutingLayers={["top", "bottom"]}
         busFanoutDirections={{
           DATA: "rightside_center",

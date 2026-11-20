@@ -1,0 +1,75 @@
+name: Validate native BGA source-layer turn repro
+on:
+  push:
+    branches: [analysis/e2e-source-pad-native-20261120]
+permissions:
+  contents: read
+jobs:
+  native:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: [before, after]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/core
+          ref: 351e73d665fad37577c47fcbff2e4c29eb377467
+          path: core
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: 8a2e17c51244b29689f5e2cc805aa3343ed0dfa1
+          path: fanout-candidate
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - run: cd core && bun install --ignore-scripts
+      - name: Prepare unchanged native fixture and candidate
+        env:
+          VARIANT: ${{ matrix.variant }}
+        run: |
+          python3 - <<'PYSETUP'
+          from pathlib import Path
+          import hashlib,json,os,shutil
+          source=Path('experiments/e2e-samples-20261120')
+          target=Path('core/tests/repros/repro-fanout-shared-layer-capacity.test.tsx')
+          target.write_bytes((source/'native-shared-layer.test.tsx').read_bytes())
+          for name in ['connectivity.ts','assess-native.ts']:shutil.copyfile(source/name,Path('core')/name)
+          module=Path('core/node_modules/@tscircuit/fanout-solver')
+          manifest=json.loads((source/'source-pad-candidate.json').read_text())
+          for entry in manifest['files']:
+              assert hashlib.sha256((module/entry['path']).read_bytes()).hexdigest()==entry['beforeSha256']
+              if os.environ['VARIANT']=='after':shutil.copyfile(Path('fanout-candidate')/entry['path'],module/entry['path'])
+          PYSETUP
+      - name: Route complete native link and capture natural snapshot
+        continue-on-error: true
+        run: cd core && BUN_UPDATE_SNAPSHOTS=1 bun test tests/repros/repro-fanout-shared-layer-capacity.test.tsx --timeout 180000
+      - name: Audit physical routes
+        if: always()
+        run: cd core && bun assess-native.ts
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: native-source-pad-${{ matrix.variant }}
+          path: |
+            core/native*
+            core/tests/repros/__snapshots__/repro-fanout-shared-layer-capacity*
+      - name: Export native evidence
+        if: always()
+        run: |
+          python3 - <<'PYEXPORT'
+          from pathlib import Path
+          import base64,io,zipfile
+          stream=io.BytesIO()
+          with zipfile.ZipFile(stream,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=9) as z:
+              for p in [*Path('core').glob('native*'),*Path('core/tests/repros/__snapshots__').glob('repro-fanout-shared-layer-capacity*')]:
+                  if p.is_file():z.writestr(p.name,p.read_bytes())
+          print('NATIVE_EVIDENCE_BEGIN')
+          encoded=base64.b64encode(stream.getvalue()).decode()
+          for offset in range(0,len(encoded),8000):print(encoded[offset:offset+8000])
+          print('NATIVE_EVIDENCE_END')
+          PYEXPORT
