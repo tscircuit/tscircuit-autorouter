@@ -1022,6 +1022,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             },
             isValid: (routes: HighDensityRoute[]): boolean =>
               evaluateCleanupDrc(convert(routes)).errors.length === 0,
+            validateTraceWidthRefinement:
+              cms.netToPointPairsSolver!.sharedRoutingTraceWidths.size > 0,
             refineTraceWidths: (
               routes: HighDensityRoute[],
             ): HighDensityRoute[] =>

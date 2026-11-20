@@ -25,7 +25,10 @@ export function getMstEdgeTraceWidths(
     // Kruskal's tree treats terminals at the same XY as one vertex.
     const from = DisjointSet.pointToKey(edge.from)
     const to = DisjointSet.pointToKey(edge.to)
-    for (const [point, neighbor] of [[from, to], [to, from]] as const) {
+    for (const [point, neighbor] of [
+      [from, to],
+      [to, from],
+    ] as const) {
       const neighbors = neighborsByPoint.get(point) ?? []
       neighbors.push({ point: neighbor, edge })
       neighborsByPoint.set(point, neighbors)

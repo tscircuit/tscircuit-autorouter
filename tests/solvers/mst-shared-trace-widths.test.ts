@@ -50,7 +50,7 @@ test("the shared path gets the widest target while each branch keeps its own", (
   ])
   const mergedPoints = [supply, split, driver, monitor, tap]
   expect(getMstEdgeTraceWidths(mergedPoints, edges, sources)).toEqual(expected)
-  expect(getMstEdgeTraceWidths(mergedPoints, edges, [...sources].reverse())).toEqual(
-    expected,
-  )
+  expect(
+    getMstEdgeTraceWidths(mergedPoints, edges, [...sources].reverse()),
+  ).toEqual(expected)
 })
