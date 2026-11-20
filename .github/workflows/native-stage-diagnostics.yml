@@ -1,4 +1,4 @@
-name: Verify native-copper acceptance in existing force cleanup
+name: Verify physical terminal vias remain fixed during native cleanup
 on:
   push:
     branches: [analysis/native-copper-stage-diagnostics]
@@ -12,7 +12,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        variant: [pads, peers, all]
+        variant: [terminal, guarded-terminal]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -22,6 +22,7 @@ jobs:
         with:
           bun-version: '1.4.3'
       - name: Reuse native copper collision checks when accepting an optimization
+        if: ${{ matrix.variant == 'guarded-terminal' }}
         run: |
           cat > lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensityForceImproveSolver.ts <<'TS'
           import { createFixedObstacleViolationEvaluator } from "@tscircuit/repair04"
@@ -280,37 +281,19 @@ jobs:
           }
           TS
       - run: bun install
-      - name: Verify pad guarding and neighboring-route context independently
-        env:
-          VARIANT: ${{ matrix.variant }}
+      - name: Distinguish physical pad ports from movable topology anchors
         run: |
           python3 - <<'PY'
-          import os,re
           from pathlib import Path
-          mode=os.environ["VARIANT"]
-          if mode in ("pads","all"):
-            p=Path("lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensityForceImproveSolver.ts")
-            s=p.read_text()
-            start=s.index("    this.fixedViaObstacleIndexes = new Set(")
-            end=s.index("    this.evaluateFixedObstacles",start)
-            s=s[:start]+"    this.fixedViaObstacleIndexes = new Set(this.inputSrj.obstacles.map((_, index) => index))\n"+s[end:]
-            s,n=re.subn(r'violation.kind === "via" &&\s*',"",s)
-            assert n==2
-            p.write_text(s)
-          if mode in ("peers","all"):
-            p=Path("node_modules/high-density-repair01/lib/HighDensityForceImproveSolver.ts")
-            s=p.read_text()
-            old="    return this.fixedHdRoutes.filter((route) => {"
-            assert s.count(old)==1
-            replacement="""    const entry = this.sampleEntries.find((entry) => entry.node === node)
-            if (!entry) throw new Error("Force improvement lost its current sample")
-            const ownedIndexes = new Set(entry.routeIndexes)
-            const contextRoutes = [
-              ...this.fixedHdRoutes,
-              ...this.originalHdRoutes.filter((_, index) => !ownedIndexes.has(index)),
-            ]
-            return contextRoutes.filter((route) => {"""
-            p.write_text(s.replace(old,replacement,1))
+          p=Path("node_modules/high-density-repair01/lib/HighDensityForceImproveSolver.ts")
+          s=p.read_text()
+          old="          isEndpoint &&\n          isPort &&"
+          assert s.count(old)==1
+          s=s.replace(old,"          isEndpoint &&\n          isPort &&\n          point.pcb_port_id === undefined &&",1)
+          old="      const isTopologyPort =\n        (index"
+          assert s.count(old)==1
+          s=s.replace(old,"      const isTopologyPort =\n        point.pcb_port_id === undefined &&\n        (index",1)
+          p.write_text(s)
           PY
       - name: Keep original connectivity, clearance and via-count assertions
         env:
