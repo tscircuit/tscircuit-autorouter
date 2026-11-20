@@ -1,0 +1,36 @@
+name: Validate existing fanout tests with source-layer candidates
+on:
+  push:
+    branches: [analysis/e2e-source-pad-checks-20261120]
+permissions:
+  contents: read
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: 8a2e17c51244b29689f5e2cc805aa3343ed0dfa1
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - run: bun install --ignore-scripts
+      - run: bunx biome format lib/route-bus/route-analytic-boundary-alternatives.ts
+      - run: bun run typecheck
+      - name: Run existing tests
+        run: bun test --timeout 9999999 > /tmp/fanout-tests.log 2>&1
+      - name: Show test summary and failures
+        if: always()
+        run: |
+          tail -n 12 /tmp/fanout-tests.log
+          rg -n -C 4 '\(fail\)|error:|Snapshot does not match' /tmp/fanout-tests.log | head -240
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: source-pad-existing-fanout-tests
+          path: |
+            /tmp/fanout-tests.log
+            tests/**/__snapshots__/*diff*
+            tests/**/__snapshots__/*diff*
