@@ -1,0 +1,35 @@
+{
+  "beforePrHead": "775d78c5fac6c84f97e8674f48b2642f75b1d1dc",
+  "afterPrHead": "eaa81e3f09ef09348c03d526e096e609de869312",
+  "beforePassingSuiteRun": 44649636597,
+  "afterMacAuditRun": 44655020702,
+  "afterMacAuditJob": 136018994405,
+  "beforeAttempts": 17,
+  "beforeAndAfterVias": 12,
+  "after": [
+    {
+      "maxLayerCombinations": 17,
+      "solved": true,
+      "attempts": 1,
+      "connections": 15,
+      "vias": 12,
+      "issues": 0,
+      "srjSha256": "2543c7ffa6e878c340067c7cc39b1fe25e7114cf57ae01be3ef3bcc301a38f04"
+    },
+    {
+      "maxLayerCombinations": 256,
+      "solved": true,
+      "attempts": 1,
+      "connections": 15,
+      "vias": 12,
+      "issues": 0,
+      "srjSha256": "2543c7ffa6e878c340067c7cc39b1fe25e7114cf57ae01be3ef3bcc301a38f04"
+    }
+  ],
+  "localAndMacEmittedSrjIdentical": true,
+  "snapshotsGeneratedWithRepositoryLockedDependencies": true,
+  "snapshots": {
+    "fanout-repair-before-grouped-beam.snap.svg": "d8fe8eccf15cdca25b07a88c781d27711185e9f69bda7c7430208d0e7bc91c76",
+    "srj19-sample002-six-layer-fanout.snap.svg": "5d8deca74950803dd0fcae6c0cae83da873a7142feeef28db842ea31b5f99028"
+  }
+}

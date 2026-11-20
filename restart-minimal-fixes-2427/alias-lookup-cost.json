@@ -9,5 +9,5 @@
   "productionLinesAddedByGuard": 8,
   "newProductionModules": 0,
   "semantics": "Skip nonterminal pours first. Until same-net target-plane existence is known, inspect remote target-plane pours. Once known, distant pours cannot alter contact or clearance. Use the existing ownership helper for alias-only matches.",
-  "verification": "Native geometry unchanged; all276 accepted isolated-boundary copper hashes identical before/after guards."
+  "verification": "Native geometry unchanged; all 276 accepted isolated boundary copper hashes are identical before and after the guards."
 }

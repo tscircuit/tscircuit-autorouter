@@ -12,12 +12,13 @@
     "benchmarkFanout": "0f04f023a159bdb9835024f8265dcc5d00031758",
     "finalHeads": {
       "304": "a0e49159c220e0ce93a0a51ad7247571b122f29d",
-      "321": "883e1f4c9de615fc46384d7c6b864d50611df5c1",
-      "318": "0afb7d56c4c55aa88bd4f9c9021f0474611aada8",
       "305": "775d78c5fac6c84f97e8674f48b2642f75b1d1dc",
-      "322": "0f04f023a159bdb9835024f8265dcc5d00031758"
+      "318": "0afb7d56c4c55aa88bd4f9c9021f0474611aada8",
+      "321": "883e1f4c9de615fc46384d7c6b864d50611df5c1",
+      "322": "eaa81e3f09ef09348c03d526e096e609de869312"
     },
-    "benchmarkAndFinalLibTree": "fd27766100ddf1ef9f7d0af2fdeeb5378b976074"
+    "benchmarkAndFinalLibTree": "fd27766100ddf1ef9f7d0af2fdeeb5378b976074",
+    "finalPrLibTree": "fd27766100ddf1ef9f7d0af2fdeeb5378b976074"
   },
   "productionDiff": {
     "oldAdded": 997,
@@ -1403,7 +1404,7 @@
     "oldStackDrills": 181,
     "physicalChecksPassed": true,
     "scope": "Single-request replays; all original obstacles retained. Resolve each request width on both sides; clear bus guidance to isolate boundary behavior. Not jointly routed boards.",
-    "sourceEquivalence": "Final paired verification44649632458 compares the final source0f04f02 against the preceding lean source4df7709. All276 accepted request sets, copper hashes and177 drills are identical across all six boards; original full obstacles retained."
+    "sourceEquivalence": "Final verification run 44649632458 compares source 0f04f02 with 4df7709. Across all six boards, all 276 accepted request sets, copper hashes and 177 drills are identical."
   },
   "rejectedNeighbors": {
     "append19Lines": {
@@ -1465,17 +1466,58 @@
     "productionLinesAddedByGuard": 8,
     "newProductionModules": 0,
     "semantics": "Skip nonterminal pours first. Until same-net target-plane existence is known, inspect remote target-plane pours. Once known, distant pours cannot alter contact or clearance. Use the existing ownership helper for alias-only matches.",
-    "verification": "Native geometry unchanged; all276 accepted isolated-boundary copper hashes identical before/after guards."
+    "verification": "Native geometry unchanged; all 276 accepted isolated boundary copper hashes are identical before and after the guards."
   },
   "validation": {
-    "formatAndAllTypeModes": "all five final heads pass in44649632430",
-    "fullMacTests": "running; raw final check results will be added",
+    "formatAndAllTypeModes": "All five final PR heads pass formatting and all three typecheck modes.",
+    "fullMacTests": "All 40 macOS test shards and all five aggregate test checks pass.",
     "macRuns": {
       "304": 44645702010,
-      "321": 44645702588,
-      "318": 44649638530,
       "305": 44649636597,
-      "322": 44649637681
+      "318": 44649638530,
+      "321": 44645702588,
+      "322": 44655356145
+    },
+    "sample002Audit": 44655020702,
+    "latestTestOnlyHeadSourceChecks": [
+      44655355796,
+      44655355840
+    ],
+    "finalChecks": "final-checks.json.gz"
+  },
+  "sample002": {
+    "beforePrHead": "775d78c5fac6c84f97e8674f48b2642f75b1d1dc",
+    "afterPrHead": "eaa81e3f09ef09348c03d526e096e609de869312",
+    "beforePassingSuiteRun": 44649636597,
+    "afterMacAuditRun": 44655020702,
+    "afterMacAuditJob": 136018994405,
+    "beforeAttempts": 17,
+    "beforeAndAfterVias": 12,
+    "after": [
+      {
+        "maxLayerCombinations": 17,
+        "solved": true,
+        "attempts": 1,
+        "connections": 15,
+        "vias": 12,
+        "issues": 0,
+        "srjSha256": "2543c7ffa6e878c340067c7cc39b1fe25e7114cf57ae01be3ef3bcc301a38f04"
+      },
+      {
+        "maxLayerCombinations": 256,
+        "solved": true,
+        "attempts": 1,
+        "connections": 15,
+        "vias": 12,
+        "issues": 0,
+        "srjSha256": "2543c7ffa6e878c340067c7cc39b1fe25e7114cf57ae01be3ef3bcc301a38f04"
+      }
+    ],
+    "localAndMacEmittedSrjIdentical": true,
+    "snapshotsGeneratedWithRepositoryLockedDependencies": true,
+    "snapshots": {
+      "fanout-repair-before-grouped-beam.snap.svg": "d8fe8eccf15cdca25b07a88c781d27711185e9f69bda7c7430208d0e7bc91c76",
+      "srj19-sample002-six-layer-fanout.snap.svg": "5d8deca74950803dd0fcae6c0cae83da873a7142feeef28db842ea31b5f99028"
     }
   }
 }
