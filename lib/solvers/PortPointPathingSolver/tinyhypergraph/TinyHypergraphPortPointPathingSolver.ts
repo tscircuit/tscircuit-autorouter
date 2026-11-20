@@ -38,7 +38,10 @@ import type {
   HgPortPointPathingSolverParams,
 } from "../hgportpointpathingsolver/types"
 import { createTinyRouteNetIndexer } from "./createTinyRouteNetIndexer"
-import { createBusRouteSegmentFilter } from "./createBusRouteSegmentFilter"
+import {
+  createBusRouteSegmentFilter,
+  type BusRoutingConstraints,
+} from "./createBusRouteSegmentFilter"
 import { getRegionNetIdByRegionId } from "./getRegionNetIdByRegionId"
 import { SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments } from "tiny-hypergraph/lib/prepared/SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments"
 import {
@@ -75,6 +78,9 @@ type SerializedTinySolvedRoute = NonNullable<
   SerializedHyperGraph["solvedRoutes"]
 >[number]
 type TinyRouteConnection = ConnectionHgWithSimpleRouteConnection
+type TinyPortPointPathingParams = HgPortPointPathingSolverParams & {
+  busConstraints?: BusRoutingConstraints
+}
 type TinyHypergraphInput = Omit<
   HgPortPointPathingSolverParams,
   "connections"
@@ -932,20 +938,18 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
 
   constructor(
     inputProblem: TinyHyperGraphSectionPipelineInput,
-    useSelectiveReripRouting: boolean,
-    usePreparedPortPointRouting = false,
-    private readonly busLayers?: ReadonlyMap<string, ReadonlySet<number>>,
-    private readonly busViaClearance = 0,
+    private readonly routing: TinyPortPointPathingParams,
   ) {
     super(inputProblem)
-    this.useSelectiveReripRouting = useSelectiveReripRouting
+    this.useSelectiveReripRouting =
+      routing.flags.USE_SELECTIVE_RERIP_ROUTING === true
     this.crampedPortTraversalPenalty = DEFAULT_CRAMPED_PORT_TRAVERSAL_PENALTY
     const preloadedStats = getSerializedPreloadedTraceStats(
       inputProblem.serializedHyperGraph,
     )
     this.preloadedPortCount = preloadedStats.preloadedPortCount
     this.preloadedFixedSegmentCount = preloadedStats.preloadedAssignmentCount
-    if (useSelectiveReripRouting) {
+    if (this.useSelectiveReripRouting) {
       const solveGraphStep = this.pipelineDef.find(
         (pipelineStep) => pipelineStep.solverName === "solveGraph",
       )
@@ -954,7 +958,7 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
           "Tiny hypergraph pipeline is missing the solveGraph stage",
         )
       }
-      solveGraphStep.solverClass = usePreparedPortPointRouting
+      solveGraphStep.solverClass = routing.flags.USE_PREPARED_PORT_POINT_ROUTING
         ? PreparedPortPointRoutingSolver
         : SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments
     }
@@ -963,12 +967,10 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
 
   override loadHyperGraph(serializedHyperGraph: SerializedHyperGraph) {
     const loaded = super.loadHyperGraph(serializedHyperGraph)
-    if (this.busLayers?.size) {
+    if (this.routing.busConstraints?.layers.size) {
       loaded.problem.routeSegmentFilter = createBusRouteSegmentFilter(
-        loaded.topology,
-        loaded.problem,
-        this.busLayers,
-        this.busViaClearance,
+        loaded,
+        this.routing.busConstraints,
       )
     }
     restorePreloadedTraceSectionMetadata(
@@ -1109,11 +1111,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   private statsSnapshotDirty = false
   private asyncRunning = false
 
-  constructor(
-    private params: HgPortPointPathingSolverParams,
-    private readonly busLayers?: ReadonlyMap<string, ReadonlySet<number>>,
-    private readonly busViaClearance?: number,
-  ) {
+  constructor(private params: TinyPortPointPathingParams) {
     super()
     const tinyRouteConnections = getTinyRouteConnectionsOrThrow(
       params.connections,
@@ -1203,10 +1201,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     this.tinyPipelineSolver =
       new TinyHyperGraphSectionPipelineWithTerminalNetIds(
         tinyPipelineInput,
-        params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
-        params.flags.USE_PREPARED_PORT_POINT_ROUTING === true,
-        this.busLayers,
-        this.busViaClearance,
+        params,
       )
     this.primaryTinyPipelineSolver = this.tinyPipelineSolver
     if (
@@ -1556,10 +1551,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         this.alternativeTinyPipelineSolver =
           new TinyHyperGraphSectionPipelineWithTerminalNetIds(
             this.alternativeTinyPipelineInput!,
-            this.params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
-            this.params.flags.USE_PREPARED_PORT_POINT_ROUTING === true,
-            this.busLayers,
-            this.busViaClearance,
+            this.params,
           )
         this.tinyPipelineSolver = this.alternativeTinyPipelineSolver
         this.candidatePortfolioPhase = "alternative"
