@@ -1,0 +1,53 @@
+name: Check the minimal source-turn fix
+on:
+  push:
+    branches: [analysis/e2e-source-turn-checks-20261120]
+permissions:
+  contents: read
+jobs:
+  source:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: 4aa9021086c09fe1c2d28340d7d2f2def74c89ad
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - run: bun install --frozen-lockfile
+      - run: bun run format:check
+      - run: bun run typecheck
+      - run: bun test --timeout 9999999 tests/icepi-oval-pad-gap.test.ts tests/same-layer-source-prefix-retained.test.ts
+  snapshots:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: 4aa9021086c09fe1c2d28340d7d2f2def74c89ad
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - run: bun install --frozen-lockfile
+      - name: Check native routing assertions and record the two changed images
+        env:
+          BUN_UPDATE_SNAPSHOTS: "1"
+        run: |
+          bun test --timeout 9999999 tests/icepi-oval-pad-gap.test.ts
+          bun test --timeout 9999999 tests/icepi-u22-native-fanout.test.ts
+          bun test --timeout 9999999 tests/same-layer-source-prefix-retained.test.ts
+      - name: Export the two native SVGs
+        run: |
+          python3 - <<'PYEXPORT'
+          from pathlib import Path
+          import base64,io,zipfile
+          stream=io.BytesIO()
+          with zipfile.ZipFile(stream,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=9) as z:
+              for name in ['icepi-oval-pad-gap','icepi-u22-native-fanout']:
+                  p=Path('tests/__snapshots__')/(name+'.snap.svg');z.writestr(str(p),p.read_bytes())
+          print('E2E_SNAPSHOTS_BEGIN')
+          encoded=base64.b64encode(stream.getvalue()).decode()
+          for offset in range(0,len(encoded),8000):print(encoded[offset:offset+8000])
+          print('E2E_SNAPSHOTS_END')
+          PYEXPORT
