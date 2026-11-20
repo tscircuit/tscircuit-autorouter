@@ -1,0 +1,66 @@
+name: Compare physical routing behind existing snapshot changes
+on:
+  push:
+    branches: [analysis/e2e-roundoff-board-snapshot-check-20261120]
+permissions:
+  contents: read
+jobs:
+  routing:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: [before, after]
+        sample: ["tests/repro/pipeline9-a13-fixed-copper-checks.test.ts", "tests/repro/pipeline9-h616-preloaded-board-clearance.test.ts", "tests/repro/pipeline9-imx6-ddr-fixed-copper.test.ts"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.variant == 'before' && '8c14cfab55b5ff65de31e3c1dfe5c4978e6107bf' || '26efd668b275c1a1a51e1acfdf8cc07d38eeda75' }}
+          path: router
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - name: Install exact native dependencies
+        run: |
+          cd router
+          for attempt in 1 2 3; do
+            if bun install; then break; fi
+            if [ "$attempt" = 3 ]; then exit 1; fi
+          done
+      - name: Capture actual emitted routing without changing solver input
+        env:
+          SAMPLE: ${{ matrix.sample }}
+        run: python3 experiments/e2e-samples-20261120/instrument-roundoff-snapshot.py
+      - name: Route and generate snapshots after physical assessment
+        env:
+          SAMPLE: ${{ matrix.sample }}
+        run: cd router && BUN_UPDATE_SNAPSHOTS=1 bun test --timeout 9999999 "$SAMPLE"
+      - name: Export actual physical assessment and changed snapshots
+        if: always()
+        env:
+          VARIANT: ${{ matrix.variant }}
+          SAMPLE: ${{ matrix.sample }}
+        run: |
+          python3 - <<'PYEXPORT'
+          from pathlib import Path
+          import base64,io,json,os,subprocess,zipfile
+          root=Path('router')
+          paths=subprocess.run(['git','diff','--name-only','--','*.svg'],cwd=root,text=True,check=True,capture_output=True).stdout.splitlines()
+          assessment=root/'snapshot-audit/assessment.json'
+          manifest={'variant':os.environ['VARIANT'],'sample':os.environ['SAMPLE'],'snapshots':paths,'assessment':json.loads(assessment.read_text()) if assessment.exists() else None}
+          stream=io.BytesIO()
+          with zipfile.ZipFile(stream,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=9) as z:
+              z.writestr('manifest.json',json.dumps(manifest,indent=2))
+              for p in paths:z.writestr(p,(root/p).read_bytes())
+          print('ROUNDOFF_BOARD_BEGIN')
+          encoded=base64.b64encode(stream.getvalue()).decode()
+          for offset in range(0,len(encoded),8000):print(encoded[offset:offset+8000])
+          print('ROUNDOFF_BOARD_END')
+          PYEXPORT
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: roundoff-board-${{ matrix.variant }}-${{ strategy.job-index }}
+          path: router/snapshot-audit
