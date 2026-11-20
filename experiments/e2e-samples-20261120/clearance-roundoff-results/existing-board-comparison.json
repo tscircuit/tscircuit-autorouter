@@ -1,0 +1,147 @@
+[
+  {
+    "before": {
+      "variant": "before",
+      "sample": "tests/repro/pipeline9-a13-fixed-copper-checks.test.ts",
+      "snapshots": [
+        "tests/repro/__snapshots__/pipeline9-a13-fixed-copper-checks.snap.svg"
+      ],
+      "assessment": {
+        "solved": true,
+        "failed": false,
+        "requestedConnections": 64,
+        "traces": 64,
+        "vias": 81,
+        "drcFindings": 7,
+        "drcTypes": {
+          "pcb_trace_error": 2,
+          "pcb_pad_trace_clearance_error": 5
+        }
+      },
+      "snapshotSha256": {
+        "tests/repro/__snapshots__/pipeline9-a13-fixed-copper-checks.snap.svg": "98113c0d37826ede0e9eb32e80e4c827d2743e91465855f5435ee80ee4354919"
+      }
+    },
+    "after": {
+      "variant": "after",
+      "sample": "tests/repro/pipeline9-a13-fixed-copper-checks.test.ts",
+      "snapshots": [
+        "tests/repro/__snapshots__/pipeline9-a13-fixed-copper-checks.snap.svg"
+      ],
+      "assessment": {
+        "solved": true,
+        "failed": false,
+        "requestedConnections": 64,
+        "traces": 64,
+        "vias": 81,
+        "drcFindings": 7,
+        "drcTypes": {
+          "pcb_trace_error": 2,
+          "pcb_pad_trace_clearance_error": 5
+        }
+      },
+      "snapshotSha256": {
+        "tests/repro/__snapshots__/pipeline9-a13-fixed-copper-checks.snap.svg": "98113c0d37826ede0e9eb32e80e4c827d2743e91465855f5435ee80ee4354919"
+      }
+    },
+    "identicalSnapshots": true
+  },
+  {
+    "before": {
+      "variant": "before",
+      "sample": "tests/repro/pipeline9-h616-preloaded-board-clearance.test.ts",
+      "snapshots": [
+        "tests/repro/__snapshots__/pipeline9-h616-preloaded-board-clearance-ddr.snap.svg",
+        "tests/repro/__snapshots__/pipeline9-h616-preloaded-board-clearance.snap.svg"
+      ],
+      "assessment": {
+        "solved": true,
+        "failed": false,
+        "requestedConnections": 56,
+        "traces": 1444,
+        "vias": 151,
+        "drcFindings": 351,
+        "drcTypes": {
+          "pcb_trace_error": 224,
+          "pcb_via_trace_clearance_error": 39,
+          "pcb_pad_trace_clearance_error": 44,
+          "pcb_pad_pad_clearance_error": 39,
+          "pcb_via_clearance_error": 5
+        }
+      },
+      "snapshotSha256": {
+        "tests/repro/__snapshots__/pipeline9-h616-preloaded-board-clearance-ddr.snap.svg": "6eeab33f48113d6045bd53fa5553a23c48ff5996b85c8b50ecd7a92602ec4866",
+        "tests/repro/__snapshots__/pipeline9-h616-preloaded-board-clearance.snap.svg": "985c1c5d3c77ba3b7a9a97e4686ed64744bdea352919d80649aaef0664fce3d9"
+      }
+    },
+    "after": {
+      "variant": "after",
+      "sample": "tests/repro/pipeline9-h616-preloaded-board-clearance.test.ts",
+      "snapshots": [
+        "tests/repro/__snapshots__/pipeline9-h616-preloaded-board-clearance-ddr.snap.svg",
+        "tests/repro/__snapshots__/pipeline9-h616-preloaded-board-clearance.snap.svg"
+      ],
+      "assessment": {
+        "solved": true,
+        "failed": false,
+        "requestedConnections": 56,
+        "traces": 1444,
+        "vias": 151,
+        "drcFindings": 351,
+        "drcTypes": {
+          "pcb_trace_error": 224,
+          "pcb_via_trace_clearance_error": 39,
+          "pcb_pad_trace_clearance_error": 44,
+          "pcb_pad_pad_clearance_error": 39,
+          "pcb_via_clearance_error": 5
+        }
+      },
+      "snapshotSha256": {
+        "tests/repro/__snapshots__/pipeline9-h616-preloaded-board-clearance-ddr.snap.svg": "6eeab33f48113d6045bd53fa5553a23c48ff5996b85c8b50ecd7a92602ec4866",
+        "tests/repro/__snapshots__/pipeline9-h616-preloaded-board-clearance.snap.svg": "985c1c5d3c77ba3b7a9a97e4686ed64744bdea352919d80649aaef0664fce3d9"
+      }
+    },
+    "identicalSnapshots": true
+  },
+  {
+    "before": {
+      "variant": "before",
+      "sample": "tests/repro/pipeline9-imx6-ddr-fixed-copper.test.ts",
+      "snapshots": [
+        "tests/repro/__snapshots__/pipeline9-imx6-ddr-fixed-copper.snap.svg"
+      ],
+      "assessment": {
+        "solved": true,
+        "failed": false,
+        "requestedConnections": 37,
+        "traces": 66,
+        "vias": 115,
+        "drcFindings": 0,
+        "drcTypes": {}
+      },
+      "snapshotSha256": {
+        "tests/repro/__snapshots__/pipeline9-imx6-ddr-fixed-copper.snap.svg": "03fa3b61ca6edc56524458c57cb1f462859987ff1f1f2da7ed78ae6c1214f73e"
+      }
+    },
+    "after": {
+      "variant": "after",
+      "sample": "tests/repro/pipeline9-imx6-ddr-fixed-copper.test.ts",
+      "snapshots": [
+        "tests/repro/__snapshots__/pipeline9-imx6-ddr-fixed-copper.snap.svg"
+      ],
+      "assessment": {
+        "solved": true,
+        "failed": false,
+        "requestedConnections": 37,
+        "traces": 66,
+        "vias": 115,
+        "drcFindings": 0,
+        "drcTypes": {}
+      },
+      "snapshotSha256": {
+        "tests/repro/__snapshots__/pipeline9-imx6-ddr-fixed-copper.snap.svg": "03fa3b61ca6edc56524458c57cb1f462859987ff1f1f2da7ed78ae6c1214f73e"
+      }
+    },
+    "identicalSnapshots": true
+  }
+]
