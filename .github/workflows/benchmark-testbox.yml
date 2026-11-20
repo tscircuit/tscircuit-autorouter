@@ -1,4 +1,4 @@
-name: Uploaded boards on tscircuit 3252 rerip fix
+name: Uploaded boards on latest tscircuit 3257
 on:
   workflow_dispatch:
 permissions:
@@ -14,17 +14,15 @@ jobs:
           bun-version: 1.4.3
       - name: Unpack the original board sources
         run: |
-          mkdir -p experiments/boards-3252/runtime
-          unzip -q experiments/boards-3252/boards.zip -d experiments/boards-3252/runtime
+          mkdir -p experiments/boards-3257/runtime
+          unzip -q experiments/boards-3257/boards.zip -d experiments/boards-3257/runtime
       - name: Install the pinned latest release
-        working-directory: experiments/boards-3252/runtime
+        working-directory: experiments/boards-3257/runtime
         run: bun install --frozen-lockfile
-      - name: Install the built rerip fix
-        run: unzip -oq experiments/boards-3252/rerip-fix.zip -d experiments/boards-3252/runtime/node_modules/@tscircuit/capacity-autorouter/dist
-      - name: Render all boards with the rerip fix
-        run: python3 experiments/boards-3252/run.py
+      - name: Render all 19 original TSX entries on the released native-copper stack
+        run: python3 experiments/boards-3257/run.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: boards-tscircuit-3252-rerip-fix
+          name: boards-tscircuit-3257
           path: board-benchmark-results
