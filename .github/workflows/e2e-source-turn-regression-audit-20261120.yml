@@ -1,0 +1,67 @@
+name: Audit changed native routing snapshots on the repository platform
+on:
+  push:
+    branches: [analysis/e2e-source-turn-regression-audit-20261120]
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: macos-15
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [before, after]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: analysis
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: ${{ matrix.mode == 'before' && '165f6db2a597b5ba02af57e10545c480bc17bfed' || 'd84297fba9800657add8f53ff661343f55afd5f5' }}
+          path: fanout
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.5
+      - run: cd fanout && bun install --frozen-lockfile
+      - name: Route each control in its own process and validate copper
+        working-directory: fanout
+        run: |
+          cp ../analysis/experiments/e2e-samples-20261120/log-source-turn-regressions.ts source-turn-observer.ts
+          failure=0
+          for test in tests/large-guided-track-fallback.test.ts tests/fanout-repair-before-grouped-beam.test.ts tests/srj19-sample001.test.ts tests/srj19-sample064.test.ts tests/repro-icepi-same-layer-turn.test.ts; do
+            if ! E2E_TEST="$test" BUN_UPDATE_SNAPSHOTS=1 bun test --preload ./source-turn-observer.ts "$test"; then failure=1; fi
+          done
+          exit "$failure"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: native-source-turn-controls-${{ matrix.mode }}
+          path: |
+            fanout/source-turn-*.json.gz
+            fanout/source-turn-regressions.ndjson
+            fanout/tests/__snapshots__/large-guided-track-fallback.snap.svg
+            fanout/tests/__snapshots__/fanout-repair-before-grouped-beam.snap.svg
+            fanout/tests/__snapshots__/srj19-sample001-six-layer-fanout.snap.svg
+            fanout/tests/__snapshots__/srj19-sample064-six-layer-fanout.snap.svg
+            fanout/tests/__snapshots__/repro-icepi-same-layer-turn.snap.svg
+      - name: Export selected native snapshots and physical metrics
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import base64,io,zipfile
+          from pathlib import Path
+          stream=io.BytesIO()
+          names=['large-guided-track-fallback','fanout-repair-before-grouped-beam','srj19-sample001-six-layer-fanout','srj19-sample064-six-layer-fanout','repro-icepi-same-layer-turn']
+          with zipfile.ZipFile(stream,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=9) as z:
+              p=Path('fanout/source-turn-regressions.ndjson')
+              if p.exists():z.writestr(p.name,p.read_bytes())
+              for name in names:
+                  p=Path('fanout/tests/__snapshots__')/(name+'.snap.svg')
+                  if p.exists():z.writestr(p.name,p.read_bytes())
+          print('SOURCE_TURN_CONTROLS_BEGIN')
+          encoded=base64.b64encode(stream.getvalue()).decode()
+          for offset in range(0,len(encoded),8000):print(encoded[offset:offset+8000])
+          print('SOURCE_TURN_CONTROLS_END')
+          PY
