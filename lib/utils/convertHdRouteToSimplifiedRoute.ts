@@ -10,6 +10,7 @@ import {
   isSingleLayerConnectionPoint,
 } from "lib/types"
 import { HighDensityIntraNodeRoute, Jumper } from "lib/types/high-density-types"
+import { isPointInCopperObstacle } from "./isPointInCopperObstacle"
 import { mapZToLayerName } from "./mapZToLayerName"
 
 type Point = {
@@ -52,7 +53,10 @@ const areSameXyPoint = (
 const pointInsideObstacle = (
   point: Pick<Point, "x" | "y">,
   obstacle: Obstacle,
-) => pointToBoxDistance(point, obstacle) <= SAME_NET_OBSTACLE_TOLERANCE
+) =>
+  obstacle.__usePhysicalCopperGeometry
+    ? isPointInCopperObstacle(obstacle, point)
+    : pointToBoxDistance(point, obstacle) <= SAME_NET_OBSTACLE_TOLERANCE
 
 const isMultilayerObstacle = (obstacle: Obstacle) =>
   (obstacle.__zLayers?.length ?? obstacle.layers?.length ?? 0) > 1
@@ -62,23 +66,36 @@ const isThroughObstacleSegment = (
   start: Point,
   end: Point,
   opts: ConvertHdRouteToSimplifiedRouteOptions,
+  layerCount: number,
 ) => {
   if (start.toNextSegmentType === "through_obstacle") return true
 
-  if (opts.connectedMultilayerObstacles) {
-    return opts.connectedMultilayerObstacles.some(
-      (obstacle) =>
-        pointInsideObstacle(start, obstacle) &&
-        pointInsideObstacle(end, obstacle),
+  const containsTransition = (obstacle: Obstacle): boolean => {
+    if (obstacle.__usePhysicalCopperGeometry) {
+      const fromLayer = mapZToLayerName(start.z, layerCount)
+      const toLayer = mapZToLayerName(end.z, layerCount)
+      if (
+        obstacle.isNonPlatedHole ||
+        !obstacle.layers.includes(fromLayer) ||
+        !obstacle.layers.includes(toLayer)
+      ) {
+        return false
+      }
+    }
+    return (
+      pointInsideObstacle(start, obstacle) && pointInsideObstacle(end, obstacle)
     )
+  }
+
+  if (opts.connectedMultilayerObstacles) {
+    return opts.connectedMultilayerObstacles.some(containsTransition)
   }
 
   return (
     opts.obstacles?.some(
       (obstacle) =>
         isMultilayerObstacle(obstacle) &&
-        pointInsideObstacle(start, obstacle) &&
-        pointInsideObstacle(end, obstacle) &&
+        containsTransition(obstacle) &&
         isObstacleConnectedToRoute(obstacle, hdRoute, opts.connMap),
     ) ?? false
   )
@@ -337,7 +354,7 @@ export const convertHdRouteToSimplifiedRoute = (
       const nextLayerName = mapZToLayerName(point.z, layerCount)
       if (
         previousPoint &&
-        isThroughObstacleSegment(hdRoute, previousPoint, point, opts)
+        isThroughObstacleSegment(hdRoute, previousPoint, point, opts, layerCount)
       ) {
         result.push({
           route_type: "through_obstacle",

@@ -75,6 +75,8 @@ import { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolve
 import { LengthMatchingPostProcessingSolver } from "../../solvers/length-matching-post-processing-solver"
 import { applyFixedRouteReplacementsToPreloadedTraces } from "./applyFixedRouteReplacementsToPreloadedTraces"
 import { applyPipeline9PowerTraceWidthTargets } from "./applyPipeline9PowerTraceWidthTargets"
+import { getPipeline9CopperObstacles } from "./getPipeline9CopperObstacles"
+import { repairPipeline9ThroughObstacleTransitions } from "./repairPipeline9ThroughObstacleTransitions"
 import { assignUniquePcbTraceIdsToNewTraces } from "./assignUniquePcbTraceIdsToNewTraces"
 import { getTerminalLayerIndicesByPcbPortId } from "./getTerminalLayerIndicesByPcbPortId"
 import { getPipeline9NetByConnectionName } from "./getPipeline9NetByConnectionName"
@@ -100,7 +102,10 @@ import { PreloadedTraceGraphSolver } from "./PreloadedTraceGraphSolver"
 import { PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver } from "./PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver"
 import { MergedComponentTopologyView } from "../AutoroutingPipeline7_MultiGraph/MergedComponentTopologyView"
 import { PowerTraceExpansionSolver } from "../AutoroutingPipeline7_MultiGraph/PowerTraceExpansionSolver"
-import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "../AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
+import {
+  convertPipeline7HdRoutesToSimplifiedPcbTraces,
+  createPipeline7HdRoutesToSimplifiedPcbTracesConverter,
+} from "../AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
 import { getPowerTraceExpansionConnectionNames } from "../AutoroutingPipeline7_MultiGraph/getPowerTraceExpansionConnectionNames"
 import { lockHdRouteTerminals } from "../AutoroutingPipeline7_MultiGraph/lock-hd-route-terminals"
 import {
@@ -1022,6 +1027,56 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             },
             isValid: (routes: HighDensityRoute[]): boolean =>
               evaluateCleanupDrc(convert(routes)).errors.length === 0,
+            repairLayerTransitions: (
+              routes: HighDensityRoute[],
+            ): HighDensityRoute[] => {
+              const convertPhysicalRoutes =
+                createPipeline7HdRoutesToSimplifiedPcbTracesConverter({
+                  connections: cms.netToPointPairsSolver!.newConnections,
+                  originalConnections: inputSrj.connections,
+                  layerCount: inputSrj.layerCount,
+                  obstacles: getPipeline9CopperObstacles(inputSrj.obstacles),
+                  defaultViaHoleDiameter: cms.viaHoleDiameter,
+                  connMap: cms.connMap,
+                })
+              const getPhysicalDrcErrors = (
+                candidate: HighDensityRoute[],
+                includeTraceContinuity = true,
+              ) =>
+                evaluateCleanupDrc(
+                  assignUniquePcbTraceIdsToNewTraces(
+                    convertPhysicalRoutes(
+                      canonicalizePipeline9HdRoutes(candidate),
+                    ),
+                    cms.originalSrj.traces ?? [],
+                  ),
+                  { includeTraceContinuity },
+                ).errors
+              let baseline: Set<string> | undefined
+              return repairPipeline9ThroughObstacleTransitions({
+                hdRoutes: routes,
+                physicalObstacles: inputSrj.obstacles,
+                connMap: cms.connMap,
+                layerCount: inputSrj.layerCount,
+                isValid: (candidate) => {
+                  const baselineErrors = (baseline ??= new Set(
+                    getPhysicalDrcErrors(routes).map((error) =>
+                      JSON.stringify(error),
+                    ),
+                  ))
+                  // Most trial placements fail clearance. Only build the
+                  // physical connectivity graph for clear candidates.
+                  return (
+                    getPhysicalDrcErrors(candidate, false).every((error) =>
+                      baselineErrors.has(JSON.stringify(error)),
+                    ) &&
+                    getPhysicalDrcErrors(candidate).every((error) =>
+                      baselineErrors.has(JSON.stringify(error)),
+                    )
+                  )
+                },
+              })
+            },
             refineTraceWidths: (
               routes: HighDensityRoute[],
             ): HighDensityRoute[] =>
@@ -1089,13 +1144,18 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           configuredOptions.onlyConnectionNames ??
           getPowerTraceExpansionConnectionNames(cms.originalSrj)
         return [
-          preparePipeline7PowerTraceExpansionInput({
-            originalSrj: cms.originalSrj,
-            newlyRoutedTraces: cms.getNewTracesBeforePowerExpansion(),
-            currentPreloadedTraces: cms.getUpdatedPreloadedTraces(),
-            expandedConnectionNames: onlyConnectionNames,
-            resolveConnectedTraceAliases: true,
-          }),
+          {
+            ...preparePipeline7PowerTraceExpansionInput({
+              originalSrj: cms.originalSrj,
+              newlyRoutedTraces: cms.getNewTracesBeforePowerExpansion(),
+              currentPreloadedTraces: cms.getUpdatedPreloadedTraces(),
+              expandedConnectionNames: onlyConnectionNames,
+              resolveConnectedTraceAliases: true,
+            }),
+            boardOutline: cms.originalSrj.outline?.length
+              ? cms.originalSrj.outline
+              : undefined,
+          },
           {
             allowNewVias: false,
             ...configuredOptions,
@@ -1690,7 +1750,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       originalConnections: this.originalSrj.connections,
       hdRoutes,
       layerCount: this.srj.layerCount,
-      obstacles: this.srj.obstacles,
+      obstacles: getPipeline9CopperObstacles(this.originalSrj.obstacles),
       defaultViaHoleDiameter: this.viaHoleDiameter,
       connMap: this.connMap,
     })

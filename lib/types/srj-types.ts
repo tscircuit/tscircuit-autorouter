@@ -156,6 +156,8 @@ export interface Obstacle {
   zLayers?: number[]
   /** Canonicalized z-layer indexes used by autorouter internals. */
   __zLayers?: number[]
+  /** Layer-transition conversion can use this obstacle's actual copper shape. */
+  __usePhysicalCopperGeometry?: true
   center: { x: number; y: number }
   width: number
   height: number

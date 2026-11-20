@@ -25,13 +25,40 @@ test("RP2040 motor controller: default Pipeline 9 relaxed DRC", async (): Promis
   expect(solver.failed, solver.error ?? "").toBe(false)
   expect(solver.solved).toBe(true)
   const routedTraces = solver.getOutputSimplifiedPcbTraces()
+  const drcInput = {
+    inputSrj: input,
+    srjWithPointPairs: solver.srjWithPointPairs!,
+    routedTraces,
+  }
+  expect(evaluateRelaxedDrc(drcInput).errors).toEqual([])
   expect(
     evaluateRelaxedDrc({
-      inputSrj: input,
-      srjWithPointPairs: solver.srjWithPointPairs!,
-      routedTraces,
+      ...drcInput,
+      includeBoardClearance: true,
+      drcOptions: {
+        traceClearance: input.minTraceToPadEdgeClearance,
+        viaClearance: input.minViaHoleEdgeToViaHoleEdgeClearance,
+      },
     }).errors,
   ).toEqual([])
+  const vmHfTrace = routedTraces.find(
+    (trace) =>
+      trace.connectsTo?.includes("pcb_port_253") &&
+      trace.connectsTo.includes("pcb_port_261"),
+  )
+  expect(vmHfTrace?.nominalTraceWidth).toBe(0.8)
+  expect(
+    vmHfTrace?.route.some((point, index) => {
+      const end = vmHfTrace.route[index + 1]
+      return (
+        point.route_type === "wire" &&
+        end?.route_type === "wire" &&
+        point.layer === end.layer &&
+        (point.x !== end.x || point.y !== end.y) &&
+        point.width === 0.8
+      )
+    }),
+  ).toBe(true)
   // Native routing can produce different route variants across platforms.
   const snapshotPath =
     process.platform === "linux"
