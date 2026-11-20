@@ -226,10 +226,18 @@ export const arePipeline9RoutesOnSameNet = (
     (id): id is string => typeof id === "string",
   )
   return leftIds.some((leftId) =>
-    rightIds.some(
-      (rightId) =>
-        leftId === rightId || connMap.areIdsConnected(leftId, rightId),
-    ),
+    rightIds.some((rightId) => {
+      if (leftId === rightId) return true
+      const leftNetId =
+        connMap.getNetConnectedToId(leftId) ??
+        (connMap.netMap[leftId] ? leftId : undefined)
+      if (leftNetId === undefined) return false
+      return (
+        leftNetId ===
+        (connMap.getNetConnectedToId(rightId) ??
+          (connMap.netMap[rightId] ? rightId : undefined))
+      )
+    }),
   )
 }
 
