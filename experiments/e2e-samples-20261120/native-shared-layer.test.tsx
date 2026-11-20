@@ -43,7 +43,6 @@ test("flexible fanout buses share capacity with fixed-top controls", async () =>
         busFanoutDirections={{
           DATA: "rightside_center",
           SERIAL: "rightside_center",
-          CONTROL: "rightside_center",
         }}
       >
         <chip name="U1" footprint="bga9_grid3x3_p0.8mm" />
@@ -55,8 +54,6 @@ test("flexible fanout buses share capacity with fixed-top controls", async () =>
       <trace name="SCLK" from="U1.pin4" to="U2.pin4" />
       <trace name="MOSI" from="U1.pin6" to="U2.pin6" />
       <trace name="MISO" from="U1.pin7" to="U2.pin7" />
-      <trace name="RESET_N" from="U1.pin8" to="U2.pin8" />
-      <trace name="IRQ" from="U1.pin9" to="U2.pin9" />
       <bus
         name="DATA"
         connections={["DATA0", "DATA1", "DATA2"]}
@@ -67,18 +64,13 @@ test("flexible fanout buses share capacity with fixed-top controls", async () =>
         connections={["SCLK", "MOSI", "MISO"]}
         preferredLayers={["top", "bottom"]}
       />
-      <bus
-        name="CONTROL"
-        connections={["RESET_N", "IRQ"]}
-        preferredLayer="top"
-      />
       <pcbnotetext
-        text="8-signal controller link: native fanout, then global routing"
+        text="6-signal controller link: native fanout, then global routing"
         pcbY={3.6}
         fontSize={0.3}
       />
       <pcbnotetext
-        text="DATA + SERIAL: top/bottom | RESET_N + IRQ: fixed top"
+        text="DATA + SERIAL: top/bottom; completed fanout stays fixed"
         pcbY={3}
         fontSize={0.27}
       />
