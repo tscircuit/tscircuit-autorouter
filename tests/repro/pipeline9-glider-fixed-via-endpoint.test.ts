@@ -1,3 +1,4 @@
+import type { PreloadedHighDensityRoute } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/convertPreloadedTraceToHdRoutes"
 import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import { Pipeline9HighDensityForceImproveSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensityForceImproveSolver"
@@ -45,7 +46,7 @@ test("Glider DDR ADDR6 escape via", (): void => {
   pipeline.highDensityNodePortPoints = [node]
   pipeline.highDensityRouteSolver = {
     routes: [route],
-    getUpdatedFixedHdRoutes: (): [] => [],
+    getUpdatedFixedHdRoutes: (): PreloadedHighDensityRoute[] => [],
   } as Pipeline9HighDensitySolver
   const step = pipeline.pipelineDef.find(
     (entry) => entry.solverName === "highDensityForceImproveSolver",
