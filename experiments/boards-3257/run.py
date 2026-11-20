@@ -11,9 +11,12 @@ for name in ['tscircuit','@tscircuit/core','@tscircuit/fanout-solver','@tscircui
  entry=package.get('module',package.get('main','index.js'))
  versions[name]={'version':package['version'],'entrySha256':hashlib.sha256((root/'node_modules'/name/entry).read_bytes()).hexdigest()}
 (out/'runtime-versions.json').write_text(json.dumps(versions,indent=2)+'\n')
+variant=os.environ.get('BOARD_VARIANT','main')
+if variant!='main':
+ (out/'fix-provenance.json').write_bytes(Path('experiments/boards-3257/a01-terminal-via-build.json').read_bytes())
 boards=sorted(p.stem for p in (root/'boards').glob('*.tsx'))
 def run(board):
- d=out/'main'/board
+ d=out/variant/board
  d.mkdir(parents=True,exist_ok=True)
  circuit=root/'output'/(board+'.circuit.json')
  if circuit.exists():circuit.unlink()
@@ -29,7 +32,7 @@ def run(board):
    p.wait()
    rc=p.returncode
    stop='600-second render budget'
- result={'board':board,'variant':'main','exit':rc,'seconds':round(time.monotonic()-start,3),'stop':stop}
+ result={'board':board,'variant':variant,'exit':rc,'seconds':round(time.monotonic()-start,3),'stop':stop}
  if circuit.exists():
   raw=circuit.read_bytes()
   els=json.loads(raw)

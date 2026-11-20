@@ -1,0 +1,10 @@
+{
+  "tscircuit": "0.0.3257",
+  "core": "0.0.2436",
+  "capacityAutorouterBase": "b7267ad4738c27a53d2faecb39bf7a7443896f0c",
+  "highDensityA01Fix": "2ce83295707aa01e30069d85aa6c84f9c6fb1eff",
+  "productionChange": "Preserve layer changes when trimming shared terminal cells (two guards)",
+  "indexSha256": "40d61054f022045c7dda60a6383fa0afb208a503cb16baa14d2a4d2e1c54d7b1",
+  "archiveSha256": "dfd0ed4a23eba7b0d1e52727cbb5b24e40221b4ffad41f87febda8d58841e618",
+  "autorouterFixCommit": "5af95ffe00a075d380d3d029f5a38065bfc0a151"
+}
