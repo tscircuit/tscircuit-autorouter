@@ -1,0 +1,56 @@
+{
+  "before": "883e1f4c9de615fc46384d7c6b864d50611df5c1",
+  "after": "0afb7d56c4c55aa88bd4f9c9021f0474611aada8",
+  "snapshots": [
+    {
+      "snapshot": "tests/__snapshots__/icepi-plane-drop.snap.svg",
+      "geometryUnchanged": true,
+      "changedFields": [
+        "stroke-width"
+      ]
+    },
+    {
+      "snapshot": "tests/__snapshots__/icepi-u22-native-fanout.snap.svg",
+      "geometryUnchanged": true,
+      "changedFields": [
+        "stroke-width"
+      ]
+    },
+    {
+      "snapshot": "tests/__snapshots__/native-alias-clearance.snap.svg",
+      "geometryUnchanged": true,
+      "changedFields": [
+        "stroke-width",
+        "alias-read diagnostic132\u2192930"
+      ]
+    },
+    {
+      "snapshot": "tests/__snapshots__/native-final-plane-validation.snap.svg",
+      "geometryUnchanged": true,
+      "changedFields": [
+        "stroke-width"
+      ]
+    },
+    {
+      "snapshot": "tests/__snapshots__/native-plane-layout.snap.svg",
+      "geometryUnchanged": true,
+      "changedFields": [
+        "stroke-width"
+      ]
+    },
+    {
+      "snapshot": "tests/__snapshots__/native-plane-static-rejections.snap.svg",
+      "geometryUnchanged": true,
+      "changedFields": [
+        "stroke-width"
+      ]
+    },
+    {
+      "snapshot": "tests/__snapshots__/native-segment-obstacle-broadphase.snap.svg",
+      "geometryUnchanged": true,
+      "changedFields": [
+        "stroke-width"
+      ]
+    }
+  ]
+}

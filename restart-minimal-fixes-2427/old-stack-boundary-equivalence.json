@@ -1,0 +1,50 @@
+[
+  {
+    "board": "butterstick",
+    "acceptedRequests": 36,
+    "sameAcceptedRequestSet": true,
+    "sameInputHashesAndObstacleCounts": true,
+    "oldDrills": 26,
+    "leanDrills": 25
+  },
+  {
+    "board": "glider",
+    "acceptedRequests": 51,
+    "sameAcceptedRequestSet": true,
+    "sameInputHashesAndObstacleCounts": true,
+    "oldDrills": 34,
+    "leanDrills": 34
+  },
+  {
+    "board": "h616",
+    "acceptedRequests": 92,
+    "sameAcceptedRequestSet": true,
+    "sameInputHashesAndObstacleCounts": true,
+    "oldDrills": 55,
+    "leanDrills": 53
+  },
+  {
+    "board": "icepi",
+    "acceptedRequests": 3,
+    "sameAcceptedRequestSet": true,
+    "sameInputHashesAndObstacleCounts": true,
+    "oldDrills": 0,
+    "leanDrills": 0
+  },
+  {
+    "board": "imx6",
+    "acceptedRequests": 3,
+    "sameAcceptedRequestSet": true,
+    "sameInputHashesAndObstacleCounts": true,
+    "oldDrills": 0,
+    "leanDrills": 0
+  },
+  {
+    "board": "orangecrab",
+    "acceptedRequests": 91,
+    "sameAcceptedRequestSet": true,
+    "sameInputHashesAndObstacleCounts": true,
+    "oldDrills": 66,
+    "leanDrills": 65
+  }
+]

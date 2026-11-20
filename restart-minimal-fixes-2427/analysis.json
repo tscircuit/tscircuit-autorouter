@@ -9,40 +9,42 @@
     "tscircuitVersion": "0.0.3245",
     "busLanesVersion": "0.0.62",
     "bunVersion": "1.4.3",
-    "benchmarkFanout": "c295fa9517961724de3284e8e896abb7d6f5fec7",
+    "benchmarkFanout": "0f04f023a159bdb9835024f8265dcc5d00031758",
     "finalHeads": {
       "304": "a0e49159c220e0ce93a0a51ad7247571b122f29d",
       "321": "883e1f4c9de615fc46384d7c6b864d50611df5c1",
-      "318": "b5c615b6c107b38631826afaa1eb4ad384f5848f",
-      "305": "4e2c6d210d2ff15246d372f2f5e4f84e55fddf3e",
-      "322": "4df7709ede6833f7fb4fc8ec98d6707eadf6f8b3"
+      "318": "0afb7d56c4c55aa88bd4f9c9021f0474611aada8",
+      "305": "775d78c5fac6c84f97e8674f48b2642f75b1d1dc",
+      "322": "0f04f023a159bdb9835024f8265dcc5d00031758"
     },
-    "benchmarkAndFinalLibTree": "67c36b6e501bd6c32cb2b2a02ca99152b063670d"
+    "benchmarkAndFinalLibTree": "fd27766100ddf1ef9f7d0af2fdeeb5378b976074"
   },
   "productionDiff": {
     "oldAdded": 997,
     "oldRemoved": 102,
-    "newAdded": 104,
+    "newAdded": 112,
     "newRemoved": 21,
     "existingFiles": 6,
     "newModules": 0,
-    "addedLineReductionPercent": 89.56870611835507
+    "addedLineReductionPercent": 88.76629889669006
   },
   "pipeline": "Fresh TSX render: fanout then bus lanes then remaining nets; original routes/vias removed, plane intent retained. All six stop in fanout; none reaches bus lanes.",
   "runs": {
-    "fullPairedBoards": 44640940791,
+    "fullPairedBoards": 44649632465,
     "finalFrozenAndOptionalNeighbors": 44640940918,
     "boundaryInference300": 44634478771,
     "freeHeading300": 44637145873,
     "originalCapture": 44519377875,
     "frozenCapture": 44415945774,
     "sourceChecksFirst": 44645728134,
-    "sourceChecksFinal": 44645937461
+    "sourceChecksFinal": 44649632430,
+    "finalFrozen": 44649632981,
+    "finalBoundaryEquivalence": 44649632458
   },
   "fullBoards": [
     {
-      "runId": 44640940791,
-      "jobId": 135971523692,
+      "runId": 44649632465,
+      "jobId": 136000974177,
       "rows": [
         {
           "variant": "main",
@@ -234,8 +236,8 @@
       ]
     },
     {
-      "runId": 44640940791,
-      "jobId": 135971523376,
+      "runId": 44649632465,
+      "jobId": 136000974126,
       "rows": [
         {
           "variant": "main",
@@ -793,8 +795,8 @@
       ]
     },
     {
-      "runId": 44640940791,
-      "jobId": 135971523446,
+      "runId": 44649632465,
+      "jobId": 136000973999,
       "rows": [
         {
           "variant": "main",
@@ -1133,8 +1135,8 @@
       ]
     },
     {
-      "runId": 44640940791,
-      "jobId": 135971523519,
+      "runId": 44649632465,
+      "jobId": 136000973691,
       "rows": [
         {
           "variant": "main",
@@ -1175,8 +1177,8 @@
       ]
     },
     {
-      "runId": 44640940791,
-      "jobId": 135971523547,
+      "runId": 44649632465,
+      "jobId": 136000973938,
       "rows": [
         {
           "variant": "main",
@@ -1272,8 +1274,8 @@
       ]
     },
     {
-      "runId": 44640940791,
-      "jobId": 135971523507,
+      "runId": 44649632465,
+      "jobId": 136000973960,
       "rows": [
         {
           "variant": "main",
@@ -1373,22 +1375,22 @@
       {
         "cohort": "matched/original",
         "completed": 30,
-        "p50SolvedMs": 42573,
-        "p95SolvedMs": 92831,
-        "meanSolvedMs": 48005.26666666667,
+        "p50SolvedMs": 43451,
+        "p95SolvedMs": 92657,
+        "meanSolvedMs": 48625.96666666667,
         "meanSolvedVias": 148.5
       },
       {
         "cohort": "matched/cleanup",
         "completed": 30,
-        "p50SolvedMs": 42778,
-        "p95SolvedMs": 94889,
-        "meanSolvedMs": 48507.666666666664,
+        "p50SolvedMs": 42271,
+        "p95SolvedMs": 91723,
+        "meanSolvedMs": 48424.166666666664,
         "meanSolvedVias": 148.5
       }
     ],
     "percentileMethod": "Nearest rank among completed samples",
-    "interpretation": "No speed improvement claimed: P50/P95/mean are slightly slower. Keep for correctness and physically valid partials, per user minimality priority."
+    "interpretation": "Completion, geometry and mean vias unchanged. Completed-case P50/P95/mean are modestly lower in this paired run."
   },
   "boundary300": {
     "before": 235,
@@ -1401,7 +1403,7 @@
     "oldStackDrills": 181,
     "physicalChecksPassed": true,
     "scope": "Single-request replays; all original obstacles retained. Resolve each request width on both sides; clear bus guidance to isolate boundary behavior. Not jointly routed boards.",
-    "sourceEquivalence": "The heading cohort uses 2f781b5, whose boundary routing source files match c295fa. Their sole lib difference is a plane candidate generator, unused by these boundary-only requests."
+    "sourceEquivalence": "Final paired verification44649632458 compares the final source0f04f02 against the preceding lean source4df7709. All276 accepted request sets, copper hashes and177 drills are identical across all six boards; original full obstacles retained."
   },
   "rejectedNeighbors": {
     "append19Lines": {
@@ -1431,5 +1433,49 @@
     "reports": "raw-reports.json.gz",
     "inputArchive": "https://raw.githubusercontent.com/tscircuit/tscircuit-autorouter/a3416878451bbe69df04ab4d27a67ac2fa0446f4/rerun2427/circuits-and-results.zip",
     "sourceArchiveDirectory": "https://github.com/tscircuit/tscircuit-autorouter/tree/a3416878451bbe69df04ab4d27a67ac2fa0446f4/rerun2427/sources"
+  },
+  "previousEvidencePin": "78e83b753b22c62d5191f236a0ade04143aba7e4",
+  "previousSourcePins": {
+    "main": "652407c1ad9d246ca16ecf64044cf83eec2e1db3",
+    "core": "75ab017cd6852dbe50516ee1f4ca9d1108c29985",
+    "coreVersion": "0.0.2427",
+    "autorouter": "a4a8f3a71dd66c2cae01d6a7ade426efad833ff6",
+    "tscircuitVersion": "0.0.3245",
+    "busLanesVersion": "0.0.62",
+    "bunVersion": "1.4.3",
+    "benchmarkFanout": "c295fa9517961724de3284e8e896abb7d6f5fec7",
+    "finalHeads": {
+      "304": "a0e49159c220e0ce93a0a51ad7247571b122f29d",
+      "321": "883e1f4c9de615fc46384d7c6b864d50611df5c1",
+      "318": "b5c615b6c107b38631826afaa1eb4ad384f5848f",
+      "305": "4e2c6d210d2ff15246d372f2f5e4f84e55fddf3e",
+      "322": "4df7709ede6833f7fb4fc8ec98d6707eadf6f8b3"
+    },
+    "benchmarkAndFinalLibTree": "67c36b6e501bd6c32cb2b2a02ca99152b063670d"
+  },
+  "fullBoardOutputsUnchangedByAliasGuards": true,
+  "aliasLookupCost": {
+    "fixture": "native iCE/Pi U22 fixed escape; same route and DRC assertions",
+    "baselineSegmentChecksOnly": 132,
+    "initialNewPlaneChecks": 740814,
+    "rejectedGlobalDirectNameFastPath": 894430,
+    "finalExistingPourBlockGuards": 930,
+    "finalAdditionalPlaneChecks": 798,
+    "prototypeReadsAvoidedPercent": 99.87446241566708,
+    "productionLinesAddedByGuard": 8,
+    "newProductionModules": 0,
+    "semantics": "Skip nonterminal pours first. Until same-net target-plane existence is known, inspect remote target-plane pours. Once known, distant pours cannot alter contact or clearance. Use the existing ownership helper for alias-only matches.",
+    "verification": "Native geometry unchanged; all276 accepted isolated-boundary copper hashes identical before/after guards."
+  },
+  "validation": {
+    "formatAndAllTypeModes": "all five final heads pass in44649632430",
+    "fullMacTests": "running; raw final check results will be added",
+    "macRuns": {
+      "304": 44645702010,
+      "321": 44645702588,
+      "318": 44649638530,
+      "305": 44649636597,
+      "322": 44649637681
+    }
   }
 }

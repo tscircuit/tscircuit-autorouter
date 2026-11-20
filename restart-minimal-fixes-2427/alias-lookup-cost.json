@@ -1,0 +1,13 @@
+{
+  "fixture": "native iCE/Pi U22 fixed escape; same route and DRC assertions",
+  "baselineSegmentChecksOnly": 132,
+  "initialNewPlaneChecks": 740814,
+  "rejectedGlobalDirectNameFastPath": 894430,
+  "finalExistingPourBlockGuards": 930,
+  "finalAdditionalPlaneChecks": 798,
+  "prototypeReadsAvoidedPercent": 99.87446241566708,
+  "productionLinesAddedByGuard": 8,
+  "newProductionModules": 0,
+  "semantics": "Skip nonterminal pours first. Until same-net target-plane existence is known, inspect remote target-plane pours. Once known, distant pours cannot alter contact or clearance. Use the existing ownership helper for alias-only matches.",
+  "verification": "Native geometry unchanged; all276 accepted isolated-boundary copper hashes identical before/after guards."
+}
