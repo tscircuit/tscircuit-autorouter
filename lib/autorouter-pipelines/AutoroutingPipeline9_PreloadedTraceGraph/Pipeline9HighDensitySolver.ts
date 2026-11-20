@@ -831,19 +831,12 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     let regionalCopperRoutes: HighDensityRoute[] =
       this.activeFallbackFixedObstacleRoutes
     if (hasImmutablePreload) {
-      // Native-copper repairs can leave the mesh cell. Keep completed neighbors
-      // in their physical frame along with the immutable preloaded paths.
-      const regionalBounds = getNodeBounds(regionalNode, this.obstacleMargin)
-      const routedCopperRoutes = this.routes.filter((route) =>
-        routeOverlapsNode(
-          route,
-          regionalNode,
-          regionalBounds,
-          Math.max(this.traceWidth, this.viaDiameter) / 2,
-          this,
+      regionalCopperRoutes = [
+        ...fixedHdRoutes.filter(
+          (route) => !movableFixedRouteConnectionNames.has(route.connectionName),
         ),
-      )
-      regionalCopperRoutes = [...regionalCopperRoutes, ...routedCopperRoutes]
+        ...this.routes,
+      ]
     }
     this.activeFallbackSolver = new Pipeline9RegionalFallbackSolver({
       captureSearchDebug: this.params.captureSearchDebug,
@@ -862,7 +855,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       fixedHdRoutes: regionalCopperRoutes,
       preservePhysicalGeometry:
         hasImmutablePreload && regionalCopperRoutes.length > 0,
-      immutableHdRoutes: this.activeFallbackFixedObstacleRoutes.filter(
+      immutableHdRoutes: regionalCopperRoutes.filter(
         (route) => route.isFixed === true || route.isThroughObstacle === true,
       ),
       movablePreloadedConnectionNames: movableFixedRouteConnectionNames,

@@ -1,3 +1,4 @@
+import { getNodeWithCopperBounds } from "lib/utils/getNodeWithCopperBounds"
 import { getDifferentialPairsForPostProcessing } from "lib/utils/getDifferentialPairsForPostProcessing"
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import { Pipeline9EffortCleanupSolver } from "./Pipeline9EffortCleanupSolver"
@@ -692,6 +693,27 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           },
         ]
       },
+      (cms) => {
+        const highDensitySolver = cms.highDensityRouteSolver!
+        if (!highDensitySolver.getUpdatedFixedHdRoutes().some((route) => route.isFixed)) {
+          return
+        }
+        type RoutingRegionId = string
+        const routesByRegion = new Map<RoutingRegionId, HighDensityRoute[]>()
+        for (const route of highDensitySolver.routes) {
+          if (!route.regionId) continue
+          const routes = routesByRegion.get(route.regionId) ?? []
+          routes.push(route)
+          routesByRegion.set(route.regionId, routes)
+        }
+        cms.highDensityNodePortPoints = cms.highDensityNodePortPoints!.map((node) =>
+          getNodeWithCopperBounds({
+            node,
+            routes: routesByRegion.get(node.capacityMeshNodeId) ?? [],
+            margin: cms.srj.defaultObstacleMargin ?? 0.2,
+          }),
+        )
+      },
     ),
     definePipelineStep(
       "highDensityForceImproveSolver",
@@ -722,6 +744,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       (cms) => [
         {
           nodeWithPortPoints: cms.highDensityNodePortPoints ?? [],
+          fixedHdRoutes: cms.highDensityRouteSolver!
+            .getUpdatedFixedHdRoutes()
+            .filter((route) => route.isFixed === true),
           hdRoutes:
             cms.highDensityForceImproveSolver?.getOutput() ??
             cms.highDensityRouteSolver!.routes,

@@ -1,3 +1,4 @@
+import { getNodeWithCopperBounds } from "lib/utils/getNodeWithCopperBounds"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
 import { RegionalForceImproveSolver } from "high-density-repair01"
@@ -247,10 +248,19 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
     let fixedHdRoutes = this.params.fixedHdRoutes
     if (!this.params.preservePhysicalGeometry) fixedHdRoutes = undefined
 
+    let cleanupNode = this.params.nodeWithPortPoints
+    if (this.params.preservePhysicalGeometry) {
+      cleanupNode = getNodeWithCopperBounds({
+        node: cleanupNode,
+        routes: routedCandidate,
+        margin: this.params.obstacleMargin,
+      })
+    }
+
     // Cleanup is part of a candidate: a legal raw route can move into a pad.
     // Reject that candidate before the portfolio commits to its winner.
     const forceImproveSolver = new RegionalForceImproveSolver({
-      nodeWithPortPoints: [this.params.nodeWithPortPoints],
+      nodeWithPortPoints: [cleanupNode],
       hdRoutes: routedCandidate,
       fixedHdRoutes,
       preserveTopologyPortAnchors: this.params.preservePhysicalGeometry,
@@ -273,7 +283,7 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
       return false
     }
     const repairSolver = new Pipeline4HighDensityRepairSolver({
-      nodeWithPortPoints: [this.params.nodeWithPortPoints],
+      nodeWithPortPoints: [cleanupNode],
       hdRoutes: forceImprovedRoutes,
       fixedHdRoutes,
       layerCount: this.params.layerCount,
