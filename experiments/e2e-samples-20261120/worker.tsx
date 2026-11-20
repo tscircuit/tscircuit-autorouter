@@ -1,7 +1,6 @@
 import { mkdirSync, writeFileSync } from "node:fs"
 import { join, resolve } from "node:path"
-import { RootCircuit } from "../lib/RootCircuit"
-import { SOLVERS } from "../lib/solvers"
+import { RootCircuit, SOLVERS } from "../lib/index"
 import { convertCircuitJsonToPcbSvg } from "circuit-to-svg"
 import { getSvgFromGraphicsObject, type GraphicsObject } from "graphics-debug"
 
