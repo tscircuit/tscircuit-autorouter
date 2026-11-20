@@ -1,0 +1,16 @@
+{
+  "base": "351e73d665fad37577c47fcbff2e4c29eb377467",
+  "candidate": "abbbebc103a22bad1c0bbc2bd685b6acadc66b35",
+  "files": [
+    {
+      "path": "lib/utils/autorouting/FanoutAutorouter.ts",
+      "beforeSha256": "46146cb1c995a93097f0843c6d22be89b891d075cb5f0ed5342cdb2f8eab3e54",
+      "afterSha256": "fb9a591f46edccf0ee6bdaadbf300452e3369af649ab0fc5011856a5024a52ac"
+    },
+    {
+      "path": "lib/utils/autorouting/SimpleRouteJson.ts",
+      "beforeSha256": "39fdc4102341e34435f6abdcf0bf5a6164f2e2cc4bf00a8f9f6c5d947da1a56c",
+      "afterSha256": "ddb6898fb8fe6ccd1789f0d35b9ec9e803b93f77f4bc32d644944dac701eb68e"
+    }
+  ]
+}
