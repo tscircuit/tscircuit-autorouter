@@ -1,0 +1,20 @@
+board,beforeStop,afterStop,beforeStage,afterStage,beforeTraces,afterTraces,beforeVias,afterVias,beforeSeconds,afterSeconds,identicalEmittedPcbElements
+butterstick-local,600-second render budget,600-second render budget,bus_lanes,bus_lanes,,,,,600.663,600.715,
+butterstick-native,settled,settled,fanout,fanout,0,0,0,0,381.785,371.899,True
+butterstick-spaced,600-second render budget,600-second render budget,bus_lanes,bus_lanes,,,,,600.77,600.82,
+glider-local,600-second render budget,600-second render budget,highDensityRouteSolver,highDensityRouteSolver,,,,,600.57,600.624,
+glider-native,settled,settled,fanout,fanout,0,0,0,0,571.531,569.169,True
+glider-spaced,settled,settled,portPointPathingSolver,portPointPathingSolver,53,53,111,111,171.092,166.863,True
+h616-default-order-local,settled,settled,highDensityRouteSolver,highDensityRouteSolver,142,142,167,167,359.58,352.23,True
+h616-local,settled,settled,highDensityRouteSolver,highDensityRouteSolver,142,142,159,159,557.093,561.448,True
+h616-native,600-second render budget,600-second render budget,fanout,fanout,,,,,600.628,600.681,
+h616-spaced,600-second render budget,600-second render budget,highDensityRouteSolver,highDensityRouteSolver,,,,,600.456,600.466,
+icepi-local,settled,settled,portPointPathingSolver,highDensityRouteSolver,52,52,116,116,322.606,466.675,True
+icepi-native,settled,settled,fanout,fanout,0,0,0,0,189.901,174.882,True
+icepi-spaced,settled,settled,portPointPathingSolver,portPointPathingSolver,52,52,112,112,295.336,288.508,True
+imx6-local,600-second render budget,600-second render budget,edgeSolver,topologyMergingSolver,,,,,600.404,600.703,
+imx6-native,settled,settled,fanout,fanout,0,0,0,0,323.504,313.97,True
+imx6-spaced,600-second render budget,600-second render budget,portPointPathingSolver,portPointPathingSolver,,,,,600.581,600.65,
+orangecrab-local,settled,settled,highDensityRouteSolver,highDensityRouteSolver,52,52,103,103,236.51,233.418,True
+orangecrab-native,600-second render budget,600-second render budget,fanout,fanout,,,,,600.36,600.388,
+orangecrab-spaced,600-second render budget,600-second render budget,highDensityRouteSolver,highDensityRouteSolver,,,,,600.9,600.754,

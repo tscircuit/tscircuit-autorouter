@@ -151,5 +151,16 @@
       "orangecrab-native"
     ],
     "runnerCommit": "f6902363cb98316db0751e913378ce2de258b17d"
+  },
+  "endToEndCopper": {
+    "interpretation": "The change fixes graph-stage state loss. It does not improve emitted E2E copper on these 19 boards. All 10 terminal cases emit identical PCB elements. Nine time-limited cases are incomplete comparisons.",
+    "terminalComparisons": 10,
+    "identicalTerminalPcbGeometry": 10,
+    "identicalTerminalCircuitJson": 9,
+    "budgetLimitedComparisons": 9,
+    "fullyRoutedBefore": 0,
+    "fullyRoutedAfter": 0,
+    "icepiFinalPcbSvgSha256": "43c52485802eecbdf12bfa805fab5fc5b3eebc30c1bf46ae22076b793d73748c",
+    "icepiFinalPcbSvgIdentical": true
   }
 }

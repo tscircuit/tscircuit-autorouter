@@ -1,0 +1,396 @@
+{
+  "interpretation": "The change fixes graph-stage state loss. It does not improve emitted E2E copper on these 19 boards. All 10 terminal cases emit identical PCB elements. Nine time-limited cases are incomplete comparisons.",
+  "terminalComparisons": 10,
+  "identicalTerminalPcbGeometry": 10,
+  "identicalTerminalCircuitJson": 9,
+  "budgetLimitedComparisons": 9,
+  "fullyRoutedBefore": 0,
+  "fullyRoutedAfter": 0,
+  "icepiFinalPcbSvgSha256": "43c52485802eecbdf12bfa805fab5fc5b3eebc30c1bf46ae22076b793d73748c",
+  "icepiFinalPcbSvgIdentical": true,
+  "circuits": [
+    {
+      "board": "butterstick-local",
+      "beforeSeconds": 600.663,
+      "afterSeconds": 600.715,
+      "beforeStage": "bus_lanes",
+      "afterStage": "bus_lanes",
+      "beforeStop": "600-second render budget",
+      "afterStop": "600-second render budget",
+      "beforeTraces": null,
+      "afterTraces": null,
+      "beforeVias": null,
+      "afterVias": null,
+      "regressionConclusion": "Inconclusive: both reached the 600-second outer render limit without final Circuit JSON"
+    },
+    {
+      "board": "butterstick-native",
+      "beforeSeconds": 381.785,
+      "afterSeconds": 371.899,
+      "beforeStage": "fanout",
+      "afterStage": "fanout",
+      "beforeStop": "settled",
+      "afterStop": "settled",
+      "beforeTraces": 0,
+      "afterTraces": 0,
+      "beforeVias": 0,
+      "afterVias": 0,
+      "identicalCircuitJson": true,
+      "identicalEmittedPcbElements": true,
+      "changedElements": [],
+      "beforeErrors": {
+        "pcb_autorouting_error": 1,
+        "pcb_port_not_connected_error": 2063,
+        "pcb_trace_missing_error": 328
+      },
+      "afterErrors": {
+        "pcb_autorouting_error": 1,
+        "pcb_port_not_connected_error": 2063,
+        "pcb_trace_missing_error": 328
+      }
+    },
+    {
+      "board": "butterstick-spaced",
+      "beforeSeconds": 600.77,
+      "afterSeconds": 600.82,
+      "beforeStage": "bus_lanes",
+      "afterStage": "bus_lanes",
+      "beforeStop": "600-second render budget",
+      "afterStop": "600-second render budget",
+      "beforeTraces": null,
+      "afterTraces": null,
+      "beforeVias": null,
+      "afterVias": null,
+      "regressionConclusion": "Inconclusive: both reached the 600-second outer render limit without final Circuit JSON"
+    },
+    {
+      "board": "glider-local",
+      "beforeSeconds": 600.57,
+      "afterSeconds": 600.624,
+      "beforeStage": "highDensityRouteSolver",
+      "afterStage": "highDensityRouteSolver",
+      "beforeStop": "600-second render budget",
+      "afterStop": "600-second render budget",
+      "beforeTraces": null,
+      "afterTraces": null,
+      "beforeVias": null,
+      "afterVias": null,
+      "regressionConclusion": "Inconclusive: both reached the 600-second outer render limit without final Circuit JSON"
+    },
+    {
+      "board": "glider-native",
+      "beforeSeconds": 571.531,
+      "afterSeconds": 569.169,
+      "beforeStage": "fanout",
+      "afterStage": "fanout",
+      "beforeStop": "settled",
+      "afterStop": "settled",
+      "beforeTraces": 0,
+      "afterTraces": 0,
+      "beforeVias": 0,
+      "afterVias": 0,
+      "identicalCircuitJson": true,
+      "identicalEmittedPcbElements": true,
+      "changedElements": [],
+      "beforeErrors": {
+        "pcb_autorouting_error": 1,
+        "pcb_port_not_connected_error": 1976,
+        "pcb_trace_missing_error": 199
+      },
+      "afterErrors": {
+        "pcb_autorouting_error": 1,
+        "pcb_port_not_connected_error": 1976,
+        "pcb_trace_missing_error": 199
+      }
+    },
+    {
+      "board": "glider-spaced",
+      "beforeSeconds": 171.092,
+      "afterSeconds": 166.863,
+      "beforeStage": "portPointPathingSolver",
+      "afterStage": "portPointPathingSolver",
+      "beforeStop": "settled",
+      "afterStop": "settled",
+      "beforeTraces": 53,
+      "afterTraces": 53,
+      "beforeVias": 111,
+      "afterVias": 111,
+      "identicalCircuitJson": true,
+      "identicalEmittedPcbElements": true,
+      "changedElements": [],
+      "beforeErrors": {
+        "pcb_autorouting_error": 1,
+        "pcb_port_not_connected_error": 1465
+      },
+      "afterErrors": {
+        "pcb_autorouting_error": 1,
+        "pcb_port_not_connected_error": 1465
+      }
+    },
+    {
+      "board": "h616-default-order-local",
+      "beforeSeconds": 359.58,
+      "afterSeconds": 352.23,
+      "beforeStage": "highDensityRouteSolver",
+      "afterStage": "highDensityRouteSolver",
+      "beforeStop": "settled",
+      "afterStop": "settled",
+      "beforeTraces": 142,
+      "afterTraces": 142,
+      "beforeVias": 167,
+      "afterVias": 167,
+      "identicalCircuitJson": true,
+      "identicalEmittedPcbElements": true,
+      "changedElements": [],
+      "beforeErrors": {
+        "pcb_autorouting_error": 1,
+        "pcb_port_not_connected_error": 341
+      },
+      "afterErrors": {
+        "pcb_autorouting_error": 1,
+        "pcb_port_not_connected_error": 341
+      }
+    },
+    {
+      "board": "h616-local",
+      "beforeSeconds": 557.093,
+      "afterSeconds": 561.448,
+      "beforeStage": "highDensityRouteSolver",
+      "afterStage": "highDensityRouteSolver",
+      "beforeStop": "settled",
+      "afterStop": "settled",
+      "beforeTraces": 142,
+      "afterTraces": 142,
+      "beforeVias": 159,
+      "afterVias": 159,
+      "identicalCircuitJson": true,
+      "identicalEmittedPcbElements": true,
+      "changedElements": [],
+      "beforeErrors": {
+        "pcb_autorouting_error": 1,
+        "pcb_port_not_connected_error": 341
+      },
+      "afterErrors": {
+        "pcb_autorouting_error": 1,
+        "pcb_port_not_connected_error": 341
+      }
+    },
+    {
+      "board": "h616-native",
+      "beforeSeconds": 600.628,
+      "afterSeconds": 600.681,
+      "beforeStage": "fanout",
+      "afterStage": "fanout",
+      "beforeStop": "600-second render budget",
+      "afterStop": "600-second render budget",
+      "beforeTraces": null,
+      "afterTraces": null,
+      "beforeVias": null,
+      "afterVias": null,
+      "regressionConclusion": "Inconclusive: both reached the 600-second outer render limit without final Circuit JSON"
+    },
+    {
+      "board": "h616-spaced",
+      "beforeSeconds": 600.456,
+      "afterSeconds": 600.466,
+      "beforeStage": "highDensityRouteSolver",
+      "afterStage": "highDensityRouteSolver",
+      "beforeStop": "600-second render budget",
+      "afterStop": "600-second render budget",
+      "beforeTraces": null,
+      "afterTraces": null,
+      "beforeVias": null,
+      "afterVias": null,
+      "regressionConclusion": "Inconclusive: both reached the 600-second outer render limit without final Circuit JSON"
+    },
+    {
+      "board": "icepi-local",
+      "beforeSeconds": 322.606,
+      "afterSeconds": 466.675,
+      "beforeStage": "portPointPathingSolver",
+      "afterStage": "highDensityRouteSolver",
+      "beforeStop": "settled",
+      "afterStop": "settled",
+      "beforeTraces": 52,
+      "afterTraces": 52,
+      "beforeVias": 116,
+      "afterVias": 116,
+      "identicalCircuitJson": false,
+      "identicalEmittedPcbElements": true,
+      "changedElements": [
+        {
+          "type": "pcb_autorouting_error",
+          "fields": [
+            "message"
+          ]
+        }
+      ],
+      "beforeErrors": {
+        "pcb_autorouting_error": 1,
+        "pcb_port_not_connected_error": 1046
+      },
+      "afterErrors": {
+        "pcb_autorouting_error": 1,
+        "pcb_port_not_connected_error": 1046
+      }
+    },
+    {
+      "board": "icepi-native",
+      "beforeSeconds": 189.901,
+      "afterSeconds": 174.882,
+      "beforeStage": "fanout",
+      "afterStage": "fanout",
+      "beforeStop": "settled",
+      "afterStop": "settled",
+      "beforeTraces": 0,
+      "afterTraces": 0,
+      "beforeVias": 0,
+      "afterVias": 0,
+      "identicalCircuitJson": true,
+      "identicalEmittedPcbElements": true,
+      "changedElements": [],
+      "beforeErrors": {
+        "pcb_autorouting_error": 1,
+        "pcb_port_not_connected_error": 1765,
+        "pcb_trace_missing_error": 223
+      },
+      "afterErrors": {
+        "pcb_autorouting_error": 1,
+        "pcb_port_not_connected_error": 1765,
+        "pcb_trace_missing_error": 223
+      }
+    },
+    {
+      "board": "icepi-spaced",
+      "beforeSeconds": 295.336,
+      "afterSeconds": 288.508,
+      "beforeStage": "portPointPathingSolver",
+      "afterStage": "portPointPathingSolver",
+      "beforeStop": "settled",
+      "afterStop": "settled",
+      "beforeTraces": 52,
+      "afterTraces": 52,
+      "beforeVias": 112,
+      "afterVias": 112,
+      "identicalCircuitJson": true,
+      "identicalEmittedPcbElements": true,
+      "changedElements": [],
+      "beforeErrors": {
+        "pcb_autorouting_error": 1,
+        "pcb_port_not_connected_error": 1046
+      },
+      "afterErrors": {
+        "pcb_autorouting_error": 1,
+        "pcb_port_not_connected_error": 1046
+      }
+    },
+    {
+      "board": "imx6-local",
+      "beforeSeconds": 600.404,
+      "afterSeconds": 600.703,
+      "beforeStage": "edgeSolver",
+      "afterStage": "topologyMergingSolver",
+      "beforeStop": "600-second render budget",
+      "afterStop": "600-second render budget",
+      "beforeTraces": null,
+      "afterTraces": null,
+      "beforeVias": null,
+      "afterVias": null,
+      "regressionConclusion": "Inconclusive: both reached the 600-second outer render limit without final Circuit JSON"
+    },
+    {
+      "board": "imx6-native",
+      "beforeSeconds": 323.504,
+      "afterSeconds": 313.97,
+      "beforeStage": "fanout",
+      "afterStage": "fanout",
+      "beforeStop": "settled",
+      "afterStop": "settled",
+      "beforeTraces": 0,
+      "afterTraces": 0,
+      "beforeVias": 0,
+      "afterVias": 0,
+      "identicalCircuitJson": true,
+      "identicalEmittedPcbElements": true,
+      "changedElements": [],
+      "beforeErrors": {
+        "pcb_autorouting_error": 2,
+        "pcb_port_not_connected_error": 2247,
+        "pcb_trace_missing_error": 265,
+        "pcb_placement_error": 1
+      },
+      "afterErrors": {
+        "pcb_autorouting_error": 2,
+        "pcb_port_not_connected_error": 2247,
+        "pcb_trace_missing_error": 265,
+        "pcb_placement_error": 1
+      }
+    },
+    {
+      "board": "imx6-spaced",
+      "beforeSeconds": 600.581,
+      "afterSeconds": 600.65,
+      "beforeStage": "portPointPathingSolver",
+      "afterStage": "portPointPathingSolver",
+      "beforeStop": "600-second render budget",
+      "afterStop": "600-second render budget",
+      "beforeTraces": null,
+      "afterTraces": null,
+      "beforeVias": null,
+      "afterVias": null,
+      "regressionConclusion": "Inconclusive: both reached the 600-second outer render limit without final Circuit JSON"
+    },
+    {
+      "board": "orangecrab-local",
+      "beforeSeconds": 236.51,
+      "afterSeconds": 233.418,
+      "beforeStage": "highDensityRouteSolver",
+      "afterStage": "highDensityRouteSolver",
+      "beforeStop": "settled",
+      "afterStop": "settled",
+      "beforeTraces": 52,
+      "afterTraces": 52,
+      "beforeVias": 103,
+      "afterVias": 103,
+      "identicalCircuitJson": true,
+      "identicalEmittedPcbElements": true,
+      "changedElements": [],
+      "beforeErrors": {
+        "pcb_autorouting_error": 1,
+        "pcb_port_not_connected_error": 658
+      },
+      "afterErrors": {
+        "pcb_autorouting_error": 1,
+        "pcb_port_not_connected_error": 658
+      }
+    },
+    {
+      "board": "orangecrab-native",
+      "beforeSeconds": 600.36,
+      "afterSeconds": 600.388,
+      "beforeStage": "fanout",
+      "afterStage": "fanout",
+      "beforeStop": "600-second render budget",
+      "afterStop": "600-second render budget",
+      "beforeTraces": null,
+      "afterTraces": null,
+      "beforeVias": null,
+      "afterVias": null,
+      "regressionConclusion": "Inconclusive: both reached the 600-second outer render limit without final Circuit JSON"
+    },
+    {
+      "board": "orangecrab-spaced",
+      "beforeSeconds": 600.9,
+      "afterSeconds": 600.754,
+      "beforeStage": "highDensityRouteSolver",
+      "afterStage": "highDensityRouteSolver",
+      "beforeStop": "600-second render budget",
+      "afterStop": "600-second render budget",
+      "beforeTraces": null,
+      "afterTraces": null,
+      "beforeVias": null,
+      "afterVias": null,
+      "regressionConclusion": "Inconclusive: both reached the 600-second outer render limit without final Circuit JSON"
+    }
+  ]
+}
