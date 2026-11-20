@@ -47,18 +47,18 @@ test("RP2040 motor controller: default Pipeline 9 relaxed DRC", async (): Promis
       trace.connectsTo.includes("pcb_port_261"),
   )
   expect(vmHfTrace?.nominalTraceWidth).toBe(0.8)
-  expect(
-    vmHfTrace?.route.some((point, index) => {
-      const end = vmHfTrace.route[index + 1]
-      return (
-        point.route_type === "wire" &&
-        end?.route_type === "wire" &&
-        point.layer === end.layer &&
-        (point.x !== end.x || point.y !== end.y) &&
-        point.width === 0.8
-      )
-    }),
-  ).toBe(true)
+  const vmHfWireWidths = vmHfTrace?.route.flatMap((point, index) => {
+    const end = vmHfTrace.route[index + 1]
+    if (
+      point.route_type === "wire" &&
+      end?.route_type === "wire" &&
+      point.layer === end.layer &&
+      (point.x !== end.x || point.y !== end.y)
+    ) {
+      return [point.width]
+    }
+    return []
+  })
   // Native routing can produce different route variants across platforms.
   const snapshotPath =
     process.platform === "linux"
@@ -71,4 +71,5 @@ test("RP2040 motor controller: default Pipeline 9 relaxed DRC", async (): Promis
       routedTraces,
     }),
   ).toMatchSvgSnapshot(snapshotPath)
+  expect(vmHfWireWidths).toContain(0.8)
 })
