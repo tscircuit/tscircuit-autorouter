@@ -1,4 +1,4 @@
-name: Verify canonical saved-trace pad ownership
+name: Verify native preloads keep their component pad escapes
 on:
   push:
     branches: [analysis/native-copper-stage-diagnostics]
@@ -12,7 +12,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        source: [2b1207ad70971f326166b134ea19418137273f23, a3011ea856de9661404a115ed2050d9e0a1bff77, 93f449589c8748916c2105a5efab437c0908269a]
+        include:
+          - variant: parent
+            source: a3011ea856de9661404a115ed2050d9e0a1bff77
+          - variant: scoped
+            source: a3011ea856de9661404a115ed2050d9e0a1bff77
+          - variant: cleanup
+            source: 93f449589c8748916c2105a5efab437c0908269a
     steps:
       - uses: actions/checkout@v4
         with:
@@ -20,7 +26,7 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: '1.4.3'
-      - name: Recognize a native trace's canonical root when its synthetic name is unmapped
+      - name: Carry existing component terminal ownership into native preloaded paths
         run: |
           cat > lib/solvers/TraceWidthSolver/isObstacleConnectedToRoute.ts <<'TS'
           import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
@@ -62,18 +68,105 @@ jobs:
           TS
           python3 - <<'PY'
           from pathlib import Path
+          p=Path("lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver.ts")
+          s=p.read_text()
+          s='import { mapZToLayerName } from "lib/utils/mapZToLayerName"\nimport { isPointInRect } from "lib/utils/isPointInRect"\nimport { isObstacleConnectedToRoute } from "lib/solvers/TraceWidthSolver/isObstacleConnectedToRoute"\n'+s
+          old="    this.fixedHdRoutes = params.fixedHdRoutes\n    this.connMap = params.connMap"
+          assert s.count(old)==1
+          new="""    this.connMap = params.connMap
+              const terminalPorts = params.nodePortPoints.flatMap(
+                (node) => node.portPoints.filter((port) => port.pcb_port_id !== undefined),
+              )
+              this.fixedHdRoutes = params.fixedHdRoutes.map((route) => {
+                const start = route.route[0]
+                const end = route.route.at(-1)
+                const net = this.connMap.getNetConnectedToId(route.connectionName) ??
+                  route.rootConnectionName ?? route.connectionName
+                const terminals = terminalPorts.filter((port) => {
+                  const terminalNet = this.connMap.getNetConnectedToId(port.connectionName) ??
+                    port.rootConnectionName ?? port.connectionName
+                  return net === terminalNet
+                })
+                const startTerminal = terminals.find((port) =>
+                  start && port.x === start.x && port.y === start.y && port.z === start.z,
+                )
+                const endTerminal = terminals.find((port) =>
+                  end && port.x === end.x && port.y === end.y && port.z === end.z,
+                )
+                const componentOwned = Boolean(startTerminal || endTerminal) &&
+                  route.vias.length === 0 &&
+                  params.obstacles.some((obstacle) =>
+                    obstacle.type === "rect" && !obstacle.shape &&
+                    isObstacleConnectedToRoute(obstacle, route, params.connMap) &&
+                    route.route.every((point) =>
+                      obstacle.layers.includes(mapZToLayerName(point.z, params.layerCount)) &&
+                      isPointInRect(point, obstacle),
+                    ),
+                  )
+                return {
+                  ...route,
+                  startPcbPortId: route.startPcbPortId ?? startTerminal?.pcb_port_id,
+                  endPcbPortId: route.endPcbPortId ?? endTerminal?.pcb_port_id,
+                  isThroughObstacle: route.isThroughObstacle || componentOwned,
+                }
+              })"""
+          s=s.replace(old,new,1)
+          p.write_text(s)
+          if '${{ matrix.variant }}' == 'scoped':
+              p=Path("lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts")
+              s=p.read_text()
+              s=s.replace("          fixedHdRoutes: cms.highDensityRouteSolver!.getUpdatedFixedHdRoutes(),","",1)
+              p.write_text(s)
+              p=Path("lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9RegionalFallbackSolver.ts")
+              s=p.read_text()
+              s=s.replace("      fixedHdRoutes: this.params.fixedHdRoutes,", """      fixedHdRoutes: this.params.preservePhysicalGeometry
+                      ? this.params.fixedHdRoutes
+                      : undefined,""")
+              p.write_text(s)
+          if '${{ matrix.variant }}' == 'cleanup':
+              p=Path("lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensityForceImproveSolver.ts")
+              s=p.read_text()
+              s='import { FixedCopperClearanceGuard } from "high-density-repair02/lib/high-density-repair-solver/functions/FixedCopperClearanceGuard"\n'+s
+              s=s.replace('    if (this.fixedViaObstacleIndexes.size === 0) return','    if (this.fixedViaObstacleIndexes.size === 0 && this.fixedHdRoutes.length === 0) return',1)
+              old='    if (!worsensViaClearance) return'
+              assert s.count(old)==1
+              new="""    let allowsNativeCopper = true
+                  if (this.fixedHdRoutes.length > 0) {
+                    const ownedIndexes = new Set(routeIndexes)
+                    const readOnlyRoutes = [
+                      ...this.fixedHdRoutes,
+                      ...this.getOutput().filter((_, index) => !ownedIndexes.has(index)),
+                    ]
+                    const guard = new FixedCopperClearanceGuard(
+                      readOnlyRoutes,
+                      this.inputSrj.minTraceToPadEdgeClearance ??
+                        this.inputSrj.defaultObstacleMargin ??
+                        RELAXED_DRC_OPTIONS.traceClearance,
+                      [],
+                      this.inputSrj.minPadEdgeToPadEdgeClearance,
+                    )
+                    allowsNativeCopper = guard.allows(
+                      originalRoutes,
+                      candidateRoutes,
+                      candidateRoutes.keys(),
+                    )
+                  }
+                  if (!worsensViaClearance && allowsNativeCopper) return"""
+              p.write_text(s.replace(old,new,1))
           p=Path("tests/bugs/bugreport96-full-gameboy-no-breakout.test.ts")
           s=p.read_text()
           old="  expect(errors.length).toBeLessThanOrEqual(28)"
           s=s.replace(old,'''  console.log("GBA_COUNTS", JSON.stringify({
               errors: errors.length,
               protectedPreloadRetained: !solver.highDensityRouteSolver!.fixedRouteReplacements.has("source_trace_0_fixed_70_0"),
+              terminalPadEscapeCount: solver.highDensityRouteSolver!.fixedHdRoutes.filter(route=>route.startPcbPortId || route.endPcbPortId).length,
+              protectedPadCopper: solver.highDensityRouteSolver!.fixedHdRoutes.find(route=>route.connectionName === "source_trace_0_fixed_70_0")?.isThroughObstacle,
             }))
           '''+old,1)
           p.write_text(s)
           PY
       - run: bun install
-      - name: Preserve every original functional assertion
+      - name: Preserve all original clearance, via-count and preload assertions
         env:
           BUN_UPDATE_SNAPSHOTS: '1'
         run: bun test --timeout 9999999 tests/bugs/bugreport96-full-gameboy-no-breakout.test.ts tests/bugs/usb-dp-phase-detour.test.ts tests/repro/pipeline9-h616-portfolio-candidate-clearance.test.ts tests/features/pipeline9-orangecrab-native-fixed-traces.test.ts
@@ -84,5 +177,5 @@ jobs:
           git config user.email "actions@github.com"
           git add -- '*.snap.svg'
           if git diff --cached --quiet; then exit 0; fi
-          git commit -m "Record verified canonical pad-ownership SVGs"
-          git push origin HEAD:refs/heads/analysis/verified-native-pad-ownership-${{ matrix.source }}
+          git commit -m "Record verified component escape snapshots"
+          git push origin HEAD:refs/heads/analysis/verified-native-pad-escape-${{ matrix.variant }}
