@@ -1,0 +1,103 @@
+name: Resolve ButterStick spaced timeout with unchanged routing rules
+on:
+  push:
+    branches: [analysis/e2e-butterstick-spaced-extended-20261120]
+concurrency:
+  group: e2e-uploaded-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+jobs:
+  baseline:
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        sample: ["butterstick-spaced"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/core
+          ref: 351e73d665fad37577c47fcbff2e4c29eb377467
+          path: core
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Install pinned latest core dependencies
+        run: |
+          python3 - <<'PYSETUP'
+          from pathlib import Path
+          config=Path('core/bunfig.toml');config.write_text(config.read_text().replace('save = false','save = true'))
+          PYSETUP
+          for attempt in 1 2 3; do
+            if bun install --ignore-scripts; then break; fi
+            if [ "$attempt" = 3 ]; then exit 1; fi
+          done
+          for attempt in 1 2 3; do
+            if (cd core && bun install --ignore-scripts); then break; fi
+            if [ "$attempt" = 3 ]; then exit 1; fi
+          done
+      - name: Prepare exact uploaded sources and record dependency revisions
+        run: |
+          python3 - <<'PYSAMPLES'
+          import hashlib,json,shutil,zipfile
+          from pathlib import Path
+          source=Path('experiments/e2e-samples-20261120');runtime=Path('core/e2e-runtime');runtime.mkdir()
+          for name in ['worker-deep.tsx','run-deep.py','assess.ts','correct-workflow.tsx','connectivity.ts','intercept-internals.ts']:shutil.copyfile(source/name,runtime/name)
+          runner=runtime/'run-deep.py';runner.write_text(runner.read_text().replace('timeout=660','timeout=960'))
+          import gzip
+          (runtime/'expected-circuits.json').write_bytes(gzip.decompress((source/'expected-circuits.json.gz').read_bytes()))
+          manifest=json.loads((source/'inputs.json').read_text())
+          assert hashlib.sha256((source/'samples.zip').read_bytes()).hexdigest()==manifest['archiveSha256']
+          with zipfile.ZipFile(source/'samples.zip') as z:
+              for entry in manifest['samples']:
+                  content=z.read(entry['name'])
+                  assert hashlib.sha256(content).hexdigest()==entry['sha256']
+                  target=runtime/'samples'/entry['name'];target.parent.mkdir(exist_ok=True);target.write_bytes(content)
+          revisions={'core':'351e73d665fad37577c47fcbff2e4c29eb377467','router':'native-installed-package','winding':'202dbe9eb0088633b6fa094120dba6f2f41f8803','sampleMode':'fanout_first','archiveSha256':manifest['archiveSha256'],'coreLockSha256':hashlib.sha256(Path('core/bun.lock').read_bytes()).hexdigest()}
+          for package in ['@tscircuit/fanout-solver','@tscircuit/winding-breakout-point-solver','@tscircuit/capacity-autorouter','@tscircuit/props','@tscircuit/bus-lanes-solver','@tscircuit/checks','circuit-to-svg','react']:
+              revisions[package]=json.loads((Path('core/node_modules')/package/'package.json').read_text())['version']
+          assert revisions['@tscircuit/fanout-solver']=='0.0.93'
+          revisions['interception']='read-only winding stages and original fanout clearance rejections'
+          revisions['corePatchApplied']=False
+          (runtime/'revisions.json').write_text(json.dumps(revisions,indent=2)+'\n')
+          print(json.dumps(revisions))
+          PYSAMPLES
+      - name: Route unmodified Core and intercept internal failure decisions
+        env:
+          E2E_SAMPLE: ${{ matrix.sample }}
+          E2E_WORKFLOW: fanout_first
+          E2E_BUDGET_MS: 900000
+        run: |
+          cd core/e2e-runtime
+          python3 run-deep.py "$E2E_SAMPLE" "$GITHUB_WORKSPACE/results/$E2E_SAMPLE"
+          bun assess.ts "$E2E_SAMPLE" "$GITHUB_WORKSPACE/results/$E2E_SAMPLE"
+          cd "$GITHUB_WORKSPACE"
+          bun experiments/e2e-samples-20261120/audit-diagnostics.ts "results/$E2E_SAMPLE"
+      - name: Publish complete stage captures and PCB SVG
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: full-circuit-interception-extended-${{ matrix.sample }}
+          path: results
+          if-no-files-found: error
+      - name: Export captured evidence
+        if: always()
+        env:
+          E2E_SAMPLE: ${{ matrix.sample }}
+        run: |
+          python3 - <<'PYEXPORT'
+          import base64,io,os,zipfile
+          from pathlib import Path
+          root=Path('results')
+          stream=io.BytesIO()
+          with zipfile.ZipFile(stream,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=9) as z:
+              for p in root.rglob('*'):
+                  if p.name in ['report.json','process.json','assessment.json','diagnostics.json','pipeline-internals.json']:z.writestr(str(p.relative_to(root)),p.read_bytes())
+          print('E2E_EVIDENCE_BEGIN')
+          encoded=base64.b64encode(stream.getvalue()).decode()
+          for offset in range(0,len(encoded),8000):print(encoded[offset:offset+8000])
+          print('E2E_EVIDENCE_END')
+          PYEXPORT
