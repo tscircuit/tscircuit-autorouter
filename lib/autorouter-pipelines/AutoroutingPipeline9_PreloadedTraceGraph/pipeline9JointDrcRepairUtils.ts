@@ -129,45 +129,55 @@ const getDrcIssueScore = (errors: Pipeline9DrcError[]) =>
     return score + 1
   }, 0)
 
+/** A short, keyed by what touches; unidentified when its ids are missing. */
+export type Pipeline9DrcContact =
+  | { kind: "identified"; key: string }
+  | { kind: "unidentified" }
+
 /**
- * Identifies a short on a trace error by the objects touching, whichever
+ * The short a trace error reports, keyed by the objects touching whichever
  * side reported it. Undefined when the error is not copper in contact.
  */
-export const getPipeline9DrcContactKey = (
+export const getPipeline9DrcContact = (
   error: Pipeline9DrcError,
-): string | undefined => {
+): Pipeline9DrcContact | undefined => {
   const isContact =
     error.type === "pcb_trace_error" &&
     typeof error.actual_clearance === "number" &&
     error.actual_clearance < 0
   if (!isContact) return undefined
   if (typeof error.pcb_smtpad_id === "string") {
-    return `${error.pcb_trace_id} touches ${error.pcb_smtpad_id}`
+    const key = `${error.pcb_trace_id} touches ${error.pcb_smtpad_id}`
+    return { kind: "identified", key }
   }
   if (typeof error.pcb_plated_hole_id === "string") {
-    return `${error.pcb_trace_id} touches ${error.pcb_plated_hole_id}`
+    const key = `${error.pcb_trace_id} touches ${error.pcb_plated_hole_id}`
+    return { kind: "identified", key }
   }
   // A trace touching another trace or its via: both traces are listed.
-  if (!Array.isArray(error.pcb_trace_ids)) return undefined
-  return [...error.pcb_trace_ids].sort().join(" touches ")
+  if (!Array.isArray(error.pcb_trace_ids)) return { kind: "unidentified" }
+  const key = [...error.pcb_trace_ids].sort().join(" touches ")
+  return { kind: "identified", key }
 }
 
-const getContactKeys = (errors: Pipeline9DrcError[]): Set<string> => {
-  const contactKeys = new Set<string>()
-  for (const error of errors) {
-    const contactKey = getPipeline9DrcContactKey(error)
-    if (contactKey) contactKeys.add(contactKey)
-  }
-  return contactKeys
-}
-
-const hasNewContact = (
+/**
+ * True when the candidate has a short the current routes do not. A short
+ * without the ids that name it counts as new: it cannot be matched.
+ */
+export const introducesPipeline9DrcContact = (
   candidateErrors: Pipeline9DrcError[],
   currentErrors: Pipeline9DrcError[],
 ): boolean => {
-  const currentContactKeys = getContactKeys(currentErrors)
-  for (const contactKey of getContactKeys(candidateErrors)) {
-    if (!currentContactKeys.has(contactKey)) return true
+  const currentContactKeys = new Set<string>()
+  for (const error of currentErrors) {
+    const contact = getPipeline9DrcContact(error)
+    if (contact?.kind === "identified") currentContactKeys.add(contact.key)
+  }
+  for (const error of candidateErrors) {
+    const contact = getPipeline9DrcContact(error)
+    if (!contact) continue
+    if (contact.kind === "unidentified") return true
+    if (!currentContactKeys.has(contact.key)) return true
   }
   return false
 }
@@ -183,7 +193,10 @@ export const isPipeline9DrcCandidateBetter = (
   currentErrors: Pipeline9DrcError[],
   { rejectNewContacts = false }: { rejectNewContacts?: boolean } = {},
 ): boolean => {
-  if (rejectNewContacts && hasNewContact(candidateErrors, currentErrors)) {
+  if (
+    rejectNewContacts &&
+    introducesPipeline9DrcContact(candidateErrors, currentErrors)
+  ) {
     return false
   }
   return (

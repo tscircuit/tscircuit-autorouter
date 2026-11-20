@@ -32,6 +32,13 @@ test("pipeline9 DRC candidate that adds a contact is not better when new contact
     pcb_smtpad_id: "pad2",
     actual_clearance: -0.02,
   }
+  // Copper touches, but nothing names what it touches, so it cannot be
+  // matched against the current contacts.
+  const unidentifiedContact: Pipeline9DrcError = {
+    type: "pcb_trace_error",
+    pcb_trace_id: "tA",
+    actual_clearance: -0.02,
+  }
   // The same objects 0.05mm apart: a clearance error, not a contact.
   const traceANearPad2: Pipeline9DrcError = {
     ...traceAOnPad2,
@@ -42,6 +49,7 @@ test("pipeline9 DRC candidate that adds a contact is not better when new contact
   const newContact = [traceAOnPad1, traceAOnTraceB, traceAOnPad2]
   const sameContacts = [traceAOnPad1, traceBOnViaOfTraceA, clearanceError]
   const clearanceErrorsOnly = [clearanceError, traceANearPad2]
+  const withUnidentifiedContact = [traceAOnPad1, unidentifiedContact]
 
   const rejectNewContacts = { rejectNewContacts: true }
 
@@ -61,4 +69,12 @@ test("pipeline9 DRC candidate that adds a contact is not better when new contact
       rejectNewContacts,
     ),
   ).toBe(true)
+  // A contact that cannot be identified counts as new.
+  expect(
+    isPipeline9DrcCandidateBetter(
+      withUnidentifiedContact,
+      current,
+      rejectNewContacts,
+    ),
+  ).toBe(false)
 })

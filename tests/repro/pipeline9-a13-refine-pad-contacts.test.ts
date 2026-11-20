@@ -5,7 +5,7 @@ import type { AnyCircuitElement } from "circuit-json"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { convertCircuitJsonToPcbSvg } from "circuit-to-svg"
 import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
-import { getPipeline9DrcContactKey } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9JointDrcRepairUtils"
+import { getPipeline9DrcContact } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9JointDrcRepairUtils"
 import { createPipeline9AutoroutingDrcEvaluator } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/createPipeline9AutoroutingDrcEvaluator"
 import { Pipeline9JointDrcRepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9JointDrcRepairSolver"
 import type {
@@ -138,8 +138,11 @@ test("A13 joint repair moves a trace onto pads of other nets", async (): Promise
     const contactKeys: string[] = []
     const { errors } = drcEngine.evaluate(traces as RepairSimplifiedPcbTraces)
     for (const error of errors) {
-      const contactKey = getPipeline9DrcContactKey(error)
-      if (contactKey) contactKeys.push(contactKey)
+      const contact = getPipeline9DrcContact(error)
+      if (!contact) continue
+      contactKeys.push(
+        contact.kind === "identified" ? contact.key : "unidentified contact",
+      )
     }
     return contactKeys
   }
