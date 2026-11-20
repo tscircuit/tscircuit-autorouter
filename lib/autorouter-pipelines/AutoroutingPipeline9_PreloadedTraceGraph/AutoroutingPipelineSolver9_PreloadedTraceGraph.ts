@@ -252,6 +252,8 @@ function definePipelineStep<
   }
 }
 
+type RoutingRegionId = NonNullable<HighDensityRoute["regionId"]>
+
 export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   override getSolverName(): string {
     return "AutoroutingPipelineSolver9_PreloadedTraceGraph"
@@ -693,26 +695,27 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           },
         ]
       },
-      (cms) => {
-        const highDensitySolver = cms.highDensityRouteSolver!
-        if (!highDensitySolver.getUpdatedFixedHdRoutes().some((route) => route.isFixed)) {
-          return
-        }
-        type RoutingRegionId = string
-        const routesByRegion = new Map<RoutingRegionId, HighDensityRoute[]>()
-        for (const route of highDensitySolver.routes) {
-          if (!route.regionId) continue
-          const routes = routesByRegion.get(route.regionId) ?? []
-          routes.push(route)
-          routesByRegion.set(route.regionId, routes)
-        }
-        cms.highDensityNodePortPoints = cms.highDensityNodePortPoints!.map((node) =>
-          getNodeWithCopperBounds({
-            node,
-            routes: routesByRegion.get(node.capacityMeshNodeId) ?? [],
-            margin: cms.srj.defaultObstacleMargin ?? 0.2,
-          }),
-        )
+      {
+        onSolved: (cms) => {
+          const highDensitySolver = cms.highDensityRouteSolver!
+          if (!highDensitySolver.getUpdatedFixedHdRoutes().some((route) => route.isFixed)) {
+            return
+          }
+          const routesByRegion = new Map<RoutingRegionId, HighDensityRoute[]>()
+          for (const route of highDensitySolver.routes) {
+            if (!route.regionId) continue
+            const routes = routesByRegion.get(route.regionId) ?? []
+            routes.push(route)
+            routesByRegion.set(route.regionId, routes)
+          }
+          cms.highDensityNodePortPoints = cms.highDensityNodePortPoints!.map((node) =>
+            getNodeWithCopperBounds({
+              node,
+              routes: routesByRegion.get(node.capacityMeshNodeId) ?? [],
+              margin: cms.srj.defaultObstacleMargin ?? 0.2,
+            }),
+          )
+        },
       },
     ),
     definePipelineStep(
