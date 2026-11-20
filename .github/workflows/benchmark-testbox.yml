@@ -1,38 +1,28 @@
-name: Blacksmith Testbox
+name: Uploaded boards on tscircuit 3249
 on:
   workflow_dispatch:
-    inputs:
-      testbox_id:
-        type: string
-        description: "Testbox session ID"
-        required: true
-  pull_request:
-    paths:
-      - '.github/workflows/**'
-
+permissions:
+  contents: read
 jobs:
-  benchmark:
-    name: Run benchmark
-    runs-on: blacksmith-4vcpu-ubuntu-2404-arm
-    timeout-minutes: 60
-
+  boards:
+    runs-on: blacksmith-32vcpu-ubuntu-2404-arm
+    timeout-minutes: 30
     steps:
-      - name: Begin Testbox
-        uses: useblacksmith/begin-testbox@v2
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
         with:
-          testbox_id: ${{ inputs.testbox_id }}
-
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-
-      - name: Install dependencies
+          bun-version: 1.4.3
+      - name: Unpack the original board sources
+        run: |
+          mkdir -p experiments/boards-3249/runtime
+          unzip -q experiments/boards-3249/boards.zip -d experiments/boards-3249/runtime
+      - name: Install the pinned latest release
+        working-directory: experiments/boards-3249/runtime
         run: bun install
-
-      - name: Run Testbox
-        uses: useblacksmith/run-testbox@v2
+      - name: Render all boards and compare the native fanout fix
+        run: python3 experiments/boards-3249/run.py
+      - uses: actions/upload-artifact@v4
         if: always()
+        with:
+          name: boards-tscircuit-3249
+          path: board-benchmark-results
