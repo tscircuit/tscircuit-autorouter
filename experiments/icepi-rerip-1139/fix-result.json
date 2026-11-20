@@ -1,0 +1,51 @@
+{
+  "seconds": 175.499872258,
+  "cpuSeconds": 180.556466,
+  "solved": false,
+  "failed": true,
+  "error": "Pipeline9 primary high-density routing failed: B01 failed: No path found for source_net_34_mst5; regional fallback failed: Failed to solve 1 nodes, topology_merge_13096. err0: GrowShrinkHighDensityIntraNodeSolver failed after resizing to 16x. Last error: All solvers failed in hyper solver. Example failures: Candidate solution rejected by validator, , Candidate solution rejected by validator, Candidate solution rejected by validator, Ran out of candidate nodes to explore.",
+  "phase": "highDensityRouteSolver",
+  "graphSolved": true,
+  "graphFailed": false,
+  "graphPending": 0,
+  "graphRoutes": 355,
+  "graphStats": {
+    "initialAssignmentCount": 1174,
+    "initiallyRoutedRouteCount": 83,
+    "selectiveRipCount": 1,
+    "selectivelyRippedRouteCount": 1,
+    "globalReripCount": 0,
+    "alternateBlockerSearchCount": 0,
+    "alternateOwnerCount": 0,
+    "failedOwnerPairCount": 1,
+    "maxFailedOwnerPairCount": 1,
+    "failedOwnerPairs": [
+      {
+        "failedRouteId": 149,
+        "ownerRouteId": 29,
+        "count": 1
+      }
+    ],
+    "lastDirectOwnerRouteIds": [
+      29
+    ],
+    "lastRepeatedOwnerRouteIds": [],
+    "lastAlternateOwnerRouteIds": [],
+    "lastRippedRouteIds": [
+      29
+    ],
+    "lastRelaxedSearchExpandedLabelCount": 4568,
+    "lastAlternateSearchExpandedLabelCount": 0,
+    "lastFailedRouteId": 149,
+    "neverSuccessfullyRoutedRouteCount": 0,
+    "acceptedGreedyFinalRouteOnTimeout": true,
+    "greedyFinalRouteIter": 4,
+    "finalRoutingStrategy": "greedy",
+    "greedyFinalRouteRemainingRouteCount": 3,
+    "greedyFinalRouteMaxIterations": 50000,
+    "maxRegionCost": 12434.258058025907,
+    "totalRegionCost": 17098.584349844034,
+    "bestMaxRegionCost": 12434.258058025907,
+    "bestTotalRegionCost": 17098.584349844034
+  }
+}

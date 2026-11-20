@@ -1,0 +1,45 @@
+{
+  "seconds": 26.166672877,
+  "cpuSeconds": 32.538249,
+  "solved": false,
+  "failed": true,
+  "error": "PreparedPortPointRoutingSolver ran out of iterations",
+  "phase": "portPointPathingSolver",
+  "graphSolved": false,
+  "graphFailed": true,
+  "graphPending": 61,
+  "graphRoutes": 355,
+  "graphStats": {
+    "initialAssignmentCount": 1174,
+    "initiallyRoutedRouteCount": 83,
+    "selectiveRipCount": 1,
+    "selectivelyRippedRouteCount": 1,
+    "globalReripCount": 0,
+    "alternateBlockerSearchCount": 0,
+    "alternateOwnerCount": 0,
+    "failedOwnerPairCount": 1,
+    "maxFailedOwnerPairCount": 1,
+    "failedOwnerPairs": [
+      {
+        "failedRouteId": 149,
+        "ownerRouteId": 29,
+        "count": 1
+      }
+    ],
+    "lastDirectOwnerRouteIds": [
+      29
+    ],
+    "lastRepeatedOwnerRouteIds": [],
+    "lastAlternateOwnerRouteIds": [],
+    "lastRippedRouteIds": [
+      29
+    ],
+    "lastRelaxedSearchExpandedLabelCount": 4568,
+    "lastAlternateSearchExpandedLabelCount": 0,
+    "lastFailedRouteId": 149,
+    "neverSuccessfullyRoutedRouteCount": 1,
+    "greedyFinalRouteAttemptCount": 4,
+    "greedyFinalRouteRemainingRouteCount": 61,
+    "greedyFinalRouteMaxIterations": 50000
+  }
+}
