@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
+import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { getBugReportSnapshotSvg } from "lib/testing/getBugReportSnapshotSvg"
 import type { SimpleRouteJson } from "lib/types"
 import srj from "../fixtures/orangecrab-native-fixed-traces.srj.json"
@@ -18,18 +19,19 @@ test("OrangeCrab routes controls beside saved DDR paths", async (): Promise<void
     savedIds.has(trace.pcb_trace_id),
   )
   expect(savedTraces).toEqual(input.traces!)
-  // Use the real board's declared trace, drill and via clearances.
-  await expect(
-    getBugReportSnapshotSvg({
-      inputSrj: input,
-      srjWithPointPairs: solver.srjWithPointPairs!,
-      routedTraces: solver.getOutputSimplifiedPcbTraces(),
-      drcOptions: {
-        traceClearance: input.minTraceToPadEdgeClearance,
-        viaClearance: input.minPadEdgeToPadEdgeClearance,
-        viaToPadClearance: input.minViaEdgeToPadEdgeClearance,
-        holeClearance: input.minTraceToHoleEdgeClearance,
-      },
-    }),
-  ).toMatchSvgSnapshot(import.meta.path)
+  const drcInput = {
+    inputSrj: input,
+    srjWithPointPairs: solver.srjWithPointPairs!,
+    routedTraces: solver.getOutputSimplifiedPcbTraces(),
+    drcOptions: {
+      traceClearance: input.minTraceToPadEdgeClearance,
+      viaClearance: input.minPadEdgeToPadEdgeClearance,
+      viaToPadClearance: input.minViaEdgeToPadEdgeClearance,
+      holeClearance: input.minTraceToHoleEdgeClearance,
+    },
+  }
+  expect(evaluateRelaxedDrc(drcInput).errors).toHaveLength(0)
+  await expect(getBugReportSnapshotSvg(drcInput)).toMatchSvgSnapshot(
+    import.meta.path,
+  )
 })
