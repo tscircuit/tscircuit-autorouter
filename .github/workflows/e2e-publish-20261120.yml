@@ -14,11 +14,11 @@ jobs:
       - name: Wait for the matched routing comparison
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh run watch 44730459517 --interval 30 --exit-status
+        run: gh run watch 44732068168 --interval 30 --exit-status
       - uses: actions/download-artifact@v4
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          run-id: 44730459517
+          run-id: 44732068168
           pattern: e2e-source-turn-pair-*
           path: captures
       - uses: actions/checkout@v4
