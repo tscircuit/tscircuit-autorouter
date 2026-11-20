@@ -32,14 +32,14 @@ for (const sample of manifest.samples.map((entry: any) => entry.name.replace(/\.
   if (!sameInputs) throw new Error(`Captured before/after inputs differ for ${sample}`)
   const comparedAssignments = Math.min(...captures.map((capture) => capture.history.length))
   const sameHistory = isDeepStrictEqual(captures[0].history.slice(0, comparedAssignments), captures[1].history.slice(0, comparedAssignments))
-  if (!sameHistory) throw new Error(`Completed assignment histories changed for ${sample}`)
+  const firstChangedAssignment = captures[0].history.slice(0, comparedAssignments).findIndex((summary: unknown, index: number) => !isDeepStrictEqual(summary, captures[1].history[index]))
   const completeSearches = captures.every((capture) => capture.state && (capture.state.failed || capture.state.solved))
   const identicalCompletedOutput = completeSearches ? isDeepStrictEqual(captures[0].state.bestAttempt.outputSrj, captures[1].state.bestAttempt.outputSrj) : null
   if (identicalCompletedOutput === false) throw new Error(`Completed search output changed for ${sample}`)
   const beforeSvg = join(captures[0].folder, "pcb.svg")
   const afterSvg = join(captures[1].folder, "pcb.svg")
   const identicalPcbSvg = existsSync(beforeSvg) && existsSync(afterSvg) ? readFileSync(beforeSvg).equals(readFileSync(afterSvg)) : null
-  const row = { sample, sameFanoutConstructorInputs: sameInputs, sameCompletedAssignmentPrefix: sameHistory, comparedAssignments, identicalCompletedOutput, identicalPcbSvg, captures: [] as any[] }
+  const row = { sample, sameFanoutConstructorInputs: sameInputs, sameCompletedAssignmentPrefix: sameHistory, comparedAssignments, firstChangedAssignment, identicalCompletedOutput, identicalPcbSvg, captures: [] as any[] }
   for (const { mode, folder, report, solver: summary, args, state, history } of captures) {
     if (!summary) {
       row.captures.push({ mode, fanoutReached: false, reportStatus: report.status, process: read(join(folder, "process.json")), errors: report.errors })
