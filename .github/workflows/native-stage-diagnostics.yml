@@ -1,4 +1,4 @@
-name: Verify native-only cleanup scope
+name: Verify saved-copper geometry follows the existing search frame
 on:
   push:
     branches: [analysis/native-copper-stage-diagnostics]
@@ -15,9 +15,7 @@ jobs:
         include:
           - variant: parent
             source: a3011ea856de9661404a115ed2050d9e0a1bff77
-          - variant: native
-            source: 93f449589c8748916c2105a5efab437c0908269a
-          - variant: guard
+          - variant: projection
             source: 93f449589c8748916c2105a5efab437c0908269a
     steps:
       - uses: actions/checkout@v4
@@ -26,82 +24,40 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: '1.4.3'
-      - name: Keep movable legacy preloads on their existing repair path
+      - name: Keep saved copper in the same frame as the existing pad obstacles
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          import json
-          p=Path("lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts")
+          p=Path("lib/solvers/HyperHighDensitySolver/GrowShrinkHighDensityIntraNodeSolver/GrowShrinkHighDensityIntraNodeSolver.ts")
           s=p.read_text()
-          old='          fixedHdRoutes: cms.highDensityRouteSolver!.getUpdatedFixedHdRoutes(),'
-          assert s.count(old)==1
-          s=s.replace(old,'',1)
-          if '${{ matrix.variant }}' != 'parent':
-              old='''          fixedHdRoutes: cms.highDensityRouteSolver!
-                      .getUpdatedFixedHdRoutes(),'''
-              assert s.count(old)==1
-              s=s.replace(old,'''          fixedHdRoutes: cms.highDensityRouteSolver!
-                      .getUpdatedFixedHdRoutes()
-                      .filter((route) => route.isFixed),''',1)
-          p.write_text(s)
-          if '${{ matrix.variant }}' != 'parent':
-              p=Path("lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9RegionalFallbackSolver.ts")
-              # Regional force gets read-only copper only in the physical native frame.
-              p=Path("lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9RegionalFallbackSolver.ts")
-              s=p.read_text()
-              old='      fixedHdRoutes: this.fixedHdRoutes,'
-              # The forwarding is in the physical pipeline regional implementation.
-              p=Path("lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9RegionalFallbackSolver.ts")
-              # Inspect the published orchestration rather than changing search behavior.
-              if '${{ matrix.variant }}' == 'guard':
-                  p=Path("lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensityForceImproveSolver.ts")
-                  s=p.read_text()
-                  s='import { FixedCopperClearanceGuard } from "high-density-repair02/lib/high-density-repair-solver/functions/FixedCopperClearanceGuard"\n'+s
-                  s=s.replace('    if (this.fixedViaObstacleIndexes.size === 0) return','    if (this.fixedViaObstacleIndexes.size === 0 && this.fixedHdRoutes.length === 0) return',1)
-                  old='    if (!worsensViaClearance) return'
-                  assert s.count(old)==1
-                  new="""    let allowsNativeCopper = true
-                      if (this.fixedHdRoutes.length > 0) {
-                        const ownedIndexes = new Set(routeIndexes)
-                        const readOnlyRoutes = [
-                          ...this.fixedHdRoutes,
-                          ...this.getOutput().filter((_, index) => !ownedIndexes.has(index)),
-                        ]
-                        const guard = new FixedCopperClearanceGuard(
-                          readOnlyRoutes,
-                          this.inputSrj.minTraceToPadEdgeClearance ??
-                            this.inputSrj.defaultObstacleMargin ??
-                            RELAXED_DRC_OPTIONS.traceClearance,
-                          [],
-                          this.inputSrj.minPadEdgeToPadEdgeClearance,
-                        )
-                        allowsNativeCopper = guard.allows(
-                          originalRoutes,
-                          candidateRoutes,
-                          candidateRoutes.keys(),
-                        )
-                      }
-                      if (!worsensViaClearance && allowsNativeCopper) return"""
-                  p.write_text(s.replace(old,new,1))
-          p=Path("lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9RegionalFallbackSolver.ts")
-          s=p.read_text()
-          # Movable legacy preloads are not immutable repair constraints.
-          s=s.replace("      fixedHdRoutes: this.params.fixedHdRoutes,", """      fixedHdRoutes: this.params.preservePhysicalGeometry
-                  ? this.params.fixedHdRoutes
-                  : undefined,""")
+          start=s.index("    let metalScale = 1")
+          end=s.index("    if (this.preservePhysicalGeometry) {\n      nodeWithPortPoints.width",start)
+          block=s[start:end]
+          s=s[:start]+"    if (this.preservePhysicalGeometry) {\n"+"".join("  "+line+"\n" for line in block.splitlines())+"    }\n"+s[end:]
           p.write_text(s)
           PY
       - run: bun install
-      - name: Keep original board clearance, via-count and preservation assertions
+      - name: Use exact native projection for the cleanup candidate
+        if: matrix.variant == 'projection'
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path("node_modules/high-density-repair01/lib/HighDensityForceImproveSolver.ts")
+          s=p.read_text()
+          old="[...routes, ...(options?.fixedHdRoutes ?? [])],"
+          assert s.count(old)==1
+          p.write_text(s.replace(old,"routes,",1))
+          PY
+      - name: Preserve every original physical assertion
         env:
           BUN_UPDATE_SNAPSHOTS: '1'
         run: bun test --timeout 9999999 tests/bugs/bugreport96-full-gameboy-no-breakout.test.ts tests/bugs/usb-dp-phase-detour.test.ts tests/repro/pipeline9-h616-portfolio-candidate-clearance.test.ts tests/features/pipeline9-orangecrab-native-fixed-traces.test.ts
-      - name: Save public SVGs only after all original assertions pass
+      - name: Save only verified public SVGs
         if: success()
         run: |
           git config user.name "tscircuit-bot"
           git config user.email "actions@github.com"
           git add -- '*.snap.svg'
           if git diff --cached --quiet; then exit 0; fi
-          git commit -m "Record verified native-only cleanup snapshots"
-          git push origin HEAD:refs/heads/analysis/verified-native-scope-${{ matrix.variant }}
+          git commit -m "Record verified saved-copper frame snapshots"
+          git push origin HEAD:refs/heads/analysis/verified-native-frame-${{ matrix.variant }}
