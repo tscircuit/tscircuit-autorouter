@@ -1,0 +1,75 @@
+name: Check singleton order base case against unchanged native AM62L snapshots
+on:
+  push:
+    branches: [analysis/singleton-order-controls-20261121]
+permissions:
+  contents: read
+jobs:
+  controls:
+    runs-on: macos-15
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - mode: baseline
+            source: 188106291265365a0d22418253bb418953e61580
+          - mode: singleton
+            source: af4d3436843c6f10ba8f026350acb8ae7dae8730
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: ${{ matrix.source }}
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: bun install --frozen-lockfile
+      - name: Capture physical route totals without changing solver decisions
+        run: |
+          cat > controls-observer.ts <<'TS'
+          import { mkdirSync, writeFileSync } from "node:fs"
+          import { FanoutSolver } from "./lib/fanout-solver"
+          import { getPlanSegments, getPlanVias } from "./lib/route-bus/plan-copper"
+          const durations = new WeakMap()
+          const solve = FanoutSolver.prototype.solve
+          FanoutSolver.prototype.solve = function() {
+            const started = performance.now()
+            try { return solve.call(this) } finally { durations.set(this, performance.now() - started) }
+          }
+          const getOutput = FanoutSolver.prototype.getOutput
+          FanoutSolver.prototype.getOutput = function() {
+            const output = getOutput.call(this)
+            const best = Reflect.get(this, "bestAttempt")
+            const plans = best.plans
+            const summary = { requested: this.inputSrj.connections.length, solved: this.solved, failed: this.failed, assignments: this.attempts.length, elapsedMs: durations.get(this), vias: plans.flatMap(getPlanVias).length, wireLengthMm: plans.flatMap(getPlanSegments).reduce((sum, segment) => sum + Math.hypot(segment.end.x - segment.start.x, segment.end.y - segment.start.y), 0), validation: output.validation }
+            mkdirSync("control-results", { recursive: true })
+            writeFileSync("control-results/" + this.inputSrj.connections.length + ".json", JSON.stringify(summary))
+            return output
+          }
+          TS
+      - name: Test the three changed native controls
+        run: bun --preload ./controls-observer.ts test tests/am62l-core-progressive-dram.test.ts tests/am62l-top-edge-breakout-solved-repro.test.ts tests/dataset31-bottom-left-offset.test.ts
+      - name: Export native control metrics and snapshots
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import base64,io,json,zipfile
+          from pathlib import Path
+          buffer=io.BytesIO()
+          with zipfile.ZipFile(buffer,'w',zipfile.ZIP_DEFLATED) as z:
+              for p in Path('control-results').glob('*.json'):z.writestr(str(p),p.read_bytes())
+              for p in Path('tests/__snapshots__').glob('*.actual.svg'):z.writestr(p.name,p.read_bytes())
+          print('SINGLETON_CONTROLS_BEGIN')
+          encoded=base64.b64encode(buffer.getvalue()).decode()
+          for offset in range(0,len(encoded),8000):print(encoded[offset:offset+8000])
+          print('SINGLETON_CONTROLS_END')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: singleton-controls-${{ matrix.mode }}
+          path: |
+            control-results
+            tests/__snapshots__/*.actual.svg
+            tests/__snapshots__/*.diff.png
