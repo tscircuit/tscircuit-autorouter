@@ -1,0 +1,30 @@
+[
+  {
+    "component": "<board#2619 />",
+    "requested": 32,
+    "available": true,
+    "routed": 14,
+    "vias": 6,
+    "drcValid": true,
+    "drcIssues": [],
+    "solved": false,
+    "failed": true,
+    "latestStage": "FanoutSolver",
+    "routedConnections": [
+      "source_trace_16",
+      "source_trace_3",
+      "source_trace_7",
+      "source_trace_15",
+      "source_trace_17",
+      "source_trace_18",
+      "breakout:pcb_breakout_point_11",
+      "breakout:pcb_breakout_point_3",
+      "breakout:pcb_breakout_point_4",
+      "breakout:pcb_breakout_point_7",
+      "breakout:pcb_breakout_point_10",
+      "breakout:pcb_breakout_point_0",
+      "breakout:pcb_breakout_point_1",
+      "breakout:pcb_breakout_point_6"
+    ]
+  }
+]

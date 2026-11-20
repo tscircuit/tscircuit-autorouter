@@ -1,0 +1,128 @@
+{
+  "sample": "glider-original",
+  "status": "failed",
+  "renderCompleted": true,
+  "elapsedMs": 608381.499332,
+  "initialCopper": 0,
+  "phases": [
+    {
+      "name": "<board#2829 />",
+      "solver": "FanoutSolver",
+      "status": "failed",
+      "connections": 95,
+      "startedMs": 59421.462051999995,
+      "elapsedMs": 540587.594748
+    }
+  ],
+  "solvers": [
+    {
+      "id": 0,
+      "name": "FanoutSolver",
+      "phases": [
+        {
+          "stage": "FanoutSolver",
+          "atMs": 60652.445884
+        }
+      ],
+      "iterations": 72570,
+      "solved": false,
+      "failed": false,
+      "error": null,
+      "stats": {
+        "phase": "route-assignment",
+        "assignment": 250,
+        "assignmentCount": 256,
+        "routedBuses": "67/95",
+        "routedConnections": "33/95",
+        "failedBuses": "ESC_U12_pin53, connection:breakout:pcb_breakout_point_34, connection:breakout:pcb_breakout_point_35, connection:breakout:pcb_breakout_point_3, connection:breakout:pcb_breakout_point_17, connection:breakout:pcb_breakout_point_19, connection:breakout:pcb_breakout_point_48, connection:breakout:pcb_breakout_point_49, connection:breakout:pcb_breakout_point_11, connection:breakout:pcb_breakout_point_25, connection:breakout:pcb_breakout_point_27, connection:breakout:pcb_breakout_point_28, connection:breakout:pcb_breakout_point_39, connection:breakout:pcb_breakout_point_40, connection:breakout:pcb_breakout_point_42, connection:breakout:pcb_breakout_point_46, connection:breakout:pcb_breakout_point_47, connection:breakout:pcb_breakout_point_50, connection:breakout:pcb_breakout_point_9, connection:breakout:pcb_breakout_point_10, connection:breakout:pcb_breakout_point_13, connection:breakout:pcb_breakout_point_29, connection:breakout:pcb_breakout_point_30, connection:breakout:pcb_breakout_point_43, connection:breakout:pcb_breakout_point_44, connection:breakout:pcb_breakout_point_45, connection:breakout:pcb_breakout_point_51, connection:breakout:pcb_breakout_point_26",
+        "bestScore": 26400234.88976104,
+        "routingStrategy": "default",
+        "workUnit": 50,
+        "workUnitCount": 95,
+        "bus": "connection:breakout:pcb_breakout_point_34"
+      }
+    }
+  ],
+  "errors": [
+    "E2E routing budget exhausted",
+    "E2E routing budget exhausted"
+  ],
+  "counts": {
+    "source_project_metadata": 1,
+    "source_group": 3,
+    "source_port": 1684,
+    "source_component": 379,
+    "source_net": 459,
+    "source_board": 1,
+    "source_refdes_convention_warning": 313,
+    "source_component_internal_connection": 10,
+    "source_trace": 1976,
+    "source_bus": 2,
+    "source_no_power_pin_defined_warning": 356,
+    "source_no_ground_pin_defined_warning": 356,
+    "source_component_pins_underspecified_warning": 378,
+    "pcb_component": 379,
+    "pcb_group": 2,
+    "pcb_board": 1,
+    "pcb_smtpad": 1679,
+    "pcb_solder_paste": 1695,
+    "pcb_silkscreen_path": 898,
+    "pcb_plated_hole": 11,
+    "pcb_hole": 10,
+    "pcb_port": 1684,
+    "pcb_fabrication_note_path": 6,
+    "pcb_fabrication_note_text": 6,
+    "pcb_breakout_point": 199,
+    "pcb_debug_object": 1,
+    "cad_component": 379,
+    "pcb_autorouting_error": 1,
+    "pcb_copper_pour": 6,
+    "pcb_port_not_connected_error": 1976,
+    "pcb_trace_missing_error": 199,
+    "pcb_copper_pour_isolated_warning": 5
+  },
+  "revisions": {
+    "core": "4306536282fe5abf32c1395e106f55a5d61ca7a3",
+    "router": "2b1207ad70971f326166b134ea19418137273f23",
+    "fanout": "d37f359996230dbffd49c1d7cc5405d30ccce809",
+    "sampleMode": "fanout_first",
+    "archiveSha256": "1991ad1891a953dcd660818aaceb73f7aa42dbf704e677e635753b9159f7a6b7",
+    "coreLockSha256": "f92ace2c03b5a28f34ef01944b0c420a2146d45c50ff48402249911adc000d8e",
+    "@tscircuit/props": "0.0.741",
+    "@tscircuit/bus-lanes-solver": "0.0.62",
+    "@tscircuit/checks": "0.0.282",
+    "circuit-to-svg": "0.0.460",
+    "react": "19.3.1",
+    "variant": "after",
+    "pairOrder": [
+      "before",
+      "after"
+    ],
+    "fanoutSourceFiles": [
+      {
+        "path": "lib/fanout-solver.ts",
+        "beforeSha256": "b6dc8a405b2a2aa6233cd7c8826b14b39729f417097ff29d3fa464f37fddb6db",
+        "afterSha256": "8c69d7a1e895849008613c154f44b1ec5469ce517505b35ca42e1353bc38a17e",
+        "actualSha256": "8c69d7a1e895849008613c154f44b1ec5469ce517505b35ca42e1353bc38a17e"
+      },
+      {
+        "path": "lib/route-bus/route-analytic-boundary-alternatives.ts",
+        "beforeSha256": "20d80b5a2b0a4c6f78d3651e50af7ce1aac948d4130e4fb30370c9a76f3c132a",
+        "afterSha256": "0da80e9b7a8b5e6ecbb45984bf1ad9d164f62312a2cfef513ce7af16f4046d23",
+        "actualSha256": "0da80e9b7a8b5e6ecbb45984bf1ad9d164f62312a2cfef513ce7af16f4046d23"
+      },
+      {
+        "path": "lib/route-bus/track-candidates.ts",
+        "beforeSha256": "5be225944e2be619eec8f89e541b7443c91e78d9507b10d8200722314ca00eeb",
+        "afterSha256": "a4f993bd19500af156a0bceea05e9c291aaaa8c094a3f805cfc57228c1fa44e2",
+        "actualSha256": "a4f993bd19500af156a0bceea05e9c291aaaa8c094a3f805cfc57228c1fa44e2"
+      },
+      {
+        "path": "lib/route-bus/types.ts",
+        "beforeSha256": "fa2555fff4acaabbf49057b23bc4d5e8a225dfea0be5931b3fbf805aa0c49d62",
+        "afterSha256": "734e8d8658ed61a3cc238dcea73a2b3ed2d018f8ae4ac903259cf5cfe1b2a818",
+        "actualSha256": "734e8d8658ed61a3cc238dcea73a2b3ed2d018f8ae4ac903259cf5cfe1b2a818"
+      }
+    ]
+  }
+}

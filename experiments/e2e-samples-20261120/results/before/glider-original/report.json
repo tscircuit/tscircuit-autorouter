@@ -1,0 +1,124 @@
+{
+  "sample": "glider-original",
+  "status": "failed",
+  "renderCompleted": true,
+  "elapsedMs": 598115.057656,
+  "initialCopper": 0,
+  "phases": [
+    {
+      "name": "<board#2829 />",
+      "solver": "FanoutSolver",
+      "status": "failed",
+      "connections": 95,
+      "startedMs": 58657.788509,
+      "elapsedMs": 531364.156098
+    }
+  ],
+  "solvers": [
+    {
+      "id": 0,
+      "name": "FanoutSolver",
+      "phases": [
+        {
+          "stage": "FanoutSolver",
+          "atMs": 59821.506049999996
+        }
+      ],
+      "iterations": 74553,
+      "solved": false,
+      "failed": true,
+      "error": "FanoutSolver: best layer assignment routed 72/95 connections",
+      "stats": {
+        "phase": "complete-assignment",
+        "assignment": 256,
+        "assignmentCount": 256,
+        "routedBuses": "67/95",
+        "routedConnections": "67/95",
+        "failedBuses": "connection:breakout:pcb_breakout_point_30, connection:breakout:pcb_breakout_point_43, connection:breakout:pcb_breakout_point_44, connection:breakout:pcb_breakout_point_45, connection:breakout:pcb_breakout_point_47, connection:breakout:pcb_breakout_point_14, connection:breakout:pcb_breakout_point_15, connection:breakout:pcb_breakout_point_16, connection:breakout:pcb_breakout_point_27, connection:breakout:pcb_breakout_point_28, connection:breakout:pcb_breakout_point_31, connection:breakout:pcb_breakout_point_40, connection:breakout:pcb_breakout_point_42, connection:breakout:pcb_breakout_point_46, connection:breakout:pcb_breakout_point_49, connection:breakout:pcb_breakout_point_3, connection:breakout:pcb_breakout_point_19, connection:breakout:pcb_breakout_point_36, connection:breakout:pcb_breakout_point_38, connection:breakout:pcb_breakout_point_4, connection:breakout:pcb_breakout_point_35, ESC_U12_pin50, ESC_U12_pin66, ESC_U12_pin72, ESC_U12_pin20, ESC_U12_pin13, ESC_U12_pin18, ESC_U12_pin1",
+        "bestScore": 25300230.367994122
+      }
+    }
+  ],
+  "errors": [
+    "Fanout failed for U12: only 72 of 95 connections could escape to the breakout boundary. The breakout boundary is 0.7mm from the pads at its narrowest point, which all 95 escapes have to share. Give the fanout more room by increasing the breakout's padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors) so their pads sit inside the boundary instead of against it.",
+    "Fanout failed for U12: only 72 of 95 connections could escape to the breakout boundary. The breakout boundary is 0.7mm from the pads at its narrowest point, which all 95 escapes have to share. Give the fanout more room by increasing the breakout's padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors) so their pads sit inside the boundary instead of against it."
+  ],
+  "counts": {
+    "source_project_metadata": 1,
+    "source_group": 3,
+    "source_port": 1684,
+    "source_component": 379,
+    "source_net": 459,
+    "source_board": 1,
+    "source_refdes_convention_warning": 313,
+    "source_component_internal_connection": 10,
+    "source_trace": 1976,
+    "source_bus": 2,
+    "source_no_power_pin_defined_warning": 356,
+    "source_no_ground_pin_defined_warning": 356,
+    "source_component_pins_underspecified_warning": 378,
+    "pcb_component": 379,
+    "pcb_group": 2,
+    "pcb_board": 1,
+    "pcb_smtpad": 1679,
+    "pcb_solder_paste": 1695,
+    "pcb_silkscreen_path": 898,
+    "pcb_plated_hole": 11,
+    "pcb_hole": 10,
+    "pcb_port": 1684,
+    "pcb_fabrication_note_path": 6,
+    "pcb_fabrication_note_text": 6,
+    "pcb_breakout_point": 199,
+    "pcb_debug_object": 1,
+    "cad_component": 379,
+    "pcb_autorouting_error": 1,
+    "pcb_copper_pour": 6,
+    "pcb_port_not_connected_error": 1976,
+    "pcb_trace_missing_error": 199,
+    "pcb_copper_pour_isolated_warning": 5
+  },
+  "revisions": {
+    "core": "4306536282fe5abf32c1395e106f55a5d61ca7a3",
+    "router": "2b1207ad70971f326166b134ea19418137273f23",
+    "fanout": "9e771f68dca591642fca3b97187e14404c16c5aa",
+    "sampleMode": "fanout_first",
+    "archiveSha256": "1991ad1891a953dcd660818aaceb73f7aa42dbf704e677e635753b9159f7a6b7",
+    "coreLockSha256": "f92ace2c03b5a28f34ef01944b0c420a2146d45c50ff48402249911adc000d8e",
+    "@tscircuit/props": "0.0.741",
+    "@tscircuit/bus-lanes-solver": "0.0.62",
+    "@tscircuit/checks": "0.0.282",
+    "circuit-to-svg": "0.0.460",
+    "react": "19.3.1",
+    "variant": "before",
+    "pairOrder": [
+      "before",
+      "after"
+    ],
+    "fanoutSourceFiles": [
+      {
+        "path": "lib/fanout-solver.ts",
+        "beforeSha256": "b6dc8a405b2a2aa6233cd7c8826b14b39729f417097ff29d3fa464f37fddb6db",
+        "afterSha256": "8c69d7a1e895849008613c154f44b1ec5469ce517505b35ca42e1353bc38a17e",
+        "actualSha256": "b6dc8a405b2a2aa6233cd7c8826b14b39729f417097ff29d3fa464f37fddb6db"
+      },
+      {
+        "path": "lib/route-bus/route-analytic-boundary-alternatives.ts",
+        "beforeSha256": "20d80b5a2b0a4c6f78d3651e50af7ce1aac948d4130e4fb30370c9a76f3c132a",
+        "afterSha256": "0da80e9b7a8b5e6ecbb45984bf1ad9d164f62312a2cfef513ce7af16f4046d23",
+        "actualSha256": "20d80b5a2b0a4c6f78d3651e50af7ce1aac948d4130e4fb30370c9a76f3c132a"
+      },
+      {
+        "path": "lib/route-bus/track-candidates.ts",
+        "beforeSha256": "5be225944e2be619eec8f89e541b7443c91e78d9507b10d8200722314ca00eeb",
+        "afterSha256": "a4f993bd19500af156a0bceea05e9c291aaaa8c094a3f805cfc57228c1fa44e2",
+        "actualSha256": "5be225944e2be619eec8f89e541b7443c91e78d9507b10d8200722314ca00eeb"
+      },
+      {
+        "path": "lib/route-bus/types.ts",
+        "beforeSha256": "fa2555fff4acaabbf49057b23bc4d5e8a225dfea0be5931b3fbf805aa0c49d62",
+        "afterSha256": "734e8d8658ed61a3cc238dcea73a2b3ed2d018f8ae4ac903259cf5cfe1b2a818",
+        "actualSha256": "fa2555fff4acaabbf49057b23bc4d5e8a225dfea0be5931b3fbf805aa0c49d62"
+      }
+    ]
+  }
+}

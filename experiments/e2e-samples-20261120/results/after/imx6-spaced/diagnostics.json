@@ -1,0 +1,24 @@
+[
+  {
+    "component": "<board#3165 />",
+    "requested": 32,
+    "available": true,
+    "routed": 8,
+    "vias": 3,
+    "drcValid": true,
+    "drcIssues": [],
+    "solved": false,
+    "failed": true,
+    "latestStage": "FanoutSolver",
+    "routedConnections": [
+      "breakout:pcb_breakout_point_2",
+      "breakout:pcb_breakout_point_4",
+      "breakout:pcb_breakout_point_5",
+      "breakout:pcb_breakout_point_8",
+      "breakout:pcb_breakout_point_15",
+      "breakout:pcb_breakout_point_17",
+      "breakout:pcb_breakout_point_22",
+      "breakout:pcb_breakout_point_30"
+    ]
+  }
+]

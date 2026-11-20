@@ -1,0 +1,125 @@
+{
+  "sample": "h616-spaced",
+  "status": "failed",
+  "renderCompleted": true,
+  "elapsedMs": 610742.552931,
+  "initialCopper": 0,
+  "phases": [
+    {
+      "name": "<board#1262 />",
+      "solver": "FanoutSolver",
+      "status": "failed",
+      "connections": 174,
+      "startedMs": 17340.250294,
+      "elapsedMs": 582693.4387409999
+    }
+  ],
+  "solvers": [
+    {
+      "id": 0,
+      "name": "FanoutSolver",
+      "phases": [
+        {
+          "stage": "FanoutSolver",
+          "atMs": 17624.928941000002
+        }
+      ],
+      "iterations": 58150,
+      "solved": false,
+      "failed": false,
+      "error": null,
+      "stats": {
+        "phase": "route-assignment",
+        "assignment": 120,
+        "assignmentCount": 256,
+        "routedBuses": "105/160",
+        "routedConnections": "95/174",
+        "failedBuses": "connection:breakout:pcb_breakout_point_169, connection:breakout:pcb_breakout_point_42, connection:breakout:pcb_breakout_point_154, connection:breakout:pcb_breakout_point_21, connection:breakout:pcb_breakout_point_9, connection:breakout:pcb_breakout_point_153, connection:breakout:pcb_breakout_point_91, connection:breakout:pcb_breakout_point_59, connection:breakout:pcb_breakout_point_25, connection:breakout:pcb_breakout_point_96, connection:breakout:pcb_breakout_point_99, connection:breakout:pcb_breakout_point_173, connection:breakout:pcb_breakout_point_73, DDR_BUS_byte1, connection:breakout:pcb_breakout_point_43, connection:breakout:pcb_breakout_point_23, connection:breakout:pcb_breakout_point_48, connection:breakout:pcb_breakout_point_15, connection:breakout:pcb_breakout_point_7, connection:breakout:pcb_breakout_point_13, connection:breakout:pcb_breakout_point_19, connection:breakout:pcb_breakout_point_70, connection:breakout:pcb_breakout_point_5, connection:breakout:pcb_breakout_point_31, connection:breakout:pcb_breakout_point_71, connection:breakout:pcb_breakout_point_94, connection:breakout:pcb_breakout_point_97, connection:breakout:pcb_breakout_point_52, connection:breakout:pcb_breakout_point_35, connection:breakout:pcb_breakout_point_114, connection:breakout:pcb_breakout_point_126, connection:breakout:pcb_breakout_point_2, connection:breakout:pcb_breakout_point_101, connection:breakout:pcb_breakout_point_8, connection:breakout:pcb_breakout_point_50, connection:breakout:pcb_breakout_point_20, connection:breakout:pcb_breakout_point_29, connection:breakout:pcb_breakout_point_83, connection:breakout:pcb_breakout_point_12, connection:breakout:pcb_breakout_point_40, connection:breakout:pcb_breakout_point_39, connection:breakout:pcb_breakout_point_92, connection:breakout:pcb_breakout_point_32, connection:breakout:pcb_breakout_point_53, connection:breakout:pcb_breakout_point_72, connection:breakout:pcb_breakout_point_93, DDR_BUS_byte0, connection:breakout:pcb_breakout_point_66, connection:breakout:pcb_breakout_point_89, connection:breakout:pcb_breakout_point_18, connection:breakout:pcb_breakout_point_51, connection:breakout:pcb_breakout_point_56, connection:breakout:pcb_breakout_point_6, connection:breakout:pcb_breakout_point_34, connection:breakout:pcb_breakout_point_95",
+        "bestScore": 73400585.4690976,
+        "routingStrategy": "default",
+        "workUnit": 147,
+        "workUnitCount": 160,
+        "bus": "connection:breakout:pcb_breakout_point_162"
+      }
+    }
+  ],
+  "errors": [
+    "E2E routing budget exhausted",
+    "E2E routing budget exhausted"
+  ],
+  "counts": {
+    "source_project_metadata": 1,
+    "source_group": 3,
+    "source_port": 746,
+    "source_component": 125,
+    "source_net": 121,
+    "source_board": 1,
+    "source_refdes_convention_warning": 117,
+    "source_component_internal_connection": 3,
+    "source_trace": 864,
+    "source_bus": 2,
+    "source_no_power_pin_defined_warning": 112,
+    "source_no_ground_pin_defined_warning": 112,
+    "source_component_pins_underspecified_warning": 125,
+    "pcb_component": 125,
+    "pcb_group": 2,
+    "pcb_board": 1,
+    "pcb_smtpad": 726,
+    "pcb_solder_paste": 760,
+    "pcb_hole": 4,
+    "pcb_plated_hole": 30,
+    "pcb_port": 746,
+    "pcb_breakout_point": 270,
+    "pcb_connector_not_in_accessible_orientation_warning": 1,
+    "cad_component": 125,
+    "pcb_component_missing_courtyard_warning": 125,
+    "pcb_debug_object": 1,
+    "pcb_autorouting_error": 1,
+    "pcb_port_not_connected_error": 864,
+    "pcb_trace_missing_error": 270
+  },
+  "revisions": {
+    "core": "4306536282fe5abf32c1395e106f55a5d61ca7a3",
+    "router": "2b1207ad70971f326166b134ea19418137273f23",
+    "fanout": "d37f359996230dbffd49c1d7cc5405d30ccce809",
+    "sampleMode": "fanout_first",
+    "archiveSha256": "1991ad1891a953dcd660818aaceb73f7aa42dbf704e677e635753b9159f7a6b7",
+    "coreLockSha256": "f92ace2c03b5a28f34ef01944b0c420a2146d45c50ff48402249911adc000d8e",
+    "@tscircuit/props": "0.0.741",
+    "@tscircuit/bus-lanes-solver": "0.0.62",
+    "@tscircuit/checks": "0.0.282",
+    "circuit-to-svg": "0.0.460",
+    "react": "19.3.1",
+    "variant": "after",
+    "pairOrder": [
+      "after",
+      "before"
+    ],
+    "fanoutSourceFiles": [
+      {
+        "path": "lib/fanout-solver.ts",
+        "beforeSha256": "b6dc8a405b2a2aa6233cd7c8826b14b39729f417097ff29d3fa464f37fddb6db",
+        "afterSha256": "8c69d7a1e895849008613c154f44b1ec5469ce517505b35ca42e1353bc38a17e",
+        "actualSha256": "8c69d7a1e895849008613c154f44b1ec5469ce517505b35ca42e1353bc38a17e"
+      },
+      {
+        "path": "lib/route-bus/route-analytic-boundary-alternatives.ts",
+        "beforeSha256": "20d80b5a2b0a4c6f78d3651e50af7ce1aac948d4130e4fb30370c9a76f3c132a",
+        "afterSha256": "0da80e9b7a8b5e6ecbb45984bf1ad9d164f62312a2cfef513ce7af16f4046d23",
+        "actualSha256": "0da80e9b7a8b5e6ecbb45984bf1ad9d164f62312a2cfef513ce7af16f4046d23"
+      },
+      {
+        "path": "lib/route-bus/track-candidates.ts",
+        "beforeSha256": "5be225944e2be619eec8f89e541b7443c91e78d9507b10d8200722314ca00eeb",
+        "afterSha256": "a4f993bd19500af156a0bceea05e9c291aaaa8c094a3f805cfc57228c1fa44e2",
+        "actualSha256": "a4f993bd19500af156a0bceea05e9c291aaaa8c094a3f805cfc57228c1fa44e2"
+      },
+      {
+        "path": "lib/route-bus/types.ts",
+        "beforeSha256": "fa2555fff4acaabbf49057b23bc4d5e8a225dfea0be5931b3fbf805aa0c49d62",
+        "afterSha256": "734e8d8658ed61a3cc238dcea73a2b3ed2d018f8ae4ac903259cf5cfe1b2a818",
+        "actualSha256": "734e8d8658ed61a3cc238dcea73a2b3ed2d018f8ae4ac903259cf5cfe1b2a818"
+      }
+    ]
+  }
+}
