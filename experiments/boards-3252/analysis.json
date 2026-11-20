@@ -19,7 +19,8 @@
     },
     "run": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44741935392",
     "artifactId": 14631807241,
-    "artifactSha256": "5bc8055d18adc1ae758201e437fef3577e15790004aebe2fce7423c6d2338629"
+    "artifactSha256": "5bc8055d18adc1ae758201e437fef3577e15790004aebe2fce7423c6d2338629",
+    "latestRegistryVerifiedAt": "2026-11-20T13:45:32Z"
   },
   "rootCause": {
     "circuit": "icepi-local",
@@ -67,12 +68,74 @@
     "tinyTypecheck": "pass",
     "capFocusedControls": 7,
     "capBuild": "pass",
-    "capTypecheck": "pass"
+    "capTypecheck": "pass",
+    "upstreamCi": "Repro and fix tests passed; repro format and typecheck passed"
   },
   "pullRequests": {
     "tinyRepro": 335,
     "tinyFix": 336,
     "capacityRepro": 4009,
     "capacityFix": 4010
+  },
+  "fixMatrix": {
+    "run": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44746042447",
+    "bundleZipSha256": "adf989195642d3b945c9894896616f97cdf30a7b4b6d9ace15d6031793ca73c3",
+    "buildSource": "tscircuit-autorouter 7d02b591 (production sources match released 0.0.1135) with tiny-hypergraph 86c1823 (production sources match final fix 04a4119)",
+    "runtimeNote": "Pinned tscircuit runtime with only capacity-autorouter dist/index.js and its helper chunk replaced by the built fix. Original package version remains 0.0.1135; compare entry SHA256 values.",
+    "artifactId": 14632913616,
+    "artifactSha256": "c5790297d3aade54727dde588af0655291ea775db27f1f57e94d80bca94c25d4",
+    "fullyRouted": 0,
+    "terminalRuns": 10,
+    "budgetRuns": 9,
+    "byteIdenticalTerminalCircuitJson": 9,
+    "improvedStage": "icepi-local: portPointPathingSolver -> highDensityRouteSolver",
+    "stages": {
+      "bus_lanes:budget": 2,
+      "fanout:failure": 4,
+      "highDensityRouteSolver:budget": 3,
+      "portPointPathingSolver:failure": 2,
+      "highDensityRouteSolver:failure": 4,
+      "fanout:budget": 2,
+      "topologyMergingSolver:budget": 1,
+      "portPointPathingSolver:budget": 1
+    },
+    "identicalCapturedPhaseInputs": 55,
+    "changedCapturedPhaseInputs": [],
+    "timingLimitations": "Separate Blacksmith jobs. Budget-only progress differences do not establish performance regressions. The changed guard is not reached in the imx6-local topology/edge stages.",
+    "nativeFanoutCounts": [
+      {
+        "board": "butterstick-native",
+        "fanoutBefore": 60,
+        "fanoutAfter": 60
+      },
+      {
+        "board": "glider-native",
+        "fanoutBefore": 72,
+        "fanoutAfter": 72
+      },
+      {
+        "board": "h616-native",
+        "fanoutBefore": 107,
+        "fanoutAfter": 107
+      },
+      {
+        "board": "icepi-native",
+        "fanoutBefore": 9,
+        "fanoutAfter": 9
+      },
+      {
+        "board": "imx6-native",
+        "fanoutBefore": 9,
+        "fanoutAfter": 9
+      },
+      {
+        "board": "orangecrab-native",
+        "fanoutBefore": 141,
+        "fanoutAfter": 141
+      }
+    ],
+    "identicalCompletedPhaseOutputs": 36,
+    "changedCompletedPhaseOutputs": [],
+    "entrySha256": "d13aec907070b1b58359fff98a2e674ea62b2c6cb287dc6ebaa56e4dcbecafdd"
   }
 }

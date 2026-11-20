@@ -1,0 +1,20 @@
+board,beforeStop,afterStop,beforeSeconds,afterSeconds,identicalCircuitJson,afterStage,fanoutBefore,fanoutAfter
+butterstick-local,600-second render budget,600-second render budget,600.663,600.715,,bus_lanes,,
+butterstick-native,settled,settled,381.785,371.899,True,fanout,60,60
+butterstick-spaced,600-second render budget,600-second render budget,600.77,600.82,,bus_lanes,,
+glider-local,600-second render budget,600-second render budget,600.57,600.624,,highDensityRouteSolver,,
+glider-native,settled,settled,571.531,569.169,True,fanout,72,72
+glider-spaced,settled,settled,171.092,166.863,True,portPointPathingSolver,,
+h616-default-order-local,settled,settled,359.58,352.23,True,highDensityRouteSolver,,
+h616-local,settled,settled,557.093,561.448,True,highDensityRouteSolver,,
+h616-native,600-second render budget,600-second render budget,600.628,600.681,,fanout,107,107
+h616-spaced,600-second render budget,600-second render budget,600.456,600.466,,highDensityRouteSolver,,
+icepi-local,settled,settled,322.606,466.675,False,highDensityRouteSolver,,
+icepi-native,settled,settled,189.901,174.882,True,fanout,9,9
+icepi-spaced,settled,settled,295.336,288.508,True,portPointPathingSolver,,
+imx6-local,600-second render budget,600-second render budget,600.404,600.703,,topologyMergingSolver,,
+imx6-native,settled,settled,323.504,313.97,True,fanout,9,9
+imx6-spaced,600-second render budget,600-second render budget,600.581,600.65,,portPointPathingSolver,,
+orangecrab-local,settled,settled,236.51,233.418,True,highDensityRouteSolver,,
+orangecrab-native,600-second render budget,600-second render budget,600.36,600.388,,fanout,141,141
+orangecrab-spaced,600-second render budget,600-second render budget,600.9,600.754,,highDensityRouteSolver,,
