@@ -1,0 +1,1016 @@
+{
+  "archiveSha256": "1991ad1891a953dcd660818aaceb73f7aa42dbf704e677e635753b9159f7a6b7",
+  "interpretation": "Best diagnostic partial fanout; not committed PCB routing or completed board nets",
+  "rows": [
+    {
+      "sample": "butterstick-original",
+      "sameFanoutConstructorInputs": true,
+      "captures": [
+        {
+          "mode": "before",
+          "fanoutReached": true,
+          "solved": false,
+          "failed": true,
+          "partialEscapes": 60,
+          "requests": 91,
+          "nativeVias": 57,
+          "physicalViaSites": 57,
+          "nativeDrc": {
+            "valid": true,
+            "checkedTraceCount": 60,
+            "checkedSegmentCount": 228,
+            "checkedViaCount": 57,
+            "issues": []
+          },
+          "independentViaInPadFindings": [],
+          "checkedCircuitSnapshot": "circuit.json.gz",
+          "coreTraces": 0,
+          "coreVias": 0,
+          "preservedGeometry": {
+            "components": 350,
+            "expectedComponents": 350,
+            "pads": 1623,
+            "expectedPads": 1623,
+            "membershipErrors": []
+          },
+          "revisions": {
+            "core": "351e73d665fad37577c47fcbff2e4c29eb377467",
+            "router": "native-installed-package",
+            "winding": "202dbe9eb0088633b6fa094120dba6f2f41f8803",
+            "sampleMode": "fanout_first",
+            "archiveSha256": "1991ad1891a953dcd660818aaceb73f7aa42dbf704e677e635753b9159f7a6b7",
+            "coreLockSha256": "23136f630f9a4a12ad672102659eca76ac78303811f52e0309c3b9ea12643037",
+            "@tscircuit/fanout-solver": "0.0.93",
+            "@tscircuit/winding-breakout-point-solver": "0.0.1",
+            "@tscircuit/capacity-autorouter": "0.0.1135",
+            "@tscircuit/props": "0.0.741",
+            "@tscircuit/bus-lanes-solver": "0.0.62",
+            "@tscircuit/checks": "0.0.282",
+            "circuit-to-svg": "0.0.460",
+            "react": "19.3.1",
+            "interception": "read-only winding stages and original fanout clearance rejections",
+            "corePatchApplied": false
+          }
+        },
+        {
+          "mode": "after",
+          "fanoutReached": true,
+          "solved": false,
+          "failed": false,
+          "partialEscapes": 62,
+          "requests": 91,
+          "nativeVias": 42,
+          "physicalViaSites": 42,
+          "nativeDrc": {
+            "valid": true,
+            "checkedTraceCount": 62,
+            "checkedSegmentCount": 191,
+            "checkedViaCount": 42,
+            "issues": []
+          },
+          "independentViaInPadFindings": [],
+          "checkedCircuitSnapshot": "circuit.json.gz",
+          "coreTraces": 0,
+          "coreVias": 0,
+          "preservedGeometry": {
+            "components": 350,
+            "expectedComponents": 350,
+            "pads": 1623,
+            "expectedPads": 1623,
+            "membershipErrors": []
+          },
+          "revisions": {
+            "core": "351e73d665fad37577c47fcbff2e4c29eb377467",
+            "router": "native-installed-package",
+            "winding": "202dbe9eb0088633b6fa094120dba6f2f41f8803",
+            "sampleMode": "fanout_first",
+            "archiveSha256": "1991ad1891a953dcd660818aaceb73f7aa42dbf704e677e635753b9159f7a6b7",
+            "coreLockSha256": "be2a291d11cb926400c08fd43a0bfab9051761c97ce4bf02afb12143cac94f55",
+            "@tscircuit/fanout-solver": "0.0.93",
+            "@tscircuit/winding-breakout-point-solver": "0.0.1",
+            "@tscircuit/capacity-autorouter": "0.0.1135",
+            "@tscircuit/props": "0.0.741",
+            "@tscircuit/bus-lanes-solver": "0.0.62",
+            "@tscircuit/checks": "0.0.282",
+            "circuit-to-svg": "0.0.460",
+            "react": "19.3.1",
+            "interception": "read-only winding stages and original fanout clearance rejections",
+            "corePatchApplied": false,
+            "fanoutSourcePatch": [
+              {
+                "file": "route-analytic-boundary-alternatives.ts",
+                "beforeSha256": "20d80b5a2b0a4c6f78d3651e50af7ce1aac948d4130e4fb30370c9a76f3c132a",
+                "afterSha256": "e9c2dbbc241ba857da32913a183a959d60d7645f26e4af383c77aeb00ea34388"
+              },
+              {
+                "file": "track-candidates.ts",
+                "beforeSha256": "5be225944e2be619eec8f89e541b7443c91e78d9507b10d8200722314ca00eeb",
+                "afterSha256": "817f623d9850ed943a0d2ee7163f3b62bdc60bac29237a1826667f88740a7bef"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "sample": "butterstick-spaced",
+      "sameFanoutConstructorInputs": true,
+      "captures": [
+        {
+          "mode": "before",
+          "fanoutReached": true,
+          "solved": false,
+          "failed": false,
+          "partialEscapes": 70,
+          "requests": 91,
+          "nativeVias": 52,
+          "physicalViaSites": 52,
+          "nativeDrc": {
+            "valid": true,
+            "checkedTraceCount": 70,
+            "checkedSegmentCount": 307,
+            "checkedViaCount": 52,
+            "issues": []
+          },
+          "independentViaInPadFindings": [],
+          "checkedCircuitSnapshot": "unrouted.circuit.json.gz",
+          "coreTraces": 0,
+          "coreVias": 0,
+          "preservedGeometry": null,
+          "revisions": {
+            "core": "351e73d665fad37577c47fcbff2e4c29eb377467",
+            "router": "native-installed-package",
+            "winding": "202dbe9eb0088633b6fa094120dba6f2f41f8803",
+            "sampleMode": "fanout_first",
+            "archiveSha256": "1991ad1891a953dcd660818aaceb73f7aa42dbf704e677e635753b9159f7a6b7",
+            "coreLockSha256": "23136f630f9a4a12ad672102659eca76ac78303811f52e0309c3b9ea12643037",
+            "@tscircuit/fanout-solver": "0.0.93",
+            "@tscircuit/winding-breakout-point-solver": "0.0.1",
+            "@tscircuit/capacity-autorouter": "0.0.1135",
+            "@tscircuit/props": "0.0.741",
+            "@tscircuit/bus-lanes-solver": "0.0.62",
+            "@tscircuit/checks": "0.0.282",
+            "circuit-to-svg": "0.0.460",
+            "react": "19.3.1",
+            "interception": "read-only winding stages and original fanout clearance rejections",
+            "corePatchApplied": false
+          }
+        },
+        {
+          "mode": "after",
+          "fanoutReached": true,
+          "solved": false,
+          "failed": true,
+          "partialEscapes": 78,
+          "requests": 91,
+          "nativeVias": 41,
+          "physicalViaSites": 41,
+          "nativeDrc": {
+            "valid": true,
+            "checkedTraceCount": 78,
+            "checkedSegmentCount": 298,
+            "checkedViaCount": 41,
+            "issues": []
+          },
+          "independentViaInPadFindings": [],
+          "checkedCircuitSnapshot": "circuit.json.gz",
+          "coreTraces": 0,
+          "coreVias": 0,
+          "preservedGeometry": {
+            "components": 350,
+            "expectedComponents": 350,
+            "pads": 1623,
+            "expectedPads": 1623,
+            "membershipErrors": []
+          },
+          "revisions": {
+            "core": "351e73d665fad37577c47fcbff2e4c29eb377467",
+            "router": "native-installed-package",
+            "winding": "202dbe9eb0088633b6fa094120dba6f2f41f8803",
+            "sampleMode": "fanout_first",
+            "archiveSha256": "1991ad1891a953dcd660818aaceb73f7aa42dbf704e677e635753b9159f7a6b7",
+            "coreLockSha256": "be2a291d11cb926400c08fd43a0bfab9051761c97ce4bf02afb12143cac94f55",
+            "@tscircuit/fanout-solver": "0.0.93",
+            "@tscircuit/winding-breakout-point-solver": "0.0.1",
+            "@tscircuit/capacity-autorouter": "0.0.1135",
+            "@tscircuit/props": "0.0.741",
+            "@tscircuit/bus-lanes-solver": "0.0.62",
+            "@tscircuit/checks": "0.0.282",
+            "circuit-to-svg": "0.0.460",
+            "react": "19.3.1",
+            "interception": "read-only winding stages and original fanout clearance rejections",
+            "corePatchApplied": false,
+            "fanoutSourcePatch": [
+              {
+                "file": "route-analytic-boundary-alternatives.ts",
+                "beforeSha256": "20d80b5a2b0a4c6f78d3651e50af7ce1aac948d4130e4fb30370c9a76f3c132a",
+                "afterSha256": "e9c2dbbc241ba857da32913a183a959d60d7645f26e4af383c77aeb00ea34388"
+              },
+              {
+                "file": "track-candidates.ts",
+                "beforeSha256": "5be225944e2be619eec8f89e541b7443c91e78d9507b10d8200722314ca00eeb",
+                "afterSha256": "817f623d9850ed943a0d2ee7163f3b62bdc60bac29237a1826667f88740a7bef"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "sample": "glider-original",
+      "sameFanoutConstructorInputs": true,
+      "captures": [
+        {
+          "mode": "before",
+          "fanoutReached": true,
+          "solved": false,
+          "failed": false,
+          "partialEscapes": 69,
+          "requests": 95,
+          "nativeVias": 56,
+          "physicalViaSites": 56,
+          "nativeDrc": {
+            "valid": true,
+            "checkedTraceCount": 69,
+            "checkedSegmentCount": 202,
+            "checkedViaCount": 56,
+            "issues": []
+          },
+          "independentViaInPadFindings": [],
+          "checkedCircuitSnapshot": "circuit.json.gz",
+          "coreTraces": 0,
+          "coreVias": 0,
+          "preservedGeometry": {
+            "components": 379,
+            "expectedComponents": 379,
+            "pads": 1700,
+            "expectedPads": 1700,
+            "membershipErrors": []
+          },
+          "revisions": {
+            "core": "351e73d665fad37577c47fcbff2e4c29eb377467",
+            "router": "native-installed-package",
+            "winding": "202dbe9eb0088633b6fa094120dba6f2f41f8803",
+            "sampleMode": "fanout_first",
+            "archiveSha256": "1991ad1891a953dcd660818aaceb73f7aa42dbf704e677e635753b9159f7a6b7",
+            "coreLockSha256": "23136f630f9a4a12ad672102659eca76ac78303811f52e0309c3b9ea12643037",
+            "@tscircuit/fanout-solver": "0.0.93",
+            "@tscircuit/winding-breakout-point-solver": "0.0.1",
+            "@tscircuit/capacity-autorouter": "0.0.1135",
+            "@tscircuit/props": "0.0.741",
+            "@tscircuit/bus-lanes-solver": "0.0.62",
+            "@tscircuit/checks": "0.0.282",
+            "circuit-to-svg": "0.0.460",
+            "react": "19.3.1",
+            "interception": "read-only winding stages and original fanout clearance rejections",
+            "corePatchApplied": false
+          }
+        },
+        {
+          "mode": "after",
+          "fanoutReached": true,
+          "solved": false,
+          "failed": false,
+          "partialEscapes": 83,
+          "requests": 95,
+          "nativeVias": 56,
+          "physicalViaSites": 56,
+          "nativeDrc": {
+            "valid": true,
+            "checkedTraceCount": 83,
+            "checkedSegmentCount": 223,
+            "checkedViaCount": 56,
+            "issues": []
+          },
+          "independentViaInPadFindings": [],
+          "checkedCircuitSnapshot": "circuit.json.gz",
+          "coreTraces": 0,
+          "coreVias": 0,
+          "preservedGeometry": {
+            "components": 379,
+            "expectedComponents": 379,
+            "pads": 1700,
+            "expectedPads": 1700,
+            "membershipErrors": []
+          },
+          "revisions": {
+            "core": "351e73d665fad37577c47fcbff2e4c29eb377467",
+            "router": "native-installed-package",
+            "winding": "202dbe9eb0088633b6fa094120dba6f2f41f8803",
+            "sampleMode": "fanout_first",
+            "archiveSha256": "1991ad1891a953dcd660818aaceb73f7aa42dbf704e677e635753b9159f7a6b7",
+            "coreLockSha256": "be2a291d11cb926400c08fd43a0bfab9051761c97ce4bf02afb12143cac94f55",
+            "@tscircuit/fanout-solver": "0.0.93",
+            "@tscircuit/winding-breakout-point-solver": "0.0.1",
+            "@tscircuit/capacity-autorouter": "0.0.1135",
+            "@tscircuit/props": "0.0.741",
+            "@tscircuit/bus-lanes-solver": "0.0.62",
+            "@tscircuit/checks": "0.0.282",
+            "circuit-to-svg": "0.0.460",
+            "react": "19.3.1",
+            "interception": "read-only winding stages and original fanout clearance rejections",
+            "corePatchApplied": false,
+            "fanoutSourcePatch": [
+              {
+                "file": "route-analytic-boundary-alternatives.ts",
+                "beforeSha256": "20d80b5a2b0a4c6f78d3651e50af7ce1aac948d4130e4fb30370c9a76f3c132a",
+                "afterSha256": "e9c2dbbc241ba857da32913a183a959d60d7645f26e4af383c77aeb00ea34388"
+              },
+              {
+                "file": "track-candidates.ts",
+                "beforeSha256": "5be225944e2be619eec8f89e541b7443c91e78d9507b10d8200722314ca00eeb",
+                "afterSha256": "817f623d9850ed943a0d2ee7163f3b62bdc60bac29237a1826667f88740a7bef"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "sample": "glider-spaced",
+      "sameFanoutConstructorInputs": true,
+      "captures": [
+        {
+          "mode": "before",
+          "fanoutReached": false,
+          "errors": [
+            "E2E routing budget exhausted",
+            "Winding fanout failed for U1: WindingBreakoutSolver: declared breakout edges need 16.91mm but expose only 16.80mm. The connections could not escape to the breakout boundary. Give the fanout more room by increasing the breakout's padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors).",
+            "Winding fanout failed for U12: WindingBreakoutSolver: declared breakout edges need 14.24mm but expose only 13.80mm. The connections could not escape to the breakout boundary. Give the fanout more room by increasing the breakout's padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors).",
+            "E2E routing budget exhausted"
+          ]
+        },
+        {
+          "mode": "after",
+          "fanoutReached": false,
+          "errors": [
+            "E2E routing budget exhausted",
+            "Winding fanout failed for U1: WindingBreakoutSolver: declared breakout edges need 16.91mm but expose only 16.80mm. The connections could not escape to the breakout boundary. Give the fanout more room by increasing the breakout's padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors).",
+            "Winding fanout failed for U12: WindingBreakoutSolver: declared breakout edges need 14.24mm but expose only 13.80mm. The connections could not escape to the breakout boundary. Give the fanout more room by increasing the breakout's padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors).",
+            "E2E routing budget exhausted"
+          ]
+        }
+      ]
+    },
+    {
+      "sample": "h616-original",
+      "sameFanoutConstructorInputs": true,
+      "captures": [
+        {
+          "mode": "before",
+          "fanoutReached": true,
+          "solved": false,
+          "failed": false,
+          "partialEscapes": 101,
+          "requests": 174,
+          "nativeVias": 76,
+          "physicalViaSites": 76,
+          "nativeDrc": {
+            "valid": true,
+            "checkedTraceCount": 101,
+            "checkedSegmentCount": 285,
+            "checkedViaCount": 76,
+            "issues": []
+          },
+          "independentViaInPadFindings": [],
+          "checkedCircuitSnapshot": "circuit.json.gz",
+          "coreTraces": 0,
+          "coreVias": 0,
+          "preservedGeometry": {
+            "components": 125,
+            "expectedComponents": 125,
+            "pads": 760,
+            "expectedPads": 760,
+            "membershipErrors": []
+          },
+          "revisions": {
+            "core": "351e73d665fad37577c47fcbff2e4c29eb377467",
+            "router": "native-installed-package",
+            "winding": "202dbe9eb0088633b6fa094120dba6f2f41f8803",
+            "sampleMode": "fanout_first",
+            "archiveSha256": "1991ad1891a953dcd660818aaceb73f7aa42dbf704e677e635753b9159f7a6b7",
+            "coreLockSha256": "23136f630f9a4a12ad672102659eca76ac78303811f52e0309c3b9ea12643037",
+            "@tscircuit/fanout-solver": "0.0.93",
+            "@tscircuit/winding-breakout-point-solver": "0.0.1",
+            "@tscircuit/capacity-autorouter": "0.0.1135",
+            "@tscircuit/props": "0.0.741",
+            "@tscircuit/bus-lanes-solver": "0.0.62",
+            "@tscircuit/checks": "0.0.282",
+            "circuit-to-svg": "0.0.460",
+            "react": "19.3.1",
+            "interception": "read-only winding stages and original fanout clearance rejections",
+            "corePatchApplied": false
+          }
+        },
+        {
+          "mode": "after",
+          "fanoutReached": true,
+          "solved": false,
+          "failed": false,
+          "partialEscapes": 105,
+          "requests": 174,
+          "nativeVias": 66,
+          "physicalViaSites": 66,
+          "nativeDrc": {
+            "valid": true,
+            "checkedTraceCount": 105,
+            "checkedSegmentCount": 247,
+            "checkedViaCount": 66,
+            "issues": []
+          },
+          "independentViaInPadFindings": [],
+          "checkedCircuitSnapshot": "circuit.json.gz",
+          "coreTraces": 0,
+          "coreVias": 0,
+          "preservedGeometry": {
+            "components": 125,
+            "expectedComponents": 125,
+            "pads": 760,
+            "expectedPads": 760,
+            "membershipErrors": []
+          },
+          "revisions": {
+            "core": "351e73d665fad37577c47fcbff2e4c29eb377467",
+            "router": "native-installed-package",
+            "winding": "202dbe9eb0088633b6fa094120dba6f2f41f8803",
+            "sampleMode": "fanout_first",
+            "archiveSha256": "1991ad1891a953dcd660818aaceb73f7aa42dbf704e677e635753b9159f7a6b7",
+            "coreLockSha256": "be2a291d11cb926400c08fd43a0bfab9051761c97ce4bf02afb12143cac94f55",
+            "@tscircuit/fanout-solver": "0.0.93",
+            "@tscircuit/winding-breakout-point-solver": "0.0.1",
+            "@tscircuit/capacity-autorouter": "0.0.1135",
+            "@tscircuit/props": "0.0.741",
+            "@tscircuit/bus-lanes-solver": "0.0.62",
+            "@tscircuit/checks": "0.0.282",
+            "circuit-to-svg": "0.0.460",
+            "react": "19.3.1",
+            "interception": "read-only winding stages and original fanout clearance rejections",
+            "corePatchApplied": false,
+            "fanoutSourcePatch": [
+              {
+                "file": "route-analytic-boundary-alternatives.ts",
+                "beforeSha256": "20d80b5a2b0a4c6f78d3651e50af7ce1aac948d4130e4fb30370c9a76f3c132a",
+                "afterSha256": "e9c2dbbc241ba857da32913a183a959d60d7645f26e4af383c77aeb00ea34388"
+              },
+              {
+                "file": "track-candidates.ts",
+                "beforeSha256": "5be225944e2be619eec8f89e541b7443c91e78d9507b10d8200722314ca00eeb",
+                "afterSha256": "817f623d9850ed943a0d2ee7163f3b62bdc60bac29237a1826667f88740a7bef"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "sample": "h616-spaced",
+      "sameFanoutConstructorInputs": true,
+      "captures": [
+        {
+          "mode": "before",
+          "fanoutReached": true,
+          "solved": false,
+          "failed": false,
+          "partialEscapes": 96,
+          "requests": 174,
+          "nativeVias": 61,
+          "physicalViaSites": 61,
+          "nativeDrc": {
+            "valid": true,
+            "checkedTraceCount": 96,
+            "checkedSegmentCount": 446,
+            "checkedViaCount": 61,
+            "issues": []
+          },
+          "independentViaInPadFindings": [],
+          "checkedCircuitSnapshot": "circuit.json.gz",
+          "coreTraces": 0,
+          "coreVias": 0,
+          "preservedGeometry": {
+            "components": 125,
+            "expectedComponents": 125,
+            "pads": 760,
+            "expectedPads": 760,
+            "membershipErrors": []
+          },
+          "revisions": {
+            "core": "351e73d665fad37577c47fcbff2e4c29eb377467",
+            "router": "native-installed-package",
+            "winding": "202dbe9eb0088633b6fa094120dba6f2f41f8803",
+            "sampleMode": "fanout_first",
+            "archiveSha256": "1991ad1891a953dcd660818aaceb73f7aa42dbf704e677e635753b9159f7a6b7",
+            "coreLockSha256": "23136f630f9a4a12ad672102659eca76ac78303811f52e0309c3b9ea12643037",
+            "@tscircuit/fanout-solver": "0.0.93",
+            "@tscircuit/winding-breakout-point-solver": "0.0.1",
+            "@tscircuit/capacity-autorouter": "0.0.1135",
+            "@tscircuit/props": "0.0.741",
+            "@tscircuit/bus-lanes-solver": "0.0.62",
+            "@tscircuit/checks": "0.0.282",
+            "circuit-to-svg": "0.0.460",
+            "react": "19.3.1",
+            "interception": "read-only winding stages and original fanout clearance rejections",
+            "corePatchApplied": false
+          }
+        },
+        {
+          "mode": "after",
+          "fanoutReached": true,
+          "solved": false,
+          "failed": false,
+          "partialEscapes": 111,
+          "requests": 174,
+          "nativeVias": 72,
+          "physicalViaSites": 72,
+          "nativeDrc": {
+            "valid": true,
+            "checkedTraceCount": 111,
+            "checkedSegmentCount": 472,
+            "checkedViaCount": 72,
+            "issues": []
+          },
+          "independentViaInPadFindings": [],
+          "checkedCircuitSnapshot": "circuit.json.gz",
+          "coreTraces": 0,
+          "coreVias": 0,
+          "preservedGeometry": {
+            "components": 125,
+            "expectedComponents": 125,
+            "pads": 760,
+            "expectedPads": 760,
+            "membershipErrors": []
+          },
+          "revisions": {
+            "core": "351e73d665fad37577c47fcbff2e4c29eb377467",
+            "router": "native-installed-package",
+            "winding": "202dbe9eb0088633b6fa094120dba6f2f41f8803",
+            "sampleMode": "fanout_first",
+            "archiveSha256": "1991ad1891a953dcd660818aaceb73f7aa42dbf704e677e635753b9159f7a6b7",
+            "coreLockSha256": "be2a291d11cb926400c08fd43a0bfab9051761c97ce4bf02afb12143cac94f55",
+            "@tscircuit/fanout-solver": "0.0.93",
+            "@tscircuit/winding-breakout-point-solver": "0.0.1",
+            "@tscircuit/capacity-autorouter": "0.0.1135",
+            "@tscircuit/props": "0.0.741",
+            "@tscircuit/bus-lanes-solver": "0.0.62",
+            "@tscircuit/checks": "0.0.282",
+            "circuit-to-svg": "0.0.460",
+            "react": "19.3.1",
+            "interception": "read-only winding stages and original fanout clearance rejections",
+            "corePatchApplied": false,
+            "fanoutSourcePatch": [
+              {
+                "file": "route-analytic-boundary-alternatives.ts",
+                "beforeSha256": "20d80b5a2b0a4c6f78d3651e50af7ce1aac948d4130e4fb30370c9a76f3c132a",
+                "afterSha256": "e9c2dbbc241ba857da32913a183a959d60d7645f26e4af383c77aeb00ea34388"
+              },
+              {
+                "file": "track-candidates.ts",
+                "beforeSha256": "5be225944e2be619eec8f89e541b7443c91e78d9507b10d8200722314ca00eeb",
+                "afterSha256": "817f623d9850ed943a0d2ee7163f3b62bdc60bac29237a1826667f88740a7bef"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "sample": "icepi-original",
+      "sameFanoutConstructorInputs": true,
+      "captures": [
+        {
+          "mode": "before",
+          "fanoutReached": true,
+          "solved": false,
+          "failed": true,
+          "partialEscapes": 9,
+          "requests": 32,
+          "nativeVias": 8,
+          "physicalViaSites": 8,
+          "nativeDrc": {
+            "valid": true,
+            "checkedTraceCount": 9,
+            "checkedSegmentCount": 15,
+            "checkedViaCount": 8,
+            "issues": []
+          },
+          "independentViaInPadFindings": [],
+          "checkedCircuitSnapshot": "circuit.json.gz",
+          "coreTraces": 0,
+          "coreVias": 0,
+          "preservedGeometry": {
+            "components": 280,
+            "expectedComponents": 280,
+            "pads": 1426,
+            "expectedPads": 1426,
+            "membershipErrors": []
+          },
+          "revisions": {
+            "core": "351e73d665fad37577c47fcbff2e4c29eb377467",
+            "router": "native-installed-package",
+            "winding": "202dbe9eb0088633b6fa094120dba6f2f41f8803",
+            "sampleMode": "fanout_first",
+            "archiveSha256": "1991ad1891a953dcd660818aaceb73f7aa42dbf704e677e635753b9159f7a6b7",
+            "coreLockSha256": "23136f630f9a4a12ad672102659eca76ac78303811f52e0309c3b9ea12643037",
+            "@tscircuit/fanout-solver": "0.0.93",
+            "@tscircuit/winding-breakout-point-solver": "0.0.1",
+            "@tscircuit/capacity-autorouter": "0.0.1135",
+            "@tscircuit/props": "0.0.741",
+            "@tscircuit/bus-lanes-solver": "0.0.62",
+            "@tscircuit/checks": "0.0.282",
+            "circuit-to-svg": "0.0.460",
+            "react": "19.3.1",
+            "interception": "read-only winding stages and original fanout clearance rejections",
+            "corePatchApplied": false
+          }
+        },
+        {
+          "mode": "after",
+          "fanoutReached": true,
+          "solved": false,
+          "failed": true,
+          "partialEscapes": 14,
+          "requests": 32,
+          "nativeVias": 6,
+          "physicalViaSites": 6,
+          "nativeDrc": {
+            "valid": true,
+            "checkedTraceCount": 14,
+            "checkedSegmentCount": 25,
+            "checkedViaCount": 6,
+            "issues": []
+          },
+          "independentViaInPadFindings": [],
+          "checkedCircuitSnapshot": "circuit.json.gz",
+          "coreTraces": 0,
+          "coreVias": 0,
+          "preservedGeometry": {
+            "components": 280,
+            "expectedComponents": 280,
+            "pads": 1426,
+            "expectedPads": 1426,
+            "membershipErrors": []
+          },
+          "revisions": {
+            "core": "351e73d665fad37577c47fcbff2e4c29eb377467",
+            "router": "native-installed-package",
+            "winding": "202dbe9eb0088633b6fa094120dba6f2f41f8803",
+            "sampleMode": "fanout_first",
+            "archiveSha256": "1991ad1891a953dcd660818aaceb73f7aa42dbf704e677e635753b9159f7a6b7",
+            "coreLockSha256": "be2a291d11cb926400c08fd43a0bfab9051761c97ce4bf02afb12143cac94f55",
+            "@tscircuit/fanout-solver": "0.0.93",
+            "@tscircuit/winding-breakout-point-solver": "0.0.1",
+            "@tscircuit/capacity-autorouter": "0.0.1135",
+            "@tscircuit/props": "0.0.741",
+            "@tscircuit/bus-lanes-solver": "0.0.62",
+            "@tscircuit/checks": "0.0.282",
+            "circuit-to-svg": "0.0.460",
+            "react": "19.3.1",
+            "interception": "read-only winding stages and original fanout clearance rejections",
+            "corePatchApplied": false,
+            "fanoutSourcePatch": [
+              {
+                "file": "route-analytic-boundary-alternatives.ts",
+                "beforeSha256": "20d80b5a2b0a4c6f78d3651e50af7ce1aac948d4130e4fb30370c9a76f3c132a",
+                "afterSha256": "e9c2dbbc241ba857da32913a183a959d60d7645f26e4af383c77aeb00ea34388"
+              },
+              {
+                "file": "track-candidates.ts",
+                "beforeSha256": "5be225944e2be619eec8f89e541b7443c91e78d9507b10d8200722314ca00eeb",
+                "afterSha256": "817f623d9850ed943a0d2ee7163f3b62bdc60bac29237a1826667f88740a7bef"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "sample": "icepi-spaced",
+      "sameFanoutConstructorInputs": true,
+      "captures": [
+        {
+          "mode": "before",
+          "fanoutReached": true,
+          "solved": false,
+          "failed": true,
+          "partialEscapes": 76,
+          "requests": 92,
+          "nativeVias": 37,
+          "physicalViaSites": 37,
+          "nativeDrc": {
+            "valid": true,
+            "checkedTraceCount": 76,
+            "checkedSegmentCount": 291,
+            "checkedViaCount": 37,
+            "issues": []
+          },
+          "independentViaInPadFindings": [],
+          "checkedCircuitSnapshot": "circuit.json.gz",
+          "coreTraces": 0,
+          "coreVias": 0,
+          "preservedGeometry": {
+            "components": 280,
+            "expectedComponents": 280,
+            "pads": 1426,
+            "expectedPads": 1426,
+            "membershipErrors": []
+          },
+          "revisions": {
+            "core": "351e73d665fad37577c47fcbff2e4c29eb377467",
+            "router": "native-installed-package",
+            "winding": "202dbe9eb0088633b6fa094120dba6f2f41f8803",
+            "sampleMode": "fanout_first",
+            "archiveSha256": "1991ad1891a953dcd660818aaceb73f7aa42dbf704e677e635753b9159f7a6b7",
+            "coreLockSha256": "23136f630f9a4a12ad672102659eca76ac78303811f52e0309c3b9ea12643037",
+            "@tscircuit/fanout-solver": "0.0.93",
+            "@tscircuit/winding-breakout-point-solver": "0.0.1",
+            "@tscircuit/capacity-autorouter": "0.0.1135",
+            "@tscircuit/props": "0.0.741",
+            "@tscircuit/bus-lanes-solver": "0.0.62",
+            "@tscircuit/checks": "0.0.282",
+            "circuit-to-svg": "0.0.460",
+            "react": "19.3.1",
+            "interception": "read-only winding stages and original fanout clearance rejections",
+            "corePatchApplied": false
+          }
+        },
+        {
+          "mode": "after",
+          "fanoutReached": true,
+          "solved": false,
+          "failed": true,
+          "partialEscapes": 77,
+          "requests": 92,
+          "nativeVias": 37,
+          "physicalViaSites": 37,
+          "nativeDrc": {
+            "valid": true,
+            "checkedTraceCount": 77,
+            "checkedSegmentCount": 293,
+            "checkedViaCount": 37,
+            "issues": []
+          },
+          "independentViaInPadFindings": [],
+          "checkedCircuitSnapshot": "circuit.json.gz",
+          "coreTraces": 0,
+          "coreVias": 0,
+          "preservedGeometry": {
+            "components": 280,
+            "expectedComponents": 280,
+            "pads": 1426,
+            "expectedPads": 1426,
+            "membershipErrors": []
+          },
+          "revisions": {
+            "core": "351e73d665fad37577c47fcbff2e4c29eb377467",
+            "router": "native-installed-package",
+            "winding": "202dbe9eb0088633b6fa094120dba6f2f41f8803",
+            "sampleMode": "fanout_first",
+            "archiveSha256": "1991ad1891a953dcd660818aaceb73f7aa42dbf704e677e635753b9159f7a6b7",
+            "coreLockSha256": "be2a291d11cb926400c08fd43a0bfab9051761c97ce4bf02afb12143cac94f55",
+            "@tscircuit/fanout-solver": "0.0.93",
+            "@tscircuit/winding-breakout-point-solver": "0.0.1",
+            "@tscircuit/capacity-autorouter": "0.0.1135",
+            "@tscircuit/props": "0.0.741",
+            "@tscircuit/bus-lanes-solver": "0.0.62",
+            "@tscircuit/checks": "0.0.282",
+            "circuit-to-svg": "0.0.460",
+            "react": "19.3.1",
+            "interception": "read-only winding stages and original fanout clearance rejections",
+            "corePatchApplied": false,
+            "fanoutSourcePatch": [
+              {
+                "file": "route-analytic-boundary-alternatives.ts",
+                "beforeSha256": "20d80b5a2b0a4c6f78d3651e50af7ce1aac948d4130e4fb30370c9a76f3c132a",
+                "afterSha256": "e9c2dbbc241ba857da32913a183a959d60d7645f26e4af383c77aeb00ea34388"
+              },
+              {
+                "file": "track-candidates.ts",
+                "beforeSha256": "5be225944e2be619eec8f89e541b7443c91e78d9507b10d8200722314ca00eeb",
+                "afterSha256": "817f623d9850ed943a0d2ee7163f3b62bdc60bac29237a1826667f88740a7bef"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "sample": "imx6-original",
+      "sameFanoutConstructorInputs": true,
+      "captures": [
+        {
+          "mode": "before",
+          "fanoutReached": true,
+          "solved": false,
+          "failed": true,
+          "partialEscapes": 9,
+          "requests": 32,
+          "nativeVias": 7,
+          "physicalViaSites": 7,
+          "nativeDrc": {
+            "valid": true,
+            "checkedTraceCount": 9,
+            "checkedSegmentCount": 18,
+            "checkedViaCount": 7,
+            "issues": []
+          },
+          "independentViaInPadFindings": [],
+          "checkedCircuitSnapshot": "circuit.json.gz",
+          "coreTraces": 0,
+          "coreVias": 0,
+          "preservedGeometry": {
+            "components": 498,
+            "expectedComponents": 498,
+            "pads": 1904,
+            "expectedPads": 1904,
+            "membershipErrors": []
+          },
+          "revisions": {
+            "core": "351e73d665fad37577c47fcbff2e4c29eb377467",
+            "router": "native-installed-package",
+            "winding": "202dbe9eb0088633b6fa094120dba6f2f41f8803",
+            "sampleMode": "fanout_first",
+            "archiveSha256": "1991ad1891a953dcd660818aaceb73f7aa42dbf704e677e635753b9159f7a6b7",
+            "coreLockSha256": "23136f630f9a4a12ad672102659eca76ac78303811f52e0309c3b9ea12643037",
+            "@tscircuit/fanout-solver": "0.0.93",
+            "@tscircuit/winding-breakout-point-solver": "0.0.1",
+            "@tscircuit/capacity-autorouter": "0.0.1135",
+            "@tscircuit/props": "0.0.741",
+            "@tscircuit/bus-lanes-solver": "0.0.62",
+            "@tscircuit/checks": "0.0.282",
+            "circuit-to-svg": "0.0.460",
+            "react": "19.3.1",
+            "interception": "read-only winding stages and original fanout clearance rejections",
+            "corePatchApplied": false
+          }
+        },
+        {
+          "mode": "after",
+          "fanoutReached": true,
+          "solved": false,
+          "failed": true,
+          "partialEscapes": 9,
+          "requests": 32,
+          "nativeVias": 7,
+          "physicalViaSites": 7,
+          "nativeDrc": {
+            "valid": true,
+            "checkedTraceCount": 9,
+            "checkedSegmentCount": 18,
+            "checkedViaCount": 7,
+            "issues": []
+          },
+          "independentViaInPadFindings": [],
+          "checkedCircuitSnapshot": "circuit.json.gz",
+          "coreTraces": 0,
+          "coreVias": 0,
+          "preservedGeometry": {
+            "components": 498,
+            "expectedComponents": 498,
+            "pads": 1904,
+            "expectedPads": 1904,
+            "membershipErrors": []
+          },
+          "revisions": {
+            "core": "351e73d665fad37577c47fcbff2e4c29eb377467",
+            "router": "native-installed-package",
+            "winding": "202dbe9eb0088633b6fa094120dba6f2f41f8803",
+            "sampleMode": "fanout_first",
+            "archiveSha256": "1991ad1891a953dcd660818aaceb73f7aa42dbf704e677e635753b9159f7a6b7",
+            "coreLockSha256": "be2a291d11cb926400c08fd43a0bfab9051761c97ce4bf02afb12143cac94f55",
+            "@tscircuit/fanout-solver": "0.0.93",
+            "@tscircuit/winding-breakout-point-solver": "0.0.1",
+            "@tscircuit/capacity-autorouter": "0.0.1135",
+            "@tscircuit/props": "0.0.741",
+            "@tscircuit/bus-lanes-solver": "0.0.62",
+            "@tscircuit/checks": "0.0.282",
+            "circuit-to-svg": "0.0.460",
+            "react": "19.3.1",
+            "interception": "read-only winding stages and original fanout clearance rejections",
+            "corePatchApplied": false,
+            "fanoutSourcePatch": [
+              {
+                "file": "route-analytic-boundary-alternatives.ts",
+                "beforeSha256": "20d80b5a2b0a4c6f78d3651e50af7ce1aac948d4130e4fb30370c9a76f3c132a",
+                "afterSha256": "e9c2dbbc241ba857da32913a183a959d60d7645f26e4af383c77aeb00ea34388"
+              },
+              {
+                "file": "track-candidates.ts",
+                "beforeSha256": "5be225944e2be619eec8f89e541b7443c91e78d9507b10d8200722314ca00eeb",
+                "afterSha256": "817f623d9850ed943a0d2ee7163f3b62bdc60bac29237a1826667f88740a7bef"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "sample": "imx6-spaced",
+      "sameFanoutConstructorInputs": true,
+      "captures": [
+        {
+          "mode": "before",
+          "fanoutReached": true,
+          "solved": false,
+          "failed": true,
+          "partialEscapes": 7,
+          "requests": 32,
+          "nativeVias": 1,
+          "physicalViaSites": 1,
+          "nativeDrc": {
+            "valid": true,
+            "checkedTraceCount": 7,
+            "checkedSegmentCount": 19,
+            "checkedViaCount": 1,
+            "issues": []
+          },
+          "independentViaInPadFindings": [],
+          "checkedCircuitSnapshot": "circuit.json.gz",
+          "coreTraces": 0,
+          "coreVias": 0,
+          "preservedGeometry": {
+            "components": 498,
+            "expectedComponents": 498,
+            "pads": 1904,
+            "expectedPads": 1904,
+            "membershipErrors": []
+          },
+          "revisions": {
+            "core": "351e73d665fad37577c47fcbff2e4c29eb377467",
+            "router": "native-installed-package",
+            "winding": "202dbe9eb0088633b6fa094120dba6f2f41f8803",
+            "sampleMode": "fanout_first",
+            "archiveSha256": "1991ad1891a953dcd660818aaceb73f7aa42dbf704e677e635753b9159f7a6b7",
+            "coreLockSha256": "23136f630f9a4a12ad672102659eca76ac78303811f52e0309c3b9ea12643037",
+            "@tscircuit/fanout-solver": "0.0.93",
+            "@tscircuit/winding-breakout-point-solver": "0.0.1",
+            "@tscircuit/capacity-autorouter": "0.0.1135",
+            "@tscircuit/props": "0.0.741",
+            "@tscircuit/bus-lanes-solver": "0.0.62",
+            "@tscircuit/checks": "0.0.282",
+            "circuit-to-svg": "0.0.460",
+            "react": "19.3.1",
+            "interception": "read-only winding stages and original fanout clearance rejections",
+            "corePatchApplied": false
+          }
+        },
+        {
+          "mode": "after",
+          "fanoutReached": true,
+          "solved": false,
+          "failed": true,
+          "partialEscapes": 7,
+          "requests": 32,
+          "nativeVias": 4,
+          "physicalViaSites": 4,
+          "nativeDrc": {
+            "valid": true,
+            "checkedTraceCount": 7,
+            "checkedSegmentCount": 16,
+            "checkedViaCount": 4,
+            "issues": []
+          },
+          "independentViaInPadFindings": [],
+          "checkedCircuitSnapshot": "circuit.json.gz",
+          "coreTraces": 0,
+          "coreVias": 0,
+          "preservedGeometry": {
+            "components": 498,
+            "expectedComponents": 498,
+            "pads": 1904,
+            "expectedPads": 1904,
+            "membershipErrors": []
+          },
+          "revisions": {
+            "core": "351e73d665fad37577c47fcbff2e4c29eb377467",
+            "router": "native-installed-package",
+            "winding": "202dbe9eb0088633b6fa094120dba6f2f41f8803",
+            "sampleMode": "fanout_first",
+            "archiveSha256": "1991ad1891a953dcd660818aaceb73f7aa42dbf704e677e635753b9159f7a6b7",
+            "coreLockSha256": "be2a291d11cb926400c08fd43a0bfab9051761c97ce4bf02afb12143cac94f55",
+            "@tscircuit/fanout-solver": "0.0.93",
+            "@tscircuit/winding-breakout-point-solver": "0.0.1",
+            "@tscircuit/capacity-autorouter": "0.0.1135",
+            "@tscircuit/props": "0.0.741",
+            "@tscircuit/bus-lanes-solver": "0.0.62",
+            "@tscircuit/checks": "0.0.282",
+            "circuit-to-svg": "0.0.460",
+            "react": "19.3.1",
+            "interception": "read-only winding stages and original fanout clearance rejections",
+            "corePatchApplied": false,
+            "fanoutSourcePatch": [
+              {
+                "file": "route-analytic-boundary-alternatives.ts",
+                "beforeSha256": "20d80b5a2b0a4c6f78d3651e50af7ce1aac948d4130e4fb30370c9a76f3c132a",
+                "afterSha256": "e9c2dbbc241ba857da32913a183a959d60d7645f26e4af383c77aeb00ea34388"
+              },
+              {
+                "file": "track-candidates.ts",
+                "beforeSha256": "5be225944e2be619eec8f89e541b7443c91e78d9507b10d8200722314ca00eeb",
+                "afterSha256": "817f623d9850ed943a0d2ee7163f3b62bdc60bac29237a1826667f88740a7bef"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
