@@ -1,0 +1,46 @@
+name: Summarize e2e stage failures
+on:
+  push:
+    branches: [analysis/e2e-evidence-20261120]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  summarize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: 44721511920
+          pattern: e2e-baseline-*
+          path: captures
+      - name: Summarize observed stages and failures
+        run: |
+          python3 - <<'PYSUMMARY'
+          from pathlib import Path
+          import base64,gzip,io,json,zipfile
+          def compact(entry,depth=0):
+              if entry is None or isinstance(entry,(int,float,bool,str)):return entry
+              if depth>5:return {'kind':type(entry).__name__,'length':len(entry)}
+              if isinstance(entry,list):
+                  return [compact(e,depth+1) for e in entry] if len(entry)<=8 else {'count':len(entry),'first':compact(entry[0],depth+1),'last':compact(entry[-1],depth+1)}
+              return {k:compact(v,depth+1) for k,v in entry.items() if k not in ['bestAttempt','attempts']}
+          rows=[]
+          stream=io.BytesIO()
+          with zipfile.ZipFile(stream,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=9) as archive:
+              for folder in sorted(Path('captures').iterdir()):
+                  report=json.loads((folder/'report.json').read_text())
+                  row=compact(report)
+                  row['process']=json.loads((folder/'process.json').read_text())
+                  row['workerLogTail']=(folder/'worker.log').read_text()[-8000:]
+                  row['states']={p.name:compact(json.loads(gzip.decompress(p.read_bytes()))) for p in folder.glob('solver-*-state.json.gz')}
+                  row['files']=[{'path':str(p.relative_to(folder)),'bytes':p.stat().st_size} for p in folder.rglob('*') if p.is_file()]
+                  rows.append(row)
+                  print('E2E_COMPACT_REPORT',json.dumps(row))
+              archive.writestr('summaries.json',json.dumps(rows,indent=2))
+          print('E2E_COMPACT_BEGIN')
+          encoded=base64.b64encode(stream.getvalue()).decode()
+          for offset in range(0,len(encoded),8000):print(encoded[offset:offset+8000])
+          print('E2E_COMPACT_END')
+          PYSUMMARY
