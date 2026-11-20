@@ -1,0 +1,26 @@
+[
+  {
+    "event": "autorouting:start",
+    "phase": "<board#73 />",
+    "solver": "FanoutSolver",
+    "connections": 6
+  },
+  {
+    "event": "autorouting:end",
+    "phase": "<board#73 />",
+    "solver": "FanoutSolver",
+    "connections": 0
+  },
+  {
+    "event": "autorouting:start",
+    "phase": "<board#73 />",
+    "solver": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+    "connections": 6
+  },
+  {
+    "event": "autorouting:end",
+    "phase": "<board#73 />",
+    "solver": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+    "connections": 6
+  }
+]

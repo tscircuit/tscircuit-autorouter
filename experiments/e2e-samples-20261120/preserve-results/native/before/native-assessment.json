@@ -1,0 +1,70 @@
+{
+  "requestedNets": 6,
+  "connectedNets": 6,
+  "nets": [
+    {
+      "name": "DATA0",
+      "connected": true
+    },
+    {
+      "name": "DATA1",
+      "connected": true
+    },
+    {
+      "name": "DATA2",
+      "connected": true
+    },
+    {
+      "name": "SCLK",
+      "connected": true
+    },
+    {
+      "name": "MOSI",
+      "connected": true
+    },
+    {
+      "name": "MISO",
+      "connected": true
+    }
+  ],
+  "traces": 12,
+  "vias": 14,
+  "errors": [],
+  "phases": [
+    {
+      "event": "autorouting:start",
+      "phase": "<board#73 />",
+      "solver": "FanoutSolver",
+      "connections": 6
+    },
+    {
+      "event": "autorouting:end",
+      "phase": "<board#73 />",
+      "solver": "FanoutSolver",
+      "connections": 0
+    },
+    {
+      "event": "autorouting:start",
+      "phase": "<board#73 />",
+      "solver": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+      "connections": 6
+    },
+    {
+      "event": "autorouting:end",
+      "phase": "<board#73 />",
+      "solver": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+      "connections": 6
+    }
+  ],
+  "drc": {
+    "overlap": 0,
+    "padTrace": 0,
+    "viaTrace": 0,
+    "viaPad": 0,
+    "viaSpacing": 0,
+    "continuity": 0,
+    "viaInPad": 0,
+    "holeTrace": 0,
+    "width": 0
+  }
+}

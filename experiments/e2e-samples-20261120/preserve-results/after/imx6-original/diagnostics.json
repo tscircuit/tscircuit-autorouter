@@ -1,0 +1,25 @@
+[
+  {
+    "component": "<board#3446 />",
+    "requested": 32,
+    "available": true,
+    "routed": 9,
+    "vias": 7,
+    "drcValid": true,
+    "drcIssues": [],
+    "solved": false,
+    "failed": true,
+    "latestStage": "FanoutSolver",
+    "routedConnections": [
+      "breakout:pcb_breakout_point_4",
+      "breakout:pcb_breakout_point_0",
+      "breakout:pcb_breakout_point_8",
+      "source_trace_12",
+      "source_trace_11",
+      "source_trace_17",
+      "source_trace_16",
+      "source_trace_15",
+      "source_trace_3"
+    ]
+  }
+]
