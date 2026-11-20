@@ -1,0 +1,66 @@
+name: Publish isolated clearance-fix circuit evidence
+on:
+  push:
+    branches: [analysis/e2e-clearance-roundoff-publish-20261120]
+permissions:
+  contents: write
+  actions: read
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Wait for all ten circuit captures
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh run watch 44772251019 --interval 30 --exit-status
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: 44772251019
+          pattern: clearance-roundoff-cohort-*
+          path: captures
+      - uses: actions/checkout@v4
+        with:
+          ref: a5172b54a58f4219d828a37d3d7e94566d2c6e19
+          path: reference
+          sparse-checkout: experiments/e2e-samples-20261120/preserve-results/before
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/core
+          ref: 351e73d665fad37577c47fcbff2e4c29eb377467
+          path: core
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - run: cd core && bun install --ignore-scripts
+      - name: Audit and publish PCB SVGs and routing-stage results
+        run: |
+          python3 experiments/e2e-samples-20261120/publish-clearance-roundoff.py
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add experiments/e2e-samples-20261120/clearance-roundoff-results
+          git commit -m 'Record full-circuit clearance roundoff experiment'
+          git push origin HEAD:refs/heads/analysis/e2e-clearance-roundoff-results-20261120
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: clearance-roundoff-measured-results
+          path: experiments/e2e-samples-20261120/clearance-roundoff-results
+      - name: Export compact measured summary
+        run: |
+          python3 - <<'PYEXPORT'
+          from pathlib import Path
+          import base64,gzip,json
+          p=Path('experiments/e2e-samples-20261120/clearance-roundoff-results/summary.json')
+          rows=json.loads(p.read_text())
+          for row in rows:
+              for variant in ['before','after']:
+                  for entry in row[variant]['diagnostics']:entry.pop('routedConnections',None)
+                  for field in ['connected','disconnected']:row[variant]['assessment'].pop(field,None)
+          encoded=base64.b64encode(gzip.compress(json.dumps({'rows':rows,'statistics':json.loads(p.with_name('statistics.json').read_text())}).encode(),mtime=0)).decode()
+          print('FIXED_COPPER_FINAL_BEGIN')
+          for offset in range(0,len(encoded),8000):print(encoded[offset:offset+8000])
+          print('FIXED_COPPER_FINAL_END')
+          PYEXPORT
