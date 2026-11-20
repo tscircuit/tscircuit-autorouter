@@ -13,11 +13,11 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - variant: parent
-            source: a3011ea856de9661404a115ed2050d9e0a1bff77
           - variant: scoped
-            source: a3011ea856de9661404a115ed2050d9e0a1bff77
-          - variant: cleanup
+            source: de07d57ffb59fa0686eaa60df4dbd4ffad8f18eb
+          - variant: native
+            source: 93f449589c8748916c2105a5efab437c0908269a
+          - variant: guarded
             source: 93f449589c8748916c2105a5efab437c0908269a
     steps:
       - uses: actions/checkout@v4
@@ -112,7 +112,7 @@ jobs:
               })"""
           s=s.replace(old,new,1)
           p.write_text(s)
-          if '${{ matrix.variant }}' == 'scoped':
+          if True:
               p=Path("lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts")
               s=p.read_text()
               s=s.replace("          fixedHdRoutes: cms.highDensityRouteSolver!.getUpdatedFixedHdRoutes(),","",1)
@@ -123,7 +123,15 @@ jobs:
                       ? this.params.fixedHdRoutes
                       : undefined,""")
               p.write_text(s)
-          if '${{ matrix.variant }}' == 'cleanup':
+          if '${{ matrix.variant }}' != 'scoped':
+              import re
+              p=Path("lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts")
+              s=p.read_text()
+              pattern=r"(fixedHdRoutes:\s*cms\.highDensityRouteSolver!\s*\.getUpdatedFixedHdRoutes\(\))(?=,)"
+              s,count=re.subn(pattern,r"\1.filter((route) => route.isFixed === true)",s)
+              assert count==1
+              p.write_text(s)
+          if '${{ matrix.variant }}' == 'guarded':
               p=Path("lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensityForceImproveSolver.ts")
               s=p.read_text()
               s='import { FixedCopperClearanceGuard } from "high-density-repair02/lib/high-density-repair-solver/functions/FixedCopperClearanceGuard"\n'+s
