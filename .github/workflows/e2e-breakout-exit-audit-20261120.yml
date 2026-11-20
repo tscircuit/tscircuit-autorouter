@@ -1,0 +1,66 @@
+name: Audit generated breakout exits against the original copper constraints
+on:
+  push:
+    branches: [analysis/e2e-breakout-exit-audit-20261120]
+permissions:
+  contents: write
+  actions: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          ref: analysis/e2e-full-circuit-interception-results-20261120
+          path: published
+          sparse-checkout: experiments/e2e-samples-20261120/interception-results
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: 44778112884
+          pattern: full-circuit-interception-*
+          path: captures
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: 44780661381
+          pattern: full-circuit-diagnosis-*
+          path: diagnoses
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/core
+          ref: 351e73d665fad37577c47fcbff2e4c29eb377467
+          path: core
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Verify source geometry using unchanged native predicates
+        run: |
+          cd core
+          for attempt in 1 2 3; do
+            if bun install --ignore-scripts; then break; fi
+            if [ "$attempt" = 3 ]; then exit 1; fi
+          done
+          cd ..
+          bun experiments/e2e-samples-20261120/check-actual-source-feasibility.ts
+          cd published
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add experiments/e2e-samples-20261120/interception-results
+          git commit -m 'Verify real source escape geometry and independent via-in-pad checks'
+          git push origin HEAD:refs/heads/analysis/e2e-full-circuit-interception-results-20261120
+      - name: Export source geometry checks
+        if: always()
+        run: |
+          python3 - <<'PYEXPORT'
+          from pathlib import Path
+          import base64,gzip
+          p=Path('published/experiments/e2e-samples-20261120/interception-results/feasibility-checks.json')
+          if p.exists():
+              encoded=base64.b64encode(gzip.compress(p.read_bytes(),mtime=0)).decode()
+              print('E2E_FEASIBILITY_BEGIN')
+              for offset in range(0,len(encoded),8000):print(encoded[offset:offset+8000])
+              print('E2E_FEASIBILITY_END')
+          PYEXPORT

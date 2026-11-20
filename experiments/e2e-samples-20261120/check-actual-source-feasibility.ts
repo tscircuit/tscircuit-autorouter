@@ -6,6 +6,7 @@ const root = resolve("core/node_modules/@tscircuit/fanout-solver/lib")
 const { FanoutSolver } = await import(join(root, "fanout-solver.ts"))
 const { planIsStaticallyClear } = await import(join(root, "route-bus/plan-static-clearance.ts"))
 const { obstacleSharesElectricalNet } = await import(join(root, "net-identity.ts"))
+const { distancePointToObstacle } = await import(join(root, "geometry.ts"))
 const { getPlanVias } = await import(join(root, "route-bus/plan-copper.ts"))
 const { checkViasInPads } = await import(resolve("core/node_modules/@tscircuit/checks"))
 const readGzip = (path: string) => JSON.parse(gunzipSync(new Uint8Array(readFileSync(path))).toString())
@@ -24,6 +25,15 @@ for (const sample of readdirSync("diagnoses")) {
   const [input, options] = readGzip(inputPath)
   const solver = new FanoutSolver(input, options)
   const config = solver.config
+  const exits = input.connections.flatMap((connection: any) => connection.pointsToConnect.filter((point: any) => String(point.pointId).startsWith("pcb_breakout_point_")).map((point: any) => {
+    const sourcePoint = connection.pointsToConnect.find((candidate: any) => candidate.pcb_port_id)
+    const metadata = input.obstacles.find((obstacle: any) => obstacle.circuitJsonMetadata?.pcb_port_id === sourcePoint?.pcb_port_id)?.circuitJsonMetadata
+    const foreignPours = input.obstacles.filter((obstacle: any) => obstacle.isCopperPour && obstacle.layers.includes(point.layer) && !obstacleSharesElectricalNet(input, obstacle, connection.name) && distancePointToObstacle(point, obstacle) < (connection.width ?? config.traceWidth) / 2 + config.clearance - 1e-9)
+    return { connection: connection.name, source: metadata ? `${metadata.source_component_name}.${metadata.source_port_name}` : "unnamed escape", point, requiredTraceToCopperGap: config.clearance, foreignPourCount: foreignPours.length, insideForeignPour: foreignPours.some((obstacle: any) => distancePointToObstacle(point, obstacle) === 0), foreignPourExamples: foreignPours.slice(0, 2).map((obstacle: any) => ({ center: obstacle.center, width: obstacle.width, height: obstacle.height, layers: obstacle.layers, distance: distancePointToObstacle(point, obstacle), circuitJsonMetadata: obstacle.circuitJsonMetadata })) }
+  }))
+  const exitSummary = { sample: name, checkedExits: exits.length, exitsConflictingWithForeignPours: exits.filter((exit: any) => exit.foreignPourCount > 0).length, exitsInsideForeignPours: exits.filter((exit: any) => exit.insideForeignPour).length, checkedAgainst: "Unmodified FanoutSolver input and the native electrical-net and obstacle-distance predicates", exits }
+  write(join(target, "exit-obstacle-audit.json"), exitSummary)
+  findings.push({ ...exitSummary, exits: undefined })
   const experimentPath = join("diagnoses", sample, "same-net-merge-experiment.json.gz")
   if (fanout.mergeExperiment) {
     const best = readGzip(experimentPath)
@@ -55,7 +65,7 @@ for (const sample of readdirSync("diagnoses")) {
       const trial = { ...plan, targetLayer, segments, sourceEscapeSegmentCount: segments.length, exitPoint: points.at(-1), via: { center: points.at(-1), diameter: config.viaDiameter, holeDiameter: config.viaHoleDiameter, fromLayer: plan.sourceLayer, toLayer: targetLayer, spanLayers: config.layerNames }, additionalVias: [], planeEndpointSegments: [], planeEndpointVia: undefined }
       return { targetLayer, staticClearancePass: planIsStaticallyClear({ plan: trial, srj: input, sharedBoundary: bus.sharedBoundary, clearance: config.clearance, allowBlindAndBuriedVias: config.allowBlindAndBuriedVias, allowSameNetMerges: config.allowSameNetMerges }) }
     })
-    const result = { sample: name, source: "U22.B5", sourceCorridorOnly: true, fullDeclaredExitNotRouted: true, unchangedWidth: segments[0].width, unchangedClearance: config.clearance, unchangedViaDiameter: config.viaDiameter, points, checks: results }
+    const result = { sample: name, source: "U22.B5", declaredExit: input.connections[plan.connectionIndex].pointsToConnect.find((point: any) => String(point.pointId).startsWith("pcb_breakout_point_")), sourceCorridorOnly: true, fullDeclaredExitNotRouted: true, unchangedWidth: segments[0].width, unchangedClearance: config.clearance, unchangedViaDiameter: config.viaDiameter, points, checks: results }
     write(join(target, "source-corridor-check.json"), result);findings.push(result)
   } else {
     const center = plan.sourcePoint
