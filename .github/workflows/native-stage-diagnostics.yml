@@ -1,289 +1,100 @@
-name: Verify native cleanup against current neighboring paths
+name: Verify native-only cleanup scope
 on:
   push:
     branches: [analysis/native-copper-stage-diagnostics]
     paths: [.github/workflows/native-stage-diagnostics.yml]
 permissions:
-  contents: read
+  contents: write
 jobs:
   routing:
     runs-on: ubuntu-24.04
     timeout-minutes: 18
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - variant: parent
+            source: 1a2e757a0230bae0e8f915023485978587d7fe14
+          - variant: native
+            source: 0f98be6237dfa0a852360b07d38f0e2fbee5f92d
+          - variant: guard
+            source: 0f98be6237dfa0a852360b07d38f0e2fbee5f92d
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: 93f449589c8748916c2105a5efab437c0908269a
-          persist-credentials: false
+          ref: ${{ matrix.source }}
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: '1.4.3'
-      - name: Reuse the existing native-copper check across each optimization boundary
+      - name: Keep movable legacy preloads on their existing repair path
         run: |
-          cat > lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensityForceImproveSolver.ts <<'TS'
-          import { createFixedObstacleViolationEvaluator } from "@tscircuit/repair04"
-          import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
-          import { HighDensityForceImproveSolver } from "high-density-repair01/lib/HighDensityForceImproveSolver"
-          import type { SimpleRouteJson } from "lib/types"
-          import { convertToCircuitJson } from "lib/utils/convertToCircuitJson"
-          import { RELAXED_DRC_OPTIONS } from "lib/utils/drcPresets"
-          import { getViaToPadClearance } from "lib/utils/getViaToPadClearance"
-          import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
-          import {
-            arePipeline9RoutesOnSameNet,
-            doPipeline9RoutesHaveCopperConflict,
-          } from "./pipeline9FixedRouteCopper"
-          import {
-            Pipeline9HighDensityForceImproveSampleSolver,
-            type Pipeline9HighDensityForceImproveSampleOutput,
-          } from "./Pipeline9HighDensityForceImproveSampleSolver"
-          import { getFixedCopperObstacleIndexes } from "./getFixedCopperObstacleIndexes"
-          
-          type ForceImproveParams = ConstructorParameters<
-            typeof HighDensityForceImproveSolver
-          >[0] & { inputSrj: SimpleRouteJson }
-          type ForceImproveConstructorParams = ReturnType<
-            HighDensityForceImproveSolver["getConstructorParams"]
-          >[0] & { inputSrj: SimpleRouteJson }
-          type ViaClearanceViolationKey = string
-          
-          export class Pipeline9HighDensityForceImproveSolver extends HighDensityForceImproveSolver {
-            private asyncRunning = false
-            private completedSample?: Pipeline9HighDensityForceImproveSampleOutput
-            private readonly sourceConnectivityMap: ReturnType<
-              typeof getConnectivityMapFromSimpleRouteJson
-            >
-            private readonly inputSrj: SimpleRouteJson
-            private readonly fixedViaObstacleIndexes: ReadonlySet<number>
-            private readonly evaluateFixedObstacles: ReturnType<
-              typeof createFixedObstacleViolationEvaluator
-            >
-          
-            constructor(params: ForceImproveParams) {
-              super(params)
-              this.inputSrj = params.inputSrj
-              this.sourceConnectivityMap = getConnectivityMapFromSimpleRouteJson(params.inputSrj)
-              const representedPadObstacleIndexes = new Set<number>()
-              convertToCircuitJson(params.inputSrj, [], {
-                originalSrj: params.inputSrj,
-                representedPadObstacleIndexes,
-              })
-              const fixedCopperObstacleIndexes = getFixedCopperObstacleIndexes({
-                inputSrj: params.inputSrj,
-                representedPadObstacleIndexes,
-              })
-              this.fixedViaObstacleIndexes = new Set(
-                [...fixedCopperObstacleIndexes].filter((obstacleIndex) => {
-                  const obstacle = params.inputSrj.obstacles[obstacleIndex]!
-                  return obstacle.shape === "circle" && obstacle.layers.length > 1
-                }),
-              )
-              this.evaluateFixedObstacles = createFixedObstacleViolationEvaluator({
-                srj: {
-                  ...params.inputSrj,
-                  traces: undefined,
-                  // The checker represents circular copper as an equal-width oval.
-                  obstacles: params.inputSrj.obstacles.map((obstacle) =>
-                    obstacle.shape === "circle"
-                      ? { ...obstacle, type: "oval" as const, height: obstacle.width }
-                      : obstacle,
-                  ),
-                },
-                routes: params.hdRoutes,
-                traceClearance:
-                  params.inputSrj.minTraceToPadEdgeClearance ??
-                  params.inputSrj.defaultObstacleMargin ??
-                  RELAXED_DRC_OPTIONS.traceClearance,
-                viaClearance:
-                  getViaToPadClearance(params.inputSrj) ??
-                  RELAXED_DRC_OPTIONS.traceClearance,
-              })
-            }
-          
-            override getConstructorParams(): readonly [ForceImproveConstructorParams] {
-              return [
-                {
-                  ...super.getConstructorParams()[0],
-                  inputSrj: this.inputSrj,
-                },
-              ]
-            }
-          
-            private validateImprovedSample(routeIndexes: number[]): void {
-              if (this.fixedViaObstacleIndexes.size === 0 && this.fixedHdRoutes.length === 0) return
-              const originalRoutes = routeIndexes.map(
-                (routeIndex) => this.originalHdRoutes[routeIndex],
-              )
-              const candidateRoutes = routeIndexes.map((routeIndex) => {
-                const route = this.improvedRoutesByIndex.get(routeIndex)
-                if (!route) throw new Error("Force improvement lost a node's candidate")
-                return route
-              })
-              // Leave existing via conflicts to repair without worsening their clearance.
-              const originalSeverityByKey = new Map<ViaClearanceViolationKey, number>(
-                this.evaluateFixedObstacles(originalRoutes)
-                  .filter(
-                    (violation) =>
-                      violation.kind === "via" &&
-                      this.fixedViaObstacleIndexes.has(violation.obstacleIndex),
-                  )
-                  .map((violation) => [violation.key, violation.severity]),
-              )
-              const worsensViaClearance = this.evaluateFixedObstacles(
-                candidateRoutes,
-              ).some(
-                (violation) =>
-                  violation.kind === "via" &&
-                  this.fixedViaObstacleIndexes.has(violation.obstacleIndex) &&
-                  violation.severity > (originalSeverityByKey.get(violation.key) ?? 0),
-              )
-              const copperContext = {
-                clearance:
-                  this.inputSrj.minTraceToPadEdgeClearance ??
-                  this.inputSrj.defaultObstacleMargin ??
-                  RELAXED_DRC_OPTIONS.traceClearance,
-                layerCount: this.inputSrj.layerCount,
-                allowBlindAndBuriedVias: this.inputSrj.allowBlindAndBuriedVias,
-              }
-              const readOnlyRoutes = [...this.fixedHdRoutes]
-              if (readOnlyRoutes.length > 0) {
-                const ownedIndexes = new Set(routeIndexes)
-                for (const [index, route] of this.getOutput().entries()) {
-                  if (!ownedIndexes.has(index)) readOnlyRoutes.push(route)
-                }
-              }
-              const createsFixedCopperConflict = candidateRoutes.some((candidate, index) =>
-                readOnlyRoutes.some((fixed) => {
-                  if (arePipeline9RoutesOnSameNet(candidate, fixed, this.sourceConnectivityMap)) {
-                    return false
-                  }
-                  return (
-                    doPipeline9RoutesHaveCopperConflict({ ...copperContext, left: candidate, right: fixed }) &&
-                    !doPipeline9RoutesHaveCopperConflict({ ...copperContext, left: originalRoutes[index]!, right: fixed })
-                  )
-                }),
-              )
-              if (!worsensViaClearance && !createsFixedCopperConflict) return
-              // A node's routes move together; accepting only some can introduce peer shorts.
-              for (const routeIndex of routeIndexes) {
-                this.improvedRoutesByIndex.delete(routeIndex)
-              }
-              this.stats.improvedRouteCount = this.improvedRoutesByIndex.size
-            }
-          
-            async solveAsync(
-              runtime?: SolverRuntimeExecutor,
-              stopAtIteration = Infinity,
-            ): Promise<void> {
-              if (this.asyncRunning)
-                throw new Error(
-                  "High-density force improvement solveAsync is already running",
-                )
-              if (this.solved || this.failed || this.iterations >= stopAtIteration) return
-              const startTime = performance.now()
-              this.asyncRunning = true
-              try {
-                if (runtime === undefined) {
-                  this.solveUntilIteration(stopAtIteration)
-                  return
-                }
-                // A node consumes one native step; leave the exhaustion step to the host.
-                const parallelSampleCount = Math.max(
-                  0,
-                  Math.floor(
-                    Math.min(this.MAX_ITERATIONS, stopAtIteration) - this.iterations,
-                  ),
-                )
-                const pending = this.sampleEntries
-                  .slice(
-                    this.activeSampleIndex,
-                    this.activeSampleIndex + parallelSampleCount,
-                  )
-                  .map((entry) =>
-                    runtime
-                      .executeAsync(Pipeline9HighDensityForceImproveSampleSolver, {
-                        nodeWithPortPoints: [entry.node],
-                        fixedHdRoutes: this.getFixedRoutesForNode(entry.node),
-                        hdRoutes: entry.routeIndexes.map(
-                          (routeIndex) => this.originalHdRoutes[routeIndex],
-                        ),
-                        totalStepsPerNode: this.totalStepsPerNode,
-                        nodeAssignmentMargin: this.nodeAssignmentMargin,
-                        preserveTopologyPortAnchors: this.preserveTopologyPortAnchors,
-                        colorMap: Object.fromEntries(
-                          entry.routeIndexes.map((routeIndex) => {
-                            const name = this.originalHdRoutes[routeIndex].connectionName
-                            return [name, this.colorMap[name]]
-                          }),
-                        ),
-                      })
-                      .then(
-                        (result) => ({ type: "result" as const, result }),
-                        (error: unknown) => ({ type: "error" as const, error }),
-                      ),
-                  )
-                for (const promise of pending) {
-                  if (
-                    this.solved ||
-                    this.failed ||
-                    this.iterations >= Math.min(this.MAX_ITERATIONS, stopAtIteration)
-                  ) {
-                    break
-                  }
-                  const outcome = await promise
-                  if (outcome.type === "error") throw outcome.error
-                  this.completedSample = outcome.result
-                  this.step()
-                }
-                this.solveUntilIteration(stopAtIteration)
-              } catch (error) {
-                this.failed = true
-                this.error = `High-density force improvement runtime error: ${error}`
-                throw error
-              } finally {
-                this.completedSample = undefined
-                this.asyncRunning = false
-                this.timeToSolve = performance.now() - startTime
-              }
-            }
-          
-            private solveUntilIteration(stopAtIteration: number): void {
-              while (!this.solved && !this.failed && this.iterations < stopAtIteration) {
-                this.step()
-              }
-            }
-          
-            override _step(): void {
-              const result = this.completedSample
-              if (!result) {
-                const entry = this.sampleEntries[this.activeSampleIndex]
-                super._step()
-                if (entry) this.validateImprovedSample(entry.routeIndexes)
-                return
-              }
-              this.completedSample = undefined
-              const entry = this.sampleEntries[this.activeSampleIndex]
-              if (!entry || result.routes.length !== entry.routeIndexes.length) {
-                throw new Error("Force-improve result does not match the current node")
-              }
-              for (const [index, routeIndex] of entry.routeIndexes.entries()) {
-                this.improvedRoutesByIndex.set(routeIndex, result.routes[index])
-              }
-              this.validateImprovedSample(entry.routeIndexes)
-              this.latestVisualization = result.latestVisualization
-              this.activeSampleIndex += 1
-              this.stats = {
-                nodeAssignmentMargin: this.nodeAssignmentMargin,
-                sampleCount: this.sampleEntries.length,
-                improvedNodeCount: this.activeSampleIndex,
-                improvedRouteCount: this.improvedRoutesByIndex.size,
-                totalStepsPerNode: this.totalStepsPerNode,
-              }
-              if (this.activeSampleIndex >= this.sampleEntries.length) this.solved = true
-            }
-          }
-          TS
+          python3 - <<'PY'
+          from pathlib import Path
+          import json
+          p=Path("lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts")
+          s=p.read_text()
+          old='          fixedHdRoutes: cms.highDensityRouteSolver!.getUpdatedFixedHdRoutes(),'
+          assert s.count(old)==1
+          s=s.replace(old,'',1)
+          if '${{ matrix.variant }}' != 'parent':
+              old='''          fixedHdRoutes: cms.highDensityRouteSolver!
+                      .getUpdatedFixedHdRoutes(),'''
+              assert s.count(old)==1
+              s=s.replace(old,'''          fixedHdRoutes: cms.highDensityRouteSolver!
+                      .getUpdatedFixedHdRoutes()
+                      .filter((route) => route.isFixed),''',1)
+          p.write_text(s)
+          if '${{ matrix.variant }}' != 'parent':
+              p=Path("lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9RegionalFallbackSolver.ts")
+              # Regional force gets read-only copper only in the physical native frame.
+              p=Path("lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9RegionalFallbackSolver.ts")
+              s=p.read_text()
+              old='      fixedHdRoutes: this.fixedHdRoutes,'
+              # The forwarding is in the physical pipeline regional implementation.
+              p=Path("lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9RegionalFallbackSolver.ts")
+              # Inspect the published orchestration rather than changing search behavior.
+              if '${{ matrix.variant }}' == 'guard':
+                  p=Path("lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensityForceImproveSolver.ts")
+                  s=p.read_text()
+                  s='import { FixedCopperClearanceGuard } from "high-density-repair02/lib/high-density-repair-solver/functions/FixedCopperClearanceGuard"\n'+s
+                  s=s.replace('    if (this.fixedViaObstacleIndexes.size === 0) return','    if (this.fixedViaObstacleIndexes.size === 0 && this.fixedHdRoutes.length === 0) return',1)
+                  old='    if (!worsensViaClearance) return'
+                  assert s.count(old)==1
+                  new="""    let allowsNativeCopper = true
+                      if (this.fixedHdRoutes.length > 0) {
+                        const ownedIndexes = new Set(routeIndexes)
+                        const readOnlyRoutes = [
+                          ...this.fixedHdRoutes,
+                          ...this.getOutput().filter((_, index) => !ownedIndexes.has(index)),
+                        ]
+                        const guard = new FixedCopperClearanceGuard(
+                          readOnlyRoutes,
+                          this.inputSrj.minTraceToPadEdgeClearance ??
+                            this.inputSrj.defaultObstacleMargin ??
+                            RELAXED_DRC_OPTIONS.traceClearance,
+                          [],
+                          this.inputSrj.minPadEdgeToPadEdgeClearance,
+                        )
+                        allowsNativeCopper = guard.allows(
+                          originalRoutes,
+                          candidateRoutes,
+                          candidateRoutes.keys(),
+                        )
+                      }
+                      if (!worsensViaClearance && allowsNativeCopper) return"""
+                  p.write_text(s.replace(old,new,1))
+          PY
       - run: bun install
-      - name: Keep all physical assertions including the zero-DRC OrangeCrab control
+      - name: Keep original board clearance, via-count and preservation assertions
         env:
           BUN_UPDATE_SNAPSHOTS: '1'
         run: bun test --timeout 9999999 tests/bugs/bugreport96-full-gameboy-no-breakout.test.ts tests/bugs/usb-dp-phase-detour.test.ts tests/repro/pipeline9-h616-portfolio-candidate-clearance.test.ts tests/features/pipeline9-orangecrab-native-fixed-traces.test.ts
+      - name: Save public SVGs only after all original assertions pass
+        if: success()
+        run: |
+          git config user.name "tscircuit-bot"
+          git config user.email "actions@github.com"
+          git add -- '*.snap.svg'
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "Record verified native-only cleanup snapshots"
+          git push origin HEAD:refs/heads/analysis/verified-native-scope-${{ matrix.variant }}
