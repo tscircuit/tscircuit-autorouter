@@ -5,16 +5,19 @@ import { createPreloadedCopperIndex } from "./createPreloadedCopperLookup"
 
 export function splitNodesWithoutThroughViaSite({
   nodes,
+  layerChangeNodeIds,
   srj,
   connMap,
   viaDiameter,
 }: {
   nodes: CapacityMeshNode[]
+  layerChangeNodeIds: ReadonlySet<string>
   srj: SimpleRouteJson
   connMap: ConnectivityMap
   viaDiameter: number
 }): CapacityMeshNode[] {
   if (
+    layerChangeNodeIds.size === 0 ||
     srj.allowBlindAndBuriedVias ||
     !srj.traces?.some((trace) => trace.isFixed)
   ) {
@@ -32,17 +35,18 @@ export function splitNodesWithoutThroughViaSite({
     srj.minTraceToPadEdgeClearance ?? srj.defaultObstacleMargin ?? 0
   const reach = viaRadius + wireClearance
 
-  return nodes.flatMap((node): CapacityMeshNode[] => {
+  const isCovered = (node: CapacityMeshNode): boolean => {
     if (
       node.availableZ.length < 2 ||
       node._containsTarget ||
       node._containsObstacle ||
       node._isVirtualOffboard
     )
-      return [node]
+      return false
 
     const { x, y } = node.center
     const nearby = copper.search(x - reach, y - reach, x + reach, y + reach)
+    if (nearby.length === 0) return false
     const halfWidth = node.width / 2
     const halfHeight = node.height / 2
     const corners = [
@@ -53,22 +57,31 @@ export function splitNodesWithoutThroughViaSite({
     ]
     // A segment's clearance envelope is convex. If one foreign piece of copper
     // excludes all four corners, it excludes every possible through-via center.
-    const covered = nearby.some(
-      ({ route, start, end, radius, kind }): boolean => {
-        if (
-          kind !== "wire" ||
-          !route.isFixed ||
-          activeNets.has(route.rootConnectionName ?? route.connectionName)
-        ) {
-          return false
-        }
-        return corners.every(
-          (corner) =>
-            pointToSegmentDistance(corner, start, end) < radius + reach - 1e-9,
-        )
-      },
+    return nearby.some(({ route, start, end, radius, kind }): boolean => {
+      if (
+        kind !== "wire" ||
+        !route.isFixed ||
+        activeNets.has(route.rootConnectionName ?? route.connectionName)
+      ) {
+        return false
+      }
+      return corners.every(
+        (corner) =>
+          pointToSegmentDistance(corner, start, end) < radius + reach - 1e-9,
+      )
+    })
+  }
+  // Preserve an already feasible plan, including all of its shared port positions.
+  if (
+    !nodes.some(
+      (node) =>
+        layerChangeNodeIds.has(node.capacityMeshNodeId) && isCovered(node),
     )
-    if (!covered) return [node]
+  ) {
+    return nodes
+  }
+  return nodes.flatMap((node): CapacityMeshNode[] => {
+    if (!isCovered(node)) return [node]
     return node.availableZ.map((z) => ({
       ...node,
       capacityMeshNodeId: `${node.capacityMeshNodeId}_no_via_z${z}`,

@@ -35,14 +35,19 @@ test("a through-via cell keeps its layers when a corner clears the wire or the n
   // At y = 0.3 the via pad and wire meet the declared clearance exactly.
   const tangent = { ...blocked, capacityMeshNodeId: "tangent", height: 0.6 }
   const nodes = [blocked, tangent]
-  const plan = (srj: SimpleRouteJson): CapacityMeshNode[] =>
+  const plan = (
+    srj: SimpleRouteJson,
+    layerChangeNodeIds = new Set(["blocked"]),
+  ): CapacityMeshNode[] =>
     splitNodesWithoutThroughViaSite({
       nodes,
+      layerChangeNodeIds,
       srj,
       viaDiameter: 0.4,
       connMap: getConnectivityMapFromSimpleRouteJson(srj),
     })
 
+  expect(plan(input, new Set(["tangent"]))).toBe(nodes)
   const [top, bottom, clear] = plan(input)
   expect([top.availableZ, bottom.availableZ]).toEqual([[0], [3]])
   expect(clear).toBe(tangent)

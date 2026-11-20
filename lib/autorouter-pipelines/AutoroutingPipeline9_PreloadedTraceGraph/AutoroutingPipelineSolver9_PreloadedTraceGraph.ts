@@ -308,6 +308,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   srjWithEscapeViaLocations?: SimpleRouteJson
   srjWithPointPairs?: SimpleRouteJson
   originalSrj: SimpleRouteJson
+  private hasRefinedFixedWireViaSites = false
   capacityNodes: CapacityMeshNode[] | null = null
   capacityEdges: CapacityMeshEdge[] | null = null
   /** Available segment points after non-component cramped points are filtered. */
@@ -441,12 +442,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       ],
       {
         onSolved: (cms) => {
-          cms.capacityNodes = splitNodesWithoutThroughViaSite({
-            nodes: cms.nodeDimensionSubdivisionSolver!.outputNodes,
-            srj: cms.originalSrj,
-            connMap: cms.connMap,
-            viaDiameter: cms.viaDiameter,
-          })
+          cms.capacityNodes = cms.nodeDimensionSubdivisionSolver!.outputNodes
         },
       },
     ),
@@ -1241,6 +1237,40 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     )
   }
 
+  private refineFixedWireViaSites(): boolean {
+    if (
+      this.hasRefinedFixedWireViaSites ||
+      !this.originalSrj.traces?.some((trace) => trace.isFixed)
+    ) {
+      return false
+    }
+    const plannedNodes =
+      this.portPointPathingSolver!.getOutput().nodesWithPortPoints
+    const layerChangeNodeIds = new Set(
+      plannedNodes
+        .filter((node) =>
+          node.portPointsInPairs?.some(([entry, exit]) => entry.z !== exit.z),
+        )
+        .map((node) => node.capacityMeshNodeId),
+    )
+    const nodes = this.capacityNodes!
+    const refined = splitNodesWithoutThroughViaSite({
+      nodes,
+      layerChangeNodeIds,
+      srj: this.originalSrj,
+      connMap: this.connMap,
+      viaDiameter: this.viaDiameter,
+    })
+    if (nodes === refined) return false
+
+    // The provisional plan uses a physically impossible via. Rebuild the edges,
+    // shared ports and path on the constrained mesh before exposing the plan.
+    this.hasRefinedFixedWireViaSites = true
+    this.capacityNodes = refined
+    this.portPointPathingSolver = undefined
+    return true
+  }
+
   _step() {
     const pipelineStepDef = this.pipelineDef[this.currentPipelineStepIndex]
     if (!pipelineStepDef) {
@@ -1257,7 +1287,16 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           this.startTimeOfPhase[pipelineStepDef.solverName]
         pipelineStepDef.onSolved?.(this)
         this.activeSubSolver = null
-        this.currentPipelineStepIndex++
+        if (
+          pipelineStepDef.solverName === "portPointPathingSolver" &&
+          this.refineFixedWireViaSites()
+        ) {
+          this.currentPipelineStepIndex = this.pipelineDef.findIndex(
+            (step) => step.solverName === "edgeSolver",
+          )
+        } else {
+          this.currentPipelineStepIndex++
+        }
       } else if (this.activeSubSolver.failed) {
         this.error = this.activeSubSolver?.error
         this.failed = true
