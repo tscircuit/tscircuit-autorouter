@@ -74,7 +74,21 @@ function observe(solver: ObservedSolver): void {
     summary.phases.push({ stage, atMs: performance.now() - started })
     previous.stage = stage
     const definition = solver.pipelineDef?.find((entry) => entry.solverName === stage)
-    if (definition) capture(`solver-${previous.id}-stage-${stage}-input`, definition.getConstructorParams(solver))
+    if (definition) {
+      const parameters = definition.getConstructorParams(solver)
+      const summaries = parameters.map((argument) => {
+        if (!argument || typeof argument !== "object") return argument
+        return Object.fromEntries(Object.entries(argument).map(([name, field]) => [
+          name,
+          field === null || ["number", "string", "boolean"].includes(typeof field)
+            ? field
+            : Array.isArray(field) ? { count: field.length }
+            : field instanceof Map || field instanceof Set ? { count: field.size }
+            : { kind: typeof field },
+        ]))
+      })
+      capture(`solver-${previous.id}-stage-${stage}-parameters`, summaries)
+    }
     console.log("STAGE", sample, previous.id, stage)
   }
   if (solver.solved || solver.failed || performance.now() - previous.persistedAt > 1000) {

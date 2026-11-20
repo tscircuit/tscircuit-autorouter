@@ -2,6 +2,9 @@ name: Trace ten supplied full-circuit e2e samples
 on:
   push:
     branches: [analysis/e2e-uploaded-20261120]
+concurrency:
+  group: e2e-uploaded-${{ github.ref }}
+  cancel-in-progress: true
 permissions:
   contents: read
 jobs:
@@ -81,7 +84,7 @@ jobs:
           stream=io.BytesIO()
           with zipfile.ZipFile(stream,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=9) as z:
               for p in root.rglob('*'):
-                  if p.is_file():z.writestr(str(p.relative_to(root)),p.read_bytes())
+                  if p.name in ['report.json','process.json']:z.writestr(str(p.relative_to(root)),p.read_bytes())
           print('E2E_EVIDENCE_BEGIN')
           encoded=base64.b64encode(stream.getvalue()).decode()
           for offset in range(0,len(encoded),8000):print(encoded[offset:offset+8000])
