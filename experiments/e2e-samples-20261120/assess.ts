@@ -3,7 +3,7 @@ import { join } from "node:path"
 import type { AnyCircuitElement, PcbPort } from "circuit-json"
 import * as checks from "@tscircuit/checks"
 import { findFloatingCopper } from "../lib/utils/copper-pour-connectivity/find-floating-copper"
-import { arePortsConnected } from "../../experiments/full-board-priority-analysis/connectivity"
+import { arePortsConnected } from "./connectivity"
 
 type ExpectedCircuit = {
   nets: { name: string; nativeName: string; members: string[]; width: number; group: string }[]
@@ -40,7 +40,7 @@ for (const requested of expected.nets) {
   if (!emitted || terminals.some((port) => !port || port.subcircuit_connectivity_map_key !== key)) membershipErrors.push(requested.nativeName)
   const routeIds = new Set(sourceTraces.filter((trace) => trace.subcircuit_connectivity_map_key === key).map((trace) => trace.source_trace_id))
   const netTraces = traces.filter((trace) => trace.source_trace_id === emitted?.source_net_id || routeIds.has(trace.source_trace_id!) || (key !== undefined && trace.subcircuit_connectivity_map_key === key))
-  const complete = terminalIds.length === requested.members.length && arePortsConnected(terminalIds, netTraces, ports, vias, pouredConnections)
+  const complete = terminalIds.length === requested.members.length && arePortsConnected({ sourcePortIds: terminalIds, routes: netTraces, ports, vias, copperConnectedPortGroups: pouredConnections })
   if (complete) connected.push(requested.nativeName)
   else disconnected.push(requested.nativeName)
   groups[requested.group] ??= { requested: 0, connected: 0 }

@@ -1,0 +1,119 @@
+name: Audit full-circuit connectivity and export focused replay inputs
+on:
+  push:
+    branches: [analysis/e2e-audit-20261120]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  replay-inputs:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - sample: icepi-original
+            run: 44722931243
+            artifact: e2e-fanout-first-icepi-original
+          - sample: glider-spaced
+            run: 44722526398
+            artifact: e2e-baseline-glider-spaced
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ matrix.run }}
+          name: ${{ matrix.artifact }}
+          path: capture
+      - name: Export bounded replay evidence
+        run: |
+          python3 - <<'PYREPLAY'
+          from pathlib import Path
+          import base64,io,json,zipfile
+          root=Path('capture');selected=[]
+          for p in root.iterdir():
+              if p.name in ['report.json','process.json','pcb.svg'] or p.name.startswith('phase-') and p.name.endswith('-start.json.gz') or p.name.startswith('started-') and p.name.endswith('FanoutSolver.json.gz') or p.name.startswith('solver-') and p.name.endswith('-state.json.gz'):
+                  selected.append(p)
+          print('REPLAY_FILES',json.dumps([{'path':p.name,'bytes':p.stat().st_size} for p in selected]))
+          stream=io.BytesIO()
+          with zipfile.ZipFile(stream,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=9) as z:
+              for p in selected:z.writestr(p.name,p.read_bytes())
+          assert len(stream.getvalue())<2_000_000,'Replay export must stay bounded'
+          print('E2E_REPLAY_BEGIN')
+          encoded=base64.b64encode(stream.getvalue()).decode()
+          for offset in range(0,len(encoded),8000):print(encoded[offset:offset+8000])
+          print('E2E_REPLAY_END')
+          PYREPLAY
+  audit:
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/core
+          ref: 4306536282fe5abf32c1395e106f55a5d61ca7a3
+          path: core
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Prepare the audit runtime
+        run: |
+          (cd core && bun install --ignore-scripts)
+          python3 - <<'PYSETUP'
+          from pathlib import Path
+          import gzip,shutil
+          source=Path('experiments/e2e-samples-20261120');runtime=Path('core/e2e-runtime');runtime.mkdir()
+          for name in ['assess.ts','connectivity.ts']:shutil.copyfile(source/name,runtime/name)
+          (runtime/'expected-circuits.json').write_bytes(gzip.decompress((source/'expected-circuits.json.gz').read_bytes()))
+          PYSETUP
+      - name: Wait for both routing cohorts to finish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh run watch 44722526398 --interval 30
+          gh run watch 44722931243 --interval 30
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: 44722526398
+          pattern: e2e-baseline-*
+          path: captures/controls
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: 44722931243
+          pattern: e2e-fanout-first-*
+          path: captures/fanout-first
+      - name: Audit emitted copper against all requested nets
+        run: |
+          python3 - <<'PYAUDIT'
+          from pathlib import Path
+          import json,subprocess
+          root=Path.cwd();rows=[]
+          for mode in ['controls','fanout-first']:
+              for folder in sorted((root/'captures'/mode).iterdir()):
+                  report=json.loads((folder/'report.json').read_text());sample=report['sample']
+                  row={'mode':mode,'sample':sample,'report':report,'process':json.loads((folder/'process.json').read_text())}
+                  if (folder/'circuit.json.gz').exists():
+                      result=subprocess.run(['bun','assess.ts',sample,str(folder)],cwd=root/'core/e2e-runtime',capture_output=True,text=True,timeout=180)
+                      if result.returncode:raise RuntimeError(f'{sample} audit failed: '+result.stderr[-6000:])
+                      row['assessment']=json.loads((folder/'assessment.json').read_text())
+                  else:row['assessmentUnavailable']='No final circuit capture was produced; do not count as a validated solve.'
+                  rows.append(row)
+                  print('E2E_AUDITED',json.dumps({'mode':mode,'sample':sample,'status':report['status'],'assessment':row.get('assessment'),'assessmentUnavailable':row.get('assessmentUnavailable')}))
+          Path('audited-summaries.json').write_text(json.dumps(rows,indent=2)+'\n')
+          PYAUDIT
+      - uses: actions/upload-artifact@v4
+        with:
+          name: audited-e2e-summaries
+          path: audited-summaries.json
+      - name: Export audit summary
+        run: |
+          python3 - <<'PYEXPORT'
+          import base64,gzip
+          from pathlib import Path
+          print('E2E_AUDIT_BEGIN')
+          encoded=base64.b64encode(gzip.compress(Path('audited-summaries.json').read_bytes(),mtime=0)).decode()
+          for offset in range(0,len(encoded),8000):print(encoded[offset:offset+8000])
+          print('E2E_AUDIT_END')
+          PYEXPORT
