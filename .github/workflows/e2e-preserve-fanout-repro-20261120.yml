@@ -1,0 +1,48 @@
+name: Validate natural before and after fanout copper snapshots
+on:
+  push:
+    branches: [analysis/e2e-preserve-fanout-repro-20261120]
+permissions:
+  contents: read
+jobs:
+  repro:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - variant: before
+            ref: 186d53c0c9ba7a43c56d33ec4bb18fd3b0de8105
+          - variant: after
+            ref: 231000b69d200431f3bb903c112e92a441829fe3
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/core
+          ref: ${{ matrix.ref }}
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - run: bun install
+      - run: bunx biome format lib/utils/autorouting/local-autorouter-strategies.ts tests/repros/repro-fanout-copper-preserved-before-global-routing.test.tsx
+      - run: bunx tsc --noEmit
+      - name: Generate native PCB snapshot from unchanged six-signal circuit
+        run: BUN_UPDATE_SNAPSHOTS=1 bun test tests/repros/repro-fanout-copper-preserved-before-global-routing.test.tsx --timeout 180000
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: core-preserve-repro-${{ matrix.variant }}
+          path: tests/repros/__snapshots__/repro-fanout-copper-preserved-before-global-routing-pcb.snap.svg
+      - name: Export natural snapshot
+        if: always()
+        run: |
+          python3 - <<'PYEXPORT'
+          from pathlib import Path
+          import base64,gzip
+          p=Path('tests/repros/__snapshots__/repro-fanout-copper-preserved-before-global-routing-pcb.snap.svg')
+          encoded=base64.b64encode(gzip.compress(p.read_bytes(),mtime=0)).decode()
+          print('CORE_PRESERVE_SVG_BEGIN')
+          for offset in range(0,len(encoded),8000):print(encoded[offset:offset+8000])
+          print('CORE_PRESERVE_SVG_END')
+          PYEXPORT
