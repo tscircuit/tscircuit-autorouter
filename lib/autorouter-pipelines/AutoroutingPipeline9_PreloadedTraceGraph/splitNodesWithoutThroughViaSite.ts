@@ -71,20 +71,21 @@ export function splitNodesWithoutThroughViaSite({
       )
     })
   }
-  // Check the planned changes at the board clearance before moving any ports.
+  const plannedViaNodes = nodes.filter((node) =>
+    layerChangeNodeIds.has(node.capacityMeshNodeId),
+  )
+  const hasCopperOverlap = plannedViaNodes.some((node) => isCovered(node, 0))
   if (
-    !nodes.some(
-      (node) =>
-        layerChangeNodeIds.has(node.capacityMeshNodeId) &&
-        isCovered(node, wireClearance),
-    )
+    !hasCopperOverlap &&
+    !plannedViaNodes.some((node) => isCovered(node, wireClearance))
   ) {
     return nodes
   }
-  // Detailed routing can move a via across a mesh edge to obtain clearance.
-  // Remove the layer change only where the via pad itself must touch fixed copper.
+  // A plan that crosses fixed metal needs new via sites with the board clearance.
+  // If only the margin is tight, detailed routing can move a via across a mesh edge.
+  const clearance = hasCopperOverlap ? wireClearance : 0
   const refined = nodes.flatMap((node): CapacityMeshNode[] => {
-    if (!isCovered(node, 0)) return [node]
+    if (!isCovered(node, clearance)) return [node]
     return node.availableZ.map((z) => ({
       ...node,
       capacityMeshNodeId: `${node.capacityMeshNodeId}_no_via_z${z}`,

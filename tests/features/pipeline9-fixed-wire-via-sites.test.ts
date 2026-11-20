@@ -53,10 +53,19 @@ test("a through-via cell keeps its layers when a corner clears the wire or the n
     })
 
   expect(plan(input, new Set(["tangent"]))).toBe(nodes)
-  const [top, bottom, near, clear] = plan(input)
+  const [top, bottom, near, clear] = plan(input, new Set(["clearance-only"]))
   expect([top.availableZ, bottom.availableZ]).toEqual([[0], [3]])
   expect(near).toBe(clearanceOnly)
   expect(clear).toBe(tangent)
+  const stricter = plan(input)
+  expect(stricter.map((node) => node.availableZ)).toEqual([
+    [0],
+    [3],
+    [0],
+    [3],
+    [0, 3],
+  ])
+  expect(stricter[4]).toBe(tangent)
   expect(plan({ ...input, allowBlindAndBuriedVias: true })).toEqual(nodes)
   expect(
     plan({
