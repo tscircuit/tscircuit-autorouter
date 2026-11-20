@@ -1,0 +1,20 @@
+name: Check unique fanout order source formatting
+on:
+  push:
+    branches: [analysis/e2e-unique-orders-format-20261121]
+permissions:
+  contents: read
+jobs:
+  format:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: 20fab14f61553ed4bb2ccba35d8dc437518400b8
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: bun install --frozen-lockfile
+      - run: bun run format:check
