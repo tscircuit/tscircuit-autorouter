@@ -1,0 +1,199 @@
+{
+  "sample": "glider-spaced",
+  "status": "failed",
+  "renderCompleted": true,
+  "elapsedMs": 634076.638482,
+  "initialCopper": 0,
+  "phases": [
+    {
+      "name": "byte0",
+      "solver": "BusLanesPipelineSolver",
+      "status": "failed",
+      "connections": 24,
+      "startedMs": 80754.441258,
+      "elapsedMs": 519565.83404700004
+    }
+  ],
+  "solvers": [
+    {
+      "id": 0,
+      "name": "BusLanesPipelineSolver",
+      "phases": [
+        {
+          "stage": "resolve_layers",
+          "atMs": 81511.40357400001
+        },
+        {
+          "stage": "lanes_route",
+          "atMs": 96410.06726000001
+        },
+        {
+          "stage": "retry_layers",
+          "atMs": 301447.161345
+        },
+        {
+          "stage": "lanes_route",
+          "atMs": 315169.60078
+        },
+        {
+          "stage": "retry_layers",
+          "atMs": 525674.675103
+        },
+        {
+          "stage": "lanes_route",
+          "atMs": 540192.966615
+        }
+      ],
+      "iterations": 5577,
+      "solved": false,
+      "failed": false,
+      "error": null,
+      "stats": {
+        "busLengths": [
+          {
+            "busId": "DDR_BUS_byte0",
+            "minLengthMm": null,
+            "aboveMinimumLength": true,
+            "maxLengthMm": null,
+            "withinLengthLimit": true,
+            "toleranceMm": null,
+            "skewMm": null,
+            "matched": false,
+            "lengths": [
+              {
+                "name": "source_trace_1594",
+                "carrierLengthMm": null,
+                "fixedLengthMm": 0,
+                "totalLengthMm": null
+              },
+              {
+                "name": "source_trace_1596",
+                "carrierLengthMm": null,
+                "fixedLengthMm": 0,
+                "totalLengthMm": null
+              },
+              {
+                "name": "source_trace_1598",
+                "carrierLengthMm": null,
+                "fixedLengthMm": 0,
+                "totalLengthMm": null
+              },
+              {
+                "name": "source_trace_1614",
+                "carrierLengthMm": null,
+                "fixedLengthMm": 0,
+                "totalLengthMm": null
+              },
+              {
+                "name": "source_trace_1616",
+                "carrierLengthMm": null,
+                "fixedLengthMm": 0,
+                "totalLengthMm": null
+              },
+              {
+                "name": "source_trace_1636",
+                "carrierLengthMm": null,
+                "fixedLengthMm": 0,
+                "totalLengthMm": null
+              },
+              {
+                "name": "source_trace_1638",
+                "carrierLengthMm": null,
+                "fixedLengthMm": 0,
+                "totalLengthMm": null
+              },
+              {
+                "name": "source_trace_1654",
+                "carrierLengthMm": null,
+                "fixedLengthMm": 0,
+                "totalLengthMm": null
+              }
+            ]
+          }
+        ],
+        "pairLengths": [],
+        "traceLengthsMm": [],
+        "phase": "route",
+        "algorithm": "octilinear_visibility",
+        "attempt": 0,
+        "lane": 0,
+        "totalLanes": 8,
+        "congestionPass": 0,
+        "conflictingLanes": 0,
+        "vertices": 2,
+        "expandedVertices": 0,
+        "frontier": 1,
+        "failureCode": null,
+        "carrierStrategy": "preferred",
+        "carrierStrategyStartedAtIteration": 0,
+        "layerAttempt": 2,
+        "dogbones": 14,
+        "routingStage": "matched_buses"
+      }
+    }
+  ],
+  "errors": [
+    "E2E routing budget exhausted",
+    "Winding fanout failed for U1: WindingBreakoutSolver: declared breakout edges need 16.91mm but expose only 16.80mm. The connections could not escape to the breakout boundary. Give the fanout more room by increasing the breakout's padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors).",
+    "Winding fanout failed for U12: WindingBreakoutSolver: declared breakout edges need 14.24mm but expose only 13.80mm. The connections could not escape to the breakout boundary. Give the fanout more room by increasing the breakout's padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors).",
+    "E2E routing budget exhausted"
+  ],
+  "counts": {
+    "source_project_metadata": 1,
+    "source_group": 3,
+    "source_port": 1684,
+    "source_component": 379,
+    "source_net": 356,
+    "source_board": 1,
+    "source_refdes_convention_warning": 313,
+    "source_component_internal_connection": 10,
+    "source_trace": 1873,
+    "source_bus": 2,
+    "source_no_power_pin_defined_warning": 356,
+    "source_no_ground_pin_defined_warning": 356,
+    "source_component_pins_underspecified_warning": 378,
+    "pcb_component": 379,
+    "pcb_group": 2,
+    "pcb_board": 1,
+    "pcb_smtpad": 1679,
+    "pcb_solder_paste": 1695,
+    "pcb_plated_hole": 11,
+    "pcb_hole": 10,
+    "pcb_port": 1684,
+    "pcb_fabrication_note_path": 6,
+    "pcb_fabrication_note_text": 6,
+    "pcb_autorouting_error": 3,
+    "pcb_connector_not_in_accessible_orientation_warning": 3,
+    "cad_component": 379,
+    "pcb_component_missing_courtyard_warning": 379,
+    "pcb_debug_object": 3,
+    "pcb_port_not_connected_error": 1873,
+    "pcb_trace_missing_error": 306
+  },
+  "revisions": {
+    "core": "4306536282fe5abf32c1395e106f55a5d61ca7a3",
+    "router": "2b1207ad70971f326166b134ea19418137273f23",
+    "fanout": "9e771f68dca591642fca3b97187e14404c16c5aa",
+    "sampleMode": "fanout_first",
+    "archiveSha256": "1991ad1891a953dcd660818aaceb73f7aa42dbf704e677e635753b9159f7a6b7",
+    "coreLockSha256": "f92ace2c03b5a28f34ef01944b0c420a2146d45c50ff48402249911adc000d8e",
+    "@tscircuit/props": "0.0.741",
+    "@tscircuit/bus-lanes-solver": "0.0.62",
+    "@tscircuit/checks": "0.0.282",
+    "circuit-to-svg": "0.0.460",
+    "react": "19.3.1",
+    "variant": "before",
+    "pairOrder": [
+      "after",
+      "before"
+    ],
+    "coreSourceFiles": [
+      {
+        "path": "lib/components/primitive-components/Group/Group.ts",
+        "beforeSha256": "9ddb264132ddc6642a655ea2d42c5a631ba5c5805224f34a33718944b905e560",
+        "afterSha256": "f0b8d346470f63424e37dae738266a917b40249f1e22e5388242f4e4ee1eb5fe",
+        "actualSha256": "9ddb264132ddc6642a655ea2d42c5a631ba5c5805224f34a33718944b905e560"
+      }
+    ]
+  }
+}

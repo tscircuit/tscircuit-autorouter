@@ -1,0 +1,26 @@
+{
+  "completedBefore": 0,
+  "completedAfter": 0,
+  "stoppedCases": [
+    "butterstick-spaced",
+    "glider-spaced",
+    "icepi-spaced",
+    "imx6-original",
+    "imx6-spaced"
+  ],
+  "medianSeconds": {
+    "before": 424.3946942625,
+    "after": 190.517313129
+  },
+  "p95Seconds": {
+    "before": 623.5761501012,
+    "after": 609.7291193916
+  },
+  "totalSeconds": {
+    "before": 4210.947822676,
+    "after": 3090.158136979
+  },
+  "medianReductionPercent": 55.10846018938218,
+  "p95ReductionPercent": 2.220583758271196,
+  "totalReductionPercent": 26.616090554756706
+}

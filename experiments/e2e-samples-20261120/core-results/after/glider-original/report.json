@@ -1,0 +1,110 @@
+{
+  "sample": "glider-original",
+  "status": "failed",
+  "renderCompleted": true,
+  "elapsedMs": 608904.397696,
+  "initialCopper": 0,
+  "phases": [
+    {
+      "name": "<board#2829 />",
+      "solver": "FanoutSolver",
+      "status": "failed",
+      "connections": 95,
+      "startedMs": 79445.609201,
+      "elapsedMs": 520584.700841
+    }
+  ],
+  "solvers": [
+    {
+      "id": 0,
+      "name": "FanoutSolver",
+      "phases": [
+        {
+          "stage": "FanoutSolver",
+          "atMs": 80710.218359
+        }
+      ],
+      "iterations": 70560,
+      "solved": false,
+      "failed": false,
+      "error": null,
+      "stats": {
+        "phase": "route-assignment",
+        "assignment": 243,
+        "assignmentCount": 256,
+        "routedBuses": "65/95",
+        "routedConnections": "58/95",
+        "failedBuses": "connection:breakout:pcb_breakout_point_30, connection:breakout:pcb_breakout_point_43, connection:breakout:pcb_breakout_point_44, connection:breakout:pcb_breakout_point_45, connection:breakout:pcb_breakout_point_14, connection:breakout:pcb_breakout_point_15, connection:breakout:pcb_breakout_point_16, connection:breakout:pcb_breakout_point_27, connection:breakout:pcb_breakout_point_28, connection:breakout:pcb_breakout_point_31, connection:breakout:pcb_breakout_point_42, connection:breakout:pcb_breakout_point_46, connection:breakout:pcb_breakout_point_49, connection:breakout:pcb_breakout_point_19, connection:breakout:pcb_breakout_point_34, connection:breakout:pcb_breakout_point_35, connection:breakout:pcb_breakout_point_47, connection:breakout:pcb_breakout_point_4, ESC_U12_pin12, ESC_U12_pin7, ESC_U12_pin23, ESC_U12_pin29, ESC_U12_pin37, ESC_U12_pin49, ESC_U12_pin50, ESC_U12_pin53, ESC_U12_pin66, ESC_U12_pin72, ESC_U12_pin84, ESC_U12_pin96",
+        "bestScore": 25300230.367994122,
+        "routingStrategy": "default",
+        "workUnit": 77,
+        "workUnitCount": 95,
+        "bus": "ESC_U12_pin54"
+      }
+    }
+  ],
+  "errors": [
+    "E2E routing budget exhausted",
+    "E2E routing budget exhausted"
+  ],
+  "counts": {
+    "source_project_metadata": 1,
+    "source_group": 3,
+    "source_port": 1684,
+    "source_component": 379,
+    "source_net": 459,
+    "source_board": 1,
+    "source_refdes_convention_warning": 313,
+    "source_component_internal_connection": 10,
+    "source_trace": 1976,
+    "source_bus": 2,
+    "source_no_power_pin_defined_warning": 356,
+    "source_no_ground_pin_defined_warning": 356,
+    "source_component_pins_underspecified_warning": 378,
+    "pcb_component": 379,
+    "pcb_group": 2,
+    "pcb_board": 1,
+    "pcb_smtpad": 1679,
+    "pcb_solder_paste": 1695,
+    "pcb_silkscreen_path": 898,
+    "pcb_plated_hole": 11,
+    "pcb_hole": 10,
+    "pcb_port": 1684,
+    "pcb_fabrication_note_path": 6,
+    "pcb_fabrication_note_text": 6,
+    "pcb_breakout_point": 199,
+    "pcb_debug_object": 1,
+    "cad_component": 379,
+    "pcb_autorouting_error": 1,
+    "pcb_copper_pour": 6,
+    "pcb_port_not_connected_error": 1976,
+    "pcb_trace_missing_error": 199,
+    "pcb_copper_pour_isolated_warning": 5
+  },
+  "revisions": {
+    "core": "88ccf3bef4239fbd47a9e7d93652537d0958aeb0",
+    "router": "2b1207ad70971f326166b134ea19418137273f23",
+    "fanout": "9e771f68dca591642fca3b97187e14404c16c5aa",
+    "sampleMode": "fanout_first",
+    "archiveSha256": "1991ad1891a953dcd660818aaceb73f7aa42dbf704e677e635753b9159f7a6b7",
+    "coreLockSha256": "f92ace2c03b5a28f34ef01944b0c420a2146d45c50ff48402249911adc000d8e",
+    "@tscircuit/props": "0.0.741",
+    "@tscircuit/bus-lanes-solver": "0.0.62",
+    "@tscircuit/checks": "0.0.282",
+    "circuit-to-svg": "0.0.460",
+    "react": "19.3.1",
+    "variant": "after",
+    "pairOrder": [
+      "before",
+      "after"
+    ],
+    "coreSourceFiles": [
+      {
+        "path": "lib/components/primitive-components/Group/Group.ts",
+        "beforeSha256": "9ddb264132ddc6642a655ea2d42c5a631ba5c5805224f34a33718944b905e560",
+        "afterSha256": "f0b8d346470f63424e37dae738266a917b40249f1e22e5388242f4e4ee1eb5fe",
+        "actualSha256": "f0b8d346470f63424e37dae738266a917b40249f1e22e5388242f4e4ee1eb5fe"
+      }
+    ]
+  }
+}
