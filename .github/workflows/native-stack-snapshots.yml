@@ -1,4 +1,4 @@
-name: Verify current OrangeCrab and H616 SVG baselines
+name: Verify remaining native-copper snapshot failures
 on:
   push:
     branches: [analysis/native-stack-snapshot-verification]
@@ -8,12 +8,12 @@ permissions:
 jobs:
   snapshots:
     runs-on: ubuntu-24.04
-    timeout-minutes: 18
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
-        source: [1a2e757a0230bae0e8f915023485978587d7fe14, 0f98be6237dfa0a852360b07d38f0e2fbee5f92d]
-        case: [orange, reach, crossing]
+        source: [a3011ea856de9661404a115ed2050d9e0a1bff77, 93f449589c8748916c2105a5efab437c0908269a]
+        case: [beagle, crossing]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -30,7 +30,7 @@ jobs:
           import os
           from pathlib import Path
           cases={
-            "orange":"tests/features/pipeline9-orangecrab-native-fixed-traces.test.ts",
+            "beagle":"tests/bugs/beagleplay-am6254-ddr4.test.ts",
             "reach":"tests/repro/pipeline9-h616-preload-reachability.test.ts",
             "crossing":"tests/repro/pipeline9-h616-solitary-crossing.test.ts",
           }
@@ -56,14 +56,4 @@ jobs:
           git config user.name "Codex"
           git config user.email "codex@users.noreply.github.com"
           git commit -m "Regenerate verified native-copper board SVG"
-          git push origin "HEAD:refs/heads/analysis/verified-native-round6-${SOURCE}-${CASE}"
-      - name: Report the OrangeCrab DRC total
-        if: ${{ matrix.case == 'orange' }}
-        run: |
-          python3 - <<'PY'
-          import re
-          from pathlib import Path
-          s=Path("tests/features/__snapshots__/pipeline9-orangecrab-native-fixed-traces.snap.svg").read_text()
-          m=re.search(r"Relaxed DRC errors: (\d+)",s)
-          print("ORANGECRAB_DRC_COUNT",int(m.group(1)))
-          PY
+          git push origin "HEAD:refs/heads/analysis/verified-native-round7-${SOURCE}-${CASE}"
