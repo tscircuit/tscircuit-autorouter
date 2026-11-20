@@ -720,6 +720,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
         highResolutionCellThickness: 8,
         lowResolutionCellSize: 0.4,
         staticSegmentValidator,
+        viaOccupantQuery: "owner-runs",
         viaDiameter: this.constructorParams.viaDiameter ?? 0.3,
         viaMinDistFromBorder: (this.constructorParams.viaDiameter ?? 0.3) / 2,
         traceMargin,
