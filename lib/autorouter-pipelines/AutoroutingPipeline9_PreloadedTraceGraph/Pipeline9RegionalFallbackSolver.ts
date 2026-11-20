@@ -244,12 +244,15 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
     const routedCandidate = materializePipeline9HdRouteVias(routes)
     if (!this.validateCandidateRoutes(routedCandidate)) return false
 
+    let fixedHdRoutes = this.params.fixedHdRoutes
+    if (!this.params.preservePhysicalGeometry) fixedHdRoutes = undefined
+
     // Cleanup is part of a candidate: a legal raw route can move into a pad.
     // Reject that candidate before the portfolio commits to its winner.
     const forceImproveSolver = new RegionalForceImproveSolver({
       nodeWithPortPoints: [this.params.nodeWithPortPoints],
       hdRoutes: routedCandidate,
-      fixedHdRoutes: this.params.fixedHdRoutes,
+      fixedHdRoutes,
       preserveTopologyPortAnchors: this.params.preservePhysicalGeometry,
       colorMap: this.params.colorMap,
       totalStepsPerNode: Math.max(12, Math.round(20 * this.params.effort)),
@@ -272,7 +275,7 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
     const repairSolver = new Pipeline4HighDensityRepairSolver({
       nodeWithPortPoints: [this.params.nodeWithPortPoints],
       hdRoutes: forceImprovedRoutes,
-      fixedHdRoutes: this.params.fixedHdRoutes,
+      fixedHdRoutes,
       layerCount: this.params.layerCount,
       allowBlindAndBuriedVias: this.params.allowBlindAndBuriedVias,
       obstacles: this.params.obstacles,
