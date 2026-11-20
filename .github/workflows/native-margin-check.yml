@@ -1,4 +1,4 @@
-name: Isolate native-routing Game Boy regression
+name: Verify read-only copper retains its physical width during repair
 on:
   push:
     branches: [analysis/native-complete-cleanup-context]
@@ -8,27 +8,11 @@ permissions:
 jobs:
   routing:
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 18
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - variant: main
-            source: 2b1207ad70971f326166b134ea19418137273f23
-          - variant: main-parent-deps
-            source: 2b1207ad70971f326166b134ea19418137273f23
-          - variant: parent-main-deps
-            source: 1a2e757a0230bae0e8f915023485978587d7fe14
-          - variant: intra
-            source: 1a2e757a0230bae0e8f915023485978587d7fe14
-          - variant: grow
-            source: 1a2e757a0230bae0e8f915023485978587d7fe14
-          - variant: portfolio
-            source: 1a2e757a0230bae0e8f915023485978587d7fe14
-          - variant: bridge
-            source: 1a2e757a0230bae0e8f915023485978587d7fe14
-          - variant: repair
-            source: 1a2e757a0230bae0e8f915023485978587d7fe14
+        source: [1a2e757a0230bae0e8f915023485978587d7fe14, 0f98be6237dfa0a852360b07d38f0e2fbee5f92d]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -37,40 +21,37 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: '1.4.3'
-      - name: Fetch the two exact source versions for isolation
-        run: |
-          git fetch origin 2b1207ad70971f326166b134ea19418137273f23 --depth=1
-          git fetch origin 1a2e757a0230bae0e8f915023485978587d7fe14 --depth=1
-      - name: Restore one component or dependency set
-        env:
-          VARIANT: ${{ matrix.variant }}
+      - name: Apply the new-width minimum only to routes this pass can change
         run: |
           python3 - <<'PY'
-          import os,subprocess
           from pathlib import Path
-          mode=os.environ["VARIANT"]
-          main="2b1207ad70971f326166b134ea19418137273f23"
-          parent="1a2e757a0230bae0e8f915023485978587d7fe14"
-          def restore(ref,path):
-            p=Path(path)
-            p.parent.mkdir(parents=True,exist_ok=True)
-            p.write_bytes(subprocess.run(["git","show",ref+":"+path],check=True,capture_output=True).stdout)
-          if mode=="main-parent-deps":
-            restore(parent,"package.json")
-          elif mode=="parent-main-deps":
-            restore(main,"package.json")
-          elif mode not in ("main",):
-            files={
-              "intra":"lib/solvers/HighDensitySolver/IntraNodeSolver.ts",
-              "grow":"lib/solvers/HyperHighDensitySolver/GrowShrinkHighDensityIntraNodeSolver/GrowShrinkHighDensityIntraNodeSolver.ts",
-              "portfolio":"lib/solvers/HyperHighDensitySolver/PortfolioSingleIntraNodeSolver.ts",
-              "bridge":"lib/solvers/HyperHighDensitySolver/repairDisconnectedSameRootPortPoints.ts",
-              "repair":"lib/solvers/HighDensityRepairSolver/Pipeline4HighDensityRepairSolver.ts",
-            }
-            restore(main,files[mode])
+          p=Path("lib/solvers/HighDensityRepairSolver/Pipeline4HighDensityRepairSolver.ts")
+          s=p.read_text()
+          old="""    const repairRoutes = contextRoutes.map((route) =>
+                toRepairRoute({
+                  route,
+                  connMap: params.connMap,
+                  minimumTraceWidth: params.minimumTraceWidth,
+                  viaLayerSpan,
+                }),
+              )"""
+          assert s.count(old)==1
+          new="""    const repairRoutes = contextRoutes.map((route, index) => {
+                let minimumTraceWidth: number | undefined
+                if (index < params.hdRoutes.length) {
+                  minimumTraceWidth = params.minimumTraceWidth
+                }
+                return toRepairRoute({
+                  route,
+                  connMap: params.connMap,
+                  minimumTraceWidth,
+                  viaLayerSpan,
+                })
+              })"""
+          p.write_text(s.replace(old,new,1))
           PY
       - run: bun install
-      - name: Run the unchanged Game Boy clearance and via-count regression
+      - name: Keep original board clearance, via-count and preservation assertions
         env:
           BUN_UPDATE_SNAPSHOTS: '1'
-        run: bun test --timeout 9999999 tests/bugs/bugreport96-full-gameboy-no-breakout.test.ts
+        run: bun test --timeout 9999999 tests/bugs/bugreport96-full-gameboy-no-breakout.test.ts tests/bugs/usb-dp-phase-detour.test.ts tests/repro/pipeline9-h616-portfolio-candidate-clearance.test.ts tests/features/pipeline9-orangecrab-native-fixed-traces.test.ts
