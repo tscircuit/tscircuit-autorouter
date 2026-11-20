@@ -1,7 +1,7 @@
-name: Trace ten supplied full-circuit e2e samples
+name: Trace ten full circuits with fanout before bus lanes
 on:
   push:
-    branches: [analysis/e2e-uploaded-20261120]
+    branches: [analysis/e2e-fanout-first-20261120]
 concurrency:
   group: e2e-uploaded-${{ github.ref }}
   cancel-in-progress: true
@@ -44,7 +44,9 @@ jobs:
           import hashlib,json,shutil,zipfile
           from pathlib import Path
           source=Path('experiments/e2e-samples-20261120');runtime=Path('core/e2e-runtime');runtime.mkdir()
-          for name in ['worker.tsx','run.py']:shutil.copyfile(source/name,runtime/name)
+          for name in ['worker.tsx','run.py','assess.ts','correct-workflow.tsx']:shutil.copyfile(source/name,runtime/name)
+          import gzip
+          (runtime/'expected-circuits.json').write_bytes(gzip.decompress((source/'expected-circuits.json.gz').read_bytes()))
           manifest=json.loads((source/'inputs.json').read_text())
           assert hashlib.sha256((source/'samples.zip').read_bytes()).hexdigest()==manifest['archiveSha256']
           with zipfile.ZipFile(source/'samples.zip') as z:
@@ -52,7 +54,7 @@ jobs:
                   content=z.read(entry['name'])
                   assert hashlib.sha256(content).hexdigest()==entry['sha256']
                   target=runtime/'samples'/entry['name'];target.parent.mkdir(exist_ok=True);target.write_bytes(content)
-          revisions={'core':'4306536282fe5abf32c1395e106f55a5d61ca7a3','router':'2b1207ad70971f326166b134ea19418137273f23','fanout':'9e771f68dca591642fca3b97187e14404c16c5aa','sampleMode':'as_authored','archiveSha256':manifest['archiveSha256'],'coreLockSha256':hashlib.sha256(Path('core/bun.lock').read_bytes()).hexdigest()}
+          revisions={'core':'4306536282fe5abf32c1395e106f55a5d61ca7a3','router':'2b1207ad70971f326166b134ea19418137273f23','fanout':'9e771f68dca591642fca3b97187e14404c16c5aa','sampleMode':'fanout_first','archiveSha256':manifest['archiveSha256'],'coreLockSha256':hashlib.sha256(Path('core/bun.lock').read_bytes()).hexdigest()}
           for package in ['@tscircuit/props','@tscircuit/bus-lanes-solver','@tscircuit/checks','circuit-to-svg','react']:
               revisions[package]=json.loads((Path('core/node_modules')/package/'package.json').read_text())['version']
           (runtime/'revisions.json').write_text(json.dumps(revisions,indent=2)+'\n')
@@ -61,15 +63,17 @@ jobs:
       - name: Route with intermediate solver and phase capture
         env:
           E2E_SAMPLE: ${{ matrix.sample }}
+          E2E_WORKFLOW: fanout_first
         run: |
           export E2E_ROUTER_MODULE="$GITHUB_WORKSPACE/benchmark-runtime/pipeline9.js"
           cd core/e2e-runtime
           python3 run.py "$E2E_SAMPLE" "$GITHUB_WORKSPACE/results/$E2E_SAMPLE"
+          bun assess.ts "$E2E_SAMPLE" "$GITHUB_WORKSPACE/results/$E2E_SAMPLE"
       - name: Publish complete stage captures and PCB SVG
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: e2e-baseline-${{ matrix.sample }}
+          name: e2e-fanout-first-${{ matrix.sample }}
           path: results/${{ matrix.sample }}
           if-no-files-found: error
       - name: Export captured evidence
@@ -84,7 +88,7 @@ jobs:
           stream=io.BytesIO()
           with zipfile.ZipFile(stream,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=9) as z:
               for p in root.rglob('*'):
-                  if p.name in ['report.json','process.json']:z.writestr(str(p.relative_to(root)),p.read_bytes())
+                  if p.name in ['report.json','process.json','assessment.json']:z.writestr(str(p.relative_to(root)),p.read_bytes())
           print('E2E_EVIDENCE_BEGIN')
           encoded=base64.b64encode(stream.getvalue()).decode()
           for offset in range(0,len(encoded),8000):print(encoded[offset:offset+8000])

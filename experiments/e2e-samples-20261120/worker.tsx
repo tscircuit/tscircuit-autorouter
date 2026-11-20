@@ -3,6 +3,7 @@ import { join, resolve } from "node:path"
 import { RootCircuit, SOLVERS } from "../lib/index"
 import { convertCircuitJsonToPcbSvg } from "circuit-to-svg"
 import { getSvgFromGraphicsObject, type GraphicsObject } from "graphics-debug"
+import { getCorrectWorkflowBoard } from "./correct-workflow"
 
 type ObservedSolver = {
   step(): void
@@ -149,7 +150,13 @@ for (const eventName of ["autorouting:start", "autorouting:end", "autorouting:er
 const heartbeat = setInterval(save, 2000)
 try {
   const { default: Board } = await import(`./samples/${sample}.tsx`)
-  circuit.add(Board())
+  const board = Board()
+  if (process.env.E2E_WORKFLOW === "fanout_first") {
+    const family = sample.replace(/-(original|spaced)$/, "")
+    const { default: Original } = await import(`./samples/${family}-original.tsx`)
+    const escapeWidthsByNativeNet = new Map(Original().props.source.nets.map((net: { nativeName: string; escapeWidth: number }) => [net.nativeName, net.escapeWidth]))
+    circuit.add(getCorrectWorkflowBoard(board, { escapeWidthsByNativeNet }))
+  } else circuit.add(board)
   await circuit.renderUntilSettled()
   report.renderCompleted = true
   const json = circuit.getCircuitJson()

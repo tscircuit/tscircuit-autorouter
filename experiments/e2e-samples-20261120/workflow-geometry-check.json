@@ -1,0 +1,172 @@
+[
+  {
+    "sample": "butterstick-original.tsx",
+    "parts": 350,
+    "pads": 1623,
+    "bgaFanouts": 3,
+    "escapes": 554,
+    "phases": [
+      "byte0",
+      "byte1",
+      "plane_escape",
+      "ddr_remaining",
+      "board"
+    ],
+    "sourceUnmodified": true,
+    "geometryUnmodified": true,
+    "netMembershipAndWidthsUnmodified": true
+  },
+  {
+    "sample": "butterstick-spaced.tsx",
+    "parts": 350,
+    "pads": 1623,
+    "bgaFanouts": 3,
+    "escapes": 554,
+    "phases": [
+      "byte0",
+      "byte1",
+      "remaining",
+      "other_signals",
+      "power"
+    ],
+    "sourceUnmodified": true,
+    "geometryUnmodified": true,
+    "netMembershipAndWidthsUnmodified": true
+  },
+  {
+    "sample": "glider-original.tsx",
+    "parts": 379,
+    "pads": 1700,
+    "bgaFanouts": 2,
+    "escapes": 306,
+    "phases": [
+      "byte0",
+      "byte1",
+      "plane_escape",
+      "ddr_remaining",
+      "board"
+    ],
+    "sourceUnmodified": true,
+    "geometryUnmodified": true,
+    "netMembershipAndWidthsUnmodified": true
+  },
+  {
+    "sample": "glider-spaced.tsx",
+    "parts": 379,
+    "pads": 1700,
+    "bgaFanouts": 2,
+    "escapes": 306,
+    "phases": [
+      "byte0",
+      "byte1",
+      "remaining",
+      "other_signals",
+      "power"
+    ],
+    "sourceUnmodified": true,
+    "geometryUnmodified": true,
+    "netMembershipAndWidthsUnmodified": true
+  },
+  {
+    "sample": "h616-original.tsx",
+    "parts": 125,
+    "pads": 760,
+    "bgaFanouts": 2,
+    "escapes": 270,
+    "phases": [
+      "byte0",
+      "byte1",
+      "plane_escape",
+      "ddr_remaining",
+      "board"
+    ],
+    "sourceUnmodified": true,
+    "geometryUnmodified": true,
+    "netMembershipAndWidthsUnmodified": true
+  },
+  {
+    "sample": "h616-spaced.tsx",
+    "parts": 125,
+    "pads": 760,
+    "bgaFanouts": 2,
+    "escapes": 270,
+    "phases": [
+      "byte0",
+      "byte1",
+      "remaining",
+      "other_signals",
+      "power"
+    ],
+    "sourceUnmodified": true,
+    "geometryUnmodified": true,
+    "netMembershipAndWidthsUnmodified": true
+  },
+  {
+    "sample": "icepi-original.tsx",
+    "parts": 280,
+    "pads": 1426,
+    "bgaFanouts": 3,
+    "escapes": 396,
+    "phases": [
+      "byte0",
+      "byte1",
+      "plane_escape",
+      "ddr_remaining",
+      "board"
+    ],
+    "sourceUnmodified": true,
+    "geometryUnmodified": true,
+    "netMembershipAndWidthsUnmodified": true
+  },
+  {
+    "sample": "icepi-spaced.tsx",
+    "parts": 280,
+    "pads": 1426,
+    "bgaFanouts": 3,
+    "escapes": 396,
+    "phases": [
+      "byte0",
+      "byte1",
+      "remaining",
+      "other_signals",
+      "power"
+    ],
+    "sourceUnmodified": true,
+    "geometryUnmodified": true,
+    "netMembershipAndWidthsUnmodified": true
+  },
+  {
+    "sample": "imx6-original.tsx",
+    "parts": 498,
+    "pads": 1904,
+    "bgaFanouts": 3,
+    "escapes": 394,
+    "phases": [
+      "byte0",
+      "byte1",
+      "plane_escape",
+      "ddr_remaining",
+      "board"
+    ],
+    "sourceUnmodified": true,
+    "geometryUnmodified": true,
+    "netMembershipAndWidthsUnmodified": true
+  },
+  {
+    "sample": "imx6-spaced.tsx",
+    "parts": 498,
+    "pads": 1904,
+    "bgaFanouts": 3,
+    "escapes": 394,
+    "phases": [
+      "byte0",
+      "byte1",
+      "remaining",
+      "other_signals",
+      "power"
+    ],
+    "sourceUnmodified": true,
+    "geometryUnmodified": true,
+    "netMembershipAndWidthsUnmodified": true
+  }
+]
