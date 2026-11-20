@@ -1,0 +1,66 @@
+name: Diagnose original full-circuit fanout and winding failures
+on:
+  push:
+    branches: [analysis/e2e-full-circuit-diagnosis-20261120]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  diagnose:
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        sample: ["butterstick-original", "butterstick-spaced", "glider-original", "glider-spaced", "h616-original", "h616-spaced", "icepi-original", "icepi-spaced", "imx6-original", "imx6-spaced"]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Wait for original pipeline captures
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh run watch 44778112884 --interval 30 --exit-status
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: 44778112884
+          name: full-circuit-interception-${{ matrix.sample }}
+          path: captures
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/core
+          ref: 351e73d665fad37577c47fcbff2e4c29eb377467
+          path: core
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Install unchanged Core dependencies
+        run: |
+          cd core
+          for attempt in 1 2 3; do
+            if bun install --ignore-scripts; then break; fi
+            if [ "$attempt" = 3 ]; then exit 1; fi
+          done
+      - name: Inspect real rejection geometry and replay isolated layer preflight
+        env:
+          SAMPLE: ${{ matrix.sample }}
+        run: bun experiments/e2e-samples-20261120/diagnose-full-circuit.ts "captures/$SAMPLE" "$SAMPLE"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: full-circuit-diagnosis-${{ matrix.sample }}
+          path: captures/${{ matrix.sample }}/diagnosis
+      - name: Export physical diagnosis
+        if: always()
+        env:
+          SAMPLE: ${{ matrix.sample }}
+        run: |
+          python3 - <<'PYEXPORT'
+          from pathlib import Path
+          import base64,gzip,os
+          p=Path('captures')/os.environ['SAMPLE']/'diagnosis/analysis.json'
+          if p.exists():
+              encoded=base64.b64encode(gzip.compress(p.read_bytes(),mtime=0)).decode()
+              print('E2E_DIAGNOSIS_BEGIN')
+              for offset in range(0,len(encoded),8000):print(encoded[offset:offset+8000])
+              print('E2E_DIAGNOSIS_END')
+          PYEXPORT
