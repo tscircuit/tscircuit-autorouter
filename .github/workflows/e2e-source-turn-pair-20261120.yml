@@ -1,7 +1,7 @@
-name: Verify preserved bus search on all ten full circuits
+name: Verify source turns with preserved layer screening
 on:
   push:
-    branches: [analysis/e2e-source-turn-v2-20261120]
+    branches: [analysis/e2e-source-turn-v3-20261120]
 concurrency:
   group: e2e-uploaded-${{ github.ref }}
   cancel-in-progress: true
@@ -25,7 +25,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: tscircuit/fanout-solver
-          ref: 67184a8c263d74c7d8427e4af04e477c4d19e44e
+          ref: d37f359996230dbffd49c1d7cc5405d30ccce809
           path: fanout-candidate
       - uses: oven-sh/setup-bun@v2
         with:

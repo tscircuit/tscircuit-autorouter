@@ -1,16 +1,26 @@
 {
   "base": "9e771f68dca591642fca3b97187e14404c16c5aa",
-  "candidate": "67184a8c263d74c7d8427e4af04e477c4d19e44e",
+  "candidate": "d37f359996230dbffd49c1d7cc5405d30ccce809",
   "files": [
+    {
+      "path": "lib/fanout-solver.ts",
+      "beforeSha256": "b6dc8a405b2a2aa6233cd7c8826b14b39729f417097ff29d3fa464f37fddb6db",
+      "afterSha256": "8c69d7a1e895849008613c154f44b1ec5469ce517505b35ca42e1353bc38a17e"
+    },
     {
       "path": "lib/route-bus/route-analytic-boundary-alternatives.ts",
       "beforeSha256": "20d80b5a2b0a4c6f78d3651e50af7ce1aac948d4130e4fb30370c9a76f3c132a",
-      "afterSha256": "75b8b453c1bf1f6fadd204f8a9056f27d34f0517e479ede76fb878148a5f0900"
+      "afterSha256": "0da80e9b7a8b5e6ecbb45984bf1ad9d164f62312a2cfef513ce7af16f4046d23"
     },
     {
       "path": "lib/route-bus/track-candidates.ts",
       "beforeSha256": "5be225944e2be619eec8f89e541b7443c91e78d9507b10d8200722314ca00eeb",
       "afterSha256": "a4f993bd19500af156a0bceea05e9c291aaaa8c094a3f805cfc57228c1fa44e2"
+    },
+    {
+      "path": "lib/route-bus/types.ts",
+      "beforeSha256": "fa2555fff4acaabbf49057b23bc4d5e8a225dfea0be5931b3fbf805aa0c49d62",
+      "afterSha256": "734e8d8658ed61a3cc238dcea73a2b3ed2d018f8ae4ac903259cf5cfe1b2a818"
     }
   ]
 }
