@@ -1,0 +1,57 @@
+name: Verify identical full-circuit inputs and physical copper in every capture
+on:
+  push:
+    branches: [analysis/e2e-source-turn-final-results-20261120]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/core
+          ref: 351e73d665fad37577c47fcbff2e4c29eb377467
+          path: core
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - run: cd core && bun install --ignore-scripts
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 44778112884
+          pattern: full-circuit-interception-*
+          path: core/e2e-runtime/before
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 44798452309
+          pattern: full-circuit-interception-*
+          path: core/e2e-runtime/after
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Check original pads and exact captured fanout inputs
+        run: |
+          cp experiments/e2e-samples-20261120/check-final-source-turn-results.ts experiments/e2e-samples-20261120/inputs.json core/e2e-runtime/
+          cd core/e2e-runtime
+          bun check-final-source-turn-results.ts "$GITHUB_WORKSPACE/results"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: final-source-turn-physical-results
+          path: results
+      - name: Export machine-readable findings
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import base64,gzip
+          from pathlib import Path
+          p=Path('results/source-turn-final-statistics.json')
+          if p.exists():
+              print('FINAL_SOURCE_TURN_RESULTS_BEGIN')
+              encoded=base64.b64encode(gzip.compress(p.read_bytes(),mtime=0)).decode()
+              for offset in range(0,len(encoded),8000):print(encoded[offset:offset+8000])
+              print('FINAL_SOURCE_TURN_RESULTS_END')
+          PY
