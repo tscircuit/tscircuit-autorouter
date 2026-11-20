@@ -1,0 +1,71 @@
+name: Validate reviewed fanout repro captions
+on:
+  push:
+    branches: [codex/repro-captions-20261120]
+permissions:
+  contents: read
+jobs:
+  captions:
+    runs-on: macos-15
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - pr: 304
+            revision: 628e2dcc2024bc7b2bf5fa02dbb2433e3964a823
+          - pr: 321
+            revision: c35447793e7b8e74572dab291f52b968d3aa2243
+          - pr: 318
+            revision: 5c125a0da83f673e7994c84198203311e85550ac
+          - pr: 305
+            revision: 31b82331a672a31a8399e44a7751ab5e3264b23c
+          - pr: 322
+            revision: 55d49dd1db85fc9e436e1a37b70a061a74e32885
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: ${{ matrix.revision }}
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: bun install --frozen-lockfile
+      - run: bun run format:check
+      - run: bun run typecheck
+      - name: Run existing repro assertions and update captions
+        env:
+          BUN_UPDATE_SNAPSHOTS: "1"
+        run: |
+          bun test tests/competing-singleton-via-windows.test.ts
+          bun test tests/plane-via-terminal-pour-clearance.test.ts
+          bun test tests/icepi-u22-native-fanout.test.ts
+          if test -f tests/native-boundary-contact.test.ts; then
+            bun test tests/native-boundary-contact.test.ts
+          fi
+      - name: Export reviewed snapshots
+        env:
+          REVIEW_PR: ${{ matrix.pr }}
+          REVIEW_REVISION: ${{ matrix.revision }}
+        run: |
+          python3 - <<'PYEXPORT'
+          import base64,io,json,os,re,zipfile
+          from pathlib import Path
+          names=['competing-singleton-via-windows','plane-via-terminal-pour-clearance','icepi-u22-native-fanout']
+          if os.environ['REVIEW_PR']!='304':names.append('native-boundary-contact')
+          manifest={'pr':os.environ['REVIEW_PR'],'revision':os.environ['REVIEW_REVISION'],'captions':{}}
+          stream=io.BytesIO()
+          with zipfile.ZipFile(stream,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=9) as archive:
+              for name in names:
+                  path=Path('tests/__snapshots__')/(name+'.snap.svg')
+                  svg=path.read_text()
+                  manifest['captions'][name]=re.findall(r'>([^<>]*(?:PASS:|FAIL:)[^<>]*)<',svg)
+                  assert len(manifest['captions'][name])==1, name
+                  archive.writestr(str(path),svg)
+              archive.writestr('manifest.json',json.dumps(manifest,indent=2))
+          print('REPRO_CAPTIONS_MANIFEST',json.dumps(manifest))
+          print('REPRO_CAPTIONS_BEGIN')
+          encoded=base64.b64encode(stream.getvalue()).decode()
+          for offset in range(0,len(encoded),8000):print(encoded[offset:offset+8000])
+          print('REPRO_CAPTIONS_END')
+          PYEXPORT
