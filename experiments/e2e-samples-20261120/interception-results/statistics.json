@@ -1,0 +1,333 @@
+[
+  {
+    "sample": "butterstick-original",
+    "status": "failed",
+    "processTimedOut": false,
+    "requestedNets": 317,
+    "connectedByExistingCopper": 9,
+    "fanout": {
+      "bestEscapes": 60,
+      "requested": 91,
+      "busCount": 77,
+      "noLayerBuses": 8,
+      "completedAssignments": 256,
+      "mergeExperiment": null
+    },
+    "windingCalls": 10,
+    "windingFailures": [],
+    "extended": null
+  },
+  {
+    "sample": "butterstick-spaced",
+    "status": "running",
+    "processTimedOut": true,
+    "requestedNets": null,
+    "connectedByExistingCopper": null,
+    "fanout": {
+      "bestEscapes": 70,
+      "requested": 91,
+      "busCount": 77,
+      "noLayerBuses": 10,
+      "completedAssignments": 244,
+      "mergeExperiment": null
+    },
+    "windingCalls": 8,
+    "windingFailures": [
+      "WindingBreakoutSolver error: WindingBreakoutInfeasibleError: WindingBreakoutSolver: declared breakout edges need 17.38mm but expose only 17.00mm"
+    ],
+    "extended": {
+      "process": {
+        "sample": "butterstick-spaced",
+        "exitCode": 0,
+        "timedOut": false,
+        "wallMs": 754569.429018
+      },
+      "diagnostics": [
+        {
+          "component": "<board#2775 />",
+          "requested": 91,
+          "available": true,
+          "routed": 70,
+          "vias": 52,
+          "drcValid": true,
+          "drcIssues": [],
+          "solved": false,
+          "failed": true,
+          "latestStage": "FanoutSolver",
+          "routedConnections": [
+            "breakout:pcb_breakout_point_25",
+            "breakout:pcb_breakout_point_37",
+            "breakout:pcb_breakout_point_2",
+            "breakout:pcb_breakout_point_64",
+            "breakout:pcb_breakout_point_74",
+            "breakout:pcb_breakout_point_60",
+            "breakout:pcb_breakout_point_70",
+            "breakout:pcb_breakout_point_83",
+            "breakout:pcb_breakout_point_77",
+            "breakout:pcb_breakout_point_87",
+            "breakout:pcb_breakout_point_8",
+            "breakout:pcb_breakout_point_5",
+            "breakout:pcb_breakout_point_1",
+            "breakout:pcb_breakout_point_6",
+            "breakout:pcb_breakout_point_9",
+            "breakout:pcb_breakout_point_16",
+            "breakout:pcb_breakout_point_10",
+            "breakout:pcb_breakout_point_17",
+            "breakout:pcb_breakout_point_13",
+            "breakout:pcb_breakout_point_32",
+            "breakout:pcb_breakout_point_15",
+            "breakout:pcb_breakout_point_22",
+            "breakout:pcb_breakout_point_30",
+            "breakout:pcb_breakout_point_42",
+            "breakout:pcb_breakout_point_43",
+            "breakout:pcb_breakout_point_48",
+            "breakout:pcb_breakout_point_61",
+            "breakout:pcb_breakout_point_75",
+            "breakout:pcb_breakout_point_18",
+            "breakout:pcb_breakout_point_45",
+            "breakout:pcb_breakout_point_55",
+            "breakout:pcb_breakout_point_88",
+            "breakout:pcb_breakout_point_11",
+            "breakout:pcb_breakout_point_33",
+            "breakout:pcb_breakout_point_31",
+            "breakout:pcb_breakout_point_4",
+            "breakout:pcb_breakout_point_12",
+            "breakout:pcb_breakout_point_62",
+            "breakout:pcb_breakout_point_72",
+            "breakout:pcb_breakout_point_54",
+            "breakout:pcb_breakout_point_65",
+            "breakout:pcb_breakout_point_78",
+            "breakout:pcb_breakout_point_19",
+            "breakout:pcb_breakout_point_29",
+            "breakout:pcb_breakout_point_39",
+            "breakout:pcb_breakout_point_24",
+            "breakout:pcb_breakout_point_36",
+            "breakout:pcb_breakout_point_20",
+            "breakout:pcb_breakout_point_44",
+            "breakout:pcb_breakout_point_53",
+            "breakout:pcb_breakout_point_63",
+            "breakout:pcb_breakout_point_86",
+            "breakout:pcb_breakout_point_0",
+            "breakout:pcb_breakout_point_21",
+            "breakout:pcb_breakout_point_23",
+            "breakout:pcb_breakout_point_26",
+            "breakout:pcb_breakout_point_27",
+            "breakout:pcb_breakout_point_28",
+            "breakout:pcb_breakout_point_34",
+            "breakout:pcb_breakout_point_38",
+            "breakout:pcb_breakout_point_41",
+            "breakout:pcb_breakout_point_49",
+            "breakout:pcb_breakout_point_50",
+            "breakout:pcb_breakout_point_51",
+            "breakout:pcb_breakout_point_52",
+            "breakout:pcb_breakout_point_59",
+            "breakout:pcb_breakout_point_71",
+            "breakout:pcb_breakout_point_82",
+            "breakout:pcb_breakout_point_84",
+            "breakout:pcb_breakout_point_14"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "sample": "glider-original",
+    "status": "failed",
+    "processTimedOut": false,
+    "requestedNets": 356,
+    "connectedByExistingCopper": 0,
+    "fanout": {
+      "bestEscapes": 69,
+      "requested": 95,
+      "busCount": 95,
+      "noLayerBuses": 3,
+      "completedAssignments": 119,
+      "mergeExperiment": null
+    },
+    "windingCalls": 7,
+    "windingFailures": [],
+    "extended": null
+  },
+  {
+    "sample": "glider-spaced",
+    "status": "failed",
+    "processTimedOut": false,
+    "requestedNets": 356,
+    "connectedByExistingCopper": 0,
+    "fanout": null,
+    "windingCalls": 7,
+    "windingFailures": [
+      "WindingBreakoutSolver error: WindingBreakoutInfeasibleError: WindingBreakoutSolver: declared breakout edges need 16.91mm but expose only 16.80mm",
+      "WindingBreakoutSolver error: WindingBreakoutInfeasibleError: WindingBreakoutSolver: declared breakout edges need 14.24mm but expose only 13.80mm"
+    ],
+    "extended": null
+  },
+  {
+    "sample": "h616-original",
+    "status": "failed",
+    "processTimedOut": false,
+    "requestedNets": 121,
+    "connectedByExistingCopper": 0,
+    "fanout": {
+      "bestEscapes": 101,
+      "requested": 174,
+      "busCount": 160,
+      "noLayerBuses": 20,
+      "completedAssignments": 50,
+      "mergeExperiment": null
+    },
+    "windingCalls": 6,
+    "windingFailures": [],
+    "extended": null
+  },
+  {
+    "sample": "h616-spaced",
+    "status": "failed",
+    "processTimedOut": false,
+    "requestedNets": 121,
+    "connectedByExistingCopper": 0,
+    "fanout": {
+      "bestEscapes": 96,
+      "requested": 174,
+      "busCount": 160,
+      "noLayerBuses": 34,
+      "completedAssignments": 41,
+      "mergeExperiment": null
+    },
+    "windingCalls": 8,
+    "windingFailures": [],
+    "extended": null
+  },
+  {
+    "sample": "icepi-original",
+    "status": "failed",
+    "processTimedOut": false,
+    "requestedNets": 230,
+    "connectedByExistingCopper": 7,
+    "fanout": {
+      "bestEscapes": 9,
+      "requested": 32,
+      "busCount": 32,
+      "noLayerBuses": 9,
+      "completedAssignments": 256,
+      "mergeExperiment": {
+        "isolatedFanout": true,
+        "endToEnd": false,
+        "option": "allowSameNetMerges=true",
+        "solved": false,
+        "failed": true,
+        "error": "FanoutSolver: best layer assignment routed 18/32 connections",
+        "bestEscapes": 18,
+        "requested": 32,
+        "elapsedMs": 29344.220579,
+        "completedAssignments": 256,
+        "drc": {
+          "valid": true,
+          "checkedTraceCount": 18,
+          "checkedSegmentCount": 34,
+          "checkedViaCount": 16,
+          "issues": []
+        }
+      }
+    },
+    "windingCalls": 8,
+    "windingFailures": [],
+    "extended": null
+  },
+  {
+    "sample": "icepi-spaced",
+    "status": "failed",
+    "processTimedOut": false,
+    "requestedNets": 230,
+    "connectedByExistingCopper": 0,
+    "fanout": {
+      "bestEscapes": 76,
+      "requested": 92,
+      "busCount": 78,
+      "noLayerBuses": 2,
+      "completedAssignments": 256,
+      "mergeExperiment": null
+    },
+    "windingCalls": 11,
+    "windingFailures": [
+      "WindingBreakoutSolver error: WindingBreakoutInfeasibleError: WindingBreakoutSolver: declared breakout edges need 17.43mm but expose only 14.64mm"
+    ],
+    "extended": null
+  },
+  {
+    "sample": "imx6-original",
+    "status": "failed",
+    "processTimedOut": false,
+    "requestedNets": 404,
+    "connectedByExistingCopper": 3,
+    "fanout": {
+      "bestEscapes": 9,
+      "requested": 32,
+      "busCount": 32,
+      "noLayerBuses": 9,
+      "completedAssignments": 256,
+      "mergeExperiment": {
+        "isolatedFanout": true,
+        "endToEnd": false,
+        "option": "allowSameNetMerges=true",
+        "solved": false,
+        "failed": true,
+        "error": "FanoutSolver: best layer assignment routed 17/32 connections",
+        "bestEscapes": 17,
+        "requested": 32,
+        "elapsedMs": 35486.011018,
+        "completedAssignments": 256,
+        "drc": {
+          "valid": true,
+          "checkedTraceCount": 17,
+          "checkedSegmentCount": 35,
+          "checkedViaCount": 14,
+          "issues": []
+        }
+      }
+    },
+    "windingCalls": 7,
+    "windingFailures": [
+      "WindingBreakoutSolver error: WindingBreakoutInfeasibleError: WindingBreakoutSolver: declared breakout edges need 16.21mm but expose only 14.50mm"
+    ],
+    "extended": null
+  },
+  {
+    "sample": "imx6-spaced",
+    "status": "failed",
+    "processTimedOut": false,
+    "requestedNets": 404,
+    "connectedByExistingCopper": 0,
+    "fanout": {
+      "bestEscapes": 7,
+      "requested": 32,
+      "busCount": 32,
+      "noLayerBuses": 25,
+      "completedAssignments": 256,
+      "mergeExperiment": {
+        "isolatedFanout": true,
+        "endToEnd": false,
+        "option": "allowSameNetMerges=true",
+        "solved": false,
+        "failed": true,
+        "error": "FanoutSolver: best layer assignment routed 9/32 connections",
+        "bestEscapes": 9,
+        "requested": 32,
+        "elapsedMs": 89494.87051200001,
+        "completedAssignments": 256,
+        "drc": {
+          "valid": true,
+          "checkedTraceCount": 9,
+          "checkedSegmentCount": 22,
+          "checkedViaCount": 5,
+          "issues": []
+        }
+      }
+    },
+    "windingCalls": 10,
+    "windingFailures": [
+      "WindingBreakoutSolver error: WindingBreakoutInfeasibleError: WindingBreakoutSolver: declared breakout edges need 16.21mm but expose only 14.50mm"
+    ],
+    "extended": null
+  }
+]

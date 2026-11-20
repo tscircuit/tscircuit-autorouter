@@ -1,0 +1,411 @@
+{
+  "sample": "icepi-spaced",
+  "status": "failed",
+  "renderCompleted": true,
+  "elapsedMs": 400776.269639,
+  "initialCopper": 0,
+  "phases": [
+    {
+      "name": "<board#2307 />",
+      "solver": "FanoutSolver",
+      "status": "failed",
+      "connections": 92,
+      "startedMs": 72038.606856,
+      "elapsedMs": 278345.42350200005
+    }
+  ],
+  "solvers": [
+    {
+      "id": 0,
+      "name": "WindingBreakoutSolver",
+      "phases": [
+        {
+          "stage": "referenceOrdering",
+          "atMs": 51620.747545
+        },
+        {
+          "stage": "gatePlacement",
+          "atMs": 51624.073574999995
+        },
+        {
+          "stage": "none",
+          "atMs": 51627.162079999995
+        }
+      ],
+      "iterations": 10,
+      "solved": true,
+      "failed": false,
+      "error": null,
+      "stats": {
+        "phase": "finalize-output-validation",
+        "completedStages": 2,
+        "totalStages": 2,
+        "valid": true,
+        "breakoutPointCount": 64
+      }
+    },
+    {
+      "id": 1,
+      "name": "WindingBreakoutSolver",
+      "phases": [
+        {
+          "stage": "referenceOrdering",
+          "atMs": 51628.236002
+        },
+        {
+          "stage": "gatePlacement",
+          "atMs": 51629.00023899999
+        },
+        {
+          "stage": "none",
+          "atMs": 51630.064361
+        }
+      ],
+      "iterations": 10,
+      "solved": true,
+      "failed": false,
+      "error": null,
+      "stats": {
+        "phase": "finalize-output-validation",
+        "completedStages": 2,
+        "totalStages": 2,
+        "valid": true,
+        "breakoutPointCount": 64
+      }
+    },
+    {
+      "id": 2,
+      "name": "WindingBreakoutSolver",
+      "phases": [
+        {
+          "stage": "referenceOrdering",
+          "atMs": 51631.109283
+        },
+        {
+          "stage": "gatePlacement",
+          "atMs": 51631.822658
+        }
+      ],
+      "iterations": 5,
+      "solved": false,
+      "failed": true,
+      "error": "WindingBreakoutSolver error: WindingBreakoutInfeasibleError: WindingBreakoutSolver: declared breakout edges need 17.43mm but expose only 14.64mm",
+      "stats": {
+        "phase": "gatePlacement",
+        "completedStages": 1,
+        "totalStages": 2
+      }
+    },
+    {
+      "id": 3,
+      "name": "WindingBreakoutSolver",
+      "phases": [
+        {
+          "stage": "referenceOrdering",
+          "atMs": 51645.478444
+        },
+        {
+          "stage": "gatePlacement",
+          "atMs": 51645.857251999994
+        },
+        {
+          "stage": "none",
+          "atMs": 51646.386263
+        }
+      ],
+      "iterations": 10,
+      "solved": true,
+      "failed": false,
+      "error": null,
+      "stats": {
+        "phase": "finalize-output-validation",
+        "completedStages": 2,
+        "totalStages": 2,
+        "valid": true,
+        "breakoutPointCount": 6
+      }
+    },
+    {
+      "id": 4,
+      "name": "WindingBreakoutSolver",
+      "phases": [
+        {
+          "stage": "referenceOrdering",
+          "atMs": 51646.887233999994
+        },
+        {
+          "stage": "gatePlacement",
+          "atMs": 51647.207741
+        },
+        {
+          "stage": "none",
+          "atMs": 51647.585748
+        }
+      ],
+      "iterations": 10,
+      "solved": true,
+      "failed": false,
+      "error": null,
+      "stats": {
+        "phase": "finalize-output-validation",
+        "completedStages": 2,
+        "totalStages": 2,
+        "valid": true,
+        "breakoutPointCount": 6
+      }
+    },
+    {
+      "id": 5,
+      "name": "WindingBreakoutSolver",
+      "phases": [
+        {
+          "stage": "referenceOrdering",
+          "atMs": 51647.974037
+        },
+        {
+          "stage": "gatePlacement",
+          "atMs": 51648.420926
+        },
+        {
+          "stage": "none",
+          "atMs": 51648.914816
+        }
+      ],
+      "iterations": 10,
+      "solved": true,
+      "failed": false,
+      "error": null,
+      "stats": {
+        "phase": "finalize-output-validation",
+        "completedStages": 2,
+        "totalStages": 2,
+        "valid": true,
+        "breakoutPointCount": 20
+      }
+    },
+    {
+      "id": 6,
+      "name": "WindingBreakoutSolver",
+      "phases": [
+        {
+          "stage": "referenceOrdering",
+          "atMs": 51649.434267
+        },
+        {
+          "stage": "gatePlacement",
+          "atMs": 51649.895916999994
+        },
+        {
+          "stage": "none",
+          "atMs": 51650.961659
+        }
+      ],
+      "iterations": 10,
+      "solved": true,
+      "failed": false,
+      "error": null,
+      "stats": {
+        "phase": "finalize-output-validation",
+        "completedStages": 2,
+        "totalStages": 2,
+        "valid": true,
+        "breakoutPointCount": 60
+      }
+    },
+    {
+      "id": 7,
+      "name": "WindingBreakoutSolver",
+      "phases": [
+        {
+          "stage": "referenceOrdering",
+          "atMs": 51661.843046999995
+        },
+        {
+          "stage": "gatePlacement",
+          "atMs": 51662.371638
+        },
+        {
+          "stage": "none",
+          "atMs": 51662.848448
+        }
+      ],
+      "iterations": 10,
+      "solved": true,
+      "failed": false,
+      "error": null,
+      "stats": {
+        "phase": "finalize-output-validation",
+        "completedStages": 2,
+        "totalStages": 2,
+        "valid": true,
+        "breakoutPointCount": 8
+      }
+    },
+    {
+      "id": 8,
+      "name": "WindingBreakoutSolver",
+      "phases": [
+        {
+          "stage": "referenceOrdering",
+          "atMs": 51663.217476
+        },
+        {
+          "stage": "gatePlacement",
+          "atMs": 51663.38561899999
+        },
+        {
+          "stage": "none",
+          "atMs": 51663.675445999994
+        }
+      ],
+      "iterations": 7,
+      "solved": true,
+      "failed": false,
+      "error": null,
+      "stats": {
+        "phase": "finalize-output-validation",
+        "completedStages": 2,
+        "totalStages": 2,
+        "valid": true,
+        "breakoutPointCount": 1
+      }
+    },
+    {
+      "id": 9,
+      "name": "WindingBreakoutSolver",
+      "phases": [
+        {
+          "stage": "referenceOrdering",
+          "atMs": 51663.999032
+        },
+        {
+          "stage": "gatePlacement",
+          "atMs": 51664.195375999996
+        },
+        {
+          "stage": "none",
+          "atMs": 51664.646106
+        }
+      ],
+      "iterations": 10,
+      "solved": true,
+      "failed": false,
+      "error": null,
+      "stats": {
+        "phase": "finalize-output-validation",
+        "completedStages": 2,
+        "totalStages": 2,
+        "valid": true,
+        "breakoutPointCount": 9
+      }
+    },
+    {
+      "id": 10,
+      "name": "WindingBreakoutSolver",
+      "phases": [
+        {
+          "stage": "referenceOrdering",
+          "atMs": 51665.03703399999
+        },
+        {
+          "stage": "gatePlacement",
+          "atMs": 51665.33956
+        },
+        {
+          "stage": "none",
+          "atMs": 51665.80570999999
+        }
+      ],
+      "iterations": 10,
+      "solved": true,
+      "failed": false,
+      "error": null,
+      "stats": {
+        "phase": "finalize-output-validation",
+        "completedStages": 2,
+        "totalStages": 2,
+        "valid": true,
+        "breakoutPointCount": 14
+      }
+    },
+    {
+      "id": 11,
+      "name": "FanoutSolver",
+      "phases": [
+        {
+          "stage": "FanoutSolver",
+          "atMs": 73400.859322
+        }
+      ],
+      "iterations": 61523,
+      "solved": false,
+      "failed": true,
+      "error": "FanoutSolver: best layer assignment routed 76/92 connections",
+      "stats": {
+        "phase": "complete-assignment",
+        "assignment": 256,
+        "assignmentCount": 256,
+        "routedBuses": "68/78",
+        "routedConnections": "68/92",
+        "failedBuses": "connection:breakout:pcb_breakout_point_68, DDR_BUS_byte1, connection:breakout:pcb_breakout_point_73, DDR_BUS_byte0, connection:breakout:pcb_breakout_point_64, connection:breakout:pcb_breakout_point_17, connection:breakout:pcb_breakout_point_25, connection:breakout:pcb_breakout_point_79, connection:breakout:pcb_breakout_point_84, connection:breakout:pcb_breakout_point_58",
+        "bestScore": 16900285.444898237
+      }
+    }
+  ],
+  "errors": [
+    "Fanout failed for U2: only 76 of 92 connections could escape to the breakout boundary. The breakout boundary is 0.7mm from the pads at its narrowest point, which all 92 escapes have to share. Give the fanout more room by increasing the breakout's padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors) so their pads sit inside the boundary instead of against it.",
+    "Winding fanout failed for U1: WindingBreakoutSolver: declared breakout edges need 17.43mm but expose only 14.64mm. The connections could not escape to the breakout boundary. Give the fanout more room by increasing the breakout's padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors).",
+    "Fanout failed for U2: only 76 of 92 connections could escape to the breakout boundary. The breakout boundary is 0.7mm from the pads at its narrowest point, which all 92 escapes have to share. Give the fanout more room by increasing the breakout's padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors) so their pads sit inside the boundary instead of against it."
+  ],
+  "counts": {
+    "source_project_metadata": 1,
+    "source_group": 4,
+    "source_port": 1414,
+    "source_component": 280,
+    "source_net": 230,
+    "source_board": 1,
+    "source_refdes_convention_warning": 250,
+    "source_component_internal_connection": 10,
+    "source_trace": 1544,
+    "source_bus": 2,
+    "source_no_power_pin_defined_warning": 269,
+    "source_no_ground_pin_defined_warning": 269,
+    "source_component_pins_underspecified_warning": 279,
+    "pcb_component": 280,
+    "pcb_group": 3,
+    "pcb_board": 1,
+    "pcb_smtpad": 1329,
+    "pcb_solder_paste": 1361,
+    "pcb_plated_hole": 85,
+    "pcb_hole": 12,
+    "pcb_port": 1414,
+    "pcb_fabrication_note_path": 3,
+    "pcb_fabrication_note_text": 3,
+    "pcb_autorouting_error": 2,
+    "pcb_breakout_point": 124,
+    "pcb_connector_not_in_accessible_orientation_warning": 6,
+    "cad_component": 280,
+    "pcb_component_missing_courtyard_warning": 280,
+    "pcb_debug_object": 2,
+    "pcb_port_not_connected_error": 1544,
+    "pcb_trace_missing_error": 396
+  },
+  "revisions": {
+    "core": "351e73d665fad37577c47fcbff2e4c29eb377467",
+    "router": "native-installed-package",
+    "winding": "202dbe9eb0088633b6fa094120dba6f2f41f8803",
+    "sampleMode": "fanout_first",
+    "archiveSha256": "1991ad1891a953dcd660818aaceb73f7aa42dbf704e677e635753b9159f7a6b7",
+    "coreLockSha256": "23136f630f9a4a12ad672102659eca76ac78303811f52e0309c3b9ea12643037",
+    "@tscircuit/fanout-solver": "0.0.93",
+    "@tscircuit/winding-breakout-point-solver": "0.0.1",
+    "@tscircuit/capacity-autorouter": "0.0.1135",
+    "@tscircuit/props": "0.0.741",
+    "@tscircuit/bus-lanes-solver": "0.0.62",
+    "@tscircuit/checks": "0.0.282",
+    "circuit-to-svg": "0.0.460",
+    "react": "19.3.1",
+    "interception": "read-only winding stages and original fanout clearance rejections",
+    "corePatchApplied": false
+  }
+}
