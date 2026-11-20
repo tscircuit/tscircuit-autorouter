@@ -8,6 +8,8 @@ jobs:
   captions:
     runs-on: macos-15
     timeout-minutes: 15
+    env:
+      NODE_OPTIONS: --max-old-space-size=8192
     strategy:
       fail-fast: false
       matrix:
