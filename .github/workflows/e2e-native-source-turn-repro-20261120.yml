@@ -1,0 +1,56 @@
+name: Snapshot the real iCE/Pi source-turn cut before and after
+on:
+  push:
+    branches: [analysis/e2e-native-source-turn-repro-20261120]
+permissions:
+  contents: read
+jobs:
+  repro:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [before, after]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: ${{ matrix.mode == 'before' && '55efcc291478346dad631b1ad2fe0c5fa36d9be9' || 'd054d1340a15ce063a649ef5f2bf926a310bfa72' }}
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Install native dependencies and copy identical reproduction
+        run: |
+          bun install --ignore-scripts
+          curl --fail --location --silent https://raw.githubusercontent.com/tscircuit/fanout-solver/d054d1340a15ce063a649ef5f2bf926a310bfa72/tests/repro-icepi-same-layer-turn.test.ts -o tests/repro-icepi-same-layer-turn.test.ts
+      - name: Typecheck and check formatting
+        if: matrix.mode == 'after'
+        run: |
+          bunx biome format lib/route-bus/source-escape.ts lib/route-bus/track-candidates.ts tests/repro-icepi-same-layer-turn.test.ts
+          bunx tsc --noEmit
+      - name: Route reproduction and related breakout controls
+        env:
+          BUN_UPDATE_SNAPSHOTS: '1'
+        run: |
+          bun test tests/repro-icepi-same-layer-turn.test.ts --timeout 60000
+      - name: Export native snapshot
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import base64,io,zipfile
+          from pathlib import Path
+          stream=io.BytesIO()
+          with zipfile.ZipFile(stream,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=9) as z:
+              for p in Path('tests/__snapshots__').glob('repro-icepi-same-layer-turn*'):
+                  z.writestr(p.name,p.read_bytes())
+          print('PLANE_REPRO_BEGIN')
+          encoded=base64.b64encode(stream.getvalue()).decode()
+          for offset in range(0,len(encoded),8000):print(encoded[offset:offset+8000])
+          print('PLANE_REPRO_END')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: native-source-turn-repro-${{ matrix.mode }}
+          path: tests/__snapshots__/repro-icepi-same-layer-turn*
