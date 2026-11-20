@@ -192,8 +192,12 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
   }
 
   private validateCandidateRoutes(routes: HighDensityRoute[]): boolean {
+    let fixedRoutes = this.params.immutableHdRoutes ?? []
+    if (this.params.preservePhysicalGeometry && this.params.fixedHdRoutes) {
+      fixedRoutes = this.params.fixedHdRoutes
+    }
     for (const route of routes) {
-      for (const fixedRoute of this.params.immutableHdRoutes ?? []) {
+      for (const fixedRoute of fixedRoutes) {
         if (
           arePipeline9RoutesOnSameNet(route, fixedRoute, this.params.connMap)
         ) {
