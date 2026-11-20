@@ -1,0 +1,20 @@
+name: Check fanout prefix fix against repository formatting
+on:
+  push:
+    branches: [analysis/e2e-prefix-format-check-20261120]
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: 08cd66e8c9128ce347e9c2fd8baba7217acf1596
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - run: bun install --frozen-lockfile
+      - run: bunx biome format lib/fanout-solver.ts tests/repro-imx6-impossible-layer-assignments.test.ts
