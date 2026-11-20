@@ -12,7 +12,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        variant: [guard, pad]
+        variant: [coupled]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -75,6 +75,20 @@ jobs:
           p.write_text(s)
           PY
       - run: bun install
+      - name: Test upstream PR 166 shared-via-site movement against the exact current pin
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          matches=[p for p in Path("node_modules/high-density-repair03/lib").rglob("*.ts") if "const moveViaAwayFromPoint = (" in p.read_text()]
+          assert len(matches)==1
+          p=matches[0]
+          s=p.read_text()
+          start=s.index("const moveViaAwayFromPoint = (")
+          end=s.index("\n}",start)
+          chunk=s[start:end]
+          assert chunk.count("return moveVia(")==1
+          p.write_text(s[:start]+chunk.replace("return moveVia(","return translateSameRootViaSite(",1)+s[end:])
+          PY
       - name: Keep the zero-clearance-error assertion
         env:
           BUN_UPDATE_SNAPSHOTS: '1'
@@ -127,6 +141,6 @@ jobs:
               }
             }
           }
-          console.log("PROTECTED_PRELOAD_GEOMETRY",JSON.stringify({solved:solver.solved,replacementRecorded:!!replacement,originalCopperRetained,originalPointCount:original.route.length,replacementPointCount:replacement?.route.length??0}))
+          console.log("PROTECTED_PRELOAD_GEOMETRY",JSON.stringify({solved:solver.solved,replacementRecorded:!!replacement,originalCopperRetained,originalPointCount:original.route.length,replacementPointCount:replacement?.route.length??0,startRetained:!replacement || ["x","y","z"].every(k=>replacement.route[0]![k]===original.route[0]![k]),endRetained:!replacement || ["x","y","z"].every(k=>replacement.route.at(-1)![k]===original.route.at(-1)![k])}))
           TS
           bun native-preload-preservation.ts
