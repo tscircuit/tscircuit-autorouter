@@ -1,0 +1,1105 @@
+{
+  "versions": {
+    "tscircuit": {
+      "version": "0.0.3257",
+      "entrySha256": "cfd669f2d96ac77eb054aab53ff34a80120bcd3db72b87f969b3d8b8d2af78a3"
+    },
+    "@tscircuit/core": {
+      "version": "0.0.2436",
+      "entrySha256": "4e936d91a642029a1bea67a9551e4c9a8e7e1c74c7ae6ff1ee43a472b3d00713"
+    },
+    "@tscircuit/fanout-solver": {
+      "version": "0.0.94",
+      "entrySha256": "ee06af452060e90d70c49f00a37cf516638f7649817fc4e94decb39da4d07cf9"
+    },
+    "@tscircuit/capacity-autorouter": {
+      "version": "0.0.1139",
+      "entrySha256": "a0ece622dbcf2f93810ec94b51a741a002760f6cd0a6f2564baf89655ade212e"
+    }
+  },
+  "fixProvenance": {
+    "tscircuit": "0.0.3257",
+    "core": "0.0.2436",
+    "capacityAutorouterBase": "b7267ad4738c27a53d2faecb39bf7a7443896f0c",
+    "highDensityA01Unchanged": "4ae21d7a15c9fbfb30378c10f948aa168d7c9cb7",
+    "productionChange": "Forward rejectOverlappingTerminals in physical regional routing (one line)",
+    "autorouterFixCommit": "15067d77c1b88e42fb2801d28c67db11896e785e",
+    "indexSha256": "a0ece622dbcf2f93810ec94b51a741a002760f6cd0a6f2564baf89655ade212e",
+    "archiveSha256": "b06a6996f2628964be6ed38f634e03b54ac2f0306f77f46398d2fe7be81ee6bf"
+  },
+  "entrypoints": 19,
+  "execution": "Original TSX via RootCircuit.renderUntilSettled, geometryOnly=false; default fanout, bus lanes and autorouter; 600 seconds per board on Blacksmith 32-vCPU ARM",
+  "baselineRun": 44824778889,
+  "repeatBaselineRun": 44820365588,
+  "fixedRun": 44831490395,
+  "repeatBaselineTerminalCircuitsByteIdentical": 12,
+  "beforeStops": {
+    "budget": 7,
+    "routing error": 12
+  },
+  "afterStops": {
+    "budget": 6,
+    "routing error": 13
+  },
+  "beforeStages": {
+    "bus lanes": 2,
+    "fanout": 6,
+    "detailed routing": 9,
+    "graph routing": 2
+  },
+  "afterStages": {
+    "bus lanes": 2,
+    "fanout": 6,
+    "detailed routing": 9,
+    "graph routing": 2
+  },
+  "terminalPairsWithIdenticalCopper": 12,
+  "terminalPairsWithChangedCopper": 0,
+  "fix": "Forward the existing rejectOverlappingTerminals option when native regional routing preserves physical geometry. One production line; dependencies unchanged.",
+  "rootCause": "Native regional repair omitted the existing terminal-overlap check. Searches with fixed unrelated endpoints closer than the requested trace width cannot succeed. A01 could then trim away a terminal layer transition and throw during via materialization.",
+  "routingLimit": "This is failure handling and wasted-search work, not additional routed copper. Budgeted runs do not establish final routing equivalence.",
+  "otherFindings": [
+    "Current IcePi-local remaining phase naturally solves its 79-connection graph; the old rectangle-based 355-connection repro is not the current pipeline.",
+    "Detailed routing remains a major blocker after graph success; H616 can request a 0.35 mm via transition in a 0.30 mm mesh cell, requiring physical regional repair.",
+    "Fanout stalls six variants. A standalone CPU profile of the current IcePi-native input spent about 25% in static candidate-cache lookup/key work and 13% cloning output obstacle connectivity. These are diagnostic samples, not performance comparisons."
+  ],
+  "rejectedConsumerProposal": "The separate two-guard A01 correction preserved copper validity but added 58 seconds to OrangeCrab-local without changing emitted copper. The selected one-line consumer fix does not depend on it.",
+  "boards": [
+    {
+      "board": "butterstick-local",
+      "before": {
+        "stage": "bus lanes",
+        "result": {
+          "board": "butterstick-local",
+          "variant": "main",
+          "exit": -15,
+          "seconds": 600.434,
+          "stop": "600-second render budget"
+        },
+        "routingErrors": [],
+        "fanoutProgress": null
+      },
+      "after": {
+        "stage": "bus lanes",
+        "result": {
+          "board": "butterstick-local",
+          "variant": "regional-terminal-fix",
+          "exit": -15,
+          "seconds": 600.384,
+          "stop": "600-second render budget"
+        },
+        "routingErrors": [],
+        "fanoutProgress": null
+      },
+      "emittedCopperIdentical": null
+    },
+    {
+      "board": "butterstick-native",
+      "before": {
+        "stage": "fanout",
+        "result": {
+          "board": "butterstick-native",
+          "variant": "main",
+          "exit": 0,
+          "seconds": 374.74,
+          "stop": "settled",
+          "elements": 14207,
+          "traces": 0,
+          "vias": 0,
+          "circuitSha256": "92e7f53692a5b7b76e56ac22e21b9c92f5e5fe940426b53e8cba68e4dd967627",
+          "errors": {
+            "pcb_autorouting_error": 1,
+            "pcb_port_not_connected_error": 2063,
+            "pcb_trace_missing_error": 328
+          }
+        },
+        "routingErrors": [
+          "Fanout failed for U11: only 62 of 91 connections could escape to the breakout boundary. The breakout boundary is 0.7mm from the pads at its narrowest point, which all 91 escapes have to share. Give the fanout more room by increasing the breakout's padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors) so their pads sit inside the boundary instead of against it."
+        ],
+        "fanoutProgress": {
+          "bestPlans": 62,
+          "requests": 91,
+          "iterations": 60716,
+          "attempts": 256
+        }
+      },
+      "after": {
+        "stage": "fanout",
+        "result": {
+          "board": "butterstick-native",
+          "variant": "regional-terminal-fix",
+          "exit": 0,
+          "seconds": 386.411,
+          "stop": "settled",
+          "elements": 14207,
+          "traces": 0,
+          "vias": 0,
+          "circuitSha256": "92e7f53692a5b7b76e56ac22e21b9c92f5e5fe940426b53e8cba68e4dd967627",
+          "errors": {
+            "pcb_autorouting_error": 1,
+            "pcb_port_not_connected_error": 2063,
+            "pcb_trace_missing_error": 328
+          }
+        },
+        "routingErrors": [
+          "Fanout failed for U11: only 62 of 91 connections could escape to the breakout boundary. The breakout boundary is 0.7mm from the pads at its narrowest point, which all 91 escapes have to share. Give the fanout more room by increasing the breakout's padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors) so their pads sit inside the boundary instead of against it."
+        ],
+        "fanoutProgress": {
+          "bestPlans": 62,
+          "requests": 91,
+          "iterations": 60716,
+          "attempts": 256
+        }
+      },
+      "emittedCopperIdentical": true
+    },
+    {
+      "board": "butterstick-spaced",
+      "before": {
+        "stage": "bus lanes",
+        "result": {
+          "board": "butterstick-spaced",
+          "variant": "main",
+          "exit": -15,
+          "seconds": 600.52,
+          "stop": "600-second render budget"
+        },
+        "routingErrors": [],
+        "fanoutProgress": null
+      },
+      "after": {
+        "stage": "bus lanes",
+        "result": {
+          "board": "butterstick-spaced",
+          "variant": "regional-terminal-fix",
+          "exit": -15,
+          "seconds": 600.472,
+          "stop": "600-second render budget"
+        },
+        "routingErrors": [],
+        "fanoutProgress": null
+      },
+      "emittedCopperIdentical": null
+    },
+    {
+      "board": "glider-local",
+      "before": {
+        "stage": "detailed routing",
+        "result": {
+          "board": "glider-local",
+          "variant": "main",
+          "exit": -15,
+          "seconds": 600.581,
+          "stop": "600-second render budget"
+        },
+        "routingErrors": [],
+        "fanoutProgress": null
+      },
+      "after": {
+        "stage": "detailed routing",
+        "result": {
+          "board": "glider-local",
+          "variant": "regional-terminal-fix",
+          "exit": 0,
+          "seconds": 384.809,
+          "stop": "settled",
+          "elements": 13259,
+          "traces": 53,
+          "vias": 100,
+          "circuitSha256": "38a18c21f409c3ee1b043cdc23ba791cf4249f0ce5ebc37cec41f7c92301a372",
+          "errors": {
+            "pcb_autorouting_error": 1,
+            "pcb_port_not_connected_error": 1465
+          }
+        },
+        "routingErrors": [
+          "Pipeline9 primary high-density routing failed: B01 failed: No path found for source_net_186; regional fallback failed: Failed to solve 1 nodes, new-cmn_78-651. err0: GrowShrinkHighDensityIntraNodeSolver failed after resizing to 256x. Last error: Unrelated route terminals overlap at the requested trace width. (capacity-autorouter@0.0.1139)"
+        ],
+        "fanoutProgress": null
+      },
+      "emittedCopperIdentical": null
+    },
+    {
+      "board": "glider-native",
+      "before": {
+        "stage": "fanout",
+        "result": {
+          "board": "glider-native",
+          "variant": "main",
+          "exit": -15,
+          "seconds": 600.406,
+          "stop": "600-second render budget"
+        },
+        "routingErrors": [],
+        "fanoutProgress": {
+          "bestPlans": 86,
+          "requests": 95,
+          "iterations": 71886,
+          "attempts": 246
+        }
+      },
+      "after": {
+        "stage": "fanout",
+        "result": {
+          "board": "glider-native",
+          "variant": "regional-terminal-fix",
+          "exit": -15,
+          "seconds": 600.304,
+          "stop": "600-second render budget"
+        },
+        "routingErrors": [],
+        "fanoutProgress": {
+          "bestPlans": 86,
+          "requests": 95,
+          "iterations": 70938,
+          "attempts": 243
+        }
+      },
+      "emittedCopperIdentical": null
+    },
+    {
+      "board": "glider-spaced",
+      "before": {
+        "stage": "detailed routing",
+        "result": {
+          "board": "glider-spaced",
+          "variant": "main",
+          "exit": 0,
+          "seconds": 178.135,
+          "stop": "settled",
+          "elements": 13221,
+          "traces": 16,
+          "vias": 30,
+          "circuitSha256": "f2ffe30845f6d13d076aca52903a7d26c9a1c11ef283e475a6c2810879143300",
+          "errors": {
+            "pcb_autorouting_error": 1,
+            "pcb_port_not_connected_error": 1535
+          }
+        },
+        "routingErrors": [
+          "Pipeline9 primary high-density routing failed: B01 failed: No path found for source_net_17; regional fallback failed: Failed to solve 1 nodes, cmn_8__sub_0_0. err0: GrowShrinkHighDensityIntraNodeSolver failed after resizing to 8x. Last error: All solvers failed in hyper solver. Example failures: ViaPossibilitiesSolver2 failed with: Exceeded max via count of 5, ViaPossibilitiesSolver2 failed with: Exceeded max via count of 5, SingleHighDensityRouteSolver ran out of iterations (MAX_ITERATIONS=10000), SingleHighDensityRouteSolver ran out of iterations (MAX_ITERATIONS=10000), SingleHighDensityRouteSolver ran out of iterations (MAX_ITERATIONS=10000). (capacity-autorouter@0.0.1139)"
+        ],
+        "fanoutProgress": null
+      },
+      "after": {
+        "stage": "detailed routing",
+        "result": {
+          "board": "glider-spaced",
+          "variant": "regional-terminal-fix",
+          "exit": 0,
+          "seconds": 188.075,
+          "stop": "settled",
+          "elements": 13221,
+          "traces": 16,
+          "vias": 30,
+          "circuitSha256": "f2ffe30845f6d13d076aca52903a7d26c9a1c11ef283e475a6c2810879143300",
+          "errors": {
+            "pcb_autorouting_error": 1,
+            "pcb_port_not_connected_error": 1535
+          }
+        },
+        "routingErrors": [
+          "Pipeline9 primary high-density routing failed: B01 failed: No path found for source_net_17; regional fallback failed: Failed to solve 1 nodes, cmn_8__sub_0_0. err0: GrowShrinkHighDensityIntraNodeSolver failed after resizing to 8x. Last error: All solvers failed in hyper solver. Example failures: ViaPossibilitiesSolver2 failed with: Exceeded max via count of 5, ViaPossibilitiesSolver2 failed with: Exceeded max via count of 5, SingleHighDensityRouteSolver ran out of iterations (MAX_ITERATIONS=10000), SingleHighDensityRouteSolver ran out of iterations (MAX_ITERATIONS=10000), SingleHighDensityRouteSolver ran out of iterations (MAX_ITERATIONS=10000). (capacity-autorouter@0.0.1139)"
+        ],
+        "fanoutProgress": null
+      },
+      "emittedCopperIdentical": true
+    },
+    {
+      "board": "h616-default-order-local",
+      "before": {
+        "stage": "graph routing",
+        "result": {
+          "board": "h616-default-order-local",
+          "variant": "main",
+          "exit": 0,
+          "seconds": 47.509,
+          "stop": "settled",
+          "elements": 5317,
+          "traces": 16,
+          "vias": 32,
+          "circuitSha256": "2c05a0aabba0a1606316ca1a94589c75cb0372093daf9050a73b75d7cc948ed7",
+          "errors": {
+            "pcb_autorouting_error": 1,
+            "pcb_port_not_connected_error": 562
+          }
+        },
+        "routingErrors": [
+          "KQ ran out of iterations (capacity-autorouter@0.0.1139)"
+        ],
+        "fanoutProgress": null
+      },
+      "after": {
+        "stage": "graph routing",
+        "result": {
+          "board": "h616-default-order-local",
+          "variant": "regional-terminal-fix",
+          "exit": 0,
+          "seconds": 48.467,
+          "stop": "settled",
+          "elements": 5317,
+          "traces": 16,
+          "vias": 32,
+          "circuitSha256": "2c05a0aabba0a1606316ca1a94589c75cb0372093daf9050a73b75d7cc948ed7",
+          "errors": {
+            "pcb_autorouting_error": 1,
+            "pcb_port_not_connected_error": 562
+          }
+        },
+        "routingErrors": [
+          "KQ ran out of iterations (capacity-autorouter@0.0.1139)"
+        ],
+        "fanoutProgress": null
+      },
+      "emittedCopperIdentical": true
+    },
+    {
+      "board": "h616-local",
+      "before": {
+        "stage": "detailed routing",
+        "result": {
+          "board": "h616-local",
+          "variant": "main",
+          "exit": 0,
+          "seconds": 59.208,
+          "stop": "settled",
+          "elements": 5317,
+          "traces": 16,
+          "vias": 32,
+          "circuitSha256": "c1bebfefde6a34e6a748bacec5c800ce4308755c69c40352310b9160b944c559",
+          "errors": {
+            "pcb_autorouting_error": 1,
+            "pcb_port_not_connected_error": 562
+          }
+        },
+        "routingErrors": [
+          "Pipeline9 primary high-density routing failed: B01 failed: No path found for source_net_68; regional fallback failed: Failed to solve 1 nodes, topology_merge_3902. err0: GrowShrinkHighDensityIntraNodeSolver failed after resizing to 16x. Last error: All solvers failed in hyper solver. Example failures: Candidate solution rejected by validator, Candidate solution rejected by validator, CachedIntraNodeRouteSolver ran out of iterations (MAX_ITERATIONS=1000), CachedIntraNodeRouteSolver ran out of iterations (MAX_ITERATIONS=1000), CachedIntraNodeRouteSolver ran out of iterations (MAX_ITERATIONS=1000). (capacity-autorouter@0.0.1139)"
+        ],
+        "fanoutProgress": null
+      },
+      "after": {
+        "stage": "detailed routing",
+        "result": {
+          "board": "h616-local",
+          "variant": "regional-terminal-fix",
+          "exit": 0,
+          "seconds": 59.197,
+          "stop": "settled",
+          "elements": 5317,
+          "traces": 16,
+          "vias": 32,
+          "circuitSha256": "c1bebfefde6a34e6a748bacec5c800ce4308755c69c40352310b9160b944c559",
+          "errors": {
+            "pcb_autorouting_error": 1,
+            "pcb_port_not_connected_error": 562
+          }
+        },
+        "routingErrors": [
+          "Pipeline9 primary high-density routing failed: B01 failed: No path found for source_net_68; regional fallback failed: Failed to solve 1 nodes, topology_merge_3902. err0: GrowShrinkHighDensityIntraNodeSolver failed after resizing to 16x. Last error: All solvers failed in hyper solver. Example failures: Candidate solution rejected by validator, Candidate solution rejected by validator, CachedIntraNodeRouteSolver ran out of iterations (MAX_ITERATIONS=1000), CachedIntraNodeRouteSolver ran out of iterations (MAX_ITERATIONS=1000), CachedIntraNodeRouteSolver ran out of iterations (MAX_ITERATIONS=1000). (capacity-autorouter@0.0.1139)"
+        ],
+        "fanoutProgress": null
+      },
+      "emittedCopperIdentical": true
+    },
+    {
+      "board": "h616-native",
+      "before": {
+        "stage": "fanout",
+        "result": {
+          "board": "h616-native",
+          "variant": "main",
+          "exit": -15,
+          "seconds": 600.444,
+          "stop": "600-second render budget"
+        },
+        "routingErrors": [],
+        "fanoutProgress": {
+          "bestPlans": 105,
+          "requests": 174,
+          "iterations": 53332,
+          "attempts": 109
+        }
+      },
+      "after": {
+        "stage": "fanout",
+        "result": {
+          "board": "h616-native",
+          "variant": "regional-terminal-fix",
+          "exit": -15,
+          "seconds": 600.339,
+          "stop": "600-second render budget"
+        },
+        "routingErrors": [],
+        "fanoutProgress": {
+          "bestPlans": 105,
+          "requests": 174,
+          "iterations": 52394,
+          "attempts": 107
+        }
+      },
+      "emittedCopperIdentical": null
+    },
+    {
+      "board": "h616-spaced",
+      "before": {
+        "stage": "graph routing",
+        "result": {
+          "board": "h616-spaced",
+          "variant": "main",
+          "exit": 0,
+          "seconds": 37.407,
+          "stop": "settled",
+          "elements": 5317,
+          "traces": 16,
+          "vias": 32,
+          "circuitSha256": "337968660464c190813f282dfaa927cd6b1b2f68c342f2b79e015779fe1ebbae",
+          "errors": {
+            "pcb_autorouting_error": 1,
+            "pcb_port_not_connected_error": 562
+          }
+        },
+        "routingErrors": [
+          "KQ ran out of iterations (capacity-autorouter@0.0.1139)"
+        ],
+        "fanoutProgress": null
+      },
+      "after": {
+        "stage": "graph routing",
+        "result": {
+          "board": "h616-spaced",
+          "variant": "regional-terminal-fix",
+          "exit": 0,
+          "seconds": 37.964,
+          "stop": "settled",
+          "elements": 5317,
+          "traces": 16,
+          "vias": 32,
+          "circuitSha256": "337968660464c190813f282dfaa927cd6b1b2f68c342f2b79e015779fe1ebbae",
+          "errors": {
+            "pcb_autorouting_error": 1,
+            "pcb_port_not_connected_error": 562
+          }
+        },
+        "routingErrors": [
+          "KQ ran out of iterations (capacity-autorouter@0.0.1139)"
+        ],
+        "fanoutProgress": null
+      },
+      "emittedCopperIdentical": true
+    },
+    {
+      "board": "icepi-local",
+      "before": {
+        "stage": "detailed routing",
+        "result": {
+          "board": "icepi-local",
+          "variant": "main",
+          "exit": 0,
+          "seconds": 235.849,
+          "stop": "settled",
+          "elements": 10375,
+          "traces": 16,
+          "vias": 30,
+          "circuitSha256": "ed060bacc01c0c1c9282c98195d7b32a4487cdd41882653a2491ac5c3582ce0a",
+          "errors": {
+            "pcb_autorouting_error": 1,
+            "pcb_port_not_connected_error": 1116
+          }
+        },
+        "routingErrors": [
+          "Pipeline9 primary high-density routing failed: B01 failed: No path found for source_net_9; regional fallback failed: Failed to solve 1 nodes, cmn_31. err0: GrowShrinkHighDensityIntraNodeSolver failed after resizing to 8x. Last error: All solvers failed in hyper solver. Example failures: ViaPossibilitiesSolver2 failed with: Exceeded max via count of 5, ViaPossibilitiesSolver2 failed with: Exceeded max via count of 5, SingleHighDensityRouteSolver ran out of iterations (MAX_ITERATIONS=10000), SingleHighDensityRouteSolver ran out of iterations (MAX_ITERATIONS=10000), SingleHighDensityRouteSolver ran out of iterations (MAX_ITERATIONS=10000). (capacity-autorouter@0.0.1139)"
+        ],
+        "fanoutProgress": null
+      },
+      "after": {
+        "stage": "detailed routing",
+        "result": {
+          "board": "icepi-local",
+          "variant": "regional-terminal-fix",
+          "exit": 0,
+          "seconds": 237.539,
+          "stop": "settled",
+          "elements": 10375,
+          "traces": 16,
+          "vias": 30,
+          "circuitSha256": "ed060bacc01c0c1c9282c98195d7b32a4487cdd41882653a2491ac5c3582ce0a",
+          "errors": {
+            "pcb_autorouting_error": 1,
+            "pcb_port_not_connected_error": 1116
+          }
+        },
+        "routingErrors": [
+          "Pipeline9 primary high-density routing failed: B01 failed: No path found for source_net_9; regional fallback failed: Failed to solve 1 nodes, cmn_31. err0: GrowShrinkHighDensityIntraNodeSolver failed after resizing to 8x. Last error: All solvers failed in hyper solver. Example failures: ViaPossibilitiesSolver2 failed with: Exceeded max via count of 5, ViaPossibilitiesSolver2 failed with: Exceeded max via count of 5, SingleHighDensityRouteSolver ran out of iterations (MAX_ITERATIONS=10000), SingleHighDensityRouteSolver ran out of iterations (MAX_ITERATIONS=10000), SingleHighDensityRouteSolver ran out of iterations (MAX_ITERATIONS=10000). (capacity-autorouter@0.0.1139)"
+        ],
+        "fanoutProgress": null
+      },
+      "emittedCopperIdentical": true
+    },
+    {
+      "board": "icepi-native",
+      "before": {
+        "stage": "fanout",
+        "result": {
+          "board": "icepi-native",
+          "variant": "main",
+          "exit": 0,
+          "seconds": 182.795,
+          "stop": "settled",
+          "elements": 13042,
+          "traces": 0,
+          "vias": 0,
+          "circuitSha256": "22ee9ac33345f56fa9a72232cf786fc8043bc22fe7ba37268af2b6a9042715d7",
+          "errors": {
+            "pcb_autorouting_error": 1,
+            "pcb_port_not_connected_error": 1765,
+            "pcb_trace_missing_error": 223
+          }
+        },
+        "routingErrors": [
+          "Fanout failed for U22: only 14 of 32 connections could escape to the breakout boundary. The breakout boundary is 0.7mm from the pads at its narrowest point, which all 32 escapes have to share. Give the fanout more room by increasing the breakout's padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors) so their pads sit inside the boundary instead of against it."
+        ],
+        "fanoutProgress": {
+          "bestPlans": 14,
+          "requests": 32,
+          "iterations": 26139,
+          "attempts": 256
+        }
+      },
+      "after": {
+        "stage": "fanout",
+        "result": {
+          "board": "icepi-native",
+          "variant": "regional-terminal-fix",
+          "exit": 0,
+          "seconds": 182.474,
+          "stop": "settled",
+          "elements": 13042,
+          "traces": 0,
+          "vias": 0,
+          "circuitSha256": "22ee9ac33345f56fa9a72232cf786fc8043bc22fe7ba37268af2b6a9042715d7",
+          "errors": {
+            "pcb_autorouting_error": 1,
+            "pcb_port_not_connected_error": 1765,
+            "pcb_trace_missing_error": 223
+          }
+        },
+        "routingErrors": [
+          "Fanout failed for U22: only 14 of 32 connections could escape to the breakout boundary. The breakout boundary is 0.7mm from the pads at its narrowest point, which all 32 escapes have to share. Give the fanout more room by increasing the breakout's padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors) so their pads sit inside the boundary instead of against it."
+        ],
+        "fanoutProgress": {
+          "bestPlans": 14,
+          "requests": 32,
+          "iterations": 26139,
+          "attempts": 256
+        }
+      },
+      "emittedCopperIdentical": true
+    },
+    {
+      "board": "icepi-spaced",
+      "before": {
+        "stage": "detailed routing",
+        "result": {
+          "board": "icepi-spaced",
+          "variant": "main",
+          "exit": 0,
+          "seconds": 331.849,
+          "stop": "settled",
+          "elements": 10418,
+          "traces": 52,
+          "vias": 98,
+          "circuitSha256": "ec4fdad2954e7d7329c0ca5359f083036651c52fa9ce90d77c32840a4b52c42b",
+          "errors": {
+            "pcb_autorouting_error": 1,
+            "pcb_port_not_connected_error": 1046
+          }
+        },
+        "routingErrors": [
+          "Pipeline9 primary high-density routing failed: B01 failed: No path found for source_net_34_mst6; regional fallback failed: Failed to solve 1 nodes, topology_merge_12964. err0: GrowShrinkHighDensityIntraNodeSolver failed after resizing to 16x. Last error: All solvers failed in hyper solver. Example failures: , , CachedIntraNodeRouteSolver ran out of iterations (MAX_ITERATIONS=2828.42712474619), CachedIntraNodeRouteSolver ran out of iterations (MAX_ITERATIONS=2828.42712474619), CachedIntraNodeRouteSolver ran out of iterations (MAX_ITERATIONS=2828.42712474619). (capacity-autorouter@0.0.1139)"
+        ],
+        "fanoutProgress": null
+      },
+      "after": {
+        "stage": "detailed routing",
+        "result": {
+          "board": "icepi-spaced",
+          "variant": "regional-terminal-fix",
+          "exit": 0,
+          "seconds": 268.655,
+          "stop": "settled",
+          "elements": 10418,
+          "traces": 52,
+          "vias": 98,
+          "circuitSha256": "02768502cf34481ff2f34e2d7d5000349308af42f552437f41803cd446d9c4c8",
+          "errors": {
+            "pcb_autorouting_error": 1,
+            "pcb_port_not_connected_error": 1046
+          }
+        },
+        "routingErrors": [
+          "Pipeline9 primary high-density routing failed: B01 failed: No path found for source_net_34_mst6; regional fallback failed: Failed to solve 1 nodes, cmn_397. err0: GrowShrinkHighDensityIntraNodeSolver failed after resizing to 8x. Last error: Unrelated route terminals overlap at the requested trace width. (capacity-autorouter@0.0.1139)"
+        ],
+        "fanoutProgress": null
+      },
+      "emittedCopperIdentical": true
+    },
+    {
+      "board": "imx6-local",
+      "before": {
+        "stage": "detailed routing",
+        "result": {
+          "board": "imx6-local",
+          "variant": "main",
+          "exit": -15,
+          "seconds": 600.569,
+          "stop": "600-second render budget"
+        },
+        "routingErrors": [],
+        "fanoutProgress": null
+      },
+      "after": {
+        "stage": "detailed routing",
+        "result": {
+          "board": "imx6-local",
+          "variant": "regional-terminal-fix",
+          "exit": -15,
+          "seconds": 600.468,
+          "stop": "600-second render budget"
+        },
+        "routingErrors": [],
+        "fanoutProgress": null
+      },
+      "emittedCopperIdentical": null
+    },
+    {
+      "board": "imx6-native",
+      "before": {
+        "stage": "fanout",
+        "result": {
+          "board": "imx6-native",
+          "variant": "main",
+          "exit": 0,
+          "seconds": 353.295,
+          "stop": "settled",
+          "elements": 18724,
+          "traces": 0,
+          "vias": 0,
+          "circuitSha256": "abd38258f281f7d0fa8481623a4c8075ab1c3a40d3e20cfedc83370615420041",
+          "errors": {
+            "pcb_autorouting_error": 2,
+            "pcb_port_not_connected_error": 2247,
+            "pcb_trace_missing_error": 265,
+            "pcb_placement_error": 1
+          }
+        },
+        "routingErrors": [
+          "Winding fanout failed for U7: WindingBreakoutSolver: declared breakout edges need 16.21mm but expose only 14.50mm. The connections could not escape to the breakout boundary. Give the fanout more room by increasing the breakout's padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors).",
+          "Fanout failed for U10: only 9 of 32 connections could escape to the breakout boundary. The breakout boundary is 0.7mm from the pads at its narrowest point, which all 32 escapes have to share. Give the fanout more room by increasing the breakout's padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors) so their pads sit inside the boundary instead of against it."
+        ],
+        "fanoutProgress": {
+          "bestPlans": 9,
+          "requests": 32,
+          "iterations": 26135,
+          "attempts": 256
+        }
+      },
+      "after": {
+        "stage": "fanout",
+        "result": {
+          "board": "imx6-native",
+          "variant": "regional-terminal-fix",
+          "exit": 0,
+          "seconds": 311.3,
+          "stop": "settled",
+          "elements": 18724,
+          "traces": 0,
+          "vias": 0,
+          "circuitSha256": "abd38258f281f7d0fa8481623a4c8075ab1c3a40d3e20cfedc83370615420041",
+          "errors": {
+            "pcb_autorouting_error": 2,
+            "pcb_port_not_connected_error": 2247,
+            "pcb_trace_missing_error": 265,
+            "pcb_placement_error": 1
+          }
+        },
+        "routingErrors": [
+          "Winding fanout failed for U7: WindingBreakoutSolver: declared breakout edges need 16.21mm but expose only 14.50mm. The connections could not escape to the breakout boundary. Give the fanout more room by increasing the breakout's padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors).",
+          "Fanout failed for U10: only 9 of 32 connections could escape to the breakout boundary. The breakout boundary is 0.7mm from the pads at its narrowest point, which all 32 escapes have to share. Give the fanout more room by increasing the breakout's padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors) so their pads sit inside the boundary instead of against it."
+        ],
+        "fanoutProgress": {
+          "bestPlans": 9,
+          "requests": 32,
+          "iterations": 26135,
+          "attempts": 256
+        }
+      },
+      "emittedCopperIdentical": true
+    },
+    {
+      "board": "imx6-spaced",
+      "before": {
+        "stage": "detailed routing",
+        "result": {
+          "board": "imx6-spaced",
+          "variant": "main",
+          "exit": 0,
+          "seconds": 412.22,
+          "stop": "settled",
+          "elements": 15110,
+          "traces": 17,
+          "vias": 30,
+          "circuitSha256": "2300c38903e44f6fccb9a7b4e2505259bfe820d58936ba93f7d5a098ec12ce33",
+          "errors": {
+            "pcb_autorouting_error": 1,
+            "pcb_port_not_connected_error": 1642
+          }
+        },
+        "routingErrors": [
+          "Pipeline9 primary high-density routing failed: B01 failed: No path found for source_net_240; regional fallback failed: Failed to solve 1 nodes, new-cmn_41-558__sub_0_0. err0: GrowShrinkHighDensityIntraNodeSolver failed after resizing to 16x. Last error: All solvers failed in hyper solver. Example failures: Candidate solution rejected by validator, Candidate solution rejected by validator, CachedIntraNodeRouteSolver ran out of iterations (MAX_ITERATIONS=1000), CachedIntraNodeRouteSolver ran out of iterations (MAX_ITERATIONS=1000), CachedIntraNodeRouteSolver ran out of iterations (MAX_ITERATIONS=1000). (capacity-autorouter@0.0.1139)"
+        ],
+        "fanoutProgress": null
+      },
+      "after": {
+        "stage": "detailed routing",
+        "result": {
+          "board": "imx6-spaced",
+          "variant": "regional-terminal-fix",
+          "exit": 0,
+          "seconds": 410.766,
+          "stop": "settled",
+          "elements": 15110,
+          "traces": 17,
+          "vias": 30,
+          "circuitSha256": "2300c38903e44f6fccb9a7b4e2505259bfe820d58936ba93f7d5a098ec12ce33",
+          "errors": {
+            "pcb_autorouting_error": 1,
+            "pcb_port_not_connected_error": 1642
+          }
+        },
+        "routingErrors": [
+          "Pipeline9 primary high-density routing failed: B01 failed: No path found for source_net_240; regional fallback failed: Failed to solve 1 nodes, new-cmn_41-558__sub_0_0. err0: GrowShrinkHighDensityIntraNodeSolver failed after resizing to 16x. Last error: All solvers failed in hyper solver. Example failures: Candidate solution rejected by validator, Candidate solution rejected by validator, CachedIntraNodeRouteSolver ran out of iterations (MAX_ITERATIONS=1000), CachedIntraNodeRouteSolver ran out of iterations (MAX_ITERATIONS=1000), CachedIntraNodeRouteSolver ran out of iterations (MAX_ITERATIONS=1000). (capacity-autorouter@0.0.1139)"
+        ],
+        "fanoutProgress": null
+      },
+      "emittedCopperIdentical": true
+    },
+    {
+      "board": "orangecrab-local",
+      "before": {
+        "stage": "detailed routing",
+        "result": {
+          "board": "orangecrab-local",
+          "variant": "main",
+          "exit": 0,
+          "seconds": 223.514,
+          "stop": "settled",
+          "elements": 6399,
+          "traces": 52,
+          "vias": 93,
+          "circuitSha256": "f81a4df56bb87884150c6d0508448f3cd3ecad3ffadc63babc08da99e80ab4de",
+          "errors": {
+            "pcb_autorouting_error": 1,
+            "pcb_port_not_connected_error": 658
+          }
+        },
+        "routingErrors": [
+          "Pipeline9 route \"source_net_46_fixed_34_1\" changes layers from z=0 to z=5 without an explicit via (capacity-autorouter@0.0.1139)"
+        ],
+        "fanoutProgress": null
+      },
+      "after": {
+        "stage": "detailed routing",
+        "result": {
+          "board": "orangecrab-local",
+          "variant": "regional-terminal-fix",
+          "exit": 0,
+          "seconds": 225.17,
+          "stop": "settled",
+          "elements": 6399,
+          "traces": 52,
+          "vias": 93,
+          "circuitSha256": "580bcecdc5dba1baa10adca0bfdfc920f5613f2a9f33efea09a660c3c7044409",
+          "errors": {
+            "pcb_autorouting_error": 1,
+            "pcb_port_not_connected_error": 658
+          }
+        },
+        "routingErrors": [
+          "Pipeline9 primary high-density routing failed: B01 failed: No path found for source_net_138_mst1; regional fallback failed: Failed to solve 1 nodes, cmn_266. err0: GrowShrinkHighDensityIntraNodeSolver failed after resizing to 32x. Last error: Unrelated route terminals overlap at the requested trace width. (capacity-autorouter@0.0.1139)"
+        ],
+        "fanoutProgress": null
+      },
+      "emittedCopperIdentical": true
+    },
+    {
+      "board": "orangecrab-native",
+      "before": {
+        "stage": "fanout",
+        "result": {
+          "board": "orangecrab-native",
+          "variant": "main",
+          "exit": -15,
+          "seconds": 600.278,
+          "stop": "600-second render budget"
+        },
+        "routingErrors": [],
+        "fanoutProgress": {
+          "bestPlans": 149,
+          "requests": 273,
+          "iterations": 27127,
+          "attempts": 34
+        }
+      },
+      "after": {
+        "stage": "fanout",
+        "result": {
+          "board": "orangecrab-native",
+          "variant": "regional-terminal-fix",
+          "exit": -15,
+          "seconds": 600.21,
+          "stop": "600-second render budget"
+        },
+        "routingErrors": [],
+        "fanoutProgress": {
+          "bestPlans": 149,
+          "requests": 273,
+          "iterations": 27166,
+          "attempts": 34
+        }
+      },
+      "emittedCopperIdentical": null
+    },
+    {
+      "board": "orangecrab-spaced",
+      "before": {
+        "stage": "detailed routing",
+        "result": {
+          "board": "orangecrab-spaced",
+          "variant": "main",
+          "exit": 0,
+          "seconds": 195.553,
+          "stop": "settled",
+          "elements": 6410,
+          "traces": 52,
+          "vias": 101,
+          "circuitSha256": "90c31d1d3c32adacc4372f021b10f9992c0c451d446b1b01069d6505f5d80508",
+          "errors": {
+            "pcb_autorouting_error": 1,
+            "pcb_port_not_connected_error": 658,
+            "pcb_pad_pad_clearance_error": 1
+          }
+        },
+        "routingErrors": [
+          "Pipeline9 route \"source_net_64_mst12\" changes layers from z=0 to z=1 without an explicit via (capacity-autorouter@0.0.1139)"
+        ],
+        "fanoutProgress": null
+      },
+      "after": {
+        "stage": "detailed routing",
+        "result": {
+          "board": "orangecrab-spaced",
+          "variant": "regional-terminal-fix",
+          "exit": 0,
+          "seconds": 197.73,
+          "stop": "settled",
+          "elements": 6410,
+          "traces": 52,
+          "vias": 101,
+          "circuitSha256": "32f5b178ef60032a993440b283b875656f29656ce03ede47eba16ff24a2fa17b",
+          "errors": {
+            "pcb_autorouting_error": 1,
+            "pcb_port_not_connected_error": 658,
+            "pcb_pad_pad_clearance_error": 1
+          }
+        },
+        "routingErrors": [
+          "Pipeline9 primary high-density routing failed: B01 failed: No path found for source_net_64_mst12; regional fallback failed: Failed to solve 1 nodes, topology_merge_13629. err0: GrowShrinkHighDensityIntraNodeSolver failed after resizing to 8x. Last error: Unrelated route terminals overlap at the requested trace width. (capacity-autorouter@0.0.1139)"
+        ],
+        "fanoutProgress": null
+      },
+      "emittedCopperIdentical": true
+    }
+  ],
+  "artifacts": {
+    "baseline": {
+      "id": 14673219451,
+      "sha256": "63a2f1a88398ecb80751934f7be61b41e211884e34e5a8a5d8dd92734fe294c9"
+    },
+    "final": {
+      "id": 14677461998,
+      "sha256": "2b2a01fb7e18e009152b7d85136a694003bf9e3f2d7294d58fa1be68fe2d3a9f"
+    }
+  },
+  "realRepro": {
+    "pr": 4027,
+    "fixtureSha256": "6b25d512f3ecdf3a6d2ba372d96b791dc47c8c61bce847db2630df791deb9b68",
+    "obstacles": 1050,
+    "nativeTraces": 52,
+    "fixedTraces": 16,
+    "obstaclesIdenticalToFirstBusPhase": true
+  },
+  "icepiLocalInspection": {
+    "remainingConnections": 34,
+    "componentObstacles": 1426,
+    "nativeFixedTraces": 16,
+    "graphConnections": 79,
+    "graphPorts": 70690,
+    "graphRegions": 19409,
+    "reservedNativeCopperPorts": 1305,
+    "uniqueCrossingsBeforeAndAfterRedistribution": 1484,
+    "blockedCrossingsBefore": 0,
+    "blockedCrossingsAfter": 0,
+    "detailedFailureNode": "cmn_31",
+    "detailedFailureNet": "source_net_9"
+  },
+  "validation": {
+    "realCircuitRegression": "pass",
+    "build": "pass",
+    "typecheck": "pass",
+    "pipeline9RegressionSuite": {
+      "passed": 226,
+      "failed": 0,
+      "files": 225,
+      "expects": 13701
+    }
+  },
+  "fullyRoutedWithinBudget": {
+    "before": 0,
+    "after": 0
+  },
+  "phaseInputsCompared": {
+    "shared": 46,
+    "identical": 46
+  },
+  "nativeFanoutProgress": [
+    {
+      "board": "butterstick-native",
+      "before": {
+        "bestPlans": 62,
+        "requests": 91,
+        "iterations": 60716,
+        "attempts": 256
+      },
+      "after": {
+        "bestPlans": 62,
+        "requests": 91,
+        "iterations": 60716,
+        "attempts": 256
+      },
+      "budgetLimited": false
+    },
+    {
+      "board": "glider-native",
+      "before": {
+        "bestPlans": 86,
+        "requests": 95,
+        "iterations": 71886,
+        "attempts": 246
+      },
+      "after": {
+        "bestPlans": 86,
+        "requests": 95,
+        "iterations": 70938,
+        "attempts": 243
+      },
+      "budgetLimited": true
+    },
+    {
+      "board": "h616-native",
+      "before": {
+        "bestPlans": 105,
+        "requests": 174,
+        "iterations": 53332,
+        "attempts": 109
+      },
+      "after": {
+        "bestPlans": 105,
+        "requests": 174,
+        "iterations": 52394,
+        "attempts": 107
+      },
+      "budgetLimited": true
+    },
+    {
+      "board": "icepi-native",
+      "before": {
+        "bestPlans": 14,
+        "requests": 32,
+        "iterations": 26139,
+        "attempts": 256
+      },
+      "after": {
+        "bestPlans": 14,
+        "requests": 32,
+        "iterations": 26139,
+        "attempts": 256
+      },
+      "budgetLimited": false
+    },
+    {
+      "board": "imx6-native",
+      "before": {
+        "bestPlans": 9,
+        "requests": 32,
+        "iterations": 26135,
+        "attempts": 256
+      },
+      "after": {
+        "bestPlans": 9,
+        "requests": 32,
+        "iterations": 26135,
+        "attempts": 256
+      },
+      "budgetLimited": false
+    },
+    {
+      "board": "orangecrab-native",
+      "before": {
+        "bestPlans": 149,
+        "requests": 273,
+        "iterations": 27127,
+        "attempts": 34
+      },
+      "after": {
+        "bestPlans": 149,
+        "requests": 273,
+        "iterations": 27166,
+        "attempts": 34
+      },
+      "budgetLimited": true
+    }
+  ],
+  "fullTerminalCircuitJsonIdentical": 9,
+  "beforeMalformedViaExceptions": 2,
+  "afterMalformedViaExceptions": 0,
+  "observedChanges": {
+    "gliderLocal": {
+      "before": "600-second timeout",
+      "afterSeconds": 384.809,
+      "after": "routing error"
+    },
+    "icepiSpacedSeconds": [
+      331.849,
+      268.655
+    ],
+    "additionalCompletedBoards": 0,
+    "terminalCopperRegressionCount": 0
+  },
+  "commands": {
+    "render": "bun --preload ./observer.ts ./render.tsx <board>",
+    "regression": "bun test --timeout 9999999 tests/features/pipeline9-*",
+    "realRepro": "BUN_UPDATE_SNAPSHOTS=1 bun test --timeout 9999999 tests/solvers/orangecrab-local-native-terminal-via.test.ts",
+    "typecheck": "bunx tsc --noEmit",
+    "build": "bun run build"
+  },
+  "pcbSnapshots": {
+    "orangecrab-local": {
+      "before": "77644d9ccd80da6828c6ee0c1b2bd970a5ed64698f4aec6338ad6950dd1256c5",
+      "after": "77644d9ccd80da6828c6ee0c1b2bd970a5ed64698f4aec6338ad6950dd1256c5"
+    },
+    "icepi-spaced": {
+      "before": "def7df81c52003006ddc80ad96761edd2b030da2a74d849f276fbf877a61a2db",
+      "after": "def7df81c52003006ddc80ad96761edd2b030da2a74d849f276fbf877a61a2db"
+    }
+  }
+}

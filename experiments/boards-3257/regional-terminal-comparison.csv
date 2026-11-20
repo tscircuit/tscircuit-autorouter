@@ -1,0 +1,20 @@
+board,before_stage,after_stage,before_seconds,after_seconds,before_traces,after_traces,before_vias,after_vias,before_unconnected,after_unconnected,before_stop,after_stop,emitted_copper_identical
+butterstick-local,bus lanes,bus lanes,600.434,600.384,,,,,,,600-second render budget,600-second render budget,
+butterstick-native,fanout,fanout,374.74,386.411,0,0,0,0,2063,2063,settled,settled,True
+butterstick-spaced,bus lanes,bus lanes,600.52,600.472,,,,,,,600-second render budget,600-second render budget,
+glider-local,detailed routing,detailed routing,600.581,384.809,,53,,100,,1465,600-second render budget,settled,
+glider-native,fanout,fanout,600.406,600.304,,,,,,,600-second render budget,600-second render budget,
+glider-spaced,detailed routing,detailed routing,178.135,188.075,16,16,30,30,1535,1535,settled,settled,True
+h616-default-order-local,graph routing,graph routing,47.509,48.467,16,16,32,32,562,562,settled,settled,True
+h616-local,detailed routing,detailed routing,59.208,59.197,16,16,32,32,562,562,settled,settled,True
+h616-native,fanout,fanout,600.444,600.339,,,,,,,600-second render budget,600-second render budget,
+h616-spaced,graph routing,graph routing,37.407,37.964,16,16,32,32,562,562,settled,settled,True
+icepi-local,detailed routing,detailed routing,235.849,237.539,16,16,30,30,1116,1116,settled,settled,True
+icepi-native,fanout,fanout,182.795,182.474,0,0,0,0,1765,1765,settled,settled,True
+icepi-spaced,detailed routing,detailed routing,331.849,268.655,52,52,98,98,1046,1046,settled,settled,True
+imx6-local,detailed routing,detailed routing,600.569,600.468,,,,,,,600-second render budget,600-second render budget,
+imx6-native,fanout,fanout,353.295,311.3,0,0,0,0,2247,2247,settled,settled,True
+imx6-spaced,detailed routing,detailed routing,412.22,410.766,17,17,30,30,1642,1642,settled,settled,True
+orangecrab-local,detailed routing,detailed routing,223.514,225.17,52,52,93,93,658,658,settled,settled,True
+orangecrab-native,fanout,fanout,600.278,600.21,,,,,,,600-second render budget,600-second render budget,
+orangecrab-spaced,detailed routing,detailed routing,195.553,197.73,52,52,101,101,658,658,settled,settled,True
