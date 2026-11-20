@@ -1,0 +1,59 @@
+name: Generate audited sample002 snapshots on repository macOS
+on:
+  push:
+    branches: [codex/ddr2427-restart-mac-snapshots]
+permissions:
+  contents: read
+jobs:
+  snapshots:
+    runs-on: macos-15
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: 0c51f5bc15d4a403ac9d9c49f59cc2b2aeb7b04a
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: bun install --frozen-lockfile
+      - name: Generate both existing snapshots after routing assertions
+        env:
+          BUN_UPDATE_SNAPSHOTS: "1"
+        run: |
+          bun test tests/fanout-repair-before-grouped-beam.test.ts
+          bun test tests/srj19-sample002.test.ts
+      - name: Audit both routing budgets independently
+        run: |
+          cat > sample002-audit.ts <<'TS'
+          import { srj19FanoutSamples } from "./datasets/srj19"
+          import { FanoutSolver } from "./lib/fanout-solver"
+          import { validateRoutedCopperDrc } from "./lib/validate-routed-copper-drc"
+          const sample = srj19FanoutSamples.find(s => s.id === "sample002")!
+          const rows = []
+          for (const maxLayerCombinations of [17, 256]) {
+            const solver = new FanoutSolver(sample.simpleRouteJson, { ...sample.solverOptions, maxLayerCombinations })
+            solver.solve()
+            const output = solver.getOutput()
+            const drc = validateRoutedCopperDrc({ inputSrj: sample.simpleRouteJson, routedSrj: output.simpleRouteJson, clearance: solver.config.clearance, allowBlindAndBuriedVias: solver.config.allowBlindAndBuriedVias })
+            if (!drc.valid) throw new Error(JSON.stringify(drc))
+            rows.push({ maxLayerCombinations, solved: solver.solved, attempts: solver.attempts.length, connections: output.validation.brokenOutConnectionCount, vias: drc.checkedViaCount, issues: drc.issues.length, srjSha256: new Bun.CryptoHasher("sha256").update(JSON.stringify(output.simpleRouteJson)).digest("hex") })
+          }
+          console.log("SAMPLE002_MAC_AUDIT", JSON.stringify(rows))
+          await Bun.write("sample002-mac-audit.json", JSON.stringify(rows, null, 2))
+          TS
+          bun sample002-audit.ts
+      - name: Export audited SVGs and report
+        run: |
+          python3 - <<'PYEXPORT'
+          import base64,io,zipfile
+          from pathlib import Path
+          paths=[Path('tests/__snapshots__/fanout-repair-before-grouped-beam.snap.svg'),Path('tests/__snapshots__/srj19-sample002-six-layer-fanout.snap.svg'),Path('sample002-mac-audit.json')]
+          stream=io.BytesIO()
+          with zipfile.ZipFile(stream,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=9) as archive:
+              for path in paths:archive.writestr(str(path),path.read_bytes())
+          print('SAMPLE002_MAC_SNAPSHOTS_BEGIN')
+          encoded=base64.b64encode(stream.getvalue()).decode()
+          for offset in range(0,len(encoded),8000):print(encoded[offset:offset+8000])
+          print('SAMPLE002_MAC_SNAPSHOTS_END')
+          PYEXPORT
