@@ -1,0 +1,11 @@
+{
+  "base": "4306536282fe5abf32c1395e106f55a5d61ca7a3",
+  "candidate": "88ccf3bef4239fbd47a9e7d93652537d0958aeb0",
+  "files": [
+    {
+      "path": "lib/components/primitive-components/Group/Group.ts",
+      "beforeSha256": "9ddb264132ddc6642a655ea2d42c5a631ba5c5805224f34a33718944b905e560",
+      "afterSha256": "f0b8d346470f63424e37dae738266a917b40249f1e22e5388242f4e4ee1eb5fe"
+    }
+  ]
+}
