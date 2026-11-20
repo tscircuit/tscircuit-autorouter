@@ -1,0 +1,4061 @@
+{
+  "summary": {
+    "captures": 82,
+    "samples": 10,
+    "baselineSolved": 76,
+    "globalLayersSolved": 81,
+    "recovered": 5,
+    "previouslySuccessfulOutputsChanged": 7,
+    "baselineCaptureOutputMismatches": 0
+  },
+  "rows": [
+    {
+      "capture": "butterstick-original/winding-0.json.gz",
+      "regions": [
+        {
+          "id": "pcb_group_0",
+          "name": "FANOUT_U11"
+        }
+      ],
+      "connections": 16,
+      "buses": [
+        {
+          "id": "DDR_BUS_byte1",
+          "count": 8,
+          "preferredLayers": [
+            "top",
+            "inner2",
+            "inner5",
+            "inner6",
+            "bottom"
+          ]
+        },
+        {
+          "id": "unbused_fanout_connections",
+          "count": 8,
+          "preferredLayers": [
+            "top",
+            "bottom",
+            "inner2",
+            "inner5",
+            "inner6"
+          ]
+        }
+      ],
+      "layerCounts": {
+        "bottom": 3,
+        "inner2": 4,
+        "inner5": 3,
+        "inner6": 2,
+        "top": 4
+      },
+      "globalLayerCounts": {
+        "bottom": 3,
+        "inner2": 3,
+        "inner5": 3,
+        "inner6": 3,
+        "top": 4
+      },
+      "oldSpan": 3.779,
+      "occupiedSpan": 3.779,
+      "captureSolved": true,
+      "baselineSolved": true,
+      "baselineError": null,
+      "baselineMatchesCapturedOutput": true,
+      "globalLayersSolved": true,
+      "globalLayersError": null,
+      "successfulOutputUnchanged": false,
+      "recovered": false
+    },
+    {
+      "capture": "butterstick-original/winding-1.json.gz",
+      "regions": [
+        {
+          "id": "pcb_group_0",
+          "name": "FANOUT_U11"
+        }
+      ],
+      "connections": 1,
+      "buses": [
+        {
+          "id": "unbused_fanout_connections",
+          "count": 1,
+          "preferredLayers": [
+            "top",
+            "bottom",
+            "inner2",
+            "inner5",
+            "inner6"
+          ]
+        }
+      ],
+      "layerCounts": {
+        "top": 1
+      },
+      "globalLayerCounts": {
+        "top": 1
+      },
+      "oldSpan": 0,
+      "occupiedSpan": 0,
+      "captureSolved": true,
+      "baselineSolved": true,
+      "baselineError": null,
+      "baselineMatchesCapturedOutput": true,
+      "globalLayersSolved": true,
+      "globalLayersError": null,
+      "successfulOutputUnchanged": true,
+      "recovered": false
+    },
+    {
+      "capture": "butterstick-original/winding-2.json.gz",
+      "regions": [
+        {
+          "id": "pcb_group_0",
+          "name": "FANOUT_U11"
+        }
+      ],
+      "connections": 36,
+      "buses": [
+        {
+          "id": "DDR_BUS_byte0",
+          "count": 8,
+          "preferredLayers": [
+            "top",
+            "inner2",
+            "inner5",
+            "inner6",
+            "bottom"
+          ]
+        },
+        {
+          "id": "unbused_fanout_connections",
+          "count": 28,
+          "preferredLayers": [
+            "top",
+            "bottom",
+            "inner2",
+            "inner5",
+            "inner6"
+          ]
+        }
+      ],
+      "layerCounts": {
+        "bottom": 7,
+        "inner2": 8,
+        "inner5": 7,
+        "inner6": 6,
+        "top": 8
+      },
+      "globalLayerCounts": {
+        "bottom": 7,
+        "inner2": 7,
+        "inner5": 7,
+        "inner6": 7,
+        "top": 8
+      },
+      "oldSpan": 6.8022,
+      "occupiedSpan": 6.8022,
+      "captureSolved": true,
+      "baselineSolved": true,
+      "baselineError": null,
+      "baselineMatchesCapturedOutput": true,
+      "globalLayersSolved": true,
+      "globalLayersError": null,
+      "successfulOutputUnchanged": false,
+      "recovered": false
+    },
+    {
+      "capture": "butterstick-original/winding-3.json.gz",
+      "regions": [
+        {
+          "id": "pcb_group_1",
+          "name": "FANOUT_U4"
+        }
+      ],
+      "connections": 99,
+      "buses": [
+        {
+          "id": "DDR_BUS_byte0",
+          "count": 3,
+          "preferredLayers": [
+            "top",
+            "inner2",
+            "inner5",
+            "inner6",
+            "bottom"
+          ]
+        },
+        {
+          "id": "DDR_BUS_byte1",
+          "count": 8,
+          "preferredLayers": [
+            "top",
+            "inner2",
+            "inner5",
+            "inner6",
+            "bottom"
+          ]
+        },
+        {
+          "id": "unbused_fanout_connections",
+          "count": 88,
+          "preferredLayers": [
+            "top",
+            "bottom",
+            "inner2",
+            "inner5",
+            "inner6"
+          ]
+        }
+      ],
+      "layerCounts": {
+        "bottom": 19,
+        "inner2": 21,
+        "inner5": 20,
+        "inner6": 18,
+        "top": 21
+      },
+      "globalLayerCounts": {
+        "bottom": 20,
+        "inner2": 20,
+        "inner5": 20,
+        "inner6": 19,
+        "top": 20
+      },
+      "oldSpan": 16.6276,
+      "occupiedSpan": 16.6276,
+      "captureSolved": true,
+      "baselineSolved": true,
+      "baselineError": null,
+      "baselineMatchesCapturedOutput": true,
+      "globalLayersSolved": true,
+      "globalLayersError": null,
+      "successfulOutputUnchanged": false,
+      "recovered": false
+    },
+    {
+      "capture": "butterstick-original/winding-4.json.gz",
+      "regions": [
+        {
+          "id": "pcb_group_1",
+          "name": "FANOUT_U4"
+        }
+      ],
+      "connections": 50,
+      "buses": [
+        {
+          "id": "unbused_fanout_connections",
+          "count": 50,
+          "preferredLayers": [
+            "top",
+            "bottom",
+            "inner2",
+            "inner5",
+            "inner6"
+          ]
+        }
+      ],
+      "layerCounts": {
+        "bottom": 10,
+        "inner2": 10,
+        "inner5": 10,
+        "inner6": 10,
+        "top": 10
+      },
+      "globalLayerCounts": {
+        "bottom": 10,
+        "inner2": 10,
+        "inner5": 10,
+        "inner6": 10,
+        "top": 10
+      },
+      "oldSpan": 8.3138,
+      "occupiedSpan": 8.3138,
+      "captureSolved": true,
+      "baselineSolved": true,
+      "baselineError": null,
+      "baselineMatchesCapturedOutput": true,
+      "globalLayersSolved": true,
+      "globalLayersError": null,
+      "successfulOutputUnchanged": true,
+      "recovered": false
+    },
+    {
+      "capture": "butterstick-original/winding-5.json.gz",
+      "regions": [
+        {
+          "id": "pcb_group_1",
+          "name": "FANOUT_U4"
+        }
+      ],
+      "connections": 40,
+      "buses": [
+        {
+          "id": "unbused_fanout_connections",
+          "count": 40,
+          "preferredLayers": [
+            "top",
+            "bottom",
+            "inner2",
+            "inner5",
+            "inner6"
+          ]
+        }
+      ],
+      "layerCounts": {
+        "bottom": 8,
+        "inner2": 8,
+        "inner5": 8,
+        "inner6": 8,
+        "top": 8
+      },
+      "globalLayerCounts": {
+        "bottom": 8,
+        "inner2": 8,
+        "inner5": 8,
+        "inner6": 8,
+        "top": 8
+      },
+      "oldSpan": 6.8022,
+      "occupiedSpan": 6.8022,
+      "captureSolved": true,
+      "baselineSolved": true,
+      "baselineError": null,
+      "baselineMatchesCapturedOutput": true,
+      "globalLayersSolved": true,
+      "globalLayersError": null,
+      "successfulOutputUnchanged": true,
+      "recovered": false
+    },
+    {
+      "capture": "butterstick-original/winding-6.json.gz",
+      "regions": [
+        {
+          "id": "pcb_group_1",
+          "name": "FANOUT_U4"
+        }
+      ],
+      "connections": 33,
+      "buses": [
+        {
+          "id": "unbused_fanout_connections",
+          "count": 33,
+          "preferredLayers": [
+            "top",
+            "bottom",
+            "inner2",
+            "inner5",
+            "inner6"
+          ]
+        }
+      ],
+      "layerCounts": {
+        "bottom": 7,
+        "inner2": 7,
+        "inner5": 6,
+        "inner6": 6,
+        "top": 7
+      },
+      "globalLayerCounts": {
+        "bottom": 7,
+        "inner2": 7,
+        "inner5": 6,
+        "inner6": 6,
+        "top": 7
+      },
+      "oldSpan": 6.0464,
+      "occupiedSpan": 6.0464,
+      "captureSolved": true,
+      "baselineSolved": true,
+      "baselineError": null,
+      "baselineMatchesCapturedOutput": true,
+      "globalLayersSolved": true,
+      "globalLayersError": null,
+      "successfulOutputUnchanged": true,
+      "recovered": false
+    },
+    {
+      "capture": "butterstick-original/winding-7.json.gz",
+      "regions": [
+        {
+          "id": "pcb_group_2",
+          "name": "FANOUT_U12"
+        }
+      ],
+      "connections": 15,
+      "buses": [
+        {
+          "id": "unbused_fanout_connections",
+          "count": 15,
+          "preferredLayers": [
+            "top",
+            "bottom",
+            "inner2",
+            "inner5",
+            "inner6"
+          ]
+        }
+      ],
+      "layerCounts": {
+        "bottom": 3,
+        "inner2": 3,
+        "inner5": 3,
+        "inner6": 3,
+        "top": 3
+      },
+      "globalLayerCounts": {
+        "bottom": 3,
+        "inner2": 3,
+        "inner5": 3,
+        "inner6": 3,
+        "top": 3
+      },
+      "oldSpan": 3.0232,
+      "occupiedSpan": 3.0232,
+      "captureSolved": true,
+      "baselineSolved": true,
+      "baselineError": null,
+      "baselineMatchesCapturedOutput": true,
+      "globalLayersSolved": true,
+      "globalLayersError": null,
+      "successfulOutputUnchanged": true,
+      "recovered": false
+    },
+    {
+      "capture": "butterstick-original/winding-8.json.gz",
+      "regions": [
+        {
+          "id": "pcb_group_2",
+          "name": "FANOUT_U12"
+        }
+      ],
+      "connections": 36,
+      "buses": [
+        {
+          "id": "DDR_BUS_byte0",
+          "count": 5,
+          "preferredLayers": [
+            "top",
+            "inner2",
+            "inner5",
+            "inner6",
+            "bottom"
+          ]
+        },
+        {
+          "id": "unbused_fanout_connections",
+          "count": 31,
+          "preferredLayers": [
+            "top",
+            "bottom",
+            "inner2",
+            "inner5",
+            "inner6"
+          ]
+        }
+      ],
+      "layerCounts": {
+        "bottom": 7,
+        "inner2": 7,
+        "inner5": 7,
+        "inner6": 7,
+        "top": 8
+      },
+      "globalLayerCounts": {
+        "bottom": 7,
+        "inner2": 7,
+        "inner5": 7,
+        "inner6": 7,
+        "top": 8
+      },
+      "oldSpan": 6.8022,
+      "occupiedSpan": 6.8022,
+      "captureSolved": true,
+      "baselineSolved": true,
+      "baselineError": null,
+      "baselineMatchesCapturedOutput": true,
+      "globalLayersSolved": true,
+      "globalLayersError": null,
+      "successfulOutputUnchanged": true,
+      "recovered": false
+    },
+    {
+      "capture": "butterstick-original/winding-9.json.gz",
+      "regions": [
+        {
+          "id": "pcb_group_2",
+          "name": "FANOUT_U12"
+        }
+      ],
+      "connections": 2,
+      "buses": [
+        {
+          "id": "unbused_fanout_connections",
+          "count": 2,
+          "preferredLayers": [
+            "top",
+            "bottom",
+            "inner2",
+            "inner5",
+            "inner6"
+          ]
+        }
+      ],
+      "layerCounts": {
+        "bottom": 1,
+        "top": 1
+      },
+      "globalLayerCounts": {
+        "bottom": 1,
+        "top": 1
+      },
+      "oldSpan": 0.3779,
+      "occupiedSpan": 0.3779,
+      "captureSolved": true,
+      "baselineSolved": true,
+      "baselineError": null,
+      "baselineMatchesCapturedOutput": true,
+      "globalLayersSolved": true,
+      "globalLayersError": null,
+      "successfulOutputUnchanged": true,
+      "recovered": false
+    },
+    {
+      "capture": "butterstick-spaced/winding-0.json.gz",
+      "regions": [
+        {
+          "id": "pcb_group_0",
+          "name": "FANOUT_U11"
+        }
+      ],
+      "connections": 1,
+      "buses": [
+        {
+          "id": "unbused_fanout_connections",
+          "count": 1,
+          "preferredLayers": [
+            "top",
+            "bottom",
+            "inner2",
+            "inner5",
+            "inner6"
+          ]
+        }
+      ],
+      "layerCounts": {
+        "top": 1
+      },
+      "globalLayerCounts": {
+        "top": 1
+      },
+      "oldSpan": 0,
+      "occupiedSpan": 0,
+      "captureSolved": true,
+      "baselineSolved": true,
+      "baselineError": null,
+      "baselineMatchesCapturedOutput": true,
+      "globalLayersSolved": true,
+      "globalLayersError": null,
+      "successfulOutputUnchanged": true,
+      "recovered": false
+    },
+    {
+      "capture": "butterstick-spaced/winding-1.json.gz",
+      "regions": [
+        {
+          "id": "pcb_group_0",
+          "name": "FANOUT_U11"
+        }
+      ],
+      "connections": 20,
+      "buses": [
+        {
+          "id": "DDR_BUS_byte1",
+          "count": 8,
+          "preferredLayers": [
+            "top",
+            "inner2",
+            "inner5",
+            "inner6",
+            "bottom"
+          ]
+        },
+        {
+          "id": "unbused_fanout_connections",
+          "count": 12,
+          "preferredLayers": [
+            "top",
+            "bottom",
+            "inner2",
+            "inner5",
+            "inner6"
+          ]
+        }
+      ],
+      "layerCounts": {
+        "bottom": 4,
+        "inner2": 4,
+        "inner5": 4,
+        "inner6": 3,
+        "top": 5
+      },
+      "globalLayerCounts": {
+        "bottom": 4,
+        "inner2": 4,
+        "inner5": 4,
+        "inner6": 4,
+        "top": 4
+      },
+      "oldSpan": 4.5348,
+      "occupiedSpan": 4.5348,
+      "captureSolved": true,
+      "baselineSolved": true,
+      "baselineError": null,
+      "baselineMatchesCapturedOutput": true,
+      "globalLayersSolved": true,
+      "globalLayersError": null,
+      "successfulOutputUnchanged": false,
+      "recovered": false
+    },
+    {
+      "capture": "butterstick-spaced/winding-2.json.gz",
+      "regions": [
+        {
+          "id": "pcb_group_0",
+          "name": "FANOUT_U11"
+        }
+      ],
+      "connections": 17,
+      "buses": [
+        {
+          "id": "unbused_fanout_connections",
+          "count": 17,
+          "preferredLayers": [
+            "top",
+            "bottom",
+            "inner2",
+            "inner5",
+            "inner6"
+          ]
+        }
+      ],
+      "layerCounts": {
+        "bottom": 4,
+        "inner2": 3,
+        "inner5": 3,
+        "inner6": 3,
+        "top": 4
+      },
+      "globalLayerCounts": {
+        "bottom": 4,
+        "inner2": 3,
+        "inner5": 3,
+        "inner6": 3,
+        "top": 4
+      },
+      "oldSpan": 3.779,
+      "occupiedSpan": 3.779,
+      "captureSolved": true,
+      "baselineSolved": true,
+      "baselineError": null,
+      "baselineMatchesCapturedOutput": true,
+      "globalLayersSolved": true,
+      "globalLayersError": null,
+      "successfulOutputUnchanged": true,
+      "recovered": false
+    },
+    {
+      "capture": "butterstick-spaced/winding-3.json.gz",
+      "regions": [
+        {
+          "id": "pcb_group_0",
+          "name": "FANOUT_U11"
+        }
+      ],
+      "connections": 53,
+      "buses": [
+        {
+          "id": "DDR_BUS_byte0",
+          "count": 8,
+          "preferredLayers": [
+            "top",
+            "inner2",
+            "inner5",
+            "inner6",
+            "bottom"
+          ]
+        },
+        {
+          "id": "unbused_fanout_connections",
+          "count": 45,
+          "preferredLayers": [
+            "top",
+            "bottom",
+            "inner2",
+            "inner5",
+            "inner6"
+          ]
+        }
+      ],
+      "layerCounts": {
+        "bottom": 10,
+        "inner2": 11,
+        "inner5": 11,
+        "inner6": 10,
+        "top": 11
+      },
+      "globalLayerCounts": {
+        "bottom": 11,
+        "inner2": 11,
+        "inner5": 10,
+        "inner6": 10,
+        "top": 11
+      },
+      "oldSpan": 9.069600000000001,
+      "occupiedSpan": 9.069600000000001,
+      "captureSolved": true,
+      "baselineSolved": true,
+      "baselineError": null,
+      "baselineMatchesCapturedOutput": true,
+      "globalLayersSolved": true,
+      "globalLayersError": null,
+      "successfulOutputUnchanged": false,
+      "recovered": false
+    },
+    {
+      "capture": "butterstick-spaced/winding-4.json.gz",
+      "regions": [
+        {
+          "id": "pcb_group_1",
+          "name": "FANOUT_U12"
+        }
+      ],
+      "connections": 18,
+      "buses": [
+        {
+          "id": "unbused_fanout_connections",
+          "count": 18,
+          "preferredLayers": [
+            "top",
+            "bottom",
+            "inner2",
+            "inner5",
+            "inner6"
+          ]
+        }
+      ],
+      "layerCounts": {
+        "bottom": 4,
+        "inner2": 4,
+        "inner5": 3,
+        "inner6": 3,
+        "top": 4
+      },
+      "globalLayerCounts": {
+        "bottom": 4,
+        "inner2": 4,
+        "inner5": 3,
+        "inner6": 3,
+        "top": 4
+      },
+      "oldSpan": 3.779,
+      "occupiedSpan": 3.779,
+      "captureSolved": true,
+      "baselineSolved": true,
+      "baselineError": null,
+      "baselineMatchesCapturedOutput": true,
+      "globalLayersSolved": true,
+      "globalLayersError": null,
+      "successfulOutputUnchanged": true,
+      "recovered": false
+    },
+    {
+      "capture": "butterstick-spaced/winding-5.json.gz",
+      "regions": [
+        {
+          "id": "pcb_group_1",
+          "name": "FANOUT_U12"
+        }
+      ],
+      "connections": 54,
+      "buses": [
+        {
+          "id": "DDR_BUS_byte0",
+          "count": 5,
+          "preferredLayers": [
+            "top",
+            "inner2",
+            "inner5",
+            "inner6",
+            "bottom"
+          ]
+        },
+        {
+          "id": "unbused_fanout_connections",
+          "count": 49,
+          "preferredLayers": [
+            "top",
+            "bottom",
+            "inner2",
+            "inner5",
+            "inner6"
+          ]
+        }
+      ],
+      "layerCounts": {
+        "bottom": 11,
+        "inner2": 11,
+        "inner5": 11,
+        "inner6": 10,
+        "top": 11
+      },
+      "globalLayerCounts": {
+        "bottom": 11,
+        "inner2": 11,
+        "inner5": 11,
+        "inner6": 10,
+        "top": 11
+      },
+      "oldSpan": 9.069600000000001,
+      "occupiedSpan": 9.069600000000001,
+      "captureSolved": true,
+      "baselineSolved": true,
+      "baselineError": null,
+      "baselineMatchesCapturedOutput": true,
+      "globalLayersSolved": true,
+      "globalLayersError": null,
+      "successfulOutputUnchanged": true,
+      "recovered": false
+    },
+    {
+      "capture": "butterstick-spaced/winding-6.json.gz",
+      "regions": [
+        {
+          "id": "pcb_group_1",
+          "name": "FANOUT_U12"
+        }
+      ],
+      "connections": 19,
+      "buses": [
+        {
+          "id": "unbused_fanout_connections",
+          "count": 19,
+          "preferredLayers": [
+            "top",
+            "bottom",
+            "inner2",
+            "inner5",
+            "inner6"
+          ]
+        }
+      ],
+      "layerCounts": {
+        "bottom": 4,
+        "inner2": 4,
+        "inner5": 4,
+        "inner6": 3,
+        "top": 4
+      },
+      "globalLayerCounts": {
+        "bottom": 4,
+        "inner2": 4,
+        "inner5": 4,
+        "inner6": 3,
+        "top": 4
+      },
+      "oldSpan": 3.779,
+      "occupiedSpan": 3.779,
+      "captureSolved": true,
+      "baselineSolved": true,
+      "baselineError": null,
+      "baselineMatchesCapturedOutput": true,
+      "globalLayersSolved": true,
+      "globalLayersError": null,
+      "successfulOutputUnchanged": true,
+      "recovered": false
+    },
+    {
+      "capture": "butterstick-spaced/winding-7.json.gz",
+      "regions": [
+        {
+          "id": "pcb_group_2",
+          "name": "FANOUT_U4"
+        }
+      ],
+      "connections": 105,
+      "buses": [
+        {
+          "id": "DDR_BUS_byte0",
+          "count": 3,
+          "preferredLayers": [
+            "top",
+            "inner2",
+            "inner5",
+            "inner6",
+            "bottom"
+          ]
+        },
+        {
+          "id": "DDR_BUS_byte1",
+          "count": 8,
+          "preferredLayers": [
+            "top",
+            "inner2",
+            "inner5",
+            "inner6",
+            "bottom"
+          ]
+        },
+        {
+          "id": "unbused_fanout_connections",
+          "count": 94,
+          "preferredLayers": [
+            "top",
+            "bottom",
+            "inner2",
+            "inner5",
+            "inner6"
+          ]
+        }
+      ],
+      "layerCounts": {
+        "bottom": 20,
+        "inner2": 22,
+        "inner5": 22,
+        "inner6": 19,
+        "top": 22
+      },
+      "globalLayerCounts": {
+        "bottom": 21,
+        "inner2": 21,
+        "inner5": 21,
+        "inner6": 21,
+        "top": 21
+      },
+      "oldSpan": 17.3834,
+      "occupiedSpan": 17.3834,
+      "captureSolved": false,
+      "baselineSolved": false,
+      "baselineError": "WindingBreakoutSolver: declared breakout edges need 17.38mm but expose only 17.00mm",
+      "baselineMatchesCapturedOutput": null,
+      "globalLayersSolved": true,
+      "globalLayersError": null,
+      "successfulOutputUnchanged": null,
+      "recovered": true
+    },
+    {
+      "capture": "glider-original/winding-0.json.gz",
+      "regions": [
+        {
+          "id": "pcb_group_0",
+          "name": "FANOUT_U12"
+        }
+      ],
+      "connections": 2,
+      "buses": [
+        {
+          "id": "unbused_fanout_connections",
+          "count": 2,
+          "preferredLayers": [
+            "top",
+            "bottom",
+            "inner2"
+          ]
+        }
+      ],
+      "layerCounts": {
+        "bottom": 1,
+        "top": 1
+      },
+      "globalLayerCounts": {
+        "bottom": 1,
+        "top": 1
+      },
+      "oldSpan": 0.445,
+      "occupiedSpan": 0.445,
+      "captureSolved": true,
+      "baselineSolved": true,
+      "baselineError": null,
+      "baselineMatchesCapturedOutput": true,
+      "globalLayersSolved": true,
+      "globalLayersError": null,
+      "successfulOutputUnchanged": true,
+      "recovered": false
+    },
+    {
+      "capture": "glider-original/winding-1.json.gz",
+      "regions": [
+        {
+          "id": "pcb_group_0",
+          "name": "FANOUT_U12"
+        }
+      ],
+      "connections": 45,
+      "buses": [
+        {
+          "id": "unbused_fanout_connections",
+          "count": 45,
+          "preferredLayers": [
+            "top",
+            "bottom",
+            "inner2"
+          ]
+        }
+      ],
+      "layerCounts": {
+        "bottom": 15,
+        "inner2": 15,
+        "top": 15
+      },
+      "globalLayerCounts": {
+        "bottom": 15,
+        "inner2": 15,
+        "top": 15
+      },
+      "oldSpan": 13.350000000000001,
+      "occupiedSpan": 13.350000000000001,
+      "captureSolved": true,
+      "baselineSolved": true,
+      "baselineError": null,
+      "baselineMatchesCapturedOutput": true,
+      "globalLayersSolved": true,
+      "globalLayersError": null,
+      "successfulOutputUnchanged": true,
+      "recovered": false
+    },
+    {
+      "capture": "glider-original/winding-2.json.gz",
+      "regions": [
+        {
+          "id": "pcb_group_0",
+          "name": "FANOUT_U12"
+        }
+      ],
+      "connections": 5,
+      "buses": [
+        {
+          "id": "unbused_fanout_connections",
+          "count": 5,
+          "preferredLayers": [
+            "top",
+            "bottom",
+            "inner2"
+          ]
+        }
+      ],
+      "layerCounts": {
+        "bottom": 2,
+        "inner2": 1,
+        "top": 2
+      },
+      "globalLayerCounts": {
+        "bottom": 2,
+        "inner2": 1,
+        "top": 2
+      },
+      "oldSpan": 1.78,
+      "occupiedSpan": 1.78,
+      "captureSolved": true,
+      "baselineSolved": true,
+      "baselineError": null,
+      "baselineMatchesCapturedOutput": true,
+      "globalLayersSolved": true,
+      "globalLayersError": null,
+      "successfulOutputUnchanged": true,
+      "recovered": false
+    },
+    {
+      "capture": "glider-original/winding-3.json.gz",
+      "regions": [
+        {
+          "id": "pcb_group_1",
+          "name": "FANOUT_U1"
+        }
+      ],
+      "connections": 53,
+      "buses": [
+        {
+          "id": "unbused_fanout_connections",
+          "count": 53,
+          "preferredLayers": [
+            "top",
+            "bottom",
+            "inner2"
+          ]
+        }
+      ],
+      "layerCounts": {
+        "bottom": 18,
+        "inner2": 17,
+        "top": 18
+      },
+      "globalLayerCounts": {
+        "bottom": 18,
+        "inner2": 17,
+        "top": 18
+      },
+      "oldSpan": 16.02,
+      "occupiedSpan": 16.02,
+      "captureSolved": true,
+      "baselineSolved": true,
+      "baselineError": null,
+      "baselineMatchesCapturedOutput": true,
+      "globalLayersSolved": true,
+      "globalLayersError": null,
+      "successfulOutputUnchanged": true,
+      "recovered": false
+    },
+    {
+      "capture": "glider-original/winding-4.json.gz",
+      "regions": [
+        {
+          "id": "pcb_group_1",
+          "name": "FANOUT_U1"
+        }
+      ],
+      "connections": 32,
+      "buses": [
+        {
+          "id": "unbused_fanout_connections",
+          "count": 32,
+          "preferredLayers": [
+            "top",
+            "bottom",
+            "inner2"
+          ]
+        }
+      ],
+      "layerCounts": {
+        "bottom": 11,
+        "inner2": 10,
+        "top": 11
+      },
+      "globalLayerCounts": {
+        "bottom": 11,
+        "inner2": 10,
+        "top": 11
+      },
+      "oldSpan": 9.790000000000001,
+      "occupiedSpan": 9.790000000000001,
+      "captureSolved": true,
+      "baselineSolved": true,
+      "baselineError": null,
+      "baselineMatchesCapturedOutput": true,
+      "globalLayersSolved": true,
+      "globalLayersError": null,
+      "successfulOutputUnchanged": true,
+      "recovered": false
+    },
+    {
+      "capture": "glider-original/winding-5.json.gz",
+      "regions": [
+        {
+          "id": "pcb_group_1",
+          "name": "FANOUT_U1"
+        }
+      ],
+      "connections": 11,
+      "buses": [
+        {
+          "id": "unbused_fanout_connections",
+          "count": 11,
+          "preferredLayers": [
+            "top",
+            "bottom",
+            "inner2"
+          ]
+        }
+      ],
+      "layerCounts": {
+        "bottom": 4,
+        "inner2": 3,
+        "top": 4
+      },
+      "globalLayerCounts": {
+        "bottom": 4,
+        "inner2": 3,
+        "top": 4
+      },
+      "oldSpan": 3.5599999999999996,
+      "occupiedSpan": 3.5599999999999996,
+      "captureSolved": true,
+      "baselineSolved": true,
+      "baselineError": null,
+      "baselineMatchesCapturedOutput": true,
+      "globalLayersSolved": true,
+      "globalLayersError": null,
+      "successfulOutputUnchanged": true,
+      "recovered": false
+    },
+    {
+      "capture": "glider-original/winding-6.json.gz",
+      "regions": [
+        {
+          "id": "pcb_group_1",
+          "name": "FANOUT_U1"
+        }
+      ],
+      "connections": 51,
+      "buses": [
+        {
+          "id": "unbused_fanout_connections",
+          "count": 51,
+          "preferredLayers": [
+            "top",
+            "bottom",
+            "inner2"
+          ]
+        }
+      ],
+      "layerCounts": {
+        "bottom": 17,
+        "inner2": 17,
+        "top": 17
+      },
+      "globalLayerCounts": {
+        "bottom": 17,
+        "inner2": 17,
+        "top": 17
+      },
+      "oldSpan": 15.13,
+      "occupiedSpan": 15.13,
+      "captureSolved": true,
+      "baselineSolved": true,
+      "baselineError": null,
+      "baselineMatchesCapturedOutput": true,
+      "globalLayersSolved": true,
+      "globalLayersError": null,
+      "successfulOutputUnchanged": true,
+      "recovered": false
+    },
+    {
+      "capture": "glider-spaced/winding-0.json.gz",
+      "regions": [
+        {
+          "id": "pcb_group_0",
+          "name": "FANOUT_U1"
+        }
+      ],
+      "connections": 54,
+      "buses": [
+        {
+          "id": "unbused_fanout_connections",
+          "count": 54,
+          "preferredLayers": [
+            "top",
+            "bottom",
+            "inner2"
+          ]
+        }
+      ],
+      "layerCounts": {
+        "bottom": 18,
+        "inner2": 18,
+        "top": 18
+      },
+      "globalLayerCounts": {
+        "bottom": 18,
+        "inner2": 18,
+        "top": 18
+      },
+      "oldSpan": 16.02,
+      "occupiedSpan": 16.02,
+      "captureSolved": true,
+      "baselineSolved": true,
+      "baselineError": null,
+      "baselineMatchesCapturedOutput": true,
+      "globalLayersSolved": true,
+      "globalLayersError": null,
+      "successfulOutputUnchanged": true,
+      "recovered": false
+    },
+    {
+      "capture": "glider-spaced/winding-1.json.gz",
+      "regions": [
+        {
+          "id": "pcb_group_0",
+          "name": "FANOUT_U1"
+        }
+      ],
+      "connections": 54,
+      "buses": [
+        {
+          "id": "unbused_fanout_connections",
+          "count": 54,
+          "preferredLayers": [
+            "top",
+            "bottom",
+            "inner2"
+          ]
+        }
+      ],
+      "layerCounts": {
+        "bottom": 18,
+        "inner2": 18,
+        "top": 18
+      },
+      "globalLayerCounts": {
+        "bottom": 18,
+        "inner2": 18,
+        "top": 18
+      },
+      "oldSpan": 16.02,
+      "occupiedSpan": 16.02,
+      "captureSolved": true,
+      "baselineSolved": true,
+      "baselineError": null,
+      "baselineMatchesCapturedOutput": true,
+      "globalLayersSolved": true,
+      "globalLayersError": null,
+      "successfulOutputUnchanged": true,
+      "recovered": false
+    },
+    {
+      "capture": "glider-spaced/winding-2.json.gz",
+      "regions": [
+        {
+          "id": "pcb_group_0",
+          "name": "FANOUT_U1"
+        }
+      ],
+      "connections": 49,
+      "buses": [
+        {
+          "id": "unbused_fanout_connections",
+          "count": 49,
+          "preferredLayers": [
+            "top",
+            "bottom",
+            "inner2"
+          ]
+        }
+      ],
+      "layerCounts": {
+        "bottom": 16,
+        "inner2": 16,
+        "top": 17
+      },
+      "globalLayerCounts": {
+        "bottom": 16,
+        "inner2": 16,
+        "top": 17
+      },
+      "oldSpan": 15.13,
+      "occupiedSpan": 15.13,
+      "captureSolved": true,
+      "baselineSolved": true,
+      "baselineError": null,
+      "baselineMatchesCapturedOutput": true,
+      "globalLayersSolved": true,
+      "globalLayersError": null,
+      "successfulOutputUnchanged": true,
+      "recovered": false
+    },
+    {
+      "capture": "glider-spaced/winding-3.json.gz",
+      "regions": [
+        {
+          "id": "pcb_group_0",
+          "name": "FANOUT_U1"
+        }
+      ],
+      "connections": 54,
+      "buses": [
+        {
+          "id": "DDR_BUS_byte0",
+          "count": 8,
+          "preferredLayers": [
+            "top",
+            "inner2",
+            "bottom"
+          ]
+        },
+        {
+          "id": "DDR_BUS_byte1",
+          "count": 8,
+          "preferredLayers": [
+            "top",
+            "inner2",
+            "bottom"
+          ]
+        },
+        {
+          "id": "unbused_fanout_connections",
+          "count": 38,
+          "preferredLayers": [
+            "top",
+            "bottom",
+            "inner2"
+          ]
+        }
+      ],
+      "layerCounts": {
+        "bottom": 17,
+        "inner2": 18,
+        "top": 19
+      },
+      "globalLayerCounts": {
+        "bottom": 18,
+        "inner2": 18,
+        "top": 18
+      },
+      "oldSpan": 16.91,
+      "occupiedSpan": 16.91,
+      "captureSolved": false,
+      "baselineSolved": false,
+      "baselineError": "WindingBreakoutSolver: declared breakout edges need 16.91mm but expose only 16.80mm",
+      "baselineMatchesCapturedOutput": null,
+      "globalLayersSolved": true,
+      "globalLayersError": null,
+      "successfulOutputUnchanged": null,
+      "recovered": true
+    },
+    {
+      "capture": "glider-spaced/winding-4.json.gz",
+      "regions": [
+        {
+          "id": "pcb_group_1",
+          "name": "FANOUT_U12"
+        }
+      ],
+      "connections": 11,
+      "buses": [
+        {
+          "id": "unbused_fanout_connections",
+          "count": 11,
+          "preferredLayers": [
+            "top",
+            "bottom",
+            "inner2"
+          ]
+        }
+      ],
+      "layerCounts": {
+        "bottom": 4,
+        "inner2": 3,
+        "top": 4
+      },
+      "globalLayerCounts": {
+        "bottom": 4,
+        "inner2": 3,
+        "top": 4
+      },
+      "oldSpan": 3.5599999999999996,
+      "occupiedSpan": 3.5599999999999996,
+      "captureSolved": true,
+      "baselineSolved": true,
+      "baselineError": null,
+      "baselineMatchesCapturedOutput": true,
+      "globalLayersSolved": true,
+      "globalLayersError": null,
+      "successfulOutputUnchanged": true,
+      "recovered": false
+    },
+    {
+      "capture": "glider-spaced/winding-5.json.gz",
+      "regions": [
+        {
+          "id": "pcb_group_1",
+          "name": "FANOUT_U12"
+        }
+      ],
+      "connections": 24,
+      "buses": [
+        {
+          "id": "unbused_fanout_connections",
+          "count": 24,
+          "preferredLayers": [
+            "top",
+            "bottom",
+            "inner2"
+          ]
+        }
+      ],
+      "layerCounts": {
+        "bottom": 8,
+        "inner2": 8,
+        "top": 8
+      },
+      "globalLayerCounts": {
+        "bottom": 8,
+        "inner2": 8,
+        "top": 8
+      },
+      "oldSpan": 7.120000000000001,
+      "occupiedSpan": 7.120000000000001,
+      "captureSolved": true,
+      "baselineSolved": true,
+      "baselineError": null,
+      "baselineMatchesCapturedOutput": true,
+      "globalLayersSolved": true,
+      "globalLayersError": null,
+      "successfulOutputUnchanged": true,
+      "recovered": false
+    },
+    {
+      "capture": "glider-spaced/winding-6.json.gz",
+      "regions": [
+        {
+          "id": "pcb_group_1",
+          "name": "FANOUT_U12"
+        }
+      ],
+      "connections": 45,
+      "buses": [
+        {
+          "id": "DDR_BUS_byte0",
+          "count": 8,
+          "preferredLayers": [
+            "top",
+            "inner2",
+            "bottom"
+          ]
+        },
+        {
+          "id": "DDR_BUS_byte1",
+          "count": 8,
+          "preferredLayers": [
+            "top",
+            "inner2",
+            "bottom"
+          ]
+        },
+        {
+          "id": "unbused_fanout_connections",
+          "count": 29,
+          "preferredLayers": [
+            "top",
+            "bottom",
+            "inner2"
+          ]
+        }
+      ],
+      "layerCounts": {
+        "bottom": 14,
+        "inner2": 15,
+        "top": 16
+      },
+      "globalLayerCounts": {
+        "bottom": 15,
+        "inner2": 15,
+        "top": 15
+      },
+      "oldSpan": 14.24,
+      "occupiedSpan": 14.24,
+      "captureSolved": false,
+      "baselineSolved": false,
+      "baselineError": "WindingBreakoutSolver: declared breakout edges need 14.24mm but expose only 13.80mm",
+      "baselineMatchesCapturedOutput": null,
+      "globalLayersSolved": true,
+      "globalLayersError": null,
+      "successfulOutputUnchanged": null,
+      "recovered": true
+    },
+    {
+      "capture": "h616-original/winding-0.json.gz",
+      "regions": [
+        {
+          "id": "pcb_group_0",
+          "name": "FANOUT_U1"
+        }
+      ],
+      "connections": 23,
+      "buses": [
+        {
+          "id": "unbused_fanout_connections",
+          "count": 23,
+          "preferredLayers": [
+            "top",
+            "bottom",
+            "inner1",
+            "inner2"
+          ]
+        }
+      ],
+      "layerCounts": {
+        "bottom": 6,
+        "inner1": 6,
+        "inner2": 5,
+        "top": 6
+      },
+      "globalLayerCounts": {
+        "bottom": 6,
+        "inner1": 6,
+        "inner2": 5,
+        "top": 6
+      },
+      "oldSpan": 4.614999999999999,
+      "occupiedSpan": 4.614999999999999,
+      "captureSolved": true,
+      "baselineSolved": true,
+      "baselineError": null,
+      "baselineMatchesCapturedOutput": true,
+      "globalLayersSolved": true,
+      "globalLayersError": null,
+      "successfulOutputUnchanged": true,
+      "recovered": false
+    },
+    {
+      "capture": "h616-original/winding-1.json.gz",
+      "regions": [
+        {
+          "id": "pcb_group_0",
+          "name": "FANOUT_U1"
+        }
+      ],
+      "connections": 54,
+      "buses": [
+        {
+          "id": "DDR_BUS_byte0",
+          "count": 8,
+          "preferredLayers": [
+            "top",
+            "inner1",
+            "inner2",
+            "bottom"
+          ]
+        },
+        {
+          "id": "DDR_BUS_byte1",
+          "count": 8,
+          "preferredLayers": [
+            "top",
+            "inner1",
+            "inner2",
+            "bottom"
+          ]
+        },
+        {
+          "id": "unbused_fanout_connections",
+          "count": 38,
+          "preferredLayers": [
+            "top",
+            "bottom",
+            "inner1",
+            "inner2"
+          ]
+        }
+      ],
+      "layerCounts": {
+        "bottom": 14,
+        "inner1": 13,
+        "inner2": 13,
+        "top": 14
+      },
+      "globalLayerCounts": {
+        "bottom": 14,
+        "inner1": 13,
+        "inner2": 13,
+        "top": 14
+      },
+      "oldSpan": 10.295000000000002,
+      "occupiedSpan": 10.295000000000002,
+      "captureSolved": true,
+      "baselineSolved": true,
+      "baselineError": null,
+      "baselineMatchesCapturedOutput": true,
+      "globalLayersSolved": true,
+      "globalLayersError": null,
+      "successfulOutputUnchanged": true,
+      "recovered": false
+    },
+    {
+      "capture": "h616-original/winding-2.json.gz",
+      "regions": [
+        {
+          "id": "pcb_group_0",
+          "name": "FANOUT_U1"
+        }
+      ],
+      "connections": 17,
+      "buses": [
+        {
+          "id": "unbused_fanout_connections",
+          "count": 17,
+          "preferredLayers": [
+            "top",
+            "bottom",
+            "inner1",
+            "inner2"
+          ]
+        }
+      ],
+      "layerCounts": {
+        "bottom": 4,
+        "inner1": 4,
+        "inner2": 4,
+        "top": 5
+      },
+      "globalLayerCounts": {
+        "bottom": 4,
+        "inner1": 4,
+        "inner2": 4,
+        "top": 5
+      },
+      "oldSpan": 3.9049999999999994,
+      "occupiedSpan": 3.9049999999999994,
+      "captureSolved": true,
+      "baselineSolved": true,
+      "baselineError": null,
+      "baselineMatchesCapturedOutput": true,
+      "globalLayersSolved": true,
+      "globalLayersError": null,
+      "successfulOutputUnchanged": true,
+      "recovered": false
+    },
+    {
+      "capture": "h616-original/winding-3.json.gz",
+      "regions": [
+        {
+          "id": "pcb_group_0",
+          "name": "FANOUT_U1"
+        }
+      ],
+      "connections": 18,
+      "buses": [
+        {
+          "id": "unbused_fanout_connections",
+          "count": 18,
+          "preferredLayers": [
+            "top",
+            "bottom",
+            "inner1",
+            "inner2"
+          ]
+        }
+      ],
+      "layerCounts": {
+        "bottom": 5,
+        "inner1": 4,
+        "inner2": 4,
+        "top": 5
+      },
+      "globalLayerCounts": {
+        "bottom": 5,
+        "inner1": 4,
+        "inner2": 4,
+        "top": 5
+      },
+      "oldSpan": 3.9049999999999994,
+      "occupiedSpan": 3.9049999999999994,
+      "captureSolved": true,
+      "baselineSolved": true,
+      "baselineError": null,
+      "baselineMatchesCapturedOutput": true,
+      "globalLayersSolved": true,
+      "globalLayersError": null,
+      "successfulOutputUnchanged": true,
+      "recovered": false
+    },
+    {
+      "capture": "h616-original/winding-4.json.gz",
+      "regions": [
+        {
+          "id": "pcb_group_1",
+          "name": "FANOUT_U2"
+        }
+      ],
+      "connections": 56,
+      "buses": [
+        {
+          "id": "DDR_BUS_byte0",
+          "count": 8,
+          "preferredLayers": [
+            "top",
+            "inner1",
+            "inner2",
+            "bottom"
+          ]
+        },
+        {
+          "id": "DDR_BUS_byte1",
+          "count": 8,
+          "preferredLayers": [
+            "top",
+            "inner1",
+            "inner2",
+            "bottom"
+          ]
+        },
+        {
+          "id": "unbused_fanout_connections",
+          "count": 40,
+          "preferredLayers": [
+            "top",
+            "bottom",
+            "inner1",
+            "inner2"
+          ]
+        }
+      ],
+      "layerCounts": {
+        "bottom": 14,
+        "inner1": 14,
+        "inner2": 14,
+        "top": 14
+      },
+      "globalLayerCounts": {
+        "bottom": 14,
+        "inner1": 14,
+        "inner2": 14,
+        "top": 14
+      },
+      "oldSpan": 10.295000000000002,
+      "occupiedSpan": 10.295000000000002,
+      "captureSolved": true,
+      "baselineSolved": true,
+      "baselineError": null,
+      "baselineMatchesCapturedOutput": true,
+      "globalLayersSolved": true,
+      "globalLayersError": null,
+      "successfulOutputUnchanged": true,
+      "recovered": false
+    },
+    {
+      "capture": "h616-original/winding-5.json.gz",
+      "regions": [
+        {
+          "id": "pcb_group_1",
+          "name": "FANOUT_U2"
+        }
+      ],
+      "connections": 1,
+      "buses": [
+        {
+          "id": "unbused_fanout_connections",
+          "count": 1,
+          "preferredLayers": [
+            "top",
+            "bottom",
+            "inner1",
+            "inner2"
+          ]
+        }
+      ],
+      "layerCounts": {
+        "top": 1
+      },
+      "globalLayerCounts": {
+        "top": 1
+      },
+      "oldSpan": 0,
+      "occupiedSpan": 0,
+      "captureSolved": true,
+      "baselineSolved": true,
+      "baselineError": null,
+      "baselineMatchesCapturedOutput": true,
+      "globalLayersSolved": true,
+      "globalLayersError": null,
+      "successfulOutputUnchanged": true,
+      "recovered": false
+    },
+    {
+      "capture": "h616-spaced/winding-0.json.gz",
+      "regions": [
+        {
+          "id": "pcb_group_0",
+          "name": "FANOUT_U1"
+        }
+      ],
+      "connections": 26,
+      "buses": [
+        {
+          "id": "unbused_fanout_connections",
+          "count": 26,
+          "preferredLayers": [
+            "top",
+            "bottom",
+            "inner1",
+            "inner2"
+          ]
+        }
+      ],
+      "layerCounts": {
+        "bottom": 7,
+        "inner1": 6,
+        "inner2": 6,
+        "top": 7
+      },
+      "globalLayerCounts": {
+        "bottom": 7,
+        "inner1": 6,
+        "inner2": 6,
+        "top": 7
+      },
+      "oldSpan": 5.324999999999999,
+      "occupiedSpan": 5.324999999999999,
+      "captureSolved": true,
+      "baselineSolved": true,
+      "baselineError": null,
+      "baselineMatchesCapturedOutput": true,
+      "globalLayersSolved": true,
+      "globalLayersError": null,
+      "successfulOutputUnchanged": true,
+      "recovered": false
+    },
+    {
+      "capture": "h616-spaced/winding-1.json.gz",
+      "regions": [
+        {
+          "id": "pcb_group_0",
+          "name": "FANOUT_U1"
+        }
+      ],
+      "connections": 80,
+      "buses": [
+        {
+          "id": "DDR_BUS_byte0",
+          "count": 8,
+          "preferredLayers": [
+            "top",
+            "inner1",
+            "inner2",
+            "bottom"
+          ]
+        },
+        {
+          "id": "unbused_fanout_connections",
+          "count": 72,
+          "preferredLayers": [
+            "top",
+            "bottom",
+            "inner1",
+            "inner2"
+          ]
+        }
+      ],
+      "layerCounts": {
+        "bottom": 20,
+        "inner1": 20,
+        "inner2": 20,
+        "top": 20
+      },
+      "globalLayerCounts": {
+        "bottom": 20,
+        "inner1": 20,
+        "inner2": 20,
+        "top": 20
+      },
+      "oldSpan": 14.555,
+      "occupiedSpan": 14.555,
+      "captureSolved": true,
+      "baselineSolved": true,
+      "baselineError": null,
+      "baselineMatchesCapturedOutput": true,
+      "globalLayersSolved": true,
+      "globalLayersError": null,
+      "successfulOutputUnchanged": true,
+      "recovered": false
+    },
+    {
+      "capture": "h616-spaced/winding-2.json.gz",
+      "regions": [
+        {
+          "id": "pcb_group_0",
+          "name": "FANOUT_U1"
+        }
+      ],
+      "connections": 27,
+      "buses": [
+        {
+          "id": "DDR_BUS_byte1",
+          "count": 8,
+          "preferredLayers": [
+            "top",
+            "inner1",
+            "inner2",
+            "bottom"
+          ]
+        },
+        {
+          "id": "unbused_fanout_connections",
+          "count": 19,
+          "preferredLayers": [
+            "top",
+            "bottom",
+            "inner1",
+            "inner2"
+          ]
+        }
+      ],
+      "layerCounts": {
+        "bottom": 7,
+        "inner1": 7,
+        "inner2": 6,
+        "top": 7
+      },
+      "globalLayerCounts": {
+        "bottom": 7,
+        "inner1": 7,
+        "inner2": 6,
+        "top": 7
+      },
+      "oldSpan": 5.324999999999999,
+      "occupiedSpan": 5.324999999999999,
+      "captureSolved": true,
+      "baselineSolved": true,
+      "baselineError": null,
+      "baselineMatchesCapturedOutput": true,
+      "globalLayersSolved": true,
+      "globalLayersError": null,
+      "successfulOutputUnchanged": true,
+      "recovered": false
+    },
+    {
+      "capture": "h616-spaced/winding-3.json.gz",
+      "regions": [
+        {
+          "id": "pcb_group_0",
+          "name": "FANOUT_U1"
+        }
+      ],
+      "connections": 41,
+      "buses": [
+        {
+          "id": "unbused_fanout_connections",
+          "count": 41,
+          "preferredLayers": [
+            "top",
+            "bottom",
+            "inner1",
+            "inner2"
+          ]
+        }
+      ],
+      "layerCounts": {
+        "bottom": 10,
+        "inner1": 10,
+        "inner2": 10,
+        "top": 11
+      },
+      "globalLayerCounts": {
+        "bottom": 10,
+        "inner1": 10,
+        "inner2": 10,
+        "top": 11
+      },
+      "oldSpan": 8.165,
+      "occupiedSpan": 8.165,
+      "captureSolved": true,
+      "baselineSolved": true,
+      "baselineError": null,
+      "baselineMatchesCapturedOutput": true,
+      "globalLayersSolved": true,
+      "globalLayersError": null,
+      "successfulOutputUnchanged": true,
+      "recovered": false
+    },
+    {
+      "capture": "h616-spaced/winding-4.json.gz",
+      "regions": [
+        {
+          "id": "pcb_group_1",
+          "name": "FANOUT_U2"
+        }
+      ],
+      "connections": 72,
+      "buses": [
+        {
+          "id": "DDR_BUS_byte0",
+          "count": 8,
+          "preferredLayers": [
+            "top",
+            "inner1",
+            "inner2",
+            "bottom"
+          ]
+        },
+        {
+          "id": "DDR_BUS_byte1",
+          "count": 8,
+          "preferredLayers": [
+            "top",
+            "inner1",
+            "inner2",
+            "bottom"
+          ]
+        },
+        {
+          "id": "unbused_fanout_connections",
+          "count": 56,
+          "preferredLayers": [
+            "top",
+            "bottom",
+            "inner1",
+            "inner2"
+          ]
+        }
+      ],
+      "layerCounts": {
+        "bottom": 18,
+        "inner1": 18,
+        "inner2": 18,
+        "top": 18
+      },
+      "globalLayerCounts": {
+        "bottom": 18,
+        "inner1": 18,
+        "inner2": 18,
+        "top": 18
+      },
+      "oldSpan": 13.135000000000002,
+      "occupiedSpan": 13.135000000000002,
+      "captureSolved": true,
+      "baselineSolved": true,
+      "baselineError": null,
+      "baselineMatchesCapturedOutput": true,
+      "globalLayersSolved": true,
+      "globalLayersError": null,
+      "successfulOutputUnchanged": true,
+      "recovered": false
+    },
+    {
+      "capture": "h616-spaced/winding-5.json.gz",
+      "regions": [
+        {
+          "id": "pcb_group_1",
+          "name": "FANOUT_U2"
+        }
+      ],
+      "connections": 11,
+      "buses": [
+        {
+          "id": "unbused_fanout_connections",
+          "count": 11,
+          "preferredLayers": [
+            "top",
+            "bottom",
+            "inner1",
+            "inner2"
+          ]
+        }
+      ],
+      "layerCounts": {
+        "bottom": 3,
+        "inner1": 3,
+        "inner2": 2,
+        "top": 3
+      },
+      "globalLayerCounts": {
+        "bottom": 3,
+        "inner1": 3,
+        "inner2": 2,
+        "top": 3
+      },
+      "oldSpan": 2.485,
+      "occupiedSpan": 2.485,
+      "captureSolved": true,
+      "baselineSolved": true,
+      "baselineError": null,
+      "baselineMatchesCapturedOutput": true,
+      "globalLayersSolved": true,
+      "globalLayersError": null,
+      "successfulOutputUnchanged": true,
+      "recovered": false
+    },
+    {
+      "capture": "h616-spaced/winding-6.json.gz",
+      "regions": [
+        {
+          "id": "pcb_group_1",
+          "name": "FANOUT_U2"
+        }
+      ],
+      "connections": 6,
+      "buses": [
+        {
+          "id": "unbused_fanout_connections",
+          "count": 6,
+          "preferredLayers": [
+            "top",
+            "bottom",
+            "inner1",
+            "inner2"
+          ]
+        }
+      ],
+      "layerCounts": {
+        "bottom": 2,
+        "inner1": 1,
+        "inner2": 1,
+        "top": 2
+      },
+      "globalLayerCounts": {
+        "bottom": 2,
+        "inner1": 1,
+        "inner2": 1,
+        "top": 2
+      },
+      "oldSpan": 1.775,
+      "occupiedSpan": 1.775,
+      "captureSolved": true,
+      "baselineSolved": true,
+      "baselineError": null,
+      "baselineMatchesCapturedOutput": true,
+      "globalLayersSolved": true,
+      "globalLayersError": null,
+      "successfulOutputUnchanged": true,
+      "recovered": false
+    },
+    {
+      "capture": "h616-spaced/winding-7.json.gz",
+      "regions": [
+        {
+          "id": "pcb_group_1",
+          "name": "FANOUT_U2"
+        }
+      ],
+      "connections": 7,
+      "buses": [
+        {
+          "id": "unbused_fanout_connections",
+          "count": 7,
+          "preferredLayers": [
+            "top",
+            "bottom",
+            "inner1",
+            "inner2"
+          ]
+        }
+      ],
+      "layerCounts": {
+        "bottom": 2,
+        "inner1": 2,
+        "inner2": 1,
+        "top": 2
+      },
+      "globalLayerCounts": {
+        "bottom": 2,
+        "inner1": 2,
+        "inner2": 1,
+        "top": 2
+      },
+      "oldSpan": 1.775,
+      "occupiedSpan": 1.775,
+      "captureSolved": true,
+      "baselineSolved": true,
+      "baselineError": null,
+      "baselineMatchesCapturedOutput": true,
+      "globalLayersSolved": true,
+      "globalLayersError": null,
+      "successfulOutputUnchanged": true,
+      "recovered": false
+    },
+    {
+      "capture": "icepi-original/winding-0.json.gz",
+      "regions": [
+        {
+          "id": "pcb_group_0",
+          "name": "FANOUT_U22"
+        }
+      ],
+      "connections": 12,
+      "buses": [
+        {
+          "id": "unbused_fanout_connections",
+          "count": 12,
+          "preferredLayers": [
+            "top",
+            "bottom",
+            "inner1",
+            "inner2"
+          ]
+        }
+      ],
+      "layerCounts": {
+        "bottom": 3,
+        "inner1": 3,
+        "inner2": 3,
+        "top": 3
+      },
+      "globalLayerCounts": {
+        "bottom": 3,
+        "inner1": 3,
+        "inner2": 3,
+        "top": 3
+      },
+      "oldSpan": 2.9750000000000005,
+      "occupiedSpan": 2.9750000000000005,
+      "captureSolved": true,
+      "baselineSolved": true,
+      "baselineError": null,
+      "baselineMatchesCapturedOutput": true,
+      "globalLayersSolved": true,
+      "globalLayersError": null,
+      "successfulOutputUnchanged": true,
+      "recovered": false
+    },
+    {
+      "capture": "icepi-original/winding-1.json.gz",
+      "regions": [
+        {
+          "id": "pcb_group_1",
+          "name": "FANOUT_U1"
+        }
+      ],
+      "connections": 22,
+      "buses": [
+        {
+          "id": "unbused_fanout_connections",
+          "count": 22,
+          "preferredLayers": [
+            "top",
+            "bottom",
+            "inner1",
+            "inner2"
+          ]
+        }
+      ],
+      "layerCounts": {
+        "bottom": 6,
+        "inner1": 5,
+        "inner2": 5,
+        "top": 6
+      },
+      "globalLayerCounts": {
+        "bottom": 6,
+        "inner1": 5,
+        "inner2": 5,
+        "top": 6
+      },
+      "oldSpan": 5.525,
+      "occupiedSpan": 5.525,
+      "captureSolved": true,
+      "baselineSolved": true,
+      "baselineError": null,
+      "baselineMatchesCapturedOutput": true,
+      "globalLayersSolved": true,
+      "globalLayersError": null,
+      "successfulOutputUnchanged": true,
+      "recovered": false
+    },
+    {
+      "capture": "icepi-original/winding-2.json.gz",
+      "regions": [
+        {
+          "id": "pcb_group_1",
+          "name": "FANOUT_U1"
+        }
+      ],
+      "connections": 47,
+      "buses": [
+        {
+          "id": "unbused_fanout_connections",
+          "count": 47,
+          "preferredLayers": [
+            "top",
+            "bottom",
+            "inner1",
+            "inner2"
+          ]
+        }
+      ],
+      "layerCounts": {
+        "bottom": 12,
+        "inner1": 12,
+        "inner2": 11,
+        "top": 12
+      },
+      "globalLayerCounts": {
+        "bottom": 12,
+        "inner1": 12,
+        "inner2": 11,
+        "top": 12
+      },
+      "oldSpan": 10.625,
+      "occupiedSpan": 10.625,
+      "captureSolved": true,
+      "baselineSolved": true,
+      "baselineError": null,
+      "baselineMatchesCapturedOutput": true,
+      "globalLayersSolved": true,
+      "globalLayersError": null,
+      "successfulOutputUnchanged": true,
+      "recovered": false
+    },
+    {
+      "capture": "icepi-original/winding-3.json.gz",
+      "regions": [
+        {
+          "id": "pcb_group_1",
+          "name": "FANOUT_U1"
+        }
+      ],
+      "connections": 64,
+      "buses": [
+        {
+          "id": "DDR_BUS_byte0",
+          "count": 8,
+          "preferredLayers": [
+            "top",
+            "inner1",
+            "inner2",
+            "bottom"
+          ]
+        },
+        {
+          "id": "DDR_BUS_byte1",
+          "count": 8,
+          "preferredLayers": [
+            "top",
+            "inner1",
+            "inner2",
+            "bottom"
+          ]
+        },
+        {
+          "id": "unbused_fanout_connections",
+          "count": 48,
+          "preferredLayers": [
+            "top",
+            "bottom",
+            "inner1",
+            "inner2"
+          ]
+        }
+      ],
+      "layerCounts": {
+        "bottom": 16,
+        "inner1": 16,
+        "inner2": 16,
+        "top": 16
+      },
+      "globalLayerCounts": {
+        "bottom": 16,
+        "inner1": 16,
+        "inner2": 16,
+        "top": 16
+      },
+      "oldSpan": 14.025,
+      "occupiedSpan": 14.025,
+      "captureSolved": true,
+      "baselineSolved": true,
+      "baselineError": null,
+      "baselineMatchesCapturedOutput": true,
+      "globalLayersSolved": true,
+      "globalLayersError": null,
+      "successfulOutputUnchanged": true,
+      "recovered": false
+    },
+    {
+      "capture": "icepi-original/winding-4.json.gz",
+      "regions": [
+        {
+          "id": "pcb_group_1",
+          "name": "FANOUT_U1"
+        }
+      ],
+      "connections": 25,
+      "buses": [
+        {
+          "id": "unbused_fanout_connections",
+          "count": 25,
+          "preferredLayers": [
+            "top",
+            "bottom",
+            "inner1",
+            "inner2"
+          ]
+        }
+      ],
+      "layerCounts": {
+        "bottom": 6,
+        "inner1": 6,
+        "inner2": 6,
+        "top": 7
+      },
+      "globalLayerCounts": {
+        "bottom": 6,
+        "inner1": 6,
+        "inner2": 6,
+        "top": 7
+      },
+      "oldSpan": 6.375000000000001,
+      "occupiedSpan": 6.375000000000001,
+      "captureSolved": true,
+      "baselineSolved": true,
+      "baselineError": null,
+      "baselineMatchesCapturedOutput": true,
+      "globalLayersSolved": true,
+      "globalLayersError": null,
+      "successfulOutputUnchanged": true,
+      "recovered": false
+    },
+    {
+      "capture": "icepi-original/winding-5.json.gz",
+      "regions": [
+        {
+          "id": "pcb_group_2",
+          "name": "FANOUT_U2"
+        }
+      ],
+      "connections": 1,
+      "buses": [
+        {
+          "id": "unbused_fanout_connections",
+          "count": 1,
+          "preferredLayers": [
+            "top",
+            "bottom",
+            "inner1",
+            "inner2"
+          ]
+        }
+      ],
+      "layerCounts": {
+        "top": 1
+      },
+      "globalLayerCounts": {
+        "top": 1
+      },
+      "oldSpan": 0,
+      "occupiedSpan": 0,
+      "captureSolved": true,
+      "baselineSolved": true,
+      "baselineError": null,
+      "baselineMatchesCapturedOutput": true,
+      "globalLayersSolved": true,
+      "globalLayersError": null,
+      "successfulOutputUnchanged": true,
+      "recovered": false
+    },
+    {
+      "capture": "icepi-original/winding-6.json.gz",
+      "regions": [
+        {
+          "id": "pcb_group_2",
+          "name": "FANOUT_U2"
+        }
+      ],
+      "connections": 1,
+      "buses": [
+        {
+          "id": "unbused_fanout_connections",
+          "count": 1,
+          "preferredLayers": [
+            "top",
+            "bottom",
+            "inner1",
+            "inner2"
+          ]
+        }
+      ],
+      "layerCounts": {
+        "top": 1
+      },
+      "globalLayerCounts": {
+        "top": 1
+      },
+      "oldSpan": 0,
+      "occupiedSpan": 0,
+      "captureSolved": true,
+      "baselineSolved": true,
+      "baselineError": null,
+      "baselineMatchesCapturedOutput": true,
+      "globalLayersSolved": true,
+      "globalLayersError": null,
+      "successfulOutputUnchanged": true,
+      "recovered": false
+    },
+    {
+      "capture": "icepi-original/winding-7.json.gz",
+      "regions": [
+        {
+          "id": "pcb_group_2",
+          "name": "FANOUT_U2"
+        }
+      ],
+      "connections": 51,
+      "buses": [
+        {
+          "id": "DDR_BUS_byte0",
+          "count": 8,
+          "preferredLayers": [
+            "top",
+            "inner1",
+            "inner2",
+            "bottom"
+          ]
+        },
+        {
+          "id": "DDR_BUS_byte1",
+          "count": 8,
+          "preferredLayers": [
+            "top",
+            "inner1",
+            "inner2",
+            "bottom"
+          ]
+        },
+        {
+          "id": "unbused_fanout_connections",
+          "count": 35,
+          "preferredLayers": [
+            "top",
+            "bottom",
+            "inner1",
+            "inner2"
+          ]
+        }
+      ],
+      "layerCounts": {
+        "bottom": 13,
+        "inner1": 13,
+        "inner2": 12,
+        "top": 13
+      },
+      "globalLayerCounts": {
+        "bottom": 13,
+        "inner1": 13,
+        "inner2": 12,
+        "top": 13
+      },
+      "oldSpan": 11.475,
+      "occupiedSpan": 11.475,
+      "captureSolved": true,
+      "baselineSolved": true,
+      "baselineError": null,
+      "baselineMatchesCapturedOutput": true,
+      "globalLayersSolved": true,
+      "globalLayersError": null,
+      "successfulOutputUnchanged": true,
+      "recovered": false
+    },
+    {
+      "capture": "icepi-spaced/winding-0.json.gz",
+      "regions": [
+        {
+          "id": "pcb_group_0",
+          "name": "FANOUT_U1"
+        }
+      ],
+      "connections": 64,
+      "buses": [
+        {
+          "id": "unbused_fanout_connections",
+          "count": 64,
+          "preferredLayers": [
+            "top",
+            "bottom",
+            "inner1",
+            "inner2"
+          ]
+        }
+      ],
+      "layerCounts": {
+        "bottom": 16,
+        "inner1": 16,
+        "inner2": 16,
+        "top": 16
+      },
+      "globalLayerCounts": {
+        "bottom": 16,
+        "inner1": 16,
+        "inner2": 16,
+        "top": 16
+      },
+      "oldSpan": 14.025,
+      "occupiedSpan": 14.025,
+      "captureSolved": true,
+      "baselineSolved": true,
+      "baselineError": null,
+      "baselineMatchesCapturedOutput": true,
+      "globalLayersSolved": true,
+      "globalLayersError": null,
+      "successfulOutputUnchanged": true,
+      "recovered": false
+    },
+    {
+      "capture": "icepi-spaced/winding-1.json.gz",
+      "regions": [
+        {
+          "id": "pcb_group_0",
+          "name": "FANOUT_U1"
+        }
+      ],
+      "connections": 64,
+      "buses": [
+        {
+          "id": "unbused_fanout_connections",
+          "count": 64,
+          "preferredLayers": [
+            "top",
+            "bottom",
+            "inner1",
+            "inner2"
+          ]
+        }
+      ],
+      "layerCounts": {
+        "bottom": 16,
+        "inner1": 16,
+        "inner2": 16,
+        "top": 16
+      },
+      "globalLayerCounts": {
+        "bottom": 16,
+        "inner1": 16,
+        "inner2": 16,
+        "top": 16
+      },
+      "oldSpan": 14.025,
+      "occupiedSpan": 14.025,
+      "captureSolved": true,
+      "baselineSolved": true,
+      "baselineError": null,
+      "baselineMatchesCapturedOutput": true,
+      "globalLayersSolved": true,
+      "globalLayersError": null,
+      "successfulOutputUnchanged": true,
+      "recovered": false
+    },
+    {
+      "capture": "icepi-spaced/winding-10.json.gz",
+      "regions": [
+        {
+          "id": "pcb_group_2",
+          "name": "FANOUT_U22"
+        }
+      ],
+      "connections": 14,
+      "buses": [
+        {
+          "id": "unbused_fanout_connections",
+          "count": 14,
+          "preferredLayers": [
+            "top",
+            "bottom",
+            "inner1",
+            "inner2"
+          ]
+        }
+      ],
+      "layerCounts": {
+        "bottom": 4,
+        "inner1": 3,
+        "inner2": 3,
+        "top": 4
+      },
+      "globalLayerCounts": {
+        "bottom": 4,
+        "inner1": 3,
+        "inner2": 3,
+        "top": 4
+      },
+      "oldSpan": 3.8250000000000006,
+      "occupiedSpan": 3.8250000000000006,
+      "captureSolved": true,
+      "baselineSolved": true,
+      "baselineError": null,
+      "baselineMatchesCapturedOutput": true,
+      "globalLayersSolved": true,
+      "globalLayersError": null,
+      "successfulOutputUnchanged": true,
+      "recovered": false
+    },
+    {
+      "capture": "icepi-spaced/winding-2.json.gz",
+      "regions": [
+        {
+          "id": "pcb_group_0",
+          "name": "FANOUT_U1"
+        }
+      ],
+      "connections": 80,
+      "buses": [
+        {
+          "id": "DDR_BUS_byte0",
+          "count": 8,
+          "preferredLayers": [
+            "top",
+            "inner1",
+            "inner2",
+            "bottom"
+          ]
+        },
+        {
+          "id": "DDR_BUS_byte1",
+          "count": 8,
+          "preferredLayers": [
+            "top",
+            "inner1",
+            "inner2",
+            "bottom"
+          ]
+        },
+        {
+          "id": "unbused_fanout_connections",
+          "count": 64,
+          "preferredLayers": [
+            "top",
+            "bottom",
+            "inner1",
+            "inner2"
+          ]
+        }
+      ],
+      "layerCounts": {
+        "bottom": 20,
+        "inner1": 20,
+        "inner2": 20,
+        "top": 20
+      },
+      "globalLayerCounts": {
+        "bottom": 20,
+        "inner1": 20,
+        "inner2": 20,
+        "top": 20
+      },
+      "oldSpan": 17.425,
+      "occupiedSpan": 17.425,
+      "captureSolved": false,
+      "baselineSolved": false,
+      "baselineError": "WindingBreakoutSolver: declared breakout edges need 17.43mm but expose only 14.64mm",
+      "baselineMatchesCapturedOutput": null,
+      "globalLayersSolved": false,
+      "globalLayersError": "WindingBreakoutSolver: declared breakout edges need 17.43mm but expose only 14.64mm",
+      "successfulOutputUnchanged": null,
+      "recovered": false
+    },
+    {
+      "capture": "icepi-spaced/winding-3.json.gz",
+      "regions": [
+        {
+          "id": "pcb_group_1",
+          "name": "FANOUT_U2"
+        }
+      ],
+      "connections": 6,
+      "buses": [
+        {
+          "id": "unbused_fanout_connections",
+          "count": 6,
+          "preferredLayers": [
+            "top",
+            "bottom",
+            "inner1",
+            "inner2"
+          ]
+        }
+      ],
+      "layerCounts": {
+        "bottom": 2,
+        "inner1": 1,
+        "inner2": 1,
+        "top": 2
+      },
+      "globalLayerCounts": {
+        "bottom": 2,
+        "inner1": 1,
+        "inner2": 1,
+        "top": 2
+      },
+      "oldSpan": 2.1250000000000004,
+      "occupiedSpan": 2.1250000000000004,
+      "captureSolved": true,
+      "baselineSolved": true,
+      "baselineError": null,
+      "baselineMatchesCapturedOutput": true,
+      "globalLayersSolved": true,
+      "globalLayersError": null,
+      "successfulOutputUnchanged": true,
+      "recovered": false
+    },
+    {
+      "capture": "icepi-spaced/winding-4.json.gz",
+      "regions": [
+        {
+          "id": "pcb_group_1",
+          "name": "FANOUT_U2"
+        }
+      ],
+      "connections": 6,
+      "buses": [
+        {
+          "id": "unbused_fanout_connections",
+          "count": 6,
+          "preferredLayers": [
+            "top",
+            "bottom",
+            "inner1",
+            "inner2"
+          ]
+        }
+      ],
+      "layerCounts": {
+        "bottom": 2,
+        "inner1": 1,
+        "inner2": 1,
+        "top": 2
+      },
+      "globalLayerCounts": {
+        "bottom": 2,
+        "inner1": 1,
+        "inner2": 1,
+        "top": 2
+      },
+      "oldSpan": 2.1250000000000004,
+      "occupiedSpan": 2.1250000000000004,
+      "captureSolved": true,
+      "baselineSolved": true,
+      "baselineError": null,
+      "baselineMatchesCapturedOutput": true,
+      "globalLayersSolved": true,
+      "globalLayersError": null,
+      "successfulOutputUnchanged": true,
+      "recovered": false
+    },
+    {
+      "capture": "icepi-spaced/winding-5.json.gz",
+      "regions": [
+        {
+          "id": "pcb_group_1",
+          "name": "FANOUT_U2"
+        }
+      ],
+      "connections": 20,
+      "buses": [
+        {
+          "id": "unbused_fanout_connections",
+          "count": 20,
+          "preferredLayers": [
+            "top",
+            "bottom",
+            "inner1",
+            "inner2"
+          ]
+        }
+      ],
+      "layerCounts": {
+        "bottom": 5,
+        "inner1": 5,
+        "inner2": 5,
+        "top": 5
+      },
+      "globalLayerCounts": {
+        "bottom": 5,
+        "inner1": 5,
+        "inner2": 5,
+        "top": 5
+      },
+      "oldSpan": 4.675000000000001,
+      "occupiedSpan": 4.675000000000001,
+      "captureSolved": true,
+      "baselineSolved": true,
+      "baselineError": null,
+      "baselineMatchesCapturedOutput": true,
+      "globalLayersSolved": true,
+      "globalLayersError": null,
+      "successfulOutputUnchanged": true,
+      "recovered": false
+    },
+    {
+      "capture": "icepi-spaced/winding-6.json.gz",
+      "regions": [
+        {
+          "id": "pcb_group_1",
+          "name": "FANOUT_U2"
+        }
+      ],
+      "connections": 60,
+      "buses": [
+        {
+          "id": "DDR_BUS_byte0",
+          "count": 8,
+          "preferredLayers": [
+            "top",
+            "inner1",
+            "inner2",
+            "bottom"
+          ]
+        },
+        {
+          "id": "DDR_BUS_byte1",
+          "count": 8,
+          "preferredLayers": [
+            "top",
+            "inner1",
+            "inner2",
+            "bottom"
+          ]
+        },
+        {
+          "id": "unbused_fanout_connections",
+          "count": 44,
+          "preferredLayers": [
+            "top",
+            "bottom",
+            "inner1",
+            "inner2"
+          ]
+        }
+      ],
+      "layerCounts": {
+        "bottom": 15,
+        "inner1": 15,
+        "inner2": 15,
+        "top": 15
+      },
+      "globalLayerCounts": {
+        "bottom": 15,
+        "inner1": 15,
+        "inner2": 15,
+        "top": 15
+      },
+      "oldSpan": 13.175,
+      "occupiedSpan": 13.175,
+      "captureSolved": true,
+      "baselineSolved": true,
+      "baselineError": null,
+      "baselineMatchesCapturedOutput": true,
+      "globalLayersSolved": true,
+      "globalLayersError": null,
+      "successfulOutputUnchanged": true,
+      "recovered": false
+    },
+    {
+      "capture": "icepi-spaced/winding-7.json.gz",
+      "regions": [
+        {
+          "id": "pcb_group_2",
+          "name": "FANOUT_U22"
+        }
+      ],
+      "connections": 8,
+      "buses": [
+        {
+          "id": "unbused_fanout_connections",
+          "count": 8,
+          "preferredLayers": [
+            "top",
+            "bottom",
+            "inner1",
+            "inner2"
+          ]
+        }
+      ],
+      "layerCounts": {
+        "bottom": 2,
+        "inner1": 2,
+        "inner2": 2,
+        "top": 2
+      },
+      "globalLayerCounts": {
+        "bottom": 2,
+        "inner1": 2,
+        "inner2": 2,
+        "top": 2
+      },
+      "oldSpan": 2.1250000000000004,
+      "occupiedSpan": 2.1250000000000004,
+      "captureSolved": true,
+      "baselineSolved": true,
+      "baselineError": null,
+      "baselineMatchesCapturedOutput": true,
+      "globalLayersSolved": true,
+      "globalLayersError": null,
+      "successfulOutputUnchanged": true,
+      "recovered": false
+    },
+    {
+      "capture": "icepi-spaced/winding-8.json.gz",
+      "regions": [
+        {
+          "id": "pcb_group_2",
+          "name": "FANOUT_U22"
+        }
+      ],
+      "connections": 1,
+      "buses": [
+        {
+          "id": "unbused_fanout_connections",
+          "count": 1,
+          "preferredLayers": [
+            "top",
+            "bottom",
+            "inner1",
+            "inner2"
+          ]
+        }
+      ],
+      "layerCounts": {
+        "top": 1
+      },
+      "globalLayerCounts": {
+        "top": 1
+      },
+      "oldSpan": 0,
+      "occupiedSpan": 0,
+      "captureSolved": true,
+      "baselineSolved": true,
+      "baselineError": null,
+      "baselineMatchesCapturedOutput": true,
+      "globalLayersSolved": true,
+      "globalLayersError": null,
+      "successfulOutputUnchanged": true,
+      "recovered": false
+    },
+    {
+      "capture": "icepi-spaced/winding-9.json.gz",
+      "regions": [
+        {
+          "id": "pcb_group_2",
+          "name": "FANOUT_U22"
+        }
+      ],
+      "connections": 9,
+      "buses": [
+        {
+          "id": "unbused_fanout_connections",
+          "count": 9,
+          "preferredLayers": [
+            "top",
+            "bottom",
+            "inner1",
+            "inner2"
+          ]
+        }
+      ],
+      "layerCounts": {
+        "bottom": 2,
+        "inner1": 2,
+        "inner2": 2,
+        "top": 3
+      },
+      "globalLayerCounts": {
+        "bottom": 2,
+        "inner1": 2,
+        "inner2": 2,
+        "top": 3
+      },
+      "oldSpan": 2.9750000000000005,
+      "occupiedSpan": 2.9750000000000005,
+      "captureSolved": true,
+      "baselineSolved": true,
+      "baselineError": null,
+      "baselineMatchesCapturedOutput": true,
+      "globalLayersSolved": true,
+      "globalLayersError": null,
+      "successfulOutputUnchanged": true,
+      "recovered": false
+    },
+    {
+      "capture": "imx6-original/winding-0.json.gz",
+      "regions": [
+        {
+          "id": "pcb_group_0",
+          "name": "FANOUT_U10"
+        }
+      ],
+      "connections": 12,
+      "buses": [
+        {
+          "id": "unbused_fanout_connections",
+          "count": 12,
+          "preferredLayers": [
+            "top",
+            "bottom",
+            "inner1",
+            "inner2",
+            "inner3",
+            "inner4"
+          ]
+        }
+      ],
+      "layerCounts": {
+        "bottom": 2,
+        "inner1": 2,
+        "inner2": 2,
+        "inner3": 2,
+        "inner4": 2,
+        "top": 2
+      },
+      "globalLayerCounts": {
+        "bottom": 2,
+        "inner1": 2,
+        "inner2": 2,
+        "inner3": 2,
+        "inner4": 2,
+        "top": 2
+      },
+      "oldSpan": 3.066,
+      "occupiedSpan": 3.066,
+      "captureSolved": true,
+      "baselineSolved": true,
+      "baselineError": null,
+      "baselineMatchesCapturedOutput": true,
+      "globalLayersSolved": true,
+      "globalLayersError": null,
+      "successfulOutputUnchanged": true,
+      "recovered": false
+    },
+    {
+      "capture": "imx6-original/winding-1.json.gz",
+      "regions": [
+        {
+          "id": "pcb_group_1",
+          "name": "FANOUT_U7"
+        }
+      ],
+      "connections": 35,
+      "buses": [
+        {
+          "id": "unbused_fanout_connections",
+          "count": 35,
+          "preferredLayers": [
+            "top",
+            "bottom",
+            "inner1",
+            "inner2",
+            "inner3",
+            "inner4"
+          ]
+        }
+      ],
+      "layerCounts": {
+        "bottom": 6,
+        "inner1": 6,
+        "inner2": 6,
+        "inner3": 6,
+        "inner4": 5,
+        "top": 6
+      },
+      "globalLayerCounts": {
+        "bottom": 6,
+        "inner1": 6,
+        "inner2": 6,
+        "inner3": 6,
+        "inner4": 5,
+        "top": 6
+      },
+      "oldSpan": 6.569999999999999,
+      "occupiedSpan": 6.569999999999999,
+      "captureSolved": true,
+      "baselineSolved": true,
+      "baselineError": null,
+      "baselineMatchesCapturedOutput": true,
+      "globalLayersSolved": true,
+      "globalLayersError": null,
+      "successfulOutputUnchanged": true,
+      "recovered": false
+    },
+    {
+      "capture": "imx6-original/winding-2.json.gz",
+      "regions": [
+        {
+          "id": "pcb_group_1",
+          "name": "FANOUT_U7"
+        }
+      ],
+      "connections": 34,
+      "buses": [
+        {
+          "id": "unbused_fanout_connections",
+          "count": 34,
+          "preferredLayers": [
+            "top",
+            "bottom",
+            "inner1",
+            "inner2",
+            "inner3",
+            "inner4"
+          ]
+        }
+      ],
+      "layerCounts": {
+        "bottom": 6,
+        "inner1": 6,
+        "inner2": 6,
+        "inner3": 5,
+        "inner4": 5,
+        "top": 6
+      },
+      "globalLayerCounts": {
+        "bottom": 6,
+        "inner1": 6,
+        "inner2": 6,
+        "inner3": 5,
+        "inner4": 5,
+        "top": 6
+      },
+      "oldSpan": 6.569999999999999,
+      "occupiedSpan": 6.569999999999999,
+      "captureSolved": true,
+      "baselineSolved": true,
+      "baselineError": null,
+      "baselineMatchesCapturedOutput": true,
+      "globalLayersSolved": true,
+      "globalLayersError": null,
+      "successfulOutputUnchanged": true,
+      "recovered": false
+    },
+    {
+      "capture": "imx6-original/winding-3.json.gz",
+      "regions": [
+        {
+          "id": "pcb_group_1",
+          "name": "FANOUT_U7"
+        }
+      ],
+      "connections": 89,
+      "buses": [
+        {
+          "id": "DDR_BUS_byte0",
+          "count": 8,
+          "preferredLayers": [
+            "top",
+            "inner1",
+            "inner2",
+            "inner3",
+            "inner4",
+            "bottom"
+          ]
+        },
+        {
+          "id": "DDR_BUS_byte1",
+          "count": 8,
+          "preferredLayers": [
+            "top",
+            "inner1",
+            "inner2",
+            "inner3",
+            "inner4",
+            "bottom"
+          ]
+        },
+        {
+          "id": "unbused_fanout_connections",
+          "count": 73,
+          "preferredLayers": [
+            "top",
+            "bottom",
+            "inner1",
+            "inner2",
+            "inner3",
+            "inner4"
+          ]
+        }
+      ],
+      "layerCounts": {
+        "bottom": 14,
+        "inner1": 16,
+        "inner2": 14,
+        "inner3": 14,
+        "inner4": 14,
+        "top": 17
+      },
+      "globalLayerCounts": {
+        "bottom": 15,
+        "inner1": 15,
+        "inner2": 15,
+        "inner3": 15,
+        "inner4": 14,
+        "top": 15
+      },
+      "oldSpan": 16.206,
+      "occupiedSpan": 16.206,
+      "captureSolved": false,
+      "baselineSolved": false,
+      "baselineError": "WindingBreakoutSolver: declared breakout edges need 16.21mm but expose only 14.50mm",
+      "baselineMatchesCapturedOutput": null,
+      "globalLayersSolved": true,
+      "globalLayersError": null,
+      "successfulOutputUnchanged": null,
+      "recovered": true
+    },
+    {
+      "capture": "imx6-original/winding-4.json.gz",
+      "regions": [
+        {
+          "id": "pcb_group_2",
+          "name": "FANOUT_U9"
+        }
+      ],
+      "connections": 1,
+      "buses": [
+        {
+          "id": "unbused_fanout_connections",
+          "count": 1,
+          "preferredLayers": [
+            "top",
+            "bottom",
+            "inner1",
+            "inner2",
+            "inner3",
+            "inner4"
+          ]
+        }
+      ],
+      "layerCounts": {
+        "top": 1
+      },
+      "globalLayerCounts": {
+        "top": 1
+      },
+      "oldSpan": 0,
+      "occupiedSpan": 0,
+      "captureSolved": true,
+      "baselineSolved": true,
+      "baselineError": null,
+      "baselineMatchesCapturedOutput": true,
+      "globalLayersSolved": true,
+      "globalLayersError": null,
+      "successfulOutputUnchanged": true,
+      "recovered": false
+    },
+    {
+      "capture": "imx6-original/winding-5.json.gz",
+      "regions": [
+        {
+          "id": "pcb_group_2",
+          "name": "FANOUT_U9"
+        }
+      ],
+      "connections": 6,
+      "buses": [
+        {
+          "id": "unbused_fanout_connections",
+          "count": 6,
+          "preferredLayers": [
+            "top",
+            "bottom",
+            "inner1",
+            "inner2",
+            "inner3",
+            "inner4"
+          ]
+        }
+      ],
+      "layerCounts": {
+        "bottom": 1,
+        "inner1": 1,
+        "inner2": 1,
+        "inner3": 1,
+        "inner4": 1,
+        "top": 1
+      },
+      "globalLayerCounts": {
+        "bottom": 1,
+        "inner1": 1,
+        "inner2": 1,
+        "inner3": 1,
+        "inner4": 1,
+        "top": 1
+      },
+      "oldSpan": 2.19,
+      "occupiedSpan": 2.19,
+      "captureSolved": true,
+      "baselineSolved": true,
+      "baselineError": null,
+      "baselineMatchesCapturedOutput": true,
+      "globalLayersSolved": true,
+      "globalLayersError": null,
+      "successfulOutputUnchanged": true,
+      "recovered": false
+    },
+    {
+      "capture": "imx6-original/winding-6.json.gz",
+      "regions": [
+        {
+          "id": "pcb_group_2",
+          "name": "FANOUT_U9"
+        }
+      ],
+      "connections": 50,
+      "buses": [
+        {
+          "id": "DDR_BUS_byte0",
+          "count": 8,
+          "preferredLayers": [
+            "top",
+            "inner1",
+            "inner2",
+            "inner3",
+            "inner4",
+            "bottom"
+          ]
+        },
+        {
+          "id": "DDR_BUS_byte1",
+          "count": 8,
+          "preferredLayers": [
+            "top",
+            "inner1",
+            "inner2",
+            "inner3",
+            "inner4",
+            "bottom"
+          ]
+        },
+        {
+          "id": "unbused_fanout_connections",
+          "count": 34,
+          "preferredLayers": [
+            "top",
+            "bottom",
+            "inner1",
+            "inner2",
+            "inner3",
+            "inner4"
+          ]
+        }
+      ],
+      "layerCounts": {
+        "bottom": 8,
+        "inner1": 10,
+        "inner2": 8,
+        "inner3": 7,
+        "inner4": 7,
+        "top": 10
+      },
+      "globalLayerCounts": {
+        "bottom": 9,
+        "inner1": 8,
+        "inner2": 8,
+        "inner3": 8,
+        "inner4": 8,
+        "top": 9
+      },
+      "oldSpan": 10.074000000000002,
+      "occupiedSpan": 10.074000000000002,
+      "captureSolved": true,
+      "baselineSolved": true,
+      "baselineError": null,
+      "baselineMatchesCapturedOutput": true,
+      "globalLayersSolved": true,
+      "globalLayersError": null,
+      "successfulOutputUnchanged": false,
+      "recovered": false
+    },
+    {
+      "capture": "imx6-spaced/winding-0.json.gz",
+      "regions": [
+        {
+          "id": "pcb_group_0",
+          "name": "FANOUT_U10"
+        }
+      ],
+      "connections": 8,
+      "buses": [
+        {
+          "id": "unbused_fanout_connections",
+          "count": 8,
+          "preferredLayers": [
+            "top",
+            "bottom",
+            "inner1",
+            "inner2",
+            "inner3",
+            "inner4"
+          ]
+        }
+      ],
+      "layerCounts": {
+        "bottom": 2,
+        "inner1": 1,
+        "inner2": 1,
+        "inner3": 1,
+        "inner4": 1,
+        "top": 2
+      },
+      "globalLayerCounts": {
+        "bottom": 2,
+        "inner1": 1,
+        "inner2": 1,
+        "inner3": 1,
+        "inner4": 1,
+        "top": 2
+      },
+      "oldSpan": 3.066,
+      "occupiedSpan": 3.066,
+      "captureSolved": true,
+      "baselineSolved": true,
+      "baselineError": null,
+      "baselineMatchesCapturedOutput": true,
+      "globalLayersSolved": true,
+      "globalLayersError": null,
+      "successfulOutputUnchanged": true,
+      "recovered": false
+    },
+    {
+      "capture": "imx6-spaced/winding-1.json.gz",
+      "regions": [
+        {
+          "id": "pcb_group_0",
+          "name": "FANOUT_U10"
+        }
+      ],
+      "connections": 16,
+      "buses": [
+        {
+          "id": "unbused_fanout_connections",
+          "count": 16,
+          "preferredLayers": [
+            "top",
+            "bottom",
+            "inner1",
+            "inner2",
+            "inner3",
+            "inner4"
+          ]
+        }
+      ],
+      "layerCounts": {
+        "bottom": 3,
+        "inner1": 3,
+        "inner2": 3,
+        "inner3": 2,
+        "inner4": 2,
+        "top": 3
+      },
+      "globalLayerCounts": {
+        "bottom": 3,
+        "inner1": 3,
+        "inner2": 3,
+        "inner3": 2,
+        "inner4": 2,
+        "top": 3
+      },
+      "oldSpan": 3.942,
+      "occupiedSpan": 3.942,
+      "captureSolved": true,
+      "baselineSolved": true,
+      "baselineError": null,
+      "baselineMatchesCapturedOutput": true,
+      "globalLayersSolved": true,
+      "globalLayersError": null,
+      "successfulOutputUnchanged": true,
+      "recovered": false
+    },
+    {
+      "capture": "imx6-spaced/winding-2.json.gz",
+      "regions": [
+        {
+          "id": "pcb_group_0",
+          "name": "FANOUT_U10"
+        }
+      ],
+      "connections": 2,
+      "buses": [
+        {
+          "id": "unbused_fanout_connections",
+          "count": 2,
+          "preferredLayers": [
+            "top",
+            "bottom",
+            "inner1",
+            "inner2",
+            "inner3",
+            "inner4"
+          ]
+        }
+      ],
+      "layerCounts": {
+        "bottom": 1,
+        "top": 1
+      },
+      "globalLayerCounts": {
+        "bottom": 1,
+        "top": 1
+      },
+      "oldSpan": 0.438,
+      "occupiedSpan": 0.438,
+      "captureSolved": true,
+      "baselineSolved": true,
+      "baselineError": null,
+      "baselineMatchesCapturedOutput": true,
+      "globalLayersSolved": true,
+      "globalLayersError": null,
+      "successfulOutputUnchanged": true,
+      "recovered": false
+    },
+    {
+      "capture": "imx6-spaced/winding-3.json.gz",
+      "regions": [
+        {
+          "id": "pcb_group_0",
+          "name": "FANOUT_U10"
+        }
+      ],
+      "connections": 6,
+      "buses": [
+        {
+          "id": "unbused_fanout_connections",
+          "count": 6,
+          "preferredLayers": [
+            "top",
+            "bottom",
+            "inner1",
+            "inner2",
+            "inner3",
+            "inner4"
+          ]
+        }
+      ],
+      "layerCounts": {
+        "bottom": 1,
+        "inner1": 1,
+        "inner2": 1,
+        "inner3": 1,
+        "inner4": 1,
+        "top": 1
+      },
+      "globalLayerCounts": {
+        "bottom": 1,
+        "inner1": 1,
+        "inner2": 1,
+        "inner3": 1,
+        "inner4": 1,
+        "top": 1
+      },
+      "oldSpan": 2.19,
+      "occupiedSpan": 2.19,
+      "captureSolved": true,
+      "baselineSolved": true,
+      "baselineError": null,
+      "baselineMatchesCapturedOutput": true,
+      "globalLayersSolved": true,
+      "globalLayersError": null,
+      "successfulOutputUnchanged": true,
+      "recovered": false
+    },
+    {
+      "capture": "imx6-spaced/winding-4.json.gz",
+      "regions": [
+        {
+          "id": "pcb_group_1",
+          "name": "FANOUT_U7"
+        }
+      ],
+      "connections": 59,
+      "buses": [
+        {
+          "id": "unbused_fanout_connections",
+          "count": 59,
+          "preferredLayers": [
+            "top",
+            "bottom",
+            "inner1",
+            "inner2",
+            "inner3",
+            "inner4"
+          ]
+        }
+      ],
+      "layerCounts": {
+        "bottom": 10,
+        "inner1": 10,
+        "inner2": 10,
+        "inner3": 10,
+        "inner4": 9,
+        "top": 10
+      },
+      "globalLayerCounts": {
+        "bottom": 10,
+        "inner1": 10,
+        "inner2": 10,
+        "inner3": 10,
+        "inner4": 9,
+        "top": 10
+      },
+      "oldSpan": 10.074000000000002,
+      "occupiedSpan": 10.074000000000002,
+      "captureSolved": true,
+      "baselineSolved": true,
+      "baselineError": null,
+      "baselineMatchesCapturedOutput": true,
+      "globalLayersSolved": true,
+      "globalLayersError": null,
+      "successfulOutputUnchanged": true,
+      "recovered": false
+    },
+    {
+      "capture": "imx6-spaced/winding-5.json.gz",
+      "regions": [
+        {
+          "id": "pcb_group_1",
+          "name": "FANOUT_U7"
+        }
+      ],
+      "connections": 60,
+      "buses": [
+        {
+          "id": "unbused_fanout_connections",
+          "count": 60,
+          "preferredLayers": [
+            "top",
+            "bottom",
+            "inner1",
+            "inner2",
+            "inner3",
+            "inner4"
+          ]
+        }
+      ],
+      "layerCounts": {
+        "bottom": 10,
+        "inner1": 10,
+        "inner2": 10,
+        "inner3": 10,
+        "inner4": 10,
+        "top": 10
+      },
+      "globalLayerCounts": {
+        "bottom": 10,
+        "inner1": 10,
+        "inner2": 10,
+        "inner3": 10,
+        "inner4": 10,
+        "top": 10
+      },
+      "oldSpan": 10.074000000000002,
+      "occupiedSpan": 10.074000000000002,
+      "captureSolved": true,
+      "baselineSolved": true,
+      "baselineError": null,
+      "baselineMatchesCapturedOutput": true,
+      "globalLayersSolved": true,
+      "globalLayersError": null,
+      "successfulOutputUnchanged": true,
+      "recovered": false
+    },
+    {
+      "capture": "imx6-spaced/winding-6.json.gz",
+      "regions": [
+        {
+          "id": "pcb_group_1",
+          "name": "FANOUT_U7"
+        }
+      ],
+      "connections": 90,
+      "buses": [
+        {
+          "id": "DDR_BUS_byte0",
+          "count": 8,
+          "preferredLayers": [
+            "top",
+            "inner1",
+            "inner2",
+            "inner3",
+            "inner4",
+            "bottom"
+          ]
+        },
+        {
+          "id": "DDR_BUS_byte1",
+          "count": 8,
+          "preferredLayers": [
+            "top",
+            "inner1",
+            "inner2",
+            "inner3",
+            "inner4",
+            "bottom"
+          ]
+        },
+        {
+          "id": "unbused_fanout_connections",
+          "count": 74,
+          "preferredLayers": [
+            "top",
+            "bottom",
+            "inner1",
+            "inner2",
+            "inner3",
+            "inner4"
+          ]
+        }
+      ],
+      "layerCounts": {
+        "bottom": 15,
+        "inner1": 16,
+        "inner2": 14,
+        "inner3": 14,
+        "inner4": 14,
+        "top": 17
+      },
+      "globalLayerCounts": {
+        "bottom": 15,
+        "inner1": 15,
+        "inner2": 15,
+        "inner3": 15,
+        "inner4": 15,
+        "top": 15
+      },
+      "oldSpan": 16.206,
+      "occupiedSpan": 16.206,
+      "captureSolved": false,
+      "baselineSolved": false,
+      "baselineError": "WindingBreakoutSolver: declared breakout edges need 16.21mm but expose only 14.50mm",
+      "baselineMatchesCapturedOutput": null,
+      "globalLayersSolved": true,
+      "globalLayersError": null,
+      "successfulOutputUnchanged": null,
+      "recovered": true
+    },
+    {
+      "capture": "imx6-spaced/winding-7.json.gz",
+      "regions": [
+        {
+          "id": "pcb_group_2",
+          "name": "FANOUT_U9"
+        }
+      ],
+      "connections": 1,
+      "buses": [
+        {
+          "id": "unbused_fanout_connections",
+          "count": 1,
+          "preferredLayers": [
+            "top",
+            "bottom",
+            "inner1",
+            "inner2",
+            "inner3",
+            "inner4"
+          ]
+        }
+      ],
+      "layerCounts": {
+        "top": 1
+      },
+      "globalLayerCounts": {
+        "top": 1
+      },
+      "oldSpan": 0,
+      "occupiedSpan": 0,
+      "captureSolved": true,
+      "baselineSolved": true,
+      "baselineError": null,
+      "baselineMatchesCapturedOutput": true,
+      "globalLayersSolved": true,
+      "globalLayersError": null,
+      "successfulOutputUnchanged": true,
+      "recovered": false
+    },
+    {
+      "capture": "imx6-spaced/winding-8.json.gz",
+      "regions": [
+        {
+          "id": "pcb_group_2",
+          "name": "FANOUT_U9"
+        }
+      ],
+      "connections": 24,
+      "buses": [
+        {
+          "id": "unbused_fanout_connections",
+          "count": 24,
+          "preferredLayers": [
+            "top",
+            "bottom",
+            "inner1",
+            "inner2",
+            "inner3",
+            "inner4"
+          ]
+        }
+      ],
+      "layerCounts": {
+        "bottom": 4,
+        "inner1": 4,
+        "inner2": 4,
+        "inner3": 4,
+        "inner4": 4,
+        "top": 4
+      },
+      "globalLayerCounts": {
+        "bottom": 4,
+        "inner1": 4,
+        "inner2": 4,
+        "inner3": 4,
+        "inner4": 4,
+        "top": 4
+      },
+      "oldSpan": 4.818,
+      "occupiedSpan": 4.818,
+      "captureSolved": true,
+      "baselineSolved": true,
+      "baselineError": null,
+      "baselineMatchesCapturedOutput": true,
+      "globalLayersSolved": true,
+      "globalLayersError": null,
+      "successfulOutputUnchanged": true,
+      "recovered": false
+    },
+    {
+      "capture": "imx6-spaced/winding-9.json.gz",
+      "regions": [
+        {
+          "id": "pcb_group_2",
+          "name": "FANOUT_U9"
+        }
+      ],
+      "connections": 71,
+      "buses": [
+        {
+          "id": "DDR_BUS_byte0",
+          "count": 8,
+          "preferredLayers": [
+            "top",
+            "inner1",
+            "inner2",
+            "inner3",
+            "inner4",
+            "bottom"
+          ]
+        },
+        {
+          "id": "DDR_BUS_byte1",
+          "count": 8,
+          "preferredLayers": [
+            "top",
+            "inner1",
+            "inner2",
+            "inner3",
+            "inner4",
+            "bottom"
+          ]
+        },
+        {
+          "id": "unbused_fanout_connections",
+          "count": 55,
+          "preferredLayers": [
+            "top",
+            "bottom",
+            "inner1",
+            "inner2",
+            "inner3",
+            "inner4"
+          ]
+        }
+      ],
+      "layerCounts": {
+        "bottom": 11,
+        "inner1": 13,
+        "inner2": 11,
+        "inner3": 11,
+        "inner4": 11,
+        "top": 14
+      },
+      "globalLayerCounts": {
+        "bottom": 12,
+        "inner1": 12,
+        "inner2": 12,
+        "inner3": 12,
+        "inner4": 11,
+        "top": 12
+      },
+      "oldSpan": 13.578000000000001,
+      "occupiedSpan": 13.578000000000001,
+      "captureSolved": true,
+      "baselineSolved": true,
+      "baselineError": null,
+      "baselineMatchesCapturedOutput": true,
+      "globalLayersSolved": true,
+      "globalLayersError": null,
+      "successfulOutputUnchanged": false,
+      "recovered": false
+    }
+  ]
+}

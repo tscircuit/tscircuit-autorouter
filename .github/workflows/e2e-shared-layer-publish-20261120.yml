@@ -1,0 +1,61 @@
+name: Publish shared-layer full-circuit comparison
+on:
+  push:
+    branches: [analysis/e2e-shared-layer-publish-20261120]
+permissions:
+  contents: write
+  actions: read
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Wait for matched routing comparison
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh run watch 44753323303 --interval 30 --exit-status
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: 44753323303
+          pattern: e2e-shared-layer-pair-*
+          path: captures
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/core
+          ref: 351e73d665fad37577c47fcbff2e4c29eb377467
+          path: core
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - run: cd core && bun install --ignore-scripts
+      - name: Audit and publish measured results and native PCB SVGs
+        run: |
+          python3 experiments/e2e-samples-20261120/publish-shared-layers.py
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add experiments/e2e-samples-20261120/shared-layer-results
+          git commit -m 'Record matched full-circuit results for shared layer allocation'
+          git push origin HEAD:refs/heads/analysis/e2e-shared-layer-results-20261120
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: shared-layer-measured-results
+          path: experiments/e2e-samples-20261120/shared-layer-results
+      - name: Export compact measured summary
+        run: |
+          python3 - <<'PYEXPORT'
+          from pathlib import Path
+          import base64,gzip,json
+          p=Path('experiments/e2e-samples-20261120/shared-layer-results/summary.json')
+          rows=json.loads(p.read_text())
+          for row in rows:
+              for variant in ['before','after']:
+                  for entry in row[variant]['diagnostics']:entry.pop('routedConnections',None)
+                  for field in ['connected','disconnected']:row[variant]['assessment'].pop(field,None)
+          encoded=base64.b64encode(gzip.compress(json.dumps({'rows':rows,'statistics':json.loads(p.with_name('statistics.json').read_text())}).encode(),mtime=0)).decode()
+          print('SHARED_LAYER_FINAL_BEGIN')
+          for offset in range(0,len(encoded),8000):print(encoded[offset:offset+8000])
+          print('SHARED_LAYER_FINAL_END')
+          PYEXPORT

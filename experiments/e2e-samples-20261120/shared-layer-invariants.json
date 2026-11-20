@@ -1,0 +1,414 @@
+{
+  "summary": {
+    "solvedInputs": 81,
+    "checkedPoints": 2583,
+    "invalidInputs": 0
+  },
+  "rows": [
+    {
+      "capture": "h616-spaced/winding-4.json.gz",
+      "points": 72,
+      "violations": []
+    },
+    {
+      "capture": "h616-spaced/winding-0.json.gz",
+      "points": 26,
+      "violations": []
+    },
+    {
+      "capture": "h616-spaced/winding-3.json.gz",
+      "points": 41,
+      "violations": []
+    },
+    {
+      "capture": "h616-spaced/winding-1.json.gz",
+      "points": 80,
+      "violations": []
+    },
+    {
+      "capture": "h616-spaced/winding-5.json.gz",
+      "points": 11,
+      "violations": []
+    },
+    {
+      "capture": "h616-spaced/winding-2.json.gz",
+      "points": 27,
+      "violations": []
+    },
+    {
+      "capture": "h616-spaced/winding-6.json.gz",
+      "points": 6,
+      "violations": []
+    },
+    {
+      "capture": "h616-spaced/winding-7.json.gz",
+      "points": 7,
+      "violations": []
+    },
+    {
+      "capture": "icepi-spaced/winding-4.json.gz",
+      "points": 6,
+      "violations": []
+    },
+    {
+      "capture": "icepi-spaced/winding-0.json.gz",
+      "points": 64,
+      "violations": []
+    },
+    {
+      "capture": "icepi-spaced/winding-3.json.gz",
+      "points": 6,
+      "violations": []
+    },
+    {
+      "capture": "icepi-spaced/winding-1.json.gz",
+      "points": 64,
+      "violations": []
+    },
+    {
+      "capture": "icepi-spaced/winding-5.json.gz",
+      "points": 20,
+      "violations": []
+    },
+    {
+      "capture": "icepi-spaced/winding-6.json.gz",
+      "points": 60,
+      "violations": []
+    },
+    {
+      "capture": "icepi-spaced/winding-10.json.gz",
+      "points": 14,
+      "violations": []
+    },
+    {
+      "capture": "icepi-spaced/winding-9.json.gz",
+      "points": 9,
+      "violations": []
+    },
+    {
+      "capture": "icepi-spaced/winding-7.json.gz",
+      "points": 8,
+      "violations": []
+    },
+    {
+      "capture": "icepi-spaced/winding-8.json.gz",
+      "points": 1,
+      "violations": []
+    },
+    {
+      "capture": "icepi-original/winding-4.json.gz",
+      "points": 25,
+      "violations": []
+    },
+    {
+      "capture": "icepi-original/winding-0.json.gz",
+      "points": 12,
+      "violations": []
+    },
+    {
+      "capture": "icepi-original/winding-3.json.gz",
+      "points": 64,
+      "violations": []
+    },
+    {
+      "capture": "icepi-original/winding-1.json.gz",
+      "points": 22,
+      "violations": []
+    },
+    {
+      "capture": "icepi-original/winding-5.json.gz",
+      "points": 1,
+      "violations": []
+    },
+    {
+      "capture": "icepi-original/winding-2.json.gz",
+      "points": 47,
+      "violations": []
+    },
+    {
+      "capture": "icepi-original/winding-6.json.gz",
+      "points": 1,
+      "violations": []
+    },
+    {
+      "capture": "icepi-original/winding-7.json.gz",
+      "points": 51,
+      "violations": []
+    },
+    {
+      "capture": "butterstick-original/winding-4.json.gz",
+      "points": 50,
+      "violations": []
+    },
+    {
+      "capture": "butterstick-original/winding-0.json.gz",
+      "points": 16,
+      "violations": []
+    },
+    {
+      "capture": "butterstick-original/winding-3.json.gz",
+      "points": 99,
+      "violations": []
+    },
+    {
+      "capture": "butterstick-original/winding-1.json.gz",
+      "points": 1,
+      "violations": []
+    },
+    {
+      "capture": "butterstick-original/winding-5.json.gz",
+      "points": 40,
+      "violations": []
+    },
+    {
+      "capture": "butterstick-original/winding-2.json.gz",
+      "points": 36,
+      "violations": []
+    },
+    {
+      "capture": "butterstick-original/winding-6.json.gz",
+      "points": 33,
+      "violations": []
+    },
+    {
+      "capture": "butterstick-original/winding-9.json.gz",
+      "points": 2,
+      "violations": []
+    },
+    {
+      "capture": "butterstick-original/winding-7.json.gz",
+      "points": 15,
+      "violations": []
+    },
+    {
+      "capture": "butterstick-original/winding-8.json.gz",
+      "points": 36,
+      "violations": []
+    },
+    {
+      "capture": "imx6-original/winding-4.json.gz",
+      "points": 1,
+      "violations": []
+    },
+    {
+      "capture": "imx6-original/winding-0.json.gz",
+      "points": 12,
+      "violations": []
+    },
+    {
+      "capture": "imx6-original/winding-3.json.gz",
+      "points": 89,
+      "violations": []
+    },
+    {
+      "capture": "imx6-original/winding-1.json.gz",
+      "points": 35,
+      "violations": []
+    },
+    {
+      "capture": "imx6-original/winding-5.json.gz",
+      "points": 6,
+      "violations": []
+    },
+    {
+      "capture": "imx6-original/winding-2.json.gz",
+      "points": 34,
+      "violations": []
+    },
+    {
+      "capture": "imx6-original/winding-6.json.gz",
+      "points": 50,
+      "violations": []
+    },
+    {
+      "capture": "glider-original/winding-4.json.gz",
+      "points": 32,
+      "violations": []
+    },
+    {
+      "capture": "glider-original/winding-0.json.gz",
+      "points": 2,
+      "violations": []
+    },
+    {
+      "capture": "glider-original/winding-3.json.gz",
+      "points": 53,
+      "violations": []
+    },
+    {
+      "capture": "glider-original/winding-1.json.gz",
+      "points": 45,
+      "violations": []
+    },
+    {
+      "capture": "glider-original/winding-5.json.gz",
+      "points": 11,
+      "violations": []
+    },
+    {
+      "capture": "glider-original/winding-2.json.gz",
+      "points": 5,
+      "violations": []
+    },
+    {
+      "capture": "glider-original/winding-6.json.gz",
+      "points": 51,
+      "violations": []
+    },
+    {
+      "capture": "butterstick-spaced/winding-4.json.gz",
+      "points": 18,
+      "violations": []
+    },
+    {
+      "capture": "butterstick-spaced/winding-0.json.gz",
+      "points": 1,
+      "violations": []
+    },
+    {
+      "capture": "butterstick-spaced/winding-3.json.gz",
+      "points": 53,
+      "violations": []
+    },
+    {
+      "capture": "butterstick-spaced/winding-1.json.gz",
+      "points": 20,
+      "violations": []
+    },
+    {
+      "capture": "butterstick-spaced/winding-5.json.gz",
+      "points": 54,
+      "violations": []
+    },
+    {
+      "capture": "butterstick-spaced/winding-2.json.gz",
+      "points": 17,
+      "violations": []
+    },
+    {
+      "capture": "butterstick-spaced/winding-6.json.gz",
+      "points": 19,
+      "violations": []
+    },
+    {
+      "capture": "butterstick-spaced/winding-7.json.gz",
+      "points": 105,
+      "violations": []
+    },
+    {
+      "capture": "h616-original/winding-4.json.gz",
+      "points": 56,
+      "violations": []
+    },
+    {
+      "capture": "h616-original/winding-0.json.gz",
+      "points": 23,
+      "violations": []
+    },
+    {
+      "capture": "h616-original/winding-3.json.gz",
+      "points": 18,
+      "violations": []
+    },
+    {
+      "capture": "h616-original/winding-1.json.gz",
+      "points": 54,
+      "violations": []
+    },
+    {
+      "capture": "h616-original/winding-5.json.gz",
+      "points": 1,
+      "violations": []
+    },
+    {
+      "capture": "h616-original/winding-2.json.gz",
+      "points": 17,
+      "violations": []
+    },
+    {
+      "capture": "imx6-spaced/winding-4.json.gz",
+      "points": 59,
+      "violations": []
+    },
+    {
+      "capture": "imx6-spaced/winding-0.json.gz",
+      "points": 8,
+      "violations": []
+    },
+    {
+      "capture": "imx6-spaced/winding-3.json.gz",
+      "points": 6,
+      "violations": []
+    },
+    {
+      "capture": "imx6-spaced/winding-1.json.gz",
+      "points": 16,
+      "violations": []
+    },
+    {
+      "capture": "imx6-spaced/winding-5.json.gz",
+      "points": 60,
+      "violations": []
+    },
+    {
+      "capture": "imx6-spaced/winding-2.json.gz",
+      "points": 2,
+      "violations": []
+    },
+    {
+      "capture": "imx6-spaced/winding-6.json.gz",
+      "points": 90,
+      "violations": []
+    },
+    {
+      "capture": "imx6-spaced/winding-9.json.gz",
+      "points": 71,
+      "violations": []
+    },
+    {
+      "capture": "imx6-spaced/winding-7.json.gz",
+      "points": 1,
+      "violations": []
+    },
+    {
+      "capture": "imx6-spaced/winding-8.json.gz",
+      "points": 24,
+      "violations": []
+    },
+    {
+      "capture": "glider-spaced/winding-4.json.gz",
+      "points": 11,
+      "violations": []
+    },
+    {
+      "capture": "glider-spaced/winding-0.json.gz",
+      "points": 54,
+      "violations": []
+    },
+    {
+      "capture": "glider-spaced/winding-3.json.gz",
+      "points": 54,
+      "violations": []
+    },
+    {
+      "capture": "glider-spaced/winding-1.json.gz",
+      "points": 54,
+      "violations": []
+    },
+    {
+      "capture": "glider-spaced/winding-5.json.gz",
+      "points": 24,
+      "violations": []
+    },
+    {
+      "capture": "glider-spaced/winding-2.json.gz",
+      "points": 49,
+      "violations": []
+    },
+    {
+      "capture": "glider-spaced/winding-6.json.gz",
+      "points": 45,
+      "violations": []
+    }
+  ]
+}
