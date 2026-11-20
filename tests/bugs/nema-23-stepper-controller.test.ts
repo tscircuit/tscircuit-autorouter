@@ -86,6 +86,8 @@ test("Pipeline 9 routes the NEMA 23 stepper controller", async (): Promise<void>
   expect(viaCountErrors.length).toBeGreaterThan(0)
   const otherErrors =
     errors.length - lengthErrors.length - viaCountErrors.length
+  expect(otherErrors).toBe(0)
+
   const errorSummary = [
     `${lengthErrors.length} trace length`,
     `${viaCountErrors.length} via count`,
