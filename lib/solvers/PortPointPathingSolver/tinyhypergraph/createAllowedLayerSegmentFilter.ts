@@ -20,7 +20,7 @@ export function createAllowedLayerSegmentFilter(
     },
   )
   if (!restrictions.some((layers) => layers !== undefined)) return
-  return (routeId, _regionId, fromPortId, toPortId) => {
+  return ({ routeId, fromPortId, toPortId }) => {
     const layers = restrictions[routeId]
     // Via barrels may cross excluded layers; their entry and exit must be allowed.
     return (
