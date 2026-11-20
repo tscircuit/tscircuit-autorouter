@@ -120,7 +120,6 @@ export class NetToPointPairsSolver2_OffBoardConnection extends NetToPointPairsSo
   protected override emitConnection(
     connection: SimpleRouteConnection,
     pathEdge?: ReturnType<NetToPointPairsSolver["getPathEdges"]>[number],
-    sharedRoutingTraceWidth?: number,
   ): void {
     // Explicit paths select physical pads, not their off-board equivalents.
     super.emitConnection(
@@ -134,7 +133,6 @@ export class NetToPointPairsSolver2_OffBoardConnection extends NetToPointPairsSo
             ),
           },
       pathEdge,
-      sharedRoutingTraceWidth,
     )
   }
 }

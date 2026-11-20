@@ -863,8 +863,6 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         colorMap: cms.colorMap,
         minTraceWidth: cms.minTraceWidth,
         connection: cms.srjWithPointPairs!.connections,
-        sharedRoutingTraceWidths:
-          cms.netToPointPairsSolver?.sharedRoutingTraceWidths,
         obstacleMargin: cms.srj.minTraceToPadEdgeClearance ?? 0.15,
         minTraceToHoleEdgeClearance: cms.srj.minTraceToHoleEdgeClearance,
         layerCount: cms.srj.layerCount,
@@ -1022,8 +1020,6 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             },
             isValid: (routes: HighDensityRoute[]): boolean =>
               evaluateCleanupDrc(convert(routes)).errors.length === 0,
-            validateTraceWidthRefinement:
-              cms.netToPointPairsSolver!.sharedRoutingTraceWidths.size > 0,
             refineTraceWidths: (
               routes: HighDensityRoute[],
             ): HighDensityRoute[] =>
@@ -1693,6 +1689,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       obstacles: this.srj.obstacles,
       defaultViaHoleDiameter: this.viaHoleDiameter,
       connMap: this.connMap,
+      powerTraceWidthTargets: this.netToPointPairsSolver?.powerTraceWidthTargets,
     })
     return assignUniquePcbTraceIdsToNewTraces(
       routedTraces,

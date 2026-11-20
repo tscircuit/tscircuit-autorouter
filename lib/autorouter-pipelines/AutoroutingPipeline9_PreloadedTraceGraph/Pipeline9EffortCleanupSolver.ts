@@ -13,7 +13,6 @@ type CleanupParams = {
   getCost: (routes: HighDensityRoute[]) => CleanupCost
   isValid: (routes: HighDensityRoute[]) => boolean
   refineTraceWidths?: (routes: HighDensityRoute[]) => HighDensityRoute[]
-  validateTraceWidthRefinement?: boolean
 }
 
 /** Post-repair cleanup commits only valid improvements, including at default effort. */
@@ -141,11 +140,7 @@ export class Pipeline9EffortCleanupSolver extends BaseSolver {
   private finish(): void {
     if (this.params.refineTraceWidths) {
       const refined = this.params.refineTraceWidths(this.bestRoutes)
-      if (
-        refined !== this.bestRoutes &&
-        (!this.params.validateTraceWidthRefinement ||
-          this.params.isValid(refined))
-      ) {
+      if (refined !== this.bestRoutes) {
         this.bestRoutes = refined
         this.bestCost = this.params.getCost(refined)
       }

@@ -16,6 +16,7 @@ export interface ConvertPipeline7HdRoutesOptions {
   obstacles: Obstacle[]
   defaultViaHoleDiameter: number
   connMap: ConnectivityMap
+  powerTraceWidthTargets?: ReadonlyMap<string, number>
 }
 
 type StaticConvertPipeline7HdRoutesOptions = Omit<
@@ -36,6 +37,7 @@ export const createPipeline7HdRoutesToSimplifiedPcbTracesConverter = ({
   obstacles,
   defaultViaHoleDiameter,
   connMap,
+  powerTraceWidthTargets,
 }: StaticConvertPipeline7HdRoutesOptions) => {
   const netConnectionNameByOriginalConnectionName = new Map<
     string,
@@ -121,6 +123,7 @@ export const createPipeline7HdRoutesToSimplifiedPcbTracesConverter = ({
       outputConnectionName,
     } of preparedConnections) {
       const connectionRoutes = routesByConnectionName.get(connection.name) ?? []
+      const nominalTraceWidth = powerTraceWidthTargets?.get(connection.name)
 
       for (let index = 0; index < connectionRoutes.length; index += 1) {
         const hdRoute = connectionRoutes[index]!
@@ -128,9 +131,7 @@ export const createPipeline7HdRoutesToSimplifiedPcbTracesConverter = ({
           type: "pcb_trace",
           pcb_trace_id: `${connection.name}_${index}`,
           connection_name: outputConnectionName,
-          ...(connection.nominalTraceWidth !== undefined && {
-            nominalTraceWidth: connection.nominalTraceWidth,
-          }),
+          ...(nominalTraceWidth !== undefined && { nominalTraceWidth }),
           connectsTo,
           route: convertHdRouteToSimplifiedRoute(hdRoute, layerCount, {
             connectionPoints: connection.pointsToConnect,
@@ -156,6 +157,7 @@ export const convertPipeline7HdRoutesToSimplifiedPcbTraces = ({
   obstacles,
   defaultViaHoleDiameter,
   connMap,
+  powerTraceWidthTargets,
 }: ConvertPipeline7HdRoutesOptions): SimplifiedPcbTraces =>
   createPipeline7HdRoutesToSimplifiedPcbTracesConverter({
     connections,
@@ -164,4 +166,5 @@ export const convertPipeline7HdRoutesToSimplifiedPcbTraces = ({
     obstacles,
     defaultViaHoleDiameter,
     connMap,
+    powerTraceWidthTargets,
   })(hdRoutes)

@@ -15,6 +15,7 @@ export function getMstEdgeTraceWidths(
   mergedPoints: ConnectionPoint[],
   edges: MstEdge[],
   sourceConnections: SimpleRouteConnection[],
+  defaultTraceWidth?: number,
 ): Map<MstEdge, number> {
   const widths = new Map<MstEdge, number>()
   const firstEdge = edges[0]
@@ -54,7 +55,7 @@ export function getMstEdgeTraceWidths(
     mergedPoints.map((point) => [getPointKey(point), point]),
   )
   for (const source of sourceConnections) {
-    const width = source.nominalTraceWidth ?? source.width
+    const width = source.nominalTraceWidth ?? source.width ?? defaultTraceWidth
     if (width === undefined || source.pointsToConnect.length < 2) continue
 
     const [start, ...rest] = source.pointsToConnect.map((point): TreeNode => {

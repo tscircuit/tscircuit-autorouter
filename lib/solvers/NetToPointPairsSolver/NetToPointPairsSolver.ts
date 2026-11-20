@@ -52,7 +52,7 @@ export class NetToPointPairsSolver extends BaseSolver {
   unprocessedConnections: Array<SimpleRouteConnection>
   newConnections: Array<SimpleRouteConnection>
   readonly initiallyConnectedMap: ConnectivityMap
-  readonly sharedRoutingTraceWidths = new Map<ConnectionName, number>()
+  readonly powerTraceWidthTargets = new Map<ConnectionName, number>()
   private readonly sourceConnectionsByMergedConnection = new Map<
     SimpleRouteConnection,
     SimpleRouteConnection[]
@@ -136,20 +136,9 @@ export class NetToPointPairsSolver extends BaseSolver {
   protected emitConnection(
     connection: SimpleRouteConnection,
     pathEdge?: PathEdge,
-    sharedRoutingTraceWidth?: number,
   ): void {
     for (const hop of pathEdge?.hops ?? []) {
       hop.emittedConnectionName = connection.name
-    }
-    if (
-      sharedRoutingTraceWidth !== undefined &&
-      connection.nominalTraceWidth !== undefined &&
-      sharedRoutingTraceWidth < connection.nominalTraceWidth
-    ) {
-      this.sharedRoutingTraceWidths.set(
-        connection.name,
-        sharedRoutingTraceWidth,
-      )
     }
     this.newConnections.push(connection)
   }
@@ -161,23 +150,16 @@ export class NetToPointPairsSolver extends BaseSolver {
     }
     const connection = this.unprocessedConnections.pop()!
     const pathEdges = this.getPathEdges(connection)
+    const defaultTraceWidth =
+      this.ogSrj.nominalTraceWidth ?? this.ogSrj.minTraceWidth
     const sourceConnections =
       this.sourceConnectionsByMergedConnection.get(connection)
-    const minTraceWidth = this.ogSrj.minTraceWidth
-    const defaultTraceWidth = this.ogSrj.nominalTraceWidth ?? minTraceWidth
-    // A merged net can use its common width during geometry repair. This
-    // keeps optional branch widening from constraining via placement.
-    const sharedRoutingTraceWidth = sourceConnections
-      ? Math.max(
-          minTraceWidth,
-          Math.min(
-            ...sourceConnections.map(
-              (source) =>
-                source.nominalTraceWidth ?? source.width ?? defaultTraceWidth,
-            ),
-          ),
-        )
-      : undefined
+    const sourceWidths = new Set(
+      sourceConnections?.map(
+        (source) =>
+          source.nominalTraceWidth ?? source.width ?? defaultTraceWidth,
+      ),
+    )
 
     const { zeroWeightEdges, arePointsConnected } =
       getInitiallyConnectedStateForConnection(
@@ -186,38 +168,30 @@ export class NetToPointPairsSolver extends BaseSolver {
       )
 
     if (connection.pointsToConnect.length === 2) {
-      const startPoint = connection.pointsToConnect[0]!
-      const endPoint = connection.pointsToConnect[1]!
-      if (arePointsConnected(startPoint, endPoint)) {
+      const [startPoint, endPoint] = connection.pointsToConnect
+      if (startPoint && endPoint && arePointsConnected(startPoint, endPoint)) {
         return
       }
-      const edge = { from: startPoint, to: endPoint, weight: 0 }
-      const nominalTraceWidth = sourceConnections
-        ? Math.max(
-            minTraceWidth,
-            getMstEdgeTraceWidths(
-              connection.pointsToConnect,
-              [edge],
-              sourceConnections,
-            ).get(edge) ?? defaultTraceWidth,
-          )
-        : connection.nominalTraceWidth
+      if (sourceWidths.size > 1) {
+        this.powerTraceWidthTargets.set(
+          connection.name,
+          Math.max(...sourceWidths),
+        )
+      }
       this.emitConnection(
         {
           ...connection,
-          ...(sourceConnections && { nominalTraceWidth }),
           __rootConnectionNames: connection.__rootConnectionNames ?? [
             connection.name,
           ],
         },
         pathEdges[0],
-        sharedRoutingTraceWidth,
       )
       return
     }
 
     // Break nearly equal XY choices without buying fewer vias with long detours.
-    const layerChangeCost = minTraceWidth * 0.05
+    const layerChangeCost = this.ogSrj.minTraceWidth * 0.05
     const originalEdges = buildMinimumSpanningTree(connection.pointsToConnect, {
       extraEdges: [...pathEdges, ...zeroWeightEdges],
     })
@@ -238,37 +212,40 @@ export class NetToPointPairsSolver extends BaseSolver {
       originalEdges,
       optimizedEdges,
     })
-    const widths = sourceConnections
-      ? getMstEdgeTraceWidths(
-          connection.pointsToConnect,
-          edges,
-          sourceConnections,
-        )
-      : undefined
+    // Keep legacy routing widths until placement and clearance repair finish.
+    const widthTargets =
+      sourceConnections && sourceWidths.size > 1
+        ? getMstEdgeTraceWidths(
+            connection.pointsToConnect,
+            edges,
+            sourceConnections,
+            defaultTraceWidth,
+          )
+        : undefined
 
     let mstIdx = 0
     for (const edge of edges) {
       if (arePointsConnected(edge.from, edge.to)) {
         continue
       }
+      const name = `${connection.name}_mst${mstIdx++}`
+      if (widthTargets) {
+        this.powerTraceWidthTargets.set(
+          name,
+          widthTargets.get(edge) ?? defaultTraceWidth,
+        )
+      }
       this.emitConnection(
         {
           ...connection,
-          ...(widths && {
-            nominalTraceWidth: Math.max(
-              minTraceWidth,
-              widths.get(edge) ?? defaultTraceWidth,
-            ),
-          }),
           pointsToConnect: [edge.from, edge.to],
-          name: `${connection.name}_mst${mstIdx++}`,
+          name,
           __rootConnectionNames: connection.__rootConnectionNames ?? [
             connection.name,
           ],
           __netConnectionName: connection.__netConnectionName,
         },
         pathEdges.find((pathEdge) => pathEdge === edge),
-        sharedRoutingTraceWidth,
       )
     }
   }
