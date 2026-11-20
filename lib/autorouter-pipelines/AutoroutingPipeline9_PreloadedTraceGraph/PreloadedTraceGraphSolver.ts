@@ -455,8 +455,7 @@ export class PreloadedTraceGraphSolver extends BaseSolver {
       .filter((port) => !port._preloadedTracePortAssignments?.length)
       .map(
         (port) =>
-          ((port.x - segment.start.x) * dx +
-            (port.y - segment.start.y) * dy) /
+          ((port.x - segment.start.x) * dx + (port.y - segment.start.y) * dy) /
           lengthSquared,
       )
     const clearSpans = copperLookup.getClearSpans({ ...segment, z })
