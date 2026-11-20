@@ -1,0 +1,287 @@
+{
+  "samples": [
+    {
+      "sample": "butterstick-original",
+      "parts": 350,
+      "pads": 1623,
+      "nets": 349,
+      "groups": {
+        "board": 294,
+        "ddr_remaining": 39,
+        "byte0": 8,
+        "byte1": 8
+      },
+      "layers": 8,
+      "fanoutEnabledByDefault": false,
+      "copperPours": 53
+    },
+    {
+      "sample": "butterstick-spaced",
+      "parts": 350,
+      "pads": 1623,
+      "nets": 349,
+      "groups": {
+        "power": 12,
+        "other_signals": 250,
+        "single": 32,
+        "remaining": 39,
+        "byte1": 8,
+        "byte0": 8
+      },
+      "layers": 8,
+      "fanoutEnabledByDefault": false,
+      "copperPours": 0
+    },
+    {
+      "sample": "glider-original",
+      "parts": 379,
+      "pads": 1700,
+      "nets": 459,
+      "groups": {
+        "board": 410,
+        "ddr_remaining": 33,
+        "byte0": 8,
+        "byte1": 8
+      },
+      "layers": 4,
+      "fanoutEnabledByDefault": false,
+      "copperPours": 5
+    },
+    {
+      "sample": "glider-spaced",
+      "parts": 379,
+      "pads": 1700,
+      "nets": 459,
+      "groups": {
+        "other_signals": 283,
+        "power": 24,
+        "remaining": 33,
+        "byte0": 8,
+        "byte1": 8,
+        "single": 103
+      },
+      "layers": 4,
+      "fanoutEnabledByDefault": false,
+      "copperPours": 0
+    },
+    {
+      "sample": "h616-original",
+      "parts": 125,
+      "pads": 760,
+      "nets": 264,
+      "groups": {
+        "board": 211,
+        "byte0": 8,
+        "byte1": 8,
+        "ddr_remaining": 37
+      },
+      "layers": 4,
+      "fanoutEnabledByDefault": false,
+      "copperPours": 5
+    },
+    {
+      "sample": "h616-spaced",
+      "parts": 125,
+      "pads": 760,
+      "nets": 264,
+      "groups": {
+        "power": 12,
+        "other_signals": 56,
+        "remaining": 37,
+        "single": 143,
+        "byte1": 8,
+        "byte0": 8
+      },
+      "layers": 4,
+      "fanoutEnabledByDefault": false,
+      "copperPours": 0
+    },
+    {
+      "sample": "icepi-original",
+      "parts": 280,
+      "pads": 1426,
+      "nets": 466,
+      "groups": {
+        "board": 416,
+        "ddr_remaining": 34,
+        "byte0": 8,
+        "byte1": 8
+      },
+      "layers": 4,
+      "fanoutEnabledByDefault": false,
+      "copperPours": 36
+    },
+    {
+      "sample": "icepi-spaced",
+      "parts": 280,
+      "pads": 1426,
+      "nets": 466,
+      "groups": {
+        "remaining": 34,
+        "power": 14,
+        "single": 236,
+        "other_signals": 166,
+        "byte1": 8,
+        "byte0": 8
+      },
+      "layers": 4,
+      "fanoutEnabledByDefault": false,
+      "copperPours": 0
+    },
+    {
+      "sample": "imx6-original",
+      "parts": 498,
+      "pads": 1904,
+      "nets": 588,
+      "groups": {
+        "board": 535,
+        "ddr_remaining": 37,
+        "byte0": 8,
+        "byte1": 8
+      },
+      "layers": 6,
+      "fanoutEnabledByDefault": false,
+      "copperPours": 61
+    },
+    {
+      "sample": "imx6-spaced",
+      "parts": 498,
+      "pads": 1904,
+      "nets": 588,
+      "groups": {
+        "power": 24,
+        "other_signals": 327,
+        "single": 184,
+        "remaining": 37,
+        "byte0": 8,
+        "byte1": 8
+      },
+      "layers": 6,
+      "fanoutEnabledByDefault": false,
+      "copperPours": 0
+    }
+  ],
+  "pairs": [
+    {
+      "board": "h616",
+      "movedParts": 16,
+      "addedParts": [],
+      "removedParts": [],
+      "ddrPartsMoved": [],
+      "ddrPartsMissing": [],
+      "ddrFrameTranslation": [
+        0.0,
+        0.0
+      ],
+      "ddrMovedAfterAlignment": []
+    },
+    {
+      "board": "butterstick",
+      "movedParts": 343,
+      "addedParts": [
+        "NATIVE_GRAPHIC_1",
+        "NATIVE_GRAPHIC_2",
+        "NATIVE_GRAPHIC_3",
+        "NATIVE_GRAPHIC_4",
+        "NATIVE_GRAPHIC_5",
+        "NATIVE_GRAPHIC_6",
+        "NATIVE_GRAPHIC_7"
+      ],
+      "removedParts": [
+        "G___",
+        "G____2",
+        "G____3",
+        "G____4",
+        "G____5",
+        "G____6",
+        "G____7"
+      ],
+      "ddrPartsMoved": [
+        "R67",
+        "R71",
+        "R93",
+        "R94",
+        "U11",
+        "U12",
+        "U4"
+      ],
+      "ddrPartsMissing": [],
+      "ddrFrameTranslation": [
+        -0.0,
+        0.0
+      ],
+      "ddrMovedAfterAlignment": []
+    },
+    {
+      "board": "glider",
+      "movedParts": 378,
+      "addedParts": [
+        "NATIVE_GRAPHIC_1"
+      ],
+      "removedParts": [
+        "G___"
+      ],
+      "ddrPartsMoved": [
+        "R100",
+        "R101",
+        "R103",
+        "R44",
+        "U1",
+        "U12"
+      ],
+      "ddrPartsMissing": [],
+      "ddrFrameTranslation": [
+        0.0,
+        -0.0
+      ],
+      "ddrMovedAfterAlignment": []
+    },
+    {
+      "board": "imx6",
+      "movedParts": 497,
+      "addedParts": [
+        "NATIVE_GRAPHIC_1"
+      ],
+      "removedParts": [
+        "G___"
+      ],
+      "ddrPartsMoved": [
+        "C103",
+        "C104",
+        "R43",
+        "R44",
+        "R45",
+        "R48",
+        "TP26",
+        "TP27",
+        "TP28",
+        "TP32",
+        "U7",
+        "U9"
+      ],
+      "ddrPartsMissing": [],
+      "ddrFrameTranslation": [
+        0.001401,
+        -0.001401
+      ],
+      "ddrMovedAfterAlignment": []
+    },
+    {
+      "board": "icepi",
+      "movedParts": 280,
+      "addedParts": [],
+      "removedParts": [],
+      "ddrPartsMoved": [
+        "R75",
+        "U1",
+        "U2"
+      ],
+      "ddrPartsMissing": [],
+      "ddrFrameTranslation": [
+        0.0,
+        0.0
+      ],
+      "ddrMovedAfterAlignment": []
+    }
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "archiveSha256": "1991ad1891a953dcd660818aaceb73f7aa42dbf704e677e635753b9159f7a6b7",
+  "samples": [
+    {
+      "name": "butterstick-original.tsx",
+      "sha256": "60dcf46c244723fd3e9fc1f6b282999b2ae9c3d7b149e7dcd6db5813f57ebe77",
+      "bytes": 637746
+    },
+    {
+      "name": "butterstick-spaced.tsx",
+      "sha256": "22c6b6899200f23be21d619d50a836cb7ded5437dfbd75a6fc2865bde7e15657",
+      "bytes": 572126
+    },
+    {
+      "name": "glider-original.tsx",
+      "sha256": "9fff30df197eb9171cdad3f312fabd565a457f4103ba3cbb7547a23228fc1dbe",
+      "bytes": 639931
+    },
+    {
+      "name": "glider-spaced.tsx",
+      "sha256": "2425bb1072a9d521e6feaa5a1e49bcc32010b3b4489cbd5a0fcd03abb0d9576c",
+      "bytes": 606202
+    },
+    {
+      "name": "h616-original.tsx",
+      "sha256": "3a829e7ee889ace8b62fab8b534574f5fae137a0e913af18e50ac2dfef3bc5ab",
+      "bytes": 275306
+    },
+    {
+      "name": "h616-spaced.tsx",
+      "sha256": "54d96274069d639cfcb0c1c2d4e5d69199800a8955dcc9810f2ffc5050bd4096",
+      "bytes": 277019
+    },
+    {
+      "name": "icepi-original.tsx",
+      "sha256": "13d2091fd4f0717f4e232c5371c6ff376001970a8d1e440ca79791b5d5a04b0c",
+      "bytes": 605600
+    },
+    {
+      "name": "icepi-spaced.tsx",
+      "sha256": "e3698908077aeb003a47abbbf92c7ffafe997412c21936d6b86c72a8889aa834",
+      "bytes": 521451
+    },
+    {
+      "name": "imx6-original.tsx",
+      "sha256": "59bad8d2a258eacfab731f61f53e3b8a170e680a4d308e7aaf4fb6b29e6e3d43",
+      "bytes": 875765
+    },
+    {
+      "name": "imx6-spaced.tsx",
+      "sha256": "e96ce2bb75f7f76fd5ccc7042646321c1f48b2ac302b641a5469c5537b7d011b",
+      "bytes": 750166
+    }
+  ]
+}
