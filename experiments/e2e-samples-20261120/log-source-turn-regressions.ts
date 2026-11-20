@@ -5,6 +5,20 @@ import { FanoutSolver } from "./lib/fanout-solver"
 import { validateRoutedCopperDrc } from "./lib/validate-routed-copper-drc"
 
 const getOutput = FanoutSolver.prototype.getOutput
+const solve = FanoutSolver.prototype.solve
+FanoutSolver.prototype.solve = function (...args) {
+  const result = solve.apply(this, args)
+  if (this.failed) {
+    const best = Reflect.get(this, "bestAttempt")
+    if (best) {
+      const drc = validateRoutedCopperDrc({ inputSrj: this.inputSrj, routedSrj: best.outputSrj, clearance: this.config.clearance, allowBlindAndBuriedVias: this.config.allowBlindAndBuriedVias })
+      const summary = { test: basename(process.env.E2E_TEST!), partial: true, connections: best.summary.routedConnectionCount, vias: drc.checkedViaCount, drc }
+      appendFileSync("source-turn-regressions.ndjson", JSON.stringify(summary) + "\n")
+      console.log("SOURCE_TURN_REGRESSION", JSON.stringify(summary))
+    }
+  }
+  return result
+}
 FanoutSolver.prototype.getOutput = function () {
   const output = getOutput.call(this)
   const drc = validateRoutedCopperDrc({ inputSrj: this.inputSrj, routedSrj: output.simpleRouteJson, clearance: this.config.clearance, allowBlindAndBuriedVias: this.config.allowBlindAndBuriedVias })

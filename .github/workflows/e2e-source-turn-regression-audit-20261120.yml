@@ -29,8 +29,15 @@ jobs:
         working-directory: fanout
         run: |
           cp ../analysis/experiments/e2e-samples-20261120/log-source-turn-regressions.ts source-turn-observer.ts
+          if [ "${{ matrix.mode }}" = "after" ]; then
+            python3 - <<'PYASSERT'
+          from pathlib import Path
+          for name,before,after in [('icepi-u22-native-fanout.test.ts','expect(routed).toBe(9)','expect(routed).toBe(14)'),('butterstick-native-fanout.test.ts','expect(best.plans).toHaveLength(60)','expect(best.plans).toHaveLength(62)')]:
+              p=Path('tests')/name;s=p.read_text();assert s.count(before)==1;p.write_text(s.replace(before,after))
+          PYASSERT
+          fi
           failure=0
-          for test in tests/large-guided-track-fallback.test.ts tests/fanout-repair-before-grouped-beam.test.ts tests/srj19-sample001.test.ts tests/srj19-sample064.test.ts tests/repro-icepi-same-layer-turn.test.ts; do
+          for test in tests/srj19-sample002.test.ts tests/srj19-sample022.test.ts tests/srj19-sample127.test.ts tests/icepi-u22-native-fanout.test.ts tests/butterstick-native-fanout.test.ts; do
             if ! E2E_TEST="$test" BUN_UPDATE_SNAPSHOTS=1 bun test --preload ./source-turn-observer.ts "$test"; then failure=1; fi
           done
           exit "$failure"
@@ -41,11 +48,11 @@ jobs:
           path: |
             fanout/source-turn-*.json.gz
             fanout/source-turn-regressions.ndjson
-            fanout/tests/__snapshots__/large-guided-track-fallback.snap.svg
-            fanout/tests/__snapshots__/fanout-repair-before-grouped-beam.snap.svg
-            fanout/tests/__snapshots__/srj19-sample001-six-layer-fanout.snap.svg
-            fanout/tests/__snapshots__/srj19-sample064-six-layer-fanout.snap.svg
-            fanout/tests/__snapshots__/repro-icepi-same-layer-turn.snap.svg
+            fanout/tests/__snapshots__/srj19-sample002-six-layer-fanout.snap.svg
+            fanout/tests/__snapshots__/srj19-sample022-six-layer-fanout.snap.svg
+            fanout/tests/__snapshots__/srj19-sample127-six-layer-fanout.snap.svg
+            fanout/tests/__snapshots__/icepi-u22-native-fanout.snap.svg
+            fanout/tests/__snapshots__/butterstick-native-fanout.snap.svg
       - name: Export selected native snapshots and physical metrics
         if: always()
         run: |
@@ -53,7 +60,7 @@ jobs:
           import base64,io,zipfile
           from pathlib import Path
           stream=io.BytesIO()
-          names=['large-guided-track-fallback','fanout-repair-before-grouped-beam','srj19-sample001-six-layer-fanout','srj19-sample064-six-layer-fanout','repro-icepi-same-layer-turn']
+          names=['srj19-sample002-six-layer-fanout','srj19-sample022-six-layer-fanout','srj19-sample127-six-layer-fanout','icepi-u22-native-fanout','butterstick-native-fanout']
           with zipfile.ZipFile(stream,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=9) as z:
               p=Path('fanout/source-turn-regressions.ndjson')
               if p.exists():z.writestr(p.name,p.read_bytes())
