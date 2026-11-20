@@ -59,7 +59,7 @@ for variant in ['before', 'after']:
     target.mkdir(parents=True, exist_ok=True)
     for name in ['native-assessment.json', 'native-phases.json', 'native.circuit.json.gz', 'native-fanout.json.gz']:
         shutil.copyfile(capture / name, target / name)
-    snapshots = list(capture.glob('*.svg'))
+    snapshots = list(capture.rglob('*.svg'))
     assert len(snapshots) == 1, snapshots
     shutil.copyfile(snapshots[0], target / 'pcb.svg')
     assessment = json.loads((capture / 'native-assessment.json').read_text())
