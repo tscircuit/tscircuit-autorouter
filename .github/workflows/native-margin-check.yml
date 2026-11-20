@@ -32,6 +32,7 @@ jobs:
           from pathlib import Path
           p=Path("lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver.ts")
           s=p.read_text()
+          s='import { mapZToLayerName } from "lib/utils/mapZToLayerName"\\nimport { isPointInRect } from "lib/utils/isPointInRect"\\nimport { isObstacleConnectedToRoute } from "lib/solvers/TraceWidthSolver/isObstacleConnectedToRoute"\\n'+s
           old="    this.fixedHdRoutes = params.fixedHdRoutes\n    this.connMap = params.connMap"
           assert s.count(old)==1
           new="""    this.connMap = params.connMap
@@ -54,21 +55,24 @@ jobs:
                 const endTerminal = terminals.find((port) =>
                   end && port.x === end.x && port.y === end.y && port.z === end.z,
                 )
+                const componentOwned = Boolean(startTerminal || endTerminal) &&
+                  route.vias.length === 0 &&
+                  params.obstacles.some((obstacle) =>
+                    obstacle.type === "rect" && !obstacle.shape &&
+                    isObstacleConnectedToRoute(obstacle, route, params.connMap) &&
+                    route.route.every((point) =>
+                      obstacle.layers.includes(mapZToLayerName(point.z, params.layerCount)) &&
+                      isPointInRect(point, obstacle),
+                    ),
+                  )
                 return {
                   ...route,
                   startPcbPortId: route.startPcbPortId ?? startTerminal?.pcb_port_id,
                   endPcbPortId: route.endPcbPortId ?? endTerminal?.pcb_port_id,
+                  isThroughObstacle: route.isThroughObstacle || componentOwned,
                 }
               })"""
           s=s.replace(old,new,1)
-          s=s.replace("fixedRoute.isThroughObstacle !== true,","fixedRoute.isThroughObstacle !== true &&\n            !fixedRoute.startPcbPortId && !fixedRoute.endPcbPortId,",1)
-          s=s.replace("(route) => route.isFixed === true || route.isThroughObstacle === true,","(route) => route.isFixed === true || route.isThroughObstacle === true ||\n          Boolean(route.startPcbPortId || route.endPcbPortId),",1)
-          p.write_text(s)
-          p=Path("lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9RegionalFallback.ts")
-          s=p.read_text()
-          old="        slice.sourceRoute.isThroughObstacle !== true &&"
-          assert s.count(old)==1
-          s=s.replace(old,old+"\n        !slice.sourceRoute.startPcbPortId &&\n        !slice.sourceRoute.endPcbPortId &&",1)
           p.write_text(s)
           if '${{ matrix.variant }}' == 'scoped':
               p=Path("lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts")
@@ -81,6 +85,36 @@ jobs:
                       ? this.params.fixedHdRoutes
                       : undefined,""")
               p.write_text(s)
+          if '${{ matrix.variant }}' == 'cleanup':
+              p=Path("lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensityForceImproveSolver.ts")
+              s=p.read_text()
+              s='import { FixedCopperClearanceGuard } from "high-density-repair02/lib/high-density-repair-solver/functions/FixedCopperClearanceGuard"\n'+s
+              s=s.replace('    if (this.fixedViaObstacleIndexes.size === 0) return','    if (this.fixedViaObstacleIndexes.size === 0 && this.fixedHdRoutes.length === 0) return',1)
+              old='    if (!worsensViaClearance) return'
+              assert s.count(old)==1
+              new="""    let allowsNativeCopper = true
+                  if (this.fixedHdRoutes.length > 0) {
+                    const ownedIndexes = new Set(routeIndexes)
+                    const readOnlyRoutes = [
+                      ...this.fixedHdRoutes,
+                      ...this.getOutput().filter((_, index) => !ownedIndexes.has(index)),
+                    ]
+                    const guard = new FixedCopperClearanceGuard(
+                      readOnlyRoutes,
+                      this.inputSrj.minTraceToPadEdgeClearance ??
+                        this.inputSrj.defaultObstacleMargin ??
+                        RELAXED_DRC_OPTIONS.traceClearance,
+                      [],
+                      this.inputSrj.minPadEdgeToPadEdgeClearance,
+                    )
+                    allowsNativeCopper = guard.allows(
+                      originalRoutes,
+                      candidateRoutes,
+                      candidateRoutes.keys(),
+                    )
+                  }
+                  if (!worsensViaClearance && allowsNativeCopper) return"""
+              p.write_text(s.replace(old,new,1))
           p=Path("tests/bugs/bugreport96-full-gameboy-no-breakout.test.ts")
           s=p.read_text()
           old="  expect(errors.length).toBeLessThanOrEqual(28)"
