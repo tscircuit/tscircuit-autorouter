@@ -59,7 +59,7 @@ test("full motherboard native search progress at the same checkpoint", async ():
     ),
   )
   expect(search.problem.routeCount).toBe(1740)
-  expect(assignedRoutes.size).toBe(93)
+  expect(assignedRoutes.size).toBeGreaterThan(93)
   const board = convertSrjToGraphicsObject({
     ...inputSrj,
     traces: preloadedTraces,

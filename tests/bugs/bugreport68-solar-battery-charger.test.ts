@@ -59,9 +59,12 @@ test(
       )
 
     expect(routedViasInsideBga).toHaveLength(0)
-    expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
-      import.meta.path,
-    )
+    // Native routing can produce different route variants across platforms.
+    const snapshotPath =
+      process.platform === "linux"
+        ? import.meta.path.replace(/\.test\.ts$/, "-linux.test.ts")
+        : import.meta.path
+    expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(snapshotPath)
   },
   { timeout: 200000 },
 )
