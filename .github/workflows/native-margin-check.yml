@@ -32,7 +32,7 @@ jobs:
           from pathlib import Path
           p=Path("lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver.ts")
           s=p.read_text()
-          s='import { mapZToLayerName } from "lib/utils/mapZToLayerName"\\nimport { isPointInRect } from "lib/utils/isPointInRect"\\nimport { isObstacleConnectedToRoute } from "lib/solvers/TraceWidthSolver/isObstacleConnectedToRoute"\\n'+s
+          s='import { mapZToLayerName } from "lib/utils/mapZToLayerName"\nimport { isPointInRect } from "lib/utils/isPointInRect"\nimport { isObstacleConnectedToRoute } from "lib/solvers/TraceWidthSolver/isObstacleConnectedToRoute"\n'+s
           old="    this.fixedHdRoutes = params.fixedHdRoutes\n    this.connMap = params.connMap"
           assert s.count(old)==1
           new="""    this.connMap = params.connMap
