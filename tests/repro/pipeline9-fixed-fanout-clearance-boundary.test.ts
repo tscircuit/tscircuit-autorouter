@@ -22,6 +22,7 @@ test("routes six signals beside fixed fanout copper at exact clearance", async (
       ),
     ).toString("utf8"),
   ) as FixedFanoutFixture
+  const originalFixedTraces = structuredClone(input.traces)
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(input, {
     cacheProvider: null,
   })
@@ -29,8 +30,9 @@ test("routes six signals beside fixed fanout copper at exact clearance", async (
 
   expect(solver.failed).toBe(false)
   expect(solver.solved).toBe(true)
+  expect(input.traces).toEqual(originalFixedTraces)
   const output = solver.getOutputSimpleRouteJson()
-  for (const fixedTrace of input.traces) {
+  for (const fixedTrace of originalFixedTraces) {
     const preservedTrace = output.traces!.find(
       (trace) => trace.pcb_trace_id === fixedTrace.pcb_trace_id,
     )
