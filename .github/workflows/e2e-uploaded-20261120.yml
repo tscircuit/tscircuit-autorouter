@@ -48,7 +48,7 @@ jobs:
                   content=z.read(entry['name'])
                   assert hashlib.sha256(content).hexdigest()==entry['sha256']
                   target=runtime/'samples'/entry['name'];target.parent.mkdir(exist_ok=True);target.write_bytes(content)
-          revisions={'core':'4306536282fe5abf32c1395e106f55a5d61ca7a3','router':'2b1207ad70971f326166b134ea19418137273f23','fanout':'9e771f68dca591642fca3b97187e14404c16c5aa','sampleMode':'as_authored','archiveSha256':manifest['archiveSha256'],'coreLockSha256':hashlib.sha256(Path('core/bun.lock').read_bytes()).hexdigest()}
+          revisions={'core':'4306536282fe5abf32c1395e106f55a5d61ca7a3','router':'2b1207ad70971f326166b134ea19418137273f23','fanout':'9e771f68dca591642fca3b97187e14404c16c5aa','sampleMode':'as_authored','archiveSha256':manifest['archiveSha256'],'coreLockSha256':hashlib.sha256(Path('core/bun.lockb').read_bytes()).hexdigest()}
           for package in ['@tscircuit/props','@tscircuit/bus-lanes-solver','@tscircuit/checks','circuit-to-svg','react']:
               revisions[package]=json.loads((Path('core/node_modules')/package/'package.json').read_text())['version']
           (runtime/'revisions.json').write_text(json.dumps(revisions,indent=2)+'\n')
