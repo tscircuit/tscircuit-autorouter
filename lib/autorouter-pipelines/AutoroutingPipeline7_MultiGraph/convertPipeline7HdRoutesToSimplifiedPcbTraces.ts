@@ -128,6 +128,9 @@ export const createPipeline7HdRoutesToSimplifiedPcbTracesConverter = ({
           type: "pcb_trace",
           pcb_trace_id: `${connection.name}_${index}`,
           connection_name: outputConnectionName,
+          ...(connection.source_trace_id === undefined
+            ? {}
+            : { source_trace_id: connection.source_trace_id }),
           connectsTo,
           route: convertHdRouteToSimplifiedRoute(hdRoute, layerCount, {
             connectionPoints: connection.pointsToConnect,

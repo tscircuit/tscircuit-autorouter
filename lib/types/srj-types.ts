@@ -194,6 +194,7 @@ export interface SimpleRouteConnection {
 export interface SimplifiedPcbTrace {
   type: "pcb_trace"
   pcb_trace_id: TraceId
+  source_trace_id?: SimpleRouteConnection["source_trace_id"]
   /** Preserve this preloaded trace's copper geometry throughout routing. */
   isFixed?: boolean
   /** Preloaded trace intentionally replaced by this routed output. */
