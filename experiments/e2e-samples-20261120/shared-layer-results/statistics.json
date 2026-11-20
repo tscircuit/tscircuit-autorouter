@@ -1,0 +1,24 @@
+{
+  "before": {
+    "completeBoards": 0,
+    "requestedNets": 2856,
+    "connectedNets": 19,
+    "emittedVias": 0,
+    "copperDrcFindings": 0,
+    "circuitsWithPlacementErrors": 5,
+    "medianFailedOrBudgetedSeconds": 433.2151440715,
+    "p95FailedOrBudgetedSeconds": 622.9242506906,
+    "totalSeconds": 4308.582373359
+  },
+  "after": {
+    "completeBoards": 0,
+    "requestedNets": 2856,
+    "connectedNets": 19,
+    "emittedVias": 0,
+    "copperDrcFindings": 0,
+    "circuitsWithPlacementErrors": 1,
+    "medianFailedOrBudgetedSeconds": 470.0360165210001,
+    "p95FailedOrBudgetedSeconds": 627.89501093745,
+    "totalSeconds": 4359.783652338
+  }
+}

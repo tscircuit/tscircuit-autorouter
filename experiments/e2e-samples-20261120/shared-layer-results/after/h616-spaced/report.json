@@ -1,0 +1,110 @@
+{
+  "sample": "h616-spaced",
+  "status": "failed",
+  "renderCompleted": true,
+  "elapsedMs": 610743.832762,
+  "initialCopper": 0,
+  "phases": [
+    {
+      "name": "<board#1262 />",
+      "solver": "FanoutSolver",
+      "status": "failed",
+      "connections": 174,
+      "startedMs": 20167.872257000003,
+      "elapsedMs": 579888.0711170001
+    }
+  ],
+  "solvers": [
+    {
+      "id": 0,
+      "name": "FanoutSolver",
+      "phases": [
+        {
+          "stage": "FanoutSolver",
+          "atMs": 20467.584898
+        }
+      ],
+      "iterations": 58141,
+      "solved": false,
+      "failed": false,
+      "error": null,
+      "stats": {
+        "phase": "route-assignment",
+        "assignment": 120,
+        "assignmentCount": 256,
+        "routedBuses": "96/160",
+        "routedConnections": "91/174",
+        "failedBuses": "DDR_BUS_byte1, DDR_BUS_byte0, connection:breakout:pcb_breakout_point_106, connection:breakout:pcb_breakout_point_126, connection:breakout:pcb_breakout_point_43, connection:breakout:pcb_breakout_point_146, connection:breakout:pcb_breakout_point_169, connection:breakout:pcb_breakout_point_23, connection:breakout:pcb_breakout_point_48, connection:breakout:pcb_breakout_point_117, connection:breakout:pcb_breakout_point_2, connection:breakout:pcb_breakout_point_154, connection:breakout:pcb_breakout_point_68, connection:breakout:pcb_breakout_point_15, connection:breakout:pcb_breakout_point_21, connection:breakout:pcb_breakout_point_69, connection:breakout:pcb_breakout_point_9, connection:breakout:pcb_breakout_point_10, connection:breakout:pcb_breakout_point_13, connection:breakout:pcb_breakout_point_28, connection:breakout:pcb_breakout_point_49, connection:breakout:pcb_breakout_point_50, connection:breakout:pcb_breakout_point_89, connection:breakout:pcb_breakout_point_153, connection:breakout:pcb_breakout_point_0, connection:breakout:pcb_breakout_point_14, connection:breakout:pcb_breakout_point_20, connection:breakout:pcb_breakout_point_29, connection:breakout:pcb_breakout_point_60, connection:breakout:pcb_breakout_point_70, connection:breakout:pcb_breakout_point_83, connection:breakout:pcb_breakout_point_90, connection:breakout:pcb_breakout_point_5, connection:breakout:pcb_breakout_point_12, connection:breakout:pcb_breakout_point_18, connection:breakout:pcb_breakout_point_31, connection:breakout:pcb_breakout_point_40, connection:breakout:pcb_breakout_point_51, connection:breakout:pcb_breakout_point_56, connection:breakout:pcb_breakout_point_59, connection:breakout:pcb_breakout_point_100, connection:breakout:pcb_breakout_point_25, connection:breakout:pcb_breakout_point_71, connection:breakout:pcb_breakout_point_78, connection:breakout:pcb_breakout_point_92, connection:breakout:pcb_breakout_point_34, connection:breakout:pcb_breakout_point_38, connection:breakout:pcb_breakout_point_32, connection:breakout:pcb_breakout_point_53, connection:breakout:pcb_breakout_point_57, connection:breakout:pcb_breakout_point_72, connection:breakout:pcb_breakout_point_74, connection:breakout:pcb_breakout_point_94, connection:breakout:pcb_breakout_point_96, connection:breakout:pcb_breakout_point_97, connection:breakout:pcb_breakout_point_173, connection:breakout:pcb_breakout_point_52, connection:breakout:pcb_breakout_point_54, connection:breakout:pcb_breakout_point_75, connection:breakout:pcb_breakout_point_95, connection:breakout:pcb_breakout_point_35, connection:breakout:pcb_breakout_point_93, connection:breakout:pcb_breakout_point_55, connection:breakout:pcb_breakout_point_73",
+        "bestScore": 81100515.28562726,
+        "routingStrategy": "default",
+        "workUnit": 138,
+        "workUnitCount": 160,
+        "bus": "connection:breakout:pcb_breakout_point_32"
+      }
+    }
+  ],
+  "errors": [
+    "E2E routing budget exhausted",
+    "E2E routing budget exhausted"
+  ],
+  "counts": {
+    "source_project_metadata": 1,
+    "source_group": 3,
+    "source_port": 746,
+    "source_component": 125,
+    "source_net": 121,
+    "source_board": 1,
+    "source_refdes_convention_warning": 117,
+    "source_component_internal_connection": 3,
+    "source_trace": 864,
+    "source_bus": 2,
+    "source_no_power_pin_defined_warning": 112,
+    "source_no_ground_pin_defined_warning": 112,
+    "source_component_pins_underspecified_warning": 125,
+    "pcb_component": 125,
+    "pcb_group": 2,
+    "pcb_board": 1,
+    "pcb_smtpad": 726,
+    "pcb_solder_paste": 760,
+    "pcb_hole": 4,
+    "pcb_plated_hole": 30,
+    "pcb_port": 746,
+    "pcb_breakout_point": 270,
+    "pcb_connector_not_in_accessible_orientation_warning": 1,
+    "cad_component": 125,
+    "pcb_component_missing_courtyard_warning": 125,
+    "pcb_debug_object": 1,
+    "pcb_autorouting_error": 1,
+    "pcb_port_not_connected_error": 864,
+    "pcb_trace_missing_error": 270
+  },
+  "revisions": {
+    "core": "351e73d665fad37577c47fcbff2e4c29eb377467",
+    "router": "2b1207ad70971f326166b134ea19418137273f23",
+    "winding": "3752c2d3b75d8c24019a793425b430a082a26726",
+    "sampleMode": "fanout_first",
+    "archiveSha256": "1991ad1891a953dcd660818aaceb73f7aa42dbf704e677e635753b9159f7a6b7",
+    "coreLockSha256": "6b1da69e57574e33e94b85f7c7e730bcc6bbcfe798214884ddae832f98b42bcb",
+    "@tscircuit/fanout-solver": "0.0.93",
+    "@tscircuit/winding-breakout-point-solver": "0.0.1",
+    "@tscircuit/capacity-autorouter": "0.0.1135",
+    "@tscircuit/props": "0.0.741",
+    "@tscircuit/bus-lanes-solver": "0.0.62",
+    "@tscircuit/checks": "0.0.282",
+    "circuit-to-svg": "0.0.460",
+    "react": "19.3.1",
+    "variant": "after",
+    "pairOrder": [
+      "after",
+      "before"
+    ],
+    "windingSourceFiles": [
+      {
+        "path": "lib/layer-assignment/assign-connection-layers.ts",
+        "beforeSha256": "bff58c0f66c54786ed6e221aebdc8e34a187585833a793269b1095faa9acd133",
+        "afterSha256": "887ba3d1de22c329e8ed3bc682107f25127a3a53e3a0e02b42388bef1fefa1f8",
+        "actualSha256": "887ba3d1de22c329e8ed3bc682107f25127a3a53e3a0e02b42388bef1fefa1f8"
+      }
+    ]
+  }
+}
