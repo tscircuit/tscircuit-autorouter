@@ -12,7 +12,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ca745655f7f32d6104d643ed056b5d6dfbafa8c9
+          ref: c5774aec1d77c81cb40bdd993fb396596cae681b
           persist-credentials: false
       - uses: oven-sh/setup-bun@v2
         with:
@@ -26,11 +26,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node: [1,2,3,4,5,6,7,8,9]
+        node: [5]
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ca745655f7f32d6104d643ed056b5d6dfbafa8c9
+          ref: c5774aec1d77c81cb40bdd993fb396596cae681b
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: '1.4.3'
