@@ -13,7 +13,10 @@ test("OrangeCrab exposes A01's missing terminal via", async (): Promise<void> =>
   const input: SimpleRouteJson = JSON.parse(
     gunzipSync(
       readFileSync(
-        new URL("../fixtures/orangecrab-local-native-copper.srj.json.gz", import.meta.url),
+        new URL(
+          "../fixtures/orangecrab-local-native-copper.srj.json.gz",
+          import.meta.url,
+        ),
       ),
     ).toString(),
   )
