@@ -1,0 +1,21 @@
+name: Validate minimal winding allocation fix
+on:
+  push:
+    branches: [analysis/e2e-shared-layer-codecheck-20261120]
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/winding-breakout-point-solver
+          ref: 9906f81d1af8b57e7846b6fed741ad2e80c9d8dd
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - run: bun install --ignore-scripts
+      - run: bunx biome format lib/layer-assignment/assign-connection-layers.ts tests/shared-layer-capacity.test.ts
+      - run: bun run typecheck
+      - run: bun test --timeout 9999999
