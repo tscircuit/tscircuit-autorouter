@@ -1,4 +1,4 @@
-name: Verify movable native paths remain eligible for regional rip-up
+name: Isolate native-routing Game Boy regression
 on:
   push:
     branches: [analysis/native-complete-cleanup-context]
@@ -8,11 +8,27 @@ permissions:
 jobs:
   routing:
     runs-on: ubuntu-24.04
-    timeout-minutes: 18
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
-        source: [1a2e757a0230bae0e8f915023485978587d7fe14, 0f98be6237dfa0a852360b07d38f0e2fbee5f92d]
+        include:
+          - variant: main
+            source: 2b1207ad70971f326166b134ea19418137273f23
+          - variant: main-parent-deps
+            source: 2b1207ad70971f326166b134ea19418137273f23
+          - variant: parent-main-deps
+            source: 1a2e757a0230bae0e8f915023485978587d7fe14
+          - variant: intra
+            source: 1a2e757a0230bae0e8f915023485978587d7fe14
+          - variant: grow
+            source: 1a2e757a0230bae0e8f915023485978587d7fe14
+          - variant: portfolio
+            source: 1a2e757a0230bae0e8f915023485978587d7fe14
+          - variant: bridge
+            source: 1a2e757a0230bae0e8f915023485978587d7fe14
+          - variant: repair
+            source: 1a2e757a0230bae0e8f915023485978587d7fe14
     steps:
       - uses: actions/checkout@v4
         with:
@@ -21,54 +37,40 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: '1.4.3'
-      - name: Keep immutable copper fixed and preserve existing movable-path promotion
+      - name: Fetch the two exact source versions for isolation
+        run: |
+          git fetch origin 2b1207ad70971f326166b134ea19418137273f23 --depth=1
+          git fetch origin 1a2e757a0230bae0e8f915023485978587d7fe14 --depth=1
+      - name: Restore one component or dependency set
+        env:
+          VARIANT: ${{ matrix.variant }}
         run: |
           python3 - <<'PY'
+          import os,subprocess
           from pathlib import Path
-          root=Path("lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph")
-          p=root/"Pipeline9RegionalFallbackSolver.ts"
-          s=p.read_text()
-          old="      fixedHdRoutes: params.fixedHdRoutes,"
-          assert s.count(old)==1
-          s=s.replace(old,"      fixedHdRoutes: params.immutableHdRoutes ?? params.fixedHdRoutes,",1)
-          old="this.params.immutableHdRoutes ?? []"
-          assert s.count(old)==1
-          s=s.replace(old,"this.params.immutableHdRoutes ?? this.params.fixedHdRoutes ?? []",1)
-          p.write_text(s)
-          p=root/"Pipeline9HighDensitySolver.ts"
-          s=p.read_text()
-          old="    let regionalCopperRoutes: HighDensityRoute[] =\n      this.activeFallbackFixedObstacleRoutes"
-          assert s.count(old)==1
-          new="""    const immutableHdRoutes: HighDensityRoute[] =
-                this.activeFallbackFixedObstacleRoutes.filter(
-                  (route) => route.isFixed === true || route.isThroughObstacle === true,
-                )
-              let regionalCopperRoutes: HighDensityRoute[] =
-                this.activeFallbackFixedObstacleRoutes"""
-          s=s.replace(old,new,1)
-          old="      regionalCopperRoutes = [...regionalCopperRoutes, ...routedCopperRoutes]"
-          assert s.count(old)==1
-          s=s.replace(old,old+"\n      immutableHdRoutes.push(...routedCopperRoutes)",1)
-          old="""      immutableHdRoutes: this.activeFallbackFixedObstacleRoutes.filter(
-                  (route) => route.isFixed === true || route.isThroughObstacle === true,
-                ),"""
-          assert s.count(old)==1
-          s=s.replace(old,"      immutableHdRoutes,",1)
-          p.write_text(s)
+          mode=os.environ["VARIANT"]
+          main="2b1207ad70971f326166b134ea19418137273f23"
+          parent="1a2e757a0230bae0e8f915023485978587d7fe14"
+          def restore(ref,path):
+            p=Path(path)
+            p.parent.mkdir(parents=True,exist_ok=True)
+            p.write_bytes(subprocess.run(["git","show",ref+":"+path],check=True,capture_output=True).stdout)
+          if mode=="main-parent-deps":
+            restore(parent,"package.json")
+          elif mode=="parent-main-deps":
+            restore(main,"package.json")
+          elif mode not in ("main",):
+            files={
+              "intra":"lib/solvers/HighDensitySolver/IntraNodeSolver.ts",
+              "grow":"lib/solvers/HyperHighDensitySolver/GrowShrinkHighDensityIntraNodeSolver/GrowShrinkHighDensityIntraNodeSolver.ts",
+              "portfolio":"lib/solvers/HyperHighDensitySolver/PortfolioSingleIntraNodeSolver.ts",
+              "bridge":"lib/solvers/HyperHighDensitySolver/repairDisconnectedSameRootPortPoints.ts",
+              "repair":"lib/solvers/HighDensityRepairSolver/Pipeline4HighDensityRepairSolver.ts",
+            }
+            restore(main,files[mode])
           PY
       - run: bun install
-      - name: Keep all original board routing assertions
+      - name: Run the unchanged Game Boy clearance and via-count regression
         env:
           BUN_UPDATE_SNAPSHOTS: '1'
-        run: bun test --timeout 9999999 tests/bugs/bugreport96-full-gameboy-no-breakout.test.ts tests/bugs/usb-dp-phase-detour.test.ts tests/repro/pipeline9-h616-portfolio-candidate-clearance.test.ts tests/features/pipeline9-orangecrab-native-fixed-traces.test.ts
-      - name: Report actual OrangeCrab DRC count
-        if: always()
-        run: |
-          python3 - <<'PY'
-          import re
-          from pathlib import Path
-          p=Path("tests/features/__snapshots__/pipeline9-orangecrab-native-fixed-traces.snap.svg")
-          if p.exists():
-            m=re.search(r"Relaxed DRC errors: (\d+)",p.read_text())
-            if m: print("ORANGECRAB_DRC_COUNT",int(m.group(1)))
-          PY
+        run: bun test --timeout 9999999 tests/bugs/bugreport96-full-gameboy-no-breakout.test.ts
