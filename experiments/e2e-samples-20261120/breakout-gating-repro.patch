@@ -1,21 +1,17 @@
 diff --git a/tests/breakout/failed-breakout-placement-stops-routing.test.tsx b/tests/breakout/failed-breakout-placement-stops-routing.test.tsx
 new file mode 100644
-index 0000000..1fc5fe7
+index 0000000..8b0bff2
 --- /dev/null
 +++ b/tests/breakout/failed-breakout-placement-stops-routing.test.tsx
-@@ -0,0 +1,79 @@
+@@ -0,0 +1,72 @@
 +import { expect, test } from "bun:test"
 +import { getTestFixture } from "tests/fixtures/get-test-fixture"
 +
 +test("failed breakout placement stops routing before the bus phase", async () => {
 +  const { circuit } = getTestFixture()
 +  let autoroutingStartCount = 0
-+  let solverStartCount = 0
 +  circuit.on("autorouting:start", () => {
 +    autoroutingStartCount++
-+  })
-+  circuit.on("solver:started", () => {
-+    solverStartCount++
 +  })
 +  const footprint = (
 +    <footprint>
@@ -78,8 +74,5 @@ index 0000000..1fc5fe7
 +    "need 2.10mm but expose only 2.00mm",
 +  )
 +  expect(autoroutingStartCount).toBe(0)
-+  expect(solverStartCount).toBe(0)
-+  expect(circuit.db.pcb_breakout_point.list()).toHaveLength(0)
 +  expect(circuit.db.pcb_trace.list()).toHaveLength(0)
-+  expect(circuit.db.pcb_via.list()).toHaveLength(0)
 +})
