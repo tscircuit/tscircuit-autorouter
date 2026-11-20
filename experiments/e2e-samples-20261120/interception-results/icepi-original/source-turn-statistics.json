@@ -1,0 +1,76 @@
+[
+  {
+    "mode": "before",
+    "sample": "icepi-original",
+    "partialFanoutOnly": true,
+    "escaped": 9,
+    "requested": 32,
+    "vias": 8,
+    "nativeDrcValid": true,
+    "nativeDrcIssues": [],
+    "independentViaInPadFindings": [],
+    "coreTraces": 0,
+    "coreVias": 0,
+    "revisions": {
+      "core": "351e73d665fad37577c47fcbff2e4c29eb377467",
+      "router": "native-installed-package",
+      "winding": "202dbe9eb0088633b6fa094120dba6f2f41f8803",
+      "sampleMode": "fanout_first",
+      "archiveSha256": "1991ad1891a953dcd660818aaceb73f7aa42dbf704e677e635753b9159f7a6b7",
+      "coreLockSha256": "23136f630f9a4a12ad672102659eca76ac78303811f52e0309c3b9ea12643037",
+      "@tscircuit/fanout-solver": "0.0.93",
+      "@tscircuit/winding-breakout-point-solver": "0.0.1",
+      "@tscircuit/capacity-autorouter": "0.0.1135",
+      "@tscircuit/props": "0.0.741",
+      "@tscircuit/bus-lanes-solver": "0.0.62",
+      "@tscircuit/checks": "0.0.282",
+      "circuit-to-svg": "0.0.460",
+      "react": "19.3.1",
+      "interception": "read-only winding stages and original fanout clearance rejections",
+      "corePatchApplied": false
+    }
+  },
+  {
+    "mode": "after",
+    "sample": "icepi-original",
+    "partialFanoutOnly": true,
+    "escaped": 14,
+    "requested": 32,
+    "vias": 6,
+    "nativeDrcValid": true,
+    "nativeDrcIssues": [],
+    "independentViaInPadFindings": [],
+    "coreTraces": 0,
+    "coreVias": 0,
+    "revisions": {
+      "core": "351e73d665fad37577c47fcbff2e4c29eb377467",
+      "router": "native-installed-package",
+      "winding": "202dbe9eb0088633b6fa094120dba6f2f41f8803",
+      "sampleMode": "fanout_first",
+      "archiveSha256": "1991ad1891a953dcd660818aaceb73f7aa42dbf704e677e635753b9159f7a6b7",
+      "coreLockSha256": "be2a291d11cb926400c08fd43a0bfab9051761c97ce4bf02afb12143cac94f55",
+      "@tscircuit/fanout-solver": "0.0.93",
+      "@tscircuit/winding-breakout-point-solver": "0.0.1",
+      "@tscircuit/capacity-autorouter": "0.0.1135",
+      "@tscircuit/props": "0.0.741",
+      "@tscircuit/bus-lanes-solver": "0.0.62",
+      "@tscircuit/checks": "0.0.282",
+      "circuit-to-svg": "0.0.460",
+      "react": "19.3.1",
+      "interception": "read-only winding stages and original fanout clearance rejections",
+      "corePatchApplied": false,
+      "fanoutSourcePatch": [
+        {
+          "file": "source-escape.ts",
+          "beforeSha256": "36f7803d49803299eb31ac445c20291d9bd610180f40d2bbacdbf3c78c915f4a",
+          "afterSha256": "aed7e510c53658fa8a34993a5cd1d58845ff209a6df46836c19fd6e0527471e3"
+        },
+        {
+          "file": "track-candidates.ts",
+          "beforeSha256": "5be225944e2be619eec8f89e541b7443c91e78d9507b10d8200722314ca00eeb",
+          "afterSha256": "71177e4d4b6e0269a359b1876157020cf60be6fbe6a69f3dd1e88c08c2de572c"
+        }
+      ]
+    }
+  }
+]
