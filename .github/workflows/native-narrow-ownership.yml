@@ -1,0 +1,42 @@
+name: Check narrowed native pad ownership
+on:
+  push:
+    branches: [analysis/native-copper-stage-diagnostics]
+    paths: [.github/workflows/native-narrow-ownership.yml]
+permissions:
+  contents: write
+jobs:
+  routing:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - variant: parent
+            source: ca745655f7f32d6104d643ed056b5d6dfbafa8c9
+          - variant: leaf
+            source: c7dbc2ce0114fc2f575db2ddd88da5a2b15e0b90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.source }}
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.4.3'
+      - run: bun install
+      - run: bunx tsc --noEmit
+      - name: Preserve board regressions and ownership invariants
+        env:
+          BUN_UPDATE_SNAPSHOTS: '1'
+        run: |
+          bun test --timeout 9999999 tests/bugs/bugreport96-full-gameboy-no-breakout.test.ts tests/bugs/usb-dp-phase-detour.test.ts tests/repro/pipeline9-h616-portfolio-candidate-clearance.test.ts tests/features/pipeline9-orangecrab-native-fixed-traces.test.ts tests/solvers/high-density-repair-geometry-first.test.ts tests/features/pipeline9-srj23-sample52-bounded-joint-drc.test.ts tests/features/obstacle-route-connectivity.test.ts tests/features/pipeline9-high-density-regional-fallback.test.ts
+      - name: Save verified public test SVGs
+        if: success()
+        run: |
+          git config user.name "tscircuit-bot"
+          git config user.email "actions@github.com"
+          git add -- '*.snap.svg'
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "Record verified narrow native-ownership SVGs"
+          git push origin HEAD:refs/heads/analysis/verified-native-narrow-${{ github.run_id }}-${{ matrix.variant }}
