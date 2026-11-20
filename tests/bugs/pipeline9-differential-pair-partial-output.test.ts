@@ -2,87 +2,63 @@ import { expect, test } from "bun:test"
 import inputFixture from "../../fixtures/bug-reports/pipeline9-differential-pair-partial-output/input.srj.json"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import { getBugReportSnapshotSvg } from "lib/testing/getBugReportSnapshotSvg"
-import type { SimpleRouteJson } from "lib/types"
+import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 
-test("Pipeline9 snapshots the RK3506G2 batch and reports a forced pair failure", async (): Promise<void> => {
-  const input = structuredClone(inputFixture) as SimpleRouteJson
-  // Route one batch on the full placement board, with all obstacles and layers.
-  const dsiPositive = "source_trace_154"
-  const dsiNegative = "source_trace_153"
-  const uartTx = "source_trace_172"
-  const ledAnode = "source_trace_194"
-  const batch = new Set([dsiPositive, dsiNegative, uartTx, ledAnode])
-  input.connections = input.connections.filter(({ name }) => batch.has(name))
-  input.differentialPairs = input.differentialPairs?.filter(
-    ({ connectionNames }) =>
-      connectionNames.includes(dsiPositive) &&
-      connectionNames.includes(dsiNegative),
+const getTraceLength = (trace: SimplifiedPcbTrace): number => {
+  const points = trace.route.filter(
+    (point) => point.route_type === "wire" || point.route_type === "via",
   )
-  expect(input.connections).toHaveLength(4)
-  expect(input.differentialPairs).toHaveLength(1)
+  return points.slice(1).reduce((length, point, index) => {
+    const previous = points[index]!
+    return length + Math.hypot(point.x - previous.x, point.y - previous.y)
+  }, 0)
+}
 
-  const options = {
+test("Pipeline9 snapshots the RK3506G2 DSI_D0 breakout length skew", async () => {
+  const input = structuredClone(inputFixture) as SimpleRouteJson
+  // The full board fixture uses two staggered DSI_D0 breakout pads.
+  const pair = input.differentialPairs?.find(
+    ({ connectionNames }) =>
+      connectionNames[0] === "source_trace_154" &&
+      connectionNames[1] === "source_trace_153",
+  )
+  if (!pair) throw new Error("DSI_D0 pair missing")
+  const batch = new Set([
+    ...pair.connectionNames,
+    "source_trace_172",
+    "source_trace_194",
+  ])
+  input.connections = input.connections.filter(({ name }) => batch.has(name))
+  input.differentialPairs = [pair]
+
+  const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(input, {
     cacheProvider: null,
     effort: 0.4,
-  }
-  const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
-    structuredClone(input),
-    options,
-  )
-  while (
-    !solver.lengthMatchingPostProcessingSolver &&
-    !solver.solved &&
-    !solver.failed
-  ) {
-    solver.step()
-  }
+  })
+  solver.solve()
+  expect(solver.solved).toBe(true)
 
-  const pairSolver = solver.lengthMatchingPostProcessingSolver
-  if (!pairSolver)
-    throw new Error(solver.error ?? "Display pair stage not reached")
-  const cleanup = solver.effortCleanupSolver
-  if (!cleanup?.solved) throw new Error("Route cleanup did not complete")
-  const cleanedRoutes = cleanup.getOutput()
-  expect(cleanup.params.isValid(cleanedRoutes)).toBe(true)
-  const cleanedNets = new Set(
-    cleanedRoutes.map(({ rootConnectionName }) => rootConnectionName),
-  )
-  expect(cleanedNets.has(uartTx)).toBe(true)
-  expect(cleanedNets.has(ledAnode)).toBe(true)
-
-  // Trigger a deterministic DSI_D0 failure after the real router produces copper.
-  const pairError = "Controlled RK3506G2 DSI_D0 length-matching failure"
-  pairSolver.error = pairError
-  pairSolver.failed = true
-  solver.step()
-
-  expect(solver.getCurrentPhase()).toBe("lengthMatchingPostProcessingSolver")
-  expect(solver.error).toBe(pairError)
-  expect(solver.failed).toBe(true)
-  expect(solver.solved).toBe(false)
-  expect(() => solver.getOutputSimplifiedPcbTraces()).toThrow(
-    "Cannot get output before solving is complete",
-  )
-
-  // Render the exported copper from a normal run on the same board and batch.
-  const previewSolver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
-    input,
-    options,
-  )
-  previewSolver.solve()
-  expect(previewSolver.solved).toBe(true)
-  const routedTraces = previewSolver.getOutputSimplifiedPcbTraces()
+  const routedTraces = solver.getOutputSimplifiedPcbTraces()
   expect(
     routedTraces.map(({ connection_name }) => connection_name).sort(),
   ).toEqual([...batch].sort())
-  await expect(
-    getBugReportSnapshotSvg(
-      {
-        inputSrj: input,
-        srjWithPointPairs: previewSolver.srjWithPointPairs!,
-        routedTraces,
-      },
-      { bounds: input.bounds },
+  const [positive, negative] = pair.connectionNames.map((name) =>
+    getTraceLength(
+      routedTraces.find((trace) => trace.connection_name === name)!,
     ),
-  ).toMatchSvgSnapshot(import.meta.path)
+  )
+  const skew = Math.abs(positive! - negative!)
+  const diagram = getBugReportSnapshotSvg(
+    {
+      inputSrj: input,
+      srjWithPointPairs: solver.srjWithPointPairs!,
+      routedTraces,
+    },
+    { bounds: input.bounds },
+  )
+  const color = skew <= pair.lengthTolerance ? "#166534" : "#b91c1c"
+  const skewLabel = `<text x="24" y="81" fill="${color}" font-family="Arial, sans-serif" font-size="18">DSI_D0 skew ${skew.toFixed(3)} mm / ${pair.lengthTolerance.toFixed(3)} mm limit</text>`
+  await expect(
+    diagram.replace("</svg>", `${skewLabel}</svg>`),
+  ).toMatchSvgSnapshot(import.meta.path, { tolerance: 0 })
 })
