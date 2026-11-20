@@ -11,11 +11,7 @@ import {
 } from "graphics-debug"
 import { TopologyMergingSolver } from "lib/solvers/TopologyMergingSolver/TopologyMergingSolver"
 import * as topologyRegions from "lib/solvers/TopologyMergingSolver/topology-merging-regions"
-import type {
-  CapacityMeshNode,
-  SimpleRouteJson,
-  SimplifiedPcbTrace,
-} from "lib/types"
+import type { CapacityMeshNode, SimpleRouteJson } from "lib/types"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
 import { createRectFromCapacityNode } from "lib/utils/createRectFromCapacityNode"
 
@@ -181,12 +177,12 @@ test("ButterStick keeps native layers while reusing repeated slab coverage", asy
   // Reuse the existing native circuit fixture for physical context only.
   // The focused solver still receives exactly the same twelve mesh regions.
   const fixtureUrl = new URL(
-    "../fixtures/assets/butterstick-ddr-fixed-copper.srj.json.gz",
+    "../fixtures/assets/butterstick-native-ddr-handoff.srj.json.gz",
     import.meta.url,
   )
-  const { inputSrj, preloadedTraces } = JSON.parse(
+  const { inputSrj } = JSON.parse(
     gunzipSync(new Uint8Array(readFileSync(fixtureUrl))).toString("utf8"),
-  ) as { inputSrj: SimpleRouteJson; preloadedTraces: SimplifiedPcbTrace[] }
+  ) as { inputSrj: SimpleRouteJson }
   const inNativeView = ({ x, y }: { x: number; y: number }): boolean => {
     const minX = 3.3
     const maxX = 6.7
@@ -209,7 +205,6 @@ test("ButterStick keeps native layers while reusing repeated slab coverage", asy
     ...inputSrj,
     obstacles: nativePads.filter(({ shape }): boolean => shape !== "circle"),
     connections: [],
-    traces: preloadedTraces,
   })
   const graphics: GraphicsObject = {
     coordinateSystem: "cartesian",

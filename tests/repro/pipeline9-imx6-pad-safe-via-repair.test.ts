@@ -32,7 +32,7 @@ type Imx6ViaRepairFixture = {
 }
 
 test("repairs the remaining i.MX6 DDR via clearance with native board geometry", async (): Promise<void> => {
-  // Captured after the full TSX board's DDR repair; other signals are unfinished.
+  // The repair checkpoint retains the board's 17 fixed PCB traces and 1,926 pad and hole obstacles.
   const fixture = JSON.parse(
     gunzipSync(
       new Uint8Array(
