@@ -1,4 +1,4 @@
-name: Verify native copper context and physical clearance
+name: Verify canonical saved-trace pad ownership
 on:
   push:
     branches: [analysis/native-copper-stage-diagnostics]
@@ -12,108 +12,56 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        variant: [width, pad-guard]
+        source: [2b1207ad70971f326166b134ea19418137273f23, a3011ea856de9661404a115ed2050d9e0a1bff77, 93f449589c8748916c2105a5efab437c0908269a]
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: 93f449589c8748916c2105a5efab437c0908269a
+          ref: ${{ matrix.source }}
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: '1.4.3'
-      - name: Preserve actual copper geometry and restore completed neighbor context
+      - name: Recognize a native trace's canonical root when its synthetic name is unmapped
         run: |
+          cat > lib/solvers/TraceWidthSolver/isObstacleConnectedToRoute.ts <<'TS'
+          import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
+          import type { Obstacle } from "lib/types/srj-types"
+          
+          type RouteConnection = {
+            connectionName: string
+            rootConnectionName?: string
+          }
+          
+          export const isObstacleConnectedToRoute = (
+            obstacle: Obstacle,
+            route: RouteConnection,
+            connMap?: ConnectivityMap,
+          ): boolean => {
+            if (!connMap) {
+              return obstacle.connectedTo.some(
+                (connectedId) =>
+                  connectedId === route.connectionName ||
+                  connectedId === route.rootConnectionName,
+              )
+            }
+          
+            let routeNetId = connMap.getNetConnectedToId(route.connectionName)
+            if (routeNetId === undefined && route.rootConnectionName !== undefined) {
+              if (Object.hasOwn(connMap.netMap, route.rootConnectionName)) {
+                routeNetId = route.rootConnectionName
+              } else {
+                routeNetId = connMap.getNetConnectedToId(route.rootConnectionName)
+              }
+            }
+            routeNetId ??= route.rootConnectionName ?? route.connectionName
+          
+            return obstacle.connectedTo.some(
+              (connectedId) =>
+                (connMap.getNetConnectedToId(connectedId) ?? connectedId) === routeNetId,
+            )
+          }
+          TS
           python3 - <<'PY'
           from pathlib import Path
-          p=Path("lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver.ts")
-          s=p.read_text()
-          start=s.index("    let regionalCopperRoutes: HighDensityRoute[] =")
-          end=s.index("    this.activeFallbackSolver = ",start)
-          s=s[:start]+"""    const regionalBounds = getNodeBounds(regionalNode, this.obstacleMargin)
-              const routedCopperRoutes = this.routes.filter((route) =>
-                routeOverlapsNode(
-                  route,
-                  regionalNode,
-                  regionalBounds,
-                  Math.max(this.traceWidth, this.viaDiameter) / 2,
-                  this,
-                ),
-              )
-              const regionalCopperRoutes = [
-                ...this.activeFallbackFixedObstacleRoutes,
-                ...routedCopperRoutes,
-              ]
-          """+s[end:]
-          p.write_text(s)
-          p=Path("lib/solvers/HighDensityRepairSolver/Pipeline4HighDensityRepairSolver.ts")
-          s=p.read_text()
-          old="""    const repairRoutes = contextRoutes.map((route) =>
-                toRepairRoute({
-                  route,
-                  connMap: params.connMap,
-                  minimumTraceWidth: params.minimumTraceWidth,
-                  viaLayerSpan,
-                }),
-              )"""
-          assert s.count(old)==1
-          new="""    const repairRoutes = contextRoutes.map((route, index) => {
-                let minimumTraceWidth: number | undefined
-                if (index < params.hdRoutes.length) {
-                  minimumTraceWidth = params.minimumTraceWidth
-                }
-                return toRepairRoute({
-                  route,
-                  connMap: params.connMap,
-                  minimumTraceWidth,
-                  viaLayerSpan,
-                })
-              })"""
-          p.write_text(s.replace(old,new,1))
-          if '${{ matrix.variant }}' == 'pad-guard':
-              p=Path("lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensityForceImproveSolver.ts")
-              s=p.read_text()
-              s='import { FixedCopperClearanceGuard } from "high-density-repair02/lib/high-density-repair-solver/functions/FixedCopperClearanceGuard"\nimport { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"\nimport { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"\n'+s
-              s=s.replace('    if (this.fixedViaObstacleIndexes.size === 0) return','    if (this.fixedViaObstacleIndexes.size === 0 && this.fixedHdRoutes.length === 0) return',1)
-              old='    if (!worsensViaClearance) return'
-              assert s.count(old)==1
-              new="""    let allowsNativeCopper = true
-                  if (this.fixedHdRoutes.length > 0) {
-                    const connMap = getConnectivityMapFromSimpleRouteJson(this.inputSrj)
-                    const ownedIndexes = new Set(routeIndexes)
-                    const readOnlyRoutes = [
-                      ...this.fixedHdRoutes,
-                      ...this.getOutput().filter((_, index) => !ownedIndexes.has(index)),
-                    ]
-                    const normalizeRoute = (route: typeof originalRoutes[number]) => ({
-                      ...route,
-                      rootConnectionName: connMap.getNetConnectedToId(route.connectionName) ??
-                        route.rootConnectionName,
-                    })
-                    const obstacles = createObjectsWithZLayers(
-                      this.inputSrj.obstacles,
-                      this.inputSrj.layerCount,
-                    ).map((obstacle) => ({
-                      ...obstacle,
-                      zLayers: obstacle.__zLayers,
-                      connectedTo: obstacle.connectedTo.map(
-                        (id) => connMap.getNetConnectedToId(id) ?? id,
-                      ),
-                    }))
-                    const guard = new FixedCopperClearanceGuard(
-                      readOnlyRoutes.map(normalizeRoute),
-                      this.inputSrj.minTraceToPadEdgeClearance ??
-                        this.inputSrj.defaultObstacleMargin ??
-                        RELAXED_DRC_OPTIONS.traceClearance,
-                      obstacles,
-                      this.inputSrj.minPadEdgeToPadEdgeClearance,
-                    )
-                    allowsNativeCopper = guard.allows(
-                      originalRoutes.map(normalizeRoute),
-                      candidateRoutes.map(normalizeRoute),
-                      candidateRoutes.keys(),
-                    )
-                  }
-                  if (!worsensViaClearance && allowsNativeCopper) return"""
-              p.write_text(s.replace(old,new,1))
           p=Path("tests/bugs/bugreport96-full-gameboy-no-breakout.test.ts")
           s=p.read_text()
           old="  expect(errors.length).toBeLessThanOrEqual(28)"
@@ -125,7 +73,7 @@ jobs:
           p.write_text(s)
           PY
       - run: bun install
-      - name: Preserve original zero-error, via-count and preload assertions
+      - name: Preserve every original functional assertion
         env:
           BUN_UPDATE_SNAPSHOTS: '1'
         run: bun test --timeout 9999999 tests/bugs/bugreport96-full-gameboy-no-breakout.test.ts tests/bugs/usb-dp-phase-detour.test.ts tests/repro/pipeline9-h616-portfolio-candidate-clearance.test.ts tests/features/pipeline9-orangecrab-native-fixed-traces.test.ts
@@ -136,5 +84,5 @@ jobs:
           git config user.email "actions@github.com"
           git add -- '*.snap.svg'
           if git diff --cached --quiet; then exit 0; fi
-          git commit -m "Record verified physical native-copper snapshots"
-          git push origin HEAD:refs/heads/analysis/verified-native-physical-${{ matrix.variant }}
+          git commit -m "Record verified canonical pad-ownership SVGs"
+          git push origin HEAD:refs/heads/analysis/verified-native-pad-ownership-${{ matrix.source }}
