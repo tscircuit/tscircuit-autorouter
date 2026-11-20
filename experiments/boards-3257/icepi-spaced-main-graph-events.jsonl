@@ -1,0 +1,24 @@
+{"event":"phase","seconds":0.000678641999999968,"phase":"preprocessSimpleRouteJsonSolver"}
+{"event":"phase","seconds":1.484183253,"phase":"componentDetectionSolver"}
+{"event":"phase","seconds":1.494794665,"phase":"escapeViaLocationSolver"}
+{"event":"phase","seconds":1.664477412,"phase":"netToPointPairsSolver"}
+{"event":"phase","seconds":1.882206643,"phase":"topologyPlanningSolver"}
+{"event":"phase","seconds":4.325736442999999,"phase":"topologyMergingSolver"}
+{"event":"phase","seconds":5.848508451,"phase":"nodeDimensionSubdivisionSolver"}
+{"event":"phase","seconds":5.869781636,"phase":"edgeSolver"}
+{"event":"phase","seconds":6.3495791399999995,"phase":"availableSegmentPointSolver"}
+{"event":"phase","seconds":6.654533638999999,"phase":"necessaryCrampedPortPointSolver"}
+{"event":"phase","seconds":8.070037079,"phase":"preloadedTraceGraphSolver"}
+{"event":"phase","seconds":8.767867645,"phase":"portPointPathingSolver"}
+{"event":"graph-created","seconds":13.529891776000001,"routes":377,"iterations":0,"reservedPorts":1212}
+{"event":"finisher","seconds":28.122991366,"attempt":-1,"solved":false,"failed":true,"error":"Congestion-aware final routing exhausted its rerip budget","pending":38,"rips":6,"iterations":2184966}
+{"event":"finisher","seconds":28.228353089,"attempt":0,"solved":false,"failed":true,"error":"GreedyFinalRouteSolver ran out of iterations","pending":61,"rips":0,"iterations":50000}
+{"event":"reset","seconds":28.246581639,"attempt":1,"before":44,"after":327,"rips":1}
+{"event":"finisher","seconds":28.34105737,"attempt":1,"solved":false,"failed":true,"error":"GreedyFinalRouteSolver ran out of iterations","pending":28,"rips":1,"iterations":50000}
+{"event":"reset","seconds":28.356381081000002,"attempt":2,"before":50,"after":327,"rips":1}
+{"event":"finisher","seconds":28.429972114,"attempt":2,"solved":false,"failed":true,"error":"GreedyFinalRouteSolver ran out of iterations","pending":28,"rips":1,"iterations":50000}
+{"event":"finisher","seconds":28.51064793,"attempt":3,"solved":false,"failed":true,"error":"GreedyFinalRouteSolver ran out of iterations","pending":60,"rips":0,"iterations":50000}
+{"event":"finisher","seconds":28.529539551000003,"attempt":4,"solved":true,"failed":false,"error":null,"pending":0,"rips":0,"iterations":7411}
+{"event":"phase","seconds":29.509981536999998,"phase":"uniformPortDistributionSolver"}
+{"event":"phase","seconds":29.810591463,"phase":"highDensityRouteSolver"}
+{"event":"result","seconds":29.936280441,"cpuSeconds":38.358706,"solved":false,"failed":false,"error":null,"phase":"highDensityRouteSolver","graphSolved":true,"graphFailed":false,"graphPending":0,"graphRoutes":377,"graphStats":{"initialAssignmentCount":1219,"initiallyRoutedRouteCount":105,"selectiveRipCount":2,"selectivelyRippedRouteCount":2,"globalReripCount":0,"alternateBlockerSearchCount":0,"alternateOwnerCount":0,"failedOwnerPairCount":2,"maxFailedOwnerPairCount":1,"failedOwnerPairs":[{"failedRouteId":141,"ownerRouteId":105,"count":1},{"failedRouteId":177,"ownerRouteId":26,"count":1}],"lastDirectOwnerRouteIds":[26],"lastRepeatedOwnerRouteIds":[],"lastAlternateOwnerRouteIds":[],"lastRippedRouteIds":[26],"lastRelaxedSearchExpandedLabelCount":263,"lastAlternateSearchExpandedLabelCount":0,"lastFailedRouteId":177,"neverSuccessfullyRoutedRouteCount":0,"acceptedGreedyFinalRouteOnTimeout":true,"greedyFinalRouteIter":4,"finalRoutingStrategy":"greedy","greedyFinalRouteRemainingRouteCount":38,"greedyFinalRouteMaxIterations":50000,"maxRegionCost":179.34065934065393,"totalRegionCost":2212.675729334728,"bestMaxRegionCost":179.34065934065393,"bestTotalRegionCost":2212.675729334728}}

@@ -1,0 +1,404 @@
+{
+  "versions": {
+    "tscircuit": {
+      "version": "0.0.3257",
+      "entrySha256": "cfd669f2d96ac77eb054aab53ff34a80120bcd3db72b87f969b3d8b8d2af78a3"
+    },
+    "@tscircuit/core": {
+      "version": "0.0.2436",
+      "entrySha256": "4e936d91a642029a1bea67a9551e4c9a8e7e1c74c7ae6ff1ee43a472b3d00713"
+    },
+    "@tscircuit/fanout-solver": {
+      "version": "0.0.94",
+      "entrySha256": "ee06af452060e90d70c49f00a37cf516638f7649817fc4e94decb39da4d07cf9"
+    },
+    "@tscircuit/capacity-autorouter": {
+      "version": "0.0.1139",
+      "entrySha256": "ad035837d9f59fad1258b73c393a7abd151bf926ae9765c28f0f37eb053c9c68"
+    }
+  },
+  "originalTsxEntries": 19,
+  "originalSourceFilesUnchanged": 45,
+  "budgetPerBoardSeconds": 600,
+  "fullyRoutedBoards": 0,
+  "terminalRoutingErrors": 12,
+  "budgetLimited": 7,
+  "freshGraphInstancesObserved": 17,
+  "oldTerminalResetLossEvents": [],
+  "stageCounts": {
+    "bus_lanes:budget": 2,
+    "fanout:routing_error": 3,
+    "highDensityRouteSolver:budget": 2,
+    "fanout:budget": 3,
+    "highDensityRouteSolver:routing_error": 7,
+    "portPointPathingSolver:routing_error": 2
+  },
+  "artifact": {
+    "run": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44820365588",
+    "id": 14671374470,
+    "sha256": "a0400b97fc8c091986c2701344a27b62a057f975e973938603cb6758ab9b9d4a"
+  },
+  "icepiLocal": {
+    "oldRemainingPhase": {
+      "obstacles": 2021,
+      "traces": 0
+    },
+    "newRemainingPhase": {
+      "obstacles": 1426,
+      "traces": 16,
+      "fixedTraces": 16
+    },
+    "oldOnlyObstacleCount": 595,
+    "newOnlyObstacleCount": 0,
+    "otherSrjFieldsChanged": [],
+    "firstTwoBusPhaseRouteGeometryUnchanged": true,
+    "oldOtherSignalsPhaseNoLongerReached": true,
+    "currentGraphRoutes": 79,
+    "currentGraphSolvedOnMainAndFix": true,
+    "currentPhaseFailure": "Detailed routing: source_net_9 in cmn_31",
+    "freshFullTsxMainAndFixCircuitJsonByteIdentical": true,
+    "freshFullTsxCircuitSha256": "ed060bacc01c0c1c9282c98195d7b32a4487cdd41882653a2491ac5c3582ce0a",
+    "oldEmittedTraces": 52,
+    "oldEmittedVias": 116,
+    "newEmittedTraces": 16,
+    "newEmittedVias": 30,
+    "newUnconnectedPortErrors": 1116
+  },
+  "nativeFanoutPartialPlans": [
+    {
+      "board": "butterstick-native",
+      "oldBest": 60,
+      "newBest": 62
+    },
+    {
+      "board": "glider-native",
+      "oldBest": 72,
+      "newBest": 86
+    },
+    {
+      "board": "h616-native",
+      "oldBest": 107,
+      "newBest": 105
+    },
+    {
+      "board": "icepi-native",
+      "oldBest": 9,
+      "newBest": 14
+    },
+    {
+      "board": "imx6-native",
+      "oldBest": 9,
+      "newBest": 9
+    },
+    {
+      "board": "orangecrab-native",
+      "oldBest": 141,
+      "newBest": 149
+    }
+  ],
+  "conclusion": "The old IcePi graph repro is a legacy core-0.0.2434 input. Fresh core-0.0.2436 inputs remove the 595 converted trace/via obstacles. No fresh instance of the old exhausted-final-reset loss was observed in 17 graph searches. The proposed fix makes no change to the fresh full IcePi-local Circuit JSON. Existing fix PRs are not justified as current-pipeline fixes by this sample run.",
+  "scopeLimitations": [
+    "The seven 600-second cases are incomplete full-board comparisons.",
+    "The old/new whole-stack comparison changes core, fanout, and autorouter together.",
+    "No claim that the generic standalone hypergraph bug is impossible; it remains reproducible with the legacy captured input."
+  ],
+  "circuits": [
+    {
+      "board": "butterstick-local",
+      "oldTraces": null,
+      "oldVias": null,
+      "newTraces": null,
+      "newVias": null,
+      "oldStop": "600-second render budget",
+      "newStop": "600-second render budget",
+      "newStage": "bus_lanes",
+      "oldSeconds": 600.663,
+      "newSeconds": 600.482,
+      "newErrors": null
+    },
+    {
+      "board": "butterstick-native",
+      "oldTraces": 0,
+      "oldVias": 0,
+      "newTraces": 0,
+      "newVias": 0,
+      "oldStop": "settled",
+      "newStop": "settled",
+      "newStage": "fanout",
+      "oldSeconds": 381.785,
+      "newSeconds": 379.998,
+      "newErrors": {
+        "pcb_autorouting_error": 1,
+        "pcb_port_not_connected_error": 2063,
+        "pcb_trace_missing_error": 328
+      }
+    },
+    {
+      "board": "butterstick-spaced",
+      "oldTraces": null,
+      "oldVias": null,
+      "newTraces": null,
+      "newVias": null,
+      "oldStop": "600-second render budget",
+      "newStop": "600-second render budget",
+      "newStage": "bus_lanes",
+      "oldSeconds": 600.77,
+      "newSeconds": 600.543,
+      "newErrors": null
+    },
+    {
+      "board": "glider-local",
+      "oldTraces": null,
+      "oldVias": null,
+      "newTraces": null,
+      "newVias": null,
+      "oldStop": "600-second render budget",
+      "newStop": "600-second render budget",
+      "newStage": "highDensityRouteSolver",
+      "oldSeconds": 600.57,
+      "newSeconds": 600.632,
+      "newErrors": null
+    },
+    {
+      "board": "glider-native",
+      "oldTraces": 0,
+      "oldVias": 0,
+      "newTraces": null,
+      "newVias": null,
+      "oldStop": "settled",
+      "newStop": "600-second render budget",
+      "newStage": "fanout",
+      "oldSeconds": 571.531,
+      "newSeconds": 600.426,
+      "newErrors": null
+    },
+    {
+      "board": "glider-spaced",
+      "oldTraces": 53,
+      "oldVias": 111,
+      "newTraces": 16,
+      "newVias": 30,
+      "oldStop": "settled",
+      "newStop": "settled",
+      "newStage": "highDensityRouteSolver",
+      "oldSeconds": 171.092,
+      "newSeconds": 182.28,
+      "newErrors": {
+        "pcb_autorouting_error": 1,
+        "pcb_port_not_connected_error": 1535
+      }
+    },
+    {
+      "board": "h616-default-order-local",
+      "oldTraces": 142,
+      "oldVias": 167,
+      "newTraces": 16,
+      "newVias": 32,
+      "oldStop": "settled",
+      "newStop": "settled",
+      "newStage": "portPointPathingSolver",
+      "oldSeconds": 359.58,
+      "newSeconds": 47.95,
+      "newErrors": {
+        "pcb_autorouting_error": 1,
+        "pcb_port_not_connected_error": 562
+      }
+    },
+    {
+      "board": "h616-local",
+      "oldTraces": 142,
+      "oldVias": 159,
+      "newTraces": 16,
+      "newVias": 32,
+      "oldStop": "settled",
+      "newStop": "settled",
+      "newStage": "highDensityRouteSolver",
+      "oldSeconds": 557.093,
+      "newSeconds": 59.913,
+      "newErrors": {
+        "pcb_autorouting_error": 1,
+        "pcb_port_not_connected_error": 562
+      }
+    },
+    {
+      "board": "h616-native",
+      "oldTraces": null,
+      "oldVias": null,
+      "newTraces": null,
+      "newVias": null,
+      "oldStop": "600-second render budget",
+      "newStop": "600-second render budget",
+      "newStage": "fanout",
+      "oldSeconds": 600.628,
+      "newSeconds": 600.467,
+      "newErrors": null
+    },
+    {
+      "board": "h616-spaced",
+      "oldTraces": null,
+      "oldVias": null,
+      "newTraces": 16,
+      "newVias": 32,
+      "oldStop": "600-second render budget",
+      "newStop": "settled",
+      "newStage": "portPointPathingSolver",
+      "oldSeconds": 600.456,
+      "newSeconds": 36.416,
+      "newErrors": {
+        "pcb_autorouting_error": 1,
+        "pcb_port_not_connected_error": 562
+      }
+    },
+    {
+      "board": "icepi-local",
+      "oldTraces": 52,
+      "oldVias": 116,
+      "newTraces": 16,
+      "newVias": 30,
+      "oldStop": "settled",
+      "newStop": "settled",
+      "newStage": "highDensityRouteSolver",
+      "oldSeconds": 322.606,
+      "newSeconds": 235.089,
+      "newErrors": {
+        "pcb_autorouting_error": 1,
+        "pcb_port_not_connected_error": 1116
+      }
+    },
+    {
+      "board": "icepi-native",
+      "oldTraces": 0,
+      "oldVias": 0,
+      "newTraces": 0,
+      "newVias": 0,
+      "oldStop": "settled",
+      "newStop": "settled",
+      "newStage": "fanout",
+      "oldSeconds": 189.901,
+      "newSeconds": 212.351,
+      "newErrors": {
+        "pcb_autorouting_error": 1,
+        "pcb_port_not_connected_error": 1765,
+        "pcb_trace_missing_error": 223
+      }
+    },
+    {
+      "board": "icepi-spaced",
+      "oldTraces": 52,
+      "oldVias": 112,
+      "newTraces": 52,
+      "newVias": 98,
+      "oldStop": "settled",
+      "newStop": "settled",
+      "newStage": "highDensityRouteSolver",
+      "oldSeconds": 295.336,
+      "newSeconds": 352.126,
+      "newErrors": {
+        "pcb_autorouting_error": 1,
+        "pcb_port_not_connected_error": 1046
+      }
+    },
+    {
+      "board": "imx6-local",
+      "oldTraces": null,
+      "oldVias": null,
+      "newTraces": null,
+      "newVias": null,
+      "oldStop": "600-second render budget",
+      "newStop": "600-second render budget",
+      "newStage": "highDensityRouteSolver",
+      "oldSeconds": 600.404,
+      "newSeconds": 600.608,
+      "newErrors": null
+    },
+    {
+      "board": "imx6-native",
+      "oldTraces": 0,
+      "oldVias": 0,
+      "newTraces": 0,
+      "newVias": 0,
+      "oldStop": "settled",
+      "newStop": "settled",
+      "newStage": "fanout",
+      "oldSeconds": 323.504,
+      "newSeconds": 318.324,
+      "newErrors": {
+        "pcb_autorouting_error": 2,
+        "pcb_port_not_connected_error": 2247,
+        "pcb_trace_missing_error": 265,
+        "pcb_placement_error": 1
+      }
+    },
+    {
+      "board": "imx6-spaced",
+      "oldTraces": null,
+      "oldVias": null,
+      "newTraces": 17,
+      "newVias": 30,
+      "oldStop": "600-second render budget",
+      "newStop": "settled",
+      "newStage": "highDensityRouteSolver",
+      "oldSeconds": 600.581,
+      "newSeconds": 419.43,
+      "newErrors": {
+        "pcb_autorouting_error": 1,
+        "pcb_port_not_connected_error": 1642
+      }
+    },
+    {
+      "board": "orangecrab-local",
+      "oldTraces": 52,
+      "oldVias": 103,
+      "newTraces": 52,
+      "newVias": 93,
+      "oldStop": "settled",
+      "newStop": "settled",
+      "newStage": "highDensityRouteSolver",
+      "oldSeconds": 236.51,
+      "newSeconds": 229.566,
+      "newErrors": {
+        "pcb_autorouting_error": 1,
+        "pcb_port_not_connected_error": 658
+      }
+    },
+    {
+      "board": "orangecrab-native",
+      "oldTraces": null,
+      "oldVias": null,
+      "newTraces": null,
+      "newVias": null,
+      "oldStop": "600-second render budget",
+      "newStop": "600-second render budget",
+      "newStage": "fanout",
+      "oldSeconds": 600.36,
+      "newSeconds": 600.418,
+      "newErrors": null
+    },
+    {
+      "board": "orangecrab-spaced",
+      "oldTraces": null,
+      "oldVias": null,
+      "newTraces": 52,
+      "newVias": 101,
+      "oldStop": "600-second render budget",
+      "newStop": "settled",
+      "newStage": "highDensityRouteSolver",
+      "oldSeconds": 600.9,
+      "newSeconds": 198.203,
+      "newErrors": {
+        "pcb_autorouting_error": 1,
+        "pcb_port_not_connected_error": 658,
+        "pcb_pad_pad_clearance_error": 1
+      }
+    }
+  ],
+  "icepiSpacedFreshGraphControl": {
+    "routes": 377,
+    "mainSolved": true,
+    "proposedFixSolved": true,
+    "oldGlobalResetLossTriggered": false,
+    "mainRecoveryIterations": 7411,
+    "fixRecoveryIterations": 2874,
+    "scope": "Graph-stage replay of the new-core other_signals input; not a fixed full-TSX E2E run."
+  }
+}

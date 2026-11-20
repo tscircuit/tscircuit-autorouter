@@ -1,0 +1,56 @@
+{
+  "seconds": 29.936280441,
+  "cpuSeconds": 38.358706,
+  "solved": false,
+  "failed": false,
+  "error": null,
+  "phase": "highDensityRouteSolver",
+  "graphSolved": true,
+  "graphFailed": false,
+  "graphPending": 0,
+  "graphRoutes": 377,
+  "graphStats": {
+    "initialAssignmentCount": 1219,
+    "initiallyRoutedRouteCount": 105,
+    "selectiveRipCount": 2,
+    "selectivelyRippedRouteCount": 2,
+    "globalReripCount": 0,
+    "alternateBlockerSearchCount": 0,
+    "alternateOwnerCount": 0,
+    "failedOwnerPairCount": 2,
+    "maxFailedOwnerPairCount": 1,
+    "failedOwnerPairs": [
+      {
+        "failedRouteId": 141,
+        "ownerRouteId": 105,
+        "count": 1
+      },
+      {
+        "failedRouteId": 177,
+        "ownerRouteId": 26,
+        "count": 1
+      }
+    ],
+    "lastDirectOwnerRouteIds": [
+      26
+    ],
+    "lastRepeatedOwnerRouteIds": [],
+    "lastAlternateOwnerRouteIds": [],
+    "lastRippedRouteIds": [
+      26
+    ],
+    "lastRelaxedSearchExpandedLabelCount": 263,
+    "lastAlternateSearchExpandedLabelCount": 0,
+    "lastFailedRouteId": 177,
+    "neverSuccessfullyRoutedRouteCount": 0,
+    "acceptedGreedyFinalRouteOnTimeout": true,
+    "greedyFinalRouteIter": 4,
+    "finalRoutingStrategy": "greedy",
+    "greedyFinalRouteRemainingRouteCount": 38,
+    "greedyFinalRouteMaxIterations": 50000,
+    "maxRegionCost": 179.34065934065393,
+    "totalRegionCost": 2212.675729334728,
+    "bestMaxRegionCost": 179.34065934065393,
+    "bestTotalRegionCost": 2212.675729334728
+  }
+}

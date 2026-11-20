@@ -1,0 +1,20 @@
+board,oldTraces,oldVias,newTraces,newVias,oldStop,newStop,newStage,oldSeconds,newSeconds
+butterstick-local,,,,,600-second render budget,600-second render budget,bus_lanes,600.663,600.482
+butterstick-native,0,0,0,0,settled,settled,fanout,381.785,379.998
+butterstick-spaced,,,,,600-second render budget,600-second render budget,bus_lanes,600.77,600.543
+glider-local,,,,,600-second render budget,600-second render budget,highDensityRouteSolver,600.57,600.632
+glider-native,0,0,,,settled,600-second render budget,fanout,571.531,600.426
+glider-spaced,53,111,16,30,settled,settled,highDensityRouteSolver,171.092,182.28
+h616-default-order-local,142,167,16,32,settled,settled,portPointPathingSolver,359.58,47.95
+h616-local,142,159,16,32,settled,settled,highDensityRouteSolver,557.093,59.913
+h616-native,,,,,600-second render budget,600-second render budget,fanout,600.628,600.467
+h616-spaced,,,16,32,600-second render budget,settled,portPointPathingSolver,600.456,36.416
+icepi-local,52,116,16,30,settled,settled,highDensityRouteSolver,322.606,235.089
+icepi-native,0,0,0,0,settled,settled,fanout,189.901,212.351
+icepi-spaced,52,112,52,98,settled,settled,highDensityRouteSolver,295.336,352.126
+imx6-local,,,,,600-second render budget,600-second render budget,highDensityRouteSolver,600.404,600.608
+imx6-native,0,0,0,0,settled,settled,fanout,323.504,318.324
+imx6-spaced,,,17,30,600-second render budget,settled,highDensityRouteSolver,600.581,419.43
+orangecrab-local,52,103,52,93,settled,settled,highDensityRouteSolver,236.51,229.566
+orangecrab-native,,,,,600-second render budget,600-second render budget,fanout,600.36,600.418
+orangecrab-spaced,,,52,101,600-second render budget,settled,highDensityRouteSolver,600.9,198.203
