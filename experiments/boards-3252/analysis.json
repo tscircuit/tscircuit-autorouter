@@ -20,7 +20,8 @@
     "run": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44741935392",
     "artifactId": 14631807241,
     "artifactSha256": "5bc8055d18adc1ae758201e437fef3577e15790004aebe2fce7423c6d2338629",
-    "latestRegistryVerifiedAt": "2026-11-20T13:45:32Z"
+    "latestRegistryVerifiedAt": "2026-11-20T13:45:32Z",
+    "runnerCommit": "897a9d046f793691d1a9b9f241b8ddb9918bb981"
   },
   "rootCause": {
     "circuit": "icepi-local",
@@ -69,7 +70,11 @@
     "capFocusedControls": 7,
     "capBuild": "pass",
     "capTypecheck": "pass",
-    "upstreamCi": "Repro and fix tests passed; repro format and typecheck passed"
+    "upstreamCi": "Repro and fix tests passed; repro format and typecheck passed",
+    "capacityReproCi": "All 9 test shards, build, format, and typecheck passed",
+    "capacityFixCi": "All 9 test shards passed",
+    "capacityFixCiRun": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44746426454",
+    "verifiedAt": "2026-11-20T14:00:05Z"
   },
   "pullRequests": {
     "tinyRepro": 335,
@@ -136,6 +141,15 @@
     ],
     "identicalCompletedPhaseOutputs": 36,
     "changedCompletedPhaseOutputs": [],
-    "entrySha256": "d13aec907070b1b58359fff98a2e674ea62b2c6cb287dc6ebaa56e4dcbecafdd"
+    "entrySha256": "d13aec907070b1b58359fff98a2e674ea62b2c6cb287dc6ebaa56e4dcbecafdd",
+    "identicalNativeFanoutPlans": [
+      "butterstick-native",
+      "glider-native",
+      "h616-native",
+      "icepi-native",
+      "imx6-native",
+      "orangecrab-native"
+    ],
+    "runnerCommit": "f6902363cb98316db0751e913378ce2de258b17d"
   }
 }
