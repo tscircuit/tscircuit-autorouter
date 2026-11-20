@@ -9,10 +9,12 @@ import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject
 test("reproduces exact-clearance rejection beside fixed fanout copper", async (): Promise<void> => {
   const input = JSON.parse(
     gunzipSync(
-      readFileSync(
-        new URL(
-          "./assets/native-six-signal-fixed-fanout.json.gz",
-          import.meta.url,
+      new Uint8Array(
+        readFileSync(
+          new URL(
+            "./assets/native-six-signal-fixed-fanout.json.gz",
+            import.meta.url,
+          ),
         ),
       ),
     ).toString("utf8"),
