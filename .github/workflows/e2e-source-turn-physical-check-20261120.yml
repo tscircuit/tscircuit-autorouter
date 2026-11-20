@@ -1,0 +1,56 @@
+name: Independently check and render the actual iCE/Pi partial fanout
+on:
+  push:
+    branches: [analysis/e2e-source-turn-physical-check-20261120]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/core
+          ref: 351e73d665fad37577c47fcbff2e4c29eb377467
+          path: core
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - run: cd core && bun install --ignore-scripts
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 44778112884
+          name: full-circuit-interception-icepi-original
+          path: core/e2e-runtime/before
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 44791246776
+          name: full-circuit-interception-icepi-original
+          path: core/e2e-runtime/after
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Validate physical holes against the original SMD pads
+        run: |
+          cp experiments/e2e-samples-20261120/check-source-turn-output.ts core/e2e-runtime/
+          cd core/e2e-runtime
+          bun check-source-turn-output.ts "$GITHUB_WORKSPACE/results"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: actual-source-turn-before-after
+          path: results
+      - name: Export native SVGs and physical findings
+        run: |
+          python3 - <<'PY'
+          import base64,io,zipfile
+          from pathlib import Path
+          stream=io.BytesIO()
+          with zipfile.ZipFile(stream,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=9) as z:
+              for p in Path('results').iterdir():z.writestr(p.name,p.read_bytes())
+          print('SOURCE_TURN_CHECK_BEGIN')
+          encoded=base64.b64encode(stream.getvalue()).decode()
+          for offset in range(0,len(encoded),8000):print(encoded[offset:offset+8000])
+          print('SOURCE_TURN_CHECK_END')
+          PY
