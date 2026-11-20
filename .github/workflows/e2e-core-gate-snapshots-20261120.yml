@@ -1,0 +1,64 @@
+name: Verify existing failed-board snapshots before updating them
+on:
+  push:
+    branches: [analysis/e2e-core-gate-snapshots-20261120]
+permissions:
+  contents: read
+jobs:
+  failed-boards:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/core
+          ref: c1cca976f0af6ed2fd807d5274c5900a35d94d67
+          path: core
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/core
+          ref: baac32debe7713c058fc02fdfcecd2e74b22ab97
+          path: core-candidate
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - run: cd core && bun install
+      - name: Compare existing failed-board cases with identical dependencies
+        run: |
+          python3 - <<'PYCHECK'
+          from pathlib import Path
+          import os,shutil,subprocess
+          root=Path.cwd();core=root/'core';source=Path('lib/components/primitive-components/Group/Group.ts')
+          for variant in ['before','after']:
+              if variant=='after':shutil.copyfile(root/'core-candidate'/source,core/source)
+              for direction in ['northeast','northwest','southeast','southwest']:
+                  target=root/'checked-snapshots'/variant/direction;target.mkdir(parents=True)
+                  environment={**os.environ,'E2E_GATE_PROOF_PATH':str(target/'proof.json')}
+                  if variant=='after':environment['BUN_UPDATE_SNAPSHOTS']='1'
+                  test=f'tests/repros/repro-am62l-lpddr4-orbit-{direction}.test.tsx'
+                  subprocess.run(['bun','--preload',str(root/'experiments/e2e-samples-20261120/prove-core-gate.mjs'),'test','--timeout','120000',test],cwd=core,env=environment,check=True)
+                  snapshot=f'tests/repros/__snapshots__/repro-am62l-lpddr4-orbit-{direction}-pcb.snap.svg'
+                  shutil.copyfile(core/snapshot,target/'pcb.svg')
+          PYCHECK
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: verified-failed-board-snapshots
+          path: checked-snapshots
+      - name: Export bounded snapshot evidence
+        if: always()
+        run: |
+          python3 - <<'PYEXPORT'
+          from pathlib import Path
+          import io,zipfile,base64
+          stream=io.BytesIO()
+          with zipfile.ZipFile(stream,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=9) as z:
+              for p in Path('checked-snapshots').rglob('*'):
+                  if p.is_file():z.writestr(str(p.relative_to('checked-snapshots')),p.read_bytes())
+          assert len(stream.getvalue())<2_000_000
+          print('E2E_CORE_SVG_BEGIN')
+          encoded=base64.b64encode(stream.getvalue()).decode()
+          for offset in range(0,len(encoded),8000):print(encoded[offset:offset+8000])
+          print('E2E_CORE_SVG_END')
+          PYEXPORT
