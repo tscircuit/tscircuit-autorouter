@@ -2,9 +2,9 @@ import { expect, test } from "bun:test"
 import inputFixture from "../../fixtures/bug-reports/pipeline9-differential-pair-partial-output/input.srj.json"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import { getBugReportSnapshotSvg } from "lib/testing/getBugReportSnapshotSvg"
-import type { SimpleRouteJson, SimplifiedPcbTraces } from "lib/types"
+import type { SimpleRouteJson } from "lib/types"
 
-test("Pipeline9 drops independent copper when the RK3506G2 display pair fails", async (): Promise<void> => {
+test("Pipeline9 snapshots the RK3506G2 batch and reports a forced pair failure", async (): Promise<void> => {
   const input = structuredClone(inputFixture) as SimpleRouteJson
   // Route one batch on the full placement board, with all obstacles and layers.
   const dsiPositive = "source_trace_154"
@@ -21,10 +21,14 @@ test("Pipeline9 drops independent copper when the RK3506G2 display pair fails", 
   expect(input.connections).toHaveLength(4)
   expect(input.differentialPairs).toHaveLength(1)
 
-  const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(input, {
+  const options = {
     cacheProvider: null,
     effort: 0.4,
-  })
+  }
+  const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
+    structuredClone(input),
+    options,
+  )
   while (
     !solver.lengthMatchingPostProcessingSolver &&
     !solver.solved &&
@@ -34,7 +38,8 @@ test("Pipeline9 drops independent copper when the RK3506G2 display pair fails", 
   }
 
   const pairSolver = solver.lengthMatchingPostProcessingSolver
-  if (!pairSolver) throw new Error(solver.error ?? "Display pair stage not reached")
+  if (!pairSolver)
+    throw new Error(solver.error ?? "Display pair stage not reached")
   const cleanup = solver.effortCleanupSolver
   if (!cleanup?.solved) throw new Error("Route cleanup did not complete")
   const cleanedRoutes = cleanup.getOutput()
@@ -59,12 +64,22 @@ test("Pipeline9 drops independent copper when the RK3506G2 display pair fails", 
     "Cannot get output before solving is complete",
   )
 
-  const routedTraces: SimplifiedPcbTraces = []
+  // Render the exported copper from a normal run on the same board and batch.
+  const previewSolver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
+    input,
+    options,
+  )
+  previewSolver.solve()
+  expect(previewSolver.solved).toBe(true)
+  const routedTraces = previewSolver.getOutputSimplifiedPcbTraces()
+  expect(
+    routedTraces.map(({ connection_name }) => connection_name).sort(),
+  ).toEqual([...batch].sort())
   await expect(
     getBugReportSnapshotSvg(
       {
         inputSrj: input,
-        srjWithPointPairs: solver.srjWithPointPairs!,
+        srjWithPointPairs: previewSolver.srjWithPointPairs!,
         routedTraces,
       },
       { bounds: input.bounds },
