@@ -13,7 +13,10 @@ import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { minimumDistanceBetweenSegments } from "lib/utils/minimumDistanceBetweenSegments"
-import { createPreloadedCopperLookup } from "./createPreloadedPortValidator"
+import {
+  createPreloadedCopperLookup,
+  type PreloadedCopperLookup,
+} from "./createPreloadedCopperLookup"
 
 type Point = { x: number; y: number }
 type RoutePoint = SimplifiedPcbTrace["route"][number]
@@ -416,53 +419,66 @@ export class PreloadedTraceGraphSolver extends BaseSolver {
 
   private addClearanceGapPorts(): void {
     if (!this.srj.traces?.some((trace) => trace.isFixed)) return
-    const { getClearSpans } = createPreloadedCopperLookup({
+    const copperLookup = createPreloadedCopperLookup({
       srj: this.srj,
       connMap: getConnectivityMapFromSimpleRouteJson(this.srj),
       traceWidth: this.srj.minTraceWidth,
       viaDiameter: this.srj.minViaDiameter ?? 0.3,
     })
     for (const segment of this.sharedEdgeSegments) {
-      const dx = segment.end.x - segment.start.x
-      const dy = segment.end.y - segment.start.y
-      const lengthSquared = dx * dx + dy * dy
-      if (lengthSquared === 0) continue
       for (const z of segment.availableZ) {
-        const layerPorts = segment.portPoints.filter((port) =>
-          port.availableZ.includes(z),
-        )
-        const template = layerPorts[0]
-        if (!template) continue
-        const clearSpans = getClearSpans({ ...segment, z })
-        for (const [index, [start, end]] of clearSpans.entries()) {
-          if ((end - start) * Math.sqrt(lengthSquared) <= GEOMETRIC_TOLERANCE) {
-            continue
-          }
-          const hasFreePort = layerPorts.some((port) => {
-            if (port._preloadedTracePortAssignments?.length) return false
-            const t =
-              ((port.x - segment.start.x) * dx +
-                (port.y - segment.start.y) * dy) /
-              lengthSquared
-            return t > start + 1e-9 && t < end - 1e-9
-          })
-          if (hasFreePort) continue
-          const fraction = (start + end) / 2
-          segment.portPoints.push({
-            ...template,
-            segmentPortPointId: `${segment.edgeId}_preloadgap${index}_z${z}`,
-            x: segment.start.x + dx * fraction,
-            y: segment.start.y + dy * fraction,
-            availableZ: [z],
-            connectionName: null,
-            rootConnectionName: undefined,
-            _preloadedFixedNetIds: undefined,
-            _preloadedTracePortAssignments: undefined,
-            distToCentermostPortOnZ:
-              Math.abs(fraction - 0.5) * Math.sqrt(lengthSquared),
-          })
-        }
+        this.addLayerClearanceGapPorts({ segment, z, copperLookup })
       }
+    }
+  }
+
+  private addLayerClearanceGapPorts({
+    segment,
+    z,
+    copperLookup,
+  }: {
+    segment: SharedEdgeSegment
+    z: number
+    copperLookup: PreloadedCopperLookup
+  }): void {
+    const dx = segment.end.x - segment.start.x
+    const dy = segment.end.y - segment.start.y
+    const lengthSquared = dx * dx + dy * dy
+    if (lengthSquared === 0) return
+    const length = Math.sqrt(lengthSquared)
+    const layerPorts = segment.portPoints.filter((port) =>
+      port.availableZ.includes(z),
+    )
+    const template = layerPorts[0]
+    if (!template) return
+    const freePortFractions = layerPorts
+      .filter((port) => !port._preloadedTracePortAssignments?.length)
+      .map(
+        (port) =>
+          ((port.x - segment.start.x) * dx +
+            (port.y - segment.start.y) * dy) /
+          lengthSquared,
+      )
+    const clearSpans = copperLookup.getClearSpans({ ...segment, z })
+    for (const [index, [start, end]] of clearSpans.entries()) {
+      if ((end - start) * length <= GEOMETRIC_TOLERANCE) continue
+      const hasFreePort = freePortFractions.some(
+        (fraction) => fraction > start + 1e-9 && fraction < end - 1e-9,
+      )
+      if (hasFreePort) continue
+      const fraction = (start + end) / 2
+      segment.portPoints.push({
+        ...template,
+        segmentPortPointId: `${segment.edgeId}_preloadgap${index}_z${z}`,
+        x: segment.start.x + dx * fraction,
+        y: segment.start.y + dy * fraction,
+        availableZ: [z],
+        connectionName: null,
+        rootConnectionName: undefined,
+        _preloadedFixedNetIds: undefined,
+        _preloadedTracePortAssignments: undefined,
+        distToCentermostPortOnZ: Math.abs(fraction - 0.5) * length,
+      })
     }
   }
 

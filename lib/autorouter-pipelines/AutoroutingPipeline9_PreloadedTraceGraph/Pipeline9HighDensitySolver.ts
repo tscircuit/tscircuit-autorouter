@@ -19,10 +19,7 @@ import type {
   PortPoint,
 } from "lib/types/high-density-types"
 import type { Obstacle, SimpleRouteJson } from "lib/types/srj-types"
-import { isObstacleConnectedToRoute } from "lib/solvers/TraceWidthSolver/isObstacleConnectedToRoute"
-import { isPointInRect } from "lib/utils/isPointInRect"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
-import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 import { BaseSolver } from "../../solvers/BaseSolver"
 import { HighDensitySolver } from "../../solvers/HighDensitySolver/HighDensitySolver"
 import type { PreloadedHighDensityRoute } from "./convertPreloadedTraceToHdRoutes"
@@ -37,6 +34,10 @@ import {
   spliceFixedRouteSectionWithMutationMask,
 } from "./pipeline9RegionalFallback"
 import { Pipeline9RegionalFallbackSolver } from "./Pipeline9RegionalFallbackSolver"
+import {
+  addTerminalPcbPortIds,
+  preparePreloadedTerminalRoutes,
+} from "./pipeline9TerminalRoutes"
 
 export type Pipeline9HighDensitySolverParams = {
   nodePortPoints: NodeWithPortPoints[]
@@ -250,80 +251,31 @@ const convertObstacleToB01Obstacle = ({
   }
 }
 
-// Match board-world points in mm (+X right, +Y up) to physical terminals.
-const addTerminalPcbPortIds = <Route extends HighDensityRoute>({
-  routes,
-  portPoints,
-  connMap,
-}: {
-  routes: Route[]
-  portPoints: PortPoint[]
-  connMap: ConnectivityMap
-}): Route[] => {
-  const terminalPorts = portPoints.filter(
-    (port) => port.pcb_port_id !== undefined,
-  )
-  return routes.map((route): Route => {
-    const start = route.route[0]
-    const end = route.route.at(-1)
-    const netId =
-      connMap.getNetConnectedToId(route.connectionName) ??
-      route.rootConnectionName ??
-      route.connectionName
-    const sameNetTerminals = terminalPorts.filter(
-      (terminal) =>
-        (connMap.getNetConnectedToId(terminal.connectionName) ??
-          terminal.rootConnectionName ??
-          terminal.connectionName) === netId,
-    )
-    const startTerminal = sameNetTerminals.find(
-      (terminal) =>
-        start !== undefined &&
-        terminal.x === start.x &&
-        terminal.y === start.y &&
-        terminal.z === start.z,
-    )
-    const endTerminal = sameNetTerminals.find(
-      (terminal) =>
-        end !== undefined &&
-        terminal.x === end.x &&
-        terminal.y === end.y &&
-        terminal.z === end.z,
-    )
-
-    const startPcbPortId = route.startPcbPortId ?? startTerminal?.pcb_port_id
-    const endPcbPortId = route.endPcbPortId ?? endTerminal?.pcb_port_id
-    if (
-      startPcbPortId === route.startPcbPortId &&
-      endPcbPortId === route.endPcbPortId
-    ) {
-      return route
-    }
-    return { ...route, startPcbPortId, endPcbPortId }
-  })
-}
+const normalizePortPoint = (
+  portPoint: PortPoint,
+  connMap: ConnectivityMap,
+): PortPoint => ({
+  ...portPoint,
+  rootConnectionName:
+    connMap.getNetConnectedToId(
+      portPoint.rootConnectionName ?? portPoint.connectionName,
+    ) ??
+    portPoint.rootConnectionName ??
+    portPoint.connectionName,
+})
 
 export const normalizePipeline9NodeRootConnectionNames = (
   node: NodeWithPortPoints,
   connMap: ConnectivityMap,
 ): NodeWithPortPoints => {
-  const normalizePortPoint = (
-    portPoint: NodeWithPortPoints["portPoints"][number],
-  ): NodeWithPortPoints["portPoints"][number] => ({
-    ...portPoint,
-    rootConnectionName:
-      connMap.getNetConnectedToId(
-        portPoint.rootConnectionName ?? portPoint.connectionName,
-      ) ??
-      portPoint.rootConnectionName ??
-      portPoint.connectionName,
-  })
   return {
     ...node,
-    portPoints: node.portPoints.map(normalizePortPoint),
+    portPoints: node.portPoints.map((portPoint) =>
+      normalizePortPoint(portPoint, connMap),
+    ),
     portPointsInPairs: node.portPointsInPairs?.map(([start, end]) => [
-      normalizePortPoint(start),
-      normalizePortPoint(end),
+      normalizePortPoint(start, connMap),
+      normalizePortPoint(end, connMap),
     ]),
   }
 }
@@ -459,33 +411,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   constructor(private readonly params: Pipeline9HighDensitySolverParams) {
     super()
     this.connMap = params.connMap
-    this.fixedHdRoutes = addTerminalPcbPortIds({
-      routes: params.fixedHdRoutes,
-      portPoints: params.nodePortPoints.flatMap((node) => node.portPoints),
-      connMap: params.connMap,
-    }).map((route): PreloadedHighDensityRoute => {
-      const hasTerminal =
-        route.startPcbPortId !== undefined || route.endPcbPortId !== undefined
-      const isInsideConnectedPad =
-        hasTerminal &&
-        route.vias.length === 0 &&
-        params.obstacles.some((obstacle) => {
-          const isRectangularPad = obstacle.type === "rect" && !obstacle.shape
-          if (!isRectangularPad) return false
-          if (!isObstacleConnectedToRoute(obstacle, route, params.connMap)) {
-            return false
-          }
-          return route.route.every(
-            (point) =>
-              obstacle.layers.includes(
-                mapZToLayerName(point.z, params.layerCount),
-              ) && isPointInRect(point, obstacle),
-          )
-        })
-      if (!isInsideConnectedPad) return route
-      // This path is component copper; regional repair must preserve it.
-      return { ...route, isThroughObstacle: true }
-    })
+    this.fixedHdRoutes = preparePreloadedTerminalRoutes(params)
     this.colorMap = params.colorMap ?? {}
     this.obstacles = params.obstacles
     this.boardGeometry = params.boardGeometry
@@ -970,7 +896,10 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     for (const candidateRoute of candidateRoutes) {
       for (const fixedRoute of fixedObstacleRoutes) {
         if (
-          arePipeline9RoutesOnSameNet(candidateRoute, fixedRoute, this.connMap)
+          arePipeline9RoutesOnSameNet(
+            { left: candidateRoute, right: fixedRoute },
+            this.connMap,
+          )
         ) {
           continue
         }

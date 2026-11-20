@@ -2,7 +2,6 @@ import type { GraphicsObject } from "graphics-debug"
 import type {
   HighDensityIntraNodeRoute,
   NodeWithPortPoints,
-  PortPoint,
 } from "lib/types/high-density-types"
 import { BaseSolver } from "../../BaseSolver"
 import { PortfolioSingleIntraNodeSolver } from "../PortfolioSingleIntraNodeSolver"
@@ -29,21 +28,23 @@ export type GrowShrinkHighDensityIntraNodeSolverParams =
     ) => boolean
   }
 
-const scalePoint = <T extends { x: number; y: number }>(
-  point: T,
-  center: { x: number; y: number },
-  scaleFactor: number,
-): T => ({
+type CoordinateScale = {
+  center: { x: number; y: number }
+  scaleFactor: number
+}
+
+type RouteScale = CoordinateScale & {
+  copperScaleFactor?: number
+}
+
+const scalePoint = <Point extends { x: number; y: number }>(
+  point: Point,
+  { center, scaleFactor }: CoordinateScale,
+): Point => ({
   ...point,
   x: center.x + (point.x - center.x) * scaleFactor,
   y: center.y + (point.y - center.y) * scaleFactor,
 })
-
-const scalePortPoint = (
-  portPoint: PortPoint,
-  center: { x: number; y: number },
-  scaleFactor: number,
-): PortPoint => scalePoint(portPoint, center, scaleFactor)
 
 const scaleNodeWithPortPoints = (
   node: NodeWithPortPoints,
@@ -53,28 +54,47 @@ const scaleNodeWithPortPoints = (
   width: node.width * scaleFactor,
   height: node.height * scaleFactor,
   portPoints: node.portPoints.map((portPoint) =>
-    scalePortPoint(portPoint, node.center, scaleFactor),
+    scalePoint(portPoint, { center: node.center, scaleFactor }),
   ),
   portPointsInPairs: node.portPointsInPairs?.map(([start, end]) => [
-    scalePortPoint(start, node.center, scaleFactor),
-    scalePortPoint(end, node.center, scaleFactor),
+    scalePoint(start, { center: node.center, scaleFactor }),
+    scalePoint(end, { center: node.center, scaleFactor }),
   ]),
 })
 
 const scaleRoute = (
   route: HighDensityIntraNodeRoute,
-  center: { x: number; y: number },
-  scaleFactor: number,
-): HighDensityIntraNodeRoute => ({
-  ...route,
-  route: route.route.map((point) => scalePoint(point, center, scaleFactor)),
-  vias: route.vias.map((via) => scalePoint(via, center, scaleFactor)),
-  jumpers: route.jumpers?.map((jumper) => ({
-    ...jumper,
-    start: scalePoint(jumper.start, center, scaleFactor),
-    end: scalePoint(jumper.end, center, scaleFactor),
-  })),
-})
+  { center, scaleFactor, copperScaleFactor }: RouteScale,
+): HighDensityIntraNodeRoute => {
+  const scaledRoute: HighDensityIntraNodeRoute = {
+    ...route,
+    route: route.route.map((point) => {
+      const scaledPoint = scalePoint(point, { center, scaleFactor })
+      if (
+        copperScaleFactor === undefined ||
+        point.traceThickness === undefined
+      ) {
+        return scaledPoint
+      }
+      return {
+        ...scaledPoint,
+        traceThickness: point.traceThickness * copperScaleFactor,
+      }
+    }),
+    vias: route.vias.map((via) => scalePoint(via, { center, scaleFactor })),
+    jumpers: route.jumpers?.map((jumper) => ({
+      ...jumper,
+      start: scalePoint(jumper.start, { center, scaleFactor }),
+      end: scalePoint(jumper.end, { center, scaleFactor }),
+    })),
+  }
+  if (copperScaleFactor === undefined) return scaledRoute
+  return {
+    ...scaledRoute,
+    traceThickness: route.traceThickness * copperScaleFactor,
+    viaDiameter: route.viaDiameter * copperScaleFactor,
+  }
+}
 
 const routeColors = [
   "#dc2626",
@@ -219,66 +239,17 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
     let metalScale = 1
     if (this.preservePhysicalGeometry) metalScale = this.coordinateScale
     portfolioParams.fixedHdRoutes = portfolioParams.fixedHdRoutes?.map(
-      (route) => {
-        const transformed = scaleRoute(
-          route,
-          this.nodeWithPortPoints.center,
-          this.coordinateScale,
-        )
-        return {
-          ...transformed,
-          traceThickness: route.traceThickness * metalScale,
-          viaDiameter: route.viaDiameter * metalScale,
-          route: transformed.route.map((point) => {
-            if (point.traceThickness === undefined) return point
-            return {
-              ...point,
-              traceThickness: point.traceThickness * metalScale,
-            }
-          }),
-        }
-      },
+      (route) =>
+        scaleRoute(route, {
+          center: this.nodeWithPortPoints.center,
+          scaleFactor: this.coordinateScale,
+          copperScaleFactor: metalScale,
+        }),
     )
     if (this.preservePhysicalGeometry) {
       nodeWithPortPoints.width *= this.scaleFactor
       nodeWithPortPoints.height *= this.scaleFactor
-      // Grow physical bounds while refining the existing search grid once.
-      // Terminals, copper, pads and clearances must use the same search frame.
-      const center = this.nodeWithPortPoints.center
-      const scale = this.coordinateScale
-      portfolioParams.traceWidth = (portfolioParams.traceWidth ?? 0.15) * scale
-      portfolioParams.viaDiameter = (portfolioParams.viaDiameter ?? 0.3) * scale
-      portfolioParams.obstacleMargin =
-        (portfolioParams.obstacleMargin ?? 0.15) * scale
-      portfolioParams.obstacles = portfolioParams.obstacles?.map(
-        (obstacle) => ({
-          ...obstacle,
-          center: scalePoint(obstacle.center, center, scale),
-          width: obstacle.width * scale,
-          height: obstacle.height * scale,
-        }),
-      )
-      if (portfolioParams.boardGeometry) {
-        const geometry = portfolioParams.boardGeometry
-        const bounds = geometry.bounds
-        portfolioParams.boardGeometry = {
-          ...geometry,
-          bounds: {
-            minX: center.x + (bounds.minX - center.x) * scale,
-            maxX: center.x + (bounds.maxX - center.x) * scale,
-            minY: center.y + (bounds.minY - center.y) * scale,
-            maxY: center.y + (bounds.maxY - center.y) * scale,
-          },
-          outline: geometry.outline?.map((point) =>
-            scalePoint(point, center, scale),
-          ),
-        }
-        if (geometry.minBoardEdgeClearance !== undefined) {
-          portfolioParams.boardGeometry.minBoardEdgeClearance =
-            geometry.minBoardEdgeClearance * scale
-        }
-      }
-      portfolioParams.precomputedIntraNodeRouteParams = undefined
+      this.scalePhysicalConstraints(portfolioParams)
     }
     this.activeSubSolver = new PortfolioSingleIntraNodeSolver({
       ...portfolioParams,
@@ -301,30 +272,63 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
     }
   }
 
+  private scalePhysicalConstraints(
+    portfolioParams: PortfolioSingleIntraNodeSolverParams,
+  ): void {
+    // Grow physical bounds while refining the existing search grid once.
+    // Terminals, copper, pads and clearances must use the same search frame.
+    const center = this.nodeWithPortPoints.center
+    const scale = this.coordinateScale
+    portfolioParams.traceWidth = (portfolioParams.traceWidth ?? 0.15) * scale
+    portfolioParams.viaDiameter = (portfolioParams.viaDiameter ?? 0.3) * scale
+    portfolioParams.obstacleMargin =
+      (portfolioParams.obstacleMargin ?? 0.15) * scale
+    portfolioParams.obstacles = portfolioParams.obstacles?.map(
+      (obstacle) => ({
+        ...obstacle,
+        center: scalePoint(obstacle.center, { center, scaleFactor: scale }),
+        width: obstacle.width * scale,
+        height: obstacle.height * scale,
+      }),
+    )
+    if (portfolioParams.boardGeometry) {
+      const geometry = portfolioParams.boardGeometry
+      const bounds = geometry.bounds
+      portfolioParams.boardGeometry = {
+        ...geometry,
+        bounds: {
+          minX: center.x + (bounds.minX - center.x) * scale,
+          maxX: center.x + (bounds.maxX - center.x) * scale,
+          minY: center.y + (bounds.minY - center.y) * scale,
+          maxY: center.y + (bounds.maxY - center.y) * scale,
+        },
+        outline: geometry.outline?.map((point) =>
+          scalePoint(point, { center, scaleFactor: scale }),
+        ),
+      }
+      if (geometry.minBoardEdgeClearance !== undefined) {
+        portfolioParams.boardGeometry.minBoardEdgeClearance =
+          geometry.minBoardEdgeClearance * scale
+      }
+    }
+    portfolioParams.precomputedIntraNodeRouteParams = undefined
+  }
+
   private getUnscaledRoutes(
     routes: HighDensityIntraNodeRoute[],
   ): HighDensityIntraNodeRoute[] {
     if (this.coordinateScale === 1) return routes
-    return routes.map((route) => {
-      const physical = scaleRoute(
-        route,
-        this.nodeWithPortPoints.center,
-        1 / this.coordinateScale,
-      )
-      if (!this.preservePhysicalGeometry) return physical
-      return {
-        ...physical,
-        traceThickness: physical.traceThickness / this.coordinateScale,
-        viaDiameter: physical.viaDiameter / this.coordinateScale,
-        route: physical.route.map((point) => {
-          if (point.traceThickness === undefined) return point
-          return {
-            ...point,
-            traceThickness: point.traceThickness / this.coordinateScale,
-          }
-        }),
-      }
-    })
+    let copperScaleFactor: number | undefined
+    if (this.preservePhysicalGeometry) {
+      copperScaleFactor = 1 / this.coordinateScale
+    }
+    return routes.map((route) =>
+      scaleRoute(route, {
+        center: this.nodeWithPortPoints.center,
+        scaleFactor: 1 / this.coordinateScale,
+        copperScaleFactor,
+      }),
+    )
   }
 
   private acceptSolution(solver: PortfolioSingleIntraNodeSolver): void {

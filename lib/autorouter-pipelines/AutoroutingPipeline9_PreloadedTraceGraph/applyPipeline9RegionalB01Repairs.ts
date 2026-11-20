@@ -368,7 +368,10 @@ const candidateConflictsWithFixedRoutes = ({
 }): boolean => {
   for (const candidateRoute of candidateRoutes) {
     for (const fixedRoute of fixedObstacleRoutes) {
-      if (arePipeline9RoutesOnSameNet(candidateRoute, fixedRoute, connMap)) {
+      if (arePipeline9RoutesOnSameNet(
+          { left: candidateRoute, right: fixedRoute },
+          connMap,
+        )) {
         continue
       }
       if (

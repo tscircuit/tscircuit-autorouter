@@ -163,8 +163,10 @@ export const getPipeline9AxisAlignedWireApproximations = (
 }
 
 export const arePipeline9RoutesOnSameNet = (
-  left: Pick<HighDensityRoute, "connectionName" | "rootConnectionName">,
-  right: Pick<HighDensityRoute, "connectionName" | "rootConnectionName">,
+  { left, right }: {
+    left: Pick<HighDensityRoute, "connectionName" | "rootConnectionName">
+    right: Pick<HighDensityRoute, "connectionName" | "rootConnectionName">
+  },
   connMap: ConnectivityMap,
 ): boolean => {
   const leftNetIds = [left.connectionName, left.rootConnectionName]

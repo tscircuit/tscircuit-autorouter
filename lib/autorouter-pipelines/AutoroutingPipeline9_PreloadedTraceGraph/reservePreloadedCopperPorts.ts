@@ -1,7 +1,7 @@
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { HyperGraphHg } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver/types"
 import type { NetId, SimpleRouteJson } from "lib/types"
-import { createPreloadedCopperLookup } from "./createPreloadedPortValidator"
+import { createPreloadedCopperLookup } from "./createPreloadedCopperLookup"
 
 /**
  * Reserve graph crossings within immutable copper's clearance envelope.

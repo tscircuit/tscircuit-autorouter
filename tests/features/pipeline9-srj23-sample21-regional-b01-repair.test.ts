@@ -48,7 +48,10 @@ test("Pipeline9 repairs SRJ23 sample21 trace and via-pad conflicts without new p
     )
     .filter(
       (route): boolean =>
-        !arePipeline9RoutesOnSameNet(signal, route, jointRepair.params.connMap),
+        !arePipeline9RoutesOnSameNet(
+          { left: signal, right: route },
+          jointRepair.params.connMap,
+        ),
     )
   expect(preloadedRoutes.length).toBeGreaterThan(0)
   expect(
