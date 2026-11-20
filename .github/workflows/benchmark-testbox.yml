@@ -1,4 +1,4 @@
-name: Uploaded boards on tscircuit 3249
+name: Uploaded boards on tscircuit 3252
 on:
   workflow_dispatch:
 permissions:
@@ -14,15 +14,15 @@ jobs:
           bun-version: 1.4.3
       - name: Unpack the original board sources
         run: |
-          mkdir -p experiments/boards-3249/runtime
-          unzip -q experiments/boards-3249/boards.zip -d experiments/boards-3249/runtime
+          mkdir -p experiments/boards-3252/runtime
+          unzip -q experiments/boards-3252/boards.zip -d experiments/boards-3252/runtime
       - name: Install the pinned latest release
-        working-directory: experiments/boards-3249/runtime
-        run: bun install
+        working-directory: experiments/boards-3252/runtime
+        run: bun install --frozen-lockfile
       - name: Render all boards and compare the native fanout fix
-        run: python3 experiments/boards-3249/run.py
+        run: python3 experiments/boards-3252/run.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: boards-tscircuit-3249
+          name: boards-tscircuit-3252
           path: board-benchmark-results
