@@ -17,6 +17,7 @@ test("flexible fanout buses share capacity with fixed-top controls", async () =>
       if (this.solved || this.failed) writeFileSync("native-fanout.json.gz", Bun.gzipSync(JSON.stringify({ input: this.getConstructorParams(), bestAttempt: this.bestAttempt, failed: this.failed, error: this.error })))
     }
   }
+  circuit.on("solver:started", (entry) => writeFileSync(`native-start-${entry.solverName}.json.gz`, Bun.gzipSync(JSON.stringify({ component: entry.componentName, input: entry.solverConstructorArgs }))))
   const phases: { event: string; phase: string; solver: string | undefined; connections: number | undefined }[] = []
   for (const event of ["autorouting:start", "autorouting:end", "autorouting:error"] as const) {
     circuit.on(event, (entry) => phases.push({ event, phase: entry.phaseName ?? entry.componentDisplayName, solver: entry.solverName, connections: entry.simpleRouteJson?.connections.length }))
