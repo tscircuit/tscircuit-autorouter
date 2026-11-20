@@ -16,7 +16,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/checkout@v4
         with:
-          ref: ${{ matrix.variant == 'before' && '306a3cb61b8ef5694beec87922c42d3b7e7fef92' || 'c280db6c000400babd59297cb31cac2dfd779024' }}
+          ref: ${{ matrix.variant == 'before' && '306a3cb61b8ef5694beec87922c42d3b7e7fef92' || '1c67e9a66914647505240791cbbf968dd8d0832e' }}
           path: router
       - uses: oven-sh/setup-bun@v2
         with:
@@ -25,7 +25,7 @@ jobs:
         run: |
           cd router
           for attempt in 1 2 3; do
-            if bun install --ignore-scripts; then break; fi
+            if bun install; then break; fi
             if [ "$attempt" = 3 ]; then exit 1; fi
           done
       - name: Verify baseline repro
