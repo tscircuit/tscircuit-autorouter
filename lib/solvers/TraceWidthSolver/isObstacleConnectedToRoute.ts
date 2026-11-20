@@ -10,7 +10,7 @@ export const isObstacleConnectedToRoute = (
   obstacle: Obstacle,
   route: RouteConnectionIds,
   connMap?: ConnectivityMap,
-) =>
+): boolean =>
   obstacle.connectedTo.some(
     (connectedId) =>
       connectedId === route.connectionName ||
@@ -18,5 +18,10 @@ export const isObstacleConnectedToRoute = (
       (connMap?.areIdsConnected(route.connectionName, connectedId) ?? false) ||
       (route.rootConnectionName !== undefined &&
         (connMap?.areIdsConnected(route.rootConnectionName, connectedId) ??
-          false)),
+          false)) ||
+      (route.rootConnectionName !== undefined &&
+        connMap !== undefined &&
+        Object.hasOwn(connMap.netMap, route.rootConnectionName) &&
+        (connMap.getNetConnectedToId(connectedId) ?? connectedId) ===
+          route.rootConnectionName),
   )
