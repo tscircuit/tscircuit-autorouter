@@ -703,8 +703,23 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
         traceThickness = this.constructorParams.traceWidth ?? 0.15
       }
       let staticSegmentValidator: StaticSegmentValidator | undefined
+      let highResolutionCellSize = 0.1
+      let lowResolutionCellSize = 0.4
+      let maxCellCount: number | undefined
       const fixedHdRoutes = this.constructorParams.fixedHdRoutes
       if (preservePhysicalGeometry && fixedHdRoutes?.length) {
+        maxCellCount = 1_000_000
+        const layerCount = this.constructorParams.layerCount ?? 2
+        const maxCellsPerDimension =
+          Math.floor(Math.sqrt(maxCellCount / layerCount)) - 1
+        const node = this.nodeWithPortPoints
+        const minimumCellSize =
+          Math.max(node.width, node.height) / maxCellsPerDimension
+        highResolutionCellSize = Math.max(
+          Math.min(0.1, traceThickness / 4),
+          minimumCellSize,
+        )
+        lowResolutionCellSize = highResolutionCellSize
         staticSegmentValidator = createIntraNodeSegmentValidator({
           fixedHdRoutes,
           connMap: this.connMap ?? new ConnectivityMap({}),
@@ -716,9 +731,10 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       }
       const solver = new HighDensityA03Solver({
         nodeWithPortPoints: this.nodeWithPortPoints,
-        highResolutionCellSize: 0.1,
+        highResolutionCellSize,
         highResolutionCellThickness: 8,
-        lowResolutionCellSize: 0.4,
+        lowResolutionCellSize,
+        maxCellCount,
         staticSegmentValidator,
         viaDiameter: this.constructorParams.viaDiameter ?? 0.3,
         viaMinDistFromBorder: (this.constructorParams.viaDiameter ?? 0.3) / 2,
