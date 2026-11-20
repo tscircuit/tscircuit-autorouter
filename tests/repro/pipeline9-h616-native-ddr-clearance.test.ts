@@ -29,6 +29,11 @@ test("routes the H616 DDR board beside completed data-byte copper", async (): Pr
     connections: [...preloadedConnections, ...inputSrj.connections],
     traces: preloadedTraces,
   }
+  // Native routing can produce different valid route variants across platforms.
+  const snapshotPath =
+    process.platform === "linux"
+      ? import.meta.path.replace(/\.test\.ts$/, "-linux.test.ts")
+      : import.meta.path
   await expect(
     getBugReportSnapshotSvg({
       inputSrj: referenceSrj,
@@ -37,5 +42,5 @@ test("routes the H616 DDR board beside completed data-byte copper", async (): Pr
       // Preserve the native H616 board's 0.1 mm copper clearance.
       drcOptions: { traceClearance: 0.1, viaToPadClearance: 0.1 },
     }),
-  ).toMatchSvgSnapshot(import.meta.path)
+  ).toMatchSvgSnapshot(snapshotPath)
 })
