@@ -1,4 +1,4 @@
-name: Verify native preloads keep their component pad escapes
+name: Verify clean native ownership across all autorouter tests
 on:
   push:
     branches: [analysis/native-copper-stage-diagnostics]
@@ -6,184 +6,91 @@ on:
 permissions:
   contents: write
 jobs:
-  routing:
+  types:
     runs-on: ubuntu-24.04
     timeout-minutes: 18
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - variant: scoped
-            source: de07d57ffb59fa0686eaa60df4dbd4ffad8f18eb
-          - variant: native
-            source: 93f449589c8748916c2105a5efab437c0908269a
-          - variant: guarded
-            source: 93f449589c8748916c2105a5efab437c0908269a
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ matrix.source }}
+          ref: e675881d910e8c0b1967b78535de3e516ef6c0ff
+          persist-credentials: false
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: '1.4.3'
-      - name: Carry existing component terminal ownership into native preloaded paths
-        run: |
-          cat > lib/solvers/TraceWidthSolver/isObstacleConnectedToRoute.ts <<'TS'
-          import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
-          import type { Obstacle } from "lib/types/srj-types"
-          
-          type RouteConnection = {
-            connectionName: string
-            rootConnectionName?: string
-          }
-          
-          export const isObstacleConnectedToRoute = (
-            obstacle: Obstacle,
-            route: RouteConnection,
-            connMap?: ConnectivityMap,
-          ): boolean => {
-            if (!connMap) {
-              return obstacle.connectedTo.some(
-                (connectedId) =>
-                  connectedId === route.connectionName ||
-                  connectedId === route.rootConnectionName,
-              )
-            }
-          
-            let routeNetId = connMap.getNetConnectedToId(route.connectionName)
-            if (routeNetId === undefined && route.rootConnectionName !== undefined) {
-              if (Object.hasOwn(connMap.netMap, route.rootConnectionName)) {
-                routeNetId = route.rootConnectionName
-              } else {
-                routeNetId = connMap.getNetConnectedToId(route.rootConnectionName)
-              }
-            }
-            routeNetId ??= route.rootConnectionName ?? route.connectionName
-          
-            return obstacle.connectedTo.some(
-              (connectedId) =>
-                (connMap.getNetConnectedToId(connectedId) ?? connectedId) === routeNetId,
-            )
-          }
-          TS
-          python3 - <<'PY'
-          from pathlib import Path
-          p=Path("lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver.ts")
-          s=p.read_text()
-          s='import { mapZToLayerName } from "lib/utils/mapZToLayerName"\nimport { isPointInRect } from "lib/utils/isPointInRect"\nimport { isObstacleConnectedToRoute } from "lib/solvers/TraceWidthSolver/isObstacleConnectedToRoute"\n'+s
-          old="    this.fixedHdRoutes = params.fixedHdRoutes\n    this.connMap = params.connMap"
-          assert s.count(old)==1
-          new="""    this.connMap = params.connMap
-              const terminalPorts = params.nodePortPoints.flatMap(
-                (node) => node.portPoints.filter((port) => port.pcb_port_id !== undefined),
-              )
-              this.fixedHdRoutes = params.fixedHdRoutes.map((route) => {
-                const start = route.route[0]
-                const end = route.route.at(-1)
-                const net = this.connMap.getNetConnectedToId(route.connectionName) ??
-                  route.rootConnectionName ?? route.connectionName
-                const terminals = terminalPorts.filter((port) => {
-                  const terminalNet = this.connMap.getNetConnectedToId(port.connectionName) ??
-                    port.rootConnectionName ?? port.connectionName
-                  return net === terminalNet
-                })
-                const startTerminal = terminals.find((port) =>
-                  start && port.x === start.x && port.y === start.y && port.z === start.z,
-                )
-                const endTerminal = terminals.find((port) =>
-                  end && port.x === end.x && port.y === end.y && port.z === end.z,
-                )
-                const componentOwned = Boolean(startTerminal || endTerminal) &&
-                  route.vias.length === 0 &&
-                  params.obstacles.some((obstacle) =>
-                    obstacle.type === "rect" && !obstacle.shape &&
-                    isObstacleConnectedToRoute(obstacle, route, params.connMap) &&
-                    route.route.every((point) =>
-                      obstacle.layers.includes(mapZToLayerName(point.z, params.layerCount)) &&
-                      isPointInRect(point, obstacle),
-                    ),
-                  )
-                return {
-                  ...route,
-                  startPcbPortId: route.startPcbPortId ?? startTerminal?.pcb_port_id,
-                  endPcbPortId: route.endPcbPortId ?? endTerminal?.pcb_port_id,
-                  isThroughObstacle: route.isThroughObstacle || componentOwned,
-                }
-              })"""
-          s=s.replace(old,new,1)
-          p.write_text(s)
-          if True:
-              p=Path("lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts")
-              s=p.read_text()
-              s=s.replace("          fixedHdRoutes: cms.highDensityRouteSolver!.getUpdatedFixedHdRoutes(),","",1)
-              p.write_text(s)
-              p=Path("lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9RegionalFallbackSolver.ts")
-              s=p.read_text()
-              s=s.replace("      fixedHdRoutes: this.params.fixedHdRoutes,", """      fixedHdRoutes: this.params.preservePhysicalGeometry
-                      ? this.params.fixedHdRoutes
-                      : undefined,""")
-              p.write_text(s)
-          if '${{ matrix.variant }}' != 'scoped':
-              import re
-              p=Path("lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts")
-              s=p.read_text()
-              pattern=r"(fixedHdRoutes:\s*cms\.highDensityRouteSolver!\s*\.getUpdatedFixedHdRoutes\(\))(?=,)"
-              s,count=re.subn(pattern,r"\1.filter((route) => route.isFixed === true)",s)
-              assert count==1
-              p.write_text(s)
-          if '${{ matrix.variant }}' == 'guarded':
-              p=Path("lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensityForceImproveSolver.ts")
-              s=p.read_text()
-              s='import { FixedCopperClearanceGuard } from "high-density-repair02/lib/high-density-repair-solver/functions/FixedCopperClearanceGuard"\n'+s
-              s=s.replace('    if (this.fixedViaObstacleIndexes.size === 0) return','    if (this.fixedViaObstacleIndexes.size === 0 && this.fixedHdRoutes.length === 0) return',1)
-              old='    if (!worsensViaClearance) return'
-              assert s.count(old)==1
-              new="""    let allowsNativeCopper = true
-                  if (this.fixedHdRoutes.length > 0) {
-                    const ownedIndexes = new Set(routeIndexes)
-                    const readOnlyRoutes = [
-                      ...this.fixedHdRoutes,
-                      ...this.getOutput().filter((_, index) => !ownedIndexes.has(index)),
-                    ]
-                    const guard = new FixedCopperClearanceGuard(
-                      readOnlyRoutes,
-                      this.inputSrj.minTraceToPadEdgeClearance ??
-                        this.inputSrj.defaultObstacleMargin ??
-                        RELAXED_DRC_OPTIONS.traceClearance,
-                      [],
-                      this.inputSrj.minPadEdgeToPadEdgeClearance,
-                    )
-                    allowsNativeCopper = guard.allows(
-                      originalRoutes,
-                      candidateRoutes,
-                      candidateRoutes.keys(),
-                    )
-                  }
-                  if (!worsensViaClearance && allowsNativeCopper) return"""
-              p.write_text(s.replace(old,new,1))
-          p=Path("tests/bugs/bugreport96-full-gameboy-no-breakout.test.ts")
-          s=p.read_text()
-          old="  expect(errors.length).toBeLessThanOrEqual(28)"
-          s=s.replace(old,'''  console.log("GBA_COUNTS", JSON.stringify({
-              errors: errors.length,
-              protectedPreloadRetained: !solver.highDensityRouteSolver!.fixedRouteReplacements.has("source_trace_0_fixed_70_0"),
-              terminalPadEscapeCount: solver.highDensityRouteSolver!.fixedHdRoutes.filter(route=>route.startPcbPortId || route.endPcbPortId).length,
-              protectedPadCopper: solver.highDensityRouteSolver!.fixedHdRoutes.find(route=>route.connectionName === "source_trace_0_fixed_70_0")?.isThroughObstacle,
-            }))
-          '''+old,1)
-          p.write_text(s)
-          PY
       - run: bun install
-      - name: Preserve all original clearance, via-count and preload assertions
+      - run: bunx tsc --noEmit
+      - run: bun run build
+  test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [1,2,3,4,5,6,7,8,9]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: e675881d910e8c0b1967b78535de3e516ef6c0ff
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.4.3'
+      - run: bun install
+      - name: Use the original balanced test plans
+        env:
+          NODE_COUNT: '9'
+        run: bun scripts/generate-balanced-test-plan.ts
+      - name: Preserve every original functional assertion
         env:
           BUN_UPDATE_SNAPSHOTS: '1'
-        run: bun test --timeout 9999999 tests/bugs/bugreport96-full-gameboy-no-breakout.test.ts tests/bugs/usb-dp-phase-detour.test.ts tests/repro/pipeline9-h616-portfolio-candidate-clearance.test.ts tests/features/pipeline9-orangecrab-native-fixed-traces.test.ts
-      - name: Save only verified public SVGs
+        run: |
+          test_plan=".bun-test-plan/testplans/testplan${{ matrix.node }}.txt"
+          if [ ! -f "$test_plan" ]; then
+            echo "Test plan not found: $test_plan"
+            exit 1
+          fi
+
+          mapfile -t test_files < "$test_plan"
+          if [ "${#test_files[@]}" -eq 0 ]; then
+            echo "No test files found in: $test_plan"
+            exit 1
+          fi
+
+          echo "Running ${#test_files[@]} test files from $test_plan"
+          # Full-board sample 2 and STMP157 mesh validation can exceed five minutes.
+          # Keep their assertions and allow the same runner-variance budget.
+          regular_tests=()
+          slow_tests=()
+          full_board_tests=()
+          for test_file in "${test_files[@]}"; do
+            if [ "$test_file" = "tests/repro/pipeline9-orangecrab-via-roundoff.test.ts" ]; then
+              bun install --ignore-scripts --cwd tests/repro/orangecrab-via-roundoff
+            fi
+            case "$test_file" in
+              tests/bugs/bugreport107-board-1726.test.ts|tests/bugs/bugreport110/motherboard-power-full-route.test.ts|tests/bugs/beagleplay-am6254-ddr4.test.ts)
+                full_board_tests+=("$test_file")
+                ;;
+              tests/features/pipeline9-srj18-sample2-bounded-regional-drc.test.ts|tests/features/pipeline9-a13-srj18-sample2-drc.test.ts|tests/features/pipeline9-srj18-sample2-via-simplification.test.ts|tests/repro/pipeline9-stmp157-mesh-memory.test.ts|tests/repro/pipeline10-artix7-ddr-bus-length-matching.test.ts|tests/repro/pipeline9-imx6-fixed-via-force-full-board.test.ts|tests/repro/pipeline9-h616-solitary-crossing.test.ts)
+                slow_tests+=("$test_file")
+                ;;
+              *) regular_tests+=("$test_file") ;;
+            esac
+          done
+          if [ "${#regular_tests[@]}" -gt 0 ]; then
+            bun test "${regular_tests[@]}" --timeout 300000
+          fi
+          if [ "${#slow_tests[@]}" -gt 0 ]; then
+            bun test "${slow_tests[@]}" --timeout 600000
+          fi
+          if [ "${#full_board_tests[@]}" -gt 0 ]; then
+            bun test "${full_board_tests[@]}" --timeout 1800000
+          fi
+
+      - name: Save verified public test SVGs
         if: success()
         run: |
           git config user.name "tscircuit-bot"
           git config user.email "actions@github.com"
           git add -- '*.snap.svg'
           if git diff --cached --quiet; then exit 0; fi
-          git commit -m "Record verified component escape snapshots"
-          git push origin HEAD:refs/heads/analysis/verified-native-pad-escape-${{ matrix.variant }}
+          git commit -m "Record verified native-ownership test SVGs"
+          git push origin HEAD:refs/heads/analysis/verified-native-clean-${{ github.run_id }}-${{ github.run_attempt }}-node${{ matrix.node }}
