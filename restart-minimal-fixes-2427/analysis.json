@@ -1,0 +1,1435 @@
+{
+  "schemaVersion": 1,
+  "decision": "Keep the lean existing-code fixes. Drop neighbor expansion, repair/CSP architecture and new production modules. User prioritizes minimal changes.",
+  "sources": {
+    "main": "652407c1ad9d246ca16ecf64044cf83eec2e1db3",
+    "core": "75ab017cd6852dbe50516ee1f4ca9d1108c29985",
+    "coreVersion": "0.0.2427",
+    "autorouter": "a4a8f3a71dd66c2cae01d6a7ade426efad833ff6",
+    "tscircuitVersion": "0.0.3245",
+    "busLanesVersion": "0.0.62",
+    "bunVersion": "1.4.3",
+    "benchmarkFanout": "c295fa9517961724de3284e8e896abb7d6f5fec7",
+    "finalHeads": {
+      "304": "a0e49159c220e0ce93a0a51ad7247571b122f29d",
+      "321": "883e1f4c9de615fc46384d7c6b864d50611df5c1",
+      "318": "b5c615b6c107b38631826afaa1eb4ad384f5848f",
+      "305": "4e2c6d210d2ff15246d372f2f5e4f84e55fddf3e",
+      "322": "4df7709ede6833f7fb4fc8ec98d6707eadf6f8b3"
+    },
+    "benchmarkAndFinalLibTree": "67c36b6e501bd6c32cb2b2a02ca99152b063670d"
+  },
+  "productionDiff": {
+    "oldAdded": 997,
+    "oldRemoved": 102,
+    "newAdded": 104,
+    "newRemoved": 21,
+    "existingFiles": 6,
+    "newModules": 0,
+    "addedLineReductionPercent": 89.56870611835507
+  },
+  "pipeline": "Fresh TSX render: fanout then bus lanes then remaining nets; original routes/vias removed, plane intent retained. All six stop in fanout; none reaches bus lanes.",
+  "runs": {
+    "fullPairedBoards": 44640940791,
+    "finalFrozenAndOptionalNeighbors": 44640940918,
+    "boundaryInference300": 44634478771,
+    "freeHeading300": 44637145873,
+    "originalCapture": 44519377875,
+    "frozenCapture": 44415945774,
+    "sourceChecksFirst": 44645728134,
+    "sourceChecksFinal": 44645937461
+  },
+  "fullBoards": [
+    {
+      "runId": 44640940791,
+      "jobId": 135971523692,
+      "rows": [
+        {
+          "variant": "main",
+          "board": "orangecrab",
+          "inputRequests": 273,
+          "inputSha256": "727660d7503438a3ab7618e2f8b52dde282f49cafb8b3f26783975dcd8642cc9",
+          "rawPartialRequests": 122,
+          "qualifiedPartialRequests": 104,
+          "distinctDrills": 113,
+          "copperDrcValid": false,
+          "requestConstraintsValid": false,
+          "violations": [
+            {
+              "connectionName": "source_trace_90",
+              "traceId": "fanout:source_trace_90:source-0",
+              "code": "plane-landing",
+              "targetLayer": "inner1",
+              "viaCenters": [
+                {
+                  "x": -2.7100000000000093,
+                  "y": -0.4500010000000141
+                }
+              ]
+            },
+            {
+              "connectionName": "source_trace_151",
+              "traceId": "fanout:source_trace_151:source-0",
+              "code": "plane-landing",
+              "targetLayer": "inner3",
+              "viaCenters": [
+                {
+                  "x": 4.789999999999991,
+                  "y": -1.4500010000000167
+                }
+              ]
+            },
+            {
+              "connectionName": "source_trace_154",
+              "traceId": "fanout:source_trace_154:source-0",
+              "code": "plane-landing",
+              "targetLayer": "inner3",
+              "viaCenters": [
+                {
+                  "x": 5.289999999999991,
+                  "y": 4.049998999999984
+                }
+              ]
+            },
+            {
+              "connectionName": "source_trace_131",
+              "traceId": "fanout:source_trace_131:source-0",
+              "code": "plane-landing",
+              "targetLayer": "inner3",
+              "viaCenters": [
+                {
+                  "x": 4.789999999999991,
+                  "y": 3.5499989999999837
+                }
+              ]
+            },
+            {
+              "connectionName": "source_trace_132",
+              "traceId": "fanout:source_trace_132:source-0",
+              "code": "plane-landing",
+              "targetLayer": "inner3",
+              "viaCenters": [
+                {
+                  "x": 5.28999999999999,
+                  "y": 2.0499989999999855
+                }
+              ]
+            },
+            {
+              "connectionName": "source_trace_134",
+              "traceId": "fanout:source_trace_134:source-0",
+              "code": "plane-landing",
+              "targetLayer": "inner3",
+              "viaCenters": [
+                {
+                  "x": 4.289999999999992,
+                  "y": 2.0499989999999846
+                }
+              ]
+            },
+            {
+              "connectionName": "source_trace_135",
+              "traceId": "fanout:source_trace_135:source-0",
+              "code": "plane-landing",
+              "targetLayer": "inner3",
+              "viaCenters": [
+                {
+                  "x": 4.789999999999991,
+                  "y": 1.5499989999999846
+                }
+              ]
+            },
+            {
+              "connectionName": "source_trace_140",
+              "traceId": "fanout:source_trace_140:source-0",
+              "code": "plane-landing",
+              "targetLayer": "inner3",
+              "viaCenters": [
+                {
+                  "x": 1.289999999999993,
+                  "y": 5.549998999999985
+                }
+              ]
+            },
+            {
+              "connectionName": "source_trace_139",
+              "traceId": "fanout:source_trace_139:source-0",
+              "code": "plane-landing",
+              "targetLayer": "inner3",
+              "viaCenters": [
+                {
+                  "x": 0.28999999999999115,
+                  "y": -0.9500010000000136
+                }
+              ]
+            },
+            {
+              "connectionName": "source_trace_156",
+              "traceId": "fanout:source_trace_156:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.121,
+              "actualWidths": [
+                0.089
+              ]
+            },
+            {
+              "connectionName": "source_trace_156",
+              "traceId": "fanout:source_trace_156:source-0",
+              "code": "plane-landing",
+              "targetLayer": "inner3",
+              "viaCenters": [
+                {
+                  "x": -2.210000000000006,
+                  "y": -0.45000100000001275
+                }
+              ]
+            },
+            {
+              "connectionName": "source_trace_146",
+              "traceId": "fanout:source_trace_146:source-0",
+              "code": "plane-landing",
+              "targetLayer": "inner3",
+              "viaCenters": [
+                {
+                  "x": -0.710000000000008,
+                  "y": -0.45000100000001364
+                }
+              ]
+            },
+            {
+              "connectionName": "source_trace_155",
+              "traceId": "fanout:source_trace_155:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.121,
+              "actualWidths": [
+                0.089
+              ]
+            }
+          ],
+          "physicalCircuitSha256": "34c69bd82a531af922dcf310862284450b970a7829268e875cf42522cbf75180",
+          "pcbSvgSha256": "b5db098076c0911ebc7c9d197a5b5c99ede8a44135a4c39bcb41e0b6475504f1",
+          "committedTraces": 0,
+          "committedVias": 0,
+          "geometryErrors": [],
+          "membershipErrors": []
+        },
+        {
+          "variant": "minimal",
+          "board": "orangecrab",
+          "inputRequests": 273,
+          "inputSha256": "727660d7503438a3ab7618e2f8b52dde282f49cafb8b3f26783975dcd8642cc9",
+          "rawPartialRequests": 141,
+          "qualifiedPartialRequests": 141,
+          "distinctDrills": 124,
+          "copperDrcValid": true,
+          "requestConstraintsValid": true,
+          "violations": [],
+          "physicalCircuitSha256": "34c69bd82a531af922dcf310862284450b970a7829268e875cf42522cbf75180",
+          "pcbSvgSha256": "b5db098076c0911ebc7c9d197a5b5c99ede8a44135a4c39bcb41e0b6475504f1",
+          "committedTraces": 0,
+          "committedVias": 0,
+          "geometryErrors": [],
+          "membershipErrors": []
+        }
+      ]
+    },
+    {
+      "runId": 44640940791,
+      "jobId": 135971523376,
+      "rows": [
+        {
+          "variant": "main",
+          "board": "h616",
+          "inputRequests": 174,
+          "inputSha256": "0aa625dd9c4fe551e6cdcd60574f5d57d0fce74d754a8c91d3b302676c7fa7db",
+          "rawPartialRequests": 88,
+          "qualifiedPartialRequests": 32,
+          "distinctDrills": 74,
+          "copperDrcValid": false,
+          "requestConstraintsValid": false,
+          "violations": [
+            {
+              "connectionName": "source_trace_47",
+              "traceId": "fanout:source_trace_47:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.1,
+              "actualWidths": [
+                0.08
+              ]
+            },
+            {
+              "connectionName": "source_trace_48",
+              "traceId": "fanout:source_trace_48:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.1,
+              "actualWidths": [
+                0.08
+              ]
+            },
+            {
+              "connectionName": "source_trace_49",
+              "traceId": "fanout:source_trace_49:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.1,
+              "actualWidths": [
+                0.08
+              ]
+            },
+            {
+              "connectionName": "source_trace_50",
+              "traceId": "fanout:source_trace_50:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.1,
+              "actualWidths": [
+                0.08
+              ]
+            },
+            {
+              "connectionName": "source_trace_51",
+              "traceId": "fanout:source_trace_51:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.1,
+              "actualWidths": [
+                0.08
+              ]
+            },
+            {
+              "connectionName": "source_trace_45",
+              "traceId": "fanout:source_trace_45:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.1,
+              "actualWidths": [
+                0.08
+              ]
+            },
+            {
+              "connectionName": "source_trace_46",
+              "traceId": "fanout:source_trace_46:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.1,
+              "actualWidths": [
+                0.08
+              ]
+            },
+            {
+              "connectionName": "source_trace_39",
+              "traceId": "fanout:source_trace_39:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.1,
+              "actualWidths": [
+                0.08
+              ]
+            },
+            {
+              "connectionName": "source_trace_40",
+              "traceId": "fanout:source_trace_40:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.1,
+              "actualWidths": [
+                0.08
+              ]
+            },
+            {
+              "connectionName": "source_trace_41",
+              "traceId": "fanout:source_trace_41:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.1,
+              "actualWidths": [
+                0.08
+              ]
+            },
+            {
+              "connectionName": "source_trace_42",
+              "traceId": "fanout:source_trace_42:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.1,
+              "actualWidths": [
+                0.08
+              ]
+            },
+            {
+              "connectionName": "source_trace_43",
+              "traceId": "fanout:source_trace_43:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.1,
+              "actualWidths": [
+                0.08
+              ]
+            },
+            {
+              "connectionName": "source_trace_44",
+              "traceId": "fanout:source_trace_44:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.1,
+              "actualWidths": [
+                0.08
+              ]
+            },
+            {
+              "connectionName": "source_trace_37",
+              "traceId": "fanout:source_trace_37:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.1,
+              "actualWidths": [
+                0.08
+              ]
+            },
+            {
+              "connectionName": "source_trace_38",
+              "traceId": "fanout:source_trace_38:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.1,
+              "actualWidths": [
+                0.08
+              ]
+            },
+            {
+              "connectionName": "source_trace_36",
+              "traceId": "fanout:source_trace_36:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.1,
+              "actualWidths": [
+                0.08
+              ]
+            },
+            {
+              "connectionName": "source_trace_31",
+              "traceId": "fanout:source_trace_31:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.1,
+              "actualWidths": [
+                0.08
+              ]
+            },
+            {
+              "connectionName": "source_trace_32",
+              "traceId": "fanout:source_trace_32:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.1,
+              "actualWidths": [
+                0.08
+              ]
+            },
+            {
+              "connectionName": "source_trace_33",
+              "traceId": "fanout:source_trace_33:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.1,
+              "actualWidths": [
+                0.08
+              ]
+            },
+            {
+              "connectionName": "source_trace_34",
+              "traceId": "fanout:source_trace_34:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.1,
+              "actualWidths": [
+                0.08
+              ]
+            },
+            {
+              "connectionName": "source_trace_35",
+              "traceId": "fanout:source_trace_35:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.1,
+              "actualWidths": [
+                0.08
+              ]
+            },
+            {
+              "connectionName": "source_trace_27",
+              "traceId": "fanout:source_trace_27:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.1,
+              "actualWidths": [
+                0.08
+              ]
+            },
+            {
+              "connectionName": "source_trace_28",
+              "traceId": "fanout:source_trace_28:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.1,
+              "actualWidths": [
+                0.08
+              ]
+            },
+            {
+              "connectionName": "source_trace_29",
+              "traceId": "fanout:source_trace_29:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.1,
+              "actualWidths": [
+                0.08
+              ]
+            },
+            {
+              "connectionName": "source_trace_58",
+              "traceId": "fanout:source_trace_58:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.15,
+              "actualWidths": [
+                0.08
+              ]
+            },
+            {
+              "connectionName": "source_trace_59",
+              "traceId": "fanout:source_trace_59:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.15,
+              "actualWidths": [
+                0.08
+              ]
+            },
+            {
+              "connectionName": "source_trace_60",
+              "traceId": "fanout:source_trace_60:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.15,
+              "actualWidths": [
+                0.08
+              ]
+            },
+            {
+              "connectionName": "source_trace_26",
+              "traceId": "fanout:source_trace_26:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.1,
+              "actualWidths": [
+                0.08
+              ]
+            },
+            {
+              "connectionName": "source_trace_61",
+              "traceId": "fanout:source_trace_61:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.15,
+              "actualWidths": [
+                0.08
+              ]
+            },
+            {
+              "connectionName": "source_trace_61",
+              "traceId": "fanout:source_trace_61:source-0",
+              "code": "plane-landing",
+              "targetLayer": "inner2",
+              "viaCenters": [
+                {
+                  "x": 4.264999999999997,
+                  "y": 8.574999999999998
+                }
+              ]
+            },
+            {
+              "connectionName": "source_trace_57",
+              "traceId": "fanout:source_trace_57:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.15,
+              "actualWidths": [
+                0.08
+              ]
+            },
+            {
+              "connectionName": "source_trace_18",
+              "traceId": "fanout:source_trace_18:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.1,
+              "actualWidths": [
+                0.08
+              ]
+            },
+            {
+              "connectionName": "source_trace_19",
+              "traceId": "fanout:source_trace_19:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.1,
+              "actualWidths": [
+                0.08
+              ]
+            },
+            {
+              "connectionName": "source_trace_20",
+              "traceId": "fanout:source_trace_20:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.1,
+              "actualWidths": [
+                0.08
+              ]
+            },
+            {
+              "connectionName": "source_trace_21",
+              "traceId": "fanout:source_trace_21:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.1,
+              "actualWidths": [
+                0.08
+              ]
+            },
+            {
+              "connectionName": "source_trace_22",
+              "traceId": "fanout:source_trace_22:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.1,
+              "actualWidths": [
+                0.08
+              ]
+            },
+            {
+              "connectionName": "source_trace_23",
+              "traceId": "fanout:source_trace_23:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.1,
+              "actualWidths": [
+                0.08
+              ]
+            },
+            {
+              "connectionName": "source_trace_24",
+              "traceId": "fanout:source_trace_24:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.1,
+              "actualWidths": [
+                0.08
+              ]
+            },
+            {
+              "connectionName": "source_trace_25",
+              "traceId": "fanout:source_trace_25:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.1,
+              "actualWidths": [
+                0.08
+              ]
+            },
+            {
+              "connectionName": "source_trace_15",
+              "traceId": "fanout:source_trace_15:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.1,
+              "actualWidths": [
+                0.08
+              ]
+            },
+            {
+              "connectionName": "source_trace_16",
+              "traceId": "fanout:source_trace_16:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.1,
+              "actualWidths": [
+                0.08
+              ]
+            },
+            {
+              "connectionName": "source_trace_17",
+              "traceId": "fanout:source_trace_17:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.1,
+              "actualWidths": [
+                0.08
+              ]
+            },
+            {
+              "connectionName": "source_trace_5",
+              "traceId": "fanout:source_trace_5:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.1,
+              "actualWidths": [
+                0.08
+              ]
+            },
+            {
+              "connectionName": "source_trace_6",
+              "traceId": "fanout:source_trace_6:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.1,
+              "actualWidths": [
+                0.08
+              ]
+            },
+            {
+              "connectionName": "source_trace_9",
+              "traceId": "fanout:source_trace_9:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.1,
+              "actualWidths": [
+                0.08
+              ]
+            },
+            {
+              "connectionName": "source_trace_10",
+              "traceId": "fanout:source_trace_10:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.1,
+              "actualWidths": [
+                0.08
+              ]
+            },
+            {
+              "connectionName": "source_trace_12",
+              "traceId": "fanout:source_trace_12:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.1,
+              "actualWidths": [
+                0.08
+              ]
+            },
+            {
+              "connectionName": "source_trace_13",
+              "traceId": "fanout:source_trace_13:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.1,
+              "actualWidths": [
+                0.08
+              ]
+            },
+            {
+              "connectionName": "source_trace_3",
+              "traceId": "fanout:source_trace_3:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.1,
+              "actualWidths": [
+                0.08
+              ]
+            },
+            {
+              "connectionName": "source_trace_55",
+              "traceId": "fanout:source_trace_55:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.1,
+              "actualWidths": [
+                0.08
+              ]
+            },
+            {
+              "connectionName": "source_trace_56",
+              "traceId": "fanout:source_trace_56:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.1,
+              "actualWidths": [
+                0.08
+              ]
+            },
+            {
+              "connectionName": "source_trace_54",
+              "traceId": "fanout:source_trace_54:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.1,
+              "actualWidths": [
+                0.08
+              ]
+            },
+            {
+              "connectionName": "source_trace_30",
+              "traceId": "fanout:source_trace_30:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.1,
+              "actualWidths": [
+                0.08
+              ]
+            },
+            {
+              "connectionName": "source_trace_52",
+              "traceId": "fanout:source_trace_52:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.1,
+              "actualWidths": [
+                0.08
+              ]
+            },
+            {
+              "connectionName": "source_trace_0",
+              "traceId": "fanout:source_trace_0:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.1,
+              "actualWidths": [
+                0.08
+              ]
+            },
+            {
+              "connectionName": "source_trace_1",
+              "traceId": "fanout:source_trace_1:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.1,
+              "actualWidths": [
+                0.08
+              ]
+            },
+            {
+              "connectionName": "source_trace_11",
+              "traceId": "fanout:source_trace_11:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.1,
+              "actualWidths": [
+                0.08
+              ]
+            }
+          ],
+          "physicalCircuitSha256": "beec478c36363d647547ce0f836ec66dca7907ee47ae33177070f2f8a06277d4",
+          "pcbSvgSha256": "5d5b8f5638b62db28a7964fa26c48ad8140e76f8e862daaaa0a3bc263a7d3874",
+          "committedTraces": 0,
+          "committedVias": 0,
+          "geometryErrors": [],
+          "membershipErrors": []
+        },
+        {
+          "variant": "minimal",
+          "board": "h616",
+          "inputRequests": 174,
+          "inputSha256": "0aa625dd9c4fe551e6cdcd60574f5d57d0fce74d754a8c91d3b302676c7fa7db",
+          "rawPartialRequests": 107,
+          "qualifiedPartialRequests": 107,
+          "distinctDrills": 88,
+          "copperDrcValid": true,
+          "requestConstraintsValid": true,
+          "violations": [],
+          "physicalCircuitSha256": "beec478c36363d647547ce0f836ec66dca7907ee47ae33177070f2f8a06277d4",
+          "pcbSvgSha256": "5d5b8f5638b62db28a7964fa26c48ad8140e76f8e862daaaa0a3bc263a7d3874",
+          "committedTraces": 0,
+          "committedVias": 0,
+          "geometryErrors": [],
+          "membershipErrors": []
+        }
+      ]
+    },
+    {
+      "runId": 44640940791,
+      "jobId": 135971523446,
+      "rows": [
+        {
+          "variant": "main",
+          "board": "butterstick",
+          "inputRequests": 91,
+          "inputSha256": "0c572408c68a22db9a1e49f1dc6c3a5626d78f431bb6bb095c8a4b18d6c9baf7",
+          "rawPartialRequests": 62,
+          "qualifiedPartialRequests": 29,
+          "distinctDrills": 59,
+          "copperDrcValid": false,
+          "requestConstraintsValid": false,
+          "violations": [
+            {
+              "connectionName": "source_trace_18",
+              "traceId": "fanout:source_trace_18:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.1,
+              "actualWidths": [
+                0.089
+              ]
+            },
+            {
+              "connectionName": "source_trace_19",
+              "traceId": "fanout:source_trace_19:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.1,
+              "actualWidths": [
+                0.089
+              ]
+            },
+            {
+              "connectionName": "source_trace_15",
+              "traceId": "fanout:source_trace_15:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.1,
+              "actualWidths": [
+                0.089
+              ]
+            },
+            {
+              "connectionName": "source_trace_16",
+              "traceId": "fanout:source_trace_16:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.1,
+              "actualWidths": [
+                0.089
+              ]
+            },
+            {
+              "connectionName": "source_trace_12",
+              "traceId": "fanout:source_trace_12:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.1,
+              "actualWidths": [
+                0.089
+              ]
+            },
+            {
+              "connectionName": "source_trace_14",
+              "traceId": "fanout:source_trace_14:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.1,
+              "actualWidths": [
+                0.089
+              ]
+            },
+            {
+              "connectionName": "source_trace_36",
+              "traceId": "fanout:source_trace_36:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.15,
+              "actualWidths": [
+                0.089
+              ]
+            },
+            {
+              "connectionName": "source_trace_26",
+              "traceId": "fanout:source_trace_26:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.15,
+              "actualWidths": [
+                0.089
+              ]
+            },
+            {
+              "connectionName": "source_trace_33",
+              "traceId": "fanout:source_trace_33:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.15,
+              "actualWidths": [
+                0.089
+              ]
+            },
+            {
+              "connectionName": "source_trace_20",
+              "traceId": "fanout:source_trace_20:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.15,
+              "actualWidths": [
+                0.089
+              ]
+            },
+            {
+              "connectionName": "source_trace_21",
+              "traceId": "fanout:source_trace_21:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.15,
+              "actualWidths": [
+                0.089
+              ]
+            },
+            {
+              "connectionName": "source_trace_10",
+              "traceId": "fanout:source_trace_10:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.1,
+              "actualWidths": [
+                0.089
+              ]
+            },
+            {
+              "connectionName": "source_trace_9",
+              "traceId": "fanout:source_trace_9:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.1,
+              "actualWidths": [
+                0.089
+              ]
+            },
+            {
+              "connectionName": "source_trace_23",
+              "traceId": "fanout:source_trace_23:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.15,
+              "actualWidths": [
+                0.089
+              ]
+            },
+            {
+              "connectionName": "source_trace_28",
+              "traceId": "fanout:source_trace_28:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.15,
+              "actualWidths": [
+                0.089
+              ]
+            },
+            {
+              "connectionName": "source_trace_7",
+              "traceId": "fanout:source_trace_7:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.1,
+              "actualWidths": [
+                0.089
+              ]
+            },
+            {
+              "connectionName": "source_trace_8",
+              "traceId": "fanout:source_trace_8:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.1,
+              "actualWidths": [
+                0.089
+              ]
+            },
+            {
+              "connectionName": "source_trace_6",
+              "traceId": "fanout:source_trace_6:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.1,
+              "actualWidths": [
+                0.089
+              ]
+            },
+            {
+              "connectionName": "source_trace_3",
+              "traceId": "fanout:source_trace_3:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.1,
+              "actualWidths": [
+                0.089
+              ]
+            },
+            {
+              "connectionName": "source_trace_5",
+              "traceId": "fanout:source_trace_5:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.1,
+              "actualWidths": [
+                0.089
+              ]
+            },
+            {
+              "connectionName": "source_trace_2",
+              "traceId": "fanout:source_trace_2:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.1,
+              "actualWidths": [
+                0.089
+              ]
+            },
+            {
+              "connectionName": "source_trace_27",
+              "traceId": "fanout:source_trace_27:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.15,
+              "actualWidths": [
+                0.089
+              ]
+            },
+            {
+              "connectionName": "source_trace_30",
+              "traceId": "fanout:source_trace_30:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.15,
+              "actualWidths": [
+                0.089
+              ]
+            },
+            {
+              "connectionName": "source_trace_32",
+              "traceId": "fanout:source_trace_32:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.15,
+              "actualWidths": [
+                0.089
+              ]
+            },
+            {
+              "connectionName": "source_trace_0",
+              "traceId": "fanout:source_trace_0:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.1,
+              "actualWidths": [
+                0.089
+              ]
+            },
+            {
+              "connectionName": "source_trace_17",
+              "traceId": "fanout:source_trace_17:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.1,
+              "actualWidths": [
+                0.089
+              ]
+            },
+            {
+              "connectionName": "source_trace_24",
+              "traceId": "fanout:source_trace_24:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.15,
+              "actualWidths": [
+                0.089
+              ]
+            },
+            {
+              "connectionName": "source_trace_25",
+              "traceId": "fanout:source_trace_25:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.15,
+              "actualWidths": [
+                0.089
+              ]
+            },
+            {
+              "connectionName": "source_trace_29",
+              "traceId": "fanout:source_trace_29:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.15,
+              "actualWidths": [
+                0.089
+              ]
+            },
+            {
+              "connectionName": "source_trace_34",
+              "traceId": "fanout:source_trace_34:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.15,
+              "actualWidths": [
+                0.089
+              ]
+            },
+            {
+              "connectionName": "source_trace_37",
+              "traceId": "fanout:source_trace_37:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.15,
+              "actualWidths": [
+                0.089
+              ]
+            },
+            {
+              "connectionName": "source_trace_22",
+              "traceId": "fanout:source_trace_22:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.15,
+              "actualWidths": [
+                0.089
+              ]
+            },
+            {
+              "connectionName": "source_trace_11",
+              "traceId": "fanout:source_trace_11:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.1,
+              "actualWidths": [
+                0.089
+              ]
+            }
+          ],
+          "physicalCircuitSha256": "78e03479709f023a90c0c95cecf206f65c07effe8838523a63db5ff7548e3dc9",
+          "pcbSvgSha256": "5ff88c5313de2c15a5243e46aad819fe32399fd853e7ee329bfab83ab59458ee",
+          "committedTraces": 0,
+          "committedVias": 0,
+          "geometryErrors": [],
+          "membershipErrors": []
+        },
+        {
+          "variant": "minimal",
+          "board": "butterstick",
+          "inputRequests": 91,
+          "inputSha256": "0c572408c68a22db9a1e49f1dc6c3a5626d78f431bb6bb095c8a4b18d6c9baf7",
+          "rawPartialRequests": 60,
+          "qualifiedPartialRequests": 60,
+          "distinctDrills": 57,
+          "copperDrcValid": true,
+          "requestConstraintsValid": true,
+          "violations": [],
+          "physicalCircuitSha256": "78e03479709f023a90c0c95cecf206f65c07effe8838523a63db5ff7548e3dc9",
+          "pcbSvgSha256": "5ff88c5313de2c15a5243e46aad819fe32399fd853e7ee329bfab83ab59458ee",
+          "committedTraces": 0,
+          "committedVias": 0,
+          "geometryErrors": [],
+          "membershipErrors": []
+        }
+      ]
+    },
+    {
+      "runId": 44640940791,
+      "jobId": 135971523519,
+      "rows": [
+        {
+          "variant": "main",
+          "board": "glider",
+          "inputRequests": 95,
+          "inputSha256": "b407978a89550c8835548bd99252b8f042a167f50cd1a81adf8b234e85155f59",
+          "rawPartialRequests": 60,
+          "qualifiedPartialRequests": 60,
+          "distinctDrills": 53,
+          "copperDrcValid": true,
+          "requestConstraintsValid": true,
+          "violations": [],
+          "physicalCircuitSha256": "a100e237069976797d368cda7d06063b633005f527ce7f7234e14c9fd9bbd1d5",
+          "pcbSvgSha256": "eccce9dabf891f1a2af237e8c2048a56fcc95963f26853d5d86f0b3982288f3c",
+          "committedTraces": 0,
+          "committedVias": 0,
+          "geometryErrors": [],
+          "membershipErrors": []
+        },
+        {
+          "variant": "minimal",
+          "board": "glider",
+          "inputRequests": 95,
+          "inputSha256": "b407978a89550c8835548bd99252b8f042a167f50cd1a81adf8b234e85155f59",
+          "rawPartialRequests": 72,
+          "qualifiedPartialRequests": 72,
+          "distinctDrills": 63,
+          "copperDrcValid": true,
+          "requestConstraintsValid": true,
+          "violations": [],
+          "physicalCircuitSha256": "a100e237069976797d368cda7d06063b633005f527ce7f7234e14c9fd9bbd1d5",
+          "pcbSvgSha256": "eccce9dabf891f1a2af237e8c2048a56fcc95963f26853d5d86f0b3982288f3c",
+          "committedTraces": 0,
+          "committedVias": 0,
+          "geometryErrors": [],
+          "membershipErrors": []
+        }
+      ]
+    },
+    {
+      "runId": 44640940791,
+      "jobId": 135971523547,
+      "rows": [
+        {
+          "variant": "main",
+          "board": "imx6",
+          "inputRequests": 32,
+          "inputSha256": "70c8dbdc3c3b66954d47334f6d92353df135ba8eb4a7edf344b40718e6b43fd5",
+          "rawPartialRequests": 8,
+          "qualifiedPartialRequests": 2,
+          "distinctDrills": 7,
+          "copperDrcValid": true,
+          "requestConstraintsValid": false,
+          "violations": [
+            {
+              "connectionName": "source_trace_12",
+              "traceId": "fanout:source_trace_12:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.12,
+              "actualWidths": [
+                0.119
+              ]
+            },
+            {
+              "connectionName": "source_trace_11",
+              "traceId": "fanout:source_trace_11:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.12,
+              "actualWidths": [
+                0.119
+              ]
+            },
+            {
+              "connectionName": "source_trace_17",
+              "traceId": "fanout:source_trace_17:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.12,
+              "actualWidths": [
+                0.119
+              ]
+            },
+            {
+              "connectionName": "source_trace_16",
+              "traceId": "fanout:source_trace_16:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.12,
+              "actualWidths": [
+                0.119
+              ]
+            },
+            {
+              "connectionName": "source_trace_15",
+              "traceId": "fanout:source_trace_15:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.12,
+              "actualWidths": [
+                0.119
+              ]
+            },
+            {
+              "connectionName": "source_trace_3",
+              "traceId": "fanout:source_trace_3:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.12,
+              "actualWidths": [
+                0.119
+              ]
+            }
+          ],
+          "physicalCircuitSha256": "b28d96945a645b09e5b08c2331c434ca73c0ef606507ed7fe4900f4519e49664",
+          "pcbSvgSha256": "f830d71d7b5870d8911781f0614bda91562fcf3ac28b9a3f9ba0f184dbb00092",
+          "committedTraces": 0,
+          "committedVias": 0,
+          "geometryErrors": [],
+          "membershipErrors": []
+        },
+        {
+          "variant": "minimal",
+          "board": "imx6",
+          "inputRequests": 32,
+          "inputSha256": "70c8dbdc3c3b66954d47334f6d92353df135ba8eb4a7edf344b40718e6b43fd5",
+          "rawPartialRequests": 9,
+          "qualifiedPartialRequests": 9,
+          "distinctDrills": 7,
+          "copperDrcValid": true,
+          "requestConstraintsValid": true,
+          "violations": [],
+          "physicalCircuitSha256": "b28d96945a645b09e5b08c2331c434ca73c0ef606507ed7fe4900f4519e49664",
+          "pcbSvgSha256": "f830d71d7b5870d8911781f0614bda91562fcf3ac28b9a3f9ba0f184dbb00092",
+          "committedTraces": 0,
+          "committedVias": 0,
+          "geometryErrors": [],
+          "membershipErrors": []
+        }
+      ]
+    },
+    {
+      "runId": 44640940791,
+      "jobId": 135971523507,
+      "rows": [
+        {
+          "variant": "main",
+          "board": "icepi",
+          "inputRequests": 32,
+          "inputSha256": "f2c622bc288faaae5e505f62fe8803b465d1be0bc5752547ea9136438df40279",
+          "rawPartialRequests": 7,
+          "qualifiedPartialRequests": 5,
+          "distinctDrills": 7,
+          "copperDrcValid": true,
+          "requestConstraintsValid": false,
+          "violations": [
+            {
+              "connectionName": "source_trace_3",
+              "traceId": "fanout:source_trace_3:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.15,
+              "actualWidths": [
+                0.1
+              ]
+            },
+            {
+              "connectionName": "source_trace_7",
+              "traceId": "fanout:source_trace_7:source-0",
+              "code": "wire-width",
+              "expectedWidth": 0.15,
+              "actualWidths": [
+                0.1
+              ]
+            }
+          ],
+          "physicalCircuitSha256": "e6e1048835308128142aab743308a686aa21b2f7aefc54fdb87688333297be1f",
+          "pcbSvgSha256": "6597f24ad923386c271401e1496447be93a10e62083f239cafd4762cc2fa9e0e",
+          "committedTraces": 0,
+          "committedVias": 0,
+          "geometryErrors": [],
+          "membershipErrors": []
+        },
+        {
+          "variant": "minimal",
+          "board": "icepi",
+          "inputRequests": 32,
+          "inputSha256": "f2c622bc288faaae5e505f62fe8803b465d1be0bc5752547ea9136438df40279",
+          "rawPartialRequests": 9,
+          "qualifiedPartialRequests": 9,
+          "distinctDrills": 8,
+          "copperDrcValid": true,
+          "requestConstraintsValid": true,
+          "violations": [],
+          "physicalCircuitSha256": "e6e1048835308128142aab743308a686aa21b2f7aefc54fdb87688333297be1f",
+          "pcbSvgSha256": "6597f24ad923386c271401e1496447be93a10e62083f239cafd4762cc2fa9e0e",
+          "committedTraces": 0,
+          "committedVias": 0,
+          "geometryErrors": [],
+          "membershipErrors": []
+        }
+      ]
+    }
+  ],
+  "totals": {
+    "main": {
+      "inputRequests": 697,
+      "rawPartialRequests": 347,
+      "qualifiedPartialRequests": 232,
+      "distinctDrills": 313,
+      "committedTraces": 0,
+      "committedVias": 0
+    },
+    "minimal": {
+      "inputRequests": 697,
+      "rawPartialRequests": 398,
+      "qualifiedPartialRequests": 398,
+      "distinctDrills": 347,
+      "committedTraces": 0,
+      "committedVias": 0
+    }
+  },
+  "qualifiedIncreaseVsMainPercent": 71.55172413793103,
+  "vsOldLargeStack": {
+    "oldEvidence": "e20a5fb5f25d233409889c77c9cd885d71761b76/minimal-stack-concerns-2427",
+    "oldQualified": 416,
+    "newQualified": 398,
+    "oldDrills": 343,
+    "newDrills": 347,
+    "qualifiedDeltaPercent": -4.326923076923073,
+    "drillsDeltaPercent": 1.1661807580174877,
+    "completeBoardsBeforeAndAfter": 0,
+    "guardCompletedBeforeAndAfter": 30
+  },
+  "frozen72": {
+    "beforeCompleted": 30,
+    "afterCompleted": 30,
+    "identicalCompletedSvgs": 30,
+    "concurrency": 16,
+    "caseDeadlineSeconds": 120,
+    "timing": [
+      {
+        "cohort": "matched/original",
+        "completed": 30,
+        "p50SolvedMs": 42573,
+        "p95SolvedMs": 92831,
+        "meanSolvedMs": 48005.26666666667,
+        "meanSolvedVias": 148.5
+      },
+      {
+        "cohort": "matched/cleanup",
+        "completed": 30,
+        "p50SolvedMs": 42778,
+        "p95SolvedMs": 94889,
+        "meanSolvedMs": 48507.666666666664,
+        "meanSolvedVias": 148.5
+      }
+    ],
+    "percentileMethod": "Nearest rank among completed samples",
+    "interpretation": "No speed improvement claimed: P50/P95/mean are slightly slower. Keep for correctness and physically valid partials, per user minimality priority."
+  },
+  "boundary300": {
+    "before": 235,
+    "inferenceOnly": 247,
+    "afterFreeHeadings": 276,
+    "drillsBefore": 180,
+    "drillsInferenceOnly": 165,
+    "drillsAfter": 177,
+    "sameAcceptedRequestSetAsOldStack": true,
+    "oldStackDrills": 181,
+    "physicalChecksPassed": true,
+    "scope": "Single-request replays; all original obstacles retained. Resolve each request width on both sides; clear bus guidance to isolate boundary behavior. Not jointly routed boards.",
+    "sourceEquivalence": "The heading cohort uses 2f781b5, whose boundary routing source files match c295fa. Their sole lib difference is a plane candidate generator, unused by these boundary-only requests."
+  },
+  "rejectedNeighbors": {
+    "append19Lines": {
+      "beforeCompleted": 30,
+      "afterCompleted": 28,
+      "lostCases": [
+        "02-top-center",
+        "08-bottom-center"
+      ]
+    },
+    "globalLegacyPrefix41Lines": {
+      "beforeCompleted": 30,
+      "afterCompleted": 30,
+      "allCompletedSvgsIdentical": true,
+      "additionalCompletedCases": 0,
+      "decision": "Drop optional search work."
+    }
+  },
+  "limitations": [
+    "Full-board qualified partial requests are uncommitted diagnostic requests from the first failed fanout region; multiple requests can share a net.",
+    "No full board completes; no PCB copper is committed, so raw PCB SVGs are unchanged.",
+    "Width resolution fixes the common route entry; custom staged/crossbar/source-origin/peripheral/single-layer builders are outside this change.",
+    "No claim of equal routing quality to the old large stack: 18 fewer valid diagnostic partials and four more drills."
+  ],
+  "artifacts": {
+    "fullBoards": "full-board-evidence.zip",
+    "reports": "raw-reports.json.gz",
+    "inputArchive": "https://raw.githubusercontent.com/tscircuit/tscircuit-autorouter/a3416878451bbe69df04ab4d27a67ac2fa0446f4/rerun2427/circuits-and-results.zip",
+    "sourceArchiveDirectory": "https://github.com/tscircuit/tscircuit-autorouter/tree/a3416878451bbe69df04ab4d27a67ac2fa0446f4/rerun2427/sources"
+  }
+}
