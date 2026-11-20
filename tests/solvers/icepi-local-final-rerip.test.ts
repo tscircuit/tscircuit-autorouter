@@ -10,10 +10,7 @@ import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject
 test("IcePi local other_signals reaches detailed routing", async (): Promise<void> => {
   // Full original other_signals phase, including all prior routed copper.
   const compressed = readFileSync(
-    new URL(
-      "../fixtures/icepi-local-other-signals.json.gz",
-      import.meta.url,
-    ),
+    new URL("../fixtures/icepi-local-other-signals.json.gz", import.meta.url),
   )
   const input = JSON.parse(
     gunzipSync(new Uint8Array(compressed)).toString("utf8"),
