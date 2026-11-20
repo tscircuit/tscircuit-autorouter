@@ -11,7 +11,7 @@ Median wall time to return a failure or routing-budget result falls **424.4s →
 | Complete boards | 0/10 | 0/10 | +0 boards |
 | Median failed/budgeted wall time | 424.4s | 190.5s | 55.1% lower |
 | P95 failed/budgeted wall time | 623.6s | 609.7s | 2.2% lower |
-| Total paired-cohort wall time | 4210.9s | 3090.2s | 26.6% lower |
+| Sum of per-board wall times | 4210.9s | 3090.2s | 26.6% lower |
 | Circuits entering routing after failed winding placement | 5 | 0 | Prevented in 5 circuits |
 
 A routing invocation below means an observed FanoutSolver, BusLanesPipelineSolver or generic autorouter instance. Placement solvers still run to produce the original diagnostic. Connected nets count physical continuity through emitted copper and actual pours; diagnostic partial fanout attempts do not count. Singleton nets are excluded.
@@ -22,7 +22,7 @@ A routing invocation below means an observed FanoutSolver, BusLanesPipelineSolve
 | butterstick-spaced | 1→0 | 479.5→195.3 | 59.3% | 0→0 / 317 | 0→0 | 0→0 |
 | glider-original | 1→1 | 609.5→608.9 | 0.1% | 0→0 / 356 | 0→0 | 0→0 |
 | glider-spaced | 1→0 | 634.1→109.2 | 82.8% | 0→0 / 356 | 0→0 | 0→0 |
-| h616-original | 1→1 | 604.3→604.5 | -0.0% | 0→0 / 121 | 0→0 | 0→0 |
+| h616-original | 1→1 | 604.3→604.5 | ≈0% | 0→0 / 121 | 0→0 | 0→0 |
 | h616-spaced | 1→1 | 610.7→610.4 | 0.1% | 0→0 / 121 | 0→0 | 0→0 |
 | icepi-original | 1→1 | 133.8→132.7 | 0.9% | 7→7 / 230 | 0→0 | 0→0 |
 | icepi-spaced | 1→0 | 289.5→99.9 | 65.5% | 0→0 / 230 | 0→0 | 0→0 |
@@ -60,7 +60,7 @@ The ten supplied TSX files replace the previous board set: original and spaced H
 
 Baseline core is `4306536282fe5abf32c1395e106f55a5d61ca7a3`; the candidate Group source is byte-identical to the fix PR and recorded in [core-candidate.json](../core-candidate.json). Autorouter stays `2b1207ad70971f326166b134ea19418137273f23`, fanout stays `9e771f68dca591642fca3b97187e14404c16c5aa`, bus-lanes stays 0.0.62, and Bun is 1.4.3. No source-turn change is included in this comparison.
 
-Each pair runs serially on one Blacksmith 8-vCPU ARM machine with the same installed dependencies, input hashes and rules, a 600-second routing budget and a 660-second process limit. Originals run before→after; spaced variants run after→before. Source fingerprints are checked before each run. Wall time includes identical instrumentation and is not a measure of uninstrumented solver latency. Zero newly emitted input traces/vias is verified; when the guard prevents any routing start, the final zero-copper result is checked instead.
+One pair per circuit runs serially on one Blacksmith 8-vCPU ARM machine with the same installed dependencies, input hashes and rules, a 600-second routing budget and a 660-second process limit. Originals run before→after; spaced variants run after→before. Source fingerprints are checked before each run. Wall time includes identical instrumentation and is not a measure of uninstrumented solver latency. Zero newly emitted input traces/vias is verified; when the guard prevents any routing start, the final zero-copper result is checked instead.
 
 The original supplied helpers default fanout off; the spaced helpers lack standalone fanout support. [correct-workflow.tsx](../correct-workflow.tsx) enables the requested fanout → DDR bus lanes → remaining signals/power sequence. Native geometry, electrical membership and nominal widths are retained. Spaced escape widths come from the paired original’s explicit escape widths. [Input hashes](../inputs.json), [electrical equivalence](../electrical-equivalence.json), [geometry checks](../workflow-geometry-check.json).
 
@@ -68,7 +68,7 @@ Spaced variants also omit original copper pours and split the remaining phases, 
 
 ## Fix and experiment decision
 
-[Repro #5742](https://github.com/tscircuit/core/pull/5742) records the natural SVG before the guard. [Stacked fix #5743](https://github.com/tscircuit/core/pull/5743) updates that same SVG. The shallow case shows four actual bus routes bypassing an infeasible fanout before the fix, then preserves the original diagnostic and stops that bypass after the fix. The fix adds 11 production lines in one existing file.
+[Repro #5742](https://github.com/tscircuit/core/pull/5742) records the natural SVG before the guard. [Stacked fix #5743](https://github.com/tscircuit/core/pull/5743) updates that same SVG. The shallow case shows four actual bus routes bypassing an infeasible fanout before the fix, then preserves the original diagnostic and stops that bypass after the fix. The fix adds 11 production lines in one existing file. Four existing failed AM62L snapshots were also replayed before updating: their original winding errors are unchanged, the downstream bus start changes from one to zero, and traces/vias stay at zero. Pad geometry is identical; pour tessellation differs by less than 0.000004 SVG pixels. Only the attempted-phase overlays disappear visibly. [Verification captures](https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44738611107).
 
 A source-turn/midpoint candidate was also measured and rejected: it improves the focused U22 diagnostic from 9/32 to 14/32 with fewer vias, but full-board completion stays 0/10, median failed/budgeted time rises 12.8%, Glider loses one diagnostic escape under the budget, and i.MX6 spaced adds two vias for one extra escape. Its two draft PRs were closed. [All ten measurements and SVGs for that rejected candidate](https://github.com/tscircuit/tscircuit-autorouter/blob/analysis/e2e-results-20261120/experiments/e2e-samples-20261120/results/analysis.md).
 
