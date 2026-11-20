@@ -62,7 +62,7 @@ summary = {
 }
 (output_root / 'regional-terminal-analysis.json').write_text(json.dumps(summary, indent=2) + '\n')
 with (output_root / 'regional-terminal-comparison.csv').open('w', newline='') as stream:
-    writer = csv.writer(stream)
+    writer = csv.writer(stream, lineterminator="\n")
     writer.writerow(['board', 'before_stage', 'after_stage', 'before_seconds', 'after_seconds', 'before_traces', 'after_traces', 'before_vias', 'after_vias', 'before_unconnected', 'after_unconnected', 'before_stop', 'after_stop', 'emitted_copper_identical'])
     for row in records:
         a, b = row['before']['result'], row['after']['result']
