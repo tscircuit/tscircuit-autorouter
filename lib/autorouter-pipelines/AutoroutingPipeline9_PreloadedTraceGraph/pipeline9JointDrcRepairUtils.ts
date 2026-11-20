@@ -129,14 +129,83 @@ const getDrcIssueScore = (errors: Pipeline9DrcError[]) =>
     return score + 1
   }, 0)
 
+/** A short, keyed by what touches; unidentified when its ids are missing. */
+export type Pipeline9DrcContact =
+  | { kind: "identified"; key: string }
+  | { kind: "unidentified" }
+
+/**
+ * The short a trace error reports, keyed by the objects touching whichever
+ * side reported it. Undefined when the error is not copper in contact.
+ */
+export const getPipeline9DrcContact = (
+  error: Pipeline9DrcError,
+): Pipeline9DrcContact | undefined => {
+  const isContact =
+    error.type === "pcb_trace_error" &&
+    typeof error.actual_clearance === "number" &&
+    error.actual_clearance < 0
+  if (!isContact) return undefined
+  if (typeof error.pcb_smtpad_id === "string") {
+    const key = `${error.pcb_trace_id} touches ${error.pcb_smtpad_id}`
+    return { kind: "identified", key }
+  }
+  if (typeof error.pcb_plated_hole_id === "string") {
+    const key = `${error.pcb_trace_id} touches ${error.pcb_plated_hole_id}`
+    return { kind: "identified", key }
+  }
+  // A trace touching another trace or its via: both traces are listed.
+  if (!Array.isArray(error.pcb_trace_ids)) return { kind: "unidentified" }
+  const key = [...error.pcb_trace_ids].sort().join(" touches ")
+  return { kind: "identified", key }
+}
+
+/**
+ * True when the candidate has a short the current routes do not. A short
+ * without the ids that name it counts as new: it cannot be matched.
+ */
+export const introducesPipeline9DrcContact = (
+  candidateErrors: Pipeline9DrcError[],
+  currentErrors: Pipeline9DrcError[],
+): boolean => {
+  const currentContactKeys = new Set<string>()
+  for (const error of currentErrors) {
+    const contact = getPipeline9DrcContact(error)
+    if (contact?.kind === "identified") currentContactKeys.add(contact.key)
+  }
+  for (const error of candidateErrors) {
+    const contact = getPipeline9DrcContact(error)
+    if (!contact) continue
+    if (contact.kind === "unidentified") return true
+    if (!currentContactKeys.has(contact.key)) return true
+  }
+  return false
+}
+
+/**
+ * A candidate is better when it has fewer DRC errors, or as many with a lower
+ * score. With rejectNewContacts, a candidate that puts two objects in contact
+ * that were not already touching is never better: use it where no later step
+ * can remove the short.
+ */
 export const isPipeline9DrcCandidateBetter = (
   candidateErrors: Pipeline9DrcError[],
   currentErrors: Pipeline9DrcError[],
-) =>
-  candidateErrors.length < currentErrors.length ||
-  (candidateErrors.length === currentErrors.length &&
-    getDrcIssueScore(candidateErrors) <
-      getDrcIssueScore(currentErrors) - SCORE_EPSILON)
+  { rejectNewContacts = false }: { rejectNewContacts?: boolean } = {},
+): boolean => {
+  if (
+    rejectNewContacts &&
+    introducesPipeline9DrcContact(candidateErrors, currentErrors)
+  ) {
+    return false
+  }
+  return (
+    candidateErrors.length < currentErrors.length ||
+    (candidateErrors.length === currentErrors.length &&
+      getDrcIssueScore(candidateErrors) <
+        getDrcIssueScore(currentErrors) - SCORE_EPSILON)
+  )
+}
 
 export const getPipeline9RouteIndexByTraceId = ({
   routes,

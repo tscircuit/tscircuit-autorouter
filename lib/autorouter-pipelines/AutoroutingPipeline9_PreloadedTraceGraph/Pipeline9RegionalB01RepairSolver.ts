@@ -31,6 +31,7 @@ import {
 import {
   getPipeline9DrcErrors,
   getPipeline9RouteIndexByTraceId,
+  introducesPipeline9DrcContact,
   isPipeline9DrcCandidateBetter,
   isPipeline9DrcErrorOwnedByPreloadRepair,
   type Pipeline9DrcError,
@@ -495,7 +496,10 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
         )
         if (
           getViaIssueCount(errors) <= getViaIssueCount(cleanup.errors) &&
-          isPipeline9DrcCandidateBetter(errors, cleanup.errors) &&
+          // Cleanup is final, so nothing after it removes a new short.
+          isPipeline9DrcCandidateBetter(errors, cleanup.errors, {
+            rejectNewContacts: true,
+          }) &&
           !this.introducesViaInPad(refinedRoutes)
         ) {
           cleanup.routes = refinedRoutes
@@ -557,11 +561,13 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
       throw new Error(`Regional via-pad projection failed: ${solver.error}`)
     }
     if (!solver.solved) return
-    cleanup.routes = solver.getOutput().slice(0, cleanup.routes.length)
-    cleanup.errors = getPipeline9DrcErrors(
-      this.params.drcEvaluator,
-      cleanup.routes,
-    )
+    const routes = solver.getOutput().slice(0, cleanup.routes.length)
+    const errors = getPipeline9DrcErrors(this.params.drcEvaluator, routes)
+    // Cleanup is final, so keep the projection only if it adds no short.
+    if (!introducesPipeline9DrcContact(errors, cleanup.errors)) {
+      cleanup.routes = routes
+      cleanup.errors = errors
+    }
     this.activeSubSolver = null
     this.phase = "prepare-safe-layer"
   }
@@ -623,7 +629,9 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
     const routes = solver.getOutput()
     const errors = getPipeline9DrcErrors(this.params.drcEvaluator, routes)
     if (
-      isPipeline9DrcCandidateBetter(errors, cleanup.errors) &&
+      isPipeline9DrcCandidateBetter(errors, cleanup.errors, {
+        rejectNewContacts: true,
+      }) &&
       !this.introducesViaInPad(routes)
     ) {
       cleanup.routes = routes
