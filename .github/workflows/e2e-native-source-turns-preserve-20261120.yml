@@ -41,8 +41,8 @@ jobs:
           done
       - name: Apply only the native fanout candidate changes
         run: |
-          curl --fail --location --silent https://raw.githubusercontent.com/tscircuit/fanout-solver/9111f0b7bf63b86710841f7188c7a476463119d8/lib/route-bus/route-analytic-boundary-alternatives.ts -o route-analytic-boundary-alternatives.ts
-          curl --fail --location --silent https://raw.githubusercontent.com/tscircuit/fanout-solver/9111f0b7bf63b86710841f7188c7a476463119d8/lib/route-bus/track-candidates.ts -o track-candidates.ts
+          curl --fail --location --silent https://raw.githubusercontent.com/tscircuit/fanout-solver/bec63740668e6ebce44ea3862a798c89941351e1/lib/route-bus/route-analytic-boundary-alternatives.ts -o route-analytic-boundary-alternatives.ts
+          curl --fail --location --silent https://raw.githubusercontent.com/tscircuit/fanout-solver/bec63740668e6ebce44ea3862a798c89941351e1/lib/route-bus/track-candidates.ts -o track-candidates.ts
           python3 - <<'PYPATCH'
           import hashlib,json
           from pathlib import Path
@@ -122,7 +122,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: tscircuit/fanout-solver
-          ref: 9111f0b7bf63b86710841f7188c7a476463119d8
+          ref: bec63740668e6ebce44ea3862a798c89941351e1
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.4.3
