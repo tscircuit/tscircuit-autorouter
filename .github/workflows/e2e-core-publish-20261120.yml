@@ -1,0 +1,72 @@
+name: Publish measured core-gate evidence
+on:
+  push:
+    branches: [analysis/e2e-core-publish-20261120]
+permissions:
+  contents: write
+  actions: read
+jobs:
+  publish:
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - name: Wait for the matched routing comparison
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh run watch 44735325252 --interval 30 --exit-status
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: 44735325252
+          pattern: e2e-core-gate-pair-*
+          path: captures
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/core
+          ref: 4306536282fe5abf32c1395e106f55a5d61ca7a3
+          path: core
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Prepare physical diagnostic checks
+        run: |
+          python3 - <<'PYSETUP'
+          from pathlib import Path
+          import json
+          p=Path('core/package.json');package=json.loads(p.read_text())
+          package['devDependencies']['@tscircuit/fanout-solver']='https://codeload.github.com/tscircuit/fanout-solver/tar.gz/9e771f68dca591642fca3b97187e14404c16c5aa'
+          p.write_text(json.dumps(package,indent=2)+'\n')
+          PYSETUP
+          (cd core && bun install --ignore-scripts)
+      - name: Audit captured diagnostics and publish results
+        run: |
+          python3 experiments/e2e-samples-20261120/publish-core.py
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add experiments/e2e-samples-20261120/core-results
+          git commit -m 'Record ten matched core-gate results and PCB SVGs'
+          git push origin HEAD:refs/heads/analysis/e2e-core-results-20261120
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e2e-core-reviewed-results
+          path: experiments/e2e-samples-20261120/core-results
+      - name: Export compact measured summary
+        run: |
+          python3 - <<'PYEXPORT'
+          from pathlib import Path
+          import base64,gzip,json
+          p=Path('experiments/e2e-samples-20261120/core-results/summary.json')
+          rows=json.loads(p.read_text())
+          for row in rows:
+              for variant in ['before','after']:
+                  for entry in row[variant]['diagnostics']:entry.pop('routedConnections',None)
+                  assessment=row[variant].get('assessment',{})
+                  for field in ['connected','disconnected']:assessment.pop(field,None)
+          statistics=json.loads(p.with_name('statistics.json').read_text())
+          encoded=base64.b64encode(gzip.compress(json.dumps({'rows':rows,'statistics':statistics}).encode(),mtime=0)).decode()
+          print('E2E_CORE_FINAL_BEGIN')
+          for offset in range(0,len(encoded),8000):print(encoded[offset:offset+8000])
+          print('E2E_CORE_FINAL_END')
+          PYEXPORT

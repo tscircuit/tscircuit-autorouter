@@ -1,0 +1,66 @@
+{
+  "imx6": {
+    "cagedRequestedPins": [
+      "B2",
+      "B3",
+      "B4",
+      "B5",
+      "B6",
+      "C2",
+      "N2"
+    ],
+    "traceInflationRadiusMm": 0.304,
+    "viaInflationRadiusMm": 0.444,
+    "maximumViaCenterDistanceInsideCageMm": 0.08497193181400509,
+    "ownPadRadiusMm": 0.125
+  },
+  "icepi": {
+    "validB2LocalPath": [
+      [
+        2.75,
+        -2.75
+      ],
+      [
+        3,
+        -3
+      ],
+      [
+        3,
+        -4.1
+      ]
+    ],
+    "wireWidthMm": 0.1,
+    "clearanceMm": 0.1,
+    "extraNativePadMarginMm": 0.005,
+    "viaDiameterMm": 0.45,
+    "extraViaToAllNativePadsMarginMm": 0.3919553682064174
+  },
+  "midpointOnlyFocusedReplay": {
+    "before": {
+      "label": "before",
+      "solved": false,
+      "failed": true,
+      "error": "FanoutSolver: best layer assignment routed 9/32 connections",
+      "attempts": 256,
+      "requested": 32,
+      "routed": 9,
+      "vias": 8,
+      "drcValid": true,
+      "drcIssues": [],
+      "b2MidpointPresent": false
+    },
+    "after": {
+      "label": "after",
+      "solved": false,
+      "failed": true,
+      "error": "FanoutSolver: best layer assignment routed 9/32 connections",
+      "attempts": 256,
+      "requested": 32,
+      "routed": 9,
+      "vias": 8,
+      "drcValid": true,
+      "drcIssues": [],
+      "b2MidpointPresent": true
+    }
+  }
+}

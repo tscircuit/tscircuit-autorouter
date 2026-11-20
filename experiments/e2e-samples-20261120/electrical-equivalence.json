@@ -1,0 +1,42 @@
+[
+  {
+    "board": "h616",
+    "multiTerminalNets": 121,
+    "singletonNets": 143,
+    "membershipDifferences": [],
+    "widthDifferences": [],
+    "widthDifferenceCount": 0
+  },
+  {
+    "board": "butterstick",
+    "multiTerminalNets": 317,
+    "singletonNets": 32,
+    "membershipDifferences": [],
+    "widthDifferences": [],
+    "widthDifferenceCount": 0
+  },
+  {
+    "board": "glider",
+    "multiTerminalNets": 356,
+    "singletonNets": 103,
+    "membershipDifferences": [],
+    "widthDifferences": [],
+    "widthDifferenceCount": 0
+  },
+  {
+    "board": "imx6",
+    "multiTerminalNets": 404,
+    "singletonNets": 184,
+    "membershipDifferences": [],
+    "widthDifferences": [],
+    "widthDifferenceCount": 0
+  },
+  {
+    "board": "icepi",
+    "multiTerminalNets": 230,
+    "singletonNets": 236,
+    "membershipDifferences": [],
+    "widthDifferences": [],
+    "widthDifferenceCount": 0
+  }
+]
