@@ -1,0 +1,68 @@
+name: Isolate sample 52 routing-path change
+on:
+  push:
+    branches: [analysis/native-copper-stage-diagnostics]
+    paths: [.github/workflows/native-sample52-check.yml]
+permissions:
+  contents: read
+jobs:
+  routing:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - variant: main
+            source: 2b1207ad70971f326166b134ea19418137273f23
+          - variant: old-parent
+            source: a3011ea856de9661404a115ed2050d9e0a1bff77
+          - variant: narrow
+            source: c7dbc2ce0114fc2f575db2ddd88da5a2b15e0b90
+          - variant: legacy
+            source: c7dbc2ce0114fc2f575db2ddd88da5a2b15e0b90
+          - variant: unregistered
+            source: c7dbc2ce0114fc2f575db2ddd88da5a2b15e0b90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.source }}
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.4.3'
+      - run: bun install
+      - name: Isolate canonical ownership and record aggregate results
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path("lib/solvers/TraceWidthSolver/isObstacleConnectedToRoute.ts")
+          variant="${{ matrix.variant }}"
+          if variant=="legacy":
+              p.write_text("import type { ConnectivityMap } from \"circuit-json-to-connectivity-map\"\nimport type { Obstacle } from \"lib/types\"\n\ntype RouteConnectionIds = {\n  connectionName: string\n  rootConnectionName?: string\n}\n\nexport const isObstacleConnectedToRoute = (\n  obstacle: Obstacle,\n  route: RouteConnectionIds,\n  connMap?: ConnectivityMap,\n) =>\n  obstacle.connectedTo.some(\n    (connectedId) =>\n      connectedId === route.connectionName ||\n      connectedId === route.rootConnectionName ||\n      (connMap?.areIdsConnected(route.connectionName, connectedId) ?? false) ||\n      (route.rootConnectionName !== undefined &&\n        (connMap?.areIdsConnected(route.rootConnectionName, connectedId) ??\n          false)),\n  )\n")
+          if variant=="unregistered":
+              s=p.read_text()
+              old="        Object.hasOwn(connMap.netMap, route.rootConnectionName) &&"
+              assert s.count(old)==1
+              p.write_text(s.replace(old,"        connMap.getNetConnectedToId(route.connectionName) === undefined &&\n"+old))
+          p=Path("tests/features/pipeline9-srj23-sample52-bounded-joint-drc.test.ts")
+          s=p.read_text()
+          old="  expect(solver.solved).toBeTrue()"
+          assert s.count(old)==1
+          s=s.replace(old,'''  console.log("SAMPLE52_AGGREGATES", JSON.stringify({
+              inputPreloadedCount: scenario.traces?.length ?? 0,
+              finalDrcCount: evaluateRelaxedDrc({
+                inputSrj: scenario,
+                srjWithPointPairs: solver.srjWithPointPairs!,
+                routedTraces: solver.getOutputSimplifiedPcbTraces(),
+              }).errors.length,
+              solved: solver.solved,
+              regionalAttempted: solver.pipeline9JointDrcRepairSolver?.stats.regionalB01RepairAttempted,
+              regionalCandidateCount: solver.pipeline9JointDrcRepairSolver?.stats.regionalB01RepairCandidateSearchCount,
+              exactReferenceAccepted: solver.pipeline9JointDrcRepairSolver?.stats.postExactReferenceAccepted,
+              exactReferenceDrcCount: solver.pipeline9JointDrcRepairSolver?.stats.postExactReferenceDrcIssueCount,
+            }))
+          '''+old)
+          p.write_text(s)
+          PY
+      - run: bun test --timeout 600000 tests/features/pipeline9-srj23-sample52-bounded-joint-drc.test.ts
