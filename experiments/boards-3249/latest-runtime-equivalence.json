@@ -1,0 +1,127 @@
+{
+  "testedRelease": "0.0.3249",
+  "latestRelease": "0.0.3251",
+  "identicalEntryModules": [
+    {
+      "package": "tscircuit",
+      "entries": [
+        {
+          "version": "0.0.3249",
+          "module": "dist/index.js",
+          "sha256": "cfd669f2d96ac77eb054aab53ff34a80120bcd3db72b87f969b3d8b8d2af78a3"
+        },
+        {
+          "version": "0.0.3251",
+          "module": "dist/index.js",
+          "sha256": "cfd669f2d96ac77eb054aab53ff34a80120bcd3db72b87f969b3d8b8d2af78a3"
+        }
+      ]
+    },
+    {
+      "package": "@tscircuit/core",
+      "entries": [
+        {
+          "version": "0.0.2433",
+          "module": "dist/index.js",
+          "sha256": "623c6060dfa37371202583cfbeebbae858bb1b7d44dfb02d0979103fbb21656b"
+        },
+        {
+          "version": "0.0.2433",
+          "module": "dist/index.js",
+          "sha256": "623c6060dfa37371202583cfbeebbae858bb1b7d44dfb02d0979103fbb21656b"
+        }
+      ]
+    },
+    {
+      "package": "@tscircuit/fanout-solver",
+      "entries": [
+        {
+          "version": "0.0.92",
+          "module": "lib/index.ts",
+          "sha256": "ee06af452060e90d70c49f00a37cf516638f7649817fc4e94decb39da4d07cf9"
+        },
+        {
+          "version": "0.0.92",
+          "module": "lib/index.ts",
+          "sha256": "ee06af452060e90d70c49f00a37cf516638f7649817fc4e94decb39da4d07cf9"
+        }
+      ]
+    },
+    {
+      "package": "@tscircuit/capacity-autorouter",
+      "entries": [
+        {
+          "version": "0.0.1135",
+          "module": "./dist/index.js",
+          "sha256": "e134482541de183eb5562fc7a21e0dfe37baefee88c482fed8a08e9ee5770b46"
+        },
+        {
+          "version": "0.0.1135",
+          "module": "./dist/index.js",
+          "sha256": "e134482541de183eb5562fc7a21e0dfe37baefee88c482fed8a08e9ee5770b46"
+        }
+      ]
+    },
+    {
+      "package": "@tscircuit/footprinter",
+      "entries": [
+        {
+          "version": "0.0.451",
+          "module": "dist/index.js",
+          "sha256": "383bcd803575ad9349e46d63c289c2b6310670f6b9e45c0a3ca2c5adae599a10"
+        },
+        {
+          "version": "0.0.451",
+          "module": "dist/index.js",
+          "sha256": "383bcd803575ad9349e46d63c289c2b6310670f6b9e45c0a3ca2c5adae599a10"
+        }
+      ]
+    },
+    {
+      "package": "@tscircuit/props",
+      "entries": [
+        {
+          "version": "0.0.741",
+          "module": "dist/index.js",
+          "sha256": "9e688c56360488b4576ca815d83b04fe166a4f7e26db752cd6782ddd04e31a5e"
+        },
+        {
+          "version": "0.0.741",
+          "module": "dist/index.js",
+          "sha256": "9e688c56360488b4576ca815d83b04fe166a4f7e26db752cd6782ddd04e31a5e"
+        }
+      ]
+    },
+    {
+      "package": "@tscircuit/eval",
+      "entries": [
+        {
+          "version": "0.0.1824",
+          "module": "dist/lib/index.js",
+          "sha256": "71517bf85bef897c0a658f69fba77e69dc6599f82f701ce966fa6af370991465"
+        },
+        {
+          "version": "0.0.1824",
+          "module": "dist/lib/index.js",
+          "sha256": "71517bf85bef897c0a658f69fba77e69dc6599f82f701ce966fa6af370991465"
+        }
+      ]
+    },
+    {
+      "package": "react",
+      "entries": [
+        {
+          "version": "19.3.1",
+          "module": "index.js",
+          "sha256": "60caffdecbdc5db3bc4ec4e83df9488345ccb271d07533b9210bf5750918d97e"
+        },
+        {
+          "version": "19.3.1",
+          "module": "index.js",
+          "sha256": "60caffdecbdc5db3bc4ec4e83df9488345ccb271d07533b9210bf5750918d97e"
+        }
+      ]
+    }
+  ],
+  "onlyChangedTopLevelDependency": "@tscircuit/cli"
+}

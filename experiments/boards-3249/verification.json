@@ -24,5 +24,8 @@
   "fixCi": {
     "run": 44723834363,
     "allEightShards": "success"
-  }
+  },
+  "latestReleaseAtFinalCheck": "0.0.3251",
+  "latestRoutingEntryModulesByteIdentical": true,
+  "latestNativeCircuitJsonByteIdentical": true
 }

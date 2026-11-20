@@ -1,0 +1,15 @@
+{
+  "latestRelease": "0.0.3251",
+  "previousRelease": "0.0.3249",
+  "nativeBoard": "icepi-native",
+  "identicalCircuitJsonBytes": 5709057,
+  "circuitSha256": "51636162694204ada0c54a81aae8e5467235609895bc7b19a4ea503fa5c95a67",
+  "identicalFanoutCaptureHashes": {
+    "input": "0c4d328f40554349158a1ed52a7265b2920e0ada9715d49ad076c44ed7ec1925",
+    "best": "7210d152148f4599b9754edf8670adcb8361989804243e2119c15715682dcad0"
+  },
+  "fanoutRetained": 9,
+  "fanoutRequests": 32,
+  "fanoutAttempts": 256,
+  "fanoutCpuMs": 27657.684
+}
