@@ -39,6 +39,7 @@ export type Pipeline9AxisAlignedRect = {
 }
 
 const FIXED_WIRE_MAX_APPROXIMATION_LENGTH = 0.75
+const COPPER_CLEARANCE_EPSILON = 1e-9
 const routeCopperGeometryCache = new WeakMap<
   HighDensityRoute,
   Map<string, Pipeline9RouteCopperGeometry>
@@ -310,7 +311,9 @@ export const doPipeline9RoutesHaveCopperConflict = ({
           leftWire.end,
           rightWire.start,
           rightWire.end,
-        ) < requiredClearance
+        ) +
+          COPPER_CLEARANCE_EPSILON <
+        requiredClearance
       ) {
         return true
       }
@@ -325,7 +328,9 @@ export const doPipeline9RoutesHaveCopperConflict = ({
           leftWire.end,
           rightVia.center,
           rightVia.center,
-        ) < requiredClearance
+        ) +
+          COPPER_CLEARANCE_EPSILON <
+        requiredClearance
       ) {
         return true
       }
@@ -342,7 +347,9 @@ export const doPipeline9RoutesHaveCopperConflict = ({
           leftVia.center,
           rightWire.start,
           rightWire.end,
-        ) < requiredClearance
+        ) +
+          COPPER_CLEARANCE_EPSILON <
+        requiredClearance
       ) {
         return true
       }
@@ -355,7 +362,9 @@ export const doPipeline9RoutesHaveCopperConflict = ({
         Math.hypot(
           leftVia.center.x - rightVia.center.x,
           leftVia.center.y - rightVia.center.y,
-        ) < requiredClearance
+        ) +
+          COPPER_CLEARANCE_EPSILON <
+        requiredClearance
       ) {
         return true
       }
