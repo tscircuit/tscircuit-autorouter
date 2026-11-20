@@ -34,7 +34,8 @@ test("Pipeline9 preserves independent copper when the RK3506G2 display pair fail
   }
 
   const pairSolver = solver.lengthMatchingPostProcessingSolver
-  if (!pairSolver) throw new Error(solver.error ?? "Display pair stage not reached")
+  if (!pairSolver)
+    throw new Error(solver.error ?? "Display pair stage not reached")
   const cleanup = solver.effortCleanupSolver
   if (!cleanup?.solved) throw new Error("Route cleanup did not complete")
   const cleanedRoutes = cleanup.getOutput()
@@ -60,10 +61,9 @@ test("Pipeline9 preserves independent copper when the RK3506G2 display pair fail
   )
 
   const routedTraces = solver.getPartialOutputSimplifiedPcbTraces()
-  expect(routedTraces.map(({ connection_name }) => connection_name).sort()).toEqual([
-    uartTx,
-    ledAnode,
-  ])
+  expect(
+    routedTraces.map(({ connection_name }) => connection_name).sort(),
+  ).toEqual([uartTx, ledAnode])
   await expect(
     getBugReportSnapshotSvg(
       {
