@@ -11,7 +11,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: tscircuit/fanout-solver
-          ref: 4aa9021086c09fe1c2d28340d7d2f2def74c89ad
+          ref: d00c6409d3efa3319c610470726b3cf4c1b6ead3
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.4.3
@@ -25,7 +25,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: tscircuit/fanout-solver
-          ref: 4aa9021086c09fe1c2d28340d7d2f2def74c89ad
+          ref: d00c6409d3efa3319c610470726b3cf4c1b6ead3
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.4.3
