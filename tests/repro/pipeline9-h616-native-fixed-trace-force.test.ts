@@ -9,10 +9,12 @@ test("routes native H616 control signals beside completed DDR data bytes", async
   // Fresh Core 0.0.2436 handoff from the real TSX board, with native fixed paths.
   const { inputSrj, preloadedConnections } = JSON.parse(
     gunzipSync(
-      readFileSync(
-        new URL(
-          "../fixtures/assets/h616-native-fixed-trace-force.json.gz",
-          import.meta.url,
+      new Uint8Array(
+        readFileSync(
+          new URL(
+            "../fixtures/assets/h616-native-fixed-trace-force.json.gz",
+            import.meta.url,
+          ),
         ),
       ),
     ).toString("utf8"),
