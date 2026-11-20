@@ -11,6 +11,7 @@ import { seededRandom } from "lib/utils/cloneAndShuffleArray"
 import { BaseSolver } from "../BaseSolver"
 import { buildMinimumSpanningTree } from "./buildMinimumSpanningTree"
 import { getInitiallyConnectedStateForConnection } from "./get-initially-connected-state-for-connection"
+import { getMstEdgeTraceWidths } from "./getMstEdgeTraceWidths"
 import { mergeConnections } from "./mergeConnections"
 import { orderMstEdgesForStablePairNames } from "./orderMstEdgesForStablePairNames"
 
@@ -51,6 +52,10 @@ export class NetToPointPairsSolver extends BaseSolver {
   unprocessedConnections: Array<SimpleRouteConnection>
   newConnections: Array<SimpleRouteConnection>
   readonly initiallyConnectedMap: ConnectivityMap
+  private readonly sourceConnectionsByMergedConnection = new Map<
+    SimpleRouteConnection,
+    SimpleRouteConnection[]
+  >()
   /** Each connection's `path` as hops, in written order. */
   readonly pathHopsByConnectionName = new Map<ConnectionName, PathHop[]>()
 
@@ -90,6 +95,7 @@ export class NetToPointPairsSolver extends BaseSolver {
     )
     this.unprocessedConnections = mergeConnections(
       connectionsWithBusTraceWidths,
+      this.sourceConnectionsByMergedConnection,
     )
     this.newConnections = []
     this.initiallyConnectedMap = initiallyConnectedMap
@@ -143,6 +149,10 @@ export class NetToPointPairsSolver extends BaseSolver {
     }
     const connection = this.unprocessedConnections.pop()!
     const pathEdges = this.getPathEdges(connection)
+    const sourceConnections =
+      this.sourceConnectionsByMergedConnection.get(connection)
+    const defaultTraceWidth =
+      this.ogSrj.nominalTraceWidth ?? this.ogSrj.minTraceWidth
 
     const { zeroWeightEdges, arePointsConnected } =
       getInitiallyConnectedStateForConnection(
@@ -151,13 +161,23 @@ export class NetToPointPairsSolver extends BaseSolver {
       )
 
     if (connection.pointsToConnect.length === 2) {
-      const [startPoint, endPoint] = connection.pointsToConnect
-      if (startPoint && endPoint && arePointsConnected(startPoint, endPoint)) {
+      const startPoint = connection.pointsToConnect[0]!
+      const endPoint = connection.pointsToConnect[1]!
+      if (arePointsConnected(startPoint, endPoint)) {
         return
       }
+      const edge = { from: startPoint, to: endPoint, weight: 0 }
+      const nominalTraceWidth = sourceConnections
+        ? (getMstEdgeTraceWidths(
+            connection.pointsToConnect,
+            [edge],
+            sourceConnections,
+          ).get(edge) ?? defaultTraceWidth)
+        : connection.nominalTraceWidth
       this.emitConnection(
         {
           ...connection,
+          ...(sourceConnections && { nominalTraceWidth }),
           __rootConnectionNames: connection.__rootConnectionNames ?? [
             connection.name,
           ],
@@ -189,6 +209,13 @@ export class NetToPointPairsSolver extends BaseSolver {
       originalEdges,
       optimizedEdges,
     })
+    const widths = sourceConnections
+      ? getMstEdgeTraceWidths(
+          connection.pointsToConnect,
+          edges,
+          sourceConnections,
+        )
+      : undefined
 
     let mstIdx = 0
     for (const edge of edges) {
@@ -198,6 +225,9 @@ export class NetToPointPairsSolver extends BaseSolver {
       this.emitConnection(
         {
           ...connection,
+          ...(widths && {
+            nominalTraceWidth: widths.get(edge) ?? defaultTraceWidth,
+          }),
           pointsToConnect: [edge.from, edge.to],
           name: `${connection.name}_mst${mstIdx++}`,
           __rootConnectionNames: connection.__rootConnectionNames ?? [

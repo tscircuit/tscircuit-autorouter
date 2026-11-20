@@ -18,6 +18,10 @@ import { getPointKey } from "lib/utils/getPointKey"
  */
 export function mergeConnections(
   simpleRouteConnections: SimpleRouteConnection[],
+  sourceConnectionsByMergedConnection?: Map<
+    SimpleRouteConnection,
+    SimpleRouteConnection[]
+  >,
 ): SimpleRouteConnection[] {
   if (simpleRouteConnections.length === 0) {
     return []
@@ -88,7 +92,6 @@ export function mergeConnections(
     let isOffBoard = false
     const mergedExternallyConnectedPointIds: PointId[][] = []
     const mergedNetConnectionNames: Set<string> = new Set()
-    let nominalTraceWidth: number | undefined = undefined
 
     simpleRouteConnectionGroup.forEach((simpleRouteConnection) => {
       // Collect unique points
@@ -124,15 +127,6 @@ export function mergeConnections(
       if (simpleRouteConnection.__netConnectionName) {
         mergedNetConnectionNames.add(simpleRouteConnection.__netConnectionName)
       }
-
-      // Take the nominalTraceWidth from the first connection for now
-      // A more robust solution might average or pick the max/min based on context
-      if (
-        nominalTraceWidth === undefined &&
-        simpleRouteConnection.nominalTraceWidth !== undefined
-      ) {
-        nominalTraceWidth = simpleRouteConnection.nominalTraceWidth
-      }
     })
 
     // Create the new merged SimpleRouteConnection
@@ -152,9 +146,12 @@ export function mergeConnections(
           ? Array.from(mergedNetConnectionNames).join("__") // Combine unique net connection names
           : undefined,
       __rootConnectionNames: Array.from(mergedRootConnectionNames),
-      nominalTraceWidth: nominalTraceWidth, // Keep the first found nominalTraceWidth
     }
 
+    sourceConnectionsByMergedConnection?.set(
+      newSimpleRouteConnection,
+      simpleRouteConnectionGroup,
+    )
     mergedSimpleRouteConnections.push(newSimpleRouteConnection)
   }
 

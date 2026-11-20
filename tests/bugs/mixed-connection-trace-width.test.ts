@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
+import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { getBugReportSnapshotSvg } from "lib/testing/getBugReportSnapshotSvg"
 import type { ConnectionPoint, SimpleRouteJson } from "lib/types"
 
@@ -58,11 +59,28 @@ test("routes a supply and sense connection sharing a pad", async (): Promise<voi
   solver.solve()
   expect(solver.solved, solver.error ?? "").toBe(true)
 
-  await expect(
-    getBugReportSnapshotSvg({
-      inputSrj,
-      srjWithPointPairs: solver.srjWithPointPairs!,
-      routedTraces: solver.getOutputSimplifiedPcbTraces(),
-    }),
-  ).toMatchSvgSnapshot(import.meta.path)
+  const routedTraces = solver.getOutputSimplifiedPcbTraces()
+  for (const [point, width] of [
+    [sense, 0.15],
+    [supply, 0.8],
+  ] as const) {
+    const trace = routedTraces.find((trace) =>
+      trace.connectsTo?.includes(point.pcb_port_id!),
+    )
+    expect(trace?.nominalTraceWidth).toBe(width)
+    const wireWidths = trace!.route.flatMap((point) =>
+      point.route_type === "wire" ? [point.width] : [],
+    )
+    expect(new Set(wireWidths)).toEqual(new Set([width]))
+  }
+
+  const drcInput = {
+    inputSrj,
+    srjWithPointPairs: solver.srjWithPointPairs!,
+    routedTraces,
+  }
+  expect(evaluateRelaxedDrc(drcInput).errors).toEqual([])
+  await expect(getBugReportSnapshotSvg(drcInput)).toMatchSvgSnapshot(
+    import.meta.path,
+  )
 })
