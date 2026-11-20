@@ -1,4 +1,4 @@
-name: Uploaded boards on latest tscircuit with A01 via fix
+name: Uploaded boards on latest tscircuit with native terminal guard
 on:
   workflow_dispatch:
 permissions:
@@ -8,7 +8,7 @@ jobs:
     runs-on: blacksmith-32vcpu-ubuntu-2404-arm
     timeout-minutes: 30
     env:
-      BOARD_VARIANT: a01-via-fix
+      BOARD_VARIANT: regional-terminal-fix
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
@@ -21,14 +21,14 @@ jobs:
       - name: Install the pinned latest release
         working-directory: experiments/boards-3257/runtime
         run: bun install --frozen-lockfile
-      - name: Install the locally validated autorouter with the two A01 guards
+      - name: Install the locally validated autorouter with the native terminal guard
         run: |
           rm -rf experiments/boards-3257/runtime/node_modules/@tscircuit/capacity-autorouter/dist
-          tar -xzf experiments/boards-3257/a01-terminal-via-dist.tar.gz -C experiments/boards-3257/runtime/node_modules/@tscircuit/capacity-autorouter
+          tar -xzf experiments/boards-3257/regional-terminal-guard-dist.tar.gz -C experiments/boards-3257/runtime/node_modules/@tscircuit/capacity-autorouter
       - name: Render all 19 original TSX entries on the fixed native-copper stack
         run: python3 experiments/boards-3257/run.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: boards-tscircuit-3257-a01-via-fix
+          name: boards-tscircuit-3257-regional-terminal-fix
           path: board-benchmark-results

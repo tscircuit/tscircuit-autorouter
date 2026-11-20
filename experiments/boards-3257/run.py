@@ -13,7 +13,7 @@ for name in ['tscircuit','@tscircuit/core','@tscircuit/fanout-solver','@tscircui
 (out/'runtime-versions.json').write_text(json.dumps(versions,indent=2)+'\n')
 variant=os.environ.get('BOARD_VARIANT','main')
 if variant!='main':
- (out/'fix-provenance.json').write_bytes(Path('experiments/boards-3257/a01-terminal-via-build.json').read_bytes())
+ (out/'fix-provenance.json').write_bytes(Path('experiments/boards-3257/regional-terminal-guard-build.json').read_bytes())
 boards=sorted(p.stem for p in (root/'boards').glob('*.tsx'))
 def run(board):
  d=out/variant/board

@@ -1,0 +1,15 @@
+{
+  "proposal": "A01 guards only; replaced with an existing regional terminal guard",
+  "baselineRun": 44824778889,
+  "guardOnlyRun": 44828513980,
+  "baselineArtifact": 14673219451,
+  "guardOnlyArtifact": 14676075650,
+  "terminalBoardCopperIdentical": 12,
+  "unfinishedBoards": 7,
+  "fullyRoutedBefore": 0,
+  "fullyRoutedAfter": 0,
+  "orangecrabLocalSeconds": [
+    223.514,
+    281.532
+  ]
+}

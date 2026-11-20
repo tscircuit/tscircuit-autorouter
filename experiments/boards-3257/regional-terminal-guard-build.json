@@ -1,0 +1,10 @@
+{
+  "tscircuit": "0.0.3257",
+  "core": "0.0.2436",
+  "capacityAutorouterBase": "b7267ad4738c27a53d2faecb39bf7a7443896f0c",
+  "highDensityA01Unchanged": "4ae21d7a15c9fbfb30378c10f948aa168d7c9cb7",
+  "productionChange": "Forward rejectOverlappingTerminals in physical regional routing (one line)",
+  "autorouterFixCommit": "15067d77c1b88e42fb2801d28c67db11896e785e",
+  "indexSha256": "a0ece622dbcf2f93810ec94b51a741a002760f6cd0a6f2564baf89655ade212e",
+  "archiveSha256": "b06a6996f2628964be6ed38f634e03b54ac2f0306f77f46398d2fe7be81ee6bf"
+}
