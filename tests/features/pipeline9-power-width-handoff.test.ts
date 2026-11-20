@@ -1,7 +1,6 @@
 import { expect, test } from "bun:test"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
-import { applyPipeline9PowerTraceWidthTargets } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/applyPipeline9PowerTraceWidthTargets"
 import type { SimpleRouteConnection } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 
@@ -34,7 +33,7 @@ test("Pipeline 9 preserves width targets for route pieces with shared endpoints"
     ],
     vias: [],
   }))
-  const routedTraces = convertPipeline7HdRoutesToSimplifiedPcbTraces({
+  const conversionInput = {
     connections,
     originalConnections: [],
     hdRoutes,
@@ -42,13 +41,11 @@ test("Pipeline 9 preserves width targets for route pieces with shared endpoints"
     obstacles: [],
     defaultViaHoleDiameter: 0.2,
     connMap: new ConnectivityMap({}),
-  })
+  }
 
-  applyPipeline9PowerTraceWidthTargets({
-    connections,
-    hdRoutes,
-    routedTraces,
-    widthTargets: new Map([
+  const routedTraces = convertPipeline7HdRoutesToSimplifiedPcbTraces({
+    ...conversionInput,
+    nominalTraceWidthByConnectionName: new Map([
       ["sense", 0.15],
       ["supply", 0.8],
     ]),
@@ -64,4 +61,9 @@ test("Pipeline 9 preserves width targets for route pieces with shared endpoints"
     ["supply_1", 0.8],
     ["ordinary_0", undefined],
   ])
+  expect(
+    convertPipeline7HdRoutesToSimplifiedPcbTraces(conversionInput).every(
+      (trace) => !("nominalTraceWidth" in trace),
+    ),
+  ).toBe(true)
 })

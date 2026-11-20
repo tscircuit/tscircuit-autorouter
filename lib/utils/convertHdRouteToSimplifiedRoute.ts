@@ -32,6 +32,7 @@ export interface ConvertHdRouteToSimplifiedRouteOptions {
   obstacles?: ReadonlyArray<Obstacle>
   connectedMultilayerObstacles?: ReadonlyArray<Obstacle>
   connMap?: ConnectivityMap
+  usePhysicalCopperGeometry?: boolean
 }
 
 /**
@@ -50,14 +51,6 @@ const areSameXyPoint = (
   Math.abs(a.x - b.x) <= SAME_POINT_TOLERANCE &&
   Math.abs(a.y - b.y) <= SAME_POINT_TOLERANCE
 
-const pointInsideObstacle = (
-  point: Pick<Point, "x" | "y">,
-  obstacle: Obstacle,
-) =>
-  obstacle.__usePhysicalCopperGeometry
-    ? isPointInCopperObstacle(obstacle, point)
-    : pointToBoxDistance(point, obstacle) <= SAME_NET_OBSTACLE_TOLERANCE
-
 const isMultilayerObstacle = (obstacle: Obstacle) =>
   (obstacle.__zLayers?.length ?? obstacle.layers?.length ?? 0) > 1
 
@@ -71,19 +64,18 @@ const isThroughObstacleSegment = (
   if (start.toNextSegmentType === "through_obstacle") return true
 
   const containsTransition = (obstacle: Obstacle): boolean => {
-    if (obstacle.__usePhysicalCopperGeometry) {
-      const fromLayer = mapZToLayerName(start.z, layerCount)
-      const toLayer = mapZToLayerName(end.z, layerCount)
-      if (
-        obstacle.isNonPlatedHole ||
-        !obstacle.layers.includes(fromLayer) ||
-        !obstacle.layers.includes(toLayer)
-      ) {
-        return false
-      }
+    if (opts.usePhysicalCopperGeometry) {
+      return (
+        !obstacle.isNonPlatedHole &&
+        obstacle.layers.includes(mapZToLayerName(start.z, layerCount)) &&
+        obstacle.layers.includes(mapZToLayerName(end.z, layerCount)) &&
+        isPointInCopperObstacle(obstacle, start) &&
+        isPointInCopperObstacle(obstacle, end)
+      )
     }
     return (
-      pointInsideObstacle(start, obstacle) && pointInsideObstacle(end, obstacle)
+      pointToBoxDistance(start, obstacle) <= SAME_NET_OBSTACLE_TOLERANCE &&
+      pointToBoxDistance(end, obstacle) <= SAME_NET_OBSTACLE_TOLERANCE
     )
   }
 

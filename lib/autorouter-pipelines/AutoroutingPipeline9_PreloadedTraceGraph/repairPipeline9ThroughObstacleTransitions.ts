@@ -4,7 +4,7 @@ import { isObstacleConnectedToRoute } from "lib/solvers/TraceWidthSolver/isObsta
 import type { Obstacle } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { isPointInCopperObstacle } from "lib/utils/isPointInCopperObstacle"
-import { getUniqueValidZLayersFromLayerNames } from "lib/utils/mapLayerNameToZ"
+import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 
 type Point = { x: number; y: number }
 type RoutePoint = HighDensityRoute["route"][number]
@@ -182,15 +182,12 @@ export function repairPipeline9ThroughObstacleTransitions({
   isValid: (routes: HighDensityRoute[]) => boolean
 }): HighDensityRoute[] {
   if (!hdRoutes.some(hasLayerTransitionToCheck)) return hdRoutes
-  const multilayerCopper = physicalObstacles
-    .filter(
-      (obstacle) => !obstacle.isNonPlatedHole && !obstacle.isFanoutSourceKeepout,
-    )
-    .map((obstacle) => ({
-      ...obstacle,
-      zLayers: getUniqueValidZLayersFromLayerNames(obstacle.layers, layerCount),
-    }))
-    .filter((obstacle) => obstacle.zLayers.length > 1)
+  const multilayerCopper = physicalObstacles.filter(
+    (obstacle) =>
+      obstacle.layers.length > 1 &&
+      !obstacle.isNonPlatedHole &&
+      !obstacle.isFanoutSourceKeepout,
+  )
   const repairedRoutes = [...hdRoutes]
   let repairedAny = false
 
@@ -204,10 +201,11 @@ export function repairPipeline9ThroughObstacleTransitions({
       const start = route.route[index]!
       const end = route.route[index + 1]!
       if (!needsCopperWitness(route, start, end)) continue
+      const fromLayer = mapZToLayerName(start.z, layerCount)
+      const toLayer = mapZToLayerName(end.z, layerCount)
       const copperOnBothLayers = sameNetCopper.filter(
         (obstacle) =>
-          obstacle.zLayers.includes(start.z) &&
-          obstacle.zLayers.includes(end.z),
+          obstacle.layers.includes(fromLayer) && obstacle.layers.includes(toLayer),
       )
       if (
         copperOnBothLayers.some(
@@ -260,18 +258,11 @@ export function repairPipeline9ThroughObstacleTransitions({
       if (padContacts.some(({ point, copper }) => tryTransition(point, copper))) {
         continue
       }
-      let foundVia = false
-      for (const point of getViaCandidates(
-        start,
-        end,
-        route.viaDiameter,
-        traceWidth,
-      )) {
-        if (!tryTransition(point)) continue
-        foundVia = true
-        break
-      }
-      if (!foundVia) {
+      if (
+        !getViaCandidates(start, end, route.viaDiameter, traceWidth).some(
+          (point) => tryTransition(point),
+        )
+      ) {
         throw new Error(
           `No physical layer transition is available for "${route.connectionName}"`,
         )
