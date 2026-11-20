@@ -701,7 +701,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           inputSrj: cms.srj,
           nodeWithPortPoints: cms.highDensityNodePortPoints ?? [],
           fixedHdRoutes: cms.highDensityRouteSolver!
-            .getUpdatedFixedHdRoutes(),
+            .getUpdatedFixedHdRoutes()
+            .filter((route) => route.isFixed === true),
           hdRoutes: simplifyPipeline9CollinearRoutePoints(
             materializePipeline9HdRouteVias(cms.highDensityRouteSolver!.routes),
           ),
@@ -724,7 +725,6 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           hdRoutes:
             cms.highDensityForceImproveSolver?.getOutput() ??
             cms.highDensityRouteSolver!.routes,
-          fixedHdRoutes: cms.highDensityRouteSolver!.getUpdatedFixedHdRoutes(),
           obstacles: cms.srj.obstacles,
           colorMap: cms.colorMap,
           repairMargin: cms.srj.defaultObstacleMargin ?? 0.2,

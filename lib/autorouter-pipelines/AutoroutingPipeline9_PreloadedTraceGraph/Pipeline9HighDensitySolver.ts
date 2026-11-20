@@ -16,9 +16,13 @@ import type {
   HighDensityIntraNodeRoute,
   HighDensityRoute,
   NodeWithPortPoints,
+  PortPoint,
 } from "lib/types/high-density-types"
 import type { Obstacle, SimpleRouteJson } from "lib/types/srj-types"
+import { isObstacleConnectedToRoute } from "lib/solvers/TraceWidthSolver/isObstacleConnectedToRoute"
+import { isPointInRect } from "lib/utils/isPointInRect"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
+import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 import { BaseSolver } from "../../solvers/BaseSolver"
 import { HighDensitySolver } from "../../solvers/HighDensitySolver/HighDensitySolver"
 import type { PreloadedHighDensityRoute } from "./convertPreloadedTraceToHdRoutes"
@@ -246,28 +250,42 @@ const convertObstacleToB01Obstacle = ({
   }
 }
 
-const addTerminalPcbPortIds = (
-  routes: HighDensityIntraNodeRoute[],
-  node: NodeWithPortPoints,
-): HighDensityIntraNodeRoute[] => {
-  const terminalPortPoints = node.portPoints.filter(
-    (portPoint) => portPoint.pcb_port_id !== undefined,
+// Match board-world points in mm (+X right, +Y up) to physical terminals.
+const addTerminalPcbPortIds = <Route extends HighDensityRoute>({
+  routes,
+  portPoints,
+  connMap,
+}: {
+  routes: Route[]
+  portPoints: PortPoint[]
+  connMap: ConnectivityMap
+}): Route[] => {
+  const terminalPorts = portPoints.filter(
+    (port) => port.pcb_port_id !== undefined,
   )
-  return routes.map((route) => {
+  return routes.map((route): Route => {
     const start = route.route[0]
     const end = route.route.at(-1)
-    const startTerminal = terminalPortPoints.find(
+    const netId =
+      connMap.getNetConnectedToId(route.connectionName) ??
+      route.rootConnectionName ??
+      route.connectionName
+    const sameNetTerminals = terminalPorts.filter(
+      (terminal) =>
+        (connMap.getNetConnectedToId(terminal.connectionName) ??
+          terminal.rootConnectionName ??
+          terminal.connectionName) === netId,
+    )
+    const startTerminal = sameNetTerminals.find(
       (terminal) =>
         start !== undefined &&
-        terminal.connectionName === route.connectionName &&
         terminal.x === start.x &&
         terminal.y === start.y &&
         terminal.z === start.z,
     )
-    const endTerminal = terminalPortPoints.find(
+    const endTerminal = sameNetTerminals.find(
       (terminal) =>
         end !== undefined &&
-        terminal.connectionName === route.connectionName &&
         terminal.x === end.x &&
         terminal.y === end.y &&
         terminal.z === end.z,
@@ -275,8 +293,8 @@ const addTerminalPcbPortIds = (
 
     return {
       ...route,
-      startPcbPortId: startTerminal?.pcb_port_id,
-      endPcbPortId: endTerminal?.pcb_port_id,
+      startPcbPortId: route.startPcbPortId ?? startTerminal?.pcb_port_id,
+      endPcbPortId: route.endPcbPortId ?? endTerminal?.pcb_port_id,
     }
   })
 }
@@ -436,8 +454,38 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
 
   constructor(private readonly params: Pipeline9HighDensitySolverParams) {
     super()
-    this.fixedHdRoutes = params.fixedHdRoutes
     this.connMap = params.connMap
+    this.fixedHdRoutes = addTerminalPcbPortIds({
+      routes: params.fixedHdRoutes,
+      portPoints: params.nodePortPoints.flatMap((node) => node.portPoints),
+      connMap: params.connMap,
+    }).map((route): PreloadedHighDensityRoute => {
+      const hasTerminal =
+        route.startPcbPortId !== undefined ||
+        route.endPcbPortId !== undefined
+      const isInsideConnectedPad =
+        hasTerminal &&
+        route.vias.length === 0 &&
+        params.obstacles.some((obstacle) => {
+          const isRectangularPad =
+            obstacle.type === "rect" && !obstacle.shape
+          if (!isRectangularPad) return false
+          if (
+            !isObstacleConnectedToRoute(obstacle, route, params.connMap)
+          ) {
+            return false
+          }
+          return route.route.every(
+            (point) =>
+              obstacle.layers.includes(
+                mapZToLayerName(point.z, params.layerCount),
+              ) && isPointInRect(point, obstacle),
+          )
+        })
+      if (!isInsideConnectedPad) return route
+      // This path is component copper; regional repair must preserve it.
+      return { ...route, isThroughObstacle: true }
+    })
     this.colorMap = params.colorMap ?? {}
     this.obstacles = params.obstacles
     this.boardGeometry = params.boardGeometry
@@ -656,7 +704,11 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       : routes
     this.routes.push(
       ...(this.preserveTerminalPcbPortIds && this.activeNode
-        ? addTerminalPcbPortIds(solvedRoutes, this.activeNode)
+        ? addTerminalPcbPortIds({
+            routes: solvedRoutes,
+            portPoints: this.activeNode.portPoints,
+            connMap: this.connMap,
+          })
         : solvedRoutes),
     )
     this.stats.solvedNodeCount = Number(this.stats.solvedNodeCount ?? 0) + 1
