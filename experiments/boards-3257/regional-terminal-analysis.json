@@ -961,6 +961,11 @@
       "failed": 0,
       "files": 225,
       "expects": 13701
+    },
+    "githubTests": {
+      "run": 44831324898,
+      "shardsPassed": 9,
+      "shardsFailed": 0
     }
   },
   "fullyRoutedWithinBudget": {
@@ -1101,5 +1106,15 @@
       "before": "def7df81c52003006ddc80ad96761edd2b030da2a74d849f276fbf877a61a2db",
       "after": "def7df81c52003006ddc80ad96761edd2b030da2a74d849f276fbf877a61a2db"
     }
+  },
+  "pullRequests": {
+    "realRepro": 4027,
+    "minimalFix": 4028,
+    "fixCommit": "15067d77c1b88e42fb2801d28c67db11896e785e"
+  },
+  "originalSourceVerification": {
+    "filesCompared": 45,
+    "byteIdentical": true,
+    "runtimeArchiveSha256": "dec02628b176f3f6a50dab2e14dbbc959e98bd3c89bbce6c4a20d02462ffc909"
   }
 }
