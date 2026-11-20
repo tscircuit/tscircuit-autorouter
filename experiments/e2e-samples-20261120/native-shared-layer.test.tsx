@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test"
 import { writeFileSync } from "node:fs"
+import { FanoutSolver } from "@tscircuit/fanout-solver"
 import {
   checkEachPcbTraceNonOverlapping,
   checkHoleTraceClearance,
@@ -9,6 +10,13 @@ import { getTestFixture } from "tests/fixtures/get-test-fixture"
 
 test("flexible fanout buses share capacity with fixed-top controls", async () => {
   const { circuit } = getTestFixture()
+  const fanoutStep = FanoutSolver.prototype.step
+  FanoutSolver.prototype.step = function () {
+    try { return fanoutStep.call(this) }
+    finally {
+      if (this.solved || this.failed) writeFileSync("native-fanout.json.gz", Bun.gzipSync(JSON.stringify({ input: this.getConstructorParams(), bestAttempt: this.bestAttempt, failed: this.failed, error: this.error })))
+    }
+  }
   const phases: { event: string; phase: string; solver: string | undefined; connections: number | undefined }[] = []
   for (const event of ["autorouting:start", "autorouting:end", "autorouting:error"] as const) {
     circuit.on(event, (entry) => phases.push({ event, phase: entry.phaseName ?? entry.componentDisplayName, solver: entry.solverName, connections: entry.simpleRouteJson?.connections.length }))

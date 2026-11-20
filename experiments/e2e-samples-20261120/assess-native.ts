@@ -12,7 +12,7 @@ const nets = requested.map((trace) => ({
   name: trace.name,
   connected: arePortsConnected({
     sourcePortIds: trace.connected_source_port_ids,
-    routes: traces.filter((route) => route.subcircuit_connectivity_map_key === trace.subcircuit_connectivity_map_key),
+    routes: traces.filter((route) => route.source_trace_id === trace.source_trace_id || route.subcircuit_connectivity_map_key === trace.subcircuit_connectivity_map_key),
     ports,
     vias,
   }),
