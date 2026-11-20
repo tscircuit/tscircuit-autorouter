@@ -9,7 +9,11 @@ test("bus layers intersect and survive point-pair connection names", (): void =>
     bounds: { minX: 0, maxX: 10, minY: 0, maxY: 10 },
     obstacles: [],
     connections: [
-      { name: "data_mst0", __rootConnectionNames: ["data"], pointsToConnect: [] },
+      {
+        name: "data_mst0",
+        __rootConnectionNames: ["data"],
+        pointsToConnect: [],
+      },
       { name: "clock", pointsToConnect: [] },
     ],
     buses: [

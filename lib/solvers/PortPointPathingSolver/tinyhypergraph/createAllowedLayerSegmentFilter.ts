@@ -9,12 +9,16 @@ export function createAllowedLayerSegmentFilter(
   allowedLayersByConnection: AllowedLayersByConnection,
 ): TinyHyperGraphProblem["routeSegmentFilter"] {
   const { topology, problem } = graph
-  const restrictions = Array.from({ length: problem.routeCount }, (_, routeId) => {
-    const connectionId: unknown = problem.routeMetadata?.[routeId]?.connectionId
-    return typeof connectionId === "string"
-      ? allowedLayersByConnection.get(connectionId)
-      : undefined
-  })
+  const restrictions = Array.from(
+    { length: problem.routeCount },
+    (_, routeId) => {
+      const connectionId: unknown =
+        problem.routeMetadata?.[routeId]?.connectionId
+      return typeof connectionId === "string"
+        ? allowedLayersByConnection.get(connectionId)
+        : undefined
+    },
+  )
   if (!restrictions.some((layers) => layers !== undefined)) return
   return (routeId, _regionId, fromPortId, toPortId) => {
     const layers = restrictions[routeId]

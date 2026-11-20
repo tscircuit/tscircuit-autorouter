@@ -1205,16 +1205,14 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       partialRipEligibilityCount,
     )
     this.tinyPipelineSolver =
-      new TinyHyperGraphSectionPipelineWithTerminalNetIds(
-        tinyPipelineInput,
-        {
-          useSelectiveReripRouting:
-            params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
-          usePreparedPortPointRouting:
-            params.flags.USE_PREPARED_PORT_POINT_ROUTING === true,
-          allowedLayersByConnection: params.allowedLayersByConnection ?? new Map(),
-        },
-      )
+      new TinyHyperGraphSectionPipelineWithTerminalNetIds(tinyPipelineInput, {
+        useSelectiveReripRouting:
+          params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
+        usePreparedPortPointRouting:
+          params.flags.USE_PREPARED_PORT_POINT_ROUTING === true,
+        allowedLayersByConnection:
+          params.allowedLayersByConnection ?? new Map(),
+      })
     this.primaryTinyPipelineSolver = this.tinyPipelineSolver
     if (
       connections.length >= TRACE_DENSITY_PORTFOLIO_MIN_ROUTE_COUNT &&

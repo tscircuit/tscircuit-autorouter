@@ -26,7 +26,9 @@ test("bus layer validation permits through-vias but rejects inner-layer wires", 
     allowedLayersByConnection: new Map([["data", new Set([0, 3])]]),
     layerCount: 4,
   }
-  expect(() => assertRoutesStayOnAllowedLayers([trace], constraints)).not.toThrow()
+  expect(() =>
+    assertRoutesStayOnAllowedLayers([trace], constraints),
+  ).not.toThrow()
   trace.route = [
     { route_type: "wire", x: 0, y: 0, width: 0.1, layer: "inner1" },
     { route_type: "wire", x: 1, y: 0, width: 0.1, layer: "inner1" },
@@ -35,5 +37,7 @@ test("bus layer validation permits through-vias but rejects inner-layer wires", 
     'Connection "data" routed wire on forbidden bus layer "inner1"',
   )
   trace.connection_name = "unrestricted"
-  expect(() => assertRoutesStayOnAllowedLayers([trace], constraints)).not.toThrow()
+  expect(() =>
+    assertRoutesStayOnAllowedLayers([trace], constraints),
+  ).not.toThrow()
 })

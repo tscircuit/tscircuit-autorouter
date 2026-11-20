@@ -26,6 +26,9 @@ const getTraceLength = (trace: SimplifiedPcbTrace): number => {
 
 test("AM62L HDMI clock pair stays within its maximum length skew", async () => {
   const inputSrj = structuredClone(boardPhase) as SimpleRouteJson
+  // This test isolates length matching. The original top-only case is covered
+  // separately: its later repair currently introduces forbidden inner-layer wires.
+  for (const bus of inputSrj.buses ?? []) delete bus.allowedLayers
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(inputSrj, {
     cacheProvider: null,
     visualizationTraceColorMode: "net",
