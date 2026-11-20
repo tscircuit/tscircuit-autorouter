@@ -1,0 +1,16 @@
+{
+  "before": {
+    "completeBoards": 0,
+    "requestedNets": 2856,
+    "connectedNets": 19,
+    "emittedVias": 0,
+    "copperDrcFindings": 0
+  },
+  "after": {
+    "completeBoards": 0,
+    "requestedNets": 2856,
+    "connectedNets": 19,
+    "emittedVias": 0,
+    "copperDrcFindings": 0
+  }
+}

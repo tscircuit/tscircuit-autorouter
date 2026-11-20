@@ -1,0 +1,109 @@
+{
+  "sample": "butterstick-spaced",
+  "status": "failed",
+  "renderCompleted": true,
+  "elapsedMs": 486110.338413,
+  "initialCopper": 0,
+  "phases": [
+    {
+      "name": "<board#2775 />",
+      "solver": "FanoutSolver",
+      "status": "failed",
+      "connections": 91,
+      "startedMs": 104617.295835,
+      "elapsedMs": 285074.850366
+    }
+  ],
+  "solvers": [
+    {
+      "id": 0,
+      "name": "FanoutSolver",
+      "phases": [
+        {
+          "stage": "FanoutSolver",
+          "atMs": 105535.181364
+        }
+      ],
+      "iterations": 60754,
+      "solved": false,
+      "failed": true,
+      "error": "FanoutSolver: best layer assignment routed 70/91 connections",
+      "stats": {
+        "phase": "complete-assignment",
+        "assignment": 256,
+        "assignmentCount": 256,
+        "routedBuses": "61/77",
+        "routedConnections": "68/91",
+        "failedBuses": "connection:breakout:pcb_breakout_point_35, connection:breakout:pcb_breakout_point_56, connection:breakout:pcb_breakout_point_3, connection:breakout:pcb_breakout_point_7, connection:breakout:pcb_breakout_point_80, connection:breakout:pcb_breakout_point_77, connection:breakout:pcb_breakout_point_72, connection:breakout:pcb_breakout_point_81, connection:breakout:pcb_breakout_point_66, connection:breakout:pcb_breakout_point_85, connection:breakout:pcb_breakout_point_40, connection:breakout:pcb_breakout_point_73, connection:breakout:pcb_breakout_point_67, DDR_BUS_byte0, connection:breakout:pcb_breakout_point_46, connection:breakout:pcb_breakout_point_76",
+        "bestScore": 22400288.22460063
+      }
+    }
+  ],
+  "errors": [
+    "Fanout failed for U11: only 70 of 91 connections could escape to the breakout boundary. The breakout boundary is 0.7mm from the pads at its narrowest point, which all 91 escapes have to share. Give the fanout more room by increasing the breakout's padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors) so their pads sit inside the boundary instead of against it.",
+    "Winding fanout failed for U4: WindingBreakoutSolver: declared breakout edges need 17.38mm but expose only 17.00mm. The connections could not escape to the breakout boundary. Give the fanout more room by increasing the breakout's padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors).",
+    "Fanout failed for U11: only 70 of 91 connections could escape to the breakout boundary. The breakout boundary is 0.7mm from the pads at its narrowest point, which all 91 escapes have to share. Give the fanout more room by increasing the breakout's padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors) so their pads sit inside the boundary instead of against it."
+  ],
+  "counts": {
+    "source_project_metadata": 1,
+    "source_group": 4,
+    "source_port": 1567,
+    "source_component": 350,
+    "source_net": 317,
+    "source_board": 1,
+    "source_refdes_convention_warning": 314,
+    "source_component_internal_connection": 12,
+    "source_trace": 2054,
+    "source_bus": 2,
+    "source_no_power_pin_defined_warning": 325,
+    "source_no_ground_pin_defined_warning": 325,
+    "source_component_pins_underspecified_warning": 335,
+    "pcb_component": 350,
+    "pcb_group": 3,
+    "pcb_board": 1,
+    "pcb_smtpad": 1557,
+    "pcb_solder_paste": 1585,
+    "pcb_hole": 10,
+    "pcb_plated_hole": 56,
+    "pcb_port": 1567,
+    "pcb_fabrication_note_path": 5,
+    "pcb_fabrication_note_text": 5,
+    "pcb_breakout_point": 182,
+    "pcb_autorouting_error": 2,
+    "pcb_connector_not_in_accessible_orientation_warning": 8,
+    "cad_component": 350,
+    "pcb_component_missing_courtyard_warning": 350,
+    "pcb_debug_object": 1,
+    "pcb_port_not_connected_error": 2054,
+    "pcb_trace_missing_error": 554
+  },
+  "revisions": {
+    "core": "351e73d665fad37577c47fcbff2e4c29eb377467",
+    "router": "2b1207ad70971f326166b134ea19418137273f23",
+    "winding": "202dbe9eb0088633b6fa094120dba6f2f41f8803",
+    "sampleMode": "fanout_first",
+    "archiveSha256": "1991ad1891a953dcd660818aaceb73f7aa42dbf704e677e635753b9159f7a6b7",
+    "coreLockSha256": "6b1da69e57574e33e94b85f7c7e730bcc6bbcfe798214884ddae832f98b42bcb",
+    "@tscircuit/fanout-solver": "0.0.93",
+    "@tscircuit/winding-breakout-point-solver": "0.0.1",
+    "@tscircuit/capacity-autorouter": "0.0.1135",
+    "@tscircuit/props": "0.0.741",
+    "@tscircuit/bus-lanes-solver": "0.0.62",
+    "@tscircuit/checks": "0.0.282",
+    "circuit-to-svg": "0.0.460",
+    "react": "19.3.1",
+    "variant": "before",
+    "pairOrder": [
+      "after",
+      "before"
+    ],
+    "coreSourceFiles": [
+      {
+        "path": "lib/utils/autorouting/local-autorouter-strategies.ts",
+        "beforeSha256": "7a8bae1686a45129a2eb6b6859394a8a0809442ce34cad4b26c9f8142e044fce",
+        "afterSha256": "87d6770e54ba83c0dd4179c745fb6058c6fc980f9e0b9b56f57c2b0f2bb4de13",
+        "actualSha256": "7a8bae1686a45129a2eb6b6859394a8a0809442ce34cad4b26c9f8142e044fce"
+      }
+    ]
+  }
+}

@@ -1,0 +1,98 @@
+{
+  "sample": "imx6-spaced",
+  "status": "failed",
+  "renderCompleted": true,
+  "elapsedMs": 291425.752178,
+  "initialCopper": 0,
+  "phases": [
+    {
+      "name": "<board#3165 />",
+      "solver": "FanoutSolver",
+      "status": "failed",
+      "connections": 32,
+      "startedMs": 174571.879338,
+      "elapsedMs": 36906.679645999975
+    }
+  ],
+  "solvers": [
+    {
+      "id": 0,
+      "name": "FanoutSolver",
+      "phases": [
+        {
+          "stage": "FanoutSolver",
+          "atMs": 175600.940886
+        }
+      ],
+      "iterations": 26149,
+      "solved": false,
+      "failed": true,
+      "error": "FanoutSolver: best layer assignment routed 7/32 connections",
+      "stats": {
+        "phase": "complete-assignment",
+        "assignment": 256,
+        "assignmentCount": 256,
+        "routedBuses": "4/32",
+        "routedConnections": "4/32",
+        "failedBuses": "connection:breakout:pcb_breakout_point_5, connection:breakout:pcb_breakout_point_0, connection:breakout:pcb_breakout_point_6, connection:breakout:pcb_breakout_point_14, connection:breakout:pcb_breakout_point_8, connection:breakout:pcb_breakout_point_22, connection:breakout:pcb_breakout_point_11, connection:breakout:pcb_breakout_point_12, connection:breakout:pcb_breakout_point_25, connection:breakout:pcb_breakout_point_18, connection:breakout:pcb_breakout_point_1, connection:breakout:pcb_breakout_point_27, connection:breakout:pcb_breakout_point_13, connection:breakout:pcb_breakout_point_16, connection:breakout:pcb_breakout_point_2, connection:breakout:pcb_breakout_point_31, connection:breakout:pcb_breakout_point_23, connection:breakout:pcb_breakout_point_29, connection:breakout:pcb_breakout_point_24, connection:breakout:pcb_breakout_point_9, connection:breakout:pcb_breakout_point_21, connection:breakout:pcb_breakout_point_10, connection:breakout:pcb_breakout_point_19, connection:breakout:pcb_breakout_point_26, connection:breakout:pcb_breakout_point_28, connection:breakout:pcb_breakout_point_3, connection:breakout:pcb_breakout_point_20, connection:breakout:pcb_breakout_point_7",
+        "bestScore": 27500015.529782284
+      }
+    }
+  ],
+  "errors": [
+    "Fanout failed for U10: only 7 of 32 connections could escape to the breakout boundary. The breakout boundary is 0.7mm from the pads at its narrowest point, which all 32 escapes have to share. Give the fanout more room by increasing the breakout's padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors) so their pads sit inside the boundary instead of against it.",
+    "Winding fanout failed for U7: WindingBreakoutSolver: declared breakout edges need 16.21mm but expose only 14.50mm. The connections could not escape to the breakout boundary. Give the fanout more room by increasing the breakout's padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors).",
+    "Fanout failed for U10: only 7 of 32 connections could escape to the breakout boundary. The breakout boundary is 0.7mm from the pads at its narrowest point, which all 32 escapes have to share. Give the fanout more room by increasing the breakout's padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors) so their pads sit inside the boundary instead of against it."
+  ],
+  "counts": {
+    "source_project_metadata": 1,
+    "source_group": 4,
+    "source_port": 1870,
+    "source_component": 498,
+    "source_net": 404,
+    "source_board": 1,
+    "source_refdes_convention_warning": 434,
+    "source_component_internal_connection": 5,
+    "source_trace": 2069,
+    "source_bus": 2,
+    "source_no_power_pin_defined_warning": 455,
+    "source_no_ground_pin_defined_warning": 455,
+    "source_component_pins_underspecified_warning": 497,
+    "pcb_component": 498,
+    "pcb_group": 3,
+    "pcb_board": 1,
+    "pcb_smtpad": 1835,
+    "pcb_solder_paste": 1843,
+    "pcb_hole": 10,
+    "pcb_plated_hole": 59,
+    "pcb_port": 1870,
+    "pcb_fabrication_note_path": 2,
+    "pcb_fabrication_note_text": 2,
+    "pcb_breakout_point": 128,
+    "pcb_autorouting_error": 2,
+    "pcb_connector_not_in_accessible_orientation_warning": 3,
+    "cad_component": 498,
+    "pcb_component_missing_courtyard_warning": 498,
+    "pcb_debug_object": 1,
+    "pcb_port_not_connected_error": 2069,
+    "pcb_trace_missing_error": 394
+  },
+  "revisions": {
+    "core": "351e73d665fad37577c47fcbff2e4c29eb377467",
+    "router": "f9c08dcd41bfd84beb0b17bdf8b75215a4701ac6",
+    "winding": "202dbe9eb0088633b6fa094120dba6f2f41f8803",
+    "sampleMode": "fanout_first",
+    "archiveSha256": "1991ad1891a953dcd660818aaceb73f7aa42dbf704e677e635753b9159f7a6b7",
+    "coreLockSha256": "7fd454bc1700fbd16b1c0acf783ace089a8be24771dc537c8a5f4bdb79264e2b",
+    "@tscircuit/fanout-solver": "0.0.93",
+    "@tscircuit/winding-breakout-point-solver": "0.0.1",
+    "@tscircuit/capacity-autorouter": "0.0.1135",
+    "@tscircuit/props": "0.0.741",
+    "@tscircuit/bus-lanes-solver": "0.0.62",
+    "@tscircuit/checks": "0.0.282",
+    "circuit-to-svg": "0.0.460",
+    "react": "19.3.1",
+    "variant": "after",
+    "corePatchApplied": false
+  }
+}
