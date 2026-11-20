@@ -11,7 +11,7 @@ for name in ['tscircuit','@tscircuit/core','@tscircuit/fanout-solver','@tscircui
 (out/'runtime-versions.json').write_text(json.dumps(versions,indent=2)+'\n')
 boards=sorted(p.stem for p in (root/'boards').glob('*.tsx'))
 def run(board):
- for variant in ['main']:
+ for variant in ['fix']:
   d=out/variant/board;d.mkdir(parents=True,exist_ok=True)
   circuit=root/'output'/(board+'.circuit.json')
   if circuit.exists():circuit.unlink()
