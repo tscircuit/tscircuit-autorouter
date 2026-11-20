@@ -1,0 +1,25 @@
+{
+  "sample": "imx6-original",
+  "isolatedFanoutOnly": true,
+  "baselineEscapes": 9,
+  "experimentalEscapes": 17,
+  "nativeCopperDrcValid": true,
+  "independentlyCheckedVias": 14,
+  "viaInPadFindingCount": 2,
+  "viaInPadFindings": [
+    {
+      "type": "pcb_placement_error",
+      "pcb_placement_error_id": "via_in_pad_analysis-via-10-0_pcb_smtpad_1236",
+      "error_type": "pcb_placement_error",
+      "message": "Via hole at (12.50mm, -14.50mm) overlaps SMD pad C82.BALL_2 at (12.68mm, -14.75mm)",
+      "subcircuit_id": "subcircuit_source_group_3"
+    },
+    {
+      "type": "pcb_placement_error",
+      "pcb_placement_error_id": "via_in_pad_analysis-via-15-0_pcb_smtpad_1236",
+      "error_type": "pcb_placement_error",
+      "message": "Via hole at (12.50mm, -14.50mm) overlaps SMD pad C82.BALL_2 at (12.68mm, -14.75mm)",
+      "subcircuit_id": "subcircuit_source_group_3"
+    }
+  ]
+}

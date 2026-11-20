@@ -1,0 +1,10 @@
+{
+  "sample": "imx6-spaced",
+  "isolatedFanoutOnly": true,
+  "baselineEscapes": 7,
+  "experimentalEscapes": 9,
+  "nativeCopperDrcValid": true,
+  "independentlyCheckedVias": 5,
+  "viaInPadFindingCount": 0,
+  "viaInPadFindings": []
+}

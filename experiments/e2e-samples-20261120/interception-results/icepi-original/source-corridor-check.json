@@ -1,0 +1,40 @@
+{
+  "sample": "icepi-original",
+  "source": "U22.B5",
+  "sourceCorridorOnly": true,
+  "fullDeclaredExitNotRouted": true,
+  "unchangedWidth": 0.1,
+  "unchangedClearance": 0.1,
+  "unchangedViaDiameter": 0.45,
+  "points": [
+    {
+      "x": 2.489999999998758,
+      "y": 11.829999999999984,
+      "layer": "top",
+      "pointId": "pcb_port_173",
+      "pcb_port_id": "pcb_port_173"
+    },
+    {
+      "x": 2.739999999998758,
+      "y": 11.579999999999984
+    },
+    {
+      "x": 2.739999999998758,
+      "y": 10.829999999999984
+    }
+  ],
+  "checks": [
+    {
+      "targetLayer": "inner1",
+      "staticClearancePass": false
+    },
+    {
+      "targetLayer": "inner2",
+      "staticClearancePass": false
+    },
+    {
+      "targetLayer": "bottom",
+      "staticClearancePass": true
+    }
+  ]
+}

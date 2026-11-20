@@ -1,0 +1,160 @@
+[
+  {
+    "sample": "imx6-original",
+    "isolatedFanoutOnly": true,
+    "baselineEscapes": 9,
+    "experimentalEscapes": 17,
+    "nativeCopperDrcValid": true,
+    "independentlyCheckedVias": 14,
+    "viaInPadFindingCount": 2,
+    "viaInPadFindings": [
+      {
+        "type": "pcb_placement_error",
+        "pcb_placement_error_id": "via_in_pad_analysis-via-10-0_pcb_smtpad_1236",
+        "error_type": "pcb_placement_error",
+        "message": "Via hole at (12.50mm, -14.50mm) overlaps SMD pad C82.BALL_2 at (12.68mm, -14.75mm)",
+        "subcircuit_id": "subcircuit_source_group_3"
+      },
+      {
+        "type": "pcb_placement_error",
+        "pcb_placement_error_id": "via_in_pad_analysis-via-15-0_pcb_smtpad_1236",
+        "error_type": "pcb_placement_error",
+        "message": "Via hole at (12.50mm, -14.50mm) overlaps SMD pad C82.BALL_2 at (12.68mm, -14.75mm)",
+        "subcircuit_id": "subcircuit_source_group_3"
+      }
+    ]
+  },
+  {
+    "sample": "imx6-original",
+    "source": "U10.B2",
+    "sourcePadDiameter": 0.25,
+    "traceWidth": 0.119,
+    "clearance": 0.119,
+    "viaDiameter": 0.4,
+    "viaInPadEnabled": false,
+    "allowSameNetMerges": false,
+    "pitch": 0.5,
+    "allEightNeighborsAreForeign": true,
+    "ringJoins": [
+      {
+        "distance": 0.5,
+        "forbiddenRadiusSum": 0.607
+      },
+      {
+        "distance": 0.5,
+        "forbiddenRadiusSum": 0.607
+      },
+      {
+        "distance": 0.5,
+        "forbiddenRadiusSum": 0.607
+      },
+      {
+        "distance": 0.5,
+        "forbiddenRadiusSum": 0.607
+      },
+      {
+        "distance": 0.5,
+        "forbiddenRadiusSum": 0.607
+      },
+      {
+        "distance": 0.5,
+        "forbiddenRadiusSum": 0.607
+      },
+      {
+        "distance": 0.5,
+        "forbiddenRadiusSum": 0.607
+      },
+      {
+        "distance": 0.5,
+        "forbiddenRadiusSum": 0.607
+      }
+    ],
+    "traceCenterRingClosed": true,
+    "viaGridCoveringRadius": 0.35355339059327373,
+    "viaForbiddenRadius": 0.444,
+    "viaInsideRingBlocked": true,
+    "policy": "Enclosure proof applies to the captured baseline's surface-trace and via rules, not arbitrary PCB manufacturing assumptions or the same-net experiment."
+  },
+  {
+    "sample": "imx6-spaced",
+    "isolatedFanoutOnly": true,
+    "baselineEscapes": 7,
+    "experimentalEscapes": 9,
+    "nativeCopperDrcValid": true,
+    "independentlyCheckedVias": 5,
+    "viaInPadFindingCount": 0,
+    "viaInPadFindings": []
+  },
+  {
+    "sample": "icepi-original",
+    "isolatedFanoutOnly": true,
+    "baselineEscapes": 9,
+    "experimentalEscapes": 18,
+    "nativeCopperDrcValid": true,
+    "independentlyCheckedVias": 16,
+    "viaInPadFindingCount": 3,
+    "viaInPadFindings": [
+      {
+        "type": "pcb_placement_error",
+        "pcb_placement_error_id": "via_in_pad_analysis-via-4-0_pcb_smtpad_1176",
+        "error_type": "pcb_placement_error",
+        "message": "Via hole at (1.74mm, 18.58mm) overlaps SMD pad C118.BALL_1 at (1.54mm, 18.79mm)",
+        "subcircuit_id": "subcircuit_source_group_3"
+      },
+      {
+        "type": "pcb_placement_error",
+        "pcb_placement_error_id": "via_in_pad_analysis-via-6-0_pcb_smtpad_1176",
+        "error_type": "pcb_placement_error",
+        "message": "Via hole at (1.74mm, 18.58mm) overlaps SMD pad C118.BALL_1 at (1.54mm, 18.79mm)",
+        "subcircuit_id": "subcircuit_source_group_3"
+      },
+      {
+        "type": "pcb_placement_error",
+        "pcb_placement_error_id": "via_in_pad_analysis-via-15-0_pcb_smtpad_1138",
+        "error_type": "pcb_placement_error",
+        "message": "Via hole at (3.74mm, 18.58mm) overlaps SMD pad C117.BALL_2 at (3.61mm, 18.79mm)",
+        "subcircuit_id": "subcircuit_source_group_3"
+      }
+    ]
+  },
+  {
+    "sample": "icepi-original",
+    "source": "U22.B5",
+    "sourceCorridorOnly": true,
+    "fullDeclaredExitNotRouted": true,
+    "unchangedWidth": 0.1,
+    "unchangedClearance": 0.1,
+    "unchangedViaDiameter": 0.45,
+    "points": [
+      {
+        "x": 2.489999999998758,
+        "y": 11.829999999999984,
+        "layer": "top",
+        "pointId": "pcb_port_173",
+        "pcb_port_id": "pcb_port_173"
+      },
+      {
+        "x": 2.739999999998758,
+        "y": 11.579999999999984
+      },
+      {
+        "x": 2.739999999998758,
+        "y": 10.829999999999984
+      }
+    ],
+    "checks": [
+      {
+        "targetLayer": "inner1",
+        "staticClearancePass": false
+      },
+      {
+        "targetLayer": "inner2",
+        "staticClearancePass": false
+      },
+      {
+        "targetLayer": "bottom",
+        "staticClearancePass": true
+      }
+    ]
+  }
+]

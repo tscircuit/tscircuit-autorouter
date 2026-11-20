@@ -1,0 +1,32 @@
+{
+  "sample": "icepi-original",
+  "isolatedFanoutOnly": true,
+  "baselineEscapes": 9,
+  "experimentalEscapes": 18,
+  "nativeCopperDrcValid": true,
+  "independentlyCheckedVias": 16,
+  "viaInPadFindingCount": 3,
+  "viaInPadFindings": [
+    {
+      "type": "pcb_placement_error",
+      "pcb_placement_error_id": "via_in_pad_analysis-via-4-0_pcb_smtpad_1176",
+      "error_type": "pcb_placement_error",
+      "message": "Via hole at (1.74mm, 18.58mm) overlaps SMD pad C118.BALL_1 at (1.54mm, 18.79mm)",
+      "subcircuit_id": "subcircuit_source_group_3"
+    },
+    {
+      "type": "pcb_placement_error",
+      "pcb_placement_error_id": "via_in_pad_analysis-via-6-0_pcb_smtpad_1176",
+      "error_type": "pcb_placement_error",
+      "message": "Via hole at (1.74mm, 18.58mm) overlaps SMD pad C118.BALL_1 at (1.54mm, 18.79mm)",
+      "subcircuit_id": "subcircuit_source_group_3"
+    },
+    {
+      "type": "pcb_placement_error",
+      "pcb_placement_error_id": "via_in_pad_analysis-via-15-0_pcb_smtpad_1138",
+      "error_type": "pcb_placement_error",
+      "message": "Via hole at (3.74mm, 18.58mm) overlaps SMD pad C117.BALL_2 at (3.61mm, 18.79mm)",
+      "subcircuit_id": "subcircuit_source_group_3"
+    }
+  ]
+}
