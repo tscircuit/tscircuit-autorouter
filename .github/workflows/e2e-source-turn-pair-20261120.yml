@@ -1,7 +1,7 @@
-name: Compare native source turns on all ten full circuits
+name: Verify preserved bus search on all ten full circuits
 on:
   push:
-    branches: [analysis/e2e-source-turn-pair-20261120]
+    branches: [analysis/e2e-source-turn-v2-20261120]
 concurrency:
   group: e2e-uploaded-${{ github.ref }}
   cancel-in-progress: true
@@ -25,7 +25,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: tscircuit/fanout-solver
-          ref: 6c2aa214ad27e1830606a4fa07dba0233e5bd8db
+          ref: 67184a8c263d74c7d8427e4af04e477c4d19e44e
           path: fanout-candidate
       - uses: oven-sh/setup-bun@v2
         with:

@@ -1,16 +1,16 @@
 {
   "base": "9e771f68dca591642fca3b97187e14404c16c5aa",
-  "candidate": "6c2aa214ad27e1830606a4fa07dba0233e5bd8db",
+  "candidate": "67184a8c263d74c7d8427e4af04e477c4d19e44e",
   "files": [
     {
       "path": "lib/route-bus/route-analytic-boundary-alternatives.ts",
       "beforeSha256": "20d80b5a2b0a4c6f78d3651e50af7ce1aac948d4130e4fb30370c9a76f3c132a",
-      "afterSha256": "20262eed4d23562ae48c06773f4851b4716cb06d1d62c26d16ab7b61b6db604c"
+      "afterSha256": "75b8b453c1bf1f6fadd204f8a9056f27d34f0517e479ede76fb878148a5f0900"
     },
     {
       "path": "lib/route-bus/track-candidates.ts",
       "beforeSha256": "5be225944e2be619eec8f89e541b7443c91e78d9507b10d8200722314ca00eeb",
-      "afterSha256": "4553bd98085a8824770e9eca2cc82ef1786ac2c25fa3a85bac76a1e586d630dd"
+      "afterSha256": "a4f993bd19500af156a0bceea05e9c291aaaa8c094a3f805cfc57228c1fa44e2"
     }
   ]
 }
