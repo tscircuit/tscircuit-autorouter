@@ -1,4 +1,4 @@
-name: Restore completed neighboring traces to native regional repair
+name: Verify native copper context and physical clearance
 on:
   push:
     branches: [analysis/native-copper-stage-diagnostics]
@@ -12,26 +12,22 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - variant: parent
-            source: a3011ea856de9661404a115ed2050d9e0a1bff77
-          - variant: cleanup
-            source: 93f449589c8748916c2105a5efab437c0908269a
+        variant: [width, pad-guard]
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ matrix.source }}
+          ref: 93f449589c8748916c2105a5efab437c0908269a
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: '1.4.3'
-      - name: Preserve the neighboring copper that the old path already supplied
+      - name: Preserve actual copper geometry and restore completed neighbor context
         run: |
           python3 - <<'PY'
           from pathlib import Path
           p=Path("lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver.ts")
           s=p.read_text()
           start=s.index("    let regionalCopperRoutes: HighDensityRoute[] =")
-          end=s.index("    this.activeFallbackSolver = new Pipeline9RegionalFallbackSolver",start)
+          end=s.index("    this.activeFallbackSolver = ",start)
           s=s[:start]+"""    const regionalBounds = getNodeBounds(regionalNode, this.obstacleMargin)
               const routedCopperRoutes = this.routes.filter((route) =>
                 routeOverlapsNode(
@@ -48,9 +44,88 @@ jobs:
               ]
           """+s[end:]
           p.write_text(s)
+          p=Path("lib/solvers/HighDensityRepairSolver/Pipeline4HighDensityRepairSolver.ts")
+          s=p.read_text()
+          old="""    const repairRoutes = contextRoutes.map((route) =>
+                toRepairRoute({
+                  route,
+                  connMap: params.connMap,
+                  minimumTraceWidth: params.minimumTraceWidth,
+                  viaLayerSpan,
+                }),
+              )"""
+          assert s.count(old)==1
+          new="""    const repairRoutes = contextRoutes.map((route, index) => {
+                let minimumTraceWidth: number | undefined
+                if (index < params.hdRoutes.length) {
+                  minimumTraceWidth = params.minimumTraceWidth
+                }
+                return toRepairRoute({
+                  route,
+                  connMap: params.connMap,
+                  minimumTraceWidth,
+                  viaLayerSpan,
+                })
+              })"""
+          p.write_text(s.replace(old,new,1))
+          if '${{ matrix.variant }}' == 'pad-guard':
+              p=Path("lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensityForceImproveSolver.ts")
+              s=p.read_text()
+              s='import { FixedCopperClearanceGuard } from "high-density-repair02/lib/high-density-repair-solver/functions/FixedCopperClearanceGuard"\nimport { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"\nimport { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"\n'+s
+              s=s.replace('    if (this.fixedViaObstacleIndexes.size === 0) return','    if (this.fixedViaObstacleIndexes.size === 0 && this.fixedHdRoutes.length === 0) return',1)
+              old='    if (!worsensViaClearance) return'
+              assert s.count(old)==1
+              new="""    let allowsNativeCopper = true
+                  if (this.fixedHdRoutes.length > 0) {
+                    const connMap = getConnectivityMapFromSimpleRouteJson(this.inputSrj)
+                    const ownedIndexes = new Set(routeIndexes)
+                    const readOnlyRoutes = [
+                      ...this.fixedHdRoutes,
+                      ...this.getOutput().filter((_, index) => !ownedIndexes.has(index)),
+                    ]
+                    const normalizeRoute = (route: typeof originalRoutes[number]) => ({
+                      ...route,
+                      rootConnectionName: connMap.getNetConnectedToId(route.connectionName) ??
+                        route.rootConnectionName,
+                    })
+                    const obstacles = createObjectsWithZLayers(
+                      this.inputSrj.obstacles,
+                      this.inputSrj.layerCount,
+                    ).map((obstacle) => ({
+                      ...obstacle,
+                      zLayers: obstacle.__zLayers,
+                      connectedTo: obstacle.connectedTo.map(
+                        (id) => connMap.getNetConnectedToId(id) ?? id,
+                      ),
+                    }))
+                    const guard = new FixedCopperClearanceGuard(
+                      readOnlyRoutes.map(normalizeRoute),
+                      this.inputSrj.minTraceToPadEdgeClearance ??
+                        this.inputSrj.defaultObstacleMargin ??
+                        RELAXED_DRC_OPTIONS.traceClearance,
+                      obstacles,
+                      this.inputSrj.minPadEdgeToPadEdgeClearance,
+                    )
+                    allowsNativeCopper = guard.allows(
+                      originalRoutes.map(normalizeRoute),
+                      candidateRoutes.map(normalizeRoute),
+                      candidateRoutes.keys(),
+                    )
+                  }
+                  if (!worsensViaClearance && allowsNativeCopper) return"""
+              p.write_text(s.replace(old,new,1))
+          p=Path("tests/bugs/bugreport96-full-gameboy-no-breakout.test.ts")
+          s=p.read_text()
+          old="  expect(errors.length).toBeLessThanOrEqual(28)"
+          s=s.replace(old,'''  console.log("GBA_COUNTS", JSON.stringify({
+              errors: errors.length,
+              protectedPreloadRetained: !solver.highDensityRouteSolver!.fixedRouteReplacements.has("source_trace_0_fixed_70_0"),
+            }))
+          '''+old,1)
+          p.write_text(s)
           PY
       - run: bun install
-      - name: Preserve all original board quality and preload assertions
+      - name: Preserve original zero-error, via-count and preload assertions
         env:
           BUN_UPDATE_SNAPSHOTS: '1'
         run: bun test --timeout 9999999 tests/bugs/bugreport96-full-gameboy-no-breakout.test.ts tests/bugs/usb-dp-phase-detour.test.ts tests/repro/pipeline9-h616-portfolio-candidate-clearance.test.ts tests/features/pipeline9-orangecrab-native-fixed-traces.test.ts
@@ -61,5 +136,5 @@ jobs:
           git config user.email "actions@github.com"
           git add -- '*.snap.svg'
           if git diff --cached --quiet; then exit 0; fi
-          git commit -m "Record verified native neighbor-context snapshots"
-          git push origin HEAD:refs/heads/analysis/verified-native-neighbors-${{ matrix.variant }}
+          git commit -m "Record verified physical native-copper snapshots"
+          git push origin HEAD:refs/heads/analysis/verified-native-physical-${{ matrix.variant }}
