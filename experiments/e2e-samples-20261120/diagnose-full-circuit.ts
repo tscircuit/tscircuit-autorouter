@@ -34,7 +34,10 @@ const { visualizeSimpleRouteJson } = await import(join(fanoutRoot, "visualize-si
 const { getSvgFromGraphicsObject } = await import(resolve("core/node_modules/graphics-debug"))
 const readCompressed = (name: string) => JSON.parse(gunzipSync(new Uint8Array(readFileSync(join(folder, name)))).toString())
 const report = JSON.parse(readFileSync(join(folder, "report.json"), "utf8"))
-const circuit = readCompressed("circuit.json.gz")
+const processResult = JSON.parse(readFileSync(join(folder, "process.json"), "utf8"))
+const identitySnapshotName = readdirSync(folder).includes("circuit.json.gz") ? "circuit.json.gz" : processResult.timedOut && readdirSync(folder).includes("unrouted.circuit.json.gz") ? "unrouted.circuit.json.gz" : undefined
+if (!identitySnapshotName) throw new Error("No captured PCB available for component-name lookup")
+const circuit = readCompressed(identitySnapshotName)
 const names = new Map<string, string>()
 const components = new Map(circuit.filter((entry: any) => entry.type === "source_component").map((entry: any) => [entry.source_component_id, entry.name]))
 for (const entry of circuit) {
@@ -102,6 +105,6 @@ const windingRows = report.solvers.filter((solver: any) => solver.name === "Wind
   const state = readCompressed(`solver-${solver.id}-state.json.gz`)
   return { id: solver.id, solved: solver.solved, failed: solver.failed, error: solver.error, phases: solver.phases, child: state.child, connections: input.connections.length, regions: input.regions, buses: input.buses, boundaryPointSpacing: input.boundaryPointSpacing }
 })
-const result = { sample, fanout: fanoutRows, winding: windingRows, finalCounts: report.counts, phases: report.phases, sourceRevisions: report.revisions }
+const result = { sample, identitySnapshotName, identitySnapshotIsFinal: identitySnapshotName === "circuit.json.gz", processResult, fanout: fanoutRows, winding: windingRows, finalCounts: report.counts, phases: report.phases, sourceRevisions: report.revisions }
 writeFileSync(join(destination, "analysis.json"), JSON.stringify(result, null, 2))
 console.log("E2E_INTERNAL_DIAGNOSIS", JSON.stringify({ sample, fanout: fanoutRows.map((row: any) => ({ requested: row.requested, bestEscapes: row.bestEscapes, isolatedNoLayerBuses: row.preflight.buses.filter((bus: any) => Array.isArray(bus.individuallyRoutableLayers) && bus.individuallyRoutableLayers.length === 0).length, coordinatedPreflightSkipped: row.preflight.buses.filter((bus: any) => bus.coordinatedPreflightSkipped).length, mergeExperiment: row.mergeExperiment })), windingFailed: windingRows.filter((row: any) => row.failed).map((row: any) => ({ error: row.error, child: row.child, connections: row.connections })) }))

@@ -18,7 +18,7 @@ jobs:
       - name: Wait for original pipeline captures
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh run watch 44778112884 --interval 30 --exit-status
+        run: gh run watch 44778112884 --interval 30
       - uses: actions/download-artifact@v4
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
