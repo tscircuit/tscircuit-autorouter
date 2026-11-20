@@ -1,0 +1,73 @@
+name: Capture actual winding placement inputs from the ten uploaded circuits
+on:
+  push:
+    branches: [analysis/e2e-winding-inputs-20261120]
+permissions:
+  contents: read
+jobs:
+  capture:
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        sample: [butterstick-original, butterstick-spaced, glider-original, glider-spaced, h616-original, h616-spaced, icepi-original, icepi-spaced, imx6-original, imx6-spaced]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/core
+          ref: 351e73d665fad37577c47fcbff2e4c29eb377467
+          path: core
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - run: cd core && bun install --ignore-scripts
+      - name: Prepare unchanged uploaded circuits
+        run: |
+          python3 - <<'PYSAMPLES'
+          from pathlib import Path
+          import hashlib,json,shutil,zipfile
+          source=Path('experiments/e2e-samples-20261120');runtime=Path('core/e2e-runtime');runtime.mkdir()
+          for name in ['capture-winding.tsx','correct-workflow.tsx']:shutil.copyfile(source/name,runtime/name)
+          manifest=json.loads((source/'inputs.json').read_text())
+          assert hashlib.sha256((source/'samples.zip').read_bytes()).hexdigest()==manifest['archiveSha256']
+          with zipfile.ZipFile(source/'samples.zip') as z:
+              for entry in manifest['samples']:
+                  content=z.read(entry['name']);assert hashlib.sha256(content).hexdigest()==entry['sha256']
+                  target=runtime/'samples'/entry['name'];target.parent.mkdir(exist_ok=True);target.write_bytes(content)
+          revisions={'core':'351e73d665fad37577c47fcbff2e4c29eb377467','archiveSha256':manifest['archiveSha256']}
+          for package in ['@tscircuit/fanout-solver','@tscircuit/bus-lanes-solver','@tscircuit/winding-breakout-point-solver','@tscircuit/capacity-autorouter']:
+              revisions[package]=json.loads((Path('core/node_modules')/package/'package.json').read_text())['version']
+          Path('capture-revisions.json').write_text(json.dumps(revisions,indent=2)+'\n')
+          print(json.dumps(revisions))
+          PYSAMPLES
+      - name: Capture placement before routing without changing failure handling
+        env:
+          E2E_SAMPLE: ${{ matrix.sample }}
+        run: |
+          cd core/e2e-runtime
+          bun capture-winding.tsx "$E2E_SAMPLE" "$GITHUB_WORKSPACE/captures/$E2E_SAMPLE"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: winding-inputs-${{ matrix.sample }}
+          path: captures
+      - name: Export bounded actual inputs
+        if: always()
+        run: |
+          python3 - <<'PYEXPORT'
+          from pathlib import Path
+          import base64,io,zipfile
+          stream=io.BytesIO()
+          with zipfile.ZipFile(stream,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=9) as z:
+              for p in Path('captures').rglob('*'):
+                  if p.is_file():z.writestr(str(p.relative_to('captures')),p.read_bytes())
+              p=Path('capture-revisions.json')
+              if p.exists():z.writestr('revisions.json',p.read_bytes())
+          assert len(stream.getvalue())<2_000_000
+          print('WINDING_INPUTS_BEGIN')
+          encoded=base64.b64encode(stream.getvalue()).decode()
+          for offset in range(0,len(encoded),8000):print(encoded[offset:offset+8000])
+          print('WINDING_INPUTS_END')
+          PYEXPORT
