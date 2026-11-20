@@ -1,0 +1,56 @@
+name: Check routed BGA reproduction before and after plane layer selection
+on:
+  push:
+    branches: [analysis/e2e-plane-layers-focused-check-20261120]
+permissions:
+  contents: read
+jobs:
+  repro:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [before, after]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/core
+          ref: ${{ matrix.mode == 'before' && '351e73d665fad37577c47fcbff2e4c29eb377467' || '71d5c70a3da2d7d70b3f9832d1da42c1382ca273' }}
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Install native dependencies and copy identical reproduction
+        run: |
+          bun install --ignore-scripts
+          curl --fail --location --silent https://raw.githubusercontent.com/tscircuit/core/71d5c70a3da2d7d70b3f9832d1da42c1382ca273/tests/repros/repro-breakout-unbroken-plane-layers.test.tsx -o tests/repros/repro-breakout-unbroken-plane-layers.test.tsx
+      - name: Typecheck and check formatting
+        if: matrix.mode == 'after'
+        run: |
+          bunx biome format lib/components/primitive-components/Breakout/get-breakout-buses-outside-unbroken-pours.ts lib/components/primitive-components/Breakout/create-implicit-breakout-point-solver-input.ts tests/repros/repro-breakout-unbroken-plane-layers.test.tsx
+          bunx tsc --noEmit
+      - name: Route reproduction and related breakout controls
+        env:
+          BUN_UPDATE_SNAPSHOTS: '1'
+        run: |
+          bun test tests/repros/repro-breakout-unbroken-plane-layers.test.tsx --timeout 60000
+      - name: Export native snapshot
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import base64,io,zipfile
+          from pathlib import Path
+          stream=io.BytesIO()
+          with zipfile.ZipFile(stream,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=9) as z:
+              for p in Path('tests/repros/__snapshots__').glob('repro-breakout-unbroken-plane-layers*'):
+                  z.writestr(p.name,p.read_bytes())
+          print('PLANE_REPRO_BEGIN')
+          encoded=base64.b64encode(stream.getvalue()).decode()
+          for offset in range(0,len(encoded),8000):print(encoded[offset:offset+8000])
+          print('PLANE_REPRO_END')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: plane-layer-repro-${{ matrix.mode }}
+          path: tests/repros/__snapshots__/repro-breakout-unbroken-plane-layers*
