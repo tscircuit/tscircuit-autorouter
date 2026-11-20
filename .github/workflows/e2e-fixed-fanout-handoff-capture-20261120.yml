@@ -1,0 +1,81 @@
+name: Capture exact regression across two fanout handoffs
+on:
+  push:
+    branches: [analysis/e2e-fixed-fanout-handoff-capture-20261120]
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: [before, after]
+        sample: ["tests/breakout/fanout-breakout-routes-before-global.test.tsx"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/core
+          ref: ${{ matrix.variant == 'before' && 'a4d0ac47a1643250c016f8e964f6b2b4ce61517a' || 'ff97f2092fa081755ccf20e20e068e7b30dadafc' }}
+          path: core
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - run: cd core && bun install
+      - name: Capture final native circuits without changing routing
+        run: |
+          python3 - <<'PYCAPTURE'
+          from pathlib import Path
+          import shutil
+          experiment=Path('experiments/e2e-samples-20261120')
+          for name in ['connectivity.ts','audit-preserve-regressions.ts']:shutil.copyfile(experiment/name,Path('core')/name)
+          p=Path('core/tests/fixtures/get-test-fixture.ts')
+          s=p.read_text();s='import { mkdirSync, writeFileSync } from "node:fs"\nlet capturedCircuitCount = 0\n'+s
+          needle='  const circuit = new RootCircuit({ platform })'
+          replacement=needle+"\n  const captureIndex = capturedCircuitCount++\n  const originalRenderUntilSettled = circuit.renderUntilSettled.bind(circuit)\n  circuit.renderUntilSettled = async (...args) => {\n    const result = await originalRenderUntilSettled(...args)\n    mkdirSync('regression-captures', { recursive: true })\n    writeFileSync(`regression-captures/circuit-${captureIndex}.json.gz`, Bun.gzipSync(JSON.stringify(circuit.getCircuitJson())))\n    return result\n  }"
+          replacement+="\n  mkdirSync('regression-captures', { recursive: true })\n  let capturedPhaseCount = 0\n  circuit.on('solver:started', (entry) => writeFileSync(`regression-captures/solver-${entry.solverName}-${Date.now()}.json.gz`, Bun.gzipSync(JSON.stringify(entry.solverConstructorArgs))))\n  circuit.on('autorouting:start', (entry) => { capturedPhaseCount++; writeFileSync(`regression-captures/phase-${capturedPhaseCount}-start.json.gz`, Bun.gzipSync(JSON.stringify(entry.simpleRouteJson))) })\n  circuit.on('autorouting:end', (entry) => writeFileSync(`regression-captures/phase-${capturedPhaseCount}-end.json.gz`, Bun.gzipSync(JSON.stringify(entry.simpleRouteJson))))"
+          assert needle in s;p.write_text(s.replace(needle,replacement))
+          audit=Path('core/audit-preserve-regressions.ts');audit.write_text(audit.read_text().replace('    drc: Object.fromEntries(', '    findings,\n    drc: Object.fromEntries('))
+          PYCAPTURE
+      - name: Run affected test and generate its natural snapshots
+        env:
+          TEST_FILE: ${{ matrix.sample }}
+        run: cd core && BUN_UPDATE_SNAPSHOTS=1 bun test "$TEST_FILE" --timeout 9999999
+      - name: Audit emitted copper
+        if: always()
+        run: cd core && bun audit-preserve-regressions.ts regression-captures
+      - name: Export changed snapshots and physical assessment
+        if: always()
+        env:
+          VARIANT: ${{ matrix.variant }}
+          SAMPLE: ${{ matrix.sample }}
+        run: |
+          python3 - <<'PYEXPORT'
+          from pathlib import Path
+          import base64,io,json,os,subprocess,zipfile
+          root=Path('core')
+          paths=subprocess.run(['git','diff','--name-only','--','*.svg'],cwd=root,text=True,check=True,capture_output=True).stdout.splitlines()
+          assessment=root/'regression-captures/assessment.json'
+          manifest={'variant':os.environ['VARIANT'],'sample':os.environ['SAMPLE'],'snapshots':paths,'assessment':json.loads(assessment.read_text()) if assessment.exists() else None}
+          stream=io.BytesIO()
+          with zipfile.ZipFile(stream,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=9) as z:
+              z.writestr('manifest.json',json.dumps(manifest,indent=2))
+              for p in paths:z.writestr(p,(root/p).read_bytes())
+              for p in (root/'regression-captures').glob('*'):
+                  if p.is_file():z.writestr(p.name,p.read_bytes())
+          assert len(stream.getvalue())<4000000
+          Path('preserve-regression.zip').write_bytes(stream.getvalue())
+          print('PRESERVE_REGRESSION_BEGIN')
+          encoded=base64.b64encode(stream.getvalue()).decode()
+          for offset in range(0,len(encoded),8000):print(encoded[offset:offset+8000])
+          print('PRESERVE_REGRESSION_END')
+          PYEXPORT
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: preserve-regression-${{ matrix.variant }}-${{ strategy.job-index }}
+          path: |
+            core/regression-captures
+            preserve-regression.zip
