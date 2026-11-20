@@ -1166,6 +1166,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           },
           {
             allowNewVias: false,
+            finishBranchWidthsInPlace: true,
             ...configuredOptions,
             onlyConnectionNames,
           },

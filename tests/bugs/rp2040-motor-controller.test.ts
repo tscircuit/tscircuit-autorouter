@@ -69,6 +69,7 @@ test("RP2040 motor controller: default Pipeline 9 relaxed DRC", async (): Promis
       trace.connectsTo.includes("pcb_port_261"),
   )
   expect(vmHfTrace?.nominalTraceWidth).toBe(0.8)
+  expect(getPowerCopperAtTargetWidth([vmHfTrace!])).toBeGreaterThan(0)
   expect(getPowerCopperAtTargetWidth(routedTraces)).toBeGreaterThan(
     getPowerCopperAtTargetWidth(solver.getNewTracesBeforePowerExpansion()),
   )
