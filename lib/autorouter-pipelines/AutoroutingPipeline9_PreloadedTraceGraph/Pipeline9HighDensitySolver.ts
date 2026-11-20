@@ -830,6 +830,9 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     )
     let regionalCopperRoutes: HighDensityRoute[] =
       this.activeFallbackFixedObstacleRoutes
+    let immutableHdRoutes = this.activeFallbackFixedObstacleRoutes.filter(
+      (route) => route.isFixed === true || route.isThroughObstacle === true,
+    )
     if (hasImmutablePreload) {
       regionalCopperRoutes = [
         ...fixedHdRoutes.filter(
@@ -855,9 +858,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       fixedHdRoutes: regionalCopperRoutes,
       preservePhysicalGeometry:
         hasImmutablePreload && regionalCopperRoutes.length > 0,
-      immutableHdRoutes: regionalCopperRoutes.filter(
-        (route) => route.isFixed === true || route.isThroughObstacle === true,
-      ),
+      immutableHdRoutes,
       movablePreloadedConnectionNames: movableFixedRouteConnectionNames,
       viaToPadClearance: this.viaToPadClearance,
       layerCount: this.layerCount,
