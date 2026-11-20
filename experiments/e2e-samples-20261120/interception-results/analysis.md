@@ -1,5 +1,7 @@
 # Ten supplied full circuits: intercepted pipeline analysis
 
+**Final follow-up:** [verified source-turn fix, before/after statistics and remaining failures](source-turn-analysis.md).
+
 All ten circuits from the uploaded ZIP were run with the agreed **fanout → DDR bus lanes → remaining routing** workflow. **0/10 complete.** No production routing fix is claimed in this report.
 
 **91 of 241 provisional signal breakout points (37.8%) lie inside foreign copper-pour obstacles. This does not establish a routing failure:** the affected singleton fanout targets have `hasExplicitLayeredExitTarget: false`, and the fanout solver may replace their position and layer. The captured U22.B5 candidate already routes on top despite its provisional inner1 point. A subsequent Core layer-filtering experiment did not improve iCE/Pi's 9/32 partial result and regressed a routed BGA control from 16 to 12 escapes; that approach is rejected.
@@ -39,7 +41,7 @@ The relevant Core boundaries are [automatic layer-candidate creation](https://gi
 
 These are native segments and pad geometry from the supplied circuit, not a newly constructed repro.
 
-A separate hand-constructed source corridor for the actual U22.B5 pin passes the unchanged static-clearance predicate on bottom, with the same 0.1 mm trace, 0.1 mm clearance and 0.45 mm via. It does not reach the declared inner1 exit and is **not a completed connection or solver improvement**. It establishes a possible local source escape; it does not establish a bad mandatory layer constraint: [source-corridor check](icepi-original/source-corridor-check.json).
+A separate hand-constructed source corridor for the actual U22.B5 pin passes the unchanged static-clearance predicate on bottom, with the same 0.1 mm trace, 0.1 mm clearance and 0.45 mm via. It does not reach the provisional inner1 point and is **not a completed connection or solver improvement**. It establishes a possible local source escape; it does not establish a bad mandatory layer constraint: [source-corridor check](icepi-original/source-corridor-check.json).
 
 The i.MX6 U10.B2 case has another limitation. Its eight foreign 0.25 mm pads form a closed ring on a 0.5 mm grid under the captured 0.119 mm trace/clearance rules. The inflated forbidden radius for a trace centre is 0.3035 mm, so adjacent forbidden regions overlap. Under the captured baseline's via-in-pad and same-net policy, the 0.4 mm via also has no permitted escape inside the ring. This is a proof about those modeled rules, not an assertion that the real hardware is universally unroutable: [source enclosure proof](imx6-original/source-enclosure-proof.json).
 
@@ -55,7 +57,7 @@ All three remain failed fanout phases. The independent check uses the original f
 
 ## Fix priority and reproducibility
 
-The Core layer-filtering approach has been tested and rejected. The current experiment instead changes the existing fanout candidate generator: same-layer routes may turn immediately out of the source pad, and mixed-pad gaps receive midpoint candidates before unchanged clearance validation. On the actual captured U22.B5 input this produces two statically legal, zero-via top-layer candidates where the original generator produced none. This is a local candidate result; the fresh ten-circuit run must establish its wider routing impact. No full-board improvement is claimed yet. Increasing assignment limits, accepting partial output or weakening clearance checks is not part of this experiment.
+The Core layer-filtering approach has been tested and rejected. The completed [source-turn follow-up](source-turn-analysis.md) changes the existing fanout candidate generator after ordinary candidates fail. Across the nine captured fanout inputs it improves diagnostic partial escapes from 497/813 to 546/813 (+9.9%) and reduces vias from 355 to 331 (−6.8%), with zero native DRC or independent via-in-pad findings. Full-board completion remains 0/10. The report includes per-circuit tradeoffs and the unchanged winding failures. Increasing assignment limits, accepting partial output or weakening clearance checks is not part of the fix.
 
 The circuits, widths, clearances, via sizes, pads and component positions were retained. Core is pinned to 351e73d (0.0.2434), fanout to 0.0.93, bus lanes to 0.0.62, and the shipped winding dependency to 202dbe9. The archive SHA-256 is 1991ad1891a953dcd660818aaceb73f7aa42dbf704e677e635753b9159f7a6b7.
 
