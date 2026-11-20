@@ -40,7 +40,9 @@ for (const sample of readdirSync("diagnoses")) {
   const selected = fanout.rejections.find((entry: any) => entry.label === sourceLabel && entry.reason === "pad-trace")
   const examples = readGzip(join(capture, "fanout-rejection-examples.json.gz"))
   const recordedPlan = examples.find(([key]: [string]) => key === selected.key)[1].plan
-  const sourceObstacle = input.obstacles.find((obstacle: any) => obstacle.obstacleId === recordedPlan.sourceObstacle.obstacleId)
+  const sourcePadId = recordedPlan.sourceObstacle.circuitJsonMetadata?.pcb_smtpad_id
+  if (!sourcePadId) throw new Error("Captured source pad metadata is missing")
+  const sourceObstacle = input.obstacles.find((obstacle: any) => obstacle.circuitJsonMetadata?.pcb_smtpad_id === sourcePadId)
   if (!sourceObstacle) throw new Error("Captured source pad identity could not be restored")
   const plan = { ...recordedPlan, sourceObstacle }
   if (name === "icepi-original") {
