@@ -9,16 +9,28 @@ import {
 } from "lib/types"
 import { seededRandom } from "lib/utils/cloneAndShuffleArray"
 import { BaseSolver } from "../BaseSolver"
-import { buildMinimumSpanningTree } from "./buildMinimumSpanningTree"
+import { buildMinimumSpanningTree, type Edge } from "./buildMinimumSpanningTree"
 import { getInitiallyConnectedStateForConnection } from "./get-initially-connected-state-for-connection"
-import { getMstEdgeTraceWidths } from "./getMstEdgeTraceWidths"
 import { mergeConnections } from "./mergeConnections"
 import { orderMstEdgesForStablePairNames } from "./orderMstEdgesForStablePairNames"
 
 type ConnectionName = SimpleRouteConnection["name"]
-export type NetToPointPairsSolverOptions = {
-  collectPowerTraceWidthTargets?: boolean
+
+export type MergedConnectionTopologyEdge = Pick<
+  Edge<ConnectionPoint>,
+  "from" | "to"
+>
+
+export type MergedConnectionTopology = {
+  connection: SimpleRouteConnection
+  sources: readonly SimpleRouteConnection[]
+  edges: readonly MergedConnectionTopologyEdge[]
+  emittedNames: ReadonlyMap<MergedConnectionTopologyEdge, ConnectionName>
 }
+
+export type MergedConnectionTopologyObserver = (
+  topology: MergedConnectionTopology,
+) => void
 
 interface PathHop {
   fromPointId: PointId
@@ -56,7 +68,6 @@ export class NetToPointPairsSolver extends BaseSolver {
   unprocessedConnections: Array<SimpleRouteConnection>
   newConnections: Array<SimpleRouteConnection>
   readonly initiallyConnectedMap: ConnectivityMap
-  readonly powerTraceWidthTargets?: Map<ConnectionName, number>
   private readonly sourceConnectionsByMergedConnection?: Map<
     SimpleRouteConnection,
     SimpleRouteConnection[]
@@ -68,11 +79,10 @@ export class NetToPointPairsSolver extends BaseSolver {
     public ogSrj: SimpleRouteJson,
     public colorMap: Record<string, string> = {},
     initiallyConnectedMap: ConnectivityMap,
-    options: NetToPointPairsSolverOptions = {},
+    private readonly onMergedConnectionTopology?: MergedConnectionTopologyObserver,
   ) {
     super()
-    if (options.collectPowerTraceWidthTargets) {
-      this.powerTraceWidthTargets = new Map()
+    if (onMergedConnectionTopology) {
       this.sourceConnectionsByMergedConnection = new Map()
     }
     const busTraceWidthsByConnectionName = new Map<ConnectionName, number>()
@@ -159,19 +169,7 @@ export class NetToPointPairsSolver extends BaseSolver {
     }
     const connection = this.unprocessedConnections.pop()!
     const pathEdges = this.getPathEdges(connection)
-    const defaultTraceWidth =
-      this.ogSrj.nominalTraceWidth ?? this.ogSrj.minTraceWidth
-    const powerTraceWidthTargets = this.powerTraceWidthTargets
-    const sourceConnections =
-      this.sourceConnectionsByMergedConnection?.get(connection)
-    const sourceWidths =
-      sourceConnections &&
-      new Set(
-        sourceConnections.map(
-          (source) =>
-            source.nominalTraceWidth ?? source.width ?? defaultTraceWidth,
-        ),
-      )
+    const sources = this.sourceConnectionsByMergedConnection?.get(connection)
 
     const { zeroWeightEdges, arePointsConnected } =
       getInitiallyConnectedStateForConnection(
@@ -180,13 +178,8 @@ export class NetToPointPairsSolver extends BaseSolver {
       )
 
     if (connection.pointsToConnect.length === 2) {
-      const [startPoint, endPoint] = connection.pointsToConnect
-      if (startPoint && endPoint && arePointsConnected(startPoint, endPoint)) {
-        return
-      }
-      if (powerTraceWidthTargets && sourceWidths && sourceWidths.size > 1) {
-        powerTraceWidthTargets.set(connection.name, Math.max(...sourceWidths))
-      }
+      const [from, to] = connection.pointsToConnect
+      if (from && to && arePointsConnected(from, to)) return
       this.emitConnection(
         {
           ...connection,
@@ -196,6 +189,15 @@ export class NetToPointPairsSolver extends BaseSolver {
         },
         pathEdges[0],
       )
+      if (sources && from && to) {
+        const edge = { from, to }
+        this.onMergedConnectionTopology?.({
+          connection,
+          sources,
+          edges: [edge],
+          emittedNames: new Map([[edge, connection.name]]),
+        })
+      }
       return
     }
 
@@ -221,16 +223,9 @@ export class NetToPointPairsSolver extends BaseSolver {
       originalEdges,
       optimizedEdges,
     })
-    // Keep legacy routing widths until placement and clearance repair finish.
-    const widthTargets =
-      sourceConnections && sourceWidths && sourceWidths.size > 1
-        ? getMstEdgeTraceWidths(
-            connection.pointsToConnect,
-            edges,
-            sourceConnections,
-            defaultTraceWidth,
-          )
-        : undefined
+    const emittedNames = sources
+      ? new Map<MergedConnectionTopologyEdge, ConnectionName>()
+      : undefined
 
     let mstIdx = 0
     for (const edge of edges) {
@@ -238,13 +233,8 @@ export class NetToPointPairsSolver extends BaseSolver {
         continue
       }
       const name = `${connection.name}_mst${mstIdx++}`
-      if (widthTargets && powerTraceWidthTargets) {
-        const target = widthTargets.get(edge)
-        if (target === undefined) {
-          throw new Error(`Missing source width target for "${name}"`)
-        }
-        powerTraceWidthTargets.set(name, target)
-      }
+      // Keep the selected endpoints before an off-board substitution.
+      emittedNames?.set(edge, name)
       this.emitConnection(
         {
           ...connection,
@@ -257,6 +247,14 @@ export class NetToPointPairsSolver extends BaseSolver {
         },
         pathEdges.find((pathEdge) => pathEdge === edge),
       )
+    }
+    if (sources && emittedNames) {
+      this.onMergedConnectionTopology?.({
+        connection,
+        sources,
+        edges,
+        emittedNames,
+      })
     }
   }
 

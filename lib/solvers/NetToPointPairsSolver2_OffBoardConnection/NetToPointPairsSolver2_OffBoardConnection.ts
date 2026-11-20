@@ -7,7 +7,7 @@ import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { DSU } from "lib/utils/dsu"
 import {
   NetToPointPairsSolver,
-  type NetToPointPairsSolverOptions,
+  type MergedConnectionTopologyObserver,
 } from "../NetToPointPairsSolver/NetToPointPairsSolver"
 
 /**
@@ -38,7 +38,7 @@ export class NetToPointPairsSolver2_OffBoardConnection extends NetToPointPairsSo
     public ogSrj: SimpleRouteJson,
     public colorMap: Record<string, string> = {},
     initiallyConnectedMap: ConnectivityMap,
-    options?: NetToPointPairsSolverOptions,
+    onMergedConnectionTopology?: MergedConnectionTopologyObserver,
   ) {
     const allConnectionPoints = ogSrj.connections.flatMap(
       (connection) => connection.pointsToConnect,
@@ -78,7 +78,7 @@ export class NetToPointPairsSolver2_OffBoardConnection extends NetToPointPairsSo
       { ...ogSrj, connections: onBoardConnections },
       colorMap,
       initiallyConnectedMap,
-      options,
+      onMergedConnectionTopology,
     )
 
     this.connectionPointDsu = connectionPointDsu

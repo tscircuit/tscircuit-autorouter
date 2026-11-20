@@ -4,28 +4,31 @@ import type {
   SimpleRouteConnection,
 } from "lib/types"
 import { getPointKey } from "lib/utils/getPointKey"
-import { DisjointSet, type Edge } from "./buildMinimumSpanningTree"
+import { DisjointSet } from "lib/solvers/NetToPointPairsSolver/buildMinimumSpanningTree"
+import type { MergedConnectionTopologyEdge } from "lib/solvers/NetToPointPairsSolver/NetToPointPairsSolver"
 
-type MstEdge = Edge<ConnectionPoint>
-type TreeLink = { point: PointKey; edge: MstEdge }
+type TreeLink = { point: PointKey; edge: MergedConnectionTopologyEdge }
 type TreeNode = { depth: number; parent?: TreeLink }
 
 /** Shared tree edges carry the largest width requested on their source paths. */
 export function getMstEdgeTraceWidths(
-  mergedPoints: ConnectionPoint[],
-  edges: MstEdge[],
-  sourceConnections: SimpleRouteConnection[],
+  mergedPoints: readonly ConnectionPoint[],
+  edges: readonly MergedConnectionTopologyEdge[],
+  sourceConnections: readonly SimpleRouteConnection[],
   defaultTraceWidth?: number,
-): Map<MstEdge, number> {
-  const widths = new Map<MstEdge, number>()
+): Map<MergedConnectionTopologyEdge, number> {
+  const widths = new Map<MergedConnectionTopologyEdge, number>()
   const firstEdge = edges[0]
   if (!firstEdge) return widths
 
+  // A direct pair can connect two distinct pads at the same XY. Kruskal's
+  // tree for larger nets treats terminals at the same XY as one vertex.
+  const getTreePointKey =
+    mergedPoints.length === 2 ? getPointKey : DisjointSet.pointToKey
   const neighborsByPoint = new Map<PointKey, TreeLink[]>()
   for (const edge of edges) {
-    // Kruskal's tree treats terminals at the same XY as one vertex.
-    const from = DisjointSet.pointToKey(edge.from)
-    const to = DisjointSet.pointToKey(edge.to)
+    const from = getTreePointKey(edge.from)
+    const to = getTreePointKey(edge.to)
     for (const [point, neighbor] of [
       [from, to],
       [to, from],
@@ -36,7 +39,7 @@ export function getMstEdgeTraceWidths(
     }
   }
 
-  const root = DisjointSet.pointToKey(firstEdge.from)
+  const root = getTreePointKey(firstEdge.from)
   const treeNodes = new Map<PointKey, TreeNode>([[root, { depth: 0 }]])
   const pendingPoints: PointKey[] = [root]
   for (const point of pendingPoints) {
@@ -60,8 +63,7 @@ export function getMstEdgeTraceWidths(
 
     const [start, ...rest] = source.pointsToConnect.map((point): TreeNode => {
       const mergedPoint = mergedPointByKey.get(getPointKey(point))
-      const node =
-        mergedPoint && treeNodes.get(DisjointSet.pointToKey(mergedPoint))
+      const node = mergedPoint && treeNodes.get(getTreePointKey(mergedPoint))
       if (!node) {
         throw new Error(`MST is missing a terminal of "${source.name}"`)
       }

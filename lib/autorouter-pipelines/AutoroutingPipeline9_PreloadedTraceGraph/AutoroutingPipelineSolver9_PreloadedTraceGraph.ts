@@ -75,6 +75,7 @@ import { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolve
 import { LengthMatchingPostProcessingSolver } from "../../solvers/length-matching-post-processing-solver"
 import { applyFixedRouteReplacementsToPreloadedTraces } from "./applyFixedRouteReplacementsToPreloadedTraces"
 import { applyPipeline9PowerTraceWidthTargets } from "./applyPipeline9PowerTraceWidthTargets"
+import { collectPipeline9PowerTraceWidthTargets } from "./collectPipeline9PowerTraceWidthTargets"
 import { getPipeline9CopperObstacles } from "./getPipeline9CopperObstacles"
 import { repairPipeline9ThroughObstacleTransitions } from "./repairPipeline9ThroughObstacleTransitions"
 import { assignUniquePcbTraceIdsToNewTraces } from "./assignUniquePcbTraceIdsToNewTraces"
@@ -264,6 +265,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   preprocessSimpleRouteJsonSolver?: PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver
   escapeViaLocationSolver?: EscapeViaLocationSolver
   netToPointPairsSolver?: NetToPointPairsSolver
+  private readonly powerTraceWidthTargets = new Map<string, number>()
   componentTopologyGeneratorSolver?: MergedComponentTopologyView
   topologyPlanningSolver?: MultiGraphTopologyPlannerSolver
   topologyMergingSolver?: TopologyMergingSolver
@@ -368,7 +370,13 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           inputSrj,
           cms.colorMap,
           getInitiallyConnectedMapFromSimpleRouteJson(inputSrj),
-          { collectPowerTraceWidthTargets: true },
+          (topology) => {
+            collectPipeline9PowerTraceWidthTargets(
+              topology,
+              inputSrj.nominalTraceWidth ?? inputSrj.minTraceWidth,
+              cms.powerTraceWidthTargets,
+            )
+          },
         ]
       },
       {
@@ -1754,13 +1762,12 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       defaultViaHoleDiameter: this.viaHoleDiameter,
       connMap: this.connMap,
     })
-    const widthTargets = this.netToPointPairsSolver?.powerTraceWidthTargets
-    if (widthTargets?.size) {
+    if (this.powerTraceWidthTargets.size) {
       applyPipeline9PowerTraceWidthTargets({
         connections,
         hdRoutes,
         routedTraces,
-        widthTargets,
+        widthTargets: this.powerTraceWidthTargets,
       })
     }
     return assignUniquePcbTraceIdsToNewTraces(

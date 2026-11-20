@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test"
 import type { Edge } from "lib/solvers/NetToPointPairsSolver/buildMinimumSpanningTree"
-import { getMstEdgeTraceWidths } from "lib/solvers/NetToPointPairsSolver/getMstEdgeTraceWidths"
+import { getMstEdgeTraceWidths } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/getMstEdgeTraceWidths"
 import type { ConnectionPoint, SimpleRouteConnection } from "lib/types"
 
 test("the shared path gets the widest target while each branch keeps its own", (): void => {
