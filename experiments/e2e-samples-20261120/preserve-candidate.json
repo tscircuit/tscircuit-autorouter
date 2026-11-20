@@ -1,0 +1,11 @@
+{
+  "base": "351e73d665fad37577c47fcbff2e4c29eb377467",
+  "candidate": "e688f7d80cf33898e77a5909a335b177d98cba25",
+  "files": [
+    {
+      "path": "lib/utils/autorouting/local-autorouter-strategies.ts",
+      "beforeSha256": "7a8bae1686a45129a2eb6b6859394a8a0809442ce34cad4b26c9f8142e044fce",
+      "afterSha256": "87d6770e54ba83c0dd4179c745fb6058c6fc980f9e0b9b56f57c2b0f2bb4de13"
+    }
+  ]
+}
