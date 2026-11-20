@@ -1,3 +1,8 @@
+import {
+  getAllowedLayersByConnection,
+  type AllowedLayersByConnection,
+} from "lib/utils/getAllowedLayersByConnection"
+import { assertRoutesStayOnAllowedLayers } from "lib/utils/assertRoutesStayOnAllowedLayers"
 import { getDifferentialPairsForPostProcessing } from "lib/utils/getDifferentialPairsForPostProcessing"
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import { Pipeline9EffortCleanupSolver } from "./Pipeline9EffortCleanupSolver"
@@ -312,6 +317,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   sharedEdgeSegmentsWithNecessaryCrampedPortPoints?: SharedEdgeSegment[]
   highDensityNodePortPoints?: NodeWithPortPoints[]
 
+  private allowedLayersByConnection: AllowedLayersByConnection = new Map()
+
   cacheProvider: CacheProvider | null = null
   pipelineDef = [
     definePipelineStep(
@@ -368,6 +375,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         onSolved: (cms) => {
           cms.srjWithPointPairs =
             cms.netToPointPairsSolver?.getNewSimpleRouteJson()
+          cms.allowedLayersByConnection = getAllowedLayersByConnection(
+            cms.srjWithPointPairs!,
+          )
           cms.colorMap = getColorMap(cms.srjWithPointPairs!, cms.connMap)
           cms.connMap = getConnectivityMapFromSimpleRouteJson(
             cms.srjWithPointPairs!,
@@ -581,6 +591,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
               GREEDY_MULTIPLIER: 0.7,
               MIN_ALLOWED_BOARD_SCORE: -10000,
             },
+            allowedLayersByConnection: cms.allowedLayersByConnection,
           },
         ]
       },
@@ -1226,6 +1237,13 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   _step() {
     const pipelineStepDef = this.pipelineDef[this.currentPipelineStepIndex]
     if (!pipelineStepDef) {
+      assertRoutesStayOnAllowedLayers(
+        this.powerTraceExpansionSolver!.getOutput(),
+        {
+          allowedLayersByConnection: this.allowedLayersByConnection,
+          layerCount: this.srj.layerCount,
+        },
+      )
       this.solved = true
       return
     }
