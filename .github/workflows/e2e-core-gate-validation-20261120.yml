@@ -1,0 +1,21 @@
+name: Validate the minimal core routing gate
+on:
+  push:
+    branches: [analysis/e2e-core-gate-validation-20261120]
+permissions:
+  contents: read
+jobs:
+  source:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/core
+          ref: baac32debe7713c058fc02fdfcecd2e74b22ab97
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - run: bun install
+      - run: bunx biome format lib/components/primitive-components/Group/Group.ts tests/breakout/failed-breakout-placement-stops-routing.test.tsx
+      - run: bunx tsc --noEmit
+      - run: bun test tests/breakout/failed-breakout-placement-stops-routing.test.tsx
