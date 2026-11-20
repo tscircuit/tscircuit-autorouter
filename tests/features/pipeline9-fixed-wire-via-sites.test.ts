@@ -28,13 +28,18 @@ test("a through-via cell keeps its layers when a corner clears the wire or the n
     capacityMeshNodeId: "blocked",
     center: { x: 0, y: 0 },
     width: 0.2,
-    height: 0.55,
+    height: 0.45,
     availableZ: [0, 3],
     layer: "z0,3",
   }
+  const clearanceOnly = {
+    ...blocked,
+    capacityMeshNodeId: "clearance-only",
+    height: 0.55,
+  }
   // At y = 0.3 the via pad and wire meet the declared clearance exactly.
   const tangent = { ...blocked, capacityMeshNodeId: "tangent", height: 0.6 }
-  const nodes = [blocked, tangent]
+  const nodes = [blocked, clearanceOnly, tangent]
   const plan = (
     srj: SimpleRouteJson,
     layerChangeNodeIds = new Set(["blocked"]),
@@ -48,8 +53,9 @@ test("a through-via cell keeps its layers when a corner clears the wire or the n
     })
 
   expect(plan(input, new Set(["tangent"]))).toBe(nodes)
-  const [top, bottom, clear] = plan(input)
+  const [top, bottom, near, clear] = plan(input)
   expect([top.availableZ, bottom.availableZ]).toEqual([[0], [3]])
+  expect(near).toBe(clearanceOnly)
   expect(clear).toBe(tangent)
   expect(plan({ ...input, allowBlindAndBuriedVias: true })).toEqual(nodes)
   expect(

@@ -33,9 +33,9 @@ export function splitNodesWithoutThroughViaSite({
   const viaRadius = viaDiameter / 2
   const wireClearance =
     srj.minTraceToPadEdgeClearance ?? srj.defaultObstacleMargin ?? 0
-  const reach = viaRadius + wireClearance
 
-  const isCovered = (node: CapacityMeshNode): boolean => {
+  const isCovered = (node: CapacityMeshNode, clearance: number): boolean => {
+    const reach = viaRadius + clearance
     if (
       node.availableZ.length < 2 ||
       node._containsTarget ||
@@ -71,17 +71,20 @@ export function splitNodesWithoutThroughViaSite({
       )
     })
   }
-  // Preserve an already feasible plan, including all of its shared port positions.
+  // Check the planned changes at the board clearance before moving any ports.
   if (
     !nodes.some(
       (node) =>
-        layerChangeNodeIds.has(node.capacityMeshNodeId) && isCovered(node),
+        layerChangeNodeIds.has(node.capacityMeshNodeId) &&
+        isCovered(node, wireClearance),
     )
   ) {
     return nodes
   }
-  return nodes.flatMap((node): CapacityMeshNode[] => {
-    if (!isCovered(node)) return [node]
+  // Detailed routing can move a via across a mesh edge to obtain clearance.
+  // Remove the layer change only where the via pad itself must touch fixed copper.
+  const refined = nodes.flatMap((node): CapacityMeshNode[] => {
+    if (!isCovered(node, 0)) return [node]
     return node.availableZ.map((z) => ({
       ...node,
       capacityMeshNodeId: `${node.capacityMeshNodeId}_no_via_z${z}`,
@@ -89,4 +92,5 @@ export function splitNodesWithoutThroughViaSite({
       availableZ: [z],
     }))
   })
+  return refined.length === nodes.length ? nodes : refined
 }
