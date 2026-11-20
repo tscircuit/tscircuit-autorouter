@@ -1,0 +1,69 @@
+name: Reproduce routing after failed breakout placement
+on:
+  push:
+    branches: [analysis/e2e-breakout-gate-checks-20261120]
+permissions:
+  contents: read
+jobs:
+  focused:
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/core
+          ref: 4306536282fe5abf32c1395e106f55a5d61ca7a3
+          path: core
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Install the same core and fanout dependencies as the circuit runs
+        run: |
+          python3 - <<'PYSETUP'
+          from pathlib import Path
+          import json
+          p=Path('core/package.json');package=json.loads(p.read_text())
+          package['devDependencies']['@tscircuit/fanout-solver']='https://codeload.github.com/tscircuit/fanout-solver/tar.gz/9e771f68dca591642fca3b97187e14404c16c5aa'
+          p.write_text(json.dumps(package,indent=2)+'\n')
+          PYSETUP
+          (cd core && bun install --ignore-scripts)
+      - name: Run the unfixed circuit and retain the natural PCB SVG
+        run: |
+          cd core
+          git apply ../experiments/e2e-samples-20261120/breakout-gating-repro.patch
+          set +e
+          BUN_UPDATE_SNAPSHOTS=1 bun test --timeout 120000 tests/breakout/failed-breakout-placement-stops-routing.test.tsx > ../before.log 2>&1
+          status=$?
+          set -e
+          cat ../before.log
+          test "$status" -ne 0
+          mkdir -p ../gate-results/before
+          cp tests/breakout/__snapshots__/failed-breakout-placement-stops-routing-pcb.snap.svg ../gate-results/before/pcb.svg
+      - name: Apply the gate and check the fixed circuit and existing valid flows
+        run: |
+          cd core
+          git apply ../experiments/e2e-samples-20261120/breakout-gating-fix.patch
+          BUN_UPDATE_SNAPSHOTS=1 bun test --timeout 120000 tests/breakout/failed-breakout-placement-stops-routing.test.tsx
+          mkdir -p ../gate-results/after
+          cp tests/breakout/__snapshots__/failed-breakout-placement-stops-routing-pcb.snap.svg ../gate-results/after/pcb.svg
+          bun test --timeout 180000 tests/breakout/manualplaced-breakoutpoint.test.tsx tests/breakout/manual-breakoutpoints-use-default-autorouter.test.tsx tests/breakout/fanout-dogbone-solver-events.test.tsx tests/breakout/fanout-breakout-routes-before-global.test.tsx
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: breakout-gating-checked-snapshots
+          path: gate-results
+      - name: Export focused SVG evidence
+        if: always()
+        run: |
+          python3 - <<'PYEXPORT'
+          from pathlib import Path
+          import io,zipfile,base64
+          stream=io.BytesIO()
+          with zipfile.ZipFile(stream,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=9) as z:
+              for p in Path('gate-results').rglob('*.svg'):z.writestr(str(p.relative_to('gate-results')),p.read_bytes())
+          print('E2E_GATE_BEGIN')
+          encoded=base64.b64encode(stream.getvalue()).decode()
+          for offset in range(0,len(encoded),8000):print(encoded[offset:offset+8000])
+          print('E2E_GATE_END')
+          PYEXPORT

@@ -1,0 +1,85 @@
+diff --git a/tests/breakout/failed-breakout-placement-stops-routing.test.tsx b/tests/breakout/failed-breakout-placement-stops-routing.test.tsx
+new file mode 100644
+index 0000000..1fc5fe7
+--- /dev/null
++++ b/tests/breakout/failed-breakout-placement-stops-routing.test.tsx
+@@ -0,0 +1,79 @@
++import { expect, test } from "bun:test"
++import { getTestFixture } from "tests/fixtures/get-test-fixture"
++
++test("failed breakout placement stops routing before the bus phase", async () => {
++  const { circuit } = getTestFixture()
++  let autoroutingStartCount = 0
++  let solverStartCount = 0
++  circuit.on("autorouting:start", () => {
++    autoroutingStartCount++
++  })
++  circuit.on("solver:started", () => {
++    solverStartCount++
++  })
++  const footprint = (
++    <footprint>
++      <smtpad portHints={["pin1"]} shape="circle" radius="0.1mm" pcbY={-0.75} />
++      <smtpad portHints={["pin2"]} shape="circle" radius="0.1mm" pcbY={-0.25} />
++      <smtpad portHints={["pin3"]} shape="circle" radius="0.1mm" pcbY={0.25} />
++      <smtpad portHints={["pin4"]} shape="circle" radius="0.1mm" pcbY={0.75} />
++    </footprint>
++  )
++
++  circuit.add(
++    <board
++      width="14mm"
++      height="8mm"
++      layers={2}
++      minTraceWidth="0.1mm"
++      minTraceToPadEdgeClearance="0.1mm"
++      minViaPadDiameter="0.3mm"
++      routeRemaining={false}
++    >
++      <fanout
++        name="FANOUT"
++        pcbX={-3}
++        width="2mm"
++        height="2mm"
++        busFanoutDirections={{ DATA: "rightside_center" }}
++      >
++        <chip name="U1" footprint={footprint} />
++      </fanout>
++      <chip name="U2" footprint={footprint} pcbX={3} />
++      <trace name="DATA0" from="U1.pin1" to="U2.pin1" routingPhaseIndex={0} />
++      <trace name="DATA1" from="U1.pin2" to="U2.pin2" routingPhaseIndex={0} />
++      <trace name="DATA2" from="U1.pin3" to="U2.pin3" routingPhaseIndex={0} />
++      <trace name="DATA3" from="U1.pin4" to="U2.pin4" routingPhaseIndex={0} />
++      <bus
++        name="DATA"
++        connections={["DATA0", "DATA1", "DATA2", "DATA3"]}
++        preferredLayer="top"
++      />
++      <autoroutingphase phaseIndex={0} name="DATA" autorouter="bus_lanes" />
++      <pcbnotetext
++        text="Four top-layer exits need 2.1mm on a 2mm edge"
++        pcbY={3}
++        fontSize="0.35mm"
++      />
++    </board>,
++  )
++
++  await circuit.renderUntilSettled()
++
++  await expect(circuit).toMatchPcbSnapshot(import.meta.path, {
++    showPcbGroups: true,
++  })
++  expect(circuit.db.pcb_autorouting_error.list()).toEqual([
++    expect.objectContaining({
++      message: expect.stringContaining("Winding fanout failed for U1"),
++    }),
++  ])
++  expect(circuit.db.pcb_autorouting_error.list()[0]!.message).toContain(
++    "need 2.10mm but expose only 2.00mm",
++  )
++  expect(autoroutingStartCount).toBe(0)
++  expect(solverStartCount).toBe(0)
++  expect(circuit.db.pcb_breakout_point.list()).toHaveLength(0)
++  expect(circuit.db.pcb_trace.list()).toHaveLength(0)
++  expect(circuit.db.pcb_via.list()).toHaveLength(0)
++})
