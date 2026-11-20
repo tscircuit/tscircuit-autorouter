@@ -20,7 +20,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: tscircuit/core
-          ref: 7698d27
+          ref: 024dc66588ad82e26b6ee0d201922852ca4ac02a
           path: core
       - uses: oven-sh/setup-bun@v2
         with:
@@ -55,7 +55,7 @@ jobs:
                   content=z.read(entry['name'])
                   assert hashlib.sha256(content).hexdigest()==entry['sha256']
                   target=runtime/'samples'/entry['name'];target.parent.mkdir(exist_ok=True);target.write_bytes(content)
-          revisions={'core':'7698d27','router':'native-installed-package','winding':'202dbe9eb0088633b6fa094120dba6f2f41f8803','sampleMode':'fanout_first','archiveSha256':manifest['archiveSha256'],'coreLockSha256':hashlib.sha256(Path('core/bun.lock').read_bytes()).hexdigest()}
+          revisions={'core':'024dc66588ad82e26b6ee0d201922852ca4ac02a','router':'native-installed-package','winding':'202dbe9eb0088633b6fa094120dba6f2f41f8803','sampleMode':'fanout_first','archiveSha256':manifest['archiveSha256'],'coreLockSha256':hashlib.sha256(Path('core/bun.lock').read_bytes()).hexdigest()}
           for package in ['@tscircuit/fanout-solver','@tscircuit/winding-breakout-point-solver','@tscircuit/capacity-autorouter','@tscircuit/props','@tscircuit/bus-lanes-solver','@tscircuit/checks','circuit-to-svg','react']:
               revisions[package]=json.loads((Path('core/node_modules')/package/'package.json').read_text())['version']
           assert revisions['@tscircuit/fanout-solver']=='0.0.93'
@@ -107,7 +107,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: tscircuit/core
-          ref: 7698d27
+          ref: 024dc66588ad82e26b6ee0d201922852ca4ac02a
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.4.3
