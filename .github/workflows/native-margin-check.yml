@@ -1,4 +1,4 @@
-name: Verify native constraints in every A03 search frame
+name: Verify complete native-copper candidate validation
 on:
   push:
     branches: [analysis/native-complete-cleanup-context]
@@ -13,6 +13,7 @@ jobs:
       fail-fast: false
       matrix:
         source: [1a2e757a0230bae0e8f915023485978587d7fe14, 0f98be6237dfa0a852360b07d38f0e2fbee5f92d]
+        clearance: [existing, minimum]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -21,22 +22,33 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: '1.4.3'
-      - name: Apply the existing native-path validator in each transformed frame
+      - name: Validate against all copper that is read-only in this region
+        env:
+          CLEARANCE: ${{ matrix.clearance }}
         run: |
           python3 - <<'PY'
+          import os
           from pathlib import Path
-          p=Path("lib/solvers/HyperHighDensitySolver/PortfolioSingleIntraNodeSolver.ts")
+          p=Path("lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9RegionalFallbackSolver.ts")
           s=p.read_text()
-          old="if (preservePhysicalGeometry && fixedHdRoutes?.length)"
+          old="for (const fixedRoute of this.params.immutableHdRoutes ?? [])"
           assert s.count(old)==1
-          p.write_text(s.replace(old,"if (fixedHdRoutes?.length)",1))
+          s=s.replace(old,"for (const fixedRoute of this.params.fixedHdRoutes ?? [])",1)
+          if os.environ["CLEARANCE"]=="minimum":
+            old="      obstacleMargin: params.obstacleMargin,"
+            assert s.count(old)==1
+            s=s.replace(old,"      obstacleMargin: params.minClearance ?? params.obstacleMargin,",1)
+            old="            clearance: this.params.obstacleMargin,"
+            assert s.count(old)==1
+            s=s.replace(old,"            clearance: this.params.minClearance ?? this.params.obstacleMargin,",1)
+          p.write_text(s)
           PY
       - run: bun install
-      - name: Preserve all original board assertions
+      - name: Keep original board assertions
         env:
           BUN_UPDATE_SNAPSHOTS: '1'
         run: bun test --timeout 9999999 tests/bugs/bugreport96-full-gameboy-no-breakout.test.ts tests/bugs/usb-dp-phase-detour.test.ts tests/repro/pipeline9-h616-portfolio-candidate-clearance.test.ts tests/features/pipeline9-orangecrab-native-fixed-traces.test.ts
-      - name: Report the current OrangeCrab DRC total
+      - name: Report actual OrangeCrab DRC count
         if: always()
         run: |
           python3 - <<'PY'
