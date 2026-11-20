@@ -14,7 +14,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          ref: e675881d910e8c0b1967b78535de3e516ef6c0ff
+          ref: c7dbc2ce0114fc2f575db2ddd88da5a2b15e0b90
           persist-credentials: false
 
       - name: Setup bun
