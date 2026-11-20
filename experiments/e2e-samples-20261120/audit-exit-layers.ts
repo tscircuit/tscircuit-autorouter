@@ -1,8 +1,8 @@
 import { readdirSync, readFileSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
 import { gunzipSync } from "node:zlib"
-import { distancePointToObstacle } from "@tscircuit/fanout-solver/lib/geometry"
-import { obstacleSharesElectricalNet } from "@tscircuit/fanout-solver/lib/net-identity"
+import { distancePointToObstacle } from "../node_modules/@tscircuit/fanout-solver/lib/geometry.ts"
+import { obstacleSharesElectricalNet } from "../node_modules/@tscircuit/fanout-solver/lib/net-identity.ts"
 
 const directory = process.argv[2]
 const audits = []
