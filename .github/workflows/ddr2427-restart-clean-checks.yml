@@ -1,0 +1,30 @@
+name: Check the minimal restart stack
+on:
+  push:
+    branches: [codex/ddr2427-restart-clean-checks]
+permissions:
+  contents: read
+jobs:
+  source:
+    strategy:
+      fail-fast: false
+      matrix:
+        revision:
+          - a0e49159c220e0ce93a0a51ad7247571b122f29d
+          - 883e1f4c9de615fc46384d7c6b864d50611df5c1
+          - ef115191b21e1e933e62a9e8d59388d50b0b0f56
+          - 758138029e89c8d94c8c68167f4ef738f66de90d
+          - 522f5c1625f557b82e204bc32d40fe6c294e6ad8
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: ${{ matrix.revision }}
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: bun install --frozen-lockfile
+      - run: bun run format:check
+      - if: always()
+        run: bun run typecheck
