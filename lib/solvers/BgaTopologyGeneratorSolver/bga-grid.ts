@@ -213,6 +213,32 @@ export class BgaGrid {
     return { row, col }
   }
 
+  getGapAdjacentObstacles(bgaGap: BgaGap): Obstacle[] {
+    const slotOffsets: Array<[number, number]> =
+      bgaGap.orientation === "horizontal"
+        ? [
+            [0, 0],
+            [0, 1],
+          ]
+        : bgaGap.orientation === "vertical"
+          ? [
+              [0, 0],
+              [1, 0],
+            ]
+          : [
+              [0, 0],
+              [1, 1],
+            ]
+
+    return slotOffsets.flatMap(([rowOffset, colOffset]) => {
+      const adjacentSlot = this.slots.get(
+        this.getSlotKey(bgaGap.row + rowOffset, bgaGap.col + colOffset),
+      )
+
+      return adjacentSlot?.obstacle ? [adjacentSlot.obstacle] : []
+    })
+  }
+
   getSlotCenter(row: number, col: number): { x: number; y: number } {
     return {
       x: this.getAxisCoordinate(this.xCoordinates, col),

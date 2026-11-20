@@ -96,10 +96,18 @@ function createMeshNodesFromBgaGap(input: {
   freeLayers: number[]
   multiLayerThreshold: number
   hasClearViaCenter: boolean
+  adjacentPadLayers: number[]
+  minimumTraceChannelWidth: number
 }): CapacityMeshNode[] {
   const { componentId, bgaGap, freeLayers, multiLayerThreshold } = input
   const isLargeEnoughForMultiLayer =
     bgaGap.width > multiLayerThreshold && bgaGap.height > multiLayerThreshold
+  const isNarrowerThanTraceChannel =
+    Math.min(bgaGap.width, bgaGap.height) < input.minimumTraceChannelWidth
+  const routableLayers: number[] =
+    bgaGap.isBetweenTwoPads && isNarrowerThanTraceChannel
+      ? freeLayers.filter((layer) => !input.adjacentPadLayers.includes(layer))
+      : freeLayers
   let orientationKey: string = "d"
   if (bgaGap.orientation === "horizontal") orientationKey = "h"
   if (bgaGap.orientation === "vertical") orientationKey = "v"
@@ -142,7 +150,7 @@ function createMeshNodesFromBgaGap(input: {
     ]
   }
 
-  return freeLayers.map((z) => ({
+  return routableLayers.map((z) => ({
     center: bgaGap.center,
     width: bgaGap.width,
     height: bgaGap.height,
@@ -376,6 +384,14 @@ export class InitialBgaTopologySolver extends BaseSolver {
       })
       return allObstaclesClear && boundingBoxBlocksVia
     }
+    const minimumTraceChannelWidth =
+      srj.minTraceWidth + 2 * (srj.minTraceToPadEdgeClearance ?? 0.15)
+    const getAdjacentPadLayers = (bgaGap: BgaGap): number[] =>
+      bgaGrid.getGapAdjacentObstacles(bgaGap).flatMap((obstacle) =>
+        obstacle.layers.map((layerName) =>
+          mapLayerNameToZ(layerName, srj.layerCount),
+        ),
+      )
     this.meshNodes = [
       ...axisGaps.flatMap((bgaGap) =>
         createMeshNodesFromBgaGap({
@@ -384,6 +400,8 @@ export class InitialBgaTopologySolver extends BaseSolver {
           freeLayers,
           multiLayerThreshold,
           hasClearViaCenter: false,
+          adjacentPadLayers: getAdjacentPadLayers(bgaGap),
+          minimumTraceChannelWidth,
         }),
       ),
       ...diagonalGaps.flatMap((bgaGap) =>
@@ -393,6 +411,8 @@ export class InitialBgaTopologySolver extends BaseSolver {
           freeLayers,
           multiLayerThreshold,
           hasClearViaCenter: hasClearGapViaCenter(bgaGap),
+          adjacentPadLayers: getAdjacentPadLayers(bgaGap),
+          minimumTraceChannelWidth,
         }),
       ),
       ...missingBgaSlots.flatMap((missingBgaSlot) =>
