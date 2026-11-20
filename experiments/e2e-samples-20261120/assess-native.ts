@@ -3,7 +3,7 @@ import * as checks from "@tscircuit/checks"
 import type { AnyCircuitElement, PcbPort } from "circuit-json"
 import { arePortsConnected } from "./connectivity"
 
-const json: AnyCircuitElement[] = JSON.parse(new TextDecoder().decode(Bun.gunzipSync(readFileSync("native.circuit.json.gz")))))
+const json: AnyCircuitElement[] = JSON.parse(new TextDecoder().decode(Bun.gunzipSync(readFileSync("native.circuit.json.gz"))))
 const ports = new Map<PcbPort["source_port_id"], PcbPort>(json.filter((element) => element.type === "pcb_port").map((port) => [port.source_port_id, port]))
 const traces = json.filter((element) => element.type === "pcb_trace")
 const vias = json.filter((element) => element.type === "pcb_via")
