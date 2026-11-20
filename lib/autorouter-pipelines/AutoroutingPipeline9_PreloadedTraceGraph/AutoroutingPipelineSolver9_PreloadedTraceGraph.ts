@@ -863,6 +863,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         colorMap: cms.colorMap,
         minTraceWidth: cms.minTraceWidth,
         connection: cms.srjWithPointPairs!.connections,
+        sharedRoutingTraceWidths:
+          cms.netToPointPairsSolver?.sharedRoutingTraceWidths,
         obstacleMargin: cms.srj.minTraceToPadEdgeClearance ?? 0.15,
         minTraceToHoleEdgeClearance: cms.srj.minTraceToHoleEdgeClearance,
         layerCount: cms.srj.layerCount,

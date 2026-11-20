@@ -140,7 +140,7 @@ export class Pipeline9EffortCleanupSolver extends BaseSolver {
   private finish(): void {
     if (this.params.refineTraceWidths) {
       const refined = this.params.refineTraceWidths(this.bestRoutes)
-      if (refined !== this.bestRoutes) {
+      if (refined !== this.bestRoutes && this.params.isValid(refined)) {
         this.bestRoutes = refined
         this.bestCost = this.params.getCost(refined)
       }

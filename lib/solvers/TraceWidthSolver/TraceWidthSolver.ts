@@ -44,6 +44,7 @@ type TaperRoutePointEntry = {
 export interface TraceWidthSolverInput {
   hdRoutes: HighDensityRoute[]
   connection: SimpleRouteConnection[]
+  sharedRoutingTraceWidths?: ReadonlyMap<string, number>
   obstacles?: Obstacle[]
   connMap?: ConnectivityMap
   colorMap?: Record<string, string>
@@ -81,6 +82,7 @@ export class TraceWidthSolver extends BaseSolver {
   minTraceToHoleEdgeClearance?: number
   TRACE_WIDTH_SCHEDULE: number[]
   connectionNominalTraceWidthMap: Map<string, number>
+  private readonly sharedRoutingTraceWidths?: ReadonlyMap<string, number>
 
   unprocessedRoutes: HighDensityRoute[] = []
   processedRoutes: HighDensityRoute[] = []
@@ -125,6 +127,7 @@ export class TraceWidthSolver extends BaseSolver {
       inferredLayerCount,
     )
     this.connectionNominalTraceWidthMap = new Map()
+    this.sharedRoutingTraceWidths = input.sharedRoutingTraceWidths
 
     for (const connection of input.connection) {
       if (connection.nominalTraceWidth === undefined) {
@@ -206,6 +209,12 @@ export class TraceWidthSolver extends BaseSolver {
   private getNominalTraceWidthForRoute(
     route: HighDensityRoute,
   ): number | undefined {
+    if (!this.refiningWidths) {
+      const sharedWidth = this.sharedRoutingTraceWidths?.get(
+        route.connectionName,
+      )
+      if (sharedWidth !== undefined) return sharedWidth
+    }
     const byName = this.connectionNominalTraceWidthMap.get(route.connectionName)
     if (byName !== undefined) {
       return byName

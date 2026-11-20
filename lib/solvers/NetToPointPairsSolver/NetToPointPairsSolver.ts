@@ -52,6 +52,7 @@ export class NetToPointPairsSolver extends BaseSolver {
   unprocessedConnections: Array<SimpleRouteConnection>
   newConnections: Array<SimpleRouteConnection>
   readonly initiallyConnectedMap: ConnectivityMap
+  readonly sharedRoutingTraceWidths = new Map<ConnectionName, number>()
   private readonly sourceConnectionsByMergedConnection = new Map<
     SimpleRouteConnection,
     SimpleRouteConnection[]
@@ -135,9 +136,20 @@ export class NetToPointPairsSolver extends BaseSolver {
   protected emitConnection(
     connection: SimpleRouteConnection,
     pathEdge?: PathEdge,
+    sharedRoutingTraceWidth?: number,
   ): void {
     for (const hop of pathEdge?.hops ?? []) {
       hop.emittedConnectionName = connection.name
+    }
+    if (
+      sharedRoutingTraceWidth !== undefined &&
+      connection.nominalTraceWidth !== undefined &&
+      sharedRoutingTraceWidth < connection.nominalTraceWidth
+    ) {
+      this.sharedRoutingTraceWidths.set(
+        connection.name,
+        sharedRoutingTraceWidth,
+      )
     }
     this.newConnections.push(connection)
   }
@@ -151,8 +163,21 @@ export class NetToPointPairsSolver extends BaseSolver {
     const pathEdges = this.getPathEdges(connection)
     const sourceConnections =
       this.sourceConnectionsByMergedConnection.get(connection)
-    const defaultTraceWidth =
-      this.ogSrj.nominalTraceWidth ?? this.ogSrj.minTraceWidth
+    const minTraceWidth = this.ogSrj.minTraceWidth
+    const defaultTraceWidth = this.ogSrj.nominalTraceWidth ?? minTraceWidth
+    // A merged net can use its common width during geometry repair. This
+    // keeps optional branch widening from constraining via placement.
+    const sharedRoutingTraceWidth = sourceConnections
+      ? Math.max(
+          minTraceWidth,
+          Math.min(
+            ...sourceConnections.map(
+              (source) =>
+                source.nominalTraceWidth ?? source.width ?? defaultTraceWidth,
+            ),
+          ),
+        )
+      : undefined
 
     const { zeroWeightEdges, arePointsConnected } =
       getInitiallyConnectedStateForConnection(
@@ -168,11 +193,14 @@ export class NetToPointPairsSolver extends BaseSolver {
       }
       const edge = { from: startPoint, to: endPoint, weight: 0 }
       const nominalTraceWidth = sourceConnections
-        ? (getMstEdgeTraceWidths(
-            connection.pointsToConnect,
-            [edge],
-            sourceConnections,
-          ).get(edge) ?? defaultTraceWidth)
+        ? Math.max(
+            minTraceWidth,
+            getMstEdgeTraceWidths(
+              connection.pointsToConnect,
+              [edge],
+              sourceConnections,
+            ).get(edge) ?? defaultTraceWidth,
+          )
         : connection.nominalTraceWidth
       this.emitConnection(
         {
@@ -183,12 +211,13 @@ export class NetToPointPairsSolver extends BaseSolver {
           ],
         },
         pathEdges[0],
+        sharedRoutingTraceWidth,
       )
       return
     }
 
     // Break nearly equal XY choices without buying fewer vias with long detours.
-    const layerChangeCost = this.ogSrj.minTraceWidth * 0.05
+    const layerChangeCost = minTraceWidth * 0.05
     const originalEdges = buildMinimumSpanningTree(connection.pointsToConnect, {
       extraEdges: [...pathEdges, ...zeroWeightEdges],
     })
@@ -226,7 +255,10 @@ export class NetToPointPairsSolver extends BaseSolver {
         {
           ...connection,
           ...(widths && {
-            nominalTraceWidth: widths.get(edge) ?? defaultTraceWidth,
+            nominalTraceWidth: Math.max(
+              minTraceWidth,
+              widths.get(edge) ?? defaultTraceWidth,
+            ),
           }),
           pointsToConnect: [edge.from, edge.to],
           name: `${connection.name}_mst${mstIdx++}`,
@@ -236,6 +268,7 @@ export class NetToPointPairsSolver extends BaseSolver {
           __netConnectionName: connection.__netConnectionName,
         },
         pathEdges.find((pathEdge) => pathEdge === edge),
+        sharedRoutingTraceWidth,
       )
     }
   }
