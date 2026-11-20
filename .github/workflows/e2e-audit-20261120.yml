@@ -12,12 +12,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - sample: icepi-original
-            run: 44722931243
-            artifact: e2e-fanout-first-icepi-original
-          - sample: glider-spaced
-            run: 44722526398
-            artifact: e2e-baseline-glider-spaced
+          - sample: icepi-spaced
+            run: 44727614860
+            artifact: e2e-source-turn-pair-icepi-spaced
     steps:
       - uses: actions/download-artifact@v4
         with:
@@ -30,7 +27,7 @@ jobs:
           python3 - <<'PYREPLAY'
           from pathlib import Path
           import base64,io,json,zipfile
-          root=Path('capture');selected=[]
+          root=Path('capture/before/icepi-spaced');selected=[]
           for p in root.iterdir():
               if p.name in ['report.json','process.json','pcb.svg','phase-4-start.json.gz'] or p.name.startswith('started-') and p.name.endswith('FanoutSolver.json.gz'):
                   selected.append(p)
