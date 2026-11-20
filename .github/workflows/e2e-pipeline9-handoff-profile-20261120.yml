@@ -1,0 +1,62 @@
+name: Locate downstream via clearance regression by stage
+on:
+  push:
+    branches: [analysis/e2e-pipeline9-handoff-profile-20261120]
+permissions:
+  contents: read
+jobs:
+  profile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: [before, after]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/tscircuit-autorouter
+          ref: 2b1207ad70971f326166b134ea19418137273f23
+          path: router
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - name: Install exact pinned router dependencies
+        run: |
+          cd router
+          for attempt in 1 2 3; do
+            if bun install --ignore-scripts; then
+              break
+            fi
+            if [ "$attempt" = 3 ]; then
+              exit 1
+            fi
+          done
+      - name: Replay captured global SRJ and inspect each completed stage
+        env:
+          VARIANT: ${{ matrix.variant }}
+        run: |
+          export ROUTER_ROOT="$GITHUB_WORKSPACE/router"
+          cd router
+          bun --tsconfig-override tsconfig.json ../experiments/e2e-samples-20261120/profile-handoff.ts "../experiments/e2e-samples-20261120/profile-handoff-$VARIANT.json.gz" "$GITHUB_WORKSPACE/profile-output"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: handoff-stage-profile-${{ matrix.variant }}
+          path: profile-output
+      - name: Export exact stage observations
+        if: always()
+        run: |
+          python3 - <<'PYEXPORT'
+          from pathlib import Path
+          import base64,io,zipfile
+          stream=io.BytesIO()
+          with zipfile.ZipFile(stream,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=9) as z:
+              for p in Path('profile-output').glob('*'):
+                  if p.is_file():z.writestr(p.name,p.read_bytes())
+          print('HANDOFF_STAGE_PROFILE_BEGIN')
+          encoded=base64.b64encode(stream.getvalue()).decode()
+          for offset in range(0,len(encoded),8000):print(encoded[offset:offset+8000])
+          print('HANDOFF_STAGE_PROFILE_END')
+          PYEXPORT
