@@ -37,7 +37,7 @@ jobs:
                   environment={**os.environ,'E2E_GATE_PROOF_PATH':str(target/'proof.json')}
                   if variant=='after':environment['BUN_UPDATE_SNAPSHOTS']='1'
                   test=f'tests/repros/repro-am62l-lpddr4-orbit-{direction}.test.tsx'
-                  subprocess.run(['bun','--preload',str(root/'experiments/e2e-samples-20261120/prove-core-gate.mjs'),'test','--timeout','120000',test],cwd=core,env=environment,check=True)
+                  subprocess.run(['bun','test','--preload',str(root/'experiments/e2e-samples-20261120/prove-core-gate.mjs'),'--timeout','120000',test],cwd=core,env=environment,check=True)
                   snapshot=f'tests/repros/__snapshots__/repro-am62l-lpddr4-orbit-{direction}-pcb.snap.svg'
                   shutil.copyfile(core/snapshot,target/'pcb.svg')
           PYCHECK
