@@ -16,14 +16,14 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: tscircuit/core
-          ref: ${{ matrix.mode == 'before' && '351e73d665fad37577c47fcbff2e4c29eb377467' || '71d5c70a3da2d7d70b3f9832d1da42c1382ca273' }}
+          ref: ${{ matrix.mode == 'before' && '351e73d665fad37577c47fcbff2e4c29eb377467' || '05621dbd3b0ba1a97dea8addee1ad81863121671' }}
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.4.3
       - name: Install native dependencies and copy identical reproduction
         run: |
           bun install --ignore-scripts
-          curl --fail --location --silent https://raw.githubusercontent.com/tscircuit/core/71d5c70a3da2d7d70b3f9832d1da42c1382ca273/tests/repros/repro-breakout-unbroken-plane-layers.test.tsx -o tests/repros/repro-breakout-unbroken-plane-layers.test.tsx
+          curl --fail --location --silent https://raw.githubusercontent.com/tscircuit/core/05621dbd3b0ba1a97dea8addee1ad81863121671/tests/repros/repro-breakout-unbroken-plane-layers.test.tsx -o tests/repros/repro-breakout-unbroken-plane-layers.test.tsx
       - name: Typecheck and check formatting
         if: matrix.mode == 'after'
         run: |
