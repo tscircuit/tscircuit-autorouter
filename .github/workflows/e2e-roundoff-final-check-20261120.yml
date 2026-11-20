@@ -1,0 +1,70 @@
+name: Validate current-main fixed-copper clearance snapshot stack
+on:
+  push:
+    branches: [analysis/e2e-roundoff-final-check-20261120]
+permissions:
+  contents: read
+jobs:
+  native:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: [before, after]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.variant == 'before' && '8c14cfab55b5ff65de31e3c1dfe5c4978e6107bf' || '26efd668b275c1a1a51e1acfdf8cc07d38eeda75' }}
+          path: router
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - name: Install exact router dependencies
+        run: |
+          cd router
+          for attempt in 1 2 3; do
+            if bun install; then break; fi
+            if [ "$attempt" = 3 ]; then exit 1; fi
+          done
+      - name: Verify baseline repro
+        if: matrix.variant == 'before'
+        run: cd router && bun test --timeout 9999999 tests/repro/pipeline9-fixed-fanout-clearance-boundary.test.ts
+      - name: Generate natural fixed routing snapshot and verify controls
+        if: matrix.variant == 'after'
+        run: cd router && bun test --timeout 9999999 tests/repro/pipeline9-fixed-fanout-clearance-boundary.test.ts tests/features/pipeline9-fixed-copper-clearance-roundoff.test.ts
+      - name: Verify native result, formatting and declarations
+        if: matrix.variant == 'after'
+        run: |
+          cd router
+          bun test --timeout 9999999 tests/repro/pipeline9-fixed-fanout-clearance-boundary.test.ts tests/features/pipeline9-fixed-copper-clearance-roundoff.test.ts
+          bun test --timeout 9999999 tests/bugs/t113-pipeline9-canonical-obstacle.test.ts tests/features/pipeline9-completed-route-copper.test.ts tests/features/pipeline9-high-density-local-preload-selection.test.ts tests/features/pipeline9-regular-regional-fallback-fixed-preload.test.ts tests/features/preloaded-boundary-via-sections.test.ts tests/features/trace-simplification-immutable-routes.test.ts
+          bunx biome format lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9FixedRouteCopper.ts tests/repro/pipeline9-fixed-fanout-clearance-boundary.test.ts tests/features/pipeline9-fixed-copper-clearance-roundoff.test.ts
+          bunx tsc --noEmit
+      - name: Export snapshot and native results
+        if: always()
+        env:
+          VARIANT: ${{ matrix.variant }}
+        run: |
+          python3 - <<'PYEXPORT'
+          from pathlib import Path
+          import base64,io,json,os,subprocess,zipfile
+          root=Path('router')
+          paths=[p for p in root.rglob('pipeline9-fixed-fanout-clearance-boundary*.svg') if 'node_modules' not in p.parts]
+          stream=io.BytesIO()
+          with zipfile.ZipFile(stream,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=9) as z:
+              z.writestr('manifest.json',json.dumps({'variant':os.environ['VARIANT'],'snapshots':[str(p.relative_to(root)) for p in paths]}))
+              for p in paths:z.writestr(str(p.relative_to(root)),p.read_bytes())
+          print('ROUNDOFF_NATIVE_BEGIN')
+          encoded=base64.b64encode(stream.getvalue()).decode()
+          for offset in range(0,len(encoded),8000):print(encoded[offset:offset+8000])
+          print('ROUNDOFF_NATIVE_END')
+          PYEXPORT
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: roundoff-native-${{ matrix.variant }}
+          path: |
+            router/tests/repro/__snapshots__/*pipeline9-fixed-fanout-clearance-boundary*
+            router/fixed-routing-test-files.txt
