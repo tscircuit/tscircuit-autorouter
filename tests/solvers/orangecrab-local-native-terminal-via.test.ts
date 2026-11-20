@@ -10,15 +10,14 @@ import { getLastStepSvg } from "../fixtures/getLastStepSvg"
 // tscircuit 0.0.3257 / core 0.0.2436 / capacity-autorouter 0.0.1139.
 // Includes 52 native traces (16 fixed), without trace-to-rectangle conversion.
 test("OrangeCrab exposes A01's missing terminal via", async (): Promise<void> => {
+  const fixture = readFileSync(
+    new URL(
+      "../fixtures/orangecrab-local-native-copper.srj.json.gz",
+      import.meta.url,
+    ),
+  )
   const input: SimpleRouteJson = JSON.parse(
-    gunzipSync(
-      readFileSync(
-        new URL(
-          "../fixtures/orangecrab-local-native-copper.srj.json.gz",
-          import.meta.url,
-        ),
-      ),
-    ).toString(),
+    gunzipSync(new Uint8Array(fixture)).toString(),
   )
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(input, {
     cacheProvider: null,
