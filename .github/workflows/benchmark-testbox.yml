@@ -1,4 +1,4 @@
-name: Uploaded boards on latest tscircuit with native terminal guard
+name: Uploaded boards on latest tscircuit 3260
 on:
   workflow_dispatch:
 permissions:
@@ -7,28 +7,22 @@ jobs:
   boards:
     runs-on: blacksmith-32vcpu-ubuntu-2404-arm
     timeout-minutes: 30
-    env:
-      BOARD_VARIANT: regional-terminal-fix
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.4.3
-      - name: Unpack the original board sources
+      - name: Unpack original board sources
         run: |
-          mkdir -p experiments/boards-3257/runtime
-          unzip -q experiments/boards-3257/boards.zip -d experiments/boards-3257/runtime
-      - name: Install the pinned latest release
-        working-directory: experiments/boards-3257/runtime
+          mkdir -p experiments/boards-3260/runtime
+          unzip -q experiments/boards-3260/boards.zip -d experiments/boards-3260/runtime
+      - name: Install latest tscircuit with its frozen dependencies
+        working-directory: experiments/boards-3260/runtime
         run: bun install --frozen-lockfile
-      - name: Install the locally validated autorouter with the native terminal guard
-        run: |
-          rm -rf experiments/boards-3257/runtime/node_modules/@tscircuit/capacity-autorouter/dist
-          tar -xzf experiments/boards-3257/regional-terminal-guard-dist.tar.gz -C experiments/boards-3257/runtime/node_modules/@tscircuit/capacity-autorouter
-      - name: Render all 19 original TSX entries on the fixed native-copper stack
-        run: python3 experiments/boards-3257/run.py
+      - name: Run all 19 original TSX boards through tscircuit
+        run: python3 experiments/boards-3260/run.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: boards-tscircuit-3257-regional-terminal-fix
+          name: boards-tscircuit-3260
           path: board-benchmark-results
