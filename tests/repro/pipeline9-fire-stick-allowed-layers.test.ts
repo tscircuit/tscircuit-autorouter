@@ -2,7 +2,7 @@ import { beforeAll, expect, test } from "bun:test"
 import { readFileSync } from "node:fs"
 import { gunzipSync } from "node:zlib"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
-import { getBugReportSnapshotSvg } from "lib/testing/getBugReportSnapshotSvg"
+import { getAllowedLayerSnapshotSvg } from "../fixtures/getAllowedLayerSnapshotSvg"
 import type { SimpleRouteJson } from "lib/types"
 
 const input: SimpleRouteJson = JSON.parse(
@@ -48,11 +48,14 @@ beforeAll(async (): Promise<void> => {
   }
   // Setup and snapshot errors must fail normally, outside test.failing.
   await expect(
-    getBugReportSnapshotSvg({
-      inputSrj: input,
-      srjWithPointPairs: solver.srjWithPointPairs!,
-      routedTraces: traces,
-    }),
+    getAllowedLayerSnapshotSvg(
+      {
+        inputSrj: input,
+        srjWithPointPairs: solver.srjWithPointPairs!,
+        routedTraces: traces,
+      },
+      [...new Set(forbiddenSegments.map((segment) => segment.layer))],
+    ),
   ).toMatchSvgSnapshot(import.meta.path)
 })
 
