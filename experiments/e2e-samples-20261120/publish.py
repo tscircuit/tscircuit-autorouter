@@ -16,6 +16,10 @@ for folder in sorted(Path('captures').glob('*/before/*')):
         for name in ['report.json','process.json','assessment.json','diagnostics.json','pcb.svg']:
             if (capture/name).exists():shutil.copyfile(capture/name,target/name)
         row[variant]={name:json.loads((capture/(name+'.json')).read_text()) for name in ['report','process','assessment','diagnostics'] if (capture/(name+'.json')).exists()}
+        assessment=row[variant]['assessment']
+        assert not assessment['membershipErrors'], (sample,variant,'Changed net membership')
+        assert assessment['components']==assessment['expectedComponents'], (sample,variant,'Missing components')
+        assert assessment['pads']==assessment['expectedPads'], (sample,variant,'Missing pads')
     rows.append(row)
 assert len(rows)==10, f'Expected ten matched pairs, got {len(rows)}'
 (destination/'summary.json').write_text(json.dumps(rows,indent=2)+'\n')
@@ -64,8 +68,8 @@ lines=[
     '',
     '**Escapes are diagnostic terminal-to-boundary paths, not connected electrical nets.** A terminal may share its electrical net with other terminals. Failed fanout copper is not committed to the PCB. Budgeted rows show the last captured best completed assignment, not a completed search or a transient progress counter.',
     '',
-    '| Circuit | Before escapes | After escapes | Diagnostic vias before→after | Emitted connected nets before→after | Copper DRC findings before→after | Seconds before→after |',
-    '|---|---|---|---|---|---|---|',
+    '| Circuit | Before escapes | After escapes | Diagnostic vias before→after | Diagnostic requests gained / lost | Emitted connected nets before→after | Copper DRC findings before→after | Seconds before→after |',
+    '|---|---|---|---|---|---|---|---|',
 ]
 for row in rows:
     before=row['before'];after=row['after'];b=first_diagnostic(before);a=first_diagnostic(after)
@@ -73,7 +77,8 @@ for row in rows:
     nets=f"{before['assessment']['connectedNets']}→{after['assessment']['connectedNets']}/{after['assessment']['requestedNets']}"
     drc=f"{sum(before['assessment']['drc'].values())}→{sum(after['assessment']['drc'].values())}"
     seconds=f"{before['report']['elapsedMs']/1000:.1f}→{after['report']['elapsedMs']/1000:.1f}"
-    lines.append(f"| {row['sample']} | {diagnostic_label(before)} | {diagnostic_label(after)} | {vias} | {nets} | {drc} | {seconds} |")
+    gained_lost=f"{len(set(a['routedConnections'])-set(b['routedConnections']))} / {len(set(b['routedConnections'])-set(a['routedConnections']))}" if b and a else '—'
+    lines.append(f"| {row['sample']} | {diagnostic_label(before)} | {diagnostic_label(after)} | {vias} | {gained_lost} | {nets} | {drc} | {seconds} |")
 lines += ['', 'Connected nets with zero emitted traces are connected by freshly generated physical copper pours. They are not newly autorouted nets. Diagnostic copper is separately clearance-checked in each diagnostics.json; zero emitted-copper DRC findings alone do not validate diagnostic routes.', '', '## Where the pipeline stops', '', '| Circuit | First blocker after the fix |', '|---|---|']
 for row in rows:lines.append(f"| {row['sample']} | {phase_label(row['after'])} |")
 lines += [
