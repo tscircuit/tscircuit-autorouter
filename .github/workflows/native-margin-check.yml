@@ -1,4 +1,4 @@
-name: Verify exact-width native copper projection
+name: Diagnose native cleanup without publishing detailed DRC records
 on:
   push:
     branches: [analysis/native-complete-cleanup-context]
@@ -6,9 +6,13 @@ on:
 permissions:
   contents: write
 jobs:
-  routing:
+  orange:
     runs-on: ubuntu-24.04
-    timeout-minutes: 18
+    timeout-minutes: 12
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: [guard, pad]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -16,29 +20,113 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: '1.4.3'
-      - run: bun install
-      - name: Preserve native copper in exact-width projection
+      - name: Reuse native clearance guard
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          p=Path("node_modules/high-density-repair01/lib/HighDensityForceImproveSolver.ts")
+          p=Path("lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensityForceImproveSolver.ts")
           s=p.read_text()
-          old='    [...routes, ...(options?.fixedHdRoutes ?? [])],'
+          s='import { FixedCopperClearanceGuard } from "high-density-repair02/lib/high-density-repair-solver/functions/FixedCopperClearanceGuard"\n'+s
+          s=s.replace('    if (this.fixedViaObstacleIndexes.size === 0) return','    if (this.fixedViaObstacleIndexes.size === 0 && this.fixedHdRoutes.length === 0) return',1)
+          old='    if (!worsensViaClearance) return'
           assert s.count(old)==1
-          # Exact-width static copper remains in applyProjectionClearance.
-          # The legacy heuristic's centerline forces assume uniform route widths.
-          p.write_text(s.replace(old,'    routes,',1))
+          new="""    let allowsNativeCopper = true
+              if (this.fixedHdRoutes.length > 0) {
+                const ownedIndexes = new Set(routeIndexes)
+                const readOnlyRoutes = [
+                  ...this.fixedHdRoutes,
+                  ...this.getOutput().filter((_, index) => !ownedIndexes.has(index)),
+                ]
+                const guard = new FixedCopperClearanceGuard(
+                  readOnlyRoutes,
+                  this.inputSrj.minTraceToPadEdgeClearance ??
+                    this.inputSrj.defaultObstacleMargin ??
+                    RELAXED_DRC_OPTIONS.traceClearance,
+                  [],
+                  this.inputSrj.minPadEdgeToPadEdgeClearance,
+                )
+                allowsNativeCopper = guard.allows(
+                  originalRoutes,
+                  candidateRoutes,
+                  candidateRoutes.keys(),
+                )
+              }
+              if (!worsensViaClearance && allowsNativeCopper) return"""
+          s=s.replace(old,new,1)
+          if '${{ matrix.variant }}' == 'pad':
+              s=s.replace('violation.kind === "via" &&\n            this.fixedViaObstacleIndexes.has(violation.obstacleIndex)','true')
+              s=s.replace('violation.kind === "via" &&\n          this.fixedViaObstacleIndexes.has(violation.obstacleIndex) &&','')
+          p.write_text(s)
+          p=Path("tests/features/pipeline9-orangecrab-native-fixed-traces.test.ts")
+          s=p.read_text()
+          old='  expect(evaluateRelaxedDrc(drcInput).errors).toHaveLength(0)'
+          assert s.count(old)==1
+          s=s.replace(old,"",1)
+          end=s.rfind("\n})")
+          s=s[:end]+"""
+            const errors=evaluateRelaxedDrc(drcInput).errors
+            const counts: Record<string, number> = {}
+            for (const error of errors) {
+              counts[error.error_type]=(counts[error.error_type]??0)+1
+            }
+            console.log("ORANGE_COUNTS",JSON.stringify({errors:errors.length,counts}))
+            expect(errors).toHaveLength(0)
+          """+s[end:]
+          p.write_text(s)
           PY
-      - name: Keep all original board assertions including zero-error OrangeCrab
+      - run: bun install
+      - name: Keep the zero-clearance-error assertion
         env:
           BUN_UPDATE_SNAPSHOTS: '1'
-        run: bun test --timeout 9999999 tests/bugs/bugreport96-full-gameboy-no-breakout.test.ts tests/bugs/usb-dp-phase-detour.test.ts tests/repro/pipeline9-h616-portfolio-candidate-clearance.test.ts tests/features/pipeline9-orangecrab-native-fixed-traces.test.ts
-      - name: Save only verified public SVGs
-        if: success()
+        run: bun test --timeout 9999999 tests/features/pipeline9-orangecrab-native-fixed-traces.test.ts
+      - name: Save public diagnostic SVGs for inspection
+        if: always()
         run: |
           git config user.name "tscircuit-bot"
           git config user.email "actions@github.com"
           git add -- '*.snap.svg'
           if git diff --cached --quiet; then exit 0; fi
-          git commit -m "Record verified exact-width projection snapshots"
-          git push origin HEAD:refs/heads/analysis/verified-native-projection
+          git commit -m "Record diagnostic OrangeCrab SVG"
+          git push origin HEAD:refs/heads/analysis/native-orange-diagnostic-${{ matrix.variant }}
+  gba:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: a3011ea856de9661404a115ed2050d9e0a1bff77
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.4.3'
+      - run: bun install
+      - name: Report only whether the protected copper actually changed
+        run: |
+          cat > native-preload-preservation.ts <<'TS'
+          import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "./lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
+          import { pointToSegmentDistance } from "@tscircuit/math-utils"
+          import srj from "./fixtures/bug-reports/bugreport96-full-gameboy-no-breakout/bugreport96-full-gameboy-no-breakout.srj.json"
+          const solver=new AutoroutingPipelineSolver9_PreloadedTraceGraph(structuredClone(srj),{cacheProvider:null,effort:1})
+          solver.solve()
+          const hd=solver.highDensityRouteSolver!
+          const original=hd.fixedHdRoutes.find(r=>r.connectionName==="source_trace_0_fixed_70_0")!
+          const replacement=hd.fixedRouteReplacements.get(original.connectionName)
+          let originalCopperRetained=true
+          if (replacement) {
+            for(let i=1;i<original.route.length;i++) {
+              const a=original.route[i-1]!,b=original.route[i]!
+              if(a.z!==b.z)continue
+              for(const t of [0,0.25,0.5,0.75,1]) {
+                const point={x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t}
+                const covered=replacement.route.some((end,index)=>{
+                  const start=replacement.route[index-1]
+                  return start && start.z===a.z && end.z===a.z &&
+                    pointToSegmentDistance(point,start,end)<1e-6
+                })
+                if(!covered)originalCopperRetained=false
+              }
+            }
+          }
+          console.log("PROTECTED_PRELOAD_GEOMETRY",JSON.stringify({solved:solver.solved,replacementRecorded:!!replacement,originalCopperRetained,originalPointCount:original.route.length,replacementPointCount:replacement?.route.length??0}))
+          TS
+          bun native-preload-preservation.ts
