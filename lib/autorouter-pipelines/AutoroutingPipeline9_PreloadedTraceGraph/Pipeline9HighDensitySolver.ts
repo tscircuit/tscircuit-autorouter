@@ -291,8 +291,7 @@ const addTerminalPcbPortIds = <Route extends HighDensityRoute>({
         terminal.z === end.z,
     )
 
-    const startPcbPortId =
-      route.startPcbPortId ?? startTerminal?.pcb_port_id
+    const startPcbPortId = route.startPcbPortId ?? startTerminal?.pcb_port_id
     const endPcbPortId = route.endPcbPortId ?? endTerminal?.pcb_port_id
     if (
       startPcbPortId === route.startPcbPortId &&
@@ -466,18 +465,14 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       connMap: params.connMap,
     }).map((route): PreloadedHighDensityRoute => {
       const hasTerminal =
-        route.startPcbPortId !== undefined ||
-        route.endPcbPortId !== undefined
+        route.startPcbPortId !== undefined || route.endPcbPortId !== undefined
       const isInsideConnectedPad =
         hasTerminal &&
         route.vias.length === 0 &&
         params.obstacles.some((obstacle) => {
-          const isRectangularPad =
-            obstacle.type === "rect" && !obstacle.shape
+          const isRectangularPad = obstacle.type === "rect" && !obstacle.shape
           if (!isRectangularPad) return false
-          if (
-            !isObstacleConnectedToRoute(obstacle, route, params.connMap)
-          ) {
+          if (!isObstacleConnectedToRoute(obstacle, route, params.connMap)) {
             return false
           }
           return route.route.every(
