@@ -66,16 +66,16 @@ for (const sample of manifest.samples.map((entry: any) => entry.name.replace(/\.
       preservedGeometry: assessment ? { components: assessment.components, expectedComponents: assessment.expectedComponents, pads: assessment.pads, expectedPads: assessment.expectedPads, membershipErrors: assessment.membershipErrors } : null,
       revisions: report.revisions,
     })
-    if (sample === "icepi-original") {
+    if (sample === "icepi-original" || sample === "glider-original") {
       const boundary = options.sharedBoundary
       const bounds = { minX: boundary.minX - 0.7, maxX: boundary.maxX + 0.7, minY: boundary.minY - 0.7, maxY: boundary.maxY + 0.7 }
       const obstacles = input.obstacles.filter((obstacle: any) => obstacle.center.x + obstacle.width / 2 >= bounds.minX && obstacle.center.x - obstacle.width / 2 <= bounds.maxX && obstacle.center.y + obstacle.height / 2 >= bounds.minY && obstacle.center.y - obstacle.height / 2 <= bounds.maxY)
       const graphics = visualizeSimpleRouteJson({ ...best.outputSrj, bounds, obstacles })
       graphics.texts = [
-        { x: bounds.minX, y: bounds.maxY + 0.9, text: `iCE/Pi U22: ${best.summary.routedConnectionCount}/${input.connections.length} partial escapes; ${drc.checkedViaCount} vias`, fontSize: 0.23, color: "#0f172a", anchorSide: "center_left" },
+        { x: bounds.minX, y: bounds.maxY + 0.9, text: `${sample === "icepi-original" ? "iCE/Pi U22" : "Glider"}: ${best.summary.routedConnectionCount}/${input.connections.length} partial escapes; ${drc.checkedViaCount} vias`, fontSize: 0.23, color: "#0f172a", anchorSide: "center_left" },
         { x: bounds.minX, y: bounds.maxY + 0.45, text: `${history.length} assignments; ${(fanoutElapsedMs / 1000).toFixed(1)}s fanout search; failed`, fontSize: 0.2, color: "#475569", anchorSide: "center_left" },
       ]
-      writeFileSync(join(output, `icepi-${mode}.svg`), getSvgFromGraphicsObject(graphics, { backgroundColor: "white", svgWidth: 1000, svgHeight: 1000 }))
+      writeFileSync(join(output, `${sample === "icepi-original" ? "icepi" : "glider"}-${mode}.svg`), getSvgFromGraphicsObject(graphics, { backgroundColor: "white", svgWidth: 1000, svgHeight: 1000 }))
     }
     invalid ||= !drc.valid || viaInPad.length > 0
   }
