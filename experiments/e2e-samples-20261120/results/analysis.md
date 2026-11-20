@@ -1,6 +1,6 @@
 # Uploaded full-circuit routing: 20 November 2026
 
-Whole-board completion: **0/10 before → 0/10 after**. A complete board must finish rendering, physically connect every multi-terminal net and pass the recorded copper checks. The source-turn change improves legal package escapes; it does not establish a full-board routing improvement.
+Decision: **reject the source-turn candidate as a full-circuit performance fix**. Whole-board completion: **0/10 before → 0/10 after**. A complete board must finish rendering, physically connect every multi-terminal net and pass the recorded copper checks. The source-turn change improves legal package escapes; it does not establish a full-board routing improvement.
 
 ## Inputs and execution
 
@@ -20,22 +20,22 @@ The spaced files also remove original copper pours and split the remaining routi
 
 | Circuit | Before escapes | After escapes | Diagnostic vias before→after | Diagnostic requests gained / lost | Emitted connected nets before→after | Copper DRC findings before→after | Seconds before→after |
 |---|---|---|---|---|---|---|---|
-| butterstick-original | <board#2868 /> 60/91 | <board#2868 /> 62/91 | 57→55 | 4 / 2 | 9→9/317 | 0→0 | 369.8→403.9 |
-| butterstick-spaced | <board#2775 /> 70/91 | <board#2775 /> 74/91 | 52→47 | 9 / 5 | 0→0/317 | 0→0 | 476.9→551.1 |
-| glider-original | <board#2829 /> 72/95 | <board#2829 /> 71/95 (budget) | 63→58 | 7 / 8 | 0→0/356 | 0→0 | 598.1→608.4 |
+| butterstick-original | 60/91 | 62/91 | 57→55 | 4 / 2 | 9→9/317 | 0→0 | 369.8→403.9 |
+| butterstick-spaced | 70/91 | 74/91 | 52→47 | 9 / 5 | 0→0/317 | 0→0 | 476.9→551.1 |
+| glider-original | 72/95 | 71/95 (budget) | 63→58 | 7 / 8 | 0→0/356 | 0→0 | 598.1→608.4 |
 | glider-spaced | Breakout placement failed | Breakout placement failed | — | — | 0→0/356 | 0→0 | 639.5→638.7 |
-| h616-original | <board#1410 /> 107/174 (budget) | <board#1410 /> 112/174 (budget) | 88→84 | 11 / 6 | 0→0/121 | 0→0 | 604.2→604.6 |
-| h616-spaced | <board#1262 /> 99/174 (budget) | <board#1262 /> 106/174 (budget) | 82→83 | 19 / 12 | 0→0/121 | 0→0 | 611.0→610.7 |
-| icepi-original | <board#2619 /> 9/32 | <board#2619 /> 14/32 | 8→6 | 5 / 0 | 7→7/230 | 0→0 | 135.2→145.0 |
-| icepi-spaced | <board#2307 /> 76/92 | <board#2307 /> 77/92 | 37→37 | 1 / 0 | 0→0/230 | 0→0 | 284.6→309.8 |
-| imx6-original | <board#3446 /> 9/32 | <board#3446 /> 9/32 | 7→7 | 0 / 0 | 3→3/404 | 0→0 | 281.5→300.7 |
-| imx6-spaced | <board#3165 /> 7/32 | <board#3165 /> 8/32 | 1→3 | 1 / 0 | 0→0/404 | 0→0 | 225.2→258.6 |
+| h616-original | 107/174 (budget) | 112/174 (budget) | 88→84 | 11 / 6 | 0→0/121 | 0→0 | 604.2→604.6 |
+| h616-spaced | 99/174 (budget) | 106/174 (budget) | 82→83 | 19 / 12 | 0→0/121 | 0→0 | 611.0→610.7 |
+| icepi-original | 9/32 | 14/32 | 8→6 | 5 / 0 | 7→7/230 | 0→0 | 135.2→145.0 |
+| icepi-spaced | 76/92 | 77/92 | 37→37 | 1 / 0 | 0→0/230 | 0→0 | 284.6→309.8 |
+| imx6-original | 9/32 | 9/32 | 7→7 | 0 / 0 | 3→3/404 | 0→0 | 281.5→300.7 |
+| imx6-spaced | 7/32 | 8/32 | 1→3 | 1 / 0 | 0→0/404 | 0→0 | 225.2→258.6 |
 
 Connected nets with zero emitted traces are connected by freshly generated physical copper pours. They are not newly autorouted nets. Diagnostic copper is separately clearance-checked in each diagnostics.json; zero emitted-copper DRC findings alone do not validate diagnostic routes.
 
 ## Where the pipeline stops
 
-| Circuit | First blocker after the fix |
+| Circuit | First blocker under the candidate |
 |---|---|
 | butterstick-original | Fanout incomplete |
 | butterstick-spaced | Fanout incomplete |
@@ -52,15 +52,15 @@ The captures include every FanoutSolver input, each autorouting phase SRJ, solve
 
 i.MX6 U10 has a physical obstruction under the supplied rules. Seven requested pins have a closed ring of neighboring 0.25mm pads on 0.5mm pitch. With a 0.12mm trace and 0.119mm clearance, the centerline exclusion radius is 0.304mm. A 0.4mm via needs 0.444mm separation from each foreign pad; the remaining interior via-center region stays within 0.084972mm of the source, inside its 0.125mm pad radius. It cannot escape without changing those rules or permitting a via in its pad. [Geometry measurements](../emmc-geometry-evidence.json) record both this obstruction and the contrasting legal iCE/Pi corridor.
 
-## Selected fix and rejected experiments
+## Rejected full-circuit performance candidate
 
 The actionable geometry defect is a legal immediate 45-degree turn between mixed-width pads. The existing source prefix extends too far into the next pad and the candidate list omits the gap midpoint. The fix extends the existing candidate generation and plan construction: preserve the entire original bus search, then try source-origin connectors with midpoint tracks only when that search finds no plan. The existing isolated layer probe stays unchanged so a newly feasible top-layer turn cannot crowd out a previously successful bounded assignment. Width, clearance, atomic bus behavior and the no-via-in-pad rule stay enforced. Production changes are +41/−2 in four files, including the internal flag that preserves isolated layer screening.
 
 Midpoint candidates alone and source-origin connectors alone each leave captured U22 at 9/32. Their combination reaches 14/32 with 6 diagnostic vias instead of 8 and zero clearance errors. Trying that combination before all original bus alternatives regresses fresh spaced U2 from 76/92 to 75/92 and adds a via; that ordering was rejected. The revised ordering reaches 77/92 with the original 37 vias and loses no baseline connection identities in either captured iCE/Pi case. A second rejected revision changed isolated layer discovery and broke an existing 18-layer fixture with a one-assignment budget; preserving the original probe restores its exact baseline output.
 
-The narrow geometric fix is justified by a previously impossible-to-find valid zero-via escape and a small production diff. These results do not justify claiming whole-board completion or a timing improvement. Higher-impact remaining work includes breakout-edge capacity/placement, fanout layer-assignment cost, and bus/peripheral pathfinding. The i.MX6 obstruction must be addressed as an input/design-rule decision rather than by weakening clearance silently.
+The focused legality improvement is real, but reject this change as a full-circuit performance fix. Whole-board completion stays at 0/10, median wall time for failed/budgeted runs rises from 423.4s to 477.5s (+12.8%), Glider original falls from 72 to 71 diagnostic escapes under the budget, and i.MX6 spaced uses 3 diagnostic vias instead of 1 for one additional escape. There are no full-board successes from which to calculate time-to-solve P50/P95. The draft fix and its repro were closed rather than shipping this tradeoff. Higher-impact remaining work includes breakout-edge capacity/placement, fanout layer-assignment cost, and bus/peripheral pathfinding. The i.MX6 obstruction must be addressed as an input/design-rule decision rather than by weakening clearance silently.
 
-Repro and naturally updated before/after SVGs: [repro #328](https://github.com/tscircuit/fanout-solver/pull/328), [stacked fix #329](https://github.com/tscircuit/fanout-solver/pull/329).
+Closed experiment, with naturally updated before/after SVGs: [repro #328](https://github.com/tscircuit/fanout-solver/pull/328), [stacked fix #329](https://github.com/tscircuit/fanout-solver/pull/329).
 
 ## Unchanged-default controls
 
