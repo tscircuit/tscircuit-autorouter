@@ -387,11 +387,13 @@ export class InitialBgaTopologySolver extends BaseSolver {
     const minimumTraceChannelWidth =
       srj.minTraceWidth + 2 * (srj.minTraceToPadEdgeClearance ?? 0.15)
     const getAdjacentPadLayers = (bgaGap: BgaGap): number[] =>
-      bgaGrid.getGapAdjacentObstacles(bgaGap).flatMap((obstacle) =>
-        obstacle.layers.map((layerName) =>
-          mapLayerNameToZ(layerName, srj.layerCount),
-        ),
-      )
+      bgaGrid
+        .getGapAdjacentObstacles(bgaGap)
+        .flatMap((obstacle) =>
+          obstacle.layers.map((layerName) =>
+            mapLayerNameToZ(layerName, srj.layerCount),
+          ),
+        )
     this.meshNodes = [
       ...axisGaps.flatMap((bgaGap) =>
         createMeshNodesFromBgaGap({
