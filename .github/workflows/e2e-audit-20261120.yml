@@ -9,6 +9,7 @@ jobs:
   replay-inputs:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         include:
           - sample: icepi-original
@@ -31,7 +32,7 @@ jobs:
           import base64,io,json,zipfile
           root=Path('capture');selected=[]
           for p in root.iterdir():
-              if p.name in ['report.json','process.json','pcb.svg'] or p.name.startswith('phase-') and p.name.endswith('-start.json.gz') or p.name.startswith('started-') and p.name.endswith('FanoutSolver.json.gz') or p.name.startswith('solver-') and p.name.endswith('-state.json.gz'):
+              if p.name in ['report.json','process.json','pcb.svg','phase-4-start.json.gz'] or p.name.startswith('started-') and p.name.endswith('FanoutSolver.json.gz'):
                   selected.append(p)
           print('REPLAY_FILES',json.dumps([{'path':p.name,'bytes':p.stat().st_size} for p in selected]))
           stream=io.BytesIO()
@@ -44,6 +45,7 @@ jobs:
           print('E2E_REPLAY_END')
           PYREPLAY
   audit:
+    if: contains(github.event.head_commit.message, '[audit]')
     runs-on: blacksmith-8vcpu-ubuntu-2404-arm
     timeout-minutes: 35
     steps:
