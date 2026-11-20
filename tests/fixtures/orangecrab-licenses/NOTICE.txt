@@ -1,0 +1,4 @@
+Derived from the user-supplied OrangeCrab hardware sample.
+Original hardware: https://github.com/orangecrab-fpga/orangecrab-hardware
+Hardware license: CERN OHL v1.2. Software license: MIT (Gregory Davill).
+Modification: extracted routing regression input using tscircuit on 2026-11-20.
