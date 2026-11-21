@@ -109,9 +109,7 @@ for (const sample of manifest.samples.map((entry: any) => entry.name.replace(/\.
       const graphics = visualizeSimpleRouteJson({ ...best.outputSrj, bounds, obstacles })
       graphics.rects ??= []
       graphics.rects.push({ center: { x: (bounds.minX + bounds.maxX) / 2, y: (bounds.minY + bounds.maxY) / 2 }, width: bounds.maxX - bounds.minX, height: bounds.maxY - bounds.minY, fill: "transparent", stroke: "transparent" })
-      graphics.rects ??= []
-    graphics.rects.push({ center: { x: (bounds.minX + bounds.maxX) / 2, y: (bounds.minY + bounds.maxY) / 2 }, width: bounds.maxX - bounds.minX, height: bounds.maxY - bounds.minY, fill: "transparent", stroke: "transparent" })
-    graphics.texts = [
+      graphics.texts = [
         { x: bounds.minX, y: bounds.maxY + 0.9, text: `${sample}: ${best.summary.routedConnectionCount}/${input.connections.length} partial escapes; ${drc.checkedViaCount} vias`, fontSize: 0.23, color: "#0f172a", anchorSide: "center_left" },
         { x: bounds.minX, y: bounds.maxY + 0.45, text: `${history.length} assignments; ${(fanoutElapsedMs / 1000).toFixed(1)}s fanout search; ${state.solved ? "fanout solved" : "incomplete"}`, fontSize: 0.2, color: "#475569", anchorSide: "center_left" },
       ]
