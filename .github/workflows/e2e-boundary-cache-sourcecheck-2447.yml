@@ -1,0 +1,20 @@
+name: Check boundary cache fix source
+on:
+  push:
+    branches: [analysis/e2e-boundary-cache-sourcecheck-2447]
+permissions:
+  contents: read
+jobs:
+  source-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: b7d4e48b907213cb848b610e20acb5510efff393
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - run: bun install --frozen-lockfile
+      - run: bun run typecheck
+      - run: bun run format:check
