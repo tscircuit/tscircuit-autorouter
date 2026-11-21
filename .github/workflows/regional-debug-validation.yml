@@ -11,7 +11,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: 2dde1a49804e69922ec479fb2125a80b0492b0ec
+          ref: 05d4c3a4fde5e1be28a3f126dcb77d36ef804a30
           persist-credentials: false
       - uses: oven-sh/setup-bun@v2
         with:
@@ -25,7 +25,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: 2dde1a49804e69922ec479fb2125a80b0492b0ec
+          ref: 05d4c3a4fde5e1be28a3f126dcb77d36ef804a30
           persist-credentials: false
       - uses: oven-sh/setup-bun@v2
         with:
