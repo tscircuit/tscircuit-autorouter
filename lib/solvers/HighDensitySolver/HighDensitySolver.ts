@@ -47,6 +47,8 @@ export class HighDensitySolver extends BaseSolver {
 
   unsolvedNodePortPoints: NodeWithPortPoints[]
   routes: HighDensityIntraNodeRoute[]
+  readonly fixedHdRoutes: HighDensityIntraNodeRoute[]
+  readonly preservePhysicalGeometry?: boolean
   colorMap: Record<string, string>
 
   // Defaults as specified: viaDiameter of 0.3 and traceThickness of 0.15
@@ -96,6 +98,8 @@ export class HighDensitySolver extends BaseSolver {
 
   constructor({
     nodePortPoints,
+    fixedHdRoutes = [],
+    preservePhysicalGeometry,
     colorMap,
     connMap,
     viaDiameter,
@@ -123,6 +127,8 @@ export class HighDensitySolver extends BaseSolver {
     allowBlindAndBuriedVias,
   }: {
     nodePortPoints: NodeWithPortPoints[]
+    fixedHdRoutes?: HighDensityIntraNodeRoute[]
+    preservePhysicalGeometry?: boolean
     colorMap?: Record<string, string>
     connMap?: ConnectivityMap
     viaDiameter?: number
@@ -154,6 +160,8 @@ export class HighDensitySolver extends BaseSolver {
       | Record<string, number | null>
   }) {
     super()
+    this.fixedHdRoutes = fixedHdRoutes
+    this.preservePhysicalGeometry = preservePhysicalGeometry
     this.unsolvedNodePortPoints = nodePortPoints
     this.colorMap = colorMap ?? {}
     this.connMap = connMap
@@ -421,6 +429,8 @@ export class HighDensitySolver extends BaseSolver {
 
     const intraNodeSolverParams = {
       nodeWithPortPoints: node,
+      fixedHdRoutes: this.fixedHdRoutes,
+      preservePhysicalGeometry: this.preservePhysicalGeometry,
       ...this.priorityDagOptions,
       priorityDiagnostics: this.benchmarkDiagnosticCounters,
       enableNegotiatedSearch: this.enableNegotiatedSearch,

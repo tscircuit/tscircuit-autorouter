@@ -241,6 +241,7 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
   constructor(params: {
     nodeWithPortPoints: NodeWithPortPoints[]
     hdRoutes: HighDensityRoute[]
+    fixedHdRoutes?: HighDensityRoute[]
     obstacles: Obstacle[]
     repairMargin?: number
     minimumTraceWidth?: number
@@ -308,7 +309,8 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
       viaLayerSpan.minZ = 0
       viaLayerSpan.maxZ = params.layerCount - 1
     }
-    const repairRoutes = params.hdRoutes.map((route) =>
+    const contextRoutes = [...params.hdRoutes, ...(params.fixedHdRoutes ?? [])]
+    const repairRoutes = contextRoutes.map((route) =>
       toRepairRoute({
         route,
         connMap: params.connMap,
@@ -317,9 +319,9 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
       }),
     )
     const routeIndex = new FlatbushIndex<{ routeIndex: number }>(
-      params.hdRoutes.length,
+      contextRoutes.length,
     )
-    for (const [index, route] of params.hdRoutes.entries()) {
+    for (const [index, route] of contextRoutes.entries()) {
       const points = [...route.route, ...route.vias]
       if (points.length === 0) {
         throw new Error(
@@ -336,7 +338,7 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
         Math.max(...points.map((point) => point.y)) + radius,
       )
     }
-    if (params.hdRoutes.length > 0) routeIndex.finish()
+    if (contextRoutes.length > 0) routeIndex.finish()
     const fixedCopperClearance =
       this.viaCopperClearance !== undefined &&
       this.viaCopperClearance > (this.minClearance ?? 0.1)

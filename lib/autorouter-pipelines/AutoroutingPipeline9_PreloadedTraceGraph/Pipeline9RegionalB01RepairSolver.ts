@@ -479,15 +479,22 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
     const hasRepair =
       cleanup.kind === "regular-candidate" || this.acceptedCandidateCount > 0
     if (hasRepair && cleanup.errors.length > 0) {
+      const repelledRoutes = applyBroadRepulsionForces(
+        { ...this.params.srj, traces: undefined },
+        cleanup.routes,
+        this.params.effort,
+        1,
+        this.params.connMap,
+      )
+      // Earlier preload repairs are complete; broad cleanup keeps them fixed.
+      for (const [index, route] of cleanup.routes.entries()) {
+        if (this.params.syntheticConnectionNames.has(route.connectionName)) {
+          repelledRoutes[index] = route
+        }
+      }
       const refinedRoutes = restorePipeline9TerminalApproaches(
         cleanup.routes,
-        applyBroadRepulsionForces(
-          { ...this.params.srj, traces: undefined },
-          cleanup.routes,
-          this.params.effort,
-          1,
-          this.params.connMap,
-        ),
+        repelledRoutes,
       )
       if (refinedRoutes && refinedRoutes !== cleanup.routes) {
         const errors = getPipeline9DrcErrors(

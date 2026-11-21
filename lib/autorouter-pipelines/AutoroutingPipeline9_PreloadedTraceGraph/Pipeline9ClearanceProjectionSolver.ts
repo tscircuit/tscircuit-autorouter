@@ -23,6 +23,8 @@ const VIA_COPPER_PROJECTION_MARGIN = 1e-5
 export type Pipeline9ClearanceProjectionParams = {
   originalSrj: SimpleRouteJson
   routes: HighDensityRoute[]
+  /** Read-only earlier copper, excluding movable sections in routes. */
+  fixedHdRoutes?: HighDensityRoute[]
   drcEvaluator: DrcEvaluator
   /** Geometry before regional rerouting, matching the outer via guard. */
   previousRoutes?: HighDensityRoute[]
@@ -93,15 +95,20 @@ export class Pipeline9ClearanceProjectionSolver extends BaseSolver {
       const canonicalRoutes = params.subdivideSegments
         ? subdividePipeline9ClearanceSegments(originalCanonicalRoutes, errors)
         : originalCanonicalRoutes
+      const contextRoutes = [
+        ...canonicalRoutes,
+        ...(params.fixedHdRoutes ?? []),
+      ]
       const solver = new RelaxTraceClearanceSolver({
         srj,
-        routes: canonicalRoutes,
+        routes: contextRoutes,
         bounds: srj.bounds,
         boundaryMargin: 0,
         boardEdgeClearance: params.originalSrj.minBoardEdgeClearance ?? 0,
-        lockedPointIndices: canonicalRoutes.map((route) =>
+        lockedPointIndices: contextRoutes.map((route, routeIndex) =>
           route.route.map(
             (point) =>
+              routeIndex >= canonicalRoutes.length ||
               point.terminalApproach !== undefined ||
               params.lockedConnectionNames?.has(route.connectionName) ===
                 true ||
@@ -146,7 +153,9 @@ export class Pipeline9ClearanceProjectionSolver extends BaseSolver {
         this.state = {
           phase: "select",
           context: state.context,
-          candidate: state.solver.getOutput(),
+          candidate: state.solver
+            .getOutput()
+            .slice(0, state.context.canonicalRoutes.length),
         }
       }
       return
