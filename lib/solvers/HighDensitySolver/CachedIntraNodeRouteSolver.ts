@@ -28,8 +28,8 @@ const cloneValue = <T>(value: T): T =>
 
 setupGlobalCaches()
 
-// Version 9 shares the fixed-pad digest between portfolio candidates.
-const INTRA_NODE_CACHE_SCHEMA_VERSION = 9
+// Canonical fixed routes participate in the search and cache identity.
+const INTRA_NODE_CACHE_SCHEMA_VERSION = 10
 
 export class CachedIntraNodeRouteSolver
   extends IntraNodeRouteSolver
@@ -177,6 +177,7 @@ export class CachedIntraNodeRouteSolver
     }
     const keyData = {
       cacheSchemaVersion: INTRA_NODE_CACHE_SCHEMA_VERSION,
+      fixedHdRoutes: this.fixedHdRoutes,
       node: {
         width: roundCoord(this.nodeWithPortPoints.width),
         height: roundCoord(this.nodeWithPortPoints.height),
