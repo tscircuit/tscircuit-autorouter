@@ -13,5 +13,7 @@ test("KRT refines physically open terminal clearances and honors a caller's grid
   const solver = new KrtAutoroutingPipelineSolver(input, {
     krtOptions: { gridStep: 0.1 },
   })
-  expect(() => solver.solve()).toThrow(/found no route for connection source_net_29 segment 0/)
+  expect(() => solver.solve()).toThrow(
+    /found no route for connection source_net_29 segment 0/,
+  )
 })
