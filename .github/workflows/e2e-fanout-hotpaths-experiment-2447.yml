@@ -1,0 +1,96 @@
+name: Compare repeated plane candidates and via broad phase on current captures
+on:
+  push:
+    branches: [analysis/e2e-fanout-hotpaths-experiment-2447]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  replay:
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        sample: [icepi-original, butterstick-original, imx6-original]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Install pinned native routing dependencies
+        run: |
+          mkdir -p core/replay
+          cat > core/package.json <<'JSON'
+          {"name":"fanout-current-capture-replay","private":true,"type":"module","dependencies":{"@tscircuit/fanout-solver":"0.0.97","@tscircuit/capacity-autorouter":"0.0.1145","@tscircuit/checks":"0.0.282","graphics-debug":"0.0.99"}}
+          JSON
+          cd core
+          bun install --ignore-scripts
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 44904481212
+          name: full-circuit-interception-${{ matrix.sample }}
+          path: captures
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Replay equal inputs and compare actual copper and search histories
+        env:
+          SAMPLE: ${{ matrix.sample }}
+        run: |
+          cp core/node_modules/@tscircuit/fanout-solver/lib/route-bus/plan-mutual-clearance.ts core/replay/original-mutual.txt
+          cp core/node_modules/@tscircuit/fanout-solver/lib/route-bus/route-plane-terminated-bus.ts core/replay/original-plane.txt
+          cat > core/replay/run.ts <<'TS'
+          import { readFileSync, writeFileSync } from "node:fs"
+          import { gunzipSync } from "node:zlib"
+          const mode = process.argv[2]
+          let source = readFileSync("original-mutual.txt", "utf8")
+          const original = source
+          const planePath = "../node_modules/@tscircuit/fanout-solver/lib/route-bus/route-plane-terminated-bus.ts"
+          const originalPlane = readFileSync("original-plane.txt", "utf8")
+          let planeSource = originalPlane
+          if (mode === "hoist") {
+            const endpointBlock = "            const endpointViaCandidates = getPlaneEndpointViaCandidates({\n              preparedConnection,\n              bus: directionalBus,\n              viaDiameter,\n              clearance,\n            })\n"
+            if (!planeSource.includes(endpointBlock)) throw new Error("Missing endpoint candidates")
+            planeSource = planeSource.replace(endpointBlock, "")
+            const anchor = "          let plan: FanoutRoutePlan | undefined"
+            planeSource = planeSource.replace(anchor, endpointBlock + anchor)
+          }
+          writeFileSync(planePath, planeSource)
+          if (mode === "via_bbox") {
+            source = source.replace("export function planIsClearOfPlans", "function viaIsNearSegment(via, segment, clearance) {\n  const margin = (via.diameter + segment.width) / 2 + clearance + 1e-9\n  return via.center.x >= Math.min(segment.start.x, segment.end.x) - margin &&\n    via.center.x <= Math.max(segment.start.x, segment.end.x) + margin &&\n    via.center.y >= Math.min(segment.start.y, segment.end.y) - margin &&\n    via.center.y <= Math.max(segment.start.y, segment.end.y) + margin\n}\n\n" + "export function planIsClearOfPlans")
+            source = source.replace("otherVia.spanLayers.includes(segment.layer) &&", "otherVia.spanLayers.includes(segment.layer) &&\n          viaIsNearSegment(otherVia, segment, clearance) &&")
+            source = source.replace("planVia.spanLayers.includes(otherSegment.layer) &&", "planVia.spanLayers.includes(otherSegment.layer) &&\n          viaIsNearSegment(planVia, otherSegment, clearance) &&")
+          }
+          if (!["before", "before_repeat", "hoist"].includes(mode) && source === original) throw new Error("Clearance experiment did not change the intended module")
+          writeFileSync("../node_modules/@tscircuit/fanout-solver/lib/route-bus/plan-mutual-clearance.ts", source)
+          const { FanoutSolver } = await import("../node_modules/@tscircuit/fanout-solver/lib/fanout-solver")
+          const { validateRoutedCopperDrc } = await import("../node_modules/@tscircuit/fanout-solver/lib/validate-routed-copper-drc")
+          const sample = process.env.SAMPLE
+          const folder = "../../captures/" + sample
+          const report = JSON.parse(readFileSync(folder + "/report.json", "utf8"))
+          const record = report.solvers.find((entry) => entry.name === "FanoutSolver")
+          const [input, options] = JSON.parse(gunzipSync(readFileSync(folder + "/solver-" + record.id + "-input.json.gz")).toString())
+          const solver = new FanoutSolver(input, options)
+          const start = performance.now()
+          solver.solve()
+          const best = Reflect.get(solver, "bestAttempt")
+          const output = best.outputSrj
+          const elapsedMs = performance.now() - start
+          const drc = validateRoutedCopperDrc({ inputSrj: input, routedSrj: output, clearance: solver.config.clearance, allowBlindAndBuriedVias: solver.config.allowBlindAndBuriedVias })
+          if (!drc.valid) throw new Error("Native DRC failed")
+          const summary = { sample, mode, elapsedMs, escapes: best.plans.length, vias: drc.checkedViaCount, assignments: solver.attempts.length, sourceSha256: new Bun.CryptoHasher("sha256").update(source).digest("hex") }
+          writeFileSync(mode + ".json", JSON.stringify({ summary, plans: best.plans, output, attempts: solver.attempts }))
+          console.log("HOTPATH_RESULT", JSON.stringify(summary))
+          TS
+          cd core/replay
+          bun run.ts before
+          bun run.ts hoist
+          bun run.ts via_bbox
+          bun run.ts before_repeat
+          python3 - <<'PY'
+          import json
+          modes=['before','hoist','via_bbox','before_repeat']
+          captures=[json.load(open(mode+'.json')) for mode in modes]
+          for entry in captures[1:]:
+              for field in ['plans','output','attempts']:assert entry[field]==captures[0][field],field+entry['summary']['mode']
+          print('HOTPATH_IDENTICAL',json.dumps([entry['summary'] for entry in captures]))
+          PY
