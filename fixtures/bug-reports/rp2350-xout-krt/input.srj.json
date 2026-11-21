@@ -1,0 +1,103 @@
+{
+  "layerCount": 4,
+  "minTraceWidth": 0.15,
+  "minViaDiameter": 0.55,
+  "defaultObstacleMargin": 0.2,
+  "bounds": {
+    "minX": 4,
+    "minY": -13,
+    "maxX": 7,
+    "maxY": -6
+  },
+  "obstacles": [
+    {
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": 6,
+        "y": -7.574923
+      },
+      "width": 0.1999996,
+      "height": 0.8750046,
+      "obstacleId": "pcb_smtpad_129",
+      "connectedTo": [
+        "DVDD2"
+      ]
+    },
+    {
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": 5.59995,
+        "y": -7.574923
+      },
+      "width": 0.1999996,
+      "height": 0.8750046,
+      "obstacleId": "pcb_smtpad_130",
+      "connectedTo": [
+        "source_net_29",
+        "pcb_port_116"
+      ]
+    },
+    {
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": 5.200154,
+        "y": -7.574923
+      },
+      "width": 0.1999996,
+      "height": 0.8750046,
+      "obstacleId": "pcb_smtpad_131",
+      "connectedTo": [
+        "XIN"
+      ]
+    },
+    {
+      "type": "rect",
+      "layers": [
+        "top"
+      ],
+      "center": {
+        "x": 5.79,
+        "y": -12
+      },
+      "width": 0.54,
+      "height": 0.64,
+      "obstacleId": "pcb_smtpad_202",
+      "connectedTo": [
+        "source_net_29",
+        "pcb_port_206"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "name": "source_net_29",
+      "nominalTraceWidth": 0.15,
+      "width": 0.15,
+      "pointsToConnect": [
+        {
+          "x": 5.59995,
+          "y": -7.574923,
+          "layer": "top",
+          "pointId": "pcb_port_116",
+          "pcb_port_id": "pcb_port_116"
+        },
+        {
+          "x": 5.79,
+          "y": -12,
+          "layer": "top",
+          "pointId": "pcb_port_206",
+          "pcb_port_id": "pcb_port_206"
+        }
+      ]
+    }
+  ]
+}

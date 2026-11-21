@@ -15,6 +15,8 @@ import { combineVisualizations } from "lib/utils/combineVisualizations"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
 import { filterObstaclesOutsideBoard } from "lib/utils/filterObstaclesOutsideBoard"
 
+import { getKrtGridStep } from "./getKrtGridStep"
+
 export interface KrtAutoroutingPipelineSolverOptions {
   effort?: number
   krtOptions?: KiCadRoutingToolsAutorouterOptions
@@ -170,10 +172,15 @@ class KrtAutorouterSolver extends BaseSolver {
     const effort = this.opts.effort ?? 1
     const clearance = getKrtClearance(this.srj, this.opts)
     const normalized = normalizeSrjForKrt(this.srj, clearance)
+    // trackMargin is expressed in grid cells, so keep its physical size when supplied.
+    const gridStep = this.opts.krtOptions?.gridStep ?? (this.opts.krtOptions?.trackMargin
+      ? 0.1
+      : getKrtGridStep(normalized.srj, clearance))
     this.router = new KiCadRoutingToolsAutorouter(normalized.srj as any, {
       clearance,
       maxIterations: Math.max(300_000, Math.round(300_000 * effort)),
       ...this.opts.krtOptions,
+      gridStep,
     })
     this.traces = addStitchesToTraces(
       this.router.solveSync() as SimplifiedPcbTraces,
