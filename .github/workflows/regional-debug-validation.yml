@@ -1,0 +1,36 @@
+name: Validate stacked regional diagnostics fix
+on:
+  push:
+    branches: [analysis/regional-debug-validation]
+    paths: [.github/workflows/regional-debug-validation.yml]
+permissions:
+  contents: read
+jobs:
+  type-and-format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 2dde1a49804e69922ec479fb2125a80b0492b0ec
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.3.1'
+      - run: git rev-parse HEAD
+      - run: bun install
+      - run: bunx tsc --noEmit
+      - run: bun run format:check
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 2dde1a49804e69922ec479fb2125a80b0492b0ec
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.4.3'
+      - run: git rev-parse HEAD
+      - run: bun install
+      - run: bun run build
+      - run: bun scripts/check-solver-runtime-packaging.ts
