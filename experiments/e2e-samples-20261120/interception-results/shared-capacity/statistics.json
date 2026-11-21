@@ -1,0 +1,2720 @@
+{
+  "summary": {
+    "baselineRun": 44897719641,
+    "fullCandidateRun": 44899751288,
+    "affectedRerun": 44900830468,
+    "physicalAudit": 44902158884,
+    "sourceChecks": 44901187229,
+    "coreTests": 44901174762,
+    "coreTypes": 44901174836,
+    "coreSmoke": 44901174846,
+    "tscircuit": "0.0.3267",
+    "core": "0.0.2444",
+    "capacityAutorouter": "0.0.1145",
+    "fanout": "0.0.97",
+    "busLanes": "0.0.63",
+    "coreSha": "a277cef7ca8c77eca992c7c350419c7eb835250b",
+    "windingBefore": "202dbe9eb0088633b6fa094120dba6f2f41f8803",
+    "windingAfter": "e39d3db8e9007ac01339c50604e6f9c70260e044",
+    "archiveSha256": "1991ad1891a953dcd660818aaceb73f7aa42dbf704e677e635753b9159f7a6b7",
+    "matchedWindingCalls": 82,
+    "matchedSuccessBefore": 76,
+    "matchedSuccessAfter": 81,
+    "placementFailuresBefore": 6,
+    "placementFailuresAfter": 1,
+    "placementFailureReductionPercent": 83.33333333333333,
+    "previousWorkingOutputsIdentical": true,
+    "newWindingCalls": 6,
+    "wholeBoardSvgIdentical": true,
+    "completeBoardsBefore": 0,
+    "completeBoardsAfter": 0,
+    "connectedNetsBefore": 19,
+    "connectedNetsAfter": 19,
+    "comparableNinePartialEscapesBefore": 552,
+    "comparableNinePartialEscapesAfter": 552,
+    "comparableNineViasBefore": 339,
+    "comparableNineViasAfter": 347,
+    "newGliderSpacedPartialEscapes": 133,
+    "newGliderSpacedRequests": 211,
+    "newGliderSpacedVias": 64,
+    "nativePartialCapturesChecked": 19,
+    "nativeDrcFindings": 0,
+    "independentViaInPadFindings": 0,
+    "allPhysicalPadsIdentical": true,
+    "interpretation": "Fanout escapes and vias are diagnostic partials, not committed PCB routes or connected board nets. All boards remain incomplete."
+  },
+  "rows": [
+    {
+      "sample": "butterstick-original",
+      "samePadGeometry": true,
+      "sameFanoutConstructorInputs": true,
+      "sameCompletedAssignmentPrefix": true,
+      "comparedAssignments": 256,
+      "identicalPcbSvg": true,
+      "winding": [
+        {
+          "index": 0,
+          "beforeId": 0,
+          "afterId": 0,
+          "before": {
+            "solved": true,
+            "outputSha256": "28f0e32158c62f0698a6496124525e785983965e4cd07e412986ccf3a3be592b",
+            "points": 16,
+            "layers": {
+              "bottom": 3,
+              "inner2": 4,
+              "inner5": 3,
+              "inner6": 2,
+              "top": 4
+            }
+          },
+          "after": {
+            "solved": true,
+            "outputSha256": "28f0e32158c62f0698a6496124525e785983965e4cd07e412986ccf3a3be592b",
+            "points": 16,
+            "layers": {
+              "bottom": 3,
+              "inner2": 4,
+              "inner5": 3,
+              "inner6": 2,
+              "top": 4
+            }
+          }
+        },
+        {
+          "index": 1,
+          "beforeId": 1,
+          "afterId": 1,
+          "before": {
+            "solved": true,
+            "outputSha256": "0db6d78348ea006eeab06eec6c0d307cc5b236b7983655d3e8db1d5f62e026a0",
+            "points": 1,
+            "layers": {
+              "top": 1
+            }
+          },
+          "after": {
+            "solved": true,
+            "outputSha256": "0db6d78348ea006eeab06eec6c0d307cc5b236b7983655d3e8db1d5f62e026a0",
+            "points": 1,
+            "layers": {
+              "top": 1
+            }
+          }
+        },
+        {
+          "index": 2,
+          "beforeId": 2,
+          "afterId": 2,
+          "before": {
+            "solved": true,
+            "outputSha256": "8eeae7b0d507d46e53413dc5f0b54f6046eb38a0d0e3f30fb6ecf00a37533fa1",
+            "points": 36,
+            "layers": {
+              "bottom": 7,
+              "inner2": 8,
+              "inner5": 7,
+              "inner6": 6,
+              "top": 8
+            }
+          },
+          "after": {
+            "solved": true,
+            "outputSha256": "8eeae7b0d507d46e53413dc5f0b54f6046eb38a0d0e3f30fb6ecf00a37533fa1",
+            "points": 36,
+            "layers": {
+              "bottom": 7,
+              "inner2": 8,
+              "inner5": 7,
+              "inner6": 6,
+              "top": 8
+            }
+          }
+        },
+        {
+          "index": 3,
+          "beforeId": 3,
+          "afterId": 3,
+          "before": {
+            "solved": true,
+            "outputSha256": "47633cb3e587a4cebe6e72dfb41a92b5ab0015d07a2cdfcd274f026e10dc5eac",
+            "points": 99,
+            "layers": {
+              "bottom": 19,
+              "inner2": 21,
+              "inner5": 20,
+              "inner6": 18,
+              "top": 21
+            }
+          },
+          "after": {
+            "solved": true,
+            "outputSha256": "47633cb3e587a4cebe6e72dfb41a92b5ab0015d07a2cdfcd274f026e10dc5eac",
+            "points": 99,
+            "layers": {
+              "bottom": 19,
+              "inner2": 21,
+              "inner5": 20,
+              "inner6": 18,
+              "top": 21
+            }
+          }
+        },
+        {
+          "index": 4,
+          "beforeId": 4,
+          "afterId": 4,
+          "before": {
+            "solved": true,
+            "outputSha256": "f9c8eb305ae3da042a856ebe097fdc696b3ae09a0403149b2fae69c4176eeb62",
+            "points": 50,
+            "layers": {
+              "bottom": 10,
+              "inner2": 10,
+              "inner5": 10,
+              "inner6": 10,
+              "top": 10
+            }
+          },
+          "after": {
+            "solved": true,
+            "outputSha256": "f9c8eb305ae3da042a856ebe097fdc696b3ae09a0403149b2fae69c4176eeb62",
+            "points": 50,
+            "layers": {
+              "bottom": 10,
+              "inner2": 10,
+              "inner5": 10,
+              "inner6": 10,
+              "top": 10
+            }
+          }
+        },
+        {
+          "index": 5,
+          "beforeId": 5,
+          "afterId": 5,
+          "before": {
+            "solved": true,
+            "outputSha256": "91614ecdfa2f4d4496a4010719d80fa7cb3cbaa68e1a7a099eb99df88fda5564",
+            "points": 40,
+            "layers": {
+              "bottom": 8,
+              "inner2": 8,
+              "inner5": 8,
+              "inner6": 8,
+              "top": 8
+            }
+          },
+          "after": {
+            "solved": true,
+            "outputSha256": "91614ecdfa2f4d4496a4010719d80fa7cb3cbaa68e1a7a099eb99df88fda5564",
+            "points": 40,
+            "layers": {
+              "bottom": 8,
+              "inner2": 8,
+              "inner5": 8,
+              "inner6": 8,
+              "top": 8
+            }
+          }
+        },
+        {
+          "index": 6,
+          "beforeId": 6,
+          "afterId": 6,
+          "before": {
+            "solved": true,
+            "outputSha256": "3bbc63bc222b613096f0f2052154dbc902010acc13f29a0dac8bef62020105ad",
+            "points": 33,
+            "layers": {
+              "bottom": 7,
+              "inner2": 7,
+              "inner5": 6,
+              "inner6": 6,
+              "top": 7
+            }
+          },
+          "after": {
+            "solved": true,
+            "outputSha256": "3bbc63bc222b613096f0f2052154dbc902010acc13f29a0dac8bef62020105ad",
+            "points": 33,
+            "layers": {
+              "bottom": 7,
+              "inner2": 7,
+              "inner5": 6,
+              "inner6": 6,
+              "top": 7
+            }
+          }
+        },
+        {
+          "index": 7,
+          "beforeId": 7,
+          "afterId": 7,
+          "before": {
+            "solved": true,
+            "outputSha256": "e57e0a96e8acc761bb0933bdc8cf67d80fce78ee22b46e527bae99ca08d28363",
+            "points": 15,
+            "layers": {
+              "bottom": 3,
+              "inner2": 3,
+              "inner5": 3,
+              "inner6": 3,
+              "top": 3
+            }
+          },
+          "after": {
+            "solved": true,
+            "outputSha256": "e57e0a96e8acc761bb0933bdc8cf67d80fce78ee22b46e527bae99ca08d28363",
+            "points": 15,
+            "layers": {
+              "bottom": 3,
+              "inner2": 3,
+              "inner5": 3,
+              "inner6": 3,
+              "top": 3
+            }
+          }
+        },
+        {
+          "index": 8,
+          "beforeId": 8,
+          "afterId": 8,
+          "before": {
+            "solved": true,
+            "outputSha256": "e2724d061187153e472592d9550753503eef3387e1a0eae4be15e7af88166247",
+            "points": 36,
+            "layers": {
+              "bottom": 7,
+              "inner2": 7,
+              "inner5": 7,
+              "inner6": 7,
+              "top": 8
+            }
+          },
+          "after": {
+            "solved": true,
+            "outputSha256": "e2724d061187153e472592d9550753503eef3387e1a0eae4be15e7af88166247",
+            "points": 36,
+            "layers": {
+              "bottom": 7,
+              "inner2": 7,
+              "inner5": 7,
+              "inner6": 7,
+              "top": 8
+            }
+          }
+        },
+        {
+          "index": 9,
+          "beforeId": 9,
+          "afterId": 9,
+          "before": {
+            "solved": true,
+            "outputSha256": "b7c6bf7e238a3d7b34f3a61a0a33f7c2705b8b27641d1a68e6e6cb96163d5f72",
+            "points": 2,
+            "layers": {
+              "bottom": 1,
+              "top": 1
+            }
+          },
+          "after": {
+            "solved": true,
+            "outputSha256": "b7c6bf7e238a3d7b34f3a61a0a33f7c2705b8b27641d1a68e6e6cb96163d5f72",
+            "points": 2,
+            "layers": {
+              "bottom": 1,
+              "top": 1
+            }
+          }
+        }
+      ],
+      "additionalWindingCalls": 0,
+      "captures": [
+        {
+          "mode": "before",
+          "fanoutReached": true,
+          "partialEscapes": 62,
+          "requests": 91,
+          "nativeVias": 42,
+          "physicalViaSites": 42,
+          "assignments": 256,
+          "fanoutElapsedMs": 258433.013372,
+          "reportStatus": "failed",
+          "nativeDrcValid": true,
+          "independentViaInPadFindings": 0,
+          "components": 350,
+          "pads": 1623,
+          "membershipErrors": [],
+          "connectedNets": 9,
+          "committedTraces": 0,
+          "committedVias": 0
+        },
+        {
+          "mode": "after",
+          "fanoutReached": true,
+          "partialEscapes": 62,
+          "requests": 91,
+          "nativeVias": 42,
+          "physicalViaSites": 42,
+          "assignments": 256,
+          "fanoutElapsedMs": 257340.739713,
+          "reportStatus": "failed",
+          "nativeDrcValid": true,
+          "independentViaInPadFindings": 0,
+          "components": 350,
+          "pads": 1623,
+          "membershipErrors": [],
+          "connectedNets": 9,
+          "committedTraces": 0,
+          "committedVias": 0
+        }
+      ]
+    },
+    {
+      "sample": "butterstick-spaced",
+      "samePadGeometry": true,
+      "sameFanoutConstructorInputs": false,
+      "sameCompletedAssignmentPrefix": false,
+      "comparedAssignments": 256,
+      "identicalPcbSvg": true,
+      "winding": [
+        {
+          "index": 0,
+          "beforeId": 0,
+          "afterId": 0,
+          "before": {
+            "solved": true,
+            "outputSha256": "16267dfad6750845c0389fce28959cf65d5846fd950f85f0d58f6dd0a9dbb1dc",
+            "points": 1,
+            "layers": {
+              "top": 1
+            }
+          },
+          "after": {
+            "solved": true,
+            "outputSha256": "16267dfad6750845c0389fce28959cf65d5846fd950f85f0d58f6dd0a9dbb1dc",
+            "points": 1,
+            "layers": {
+              "top": 1
+            }
+          }
+        },
+        {
+          "index": 1,
+          "beforeId": 1,
+          "afterId": 1,
+          "before": {
+            "solved": true,
+            "outputSha256": "45296a90748ff47d72c89b84c3e32db957e1ab50a4b099981123bb081215901e",
+            "points": 20,
+            "layers": {
+              "bottom": 4,
+              "inner2": 4,
+              "inner5": 4,
+              "inner6": 3,
+              "top": 5
+            }
+          },
+          "after": {
+            "solved": true,
+            "outputSha256": "45296a90748ff47d72c89b84c3e32db957e1ab50a4b099981123bb081215901e",
+            "points": 20,
+            "layers": {
+              "bottom": 4,
+              "inner2": 4,
+              "inner5": 4,
+              "inner6": 3,
+              "top": 5
+            }
+          }
+        },
+        {
+          "index": 2,
+          "beforeId": 2,
+          "afterId": 2,
+          "before": {
+            "solved": true,
+            "outputSha256": "1f80408bb83b80c69002a6cdcc10bd4a10d80f41e81e49fd39630e4f0d307aba",
+            "points": 17,
+            "layers": {
+              "bottom": 4,
+              "inner2": 3,
+              "inner5": 3,
+              "inner6": 3,
+              "top": 4
+            }
+          },
+          "after": {
+            "solved": true,
+            "outputSha256": "1f80408bb83b80c69002a6cdcc10bd4a10d80f41e81e49fd39630e4f0d307aba",
+            "points": 17,
+            "layers": {
+              "bottom": 4,
+              "inner2": 3,
+              "inner5": 3,
+              "inner6": 3,
+              "top": 4
+            }
+          }
+        },
+        {
+          "index": 3,
+          "beforeId": 3,
+          "afterId": 3,
+          "before": {
+            "solved": true,
+            "outputSha256": "a9926656b111721691f4eb71ef38efaa90bd9ae39c6045e2484dd7d5931452ae",
+            "points": 53,
+            "layers": {
+              "bottom": 10,
+              "inner2": 11,
+              "inner5": 11,
+              "inner6": 10,
+              "top": 11
+            }
+          },
+          "after": {
+            "solved": true,
+            "outputSha256": "a9926656b111721691f4eb71ef38efaa90bd9ae39c6045e2484dd7d5931452ae",
+            "points": 53,
+            "layers": {
+              "bottom": 10,
+              "inner2": 11,
+              "inner5": 11,
+              "inner6": 10,
+              "top": 11
+            }
+          }
+        },
+        {
+          "index": 4,
+          "beforeId": 4,
+          "afterId": 4,
+          "before": {
+            "solved": true,
+            "outputSha256": "89bf455a582c142b0ca5d5c0fc93dad5f49900289fb17bfd2b8bd58bd61bba8c",
+            "points": 18,
+            "layers": {
+              "bottom": 4,
+              "inner2": 4,
+              "inner5": 3,
+              "inner6": 3,
+              "top": 4
+            }
+          },
+          "after": {
+            "solved": true,
+            "outputSha256": "89bf455a582c142b0ca5d5c0fc93dad5f49900289fb17bfd2b8bd58bd61bba8c",
+            "points": 18,
+            "layers": {
+              "bottom": 4,
+              "inner2": 4,
+              "inner5": 3,
+              "inner6": 3,
+              "top": 4
+            }
+          }
+        },
+        {
+          "index": 5,
+          "beforeId": 5,
+          "afterId": 5,
+          "before": {
+            "solved": true,
+            "outputSha256": "911c7925844e2f6d2d1314966c4c9c7689d5121d4668ffd56fae707723fce10e",
+            "points": 54,
+            "layers": {
+              "bottom": 11,
+              "inner2": 11,
+              "inner5": 11,
+              "inner6": 10,
+              "top": 11
+            }
+          },
+          "after": {
+            "solved": true,
+            "outputSha256": "911c7925844e2f6d2d1314966c4c9c7689d5121d4668ffd56fae707723fce10e",
+            "points": 54,
+            "layers": {
+              "bottom": 11,
+              "inner2": 11,
+              "inner5": 11,
+              "inner6": 10,
+              "top": 11
+            }
+          }
+        },
+        {
+          "index": 6,
+          "beforeId": 6,
+          "afterId": 6,
+          "before": {
+            "solved": true,
+            "outputSha256": "d12d88024564536dbc4b052c963a6aba9c1bbdc5d10a609137fbf4b9ff355246",
+            "points": 19,
+            "layers": {
+              "bottom": 4,
+              "inner2": 4,
+              "inner5": 4,
+              "inner6": 3,
+              "top": 4
+            }
+          },
+          "after": {
+            "solved": true,
+            "outputSha256": "d12d88024564536dbc4b052c963a6aba9c1bbdc5d10a609137fbf4b9ff355246",
+            "points": 19,
+            "layers": {
+              "bottom": 4,
+              "inner2": 4,
+              "inner5": 4,
+              "inner6": 3,
+              "top": 4
+            }
+          }
+        },
+        {
+          "index": 7,
+          "beforeId": 7,
+          "afterId": 7,
+          "before": {
+            "solved": false,
+            "error": "WindingBreakoutSolver: declared breakout edges need 17.38mm but expose only 17.00mm"
+          },
+          "after": {
+            "solved": true,
+            "outputSha256": "3b4d283d572acfab050268c6b08d3a5eb5cbed6aaedf967cfc47722938efd2d6",
+            "points": 105,
+            "layers": {
+              "bottom": 21,
+              "inner2": 21,
+              "inner5": 21,
+              "inner6": 21,
+              "top": 21
+            }
+          }
+        }
+      ],
+      "additionalWindingCalls": 3,
+      "captures": [
+        {
+          "mode": "before",
+          "fanoutReached": true,
+          "partialEscapes": 78,
+          "requests": 91,
+          "nativeVias": 41,
+          "physicalViaSites": 41,
+          "assignments": 256,
+          "fanoutElapsedMs": 322530.22596099996,
+          "reportStatus": "failed",
+          "nativeDrcValid": true,
+          "independentViaInPadFindings": 0,
+          "components": 350,
+          "pads": 1623,
+          "membershipErrors": [],
+          "connectedNets": 0,
+          "committedTraces": 0,
+          "committedVias": 0
+        },
+        {
+          "mode": "after",
+          "fanoutReached": true,
+          "partialEscapes": 78,
+          "requests": 91,
+          "nativeVias": 49,
+          "physicalViaSites": 49,
+          "assignments": 256,
+          "fanoutElapsedMs": 324301.700371,
+          "reportStatus": "failed",
+          "nativeDrcValid": true,
+          "independentViaInPadFindings": 0,
+          "components": 350,
+          "pads": 1623,
+          "membershipErrors": [],
+          "connectedNets": 0,
+          "committedTraces": 0,
+          "committedVias": 0
+        }
+      ]
+    },
+    {
+      "sample": "glider-original",
+      "samePadGeometry": true,
+      "sameFanoutConstructorInputs": true,
+      "sameCompletedAssignmentPrefix": true,
+      "comparedAssignments": 223,
+      "identicalPcbSvg": true,
+      "winding": [
+        {
+          "index": 0,
+          "beforeId": 0,
+          "afterId": 0,
+          "before": {
+            "solved": true,
+            "outputSha256": "decc0939d85bfd62219645d4e1c0f87af7ce1bed9b88a194da378a08e3503d86",
+            "points": 2,
+            "layers": {
+              "bottom": 1,
+              "top": 1
+            }
+          },
+          "after": {
+            "solved": true,
+            "outputSha256": "decc0939d85bfd62219645d4e1c0f87af7ce1bed9b88a194da378a08e3503d86",
+            "points": 2,
+            "layers": {
+              "bottom": 1,
+              "top": 1
+            }
+          }
+        },
+        {
+          "index": 1,
+          "beforeId": 1,
+          "afterId": 1,
+          "before": {
+            "solved": true,
+            "outputSha256": "3fd11b32bdf74c7fc4549b979c20bee83235c839da99180eef8617857310df6d",
+            "points": 45,
+            "layers": {
+              "bottom": 15,
+              "inner2": 15,
+              "top": 15
+            }
+          },
+          "after": {
+            "solved": true,
+            "outputSha256": "3fd11b32bdf74c7fc4549b979c20bee83235c839da99180eef8617857310df6d",
+            "points": 45,
+            "layers": {
+              "bottom": 15,
+              "inner2": 15,
+              "top": 15
+            }
+          }
+        },
+        {
+          "index": 2,
+          "beforeId": 2,
+          "afterId": 2,
+          "before": {
+            "solved": true,
+            "outputSha256": "da71e8746ee2d4730c1ec554348d0f98fce484a2436149c96dad27f3488ff192",
+            "points": 5,
+            "layers": {
+              "bottom": 2,
+              "inner2": 1,
+              "top": 2
+            }
+          },
+          "after": {
+            "solved": true,
+            "outputSha256": "da71e8746ee2d4730c1ec554348d0f98fce484a2436149c96dad27f3488ff192",
+            "points": 5,
+            "layers": {
+              "bottom": 2,
+              "inner2": 1,
+              "top": 2
+            }
+          }
+        },
+        {
+          "index": 3,
+          "beforeId": 3,
+          "afterId": 3,
+          "before": {
+            "solved": true,
+            "outputSha256": "d3db78b5821b696e35380ded9580abd30efe9225ca56ee15ca8d5d44c0ba7520",
+            "points": 53,
+            "layers": {
+              "bottom": 18,
+              "inner2": 17,
+              "top": 18
+            }
+          },
+          "after": {
+            "solved": true,
+            "outputSha256": "d3db78b5821b696e35380ded9580abd30efe9225ca56ee15ca8d5d44c0ba7520",
+            "points": 53,
+            "layers": {
+              "bottom": 18,
+              "inner2": 17,
+              "top": 18
+            }
+          }
+        },
+        {
+          "index": 4,
+          "beforeId": 4,
+          "afterId": 4,
+          "before": {
+            "solved": true,
+            "outputSha256": "ad20881770a9b891cf8c464d6516557b75454b7d35efb46038b9a2bafe92c6fc",
+            "points": 32,
+            "layers": {
+              "bottom": 11,
+              "inner2": 10,
+              "top": 11
+            }
+          },
+          "after": {
+            "solved": true,
+            "outputSha256": "ad20881770a9b891cf8c464d6516557b75454b7d35efb46038b9a2bafe92c6fc",
+            "points": 32,
+            "layers": {
+              "bottom": 11,
+              "inner2": 10,
+              "top": 11
+            }
+          }
+        },
+        {
+          "index": 5,
+          "beforeId": 5,
+          "afterId": 5,
+          "before": {
+            "solved": true,
+            "outputSha256": "10f50d603f5054fcc6308f5ace3fab632b0eec86754641eddfda1acefa28f8fb",
+            "points": 11,
+            "layers": {
+              "bottom": 4,
+              "inner2": 3,
+              "top": 4
+            }
+          },
+          "after": {
+            "solved": true,
+            "outputSha256": "10f50d603f5054fcc6308f5ace3fab632b0eec86754641eddfda1acefa28f8fb",
+            "points": 11,
+            "layers": {
+              "bottom": 4,
+              "inner2": 3,
+              "top": 4
+            }
+          }
+        },
+        {
+          "index": 6,
+          "beforeId": 6,
+          "afterId": 6,
+          "before": {
+            "solved": true,
+            "outputSha256": "6560531505a5f91124ebac83a894a41a1a580bfc35ad99b30652e79ae171a9fa",
+            "points": 51,
+            "layers": {
+              "bottom": 17,
+              "inner2": 17,
+              "top": 17
+            }
+          },
+          "after": {
+            "solved": true,
+            "outputSha256": "6560531505a5f91124ebac83a894a41a1a580bfc35ad99b30652e79ae171a9fa",
+            "points": 51,
+            "layers": {
+              "bottom": 17,
+              "inner2": 17,
+              "top": 17
+            }
+          }
+        }
+      ],
+      "additionalWindingCalls": 0,
+      "captures": [
+        {
+          "mode": "before",
+          "fanoutReached": true,
+          "partialEscapes": 86,
+          "requests": 95,
+          "nativeVias": 58,
+          "physicalViaSites": 58,
+          "assignments": 256,
+          "fanoutElapsedMs": 523797.0097110001,
+          "reportStatus": "failed",
+          "nativeDrcValid": true,
+          "independentViaInPadFindings": 0,
+          "components": 379,
+          "pads": 1700,
+          "membershipErrors": [],
+          "connectedNets": 0,
+          "committedTraces": 0,
+          "committedVias": 0
+        },
+        {
+          "mode": "after",
+          "fanoutReached": true,
+          "partialEscapes": 86,
+          "requests": 95,
+          "nativeVias": 58,
+          "physicalViaSites": 58,
+          "assignments": 223,
+          "fanoutElapsedMs": 530217.689715,
+          "reportStatus": "failed",
+          "nativeDrcValid": true,
+          "independentViaInPadFindings": 0,
+          "components": 379,
+          "pads": 1700,
+          "membershipErrors": [],
+          "connectedNets": 0,
+          "committedTraces": 0,
+          "committedVias": 0
+        }
+      ]
+    },
+    {
+      "sample": "glider-spaced",
+      "samePadGeometry": true,
+      "sameFanoutConstructorInputs": false,
+      "sameCompletedAssignmentPrefix": true,
+      "comparedAssignments": 0,
+      "identicalPcbSvg": true,
+      "winding": [
+        {
+          "index": 0,
+          "beforeId": 0,
+          "afterId": 0,
+          "before": {
+            "solved": true,
+            "outputSha256": "faf1885400aac9b9a309e664c11b57fb21c6bed24248363db8493dd7ee24bac5",
+            "points": 54,
+            "layers": {
+              "bottom": 18,
+              "inner2": 18,
+              "top": 18
+            }
+          },
+          "after": {
+            "solved": true,
+            "outputSha256": "faf1885400aac9b9a309e664c11b57fb21c6bed24248363db8493dd7ee24bac5",
+            "points": 54,
+            "layers": {
+              "bottom": 18,
+              "inner2": 18,
+              "top": 18
+            }
+          }
+        },
+        {
+          "index": 1,
+          "beforeId": 1,
+          "afterId": 1,
+          "before": {
+            "solved": true,
+            "outputSha256": "42b06bafdf2352a3dcd014a174d6d64fd78ced7200a23569c16ceaf57ee10868",
+            "points": 54,
+            "layers": {
+              "bottom": 18,
+              "inner2": 18,
+              "top": 18
+            }
+          },
+          "after": {
+            "solved": true,
+            "outputSha256": "42b06bafdf2352a3dcd014a174d6d64fd78ced7200a23569c16ceaf57ee10868",
+            "points": 54,
+            "layers": {
+              "bottom": 18,
+              "inner2": 18,
+              "top": 18
+            }
+          }
+        },
+        {
+          "index": 2,
+          "beforeId": 2,
+          "afterId": 2,
+          "before": {
+            "solved": true,
+            "outputSha256": "b0a55d43bb67df2a56a789af9f1075b0d4543c560e123c0da10d89af573ebbdd",
+            "points": 49,
+            "layers": {
+              "bottom": 16,
+              "inner2": 16,
+              "top": 17
+            }
+          },
+          "after": {
+            "solved": true,
+            "outputSha256": "b0a55d43bb67df2a56a789af9f1075b0d4543c560e123c0da10d89af573ebbdd",
+            "points": 49,
+            "layers": {
+              "bottom": 16,
+              "inner2": 16,
+              "top": 17
+            }
+          }
+        },
+        {
+          "index": 3,
+          "beforeId": 3,
+          "afterId": 3,
+          "before": {
+            "solved": false,
+            "error": "WindingBreakoutSolver: declared breakout edges need 16.91mm but expose only 16.80mm"
+          },
+          "after": {
+            "solved": true,
+            "outputSha256": "37a09ceac20d7d58d268db0aabfd2d4521fd6bd19a4d803da4f9c864daf48d73",
+            "points": 54,
+            "layers": {
+              "bottom": 18,
+              "inner2": 18,
+              "top": 18
+            }
+          }
+        },
+        {
+          "index": 4,
+          "beforeId": 4,
+          "afterId": 4,
+          "before": {
+            "solved": true,
+            "outputSha256": "add2a7842d93a1024c93a8eaac283d97eaab12604698687e89162fe1d12883e9",
+            "points": 11,
+            "layers": {
+              "bottom": 4,
+              "inner2": 3,
+              "top": 4
+            }
+          },
+          "after": {
+            "solved": true,
+            "outputSha256": "add2a7842d93a1024c93a8eaac283d97eaab12604698687e89162fe1d12883e9",
+            "points": 11,
+            "layers": {
+              "bottom": 4,
+              "inner2": 3,
+              "top": 4
+            }
+          }
+        },
+        {
+          "index": 5,
+          "beforeId": 5,
+          "afterId": 5,
+          "before": {
+            "solved": true,
+            "outputSha256": "cd7648d18b65deac5af1a929f78b316991a6844cac66ec3de502ddeb44596c2a",
+            "points": 24,
+            "layers": {
+              "bottom": 8,
+              "inner2": 8,
+              "top": 8
+            }
+          },
+          "after": {
+            "solved": true,
+            "outputSha256": "cd7648d18b65deac5af1a929f78b316991a6844cac66ec3de502ddeb44596c2a",
+            "points": 24,
+            "layers": {
+              "bottom": 8,
+              "inner2": 8,
+              "top": 8
+            }
+          }
+        },
+        {
+          "index": 6,
+          "beforeId": 6,
+          "afterId": 6,
+          "before": {
+            "solved": false,
+            "error": "WindingBreakoutSolver: declared breakout edges need 14.24mm but expose only 13.80mm"
+          },
+          "after": {
+            "solved": true,
+            "outputSha256": "dc6315a30846c54b093e6b643c70fed6ebc86ae64b0925cc153ee36fafe9353d",
+            "points": 45,
+            "layers": {
+              "bottom": 15,
+              "inner2": 15,
+              "top": 15
+            }
+          }
+        }
+      ],
+      "additionalWindingCalls": 1,
+      "captures": [
+        {
+          "mode": "before",
+          "fanoutReached": false,
+          "partialEscapes": null,
+          "requests": null,
+          "nativeVias": null,
+          "physicalViaSites": null,
+          "assignments": null,
+          "fanoutElapsedMs": null,
+          "reportStatus": "failed",
+          "nativeDrcValid": null,
+          "independentViaInPadFindings": 0,
+          "components": 379,
+          "pads": 1700,
+          "membershipErrors": [],
+          "connectedNets": 0,
+          "committedTraces": 0,
+          "committedVias": 0
+        },
+        {
+          "mode": "after",
+          "fanoutReached": true,
+          "partialEscapes": 133,
+          "requests": 211,
+          "nativeVias": 64,
+          "physicalViaSites": 64,
+          "assignments": 22,
+          "fanoutElapsedMs": 552615.079042,
+          "reportStatus": "failed",
+          "nativeDrcValid": true,
+          "independentViaInPadFindings": 0,
+          "components": 379,
+          "pads": 1700,
+          "membershipErrors": [],
+          "connectedNets": 0,
+          "committedTraces": 0,
+          "committedVias": 0
+        }
+      ]
+    },
+    {
+      "sample": "h616-original",
+      "samePadGeometry": true,
+      "sameFanoutConstructorInputs": true,
+      "sameCompletedAssignmentPrefix": true,
+      "comparedAssignments": 148,
+      "identicalPcbSvg": true,
+      "winding": [
+        {
+          "index": 0,
+          "beforeId": 0,
+          "afterId": 0,
+          "before": {
+            "solved": true,
+            "outputSha256": "0590ceb4ae200e55320ceb46618e517ffdd25c7b9f26c04ad70d77e32689e2d1",
+            "points": 23,
+            "layers": {
+              "bottom": 6,
+              "inner1": 6,
+              "inner2": 5,
+              "top": 6
+            }
+          },
+          "after": {
+            "solved": true,
+            "outputSha256": "0590ceb4ae200e55320ceb46618e517ffdd25c7b9f26c04ad70d77e32689e2d1",
+            "points": 23,
+            "layers": {
+              "bottom": 6,
+              "inner1": 6,
+              "inner2": 5,
+              "top": 6
+            }
+          }
+        },
+        {
+          "index": 1,
+          "beforeId": 1,
+          "afterId": 1,
+          "before": {
+            "solved": true,
+            "outputSha256": "c7a9ac0e30dee44d53127ec41e7980bff57721775a0f89d2dd18d7d8cf0e440a",
+            "points": 54,
+            "layers": {
+              "bottom": 14,
+              "inner1": 13,
+              "inner2": 13,
+              "top": 14
+            }
+          },
+          "after": {
+            "solved": true,
+            "outputSha256": "c7a9ac0e30dee44d53127ec41e7980bff57721775a0f89d2dd18d7d8cf0e440a",
+            "points": 54,
+            "layers": {
+              "bottom": 14,
+              "inner1": 13,
+              "inner2": 13,
+              "top": 14
+            }
+          }
+        },
+        {
+          "index": 2,
+          "beforeId": 2,
+          "afterId": 2,
+          "before": {
+            "solved": true,
+            "outputSha256": "13058ec45735de578d6c2197803b11afd6c99604905bebcf7d65f989d284b2ba",
+            "points": 17,
+            "layers": {
+              "bottom": 4,
+              "inner1": 4,
+              "inner2": 4,
+              "top": 5
+            }
+          },
+          "after": {
+            "solved": true,
+            "outputSha256": "13058ec45735de578d6c2197803b11afd6c99604905bebcf7d65f989d284b2ba",
+            "points": 17,
+            "layers": {
+              "bottom": 4,
+              "inner1": 4,
+              "inner2": 4,
+              "top": 5
+            }
+          }
+        },
+        {
+          "index": 3,
+          "beforeId": 3,
+          "afterId": 3,
+          "before": {
+            "solved": true,
+            "outputSha256": "4818464511c3ab5c25ef19cbd558da316e273b0d736cc39e99971ea1c31b8170",
+            "points": 18,
+            "layers": {
+              "bottom": 5,
+              "inner1": 4,
+              "inner2": 4,
+              "top": 5
+            }
+          },
+          "after": {
+            "solved": true,
+            "outputSha256": "4818464511c3ab5c25ef19cbd558da316e273b0d736cc39e99971ea1c31b8170",
+            "points": 18,
+            "layers": {
+              "bottom": 5,
+              "inner1": 4,
+              "inner2": 4,
+              "top": 5
+            }
+          }
+        },
+        {
+          "index": 4,
+          "beforeId": 4,
+          "afterId": 4,
+          "before": {
+            "solved": true,
+            "outputSha256": "7a8bcb75ed279e2eb85c9f7d87015a49255da5a7bc82bfb051729ff66381d5ea",
+            "points": 56,
+            "layers": {
+              "bottom": 14,
+              "inner1": 14,
+              "inner2": 14,
+              "top": 14
+            }
+          },
+          "after": {
+            "solved": true,
+            "outputSha256": "7a8bcb75ed279e2eb85c9f7d87015a49255da5a7bc82bfb051729ff66381d5ea",
+            "points": 56,
+            "layers": {
+              "bottom": 14,
+              "inner1": 14,
+              "inner2": 14,
+              "top": 14
+            }
+          }
+        },
+        {
+          "index": 5,
+          "beforeId": 5,
+          "afterId": 5,
+          "before": {
+            "solved": true,
+            "outputSha256": "97d0ac070e95462e96494432d13788e69c80c308a14bdf8f919d8cfc24bfba4f",
+            "points": 1,
+            "layers": {
+              "top": 1
+            }
+          },
+          "after": {
+            "solved": true,
+            "outputSha256": "97d0ac070e95462e96494432d13788e69c80c308a14bdf8f919d8cfc24bfba4f",
+            "points": 1,
+            "layers": {
+              "top": 1
+            }
+          }
+        }
+      ],
+      "additionalWindingCalls": 0,
+      "captures": [
+        {
+          "mode": "before",
+          "fanoutReached": true,
+          "partialEscapes": 108,
+          "requests": 174,
+          "nativeVias": 72,
+          "physicalViaSites": 72,
+          "assignments": 150,
+          "fanoutElapsedMs": 592008.0956169999,
+          "reportStatus": "failed",
+          "nativeDrcValid": true,
+          "independentViaInPadFindings": 0,
+          "components": 125,
+          "pads": 760,
+          "membershipErrors": [],
+          "connectedNets": 0,
+          "committedTraces": 0,
+          "committedVias": 0
+        },
+        {
+          "mode": "after",
+          "fanoutReached": true,
+          "partialEscapes": 108,
+          "requests": 174,
+          "nativeVias": 72,
+          "physicalViaSites": 72,
+          "assignments": 148,
+          "fanoutElapsedMs": 592150.149164,
+          "reportStatus": "failed",
+          "nativeDrcValid": true,
+          "independentViaInPadFindings": 0,
+          "components": 125,
+          "pads": 760,
+          "membershipErrors": [],
+          "connectedNets": 0,
+          "committedTraces": 0,
+          "committedVias": 0
+        }
+      ]
+    },
+    {
+      "sample": "h616-spaced",
+      "samePadGeometry": true,
+      "sameFanoutConstructorInputs": true,
+      "sameCompletedAssignmentPrefix": true,
+      "comparedAssignments": 102,
+      "identicalPcbSvg": true,
+      "winding": [
+        {
+          "index": 0,
+          "beforeId": 0,
+          "afterId": 0,
+          "before": {
+            "solved": true,
+            "outputSha256": "31697687ce450e1a6e68a812e33506292dbf21a7b1f77819b62857cb83daf92a",
+            "points": 26,
+            "layers": {
+              "bottom": 7,
+              "inner1": 6,
+              "inner2": 6,
+              "top": 7
+            }
+          },
+          "after": {
+            "solved": true,
+            "outputSha256": "31697687ce450e1a6e68a812e33506292dbf21a7b1f77819b62857cb83daf92a",
+            "points": 26,
+            "layers": {
+              "bottom": 7,
+              "inner1": 6,
+              "inner2": 6,
+              "top": 7
+            }
+          }
+        },
+        {
+          "index": 1,
+          "beforeId": 1,
+          "afterId": 1,
+          "before": {
+            "solved": true,
+            "outputSha256": "022105657c019c03878795e04f15ead7270cb0f497a46a0456a79ecc0a97825f",
+            "points": 80,
+            "layers": {
+              "bottom": 20,
+              "inner1": 20,
+              "inner2": 20,
+              "top": 20
+            }
+          },
+          "after": {
+            "solved": true,
+            "outputSha256": "022105657c019c03878795e04f15ead7270cb0f497a46a0456a79ecc0a97825f",
+            "points": 80,
+            "layers": {
+              "bottom": 20,
+              "inner1": 20,
+              "inner2": 20,
+              "top": 20
+            }
+          }
+        },
+        {
+          "index": 2,
+          "beforeId": 2,
+          "afterId": 2,
+          "before": {
+            "solved": true,
+            "outputSha256": "7cad063745f70a6591ea289ae39d8eee84541c62ea8deddf90126889a383cb54",
+            "points": 27,
+            "layers": {
+              "bottom": 7,
+              "inner1": 7,
+              "inner2": 6,
+              "top": 7
+            }
+          },
+          "after": {
+            "solved": true,
+            "outputSha256": "7cad063745f70a6591ea289ae39d8eee84541c62ea8deddf90126889a383cb54",
+            "points": 27,
+            "layers": {
+              "bottom": 7,
+              "inner1": 7,
+              "inner2": 6,
+              "top": 7
+            }
+          }
+        },
+        {
+          "index": 3,
+          "beforeId": 3,
+          "afterId": 3,
+          "before": {
+            "solved": true,
+            "outputSha256": "feaf748308e0a5b6ca1d1fa36c7ddd89faa37ea8f6826aac67a6b815e4c1668c",
+            "points": 41,
+            "layers": {
+              "bottom": 10,
+              "inner1": 10,
+              "inner2": 10,
+              "top": 11
+            }
+          },
+          "after": {
+            "solved": true,
+            "outputSha256": "feaf748308e0a5b6ca1d1fa36c7ddd89faa37ea8f6826aac67a6b815e4c1668c",
+            "points": 41,
+            "layers": {
+              "bottom": 10,
+              "inner1": 10,
+              "inner2": 10,
+              "top": 11
+            }
+          }
+        },
+        {
+          "index": 4,
+          "beforeId": 4,
+          "afterId": 4,
+          "before": {
+            "solved": true,
+            "outputSha256": "e29792fae2726016a9f95ff6f7f7e4230470b92309f1686be8aa4d68447ecdcf",
+            "points": 72,
+            "layers": {
+              "bottom": 18,
+              "inner1": 18,
+              "inner2": 18,
+              "top": 18
+            }
+          },
+          "after": {
+            "solved": true,
+            "outputSha256": "e29792fae2726016a9f95ff6f7f7e4230470b92309f1686be8aa4d68447ecdcf",
+            "points": 72,
+            "layers": {
+              "bottom": 18,
+              "inner1": 18,
+              "inner2": 18,
+              "top": 18
+            }
+          }
+        },
+        {
+          "index": 5,
+          "beforeId": 5,
+          "afterId": 5,
+          "before": {
+            "solved": true,
+            "outputSha256": "c4bc2545fc7c79db3b555081059890acabbfb82a9f38ca458044acb5318c5da6",
+            "points": 11,
+            "layers": {
+              "bottom": 3,
+              "inner1": 3,
+              "inner2": 2,
+              "top": 3
+            }
+          },
+          "after": {
+            "solved": true,
+            "outputSha256": "c4bc2545fc7c79db3b555081059890acabbfb82a9f38ca458044acb5318c5da6",
+            "points": 11,
+            "layers": {
+              "bottom": 3,
+              "inner1": 3,
+              "inner2": 2,
+              "top": 3
+            }
+          }
+        },
+        {
+          "index": 6,
+          "beforeId": 6,
+          "afterId": 6,
+          "before": {
+            "solved": true,
+            "outputSha256": "5d04091d9a97c9d13d0176a912ad6d1340a7182ebafcce4ec9b6f15afb106729",
+            "points": 6,
+            "layers": {
+              "bottom": 2,
+              "inner1": 1,
+              "inner2": 1,
+              "top": 2
+            }
+          },
+          "after": {
+            "solved": true,
+            "outputSha256": "5d04091d9a97c9d13d0176a912ad6d1340a7182ebafcce4ec9b6f15afb106729",
+            "points": 6,
+            "layers": {
+              "bottom": 2,
+              "inner1": 1,
+              "inner2": 1,
+              "top": 2
+            }
+          }
+        },
+        {
+          "index": 7,
+          "beforeId": 7,
+          "afterId": 7,
+          "before": {
+            "solved": true,
+            "outputSha256": "2f12f9bf47a3efeba83fa1be7b4ea91751a27b1725dbb46c06e9a03a73925a49",
+            "points": 7,
+            "layers": {
+              "bottom": 2,
+              "inner1": 2,
+              "inner2": 1,
+              "top": 2
+            }
+          },
+          "after": {
+            "solved": true,
+            "outputSha256": "2f12f9bf47a3efeba83fa1be7b4ea91751a27b1725dbb46c06e9a03a73925a49",
+            "points": 7,
+            "layers": {
+              "bottom": 2,
+              "inner1": 2,
+              "inner2": 1,
+              "top": 2
+            }
+          }
+        }
+      ],
+      "additionalWindingCalls": 0,
+      "captures": [
+        {
+          "mode": "before",
+          "fanoutReached": true,
+          "partialEscapes": 111,
+          "requests": 174,
+          "nativeVias": 72,
+          "physicalViaSites": 72,
+          "assignments": 102,
+          "fanoutElapsedMs": 590953.3134120001,
+          "reportStatus": "failed",
+          "nativeDrcValid": true,
+          "independentViaInPadFindings": 0,
+          "components": 125,
+          "pads": 760,
+          "membershipErrors": [],
+          "connectedNets": 0,
+          "committedTraces": 0,
+          "committedVias": 0
+        },
+        {
+          "mode": "after",
+          "fanoutReached": true,
+          "partialEscapes": 111,
+          "requests": 174,
+          "nativeVias": 72,
+          "physicalViaSites": 72,
+          "assignments": 102,
+          "fanoutElapsedMs": 590917.0914159999,
+          "reportStatus": "failed",
+          "nativeDrcValid": true,
+          "independentViaInPadFindings": 0,
+          "components": 125,
+          "pads": 760,
+          "membershipErrors": [],
+          "connectedNets": 0,
+          "committedTraces": 0,
+          "committedVias": 0
+        }
+      ]
+    },
+    {
+      "sample": "icepi-original",
+      "samePadGeometry": true,
+      "sameFanoutConstructorInputs": true,
+      "sameCompletedAssignmentPrefix": true,
+      "comparedAssignments": 256,
+      "identicalPcbSvg": true,
+      "winding": [
+        {
+          "index": 0,
+          "beforeId": 0,
+          "afterId": 0,
+          "before": {
+            "solved": true,
+            "outputSha256": "d203f7d7313889f01faac1c65ea3a83415f0300db33573e7d75600cedc8a8b78",
+            "points": 12,
+            "layers": {
+              "bottom": 3,
+              "inner1": 3,
+              "inner2": 3,
+              "top": 3
+            }
+          },
+          "after": {
+            "solved": true,
+            "outputSha256": "d203f7d7313889f01faac1c65ea3a83415f0300db33573e7d75600cedc8a8b78",
+            "points": 12,
+            "layers": {
+              "bottom": 3,
+              "inner1": 3,
+              "inner2": 3,
+              "top": 3
+            }
+          }
+        },
+        {
+          "index": 1,
+          "beforeId": 1,
+          "afterId": 1,
+          "before": {
+            "solved": true,
+            "outputSha256": "591b0e724bb68587c89c47598d1b66559888e00b6561102565229d0988b73dcf",
+            "points": 22,
+            "layers": {
+              "bottom": 6,
+              "inner1": 5,
+              "inner2": 5,
+              "top": 6
+            }
+          },
+          "after": {
+            "solved": true,
+            "outputSha256": "591b0e724bb68587c89c47598d1b66559888e00b6561102565229d0988b73dcf",
+            "points": 22,
+            "layers": {
+              "bottom": 6,
+              "inner1": 5,
+              "inner2": 5,
+              "top": 6
+            }
+          }
+        },
+        {
+          "index": 2,
+          "beforeId": 2,
+          "afterId": 2,
+          "before": {
+            "solved": true,
+            "outputSha256": "03fc85e51b0018098cc241c4af7c2552555b4c68c46b862571744761f68db056",
+            "points": 47,
+            "layers": {
+              "bottom": 12,
+              "inner1": 12,
+              "inner2": 11,
+              "top": 12
+            }
+          },
+          "after": {
+            "solved": true,
+            "outputSha256": "03fc85e51b0018098cc241c4af7c2552555b4c68c46b862571744761f68db056",
+            "points": 47,
+            "layers": {
+              "bottom": 12,
+              "inner1": 12,
+              "inner2": 11,
+              "top": 12
+            }
+          }
+        },
+        {
+          "index": 3,
+          "beforeId": 3,
+          "afterId": 3,
+          "before": {
+            "solved": true,
+            "outputSha256": "084f800a2b687b09a94578989866936a24595acef42a6f3248265a8ee8397c20",
+            "points": 64,
+            "layers": {
+              "bottom": 16,
+              "inner1": 16,
+              "inner2": 16,
+              "top": 16
+            }
+          },
+          "after": {
+            "solved": true,
+            "outputSha256": "084f800a2b687b09a94578989866936a24595acef42a6f3248265a8ee8397c20",
+            "points": 64,
+            "layers": {
+              "bottom": 16,
+              "inner1": 16,
+              "inner2": 16,
+              "top": 16
+            }
+          }
+        },
+        {
+          "index": 4,
+          "beforeId": 4,
+          "afterId": 4,
+          "before": {
+            "solved": true,
+            "outputSha256": "c5235116fdc4423706f2c0c083716d7a63b8c901102281251e7199d5e918a6ab",
+            "points": 25,
+            "layers": {
+              "bottom": 6,
+              "inner1": 6,
+              "inner2": 6,
+              "top": 7
+            }
+          },
+          "after": {
+            "solved": true,
+            "outputSha256": "c5235116fdc4423706f2c0c083716d7a63b8c901102281251e7199d5e918a6ab",
+            "points": 25,
+            "layers": {
+              "bottom": 6,
+              "inner1": 6,
+              "inner2": 6,
+              "top": 7
+            }
+          }
+        },
+        {
+          "index": 5,
+          "beforeId": 5,
+          "afterId": 5,
+          "before": {
+            "solved": true,
+            "outputSha256": "dceb950985938398641d6aec74360650eb2142d0470b29d44dd054a26187161b",
+            "points": 1,
+            "layers": {
+              "top": 1
+            }
+          },
+          "after": {
+            "solved": true,
+            "outputSha256": "dceb950985938398641d6aec74360650eb2142d0470b29d44dd054a26187161b",
+            "points": 1,
+            "layers": {
+              "top": 1
+            }
+          }
+        },
+        {
+          "index": 6,
+          "beforeId": 6,
+          "afterId": 6,
+          "before": {
+            "solved": true,
+            "outputSha256": "dfdf0eb7869d17399373e1d25b4e1fbfd25f48a361ec3c310a7c5c80888bdc5e",
+            "points": 1,
+            "layers": {
+              "top": 1
+            }
+          },
+          "after": {
+            "solved": true,
+            "outputSha256": "dfdf0eb7869d17399373e1d25b4e1fbfd25f48a361ec3c310a7c5c80888bdc5e",
+            "points": 1,
+            "layers": {
+              "top": 1
+            }
+          }
+        },
+        {
+          "index": 7,
+          "beforeId": 7,
+          "afterId": 7,
+          "before": {
+            "solved": true,
+            "outputSha256": "a9f26ef66d875d6faacb8c5a2a04cae7d56f5cbba73693737290beb776a19be0",
+            "points": 51,
+            "layers": {
+              "bottom": 13,
+              "inner1": 13,
+              "inner2": 12,
+              "top": 13
+            }
+          },
+          "after": {
+            "solved": true,
+            "outputSha256": "a9f26ef66d875d6faacb8c5a2a04cae7d56f5cbba73693737290beb776a19be0",
+            "points": 51,
+            "layers": {
+              "bottom": 13,
+              "inner1": 13,
+              "inner2": 12,
+              "top": 13
+            }
+          }
+        }
+      ],
+      "additionalWindingCalls": 0,
+      "captures": [
+        {
+          "mode": "before",
+          "fanoutReached": true,
+          "partialEscapes": 14,
+          "requests": 32,
+          "nativeVias": 6,
+          "physicalViaSites": 6,
+          "assignments": 256,
+          "fanoutElapsedMs": 11136.675876000001,
+          "reportStatus": "failed",
+          "nativeDrcValid": true,
+          "independentViaInPadFindings": 0,
+          "components": 280,
+          "pads": 1426,
+          "membershipErrors": [],
+          "connectedNets": 7,
+          "committedTraces": 0,
+          "committedVias": 0
+        },
+        {
+          "mode": "after",
+          "fanoutReached": true,
+          "partialEscapes": 14,
+          "requests": 32,
+          "nativeVias": 6,
+          "physicalViaSites": 6,
+          "assignments": 256,
+          "fanoutElapsedMs": 11747.637141,
+          "reportStatus": "failed",
+          "nativeDrcValid": true,
+          "independentViaInPadFindings": 0,
+          "components": 280,
+          "pads": 1426,
+          "membershipErrors": [],
+          "connectedNets": 7,
+          "committedTraces": 0,
+          "committedVias": 0
+        }
+      ]
+    },
+    {
+      "sample": "icepi-spaced",
+      "samePadGeometry": true,
+      "sameFanoutConstructorInputs": true,
+      "sameCompletedAssignmentPrefix": true,
+      "comparedAssignments": 256,
+      "identicalPcbSvg": true,
+      "winding": [
+        {
+          "index": 0,
+          "beforeId": 0,
+          "afterId": 0,
+          "before": {
+            "solved": true,
+            "outputSha256": "6a33f4ab6007a0db2e1e77334d342b35645bf2fda1de4dee4e92ef0da3f88539",
+            "points": 64,
+            "layers": {
+              "bottom": 16,
+              "inner1": 16,
+              "inner2": 16,
+              "top": 16
+            }
+          },
+          "after": {
+            "solved": true,
+            "outputSha256": "6a33f4ab6007a0db2e1e77334d342b35645bf2fda1de4dee4e92ef0da3f88539",
+            "points": 64,
+            "layers": {
+              "bottom": 16,
+              "inner1": 16,
+              "inner2": 16,
+              "top": 16
+            }
+          }
+        },
+        {
+          "index": 1,
+          "beforeId": 1,
+          "afterId": 1,
+          "before": {
+            "solved": true,
+            "outputSha256": "3efedf0265c5ed8406296376b39c346267dcdcc71cf15aa99098695cb482d9b7",
+            "points": 64,
+            "layers": {
+              "bottom": 16,
+              "inner1": 16,
+              "inner2": 16,
+              "top": 16
+            }
+          },
+          "after": {
+            "solved": true,
+            "outputSha256": "3efedf0265c5ed8406296376b39c346267dcdcc71cf15aa99098695cb482d9b7",
+            "points": 64,
+            "layers": {
+              "bottom": 16,
+              "inner1": 16,
+              "inner2": 16,
+              "top": 16
+            }
+          }
+        },
+        {
+          "index": 2,
+          "beforeId": 2,
+          "afterId": 2,
+          "before": {
+            "solved": false,
+            "error": "WindingBreakoutSolver: declared breakout edges need 17.43mm but expose only 14.64mm"
+          },
+          "after": {
+            "solved": false,
+            "error": "WindingBreakoutSolver: declared breakout edges need 17.43mm but expose only 14.64mm"
+          }
+        },
+        {
+          "index": 3,
+          "beforeId": 3,
+          "afterId": 3,
+          "before": {
+            "solved": true,
+            "outputSha256": "0083b2488f10fc0363fa704e6dfa72c5880871d0ffae9e0584f0cd1a28d8d17f",
+            "points": 6,
+            "layers": {
+              "bottom": 2,
+              "inner1": 1,
+              "inner2": 1,
+              "top": 2
+            }
+          },
+          "after": {
+            "solved": true,
+            "outputSha256": "0083b2488f10fc0363fa704e6dfa72c5880871d0ffae9e0584f0cd1a28d8d17f",
+            "points": 6,
+            "layers": {
+              "bottom": 2,
+              "inner1": 1,
+              "inner2": 1,
+              "top": 2
+            }
+          }
+        },
+        {
+          "index": 4,
+          "beforeId": 4,
+          "afterId": 4,
+          "before": {
+            "solved": true,
+            "outputSha256": "2de21787be75bd74448455392523093efead8a550368d160f420297b58cc4c52",
+            "points": 6,
+            "layers": {
+              "bottom": 2,
+              "inner1": 1,
+              "inner2": 1,
+              "top": 2
+            }
+          },
+          "after": {
+            "solved": true,
+            "outputSha256": "2de21787be75bd74448455392523093efead8a550368d160f420297b58cc4c52",
+            "points": 6,
+            "layers": {
+              "bottom": 2,
+              "inner1": 1,
+              "inner2": 1,
+              "top": 2
+            }
+          }
+        },
+        {
+          "index": 5,
+          "beforeId": 5,
+          "afterId": 5,
+          "before": {
+            "solved": true,
+            "outputSha256": "7cb305aac6222a8a213a4dadcc5bee014cc388a4013d842a6ed2853b535625b1",
+            "points": 20,
+            "layers": {
+              "bottom": 5,
+              "inner1": 5,
+              "inner2": 5,
+              "top": 5
+            }
+          },
+          "after": {
+            "solved": true,
+            "outputSha256": "7cb305aac6222a8a213a4dadcc5bee014cc388a4013d842a6ed2853b535625b1",
+            "points": 20,
+            "layers": {
+              "bottom": 5,
+              "inner1": 5,
+              "inner2": 5,
+              "top": 5
+            }
+          }
+        },
+        {
+          "index": 6,
+          "beforeId": 6,
+          "afterId": 6,
+          "before": {
+            "solved": true,
+            "outputSha256": "0cf50b7263234bd70bf131553ca62a5d48f9ac742ecf9dee28212121a1fd549b",
+            "points": 60,
+            "layers": {
+              "bottom": 15,
+              "inner1": 15,
+              "inner2": 15,
+              "top": 15
+            }
+          },
+          "after": {
+            "solved": true,
+            "outputSha256": "0cf50b7263234bd70bf131553ca62a5d48f9ac742ecf9dee28212121a1fd549b",
+            "points": 60,
+            "layers": {
+              "bottom": 15,
+              "inner1": 15,
+              "inner2": 15,
+              "top": 15
+            }
+          }
+        },
+        {
+          "index": 7,
+          "beforeId": 7,
+          "afterId": 7,
+          "before": {
+            "solved": true,
+            "outputSha256": "8af5e6df25542a5f624785e64b57d6dfd585bd0fe13478927c425df13b6edb42",
+            "points": 8,
+            "layers": {
+              "bottom": 2,
+              "inner1": 2,
+              "inner2": 2,
+              "top": 2
+            }
+          },
+          "after": {
+            "solved": true,
+            "outputSha256": "8af5e6df25542a5f624785e64b57d6dfd585bd0fe13478927c425df13b6edb42",
+            "points": 8,
+            "layers": {
+              "bottom": 2,
+              "inner1": 2,
+              "inner2": 2,
+              "top": 2
+            }
+          }
+        },
+        {
+          "index": 8,
+          "beforeId": 8,
+          "afterId": 8,
+          "before": {
+            "solved": true,
+            "outputSha256": "af17eeec8fc734445ce67420a13f128fa21e45e6d93a10d7f0e01ef5b6ecf6f9",
+            "points": 1,
+            "layers": {
+              "top": 1
+            }
+          },
+          "after": {
+            "solved": true,
+            "outputSha256": "af17eeec8fc734445ce67420a13f128fa21e45e6d93a10d7f0e01ef5b6ecf6f9",
+            "points": 1,
+            "layers": {
+              "top": 1
+            }
+          }
+        },
+        {
+          "index": 9,
+          "beforeId": 9,
+          "afterId": 9,
+          "before": {
+            "solved": true,
+            "outputSha256": "a51437915c575291eca94895c291db624008179d11cf745f8f4b92b3c224dd81",
+            "points": 9,
+            "layers": {
+              "bottom": 2,
+              "inner1": 2,
+              "inner2": 2,
+              "top": 3
+            }
+          },
+          "after": {
+            "solved": true,
+            "outputSha256": "a51437915c575291eca94895c291db624008179d11cf745f8f4b92b3c224dd81",
+            "points": 9,
+            "layers": {
+              "bottom": 2,
+              "inner1": 2,
+              "inner2": 2,
+              "top": 3
+            }
+          }
+        },
+        {
+          "index": 10,
+          "beforeId": 10,
+          "afterId": 10,
+          "before": {
+            "solved": true,
+            "outputSha256": "fa009535550f59a7dc4243eb2590a823e09a3fac11a7784c298177daa61e09f7",
+            "points": 14,
+            "layers": {
+              "bottom": 4,
+              "inner1": 3,
+              "inner2": 3,
+              "top": 4
+            }
+          },
+          "after": {
+            "solved": true,
+            "outputSha256": "fa009535550f59a7dc4243eb2590a823e09a3fac11a7784c298177daa61e09f7",
+            "points": 14,
+            "layers": {
+              "bottom": 4,
+              "inner1": 3,
+              "inner2": 3,
+              "top": 4
+            }
+          }
+        }
+      ],
+      "additionalWindingCalls": 0,
+      "captures": [
+        {
+          "mode": "before",
+          "fanoutReached": true,
+          "partialEscapes": 77,
+          "requests": 92,
+          "nativeVias": 37,
+          "physicalViaSites": 37,
+          "assignments": 256,
+          "fanoutElapsedMs": 261207.772986,
+          "reportStatus": "failed",
+          "nativeDrcValid": true,
+          "independentViaInPadFindings": 0,
+          "components": 280,
+          "pads": 1426,
+          "membershipErrors": [],
+          "connectedNets": 0,
+          "committedTraces": 0,
+          "committedVias": 0
+        },
+        {
+          "mode": "after",
+          "fanoutReached": true,
+          "partialEscapes": 77,
+          "requests": 92,
+          "nativeVias": 37,
+          "physicalViaSites": 37,
+          "assignments": 256,
+          "fanoutElapsedMs": 258104.43403400003,
+          "reportStatus": "failed",
+          "nativeDrcValid": true,
+          "independentViaInPadFindings": 0,
+          "components": 280,
+          "pads": 1426,
+          "membershipErrors": [],
+          "connectedNets": 0,
+          "committedTraces": 0,
+          "committedVias": 0
+        }
+      ]
+    },
+    {
+      "sample": "imx6-original",
+      "samePadGeometry": true,
+      "sameFanoutConstructorInputs": true,
+      "sameCompletedAssignmentPrefix": true,
+      "comparedAssignments": 256,
+      "identicalPcbSvg": true,
+      "winding": [
+        {
+          "index": 0,
+          "beforeId": 0,
+          "afterId": 0,
+          "before": {
+            "solved": true,
+            "outputSha256": "e2e154edbc27735a67a7c8507b96e413c5726ed1a0e8e84945884612e9521b1f",
+            "points": 12,
+            "layers": {
+              "bottom": 2,
+              "inner1": 2,
+              "inner2": 2,
+              "inner3": 2,
+              "inner4": 2,
+              "top": 2
+            }
+          },
+          "after": {
+            "solved": true,
+            "outputSha256": "e2e154edbc27735a67a7c8507b96e413c5726ed1a0e8e84945884612e9521b1f",
+            "points": 12,
+            "layers": {
+              "bottom": 2,
+              "inner1": 2,
+              "inner2": 2,
+              "inner3": 2,
+              "inner4": 2,
+              "top": 2
+            }
+          }
+        },
+        {
+          "index": 1,
+          "beforeId": 1,
+          "afterId": 1,
+          "before": {
+            "solved": true,
+            "outputSha256": "dc8038b457299febcfdaa62dcdb5c3d2b7211133a3b51a390248860bf6bda3f4",
+            "points": 35,
+            "layers": {
+              "bottom": 6,
+              "inner1": 6,
+              "inner2": 6,
+              "inner3": 6,
+              "inner4": 5,
+              "top": 6
+            }
+          },
+          "after": {
+            "solved": true,
+            "outputSha256": "dc8038b457299febcfdaa62dcdb5c3d2b7211133a3b51a390248860bf6bda3f4",
+            "points": 35,
+            "layers": {
+              "bottom": 6,
+              "inner1": 6,
+              "inner2": 6,
+              "inner3": 6,
+              "inner4": 5,
+              "top": 6
+            }
+          }
+        },
+        {
+          "index": 2,
+          "beforeId": 2,
+          "afterId": 2,
+          "before": {
+            "solved": true,
+            "outputSha256": "bf4a7abddde42c66e3be9f00f13557ebc50508d12b0a37d98705f2832edb1153",
+            "points": 34,
+            "layers": {
+              "bottom": 6,
+              "inner1": 6,
+              "inner2": 6,
+              "inner3": 5,
+              "inner4": 5,
+              "top": 6
+            }
+          },
+          "after": {
+            "solved": true,
+            "outputSha256": "bf4a7abddde42c66e3be9f00f13557ebc50508d12b0a37d98705f2832edb1153",
+            "points": 34,
+            "layers": {
+              "bottom": 6,
+              "inner1": 6,
+              "inner2": 6,
+              "inner3": 5,
+              "inner4": 5,
+              "top": 6
+            }
+          }
+        },
+        {
+          "index": 3,
+          "beforeId": 3,
+          "afterId": 3,
+          "before": {
+            "solved": false,
+            "error": "WindingBreakoutSolver: declared breakout edges need 16.21mm but expose only 14.50mm"
+          },
+          "after": {
+            "solved": true,
+            "outputSha256": "ca704aae3314b452f285909dc3a32ad15b5af2431c3be8b7e849d3fae49239f6",
+            "points": 89,
+            "layers": {
+              "bottom": 15,
+              "inner1": 15,
+              "inner2": 15,
+              "inner3": 15,
+              "inner4": 14,
+              "top": 15
+            }
+          }
+        },
+        {
+          "index": 4,
+          "beforeId": 4,
+          "afterId": 5,
+          "before": {
+            "solved": true,
+            "outputSha256": "9d7bbb58e3533773a0ce3b18823f5f81fdd32441024a00f7356c6dda7adebaa3",
+            "points": 1,
+            "layers": {
+              "top": 1
+            }
+          },
+          "after": {
+            "solved": true,
+            "outputSha256": "9d7bbb58e3533773a0ce3b18823f5f81fdd32441024a00f7356c6dda7adebaa3",
+            "points": 1,
+            "layers": {
+              "top": 1
+            }
+          }
+        },
+        {
+          "index": 5,
+          "beforeId": 5,
+          "afterId": 6,
+          "before": {
+            "solved": true,
+            "outputSha256": "0fd36c313858b0866fdd61965d586b0033f938911952ea352910ced06f4bbbb8",
+            "points": 6,
+            "layers": {
+              "bottom": 1,
+              "inner1": 1,
+              "inner2": 1,
+              "inner3": 1,
+              "inner4": 1,
+              "top": 1
+            }
+          },
+          "after": {
+            "solved": true,
+            "outputSha256": "0fd36c313858b0866fdd61965d586b0033f938911952ea352910ced06f4bbbb8",
+            "points": 6,
+            "layers": {
+              "bottom": 1,
+              "inner1": 1,
+              "inner2": 1,
+              "inner3": 1,
+              "inner4": 1,
+              "top": 1
+            }
+          }
+        },
+        {
+          "index": 6,
+          "beforeId": 6,
+          "afterId": 7,
+          "before": {
+            "solved": true,
+            "outputSha256": "ef9bcd2065046122b2e2bef7dd266686f981d4cb80feb106e1c3dcaacc86f0ef",
+            "points": 50,
+            "layers": {
+              "bottom": 8,
+              "inner1": 10,
+              "inner2": 8,
+              "inner3": 7,
+              "inner4": 7,
+              "top": 10
+            }
+          },
+          "after": {
+            "solved": true,
+            "outputSha256": "ef9bcd2065046122b2e2bef7dd266686f981d4cb80feb106e1c3dcaacc86f0ef",
+            "points": 50,
+            "layers": {
+              "bottom": 8,
+              "inner1": 10,
+              "inner2": 8,
+              "inner3": 7,
+              "inner4": 7,
+              "top": 10
+            }
+          }
+        }
+      ],
+      "additionalWindingCalls": 1,
+      "captures": [
+        {
+          "mode": "before",
+          "fanoutReached": true,
+          "partialEscapes": 9,
+          "requests": 32,
+          "nativeVias": 7,
+          "physicalViaSites": 7,
+          "assignments": 256,
+          "fanoutElapsedMs": 17964.460613999996,
+          "reportStatus": "failed",
+          "nativeDrcValid": true,
+          "independentViaInPadFindings": 0,
+          "components": 498,
+          "pads": 1904,
+          "membershipErrors": [],
+          "connectedNets": 3,
+          "committedTraces": 0,
+          "committedVias": 0
+        },
+        {
+          "mode": "after",
+          "fanoutReached": true,
+          "partialEscapes": 9,
+          "requests": 32,
+          "nativeVias": 7,
+          "physicalViaSites": 7,
+          "assignments": 256,
+          "fanoutElapsedMs": 18585.777082,
+          "reportStatus": "failed",
+          "nativeDrcValid": true,
+          "independentViaInPadFindings": 0,
+          "components": 498,
+          "pads": 1904,
+          "membershipErrors": [],
+          "connectedNets": 3,
+          "committedTraces": 0,
+          "committedVias": 0
+        }
+      ]
+    },
+    {
+      "sample": "imx6-spaced",
+      "samePadGeometry": true,
+      "sameFanoutConstructorInputs": true,
+      "sameCompletedAssignmentPrefix": true,
+      "comparedAssignments": 256,
+      "identicalPcbSvg": true,
+      "winding": [
+        {
+          "index": 0,
+          "beforeId": 0,
+          "afterId": 0,
+          "before": {
+            "solved": true,
+            "outputSha256": "95ca759071a73a435c649de21bb05d7c3c04175392ff2854554c3d11108af873",
+            "points": 8,
+            "layers": {
+              "bottom": 2,
+              "inner1": 1,
+              "inner2": 1,
+              "inner3": 1,
+              "inner4": 1,
+              "top": 2
+            }
+          },
+          "after": {
+            "solved": true,
+            "outputSha256": "95ca759071a73a435c649de21bb05d7c3c04175392ff2854554c3d11108af873",
+            "points": 8,
+            "layers": {
+              "bottom": 2,
+              "inner1": 1,
+              "inner2": 1,
+              "inner3": 1,
+              "inner4": 1,
+              "top": 2
+            }
+          }
+        },
+        {
+          "index": 1,
+          "beforeId": 1,
+          "afterId": 1,
+          "before": {
+            "solved": true,
+            "outputSha256": "74a833925e1c9064fa9e4ab6191f9ecbfcf738cc209897bbd13695e28d3d6e7b",
+            "points": 16,
+            "layers": {
+              "bottom": 3,
+              "inner1": 3,
+              "inner2": 3,
+              "inner3": 2,
+              "inner4": 2,
+              "top": 3
+            }
+          },
+          "after": {
+            "solved": true,
+            "outputSha256": "74a833925e1c9064fa9e4ab6191f9ecbfcf738cc209897bbd13695e28d3d6e7b",
+            "points": 16,
+            "layers": {
+              "bottom": 3,
+              "inner1": 3,
+              "inner2": 3,
+              "inner3": 2,
+              "inner4": 2,
+              "top": 3
+            }
+          }
+        },
+        {
+          "index": 2,
+          "beforeId": 2,
+          "afterId": 2,
+          "before": {
+            "solved": true,
+            "outputSha256": "f19d43b8d524d798ce099dd52ae04e70ef723b68b7f499895a6fdece58f3409c",
+            "points": 2,
+            "layers": {
+              "bottom": 1,
+              "top": 1
+            }
+          },
+          "after": {
+            "solved": true,
+            "outputSha256": "f19d43b8d524d798ce099dd52ae04e70ef723b68b7f499895a6fdece58f3409c",
+            "points": 2,
+            "layers": {
+              "bottom": 1,
+              "top": 1
+            }
+          }
+        },
+        {
+          "index": 3,
+          "beforeId": 3,
+          "afterId": 3,
+          "before": {
+            "solved": true,
+            "outputSha256": "d33768502d2079df5755b1467657878a4538f67ed6d383943906a08fb778ae7c",
+            "points": 6,
+            "layers": {
+              "bottom": 1,
+              "inner1": 1,
+              "inner2": 1,
+              "inner3": 1,
+              "inner4": 1,
+              "top": 1
+            }
+          },
+          "after": {
+            "solved": true,
+            "outputSha256": "d33768502d2079df5755b1467657878a4538f67ed6d383943906a08fb778ae7c",
+            "points": 6,
+            "layers": {
+              "bottom": 1,
+              "inner1": 1,
+              "inner2": 1,
+              "inner3": 1,
+              "inner4": 1,
+              "top": 1
+            }
+          }
+        },
+        {
+          "index": 4,
+          "beforeId": 4,
+          "afterId": 4,
+          "before": {
+            "solved": true,
+            "outputSha256": "7d7979c5f88644e89b86be650e770c0657fb937322df49306ae886de4ef56811",
+            "points": 59,
+            "layers": {
+              "bottom": 10,
+              "inner1": 10,
+              "inner2": 10,
+              "inner3": 10,
+              "inner4": 9,
+              "top": 10
+            }
+          },
+          "after": {
+            "solved": true,
+            "outputSha256": "7d7979c5f88644e89b86be650e770c0657fb937322df49306ae886de4ef56811",
+            "points": 59,
+            "layers": {
+              "bottom": 10,
+              "inner1": 10,
+              "inner2": 10,
+              "inner3": 10,
+              "inner4": 9,
+              "top": 10
+            }
+          }
+        },
+        {
+          "index": 5,
+          "beforeId": 5,
+          "afterId": 5,
+          "before": {
+            "solved": true,
+            "outputSha256": "65ce7f4c253cab8313c5d8f27602741be79ebc0a69b5f5194d23e8abf49836c4",
+            "points": 60,
+            "layers": {
+              "bottom": 10,
+              "inner1": 10,
+              "inner2": 10,
+              "inner3": 10,
+              "inner4": 10,
+              "top": 10
+            }
+          },
+          "after": {
+            "solved": true,
+            "outputSha256": "65ce7f4c253cab8313c5d8f27602741be79ebc0a69b5f5194d23e8abf49836c4",
+            "points": 60,
+            "layers": {
+              "bottom": 10,
+              "inner1": 10,
+              "inner2": 10,
+              "inner3": 10,
+              "inner4": 10,
+              "top": 10
+            }
+          }
+        },
+        {
+          "index": 6,
+          "beforeId": 6,
+          "afterId": 6,
+          "before": {
+            "solved": false,
+            "error": "WindingBreakoutSolver: declared breakout edges need 16.21mm but expose only 14.50mm"
+          },
+          "after": {
+            "solved": true,
+            "outputSha256": "00061ed54f6f2ac0b6dcd5d1aa66a9dbf5cbe54111bed7a657855786e85d7c13",
+            "points": 90,
+            "layers": {
+              "bottom": 15,
+              "inner1": 15,
+              "inner2": 15,
+              "inner3": 15,
+              "inner4": 15,
+              "top": 15
+            }
+          }
+        },
+        {
+          "index": 7,
+          "beforeId": 7,
+          "afterId": 8,
+          "before": {
+            "solved": true,
+            "outputSha256": "630a508c1db1f4988f14f549445441052cc7e3ae53217410ad3c77750a74f182",
+            "points": 1,
+            "layers": {
+              "top": 1
+            }
+          },
+          "after": {
+            "solved": true,
+            "outputSha256": "630a508c1db1f4988f14f549445441052cc7e3ae53217410ad3c77750a74f182",
+            "points": 1,
+            "layers": {
+              "top": 1
+            }
+          }
+        },
+        {
+          "index": 8,
+          "beforeId": 8,
+          "afterId": 9,
+          "before": {
+            "solved": true,
+            "outputSha256": "f6bd3a3bafa1dabe6876d93feddf71290047f3d9855f87d7f1bd53472d07ed20",
+            "points": 24,
+            "layers": {
+              "bottom": 4,
+              "inner1": 4,
+              "inner2": 4,
+              "inner3": 4,
+              "inner4": 4,
+              "top": 4
+            }
+          },
+          "after": {
+            "solved": true,
+            "outputSha256": "f6bd3a3bafa1dabe6876d93feddf71290047f3d9855f87d7f1bd53472d07ed20",
+            "points": 24,
+            "layers": {
+              "bottom": 4,
+              "inner1": 4,
+              "inner2": 4,
+              "inner3": 4,
+              "inner4": 4,
+              "top": 4
+            }
+          }
+        },
+        {
+          "index": 9,
+          "beforeId": 9,
+          "afterId": 10,
+          "before": {
+            "solved": true,
+            "outputSha256": "625851564c029ab0d5a1dfac78bf636807248fee15204c3d74317d19d8f15101",
+            "points": 71,
+            "layers": {
+              "bottom": 11,
+              "inner1": 13,
+              "inner2": 11,
+              "inner3": 11,
+              "inner4": 11,
+              "top": 14
+            }
+          },
+          "after": {
+            "solved": true,
+            "outputSha256": "625851564c029ab0d5a1dfac78bf636807248fee15204c3d74317d19d8f15101",
+            "points": 71,
+            "layers": {
+              "bottom": 11,
+              "inner1": 13,
+              "inner2": 11,
+              "inner3": 11,
+              "inner4": 11,
+              "top": 14
+            }
+          }
+        }
+      ],
+      "additionalWindingCalls": 1,
+      "captures": [
+        {
+          "mode": "before",
+          "fanoutReached": true,
+          "partialEscapes": 7,
+          "requests": 32,
+          "nativeVias": 4,
+          "physicalViaSites": 4,
+          "assignments": 256,
+          "fanoutElapsedMs": 28218.98037399999,
+          "reportStatus": "failed",
+          "nativeDrcValid": true,
+          "independentViaInPadFindings": 0,
+          "components": 498,
+          "pads": 1904,
+          "membershipErrors": [],
+          "connectedNets": 0,
+          "committedTraces": 0,
+          "committedVias": 0
+        },
+        {
+          "mode": "after",
+          "fanoutReached": true,
+          "partialEscapes": 7,
+          "requests": 32,
+          "nativeVias": 4,
+          "physicalViaSites": 4,
+          "assignments": 256,
+          "fanoutElapsedMs": 28607.781760000013,
+          "reportStatus": "failed",
+          "nativeDrcValid": true,
+          "independentViaInPadFindings": 0,
+          "components": 498,
+          "pads": 1904,
+          "membershipErrors": [],
+          "connectedNets": 0,
+          "committedTraces": 0,
+          "committedVias": 0
+        }
+      ]
+    }
+  ]
+}

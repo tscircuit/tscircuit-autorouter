@@ -1,0 +1,2618 @@
+{
+  "sample": "butterstick-spaced",
+  "beforeVias": 41,
+  "afterVias": 49,
+  "escapesBefore": 78,
+  "escapesAfter": 78,
+  "byte1LayerBefore": "top",
+  "byte1LayerAfter": "inner2",
+  "byte1ViasAdded": 8,
+  "byte1ExitTargetsBefore": false,
+  "byte1ExitTargetsAfter": 8,
+  "explanation": "The recovered winding placement supplies coordinated connectionExitTargets absent before. Fanout chooses inner2 for the entire eight-bit byte1 bus. This accounts for the net eight-via increase; this does not establish a minimum required via count.",
+  "connections": [
+    {
+      "source": [
+        -1.6999999999999886,
+        3.1999999999999944,
+        "top"
+      ],
+      "before": {
+        "connection": "breakout:pcb_breakout_point_9",
+        "bus": "DDR_BUS_byte1",
+        "termination": {
+          "type": "boundary"
+        },
+        "sourceLayer": "top",
+        "targetLayer": "top",
+        "vias": [],
+        "endpoints": [
+          {
+            "x": -1.6999999999999886,
+            "y": 3.1999999999999944,
+            "layer": "top",
+            "pointId": "pcb_port_848",
+            "pcb_port_id": "pcb_port_848"
+          },
+          {
+            "x": -2.599899999999988,
+            "y": 4.088399999999993,
+            "layer": "inner5",
+            "pointId": "pcb_breakout_point_9"
+          }
+        ]
+      },
+      "after": {
+        "connection": "breakout:pcb_breakout_point_9",
+        "bus": "DDR_BUS_byte1",
+        "termination": {
+          "type": "boundary"
+        },
+        "sourceLayer": "top",
+        "targetLayer": "inner2",
+        "vias": [
+          {
+            "center": {
+              "x": -2.099999999999988,
+              "y": 2.799999999999995
+            },
+            "diameter": 0.4,
+            "holeDiameter": 0.2,
+            "fromLayer": "top",
+            "toLayer": "inner2",
+            "spanLayers": [
+              "top",
+              "inner1",
+              "inner2",
+              "inner3",
+              "inner4",
+              "inner5",
+              "inner6",
+              "bottom"
+            ]
+          }
+        ],
+        "endpoints": [
+          {
+            "x": -1.6999999999999886,
+            "y": 3.1999999999999944,
+            "layer": "top",
+            "pointId": "pcb_port_848",
+            "pcb_port_id": "pcb_port_848"
+          },
+          {
+            "x": -2.599899999999988,
+            "y": 4.088399999999993,
+            "layer": "inner5",
+            "pointId": "pcb_breakout_point_9"
+          }
+        ]
+      }
+    },
+    {
+      "source": [
+        -1.6999999999999886,
+        3.9999999999999942,
+        "top"
+      ],
+      "before": {
+        "connection": "breakout:pcb_breakout_point_16",
+        "bus": "DDR_BUS_byte1",
+        "termination": {
+          "type": "boundary"
+        },
+        "sourceLayer": "top",
+        "targetLayer": "top",
+        "vias": [],
+        "endpoints": [
+          {
+            "x": -1.6999999999999886,
+            "y": 3.9999999999999942,
+            "layer": "top",
+            "pointId": "pcb_port_849",
+            "pcb_port_id": "pcb_port_849"
+          },
+          {
+            "x": -2.599899999999988,
+            "y": 4.844199999999993,
+            "layer": "top",
+            "pointId": "pcb_breakout_point_16"
+          }
+        ]
+      },
+      "after": {
+        "connection": "breakout:pcb_breakout_point_16",
+        "bus": "DDR_BUS_byte1",
+        "termination": {
+          "type": "boundary"
+        },
+        "sourceLayer": "top",
+        "targetLayer": "inner2",
+        "vias": [
+          {
+            "center": {
+              "x": -2.099999999999988,
+              "y": 3.5999999999999948
+            },
+            "diameter": 0.4,
+            "holeDiameter": 0.2,
+            "fromLayer": "top",
+            "toLayer": "inner2",
+            "spanLayers": [
+              "top",
+              "inner1",
+              "inner2",
+              "inner3",
+              "inner4",
+              "inner5",
+              "inner6",
+              "bottom"
+            ]
+          }
+        ],
+        "endpoints": [
+          {
+            "x": -1.6999999999999886,
+            "y": 3.9999999999999942,
+            "layer": "top",
+            "pointId": "pcb_port_849",
+            "pcb_port_id": "pcb_port_849"
+          },
+          {
+            "x": -2.599899999999988,
+            "y": 4.844199999999993,
+            "layer": "top",
+            "pointId": "pcb_breakout_point_16"
+          }
+        ]
+      }
+    },
+    {
+      "source": [
+        -1.6999999999999886,
+        7.199999999999994,
+        "top"
+      ],
+      "before": {
+        "connection": "breakout:pcb_breakout_point_10",
+        "bus": "DDR_BUS_byte1",
+        "termination": {
+          "type": "boundary"
+        },
+        "sourceLayer": "top",
+        "targetLayer": "top",
+        "vias": [],
+        "endpoints": [
+          {
+            "x": -1.6999999999999886,
+            "y": 7.199999999999994,
+            "layer": "top",
+            "pointId": "pcb_port_850",
+            "pcb_port_id": "pcb_port_850"
+          },
+          {
+            "x": -2.599899999999988,
+            "y": 4.844199999999993,
+            "layer": "inner5",
+            "pointId": "pcb_breakout_point_10"
+          }
+        ]
+      },
+      "after": {
+        "connection": "breakout:pcb_breakout_point_10",
+        "bus": "DDR_BUS_byte1",
+        "termination": {
+          "type": "boundary"
+        },
+        "sourceLayer": "top",
+        "targetLayer": "inner2",
+        "vias": [
+          {
+            "center": {
+              "x": -2.099999999999988,
+              "y": 6.7999999999999945
+            },
+            "diameter": 0.4,
+            "holeDiameter": 0.2,
+            "fromLayer": "top",
+            "toLayer": "inner2",
+            "spanLayers": [
+              "top",
+              "inner1",
+              "inner2",
+              "inner3",
+              "inner4",
+              "inner5",
+              "inner6",
+              "bottom"
+            ]
+          }
+        ],
+        "endpoints": [
+          {
+            "x": -1.6999999999999886,
+            "y": 7.199999999999994,
+            "layer": "top",
+            "pointId": "pcb_port_850",
+            "pcb_port_id": "pcb_port_850"
+          },
+          {
+            "x": -2.599899999999988,
+            "y": 4.844199999999993,
+            "layer": "inner5",
+            "pointId": "pcb_breakout_point_10"
+          }
+        ]
+      }
+    },
+    {
+      "source": [
+        -0.8999999999999888,
+        7.999999999999995,
+        "top"
+      ],
+      "before": {
+        "connection": "breakout:pcb_breakout_point_17",
+        "bus": "DDR_BUS_byte1",
+        "termination": {
+          "type": "boundary"
+        },
+        "sourceLayer": "top",
+        "targetLayer": "top",
+        "vias": [],
+        "endpoints": [
+          {
+            "x": -0.8999999999999888,
+            "y": 7.999999999999995,
+            "layer": "top",
+            "pointId": "pcb_port_857",
+            "pcb_port_id": "pcb_port_857"
+          },
+          {
+            "x": -2.599899999999988,
+            "y": 5.5999999999999925,
+            "layer": "top",
+            "pointId": "pcb_breakout_point_17"
+          }
+        ]
+      },
+      "after": {
+        "connection": "breakout:pcb_breakout_point_17",
+        "bus": "DDR_BUS_byte1",
+        "termination": {
+          "type": "boundary"
+        },
+        "sourceLayer": "top",
+        "targetLayer": "inner2",
+        "vias": [
+          {
+            "center": {
+              "x": -1.2999999999999883,
+              "y": 7.599999999999995
+            },
+            "diameter": 0.4,
+            "holeDiameter": 0.2,
+            "fromLayer": "top",
+            "toLayer": "inner2",
+            "spanLayers": [
+              "top",
+              "inner1",
+              "inner2",
+              "inner3",
+              "inner4",
+              "inner5",
+              "inner6",
+              "bottom"
+            ]
+          }
+        ],
+        "endpoints": [
+          {
+            "x": -0.8999999999999888,
+            "y": 7.999999999999995,
+            "layer": "top",
+            "pointId": "pcb_port_857",
+            "pcb_port_id": "pcb_port_857"
+          },
+          {
+            "x": -2.599899999999988,
+            "y": 5.5999999999999925,
+            "layer": "top",
+            "pointId": "pcb_breakout_point_17"
+          }
+        ]
+      }
+    },
+    {
+      "source": [
+        -0.09999999999998899,
+        3.1999999999999944,
+        "top"
+      ],
+      "before": {
+        "connection": "breakout:pcb_breakout_point_13",
+        "bus": "DDR_BUS_byte1",
+        "termination": {
+          "type": "boundary"
+        },
+        "sourceLayer": "top",
+        "targetLayer": "top",
+        "vias": [],
+        "endpoints": [
+          {
+            "x": -0.09999999999998899,
+            "y": 3.1999999999999944,
+            "layer": "top",
+            "pointId": "pcb_port_860",
+            "pcb_port_id": "pcb_port_860"
+          },
+          {
+            "x": -2.599899999999988,
+            "y": 4.466299999999993,
+            "layer": "inner6",
+            "pointId": "pcb_breakout_point_13"
+          }
+        ]
+      },
+      "after": {
+        "connection": "breakout:pcb_breakout_point_13",
+        "bus": "DDR_BUS_byte1",
+        "termination": {
+          "type": "boundary"
+        },
+        "sourceLayer": "top",
+        "targetLayer": "inner2",
+        "vias": [
+          {
+            "center": {
+              "x": -0.49999999999998845,
+              "y": 2.799999999999995
+            },
+            "diameter": 0.4,
+            "holeDiameter": 0.2,
+            "fromLayer": "top",
+            "toLayer": "inner2",
+            "spanLayers": [
+              "top",
+              "inner1",
+              "inner2",
+              "inner3",
+              "inner4",
+              "inner5",
+              "inner6",
+              "bottom"
+            ]
+          }
+        ],
+        "endpoints": [
+          {
+            "x": -0.09999999999998899,
+            "y": 3.1999999999999944,
+            "layer": "top",
+            "pointId": "pcb_port_860",
+            "pcb_port_id": "pcb_port_860"
+          },
+          {
+            "x": -2.599899999999988,
+            "y": 4.466299999999993,
+            "layer": "inner6",
+            "pointId": "pcb_breakout_point_13"
+          }
+        ]
+      }
+    },
+    {
+      "source": [
+        -0.09999999999998899,
+        3.9999999999999942,
+        "top"
+      ],
+      "before": {
+        "connection": "breakout:pcb_breakout_point_5",
+        "bus": "DDR_BUS_byte1",
+        "termination": {
+          "type": "boundary"
+        },
+        "sourceLayer": "top",
+        "targetLayer": "top",
+        "vias": [],
+        "endpoints": [
+          {
+            "x": -0.09999999999998899,
+            "y": 3.9999999999999942,
+            "layer": "top",
+            "pointId": "pcb_port_861",
+            "pcb_port_id": "pcb_port_861"
+          },
+          {
+            "x": -2.599899999999988,
+            "y": 3.710499999999993,
+            "layer": "inner2",
+            "pointId": "pcb_breakout_point_5"
+          }
+        ]
+      },
+      "after": {
+        "connection": "breakout:pcb_breakout_point_5",
+        "bus": "DDR_BUS_byte1",
+        "termination": {
+          "type": "boundary"
+        },
+        "sourceLayer": "top",
+        "targetLayer": "inner2",
+        "vias": [
+          {
+            "center": {
+              "x": -0.49999999999998845,
+              "y": 3.5999999999999948
+            },
+            "diameter": 0.4,
+            "holeDiameter": 0.2,
+            "fromLayer": "top",
+            "toLayer": "inner2",
+            "spanLayers": [
+              "top",
+              "inner1",
+              "inner2",
+              "inner3",
+              "inner4",
+              "inner5",
+              "inner6",
+              "bottom"
+            ]
+          }
+        ],
+        "endpoints": [
+          {
+            "x": -0.09999999999998899,
+            "y": 3.9999999999999942,
+            "layer": "top",
+            "pointId": "pcb_port_861",
+            "pcb_port_id": "pcb_port_861"
+          },
+          {
+            "x": -2.599899999999988,
+            "y": 3.710499999999993,
+            "layer": "inner2",
+            "pointId": "pcb_breakout_point_5"
+          }
+        ]
+      }
+    },
+    {
+      "source": [
+        -0.09999999999998899,
+        7.999999999999995,
+        "top"
+      ],
+      "before": {
+        "connection": "breakout:pcb_breakout_point_1",
+        "bus": "DDR_BUS_byte1",
+        "termination": {
+          "type": "boundary"
+        },
+        "sourceLayer": "top",
+        "targetLayer": "top",
+        "vias": [],
+        "endpoints": [
+          {
+            "x": -0.09999999999998899,
+            "y": 7.999999999999995,
+            "layer": "top",
+            "pointId": "pcb_port_863",
+            "pcb_port_id": "pcb_port_863"
+          },
+          {
+            "x": -2.599899999999988,
+            "y": 3.332599999999993,
+            "layer": "bottom",
+            "pointId": "pcb_breakout_point_1"
+          }
+        ]
+      },
+      "after": {
+        "connection": "breakout:pcb_breakout_point_1",
+        "bus": "DDR_BUS_byte1",
+        "termination": {
+          "type": "boundary"
+        },
+        "sourceLayer": "top",
+        "targetLayer": "inner2",
+        "vias": [
+          {
+            "center": {
+              "x": -0.49999999999998845,
+              "y": 7.599999999999995
+            },
+            "diameter": 0.4,
+            "holeDiameter": 0.2,
+            "fromLayer": "top",
+            "toLayer": "inner2",
+            "spanLayers": [
+              "top",
+              "inner1",
+              "inner2",
+              "inner3",
+              "inner4",
+              "inner5",
+              "inner6",
+              "bottom"
+            ]
+          }
+        ],
+        "endpoints": [
+          {
+            "x": -0.09999999999998899,
+            "y": 7.999999999999995,
+            "layer": "top",
+            "pointId": "pcb_port_863",
+            "pcb_port_id": "pcb_port_863"
+          },
+          {
+            "x": -2.599899999999988,
+            "y": 3.332599999999993,
+            "layer": "bottom",
+            "pointId": "pcb_breakout_point_1"
+          }
+        ]
+      }
+    },
+    {
+      "source": [
+        0.7000000000000113,
+        7.199999999999994,
+        "top"
+      ],
+      "before": {
+        "connection": "breakout:pcb_breakout_point_6",
+        "bus": "DDR_BUS_byte1",
+        "termination": {
+          "type": "boundary"
+        },
+        "sourceLayer": "top",
+        "targetLayer": "top",
+        "vias": [],
+        "endpoints": [
+          {
+            "x": 0.7000000000000113,
+            "y": 7.199999999999994,
+            "layer": "top",
+            "pointId": "pcb_port_868",
+            "pcb_port_id": "pcb_port_868"
+          },
+          {
+            "x": -2.599899999999988,
+            "y": 4.466299999999992,
+            "layer": "inner2",
+            "pointId": "pcb_breakout_point_6"
+          }
+        ]
+      },
+      "after": {
+        "connection": "breakout:pcb_breakout_point_6",
+        "bus": "DDR_BUS_byte1",
+        "termination": {
+          "type": "boundary"
+        },
+        "sourceLayer": "top",
+        "targetLayer": "inner2",
+        "vias": [
+          {
+            "center": {
+              "x": 0.3000000000000118,
+              "y": 6.7999999999999945
+            },
+            "diameter": 0.4,
+            "holeDiameter": 0.2,
+            "fromLayer": "top",
+            "toLayer": "inner2",
+            "spanLayers": [
+              "top",
+              "inner1",
+              "inner2",
+              "inner3",
+              "inner4",
+              "inner5",
+              "inner6",
+              "bottom"
+            ]
+          }
+        ],
+        "endpoints": [
+          {
+            "x": 0.7000000000000113,
+            "y": 7.199999999999994,
+            "layer": "top",
+            "pointId": "pcb_port_868",
+            "pcb_port_id": "pcb_port_868"
+          },
+          {
+            "x": -2.599899999999988,
+            "y": 4.466299999999992,
+            "layer": "inner2",
+            "pointId": "pcb_breakout_point_6"
+          }
+        ]
+      }
+    },
+    {
+      "source": [
+        3.9000000000000115,
+        8.799999999999994,
+        "top"
+      ],
+      "before": {
+        "connection": "breakout:pcb_breakout_point_26",
+        "bus": "connection:breakout:pcb_breakout_point_26",
+        "termination": {
+          "type": "boundary"
+        },
+        "sourceLayer": "top",
+        "targetLayer": "bottom",
+        "vias": [
+          {
+            "center": {
+              "x": 3.9000000000000115,
+              "y": 9.289899999999994
+            },
+            "diameter": 0.4,
+            "holeDiameter": 0.2,
+            "fromLayer": "top",
+            "toLayer": "bottom",
+            "spanLayers": [
+              "top",
+              "inner1",
+              "inner2",
+              "inner3",
+              "inner4",
+              "inner5",
+              "inner6",
+              "bottom"
+            ]
+          }
+        ],
+        "endpoints": [
+          {
+            "x": 3.9000000000000115,
+            "y": 8.799999999999994,
+            "layer": "top",
+            "pointId": "pcb_port_894",
+            "pcb_port_id": "pcb_port_894"
+          },
+          {
+            "x": 2.9559647058823644,
+            "y": 9.699899999999992,
+            "layer": "inner2",
+            "pointId": "pcb_breakout_point_26"
+          }
+        ]
+      },
+      "after": {
+        "connection": "breakout:pcb_breakout_point_26",
+        "bus": "connection:breakout:pcb_breakout_point_26",
+        "termination": {
+          "type": "boundary"
+        },
+        "sourceLayer": "top",
+        "targetLayer": "top",
+        "vias": [],
+        "endpoints": [
+          {
+            "x": 3.9000000000000115,
+            "y": 8.799999999999994,
+            "layer": "top",
+            "pointId": "pcb_port_894",
+            "pcb_port_id": "pcb_port_894"
+          },
+          {
+            "x": 2.9559647058823644,
+            "y": 9.699899999999992,
+            "layer": "inner2",
+            "pointId": "pcb_breakout_point_26"
+          }
+        ]
+      }
+    },
+    {
+      "source": [
+        2.3000000000000114,
+        8.799999999999994,
+        "top"
+      ],
+      "before": {
+        "connection": "breakout:pcb_breakout_point_32",
+        "bus": "connection:breakout:pcb_breakout_point_32",
+        "termination": {
+          "type": "boundary"
+        },
+        "sourceLayer": "top",
+        "targetLayer": "top",
+        "vias": [],
+        "endpoints": [
+          {
+            "x": 2.3000000000000114,
+            "y": 8.799999999999994,
+            "layer": "top",
+            "pointId": "pcb_port_882",
+            "pcb_port_id": "pcb_port_882"
+          },
+          {
+            "x": 3.711764705882364,
+            "y": 9.699899999999992,
+            "layer": "inner6",
+            "pointId": "pcb_breakout_point_32"
+          }
+        ]
+      },
+      "after": {
+        "connection": "breakout:pcb_breakout_point_32",
+        "bus": "connection:breakout:pcb_breakout_point_32",
+        "termination": {
+          "type": "boundary"
+        },
+        "sourceLayer": "top",
+        "targetLayer": "inner2",
+        "vias": [
+          {
+            "center": {
+              "x": 2.3000000000000114,
+              "y": 9.289899999999994
+            },
+            "diameter": 0.4,
+            "holeDiameter": 0.2,
+            "fromLayer": "top",
+            "toLayer": "inner2",
+            "spanLayers": [
+              "top",
+              "inner1",
+              "inner2",
+              "inner3",
+              "inner4",
+              "inner5",
+              "inner6",
+              "bottom"
+            ]
+          }
+        ],
+        "endpoints": [
+          {
+            "x": 2.3000000000000114,
+            "y": 8.799999999999994,
+            "layer": "top",
+            "pointId": "pcb_port_882",
+            "pcb_port_id": "pcb_port_882"
+          },
+          {
+            "x": 3.711764705882364,
+            "y": 9.699899999999992,
+            "layer": "inner6",
+            "pointId": "pcb_breakout_point_32"
+          }
+        ]
+      }
+    },
+    {
+      "source": [
+        -1.6999999999999886,
+        8.799999999999994,
+        "top"
+      ],
+      "before": {
+        "connection": "breakout:pcb_breakout_point_15",
+        "bus": "connection:breakout:pcb_breakout_point_15",
+        "termination": {
+          "type": "boundary"
+        },
+        "sourceLayer": "top",
+        "targetLayer": "top",
+        "vias": [],
+        "endpoints": [
+          {
+            "x": -1.6999999999999886,
+            "y": 8.799999999999994,
+            "layer": "top",
+            "pointId": "pcb_port_852",
+            "pcb_port_id": "pcb_port_852"
+          },
+          {
+            "x": -2.599899999999988,
+            "y": 5.977899999999993,
+            "layer": "inner6",
+            "pointId": "pcb_breakout_point_15"
+          }
+        ]
+      },
+      "after": {
+        "connection": "breakout:pcb_breakout_point_15",
+        "bus": "connection:breakout:pcb_breakout_point_15",
+        "termination": {
+          "type": "boundary"
+        },
+        "sourceLayer": "top",
+        "targetLayer": "inner2",
+        "vias": [
+          {
+            "center": {
+              "x": -2.1898999999999886,
+              "y": 8.799999999999994
+            },
+            "diameter": 0.4,
+            "holeDiameter": 0.2,
+            "fromLayer": "top",
+            "toLayer": "inner2",
+            "spanLayers": [
+              "top",
+              "inner1",
+              "inner2",
+              "inner3",
+              "inner4",
+              "inner5",
+              "inner6",
+              "bottom"
+            ]
+          }
+        ],
+        "endpoints": [
+          {
+            "x": -1.6999999999999886,
+            "y": 8.799999999999994,
+            "layer": "top",
+            "pointId": "pcb_port_852",
+            "pcb_port_id": "pcb_port_852"
+          },
+          {
+            "x": -2.599899999999988,
+            "y": 5.977899999999993,
+            "layer": "inner6",
+            "pointId": "pcb_breakout_point_15"
+          }
+        ]
+      }
+    },
+    {
+      "source": [
+        2.3000000000000114,
+        2.399999999999994,
+        "top"
+      ],
+      "before": {
+        "connection": "breakout:pcb_breakout_point_71",
+        "bus": "connection:breakout:pcb_breakout_point_71",
+        "termination": {
+          "type": "boundary"
+        },
+        "sourceLayer": "top",
+        "targetLayer": "bottom",
+        "vias": [
+          {
+            "center": {
+              "x": 2.3000000000000114,
+              "y": 1.9100999999999941
+            },
+            "diameter": 0.4,
+            "holeDiameter": 0.2,
+            "fromLayer": "top",
+            "toLayer": "bottom",
+            "spanLayers": [
+              "top",
+              "inner1",
+              "inner2",
+              "inner3",
+              "inner4",
+              "inner5",
+              "inner6",
+              "bottom"
+            ]
+          }
+        ],
+        "endpoints": [
+          {
+            "x": 2.3000000000000114,
+            "y": 2.399999999999994,
+            "layer": "top",
+            "pointId": "pcb_port_877",
+            "pcb_port_id": "pcb_port_877"
+          },
+          {
+            "x": 2.9754547169811434,
+            "y": 1.5000999999999938,
+            "layer": "inner6",
+            "pointId": "pcb_breakout_point_71"
+          }
+        ]
+      },
+      "after": {
+        "connection": "breakout:pcb_breakout_point_71",
+        "bus": "connection:breakout:pcb_breakout_point_71",
+        "termination": {
+          "type": "boundary"
+        },
+        "sourceLayer": "top",
+        "targetLayer": "top",
+        "vias": [],
+        "endpoints": [
+          {
+            "x": 2.3000000000000114,
+            "y": 2.399999999999994,
+            "layer": "top",
+            "pointId": "pcb_port_877",
+            "pcb_port_id": "pcb_port_877"
+          },
+          {
+            "x": 2.9754547169811434,
+            "y": 1.5000999999999938,
+            "layer": "inner6",
+            "pointId": "pcb_breakout_point_71"
+          }
+        ]
+      }
+    },
+    {
+      "source": [
+        3.100000000000011,
+        2.399999999999994,
+        "top"
+      ],
+      "before": {
+        "connection": "breakout:pcb_breakout_point_82",
+        "bus": "connection:breakout:pcb_breakout_point_82",
+        "termination": {
+          "type": "boundary"
+        },
+        "sourceLayer": "top",
+        "targetLayer": "bottom",
+        "vias": [
+          {
+            "center": {
+              "x": 3.100000000000011,
+              "y": 1.9100999999999941
+            },
+            "diameter": 0.4,
+            "holeDiameter": 0.2,
+            "fromLayer": "top",
+            "toLayer": "bottom",
+            "spanLayers": [
+              "top",
+              "inner1",
+              "inner2",
+              "inner3",
+              "inner4",
+              "inner5",
+              "inner6",
+              "bottom"
+            ]
+          }
+        ],
+        "endpoints": [
+          {
+            "x": 3.100000000000011,
+            "y": 2.399999999999994,
+            "layer": "top",
+            "pointId": "pcb_port_883",
+            "pcb_port_id": "pcb_port_883"
+          },
+          {
+            "x": 4.109154716981144,
+            "y": 1.5000999999999938,
+            "layer": "top",
+            "pointId": "pcb_breakout_point_82"
+          }
+        ]
+      },
+      "after": {
+        "connection": "breakout:pcb_breakout_point_82",
+        "bus": "connection:breakout:pcb_breakout_point_82",
+        "termination": {
+          "type": "boundary"
+        },
+        "sourceLayer": "top",
+        "targetLayer": "top",
+        "vias": [],
+        "endpoints": [
+          {
+            "x": 3.100000000000011,
+            "y": 2.399999999999994,
+            "layer": "top",
+            "pointId": "pcb_port_883",
+            "pcb_port_id": "pcb_port_883"
+          },
+          {
+            "x": 4.109154716981144,
+            "y": 1.5000999999999938,
+            "layer": "top",
+            "pointId": "pcb_breakout_point_82"
+          }
+        ]
+      }
+    },
+    {
+      "source": [
+        4.700000000000012,
+        7.999999999999995,
+        "top"
+      ],
+      "before": {
+        "connection": "breakout:pcb_breakout_point_22",
+        "bus": "connection:breakout:pcb_breakout_point_22",
+        "termination": {
+          "type": "boundary"
+        },
+        "sourceLayer": "top",
+        "targetLayer": "top",
+        "vias": [],
+        "endpoints": [
+          {
+            "x": 4.700000000000012,
+            "y": 7.999999999999995,
+            "layer": "top",
+            "pointId": "pcb_port_899",
+            "pcb_port_id": "pcb_port_899"
+          },
+          {
+            "x": 2.5780647058823645,
+            "y": 9.699899999999992,
+            "layer": "bottom",
+            "pointId": "pcb_breakout_point_22"
+          }
+        ]
+      },
+      "after": {
+        "connection": "breakout:pcb_breakout_point_22",
+        "bus": "connection:breakout:pcb_breakout_point_22",
+        "termination": {
+          "type": "boundary"
+        },
+        "sourceLayer": "top",
+        "targetLayer": "inner2",
+        "vias": [
+          {
+            "center": {
+              "x": 5.100000000000011,
+              "y": 8.399999999999995
+            },
+            "diameter": 0.4,
+            "holeDiameter": 0.2,
+            "fromLayer": "top",
+            "toLayer": "inner2",
+            "spanLayers": [
+              "top",
+              "inner1",
+              "inner2",
+              "inner3",
+              "inner4",
+              "inner5",
+              "inner6",
+              "bottom"
+            ]
+          }
+        ],
+        "endpoints": [
+          {
+            "x": 4.700000000000012,
+            "y": 7.999999999999995,
+            "layer": "top",
+            "pointId": "pcb_port_899",
+            "pcb_port_id": "pcb_port_899"
+          },
+          {
+            "x": 2.5780647058823645,
+            "y": 9.699899999999992,
+            "layer": "bottom",
+            "pointId": "pcb_breakout_point_22"
+          }
+        ]
+      }
+    },
+    {
+      "source": [
+        5.5000000000000115,
+        7.999999999999995,
+        "top"
+      ],
+      "before": {
+        "connection": "breakout:pcb_breakout_point_31",
+        "bus": "connection:breakout:pcb_breakout_point_31",
+        "termination": {
+          "type": "boundary"
+        },
+        "sourceLayer": "top",
+        "targetLayer": "bottom",
+        "vias": [
+          {
+            "center": {
+              "x": 5.900000000000011,
+              "y": 8.399999999999995
+            },
+            "diameter": 0.4,
+            "holeDiameter": 0.2,
+            "fromLayer": "top",
+            "toLayer": "bottom",
+            "spanLayers": [
+              "top",
+              "inner1",
+              "inner2",
+              "inner3",
+              "inner4",
+              "inner5",
+              "inner6",
+              "bottom"
+            ]
+          }
+        ],
+        "endpoints": [
+          {
+            "x": 5.5000000000000115,
+            "y": 7.999999999999995,
+            "layer": "top",
+            "pointId": "pcb_port_905",
+            "pcb_port_id": "pcb_port_905"
+          },
+          {
+            "x": 2.955964705882364,
+            "y": 9.699899999999992,
+            "layer": "inner6",
+            "pointId": "pcb_breakout_point_31"
+          }
+        ]
+      },
+      "after": {
+        "connection": "breakout:pcb_breakout_point_31",
+        "bus": "connection:breakout:pcb_breakout_point_31",
+        "termination": {
+          "type": "boundary"
+        },
+        "sourceLayer": "top",
+        "targetLayer": "top",
+        "vias": [],
+        "endpoints": [
+          {
+            "x": 5.5000000000000115,
+            "y": 7.999999999999995,
+            "layer": "top",
+            "pointId": "pcb_port_905",
+            "pcb_port_id": "pcb_port_905"
+          },
+          {
+            "x": 2.955964705882364,
+            "y": 9.699899999999992,
+            "layer": "inner6",
+            "pointId": "pcb_breakout_point_31"
+          }
+        ]
+      }
+    },
+    {
+      "source": [
+        0.7000000000000113,
+        7.999999999999995,
+        "top"
+      ],
+      "before": {
+        "connection": "breakout:pcb_breakout_point_37",
+        "bus": "connection:breakout:pcb_breakout_point_37",
+        "termination": {
+          "type": "boundary"
+        },
+        "sourceLayer": "top",
+        "targetLayer": "top",
+        "vias": [],
+        "endpoints": [
+          {
+            "x": 0.7000000000000113,
+            "y": 7.999999999999995,
+            "layer": "top",
+            "pointId": "pcb_port_869",
+            "pcb_port_id": "pcb_port_869"
+          },
+          {
+            "x": 5.601264705882364,
+            "y": 9.699899999999992,
+            "layer": "top",
+            "pointId": "pcb_breakout_point_37"
+          }
+        ]
+      },
+      "after": {
+        "connection": "breakout:pcb_breakout_point_37",
+        "bus": "connection:breakout:pcb_breakout_point_37",
+        "termination": {
+          "type": "boundary"
+        },
+        "sourceLayer": "top",
+        "targetLayer": "inner2",
+        "vias": [
+          {
+            "center": {
+              "x": 0.3000000000000118,
+              "y": 8.399999999999995
+            },
+            "diameter": 0.4,
+            "holeDiameter": 0.2,
+            "fromLayer": "top",
+            "toLayer": "inner2",
+            "spanLayers": [
+              "top",
+              "inner1",
+              "inner2",
+              "inner3",
+              "inner4",
+              "inner5",
+              "inner6",
+              "bottom"
+            ]
+          }
+        ],
+        "endpoints": [
+          {
+            "x": 0.7000000000000113,
+            "y": 7.999999999999995,
+            "layer": "top",
+            "pointId": "pcb_port_869",
+            "pcb_port_id": "pcb_port_869"
+          },
+          {
+            "x": 5.601264705882364,
+            "y": 9.699899999999992,
+            "layer": "top",
+            "pointId": "pcb_breakout_point_37"
+          }
+        ]
+      }
+    },
+    {
+      "source": [
+        -0.8999999999999888,
+        7.199999999999994,
+        "top"
+      ],
+      "before": {
+        "connection": "breakout:pcb_breakout_point_4",
+        "bus": "connection:breakout:pcb_breakout_point_4",
+        "termination": {
+          "type": "boundary"
+        },
+        "sourceLayer": "top",
+        "targetLayer": "bottom",
+        "vias": [
+          {
+            "center": {
+              "x": -1.2999999999999883,
+              "y": 6.7999999999999945
+            },
+            "diameter": 0.4,
+            "holeDiameter": 0.2,
+            "fromLayer": "top",
+            "toLayer": "bottom",
+            "spanLayers": [
+              "top",
+              "inner1",
+              "inner2",
+              "inner3",
+              "inner4",
+              "inner5",
+              "inner6",
+              "bottom"
+            ]
+          }
+        ],
+        "endpoints": [
+          {
+            "x": -0.8999999999999888,
+            "y": 7.199999999999994,
+            "layer": "top",
+            "pointId": "pcb_port_856",
+            "pcb_port_id": "pcb_port_856"
+          },
+          {
+            "x": -2.599899999999988,
+            "y": 5.599999999999993,
+            "layer": "bottom",
+            "pointId": "pcb_breakout_point_4"
+          }
+        ]
+      },
+      "after": {
+        "connection": "breakout:pcb_breakout_point_4",
+        "bus": "connection:breakout:pcb_breakout_point_4",
+        "termination": {
+          "type": "boundary"
+        },
+        "sourceLayer": "top",
+        "targetLayer": "top",
+        "vias": [],
+        "endpoints": [
+          {
+            "x": -0.8999999999999888,
+            "y": 7.199999999999994,
+            "layer": "top",
+            "pointId": "pcb_port_856",
+            "pcb_port_id": "pcb_port_856"
+          },
+          {
+            "x": -2.599899999999988,
+            "y": 5.599999999999993,
+            "layer": "bottom",
+            "pointId": "pcb_breakout_point_4"
+          }
+        ]
+      }
+    },
+    {
+      "source": [
+        7.900000000000011,
+        3.1999999999999944,
+        "top"
+      ],
+      "before": {
+        "connection": "breakout:pcb_breakout_point_42",
+        "bus": "connection:breakout:pcb_breakout_point_42",
+        "termination": {
+          "type": "boundary"
+        },
+        "sourceLayer": "top",
+        "targetLayer": "top",
+        "vias": [],
+        "endpoints": [
+          {
+            "x": 7.900000000000011,
+            "y": 3.1999999999999944,
+            "layer": "top",
+            "pointId": "pcb_port_920",
+            "pcb_port_id": "pcb_port_920"
+          },
+          {
+            "x": 4.109154716981144,
+            "y": 1.5000999999999938,
+            "layer": "bottom",
+            "pointId": "pcb_breakout_point_42"
+          }
+        ]
+      },
+      "after": {
+        "connection": "breakout:pcb_breakout_point_42",
+        "bus": "connection:breakout:pcb_breakout_point_42",
+        "termination": {
+          "type": "boundary"
+        },
+        "sourceLayer": "top",
+        "targetLayer": "inner2",
+        "vias": [
+          {
+            "center": {
+              "x": 8.300000000000011,
+              "y": 2.799999999999995
+            },
+            "diameter": 0.4,
+            "holeDiameter": 0.2,
+            "fromLayer": "top",
+            "toLayer": "inner2",
+            "spanLayers": [
+              "top",
+              "inner1",
+              "inner2",
+              "inner3",
+              "inner4",
+              "inner5",
+              "inner6",
+              "bottom"
+            ]
+          }
+        ],
+        "endpoints": [
+          {
+            "x": 7.900000000000011,
+            "y": 3.1999999999999944,
+            "layer": "top",
+            "pointId": "pcb_port_920",
+            "pcb_port_id": "pcb_port_920"
+          },
+          {
+            "x": 4.109154716981144,
+            "y": 1.5000999999999938,
+            "layer": "bottom",
+            "pointId": "pcb_breakout_point_42"
+          }
+        ]
+      }
+    },
+    {
+      "source": [
+        10.300000000000011,
+        3.1999999999999944,
+        "top"
+      ],
+      "before": {
+        "connection": "breakout:pcb_breakout_point_64",
+        "bus": "connection:breakout:pcb_breakout_point_64",
+        "termination": {
+          "type": "boundary"
+        },
+        "sourceLayer": "top",
+        "targetLayer": "bottom",
+        "vias": [
+          {
+            "center": {
+              "x": 9.900000000000013,
+              "y": 3.599999999999994
+            },
+            "diameter": 0.4,
+            "holeDiameter": 0.2,
+            "fromLayer": "top",
+            "toLayer": "bottom",
+            "spanLayers": [
+              "top",
+              "inner1",
+              "inner2",
+              "inner3",
+              "inner4",
+              "inner5",
+              "inner6",
+              "bottom"
+            ]
+          }
+        ],
+        "endpoints": [
+          {
+            "x": 10.300000000000011,
+            "y": 3.1999999999999944,
+            "layer": "top",
+            "pointId": "pcb_port_938",
+            "pcb_port_id": "pcb_port_938"
+          },
+          {
+            "x": 5.620754716981144,
+            "y": 1.5000999999999938,
+            "layer": "inner5",
+            "pointId": "pcb_breakout_point_64"
+          }
+        ]
+      },
+      "after": {
+        "connection": "breakout:pcb_breakout_point_64",
+        "bus": "connection:breakout:pcb_breakout_point_64",
+        "termination": {
+          "type": "boundary"
+        },
+        "sourceLayer": "top",
+        "targetLayer": "top",
+        "vias": [],
+        "endpoints": [
+          {
+            "x": 10.300000000000011,
+            "y": 3.1999999999999944,
+            "layer": "top",
+            "pointId": "pcb_port_938",
+            "pcb_port_id": "pcb_port_938"
+          },
+          {
+            "x": 5.620754716981144,
+            "y": 1.5000999999999938,
+            "layer": "inner5",
+            "pointId": "pcb_breakout_point_64"
+          }
+        ]
+      }
+    },
+    {
+      "source": [
+        5.5000000000000115,
+        3.1999999999999944,
+        "top"
+      ],
+      "before": {
+        "connection": "breakout:pcb_breakout_point_72",
+        "bus": "connection:breakout:pcb_breakout_point_72",
+        "termination": {
+          "type": "boundary"
+        },
+        "sourceLayer": "top",
+        "targetLayer": "top",
+        "vias": [],
+        "endpoints": [
+          {
+            "x": 5.5000000000000115,
+            "y": 3.1999999999999944,
+            "layer": "top",
+            "pointId": "pcb_port_902",
+            "pcb_port_id": "pcb_port_902"
+          },
+          {
+            "x": 3.7312547169811436,
+            "y": 1.5000999999999938,
+            "layer": "inner6",
+            "pointId": "pcb_breakout_point_72"
+          }
+        ]
+      },
+      "after": {
+        "connection": "breakout:pcb_breakout_point_72",
+        "bus": "connection:breakout:pcb_breakout_point_72",
+        "termination": {
+          "type": "boundary"
+        },
+        "sourceLayer": "top",
+        "targetLayer": "inner2",
+        "vias": [
+          {
+            "center": {
+              "x": 5.900000000000011,
+              "y": 3.599999999999994
+            },
+            "diameter": 0.4,
+            "holeDiameter": 0.2,
+            "fromLayer": "top",
+            "toLayer": "inner2",
+            "spanLayers": [
+              "top",
+              "inner1",
+              "inner2",
+              "inner3",
+              "inner4",
+              "inner5",
+              "inner6",
+              "bottom"
+            ]
+          }
+        ],
+        "endpoints": [
+          {
+            "x": 5.5000000000000115,
+            "y": 3.1999999999999944,
+            "layer": "top",
+            "pointId": "pcb_port_902",
+            "pcb_port_id": "pcb_port_902"
+          },
+          {
+            "x": 3.7312547169811436,
+            "y": 1.5000999999999938,
+            "layer": "inner6",
+            "pointId": "pcb_breakout_point_72"
+          }
+        ]
+      }
+    },
+    {
+      "source": [
+        3.100000000000011,
+        7.199999999999994,
+        "top"
+      ],
+      "before": {
+        "connection": "breakout:pcb_breakout_point_36",
+        "bus": "connection:breakout:pcb_breakout_point_36",
+        "termination": {
+          "type": "boundary"
+        },
+        "sourceLayer": "top",
+        "targetLayer": "bottom",
+        "vias": [
+          {
+            "center": {
+              "x": 2.7000000000000117,
+              "y": 7.599999999999993
+            },
+            "diameter": 0.4,
+            "holeDiameter": 0.2,
+            "fromLayer": "top",
+            "toLayer": "bottom",
+            "spanLayers": [
+              "top",
+              "inner1",
+              "inner2",
+              "inner3",
+              "inner4",
+              "inner5",
+              "inner6",
+              "bottom"
+            ]
+          }
+        ],
+        "endpoints": [
+          {
+            "x": 3.100000000000011,
+            "y": 7.199999999999994,
+            "layer": "top",
+            "pointId": "pcb_port_886",
+            "pcb_port_id": "pcb_port_886"
+          },
+          {
+            "x": 4.845464705882364,
+            "y": 9.699899999999992,
+            "layer": "top",
+            "pointId": "pcb_breakout_point_36"
+          }
+        ]
+      },
+      "after": {
+        "connection": "breakout:pcb_breakout_point_36",
+        "bus": "connection:breakout:pcb_breakout_point_36",
+        "termination": {
+          "type": "boundary"
+        },
+        "sourceLayer": "top",
+        "targetLayer": "top",
+        "vias": [],
+        "endpoints": [
+          {
+            "x": 3.100000000000011,
+            "y": 7.199999999999994,
+            "layer": "top",
+            "pointId": "pcb_port_886",
+            "pcb_port_id": "pcb_port_886"
+          },
+          {
+            "x": 4.845464705882364,
+            "y": 9.699899999999992,
+            "layer": "top",
+            "pointId": "pcb_breakout_point_36"
+          }
+        ]
+      }
+    },
+    {
+      "source": [
+        3.100000000000011,
+        3.9999999999999942,
+        "top"
+      ],
+      "before": {
+        "connection": "breakout:pcb_breakout_point_60",
+        "bus": "connection:breakout:pcb_breakout_point_60",
+        "termination": {
+          "type": "boundary"
+        },
+        "sourceLayer": "top",
+        "targetLayer": "top",
+        "vias": [],
+        "endpoints": [
+          {
+            "x": 3.100000000000011,
+            "y": 3.9999999999999942,
+            "layer": "top",
+            "pointId": "pcb_port_885",
+            "pcb_port_id": "pcb_port_885"
+          },
+          {
+            "x": 2.5975547169811435,
+            "y": 1.5000999999999938,
+            "layer": "inner5",
+            "pointId": "pcb_breakout_point_60"
+          }
+        ]
+      },
+      "after": {
+        "connection": "breakout:pcb_breakout_point_60",
+        "bus": "connection:breakout:pcb_breakout_point_60",
+        "termination": {
+          "type": "boundary"
+        },
+        "sourceLayer": "top",
+        "targetLayer": "inner2",
+        "vias": [
+          {
+            "center": {
+              "x": 3.5000000000000107,
+              "y": 3.5999999999999948
+            },
+            "diameter": 0.4,
+            "holeDiameter": 0.2,
+            "fromLayer": "top",
+            "toLayer": "inner2",
+            "spanLayers": [
+              "top",
+              "inner1",
+              "inner2",
+              "inner3",
+              "inner4",
+              "inner5",
+              "inner6",
+              "bottom"
+            ]
+          }
+        ],
+        "endpoints": [
+          {
+            "x": 3.100000000000011,
+            "y": 3.9999999999999942,
+            "layer": "top",
+            "pointId": "pcb_port_885",
+            "pcb_port_id": "pcb_port_885"
+          },
+          {
+            "x": 2.5975547169811435,
+            "y": 1.5000999999999938,
+            "layer": "inner5",
+            "pointId": "pcb_breakout_point_60"
+          }
+        ]
+      }
+    },
+    {
+      "source": [
+        5.5000000000000115,
+        3.9999999999999942,
+        "top"
+      ],
+      "before": {
+        "connection": "breakout:pcb_breakout_point_83",
+        "bus": "connection:breakout:pcb_breakout_point_83",
+        "termination": {
+          "type": "boundary"
+        },
+        "sourceLayer": "top",
+        "targetLayer": "top",
+        "vias": [],
+        "endpoints": [
+          {
+            "x": 5.5000000000000115,
+            "y": 3.9999999999999942,
+            "layer": "top",
+            "pointId": "pcb_port_903",
+            "pcb_port_id": "pcb_port_903"
+          },
+          {
+            "x": 4.864954716981144,
+            "y": 1.5000999999999938,
+            "layer": "top",
+            "pointId": "pcb_breakout_point_83"
+          }
+        ]
+      },
+      "after": {
+        "connection": "breakout:pcb_breakout_point_83",
+        "bus": "connection:breakout:pcb_breakout_point_83",
+        "termination": {
+          "type": "boundary"
+        },
+        "sourceLayer": "top",
+        "targetLayer": "inner2",
+        "vias": [
+          {
+            "center": {
+              "x": 5.100000000000012,
+              "y": 3.5999999999999948
+            },
+            "diameter": 0.4,
+            "holeDiameter": 0.2,
+            "fromLayer": "top",
+            "toLayer": "inner2",
+            "spanLayers": [
+              "top",
+              "inner1",
+              "inner2",
+              "inner3",
+              "inner4",
+              "inner5",
+              "inner6",
+              "bottom"
+            ]
+          }
+        ],
+        "endpoints": [
+          {
+            "x": 5.5000000000000115,
+            "y": 3.9999999999999942,
+            "layer": "top",
+            "pointId": "pcb_port_903",
+            "pcb_port_id": "pcb_port_903"
+          },
+          {
+            "x": 4.864954716981144,
+            "y": 1.5000999999999938,
+            "layer": "top",
+            "pointId": "pcb_breakout_point_83"
+          }
+        ]
+      }
+    },
+    {
+      "source": [
+        9.50000000000001,
+        3.9999999999999942,
+        "top"
+      ],
+      "before": {
+        "connection": "breakout:pcb_breakout_point_86",
+        "bus": "connection:breakout:pcb_breakout_point_86",
+        "termination": {
+          "type": "boundary"
+        },
+        "sourceLayer": "top",
+        "targetLayer": "top",
+        "vias": [],
+        "endpoints": [
+          {
+            "x": 9.50000000000001,
+            "y": 3.9999999999999942,
+            "layer": "top",
+            "pointId": "pcb_port_933",
+            "pcb_port_id": "pcb_port_933"
+          },
+          {
+            "x": 7.132354716981144,
+            "y": 1.5000999999999938,
+            "layer": "top",
+            "pointId": "pcb_breakout_point_86"
+          }
+        ]
+      },
+      "after": {
+        "connection": "breakout:pcb_breakout_point_86",
+        "bus": "connection:breakout:pcb_breakout_point_86",
+        "termination": {
+          "type": "boundary"
+        },
+        "sourceLayer": "top",
+        "targetLayer": "bottom",
+        "vias": [
+          {
+            "center": {
+              "x": 9.90000000000001,
+              "y": 3.5999999999999948
+            },
+            "diameter": 0.4,
+            "holeDiameter": 0.2,
+            "fromLayer": "top",
+            "toLayer": "bottom",
+            "spanLayers": [
+              "top",
+              "inner1",
+              "inner2",
+              "inner3",
+              "inner4",
+              "inner5",
+              "inner6",
+              "bottom"
+            ]
+          }
+        ],
+        "endpoints": [
+          {
+            "x": 9.50000000000001,
+            "y": 3.9999999999999942,
+            "layer": "top",
+            "pointId": "pcb_port_933",
+            "pcb_port_id": "pcb_port_933"
+          },
+          {
+            "x": 7.132354716981144,
+            "y": 1.5000999999999938,
+            "layer": "top",
+            "pointId": "pcb_breakout_point_86"
+          }
+        ]
+      }
+    },
+    {
+      "source": [
+        6.300000000000011,
+        7.199999999999994,
+        "top"
+      ],
+      "before": {
+        "connection": "breakout:pcb_breakout_point_46",
+        "bus": "connection:breakout:pcb_breakout_point_46",
+        "termination": {
+          "type": "boundary"
+        },
+        "sourceLayer": "top",
+        "targetLayer": "bottom",
+        "vias": [
+          {
+            "center": {
+              "x": 6.700000000000011,
+              "y": 6.7999999999999945
+            },
+            "diameter": 0.4,
+            "holeDiameter": 0.2,
+            "fromLayer": "top",
+            "toLayer": "bottom",
+            "spanLayers": [
+              "top",
+              "inner1",
+              "inner2",
+              "inner3",
+              "inner4",
+              "inner5",
+              "inner6",
+              "bottom"
+            ]
+          }
+        ],
+        "endpoints": [
+          {
+            "x": 6.300000000000011,
+            "y": 7.199999999999994,
+            "layer": "top",
+            "pointId": "pcb_port_910",
+            "pcb_port_id": "pcb_port_910"
+          },
+          {
+            "x": 7.132354716981144,
+            "y": 1.5000999999999938,
+            "layer": "bottom",
+            "pointId": "pcb_breakout_point_46"
+          }
+        ]
+      },
+      "after": {
+        "connection": "breakout:pcb_breakout_point_46",
+        "bus": "connection:breakout:pcb_breakout_point_46",
+        "termination": {
+          "type": "boundary"
+        },
+        "sourceLayer": "top",
+        "targetLayer": "top",
+        "vias": [],
+        "endpoints": [
+          {
+            "x": 6.300000000000011,
+            "y": 7.199999999999994,
+            "layer": "top",
+            "pointId": "pcb_port_910",
+            "pcb_port_id": "pcb_port_910"
+          },
+          {
+            "x": 7.132354716981144,
+            "y": 1.5000999999999938,
+            "layer": "bottom",
+            "pointId": "pcb_breakout_point_46"
+          }
+        ]
+      }
+    },
+    {
+      "source": [
+        9.50000000000001,
+        7.199999999999994,
+        "top"
+      ],
+      "before": {
+        "connection": "breakout:pcb_breakout_point_65",
+        "bus": "connection:breakout:pcb_breakout_point_65",
+        "termination": {
+          "type": "boundary"
+        },
+        "sourceLayer": "top",
+        "targetLayer": "top",
+        "vias": [],
+        "endpoints": [
+          {
+            "x": 9.50000000000001,
+            "y": 7.199999999999994,
+            "layer": "top",
+            "pointId": "pcb_port_934",
+            "pcb_port_id": "pcb_port_934"
+          },
+          {
+            "x": 6.376554716981144,
+            "y": 1.5000999999999938,
+            "layer": "inner5",
+            "pointId": "pcb_breakout_point_65"
+          }
+        ]
+      },
+      "after": {
+        "connection": "breakout:pcb_breakout_point_65",
+        "bus": "connection:breakout:pcb_breakout_point_65",
+        "termination": {
+          "type": "boundary"
+        },
+        "sourceLayer": "top",
+        "targetLayer": "inner2",
+        "vias": [
+          {
+            "center": {
+              "x": 9.100000000000012,
+              "y": 6.7999999999999945
+            },
+            "diameter": 0.4,
+            "holeDiameter": 0.2,
+            "fromLayer": "top",
+            "toLayer": "inner2",
+            "spanLayers": [
+              "top",
+              "inner1",
+              "inner2",
+              "inner3",
+              "inner4",
+              "inner5",
+              "inner6",
+              "bottom"
+            ]
+          }
+        ],
+        "endpoints": [
+          {
+            "x": 9.50000000000001,
+            "y": 7.199999999999994,
+            "layer": "top",
+            "pointId": "pcb_port_934",
+            "pcb_port_id": "pcb_port_934"
+          },
+          {
+            "x": 6.376554716981144,
+            "y": 1.5000999999999938,
+            "layer": "inner5",
+            "pointId": "pcb_breakout_point_65"
+          }
+        ]
+      }
+    },
+    {
+      "source": [
+        8.700000000000012,
+        7.199999999999994,
+        "top"
+      ],
+      "before": {
+        "connection": "breakout:pcb_breakout_point_76",
+        "bus": "connection:breakout:pcb_breakout_point_76",
+        "termination": {
+          "type": "boundary"
+        },
+        "sourceLayer": "top",
+        "targetLayer": "bottom",
+        "vias": [
+          {
+            "center": {
+              "x": 9.100000000000012,
+              "y": 6.7999999999999945
+            },
+            "diameter": 0.4,
+            "holeDiameter": 0.2,
+            "fromLayer": "top",
+            "toLayer": "bottom",
+            "spanLayers": [
+              "top",
+              "inner1",
+              "inner2",
+              "inner3",
+              "inner4",
+              "inner5",
+              "inner6",
+              "bottom"
+            ]
+          }
+        ],
+        "endpoints": [
+          {
+            "x": 8.700000000000012,
+            "y": 7.199999999999994,
+            "layer": "top",
+            "pointId": "pcb_port_928",
+            "pcb_port_id": "pcb_port_928"
+          },
+          {
+            "x": 6.754454716981145,
+            "y": 1.5000999999999938,
+            "layer": "inner6",
+            "pointId": "pcb_breakout_point_76"
+          }
+        ]
+      },
+      "after": {
+        "connection": "breakout:pcb_breakout_point_76",
+        "bus": "connection:breakout:pcb_breakout_point_76",
+        "termination": {
+          "type": "boundary"
+        },
+        "sourceLayer": "top",
+        "targetLayer": "top",
+        "vias": [],
+        "endpoints": [
+          {
+            "x": 8.700000000000012,
+            "y": 7.199999999999994,
+            "layer": "top",
+            "pointId": "pcb_port_928",
+            "pcb_port_id": "pcb_port_928"
+          },
+          {
+            "x": 6.754454716981145,
+            "y": 1.5000999999999938,
+            "layer": "inner6",
+            "pointId": "pcb_breakout_point_76"
+          }
+        ]
+      }
+    },
+    {
+      "source": [
+        7.100000000000011,
+        7.199999999999994,
+        "top"
+      ],
+      "before": {
+        "connection": "breakout:pcb_breakout_point_77",
+        "bus": "connection:breakout:pcb_breakout_point_77",
+        "termination": {
+          "type": "boundary"
+        },
+        "sourceLayer": "top",
+        "targetLayer": "top",
+        "vias": [],
+        "endpoints": [
+          {
+            "x": 7.100000000000011,
+            "y": 7.199999999999994,
+            "layer": "top",
+            "pointId": "pcb_port_916",
+            "pcb_port_id": "pcb_port_916"
+          },
+          {
+            "x": 7.510254716981144,
+            "y": 1.5000999999999938,
+            "layer": "inner6",
+            "pointId": "pcb_breakout_point_77"
+          }
+        ]
+      },
+      "after": {
+        "connection": "breakout:pcb_breakout_point_77",
+        "bus": "connection:breakout:pcb_breakout_point_77",
+        "termination": {
+          "type": "boundary"
+        },
+        "sourceLayer": "top",
+        "targetLayer": "inner2",
+        "vias": [
+          {
+            "center": {
+              "x": 6.700000000000012,
+              "y": 6.7999999999999945
+            },
+            "diameter": 0.4,
+            "holeDiameter": 0.2,
+            "fromLayer": "top",
+            "toLayer": "inner2",
+            "spanLayers": [
+              "top",
+              "inner1",
+              "inner2",
+              "inner3",
+              "inner4",
+              "inner5",
+              "inner6",
+              "bottom"
+            ]
+          }
+        ],
+        "endpoints": [
+          {
+            "x": 7.100000000000011,
+            "y": 7.199999999999994,
+            "layer": "top",
+            "pointId": "pcb_port_916",
+            "pcb_port_id": "pcb_port_916"
+          },
+          {
+            "x": 7.510254716981144,
+            "y": 1.5000999999999938,
+            "layer": "inner6",
+            "pointId": "pcb_breakout_point_77"
+          }
+        ]
+      }
+    },
+    {
+      "source": [
+        10.300000000000011,
+        7.999999999999995,
+        "top"
+      ],
+      "before": {
+        "connection": "breakout:pcb_breakout_point_87",
+        "bus": "connection:breakout:pcb_breakout_point_87",
+        "termination": {
+          "type": "boundary"
+        },
+        "sourceLayer": "top",
+        "targetLayer": "bottom",
+        "vias": [
+          {
+            "center": {
+              "x": 10.789900000000012,
+              "y": 7.999999999999995
+            },
+            "diameter": 0.4,
+            "holeDiameter": 0.2,
+            "fromLayer": "top",
+            "toLayer": "bottom",
+            "spanLayers": [
+              "top",
+              "inner1",
+              "inner2",
+              "inner3",
+              "inner4",
+              "inner5",
+              "inner6",
+              "bottom"
+            ]
+          }
+        ],
+        "endpoints": [
+          {
+            "x": 10.300000000000011,
+            "y": 7.999999999999995,
+            "layer": "top",
+            "pointId": "pcb_port_941",
+            "pcb_port_id": "pcb_port_941"
+          },
+          {
+            "x": 7.888154716981144,
+            "y": 1.5000999999999938,
+            "layer": "top",
+            "pointId": "pcb_breakout_point_87"
+          }
+        ]
+      },
+      "after": {
+        "connection": "breakout:pcb_breakout_point_87",
+        "bus": "connection:breakout:pcb_breakout_point_87",
+        "termination": {
+          "type": "boundary"
+        },
+        "sourceLayer": "top",
+        "targetLayer": "top",
+        "vias": [],
+        "endpoints": [
+          {
+            "x": 10.300000000000011,
+            "y": 7.999999999999995,
+            "layer": "top",
+            "pointId": "pcb_port_941",
+            "pcb_port_id": "pcb_port_941"
+          },
+          {
+            "x": 7.888154716981144,
+            "y": 1.5000999999999938,
+            "layer": "top",
+            "pointId": "pcb_breakout_point_87"
+          }
+        ]
+      }
+    }
+  ],
+  "ruleContexts": [
+    {
+      "mode": "before",
+      "config": {
+        "traceWidth": 0.089,
+        "viaDiameter": 0.4,
+        "viaHoleDiameter": 0.2,
+        "clearance": 0.0889,
+        "compactBusTracks": true,
+        "allowBlindAndBuriedVias": false,
+        "allowSameNetMerges": false,
+        "densePlaneReservationBusIds": [],
+        "denseUnrestrictedPlaneRoutingBusIds": [],
+        "singleLayerPushAndShove": false,
+        "singleLayerAdaptiveExits": false,
+        "borderDistribution": "even",
+        "layerNames": [
+          "top",
+          "inner1",
+          "inner2",
+          "inner3",
+          "inner4",
+          "inner5",
+          "inner6",
+          "bottom"
+        ],
+        "escapeLayers": [
+          "top",
+          "inner2",
+          "inner5",
+          "inner6",
+          "bottom"
+        ],
+        "maxLayerCombinations": 256,
+        "balanceLayerLoadByConnectionCount": false
+      },
+      "options": {
+        "buses": [
+          {
+            "busId": "DDR_BUS_byte0",
+            "name": "DDR_BUS_byte0",
+            "connectionNames": [
+              "breakout:pcb_breakout_point_90",
+              "breakout:pcb_breakout_point_79",
+              "breakout:pcb_breakout_point_47",
+              "breakout:pcb_breakout_point_68",
+              "breakout:pcb_breakout_point_58",
+              "breakout:pcb_breakout_point_69",
+              "breakout:pcb_breakout_point_57",
+              "breakout:pcb_breakout_point_89"
+            ],
+            "allowedLayers": [
+              "top",
+              "inner2",
+              "inner5",
+              "inner6",
+              "bottom"
+            ],
+            "connectionExitTargets": {
+              "breakout:pcb_breakout_point_90": {
+                "x": 1.943222222222233,
+                "y": -1.7001000000000108,
+                "layer": "inner5"
+              },
+              "breakout:pcb_breakout_point_79": {
+                "x": 2.699022222222233,
+                "y": -1.7001000000000108,
+                "layer": "top"
+              },
+              "breakout:pcb_breakout_point_47": {
+                "x": 1.5653222222222332,
+                "y": -1.7001000000000108,
+                "layer": "inner2"
+              },
+              "breakout:pcb_breakout_point_58": {
+                "x": 2.321122222222233,
+                "y": -1.7001000000000108,
+                "layer": "inner6"
+              },
+              "breakout:pcb_breakout_point_69": {
+                "x": 1.187422222222233,
+                "y": -1.7001000000000108,
+                "layer": "bottom"
+              }
+            }
+          },
+          {
+            "busId": "DDR_BUS_byte1",
+            "name": "DDR_BUS_byte1",
+            "connectionNames": [
+              "breakout:pcb_breakout_point_1",
+              "breakout:pcb_breakout_point_5",
+              "breakout:pcb_breakout_point_6",
+              "breakout:pcb_breakout_point_17",
+              "breakout:pcb_breakout_point_10",
+              "breakout:pcb_breakout_point_16",
+              "breakout:pcb_breakout_point_13",
+              "breakout:pcb_breakout_point_9"
+            ],
+            "allowedLayers": [
+              "top",
+              "inner2",
+              "inner5",
+              "inner6",
+              "bottom"
+            ]
+          }
+        ],
+        "borderDistribution": "even",
+        "compactBusTracks": true,
+        "escapeLayers": [
+          "top",
+          "inner2",
+          "inner5",
+          "inner6",
+          "bottom"
+        ],
+        "allowBlindAndBuriedVias": false,
+        "sharedBoundary": {
+          "minX": -2.599999999999988,
+          "maxX": 11.20000000000001,
+          "minY": 1.4999999999999938,
+          "maxY": 9.699999999999992
+        }
+      },
+      "buses": [
+        {
+          "busId": "DDR_BUS_byte1",
+          "direction": "left",
+          "allowedLayers": [
+            "top",
+            "inner2",
+            "inner5",
+            "inner6",
+            "bottom"
+          ],
+          "termination": {
+            "type": "boundary"
+          }
+        }
+      ]
+    },
+    {
+      "mode": "after",
+      "config": {
+        "traceWidth": 0.089,
+        "viaDiameter": 0.4,
+        "viaHoleDiameter": 0.2,
+        "clearance": 0.0889,
+        "compactBusTracks": true,
+        "allowBlindAndBuriedVias": false,
+        "allowSameNetMerges": false,
+        "densePlaneReservationBusIds": [],
+        "denseUnrestrictedPlaneRoutingBusIds": [],
+        "singleLayerPushAndShove": false,
+        "singleLayerAdaptiveExits": false,
+        "borderDistribution": "even",
+        "layerNames": [
+          "top",
+          "inner1",
+          "inner2",
+          "inner3",
+          "inner4",
+          "inner5",
+          "inner6",
+          "bottom"
+        ],
+        "escapeLayers": [
+          "top",
+          "inner2",
+          "inner5",
+          "inner6",
+          "bottom"
+        ],
+        "maxLayerCombinations": 256,
+        "balanceLayerLoadByConnectionCount": false
+      },
+      "options": {
+        "buses": [
+          {
+            "busId": "DDR_BUS_byte0",
+            "name": "DDR_BUS_byte0",
+            "connectionNames": [
+              "breakout:pcb_breakout_point_90",
+              "breakout:pcb_breakout_point_79",
+              "breakout:pcb_breakout_point_47",
+              "breakout:pcb_breakout_point_68",
+              "breakout:pcb_breakout_point_58",
+              "breakout:pcb_breakout_point_69",
+              "breakout:pcb_breakout_point_57",
+              "breakout:pcb_breakout_point_89"
+            ],
+            "allowedLayers": [
+              "top",
+              "inner2",
+              "inner5",
+              "inner6",
+              "bottom"
+            ],
+            "connectionExitTargets": {
+              "breakout:pcb_breakout_point_90": {
+                "x": 1.943222222222233,
+                "y": -1.7001000000000108,
+                "layer": "inner5"
+              },
+              "breakout:pcb_breakout_point_79": {
+                "x": 2.699022222222233,
+                "y": -1.7001000000000108,
+                "layer": "top"
+              },
+              "breakout:pcb_breakout_point_47": {
+                "x": 1.5653222222222332,
+                "y": -1.7001000000000108,
+                "layer": "inner2"
+              },
+              "breakout:pcb_breakout_point_68": {
+                "x": -3.900100000000006,
+                "y": 7.460199999999996,
+                "layer": "inner5"
+              },
+              "breakout:pcb_breakout_point_58": {
+                "x": 2.321122222222233,
+                "y": -1.7001000000000108,
+                "layer": "inner6"
+              },
+              "breakout:pcb_breakout_point_69": {
+                "x": 1.187422222222233,
+                "y": -1.7001000000000108,
+                "layer": "bottom"
+              },
+              "breakout:pcb_breakout_point_57": {
+                "x": -3.900100000000006,
+                "y": 8.215999999999996,
+                "layer": "top"
+              },
+              "breakout:pcb_breakout_point_89": {
+                "x": -3.900100000000006,
+                "y": 7.082299999999996,
+                "layer": "inner2"
+              }
+            }
+          },
+          {
+            "busId": "DDR_BUS_byte1",
+            "name": "DDR_BUS_byte1",
+            "connectionNames": [
+              "breakout:pcb_breakout_point_1",
+              "breakout:pcb_breakout_point_5",
+              "breakout:pcb_breakout_point_6",
+              "breakout:pcb_breakout_point_17",
+              "breakout:pcb_breakout_point_10",
+              "breakout:pcb_breakout_point_16",
+              "breakout:pcb_breakout_point_13",
+              "breakout:pcb_breakout_point_9"
+            ],
+            "allowedLayers": [
+              "top",
+              "inner2",
+              "inner5",
+              "inner6",
+              "bottom"
+            ],
+            "connectionExitTargets": {
+              "breakout:pcb_breakout_point_1": {
+                "x": -3.900100000000006,
+                "y": 9.727599999999995,
+                "layer": "top"
+              },
+              "breakout:pcb_breakout_point_5": {
+                "x": -3.900100000000006,
+                "y": 8.593899999999994,
+                "layer": "inner2"
+              },
+              "breakout:pcb_breakout_point_6": {
+                "x": -3.900100000000006,
+                "y": 8.971799999999995,
+                "layer": "inner5"
+              },
+              "breakout:pcb_breakout_point_17": {
+                "x": -3.900100000000006,
+                "y": 9.349699999999995,
+                "layer": "inner6"
+              },
+              "breakout:pcb_breakout_point_10": {
+                "x": -3.900100000000006,
+                "y": 8.215999999999994,
+                "layer": "bottom"
+              },
+              "breakout:pcb_breakout_point_16": {
+                "x": -3.900100000000006,
+                "y": 8.215999999999998,
+                "layer": "inner5"
+              },
+              "breakout:pcb_breakout_point_13": {
+                "x": -3.900100000000006,
+                "y": 8.971799999999998,
+                "layer": "top"
+              },
+              "breakout:pcb_breakout_point_9": {
+                "x": -3.900100000000006,
+                "y": 7.838099999999997,
+                "layer": "inner2"
+              }
+            }
+          }
+        ],
+        "borderDistribution": "even",
+        "compactBusTracks": true,
+        "escapeLayers": [
+          "top",
+          "inner2",
+          "inner5",
+          "inner6",
+          "bottom"
+        ],
+        "allowBlindAndBuriedVias": false,
+        "sharedBoundary": {
+          "minX": -2.599999999999988,
+          "maxX": 11.20000000000001,
+          "minY": 1.4999999999999938,
+          "maxY": 9.699999999999992
+        }
+      },
+      "buses": [
+        {
+          "busId": "DDR_BUS_byte1",
+          "direction": "left",
+          "allowedLayers": [
+            "top",
+            "inner2",
+            "inner5",
+            "inner6",
+            "bottom"
+          ],
+          "termination": {
+            "type": "boundary"
+          }
+        }
+      ]
+    }
+  ]
+}
