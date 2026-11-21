@@ -133,6 +133,19 @@ for (const sample of manifest.samples.map((entry: any) => entry.name.replace(/\.
     ]
     writeFileSync(join(output, "glider-spaced-before.svg"), getSvgFromGraphicsObject(graphics, { backgroundColor: "white", svgWidth: 1000, svgHeight: 1000 }))
   }
+  if (sample === "butterstick-spaced") {
+    const bySource = captures.map((capture) => new Map(capture.state.bestAttempt.plans.map((plan: any) => [JSON.stringify([plan.sourcePoint.x, plan.sourcePoint.y, plan.sourceLayer]), plan])))
+    const changedVias = []
+    for (const [source, beforePlan] of bySource[0]) {
+      const afterPlan = bySource[1].get(source) as any
+      if (!afterPlan) continue
+      const beforeVias = getPlanVias(beforePlan as any)
+      const afterVias = getPlanVias(afterPlan)
+      if (beforeVias.length === afterVias.length) continue
+      changedVias.push({ source: JSON.parse(source as string), before: { connection: (beforePlan as any).connectionName, bus: (beforePlan as any).busId, termination: (beforePlan as any).termination, sourceLayer: (beforePlan as any).sourceLayer, targetLayer: (beforePlan as any).targetLayer, vias: beforeVias, endpoints: captures[0].args[0].connections[(beforePlan as any).connectionIndex].pointsToConnect }, after: { connection: afterPlan.connectionName, bus: afterPlan.busId, termination: afterPlan.termination, sourceLayer: afterPlan.sourceLayer, targetLayer: afterPlan.targetLayer, vias: afterVias, endpoints: captures[1].args[0].connections[afterPlan.connectionIndex].pointsToConnect } })
+    }
+    Reflect.set(row, "changedViaConnections", changedVias)
+  }
   rows.push(row)
 }
 const statistics = { baselineRun: 44897719641, candidateRun: 44900830468, unchangedControlsRun: 44899751288, archiveSha256: manifest.archiveSha256, interpretation: "Best diagnostic partial fanout; not committed PCB routing or completed board nets", rows }
