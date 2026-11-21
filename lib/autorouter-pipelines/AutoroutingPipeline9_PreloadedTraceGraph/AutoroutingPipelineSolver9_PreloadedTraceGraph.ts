@@ -75,6 +75,7 @@ import { TraceSimplificationSolver } from "@tscircuit/trace-simplification-solve
 import { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolver"
 import { LengthMatchingPostProcessingSolver } from "../../solvers/length-matching-post-processing-solver"
 import { applyFixedRouteReplacementsToPreloadedTraces } from "./applyFixedRouteReplacementsToPreloadedTraces"
+import { applyPipeline9PowerTraceWidthTargets } from "./applyPipeline9PowerTraceWidthTargets"
 import { collectPipeline9PowerTraceWidthTargets } from "./collectPipeline9PowerTraceWidthTargets"
 import { repairPipeline9ThroughObstacleTransitions } from "./repairPipeline9ThroughObstacleTransitions"
 import { assignUniquePcbTraceIdsToNewTraces } from "./assignUniquePcbTraceIdsToNewTraces"
@@ -1721,21 +1722,36 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     nominalTraceWidthByConnectionName?: ReadonlyMap<string, number>
   } = {}): (routes: HighDensityRoute[]) => SimplifiedPcbTraces {
     const srj = usePhysicalCopperGeometry ? this.originalSrj : this.srj
+    const connections = this.netToPointPairsSolver!.newConnections
     const convert = createPipeline7HdRoutesToSimplifiedPcbTracesConverter({
-      connections: this.netToPointPairsSolver!.newConnections,
+      connections,
       originalConnections: this.originalSrj.connections,
       layerCount: srj.layerCount,
-      obstacles: srj.obstacles,
+      obstacles: usePhysicalCopperGeometry
+        ? srj.obstacles.map((obstacle) => ({
+            ...obstacle,
+            __usePhysicalCopperGeometry: true,
+          }))
+        : srj.obstacles,
       defaultViaHoleDiameter: this.viaHoleDiameter,
       connMap: this.connMap,
-      nominalTraceWidthByConnectionName,
-      usePhysicalCopperGeometry,
     })
-    return (routes) =>
-      assignUniquePcbTraceIdsToNewTraces(
-        convert(canonicalizePipeline9HdRoutes(routes)),
+    return (routes) => {
+      const hdRoutes = canonicalizePipeline9HdRoutes(routes)
+      const traces = convert(hdRoutes)
+      if (nominalTraceWidthByConnectionName?.size) {
+        applyPipeline9PowerTraceWidthTargets({
+          connections,
+          hdRoutes,
+          routedTraces: traces,
+          widthTargets: nominalTraceWidthByConnectionName,
+        })
+      }
+      return assignUniquePcbTraceIdsToNewTraces(
+        traces,
         this.originalSrj.traces ?? [],
       )
+    }
   }
 
   getNewTracesBeforePowerExpansion(): SimplifiedPcbTraces {

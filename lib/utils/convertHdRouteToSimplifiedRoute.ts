@@ -32,7 +32,6 @@ export interface ConvertHdRouteToSimplifiedRouteOptions {
   obstacles?: ReadonlyArray<Obstacle>
   connectedMultilayerObstacles?: ReadonlyArray<Obstacle>
   connMap?: ConnectivityMap
-  usePhysicalCopperGeometry?: boolean
 }
 
 /**
@@ -64,7 +63,7 @@ const isThroughObstacleSegment = (
   if (start.toNextSegmentType === "through_obstacle") return true
 
   const containsTransition = (obstacle: Obstacle): boolean => {
-    if (opts.usePhysicalCopperGeometry) {
+    if (obstacle.__usePhysicalCopperGeometry) {
       return (
         !obstacle.isNonPlatedHole &&
         obstacle.layers.includes(mapZToLayerName(start.z, layerCount)) &&

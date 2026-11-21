@@ -16,8 +16,6 @@ export interface ConvertPipeline7HdRoutesOptions {
   obstacles: Obstacle[]
   defaultViaHoleDiameter: number
   connMap: ConnectivityMap
-  nominalTraceWidthByConnectionName?: ReadonlyMap<string, number>
-  usePhysicalCopperGeometry?: boolean
 }
 
 type StaticConvertPipeline7HdRoutesOptions = Omit<
@@ -38,8 +36,6 @@ export const createPipeline7HdRoutesToSimplifiedPcbTracesConverter = ({
   obstacles,
   defaultViaHoleDiameter,
   connMap,
-  nominalTraceWidthByConnectionName,
-  usePhysicalCopperGeometry,
 }: StaticConvertPipeline7HdRoutesOptions) => {
   const netConnectionNameByOriginalConnectionName = new Map<
     string,
@@ -125,9 +121,6 @@ export const createPipeline7HdRoutesToSimplifiedPcbTracesConverter = ({
       outputConnectionName,
     } of preparedConnections) {
       const connectionRoutes = routesByConnectionName.get(connection.name) ?? []
-      const nominalTraceWidth = nominalTraceWidthByConnectionName?.get(
-        connection.name,
-      )
 
       for (let index = 0; index < connectionRoutes.length; index += 1) {
         const hdRoute = connectionRoutes[index]!
@@ -142,9 +135,7 @@ export const createPipeline7HdRoutesToSimplifiedPcbTracesConverter = ({
             connectedMultilayerObstacles:
               getConnectedMultilayerObstacles(hdRoute),
             connMap,
-            usePhysicalCopperGeometry,
           }),
-          ...(nominalTraceWidth === undefined ? {} : { nominalTraceWidth }),
         })
       }
     }
@@ -155,7 +146,19 @@ export const createPipeline7HdRoutesToSimplifiedPcbTracesConverter = ({
 
 /** Converts Pipeline7 routes using the same net and terminal rules as final output. */
 export const convertPipeline7HdRoutesToSimplifiedPcbTraces = ({
+  connections,
+  originalConnections,
   hdRoutes,
-  ...options
+  layerCount,
+  obstacles,
+  defaultViaHoleDiameter,
+  connMap,
 }: ConvertPipeline7HdRoutesOptions): SimplifiedPcbTraces =>
-  createPipeline7HdRoutesToSimplifiedPcbTracesConverter(options)(hdRoutes)
+  createPipeline7HdRoutesToSimplifiedPcbTracesConverter({
+    connections,
+    originalConnections,
+    layerCount,
+    obstacles,
+    defaultViaHoleDiameter,
+    connMap,
+  })(hdRoutes)
