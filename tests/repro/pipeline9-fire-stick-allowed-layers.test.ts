@@ -46,7 +46,6 @@ beforeAll(async (): Promise<void> => {
       }
     }
   }
-  // Setup and snapshot errors must fail normally, outside test.failing.
   await expect(
     getAllowedLayerSnapshotSvg(
       {
@@ -59,6 +58,6 @@ beforeAll(async (): Promise<void> => {
   ).toMatchSvgSnapshot(import.meta.path)
 })
 
-test.failing("Pipeline 9 keeps bus wires on their allowed layers", (): void => {
+test("Pipeline 9 keeps bus wires on their allowed layers", (): void => {
   expect(forbiddenSegments).toEqual([])
 })

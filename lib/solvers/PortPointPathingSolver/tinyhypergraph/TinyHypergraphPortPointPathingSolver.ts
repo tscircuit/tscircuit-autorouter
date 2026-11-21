@@ -1,3 +1,5 @@
+import { getRouteAllowedZ } from "./getRouteAllowedZ"
+import type { AllowedLayersByConnection } from "lib/utils/getAllowedLayersByConnection"
 import type { NetId as SrjNetId } from "lib/types"
 import type { SerializedHyperGraph } from "@tscircuit/hypergraph"
 import type { GraphicsObject } from "graphics-debug"
@@ -951,13 +953,22 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
   preloadedFixedSegmentCount = 0
   readonly crampedPortTraversalPenalty: number
   readonly useSelectiveReripRouting: boolean
+  private allowedLayersByConnection: AllowedLayersByConnection
 
   constructor(
     inputProblem: TinyHyperGraphSectionPipelineInput,
-    useSelectiveReripRouting: boolean,
-    usePreparedPortPointRouting = false,
+    {
+      useSelectiveReripRouting,
+      usePreparedPortPointRouting,
+      allowedLayersByConnection,
+    }: {
+      useSelectiveReripRouting: boolean
+      usePreparedPortPointRouting: boolean
+      allowedLayersByConnection: AllowedLayersByConnection
+    },
   ) {
     super(inputProblem)
+    this.allowedLayersByConnection = allowedLayersByConnection
     this.useSelectiveReripRouting = useSelectiveReripRouting
     this.crampedPortTraversalPenalty = DEFAULT_CRAMPED_PORT_TRAVERSAL_PENALTY
     const preloadedStats = getSerializedPreloadedTraceStats(
@@ -986,6 +997,10 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
     restorePreloadedTraceSectionMetadata(
       loaded,
       this.inputProblem.serializedHyperGraph,
+    )
+    loaded.problem.routeAllowedZ = getRouteAllowedZ(
+      loaded.problem,
+      this.allowedLayersByConnection,
     )
     const metadataPortPenaltyCount = applyMetadataPortPenalties(loaded)
     const { duplicatePortPenaltyCount, crampedPortPenaltyCount } =
@@ -1121,7 +1136,11 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   private statsSnapshotDirty = false
   private asyncRunning = false
 
-  constructor(private params: HgPortPointPathingSolverParams) {
+  constructor(
+    private params: HgPortPointPathingSolverParams & {
+      allowedLayersByConnection?: AllowedLayersByConnection
+    },
+  ) {
     super()
     const tinyRouteConnections = getTinyRouteConnectionsOrThrow(
       params.connections,
@@ -1218,11 +1237,14 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       partialRipEligibilityCount,
     )
     this.tinyPipelineSolver =
-      new TinyHyperGraphSectionPipelineWithTerminalNetIds(
-        tinyPipelineInput,
-        params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
-        params.flags.USE_PREPARED_PORT_POINT_ROUTING === true,
-      )
+      new TinyHyperGraphSectionPipelineWithTerminalNetIds(tinyPipelineInput, {
+        useSelectiveReripRouting:
+          params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
+        usePreparedPortPointRouting:
+          params.flags.USE_PREPARED_PORT_POINT_ROUTING === true,
+        allowedLayersByConnection:
+          params.allowedLayersByConnection ?? new Map(),
+      })
     this.primaryTinyPipelineSolver = this.tinyPipelineSolver
     if (
       connections.length >= TRACE_DENSITY_PORTFOLIO_MIN_ROUTE_COUNT &&
@@ -1571,8 +1593,14 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         this.alternativeTinyPipelineSolver =
           new TinyHyperGraphSectionPipelineWithTerminalNetIds(
             this.alternativeTinyPipelineInput!,
-            this.params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
-            this.params.flags.USE_PREPARED_PORT_POINT_ROUTING === true,
+            {
+              useSelectiveReripRouting:
+                this.params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
+              usePreparedPortPointRouting:
+                this.params.flags.USE_PREPARED_PORT_POINT_ROUTING === true,
+              allowedLayersByConnection:
+                this.params.allowedLayersByConnection ?? new Map(),
+            },
           )
         this.tinyPipelineSolver = this.alternativeTinyPipelineSolver
         this.candidatePortfolioPhase = "alternative"
