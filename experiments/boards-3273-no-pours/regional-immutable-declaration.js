@@ -1,0 +1,1 @@
+const s=this.fixedHdRoutes.some(e=>!0===e.isFixed);
