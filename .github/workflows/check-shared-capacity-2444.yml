@@ -1,0 +1,30 @@
+name: Validate shared winding layer capacity
+on:
+  push:
+    branches: [analysis/check-shared-capacity-2444]
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        ref: [1bc5c9835f7962ca31c2cb5e02efde244982a8e9, 36bacae68490c0c78633f6d69f1d8f7e1a4aa4dd]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/winding-breakout-point-solver
+          ref: ${{ matrix.ref }}
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - run: bun install --ignore-scripts --frozen-lockfile
+      - run: bun test --timeout 9999999
+      - run: bun run typecheck
+      - name: Check formatting on the changed TypeScript files
+        run: |
+          paths=(lib/layer-assignment/assign-connection-layers.ts tests/glider-shared-layer-capacity.test.ts)
+          if [ -f tests/shared-layer-reservations.test.ts ]; then paths+=(tests/shared-layer-reservations.test.ts); fi
+          bunx biome format "${paths[@]}"
