@@ -22,7 +22,8 @@ test("plans inner1 DDR crossings between the two fixed iCEPi fanout vias", async
   expect(solver.failed).toBeFalse()
   // Board-world millimetres. These fixed via lands straddle the inner1 cell.
   const center = { x: 14.7, y: 4.9 }
-  const node = solver.uniformPortDistributionSolver!.getOutput().find(
+  const plannedNodes = solver.uniformPortDistributionSolver!.getOutput()
+  const node = plannedNodes.find(
     (node) =>
       Math.hypot(node.center.x - center.x, node.center.y - center.y) < 1e-6 &&
       node.availableZ?.includes(1),
@@ -34,26 +35,27 @@ test("plans inner1 DDR crossings between the two fixed iCEPi fanout vias", async
     trace.route.flatMap((point) =>
       point.route_type === "via" &&
       Math.hypot(point.x - center.x, point.y - center.y) < 0.5
-        ? [{
-            center: { x: point.x, y: point.y },
-            radius: inputSrj.minViaDiameter! / 2,
-            fill: "#64748b",
-          }]
+        ? [
+            {
+              center: { x: point.x, y: point.y },
+              radius: inputSrj.minViaDiameter! / 2,
+              fill: "#64748b",
+            },
+          ]
         : [],
     ),
   )
   expect(lands).toHaveLength(2)
   const overlappingPairs = crossings.flatMap(([a, b], index) =>
-    crossings.slice(0, index).filter(
-      ([c, d]) =>
-        a.rootConnectionName !== c.rootConnectionName &&
-        [a, b].some((p) =>
-          [c, d].some(
-            (q) =>
-              Math.hypot(p.x - q.x, p.y - q.y) < inputSrj.minTraceWidth - 1e-6,
-          ),
+    crossings.slice(0, index).filter(([c, d]) => {
+      if (a.rootConnectionName === c.rootConnectionName) return false
+      return [a, b].some((p) =>
+        [c, d].some(
+          (q) =>
+            Math.hypot(p.x - q.x, p.y - q.y) < inputSrj.minTraceWidth - 1e-6,
         ),
-    ),
+      )
+    }),
   )
   expect(overlappingPairs).toHaveLength(1)
   const svg = getSvgFromGraphicsObject(
@@ -73,7 +75,9 @@ test("plans inner1 DDR crossings between the two fixed iCEPi fanout vias", async
         points: [entry, exit],
         strokeWidth: inputSrj.minTraceWidth,
         strokeColor:
-          entry.rootConnectionName === "source_net_2" ? "#0284c7ba" : "#c2410cba",
+          entry.rootConnectionName === "source_net_2"
+            ? "#0284c7ba"
+            : "#c2410cba",
         label: entry.connectionName,
       })),
       texts: [
