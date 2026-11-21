@@ -19,10 +19,15 @@ jobs:
       - name: Install latest tscircuit with frozen dependencies
         working-directory: experiments/boards-3271/runtime
         run: bun install --frozen-lockfile
+      - name: Apply the row-rasterization candidate
+        run: python3 experiments/boards-3271/apply-board-grid-fix.py
       - name: Run all 19 original TSX boards through tscircuit
+        env:
+          BOARD_VARIANT: row-grid
+          BOARD_FIX_PROVENANCE: board-grid-fix-provenance.json
         run: python3 experiments/boards-3271/run.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: boards-tscircuit-3271
+          name: boards-tscircuit-3271-row-grid
           path: board-benchmark-results
