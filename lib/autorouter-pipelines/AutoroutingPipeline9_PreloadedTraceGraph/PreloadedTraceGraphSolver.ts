@@ -18,7 +18,8 @@ import {
   PRELOADED_TRACE_TOLERANCE,
   type PreloadedTracePrimitive,
 } from "./getPreloadedTracePrimitives"
-import type { ClearanceGapKey, PortPointId } from "./findConflictingGapKeys"
+import type { ClearanceGapIndex } from "./ClearanceGapIndex"
+import type { PortPointId } from "./findConflictingGaps"
 
 /**
  * Loads saved copper onto capacity-graph boundary ports. Empty clearance gaps
@@ -148,15 +149,13 @@ export class PreloadedTraceGraphSolver extends BaseSolver {
     }
   }
 
-  getRoutablePortPoints(
-    excludedGapKeys: ReadonlySet<ClearanceGapKey>,
-  ): SegmentPortPoint[] {
+  getRoutablePortPoints(excludedGaps: ClearanceGapIndex): SegmentPortPoint[] {
     const portPoints = this.getOutput().flatMap((segment) => segment.portPoints)
-    if (excludedGapKeys.size === 0) return portPoints
+    if (excludedGaps.gaps.length === 0) return portPoints
 
     const excludedPorts = new Set<SegmentPortPoint>()
     for (const gap of this.clearanceGapsByPortId.values()) {
-      if (excludedGapKeys.has(gap.key)) excludedPorts.add(gap.port)
+      if (excludedGaps.has(gap)) excludedPorts.add(gap.port)
     }
     return portPoints.filter((port) => !excludedPorts.has(port))
   }

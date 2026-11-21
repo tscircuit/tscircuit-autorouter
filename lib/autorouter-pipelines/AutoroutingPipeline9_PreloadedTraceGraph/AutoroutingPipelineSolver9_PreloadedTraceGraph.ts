@@ -14,10 +14,8 @@ import type { NodeDimensionSubdivisionSolver } from "lib/solvers/NodeDimensionSu
 import { TinyHypergraphPortPointPathingSolver } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver"
 import type { MultiGraphTopologyPlannerSolver } from "lib/solvers/TopologyPlanningSolver/MultiGraphTopologyPlannerSolver"
 import type { TopologyMergingSolver } from "lib/solvers/TopologyMergingSolver/TopologyMergingSolver"
-import {
-  findConflictingGapKeys,
-  type ClearanceGapKey,
-} from "./findConflictingGapKeys"
+import { ClearanceGapIndex } from "./ClearanceGapIndex"
+import { findConflictingGaps } from "./findConflictingGaps"
 import { splitNodesWithoutThroughViaSite } from "./splitNodesWithoutThroughViaSite"
 import type { UniformPortDistributionSolver } from "lib/solvers/UniformPortDistributionSolver/UniformPortDistributionSolver"
 import { getColorMap } from "lib/solvers/colors"
@@ -148,7 +146,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   srjWithEscapeViaLocations?: SimpleRouteJson
   srjWithPointPairs?: SimpleRouteJson
   originalSrj: SimpleRouteJson
-  private readonly excludedGapKeys = new Set<ClearanceGapKey>()
+  private readonly excludedGaps = new ClearanceGapIndex()
   private hasRefinedFixedWireViaSites = false
   capacityNodes: CapacityMeshNode[] | null = null
   capacityEdges: CapacityMeshEdge[] | null = null
@@ -179,7 +177,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       getConstructorParams: (pipeline) => {
         const segmentPortPoints =
           pipeline.preloadedTraceGraphSolver!.getRoutablePortPoints(
-            pipeline.excludedGapKeys,
+            pipeline.excludedGaps,
           )
         return [getPipeline9PortPointPathingInput(segmentPortPoints, pipeline)]
       },
@@ -348,14 +346,14 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         (step) => step.solverName === "edgeSolver",
       )
     } else {
-      const conflictingGapKeys = findConflictingGapKeys({
+      const conflictingGaps = findConflictingGaps({
         nodesWithPortPoints,
         clearanceGapsByPortId,
         connMap: this.connMap,
         srj: this.srjWithPointPairs!,
       })
-      if (conflictingGapKeys.size === 0) return false
-      for (const key of conflictingGapKeys) this.excludedGapKeys.add(key)
+      if (conflictingGaps.length === 0) return false
+      for (const gap of conflictingGaps) this.excludedGaps.add(gap)
     }
     this.portPointPathingSolver = undefined
     return true

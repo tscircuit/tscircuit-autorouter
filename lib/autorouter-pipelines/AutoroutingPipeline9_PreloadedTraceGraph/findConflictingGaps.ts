@@ -1,4 +1,4 @@
-import { distance, midpoint, type Point } from "@tscircuit/math-utils"
+import { distance, midpoint } from "@tscircuit/math-utils"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { RbushIndex } from "lib/data-structures/RbushIndex"
 import type { NetId, SimpleRouteJson } from "lib/types"
@@ -7,18 +7,11 @@ import type {
   PortPoint,
 } from "lib/types/high-density-types"
 import { RELAXED_DRC_OPTIONS } from "lib/utils/drcPresets"
+import { ClearanceGapIndex, type ClearanceGap } from "./ClearanceGapIndex"
+import { PRELOADED_TRACE_TOLERANCE } from "./getPreloadedTracePrimitives"
 
 export type PortPointId = NonNullable<PortPoint["portPointId"]>
-export type ClearanceGapKey = string
-export type ClearanceGap = {
-  key: ClearanceGapKey
-  start: Point
-  end: Point
-}
-
-type GapCrossing = { gap: ClearanceGap; netId: NetId; z: number }
-
-const DISTANCE_TOLERANCE = 1e-6
+type GapCrossing = { gap: ClearanceGap; netId: NetId }
 
 // The four endpoint pairs give the maximum possible distance between crossings.
 function getMaximumGapDistance(
@@ -37,7 +30,7 @@ function getMaximumGapDistance(
  * Keep crossings in plan order. Exclude a later gap only if no pair of
  * positions can clear the earlier net on the same layer.
  */
-export function findConflictingGapKeys({
+export function findConflictingGaps({
   nodesWithPortPoints,
   clearanceGapsByPortId,
   connMap,
@@ -50,9 +43,9 @@ export function findConflictingGapKeys({
     SimpleRouteJson,
     "minTraceWidth" | "minTraceToPadEdgeClearance" | "defaultObstacleMargin"
   >
-}): Set<ClearanceGapKey> {
-  const conflictingGapKeys = new Set<ClearanceGapKey>()
-  if (clearanceGapsByPortId.size < 2) return conflictingGapKeys
+}): readonly ClearanceGap[] {
+  if (clearanceGapsByPortId.size < 2) return []
+  const conflictingGaps = new ClearanceGapIndex()
   const traceClearance =
     srj.minTraceToPadEdgeClearance ??
     srj.defaultObstacleMargin ??
@@ -63,7 +56,7 @@ export function findConflictingGapKeys({
 
   for (const { portPoints } of nodesWithPortPoints) {
     for (const portPoint of portPoints) {
-      const { portPointId, z } = portPoint
+      const { portPointId } = portPoint
       // Adjacent mesh nodes report the same boundary crossing.
       if (!portPointId || visitedPortIds.has(portPointId)) continue
       const gap = clearanceGapsByPortId.get(portPointId)
@@ -83,18 +76,18 @@ export function findConflictingGapKeys({
       )
       const conflicts = neighbors.some(
         (crossing) =>
-          crossing.z === z &&
+          crossing.gap.z === gap.z &&
           crossing.netId !== netId &&
-          !conflictingGapKeys.has(crossing.gap.key) &&
+          !conflictingGaps.has(crossing.gap) &&
           getMaximumGapDistance(gap, crossing.gap) <
-            minCenterDistance - DISTANCE_TOLERANCE,
+            minCenterDistance - PRELOADED_TRACE_TOLERANCE,
       )
       if (conflicts) {
-        conflictingGapKeys.add(gap.key)
+        conflictingGaps.add(gap)
       } else {
-        keptCrossings.insert({ gap, netId, z }, x, y, x, y)
+        keptCrossings.insert({ gap, netId }, x, y, x, y)
       }
     }
   }
-  return conflictingGapKeys
+  return conflictingGaps.gaps
 }

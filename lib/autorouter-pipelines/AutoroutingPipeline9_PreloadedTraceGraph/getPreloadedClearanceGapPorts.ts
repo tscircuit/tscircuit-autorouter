@@ -4,11 +4,11 @@ import type {
 } from "lib/solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
 import type { PreloadedCopperLookup } from "./createPreloadedCopperLookup"
 import { PRELOADED_TRACE_TOLERANCE } from "./getPreloadedTracePrimitives"
-import type { ClearanceGap } from "./findConflictingGapKeys"
+import type { ClearanceGap } from "./ClearanceGapIndex"
 
 export type ClearanceGapPort = ClearanceGap & { port: SegmentPortPoint }
 
-/** Add a crossing candidate in each clear boundary interval that has no free port. */
+/** Return a crossing candidate for each clear boundary interval that has no free port. */
 export function getPreloadedClearanceGapPorts({
   segment,
   z,
@@ -56,19 +56,16 @@ export function getPreloadedClearanceGapPorts({
       _preloadedTracePortAssignments: undefined,
       distToCentermostPortOnZ: Math.abs(fraction - 0.5) * length,
     }
-    const gapStart = {
-      x: segment.start.x + dx * start,
-      y: segment.start.y + dy * start,
-    }
-    const gapEnd = {
-      x: segment.start.x + dx * end,
-      y: segment.start.y + dy * end,
-    }
     gapPorts.push({
-      // Edge IDs can change when the mesh is rebuilt.
-      key: JSON.stringify([segment.nodeIds, z, [gapStart, gapEnd]]),
-      start: gapStart,
-      end: gapEnd,
+      z,
+      start: {
+        x: segment.start.x + dx * start,
+        y: segment.start.y + dy * start,
+      },
+      end: {
+        x: segment.start.x + dx * end,
+        y: segment.start.y + dy * end,
+      },
       port,
     })
   }
