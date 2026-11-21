@@ -53,6 +53,7 @@ type SolverInstance = Omit<PipelineStageTimingSource, "pipelineDef"> & {
   pipelineDef: ReadonlyArray<BenchmarkPipelineStep>
   srjWithPointPairs?: SimpleRouteJson
   step?: () => void
+  stepAsync?: () => Promise<void>
   solve?: () => void | Promise<void>
   solveAsync?: (runtime?: SolverRuntimeExecutor) => Promise<void>
   getOutputSimplifiedPcbTraces?: () => SimplifiedPcbTrace[]
@@ -65,6 +66,7 @@ type SolverInstance = Omit<PipelineStageTimingSource, "pipelineDef"> & {
   }
   highDensityRouteSolver?: HighDensityBenchmarkSource
   highDensityRepairSolver?: HighDensityBenchmarkSource
+  timeToSolve?: number
   timeSpentOnPhase: Record<string, number>
 }
 
@@ -545,7 +547,7 @@ export const solveWithProgress = async (
     throw new Error("--threads > 1 requires Pipeline9_PreloadedTraceGraph")
   }
 
-  if (typeof solver.solveAsync === "function") {
+  if (typeof solver.solveAsync === "function" && (task.threads ?? 1) > 1) {
     const interval =
       options.onProgress && progressIntervalMs > 0
         ? setInterval(() => emitProgress(true), progressIntervalMs)
@@ -554,15 +556,13 @@ export const solveWithProgress = async (
       | (SolverRuntimeExecutor & { dispose(): Promise<void> })
       | undefined
     try {
-      if ((task.threads ?? 1) > 1) {
-        const { createAutorouterSolverRuntime } = await import(
-          "../../lib/runtime/bun"
-        )
-        runtime = createAutorouterSolverRuntime({
-          workerCount: task.threads!,
-          requireWorker: true,
-        })
-      }
+      const { createAutorouterSolverRuntime } = await import(
+        "../../lib/runtime/bun"
+      )
+      runtime = createAutorouterSolverRuntime({
+        workerCount: task.threads!,
+        requireWorker: true,
+      })
       await solver.solveAsync(runtime)
     } finally {
       if (interval) {
@@ -574,11 +574,26 @@ export const solveWithProgress = async (
     return
   }
 
-  if (typeof solver.step === "function") {
+  // solveAsync(undefined) blocks until done, so step here to report each phase
+  const stepAsync = solver.stepAsync
+  const step = solver.step
+  if (stepAsync || step) {
+    const solveStartedAt = Date.now()
     while (!solver.solved && !solver.failed) {
-      solver.step()
+      if (stepAsync) {
+        await stepAsync.call(solver)
+      } else {
+        step!.call(solver)
+      }
       emitProgress()
     }
+    solver.timeToSolve = Date.now() - solveStartedAt
+    emitProgress(true)
+    return
+  }
+
+  if (typeof solver.solveAsync === "function") {
+    await solver.solveAsync()
     emitProgress(true)
     return
   }
@@ -589,7 +604,7 @@ export const solveWithProgress = async (
     return
   }
 
-  throw new Error("Solver does not implement step(), solve(), or solveAsync()")
+  throw new Error("Solver does not implement step(), stepAsync(), or solve()")
 }
 
 const createBenchmarkSnapshot = async ({
