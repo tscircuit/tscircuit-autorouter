@@ -103,4 +103,4 @@ z: 4" data-x="-3.4218661305798204" data-y="1.3264129816510737" cx="252.530186350
               document.currentScript.parentElement.addEventListener('mouseleave', () => {
                 document.currentScript.parentElement.getElementById('crosshair').style.display = 'none';
               });
-            ]]></script><g data-testid="via-clearance-checks"><rect x="12" y="12" width="500" height="44" rx="6" fill="white" stroke="#166534"/><text x="24" y="40" font-family="Arial, sans-serif" font-size="20" fill="#166534">Via-clearance checks: 11312</text></g></svg>
+            ]]></script><g data-testid="via-clearance-checks"><rect x="12" y="12" width="500" height="44" rx="6" fill="white" stroke="#166534"/><text x="24" y="40" font-family="Arial, sans-serif" font-size="20" fill="#166534">Via-clearance checks: 1616</text></g></svg>
