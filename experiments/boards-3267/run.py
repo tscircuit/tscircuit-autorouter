@@ -6,7 +6,7 @@ root=Path('experiments/boards-3267/runtime').resolve()
 out=Path('board-benchmark-results').resolve()
 out.mkdir(exist_ok=True)
 versions={}
-for name in ['tscircuit','@tscircuit/core','@tscircuit/fanout-solver','@tscircuit/capacity-autorouter']:
+for name in ['tscircuit','@tscircuit/core','@tscircuit/fanout-solver','@tscircuit/capacity-autorouter','circuit-json-to-connectivity-map','@tscircuit/copper-pour-solver']:
  package=json.loads((root/'node_modules'/name/'package.json').read_text())
  entry=package.get('module',package.get('main','index.js'))
  versions[name]={'version':package['version'],'entrySha256':hashlib.sha256((root/'node_modules'/name/entry).read_bytes()).hexdigest()}

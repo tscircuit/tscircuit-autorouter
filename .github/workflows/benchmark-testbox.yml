@@ -1,4 +1,4 @@
-name: Uploaded boards on latest tscircuit 3267
+name: Latest boards with connectivity dependency update
 on:
   workflow_dispatch:
 permissions:
@@ -19,10 +19,15 @@ jobs:
       - name: Install latest tscircuit with its frozen dependencies
         working-directory: experiments/boards-3267/runtime
         run: bun install --frozen-lockfile
+      - name: Apply the one-dependency update
+        run: python3 experiments/boards-3267/apply-connectivity-update.py
       - name: Run all 19 original TSX boards through tscircuit
+        env:
+          BOARD_VARIANT: connectivity-36
+          BOARD_FIX_PROVENANCE: connectivity-update-provenance.json
         run: python3 experiments/boards-3267/run.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: boards-tscircuit-3267
+          name: boards-tscircuit-3267-connectivity-36
           path: board-benchmark-results
