@@ -1,0 +1,92 @@
+name: Paired replay of current full-circuit fanout captures
+on:
+  push:
+    branches: [analysis/profile-fanout-2444]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  replay:
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        sample: [icepi-original, butterstick-original]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/core
+          ref: a277cef7ca8c77eca992c7c350419c7eb835250b
+          path: core
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Install pinned standalone audit dependencies
+        run: |
+          python3 - <<'PYDEPS'
+          from pathlib import Path
+          import json
+          packages={'@tscircuit/fanout-solver':'0.0.97','@tscircuit/capacity-autorouter':'0.0.1145','@tscircuit/checks':'0.0.282','graphics-debug':'0.0.99'}
+          Path('core/package.json').write_text(json.dumps({'name':'full-circuit-audit','private':True,'type':'module','dependencies':packages}))
+          PYDEPS
+          cd core
+          bun install --ignore-scripts
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 44876574547
+          name: full-circuit-interception-${{ matrix.sample }}
+          path: captures
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Replay the identical latest constructor on both versions
+        env:
+          SAMPLE: ${{ matrix.sample }}
+        run: |
+          mkdir -p core/replay
+          cat > core/replay/run.ts <<'TS'
+          import { plugin } from "bun"
+          import { readFileSync, writeFileSync } from "node:fs"
+          import { gunzipSync } from "node:zlib"
+          let builds = 0
+          Reflect.set(globalThis, "countOutputBuild", () => builds++)
+          plugin({ name: "count-output-builds", setup(build) {
+            build.onLoad({ filter: /build-output\.ts$/ }, async ({ path }) => {
+              const contents = await Bun.file(path).text()
+              const marker = "  const { inputSrj, plans, layerNames } = params"
+              if (!contents.includes(marker)) throw new Error("Output builder changed")
+              return { contents: contents.replace(marker, '  Reflect.get(globalThis, "countOutputBuild")()\n'+marker), loader: "ts" }
+            })
+          } })
+          const { FanoutSolver } = await import("../node_modules/@tscircuit/fanout-solver/lib/fanout-solver")
+          const { validateRoutedCopperDrc } = await import("../node_modules/@tscircuit/fanout-solver/lib/validate-routed-copper-drc")
+          const sample = process.env.SAMPLE
+          const root = "../../captures/" + sample
+          const report = JSON.parse(readFileSync(root + "/report.json", "utf8"))
+          const entry = report.solvers.find((s) => s.name === "FanoutSolver")
+          const [input, options] = JSON.parse(gunzipSync(readFileSync(root + "/solver-" + entry.id + "-input.json.gz")).toString())
+          const solver = new FanoutSolver(input, options)
+          const started = performance.now()
+          solver.solve()
+          const best = Reflect.get(solver, "bestAttempt")
+          const output = best.outputSrj
+          const elapsedMs = performance.now() - started
+          const drc = validateRoutedCopperDrc({ inputSrj: input, routedSrj: output, clearance: solver.config.clearance, allowBlindAndBuriedVias: solver.config.allowBlindAndBuriedVias })
+          const summary = { sample, mode: process.argv[2], elapsedMs, builds, escaped: best.plans.length, vias: drc.checkedViaCount, drcValid: drc.valid, assignments: solver.attempts.length, obstacles: input.obstacles.length, obstacleAliasCount: input.obstacles.reduce((sum, o) => sum + o.connectedTo.length, 0) }
+          writeFileSync(process.argv[2]+".json", JSON.stringify({ summary, output, plans: best.plans, attempts: solver.attempts }))
+          console.log("PAIRED_RESULT", JSON.stringify(summary))
+          TS
+          cd core/replay
+          bun --cpu-prof --cpu-prof-dir=profile run.ts baseline
+          python3 - <<'PYPROFILE'
+          import json,collections
+          from pathlib import Path
+          for p in Path('profile').glob('*.cpuprofile'):
+              d=json.loads(p.read_text());nodes={n['id']:n for n in d['nodes']}
+              counts=collections.Counter(d.get('samples',[]));total=sum(counts.values())
+              print('CPU_PROFILE',p.name,'samples',total)
+              for ident,n in sorted(nodes.items(),key=lambda kv:counts[kv[0]],reverse=True)[:45]:
+                  cf=n['callFrame'];print(round(100*counts[ident]/max(1,total),2),cf['functionName'],cf.get('url',''),cf.get('lineNumber'))
+              for filename in ['plan-static-clearance.ts','net-identity.ts','geometry.ts','plan-mutual-clearance.ts']:
+                  hits=sum(counts[n['id']] for n in nodes.values() if filename in n['callFrame'].get('url',''));print('FILE_COST',filename,hits,round(hits/max(1,total)*100,2))
+          PYPROFILE
