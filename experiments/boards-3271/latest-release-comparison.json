@@ -1,0 +1,211 @@
+[
+  {
+    "board": "butterstick-local",
+    "previousRelease": "0.0.3269 with merged selector fix",
+    "latestRelease": "0.0.3271",
+    "previousSeconds": 600.172,
+    "latestSeconds": 600.192,
+    "sameStop": true,
+    "sameTraceCount": true,
+    "sameViaCount": true,
+    "identicalEmittedCopper": null
+  },
+  {
+    "board": "butterstick-native",
+    "previousRelease": "0.0.3269 with merged selector fix",
+    "latestRelease": "0.0.3271",
+    "previousSeconds": 154.578,
+    "latestSeconds": 129.559,
+    "sameStop": true,
+    "sameTraceCount": true,
+    "sameViaCount": true,
+    "identicalEmittedCopper": true
+  },
+  {
+    "board": "butterstick-spaced",
+    "previousRelease": "0.0.3269 with merged selector fix",
+    "latestRelease": "0.0.3271",
+    "previousSeconds": 600.311,
+    "latestSeconds": 600.305,
+    "sameStop": true,
+    "sameTraceCount": true,
+    "sameViaCount": true,
+    "identicalEmittedCopper": null
+  },
+  {
+    "board": "glider-local",
+    "previousRelease": "0.0.3269 with merged selector fix",
+    "latestRelease": "0.0.3271",
+    "previousSeconds": 322.596,
+    "latestSeconds": 322.346,
+    "sameStop": true,
+    "sameTraceCount": true,
+    "sameViaCount": true,
+    "identicalEmittedCopper": true
+  },
+  {
+    "board": "glider-native",
+    "previousRelease": "0.0.3269 with merged selector fix",
+    "latestRelease": "0.0.3271",
+    "previousSeconds": 266.301,
+    "latestSeconds": 208.621,
+    "sameStop": true,
+    "sameTraceCount": true,
+    "sameViaCount": true,
+    "identicalEmittedCopper": true
+  },
+  {
+    "board": "glider-spaced",
+    "previousRelease": "0.0.3269 with merged selector fix",
+    "latestRelease": "0.0.3271",
+    "previousSeconds": 181.303,
+    "latestSeconds": 164.063,
+    "sameStop": true,
+    "sameTraceCount": true,
+    "sameViaCount": true,
+    "identicalEmittedCopper": true
+  },
+  {
+    "board": "h616-default-order-local",
+    "previousRelease": "0.0.3269 with merged selector fix",
+    "latestRelease": "0.0.3271",
+    "previousSeconds": 35.5,
+    "latestSeconds": 35.175,
+    "sameStop": true,
+    "sameTraceCount": true,
+    "sameViaCount": true,
+    "identicalEmittedCopper": true
+  },
+  {
+    "board": "h616-local",
+    "previousRelease": "0.0.3269 with merged selector fix",
+    "latestRelease": "0.0.3271",
+    "previousSeconds": 56.836,
+    "latestSeconds": 56.247,
+    "sameStop": true,
+    "sameTraceCount": true,
+    "sameViaCount": true,
+    "identicalEmittedCopper": true
+  },
+  {
+    "board": "h616-native",
+    "previousRelease": "0.0.3269 with merged selector fix",
+    "latestRelease": "0.0.3271",
+    "previousSeconds": 369.086,
+    "latestSeconds": 257.093,
+    "sameStop": true,
+    "sameTraceCount": true,
+    "sameViaCount": true,
+    "identicalEmittedCopper": true
+  },
+  {
+    "board": "h616-spaced",
+    "previousRelease": "0.0.3269 with merged selector fix",
+    "latestRelease": "0.0.3271",
+    "previousSeconds": 35.448,
+    "latestSeconds": 35.574,
+    "sameStop": true,
+    "sameTraceCount": true,
+    "sameViaCount": true,
+    "identicalEmittedCopper": true
+  },
+  {
+    "board": "icepi-local",
+    "previousRelease": "0.0.3269 with merged selector fix",
+    "latestRelease": "0.0.3271",
+    "previousSeconds": 204.3,
+    "latestSeconds": 198.942,
+    "sameStop": true,
+    "sameTraceCount": true,
+    "sameViaCount": true,
+    "identicalEmittedCopper": true
+  },
+  {
+    "board": "icepi-native",
+    "previousRelease": "0.0.3269 with merged selector fix",
+    "latestRelease": "0.0.3271",
+    "previousSeconds": 37.842,
+    "latestSeconds": 35.489,
+    "sameStop": true,
+    "sameTraceCount": true,
+    "sameViaCount": true,
+    "identicalEmittedCopper": true
+  },
+  {
+    "board": "icepi-spaced",
+    "previousRelease": "0.0.3269 with merged selector fix",
+    "latestRelease": "0.0.3271",
+    "previousSeconds": 346.982,
+    "latestSeconds": 330.617,
+    "sameStop": true,
+    "sameTraceCount": true,
+    "sameViaCount": true,
+    "identicalEmittedCopper": true
+  },
+  {
+    "board": "imx6-local",
+    "previousRelease": "0.0.3269 with merged selector fix",
+    "latestRelease": "0.0.3271",
+    "previousSeconds": 600.451,
+    "latestSeconds": 600.547,
+    "sameStop": true,
+    "sameTraceCount": true,
+    "sameViaCount": true,
+    "identicalEmittedCopper": null
+  },
+  {
+    "board": "imx6-native",
+    "previousRelease": "0.0.3269 with merged selector fix",
+    "latestRelease": "0.0.3271",
+    "previousSeconds": 56.996,
+    "latestSeconds": 53.72,
+    "sameStop": true,
+    "sameTraceCount": true,
+    "sameViaCount": true,
+    "identicalEmittedCopper": true
+  },
+  {
+    "board": "imx6-spaced",
+    "previousRelease": "0.0.3269 with merged selector fix",
+    "latestRelease": "0.0.3271",
+    "previousSeconds": 577.107,
+    "latestSeconds": 548.794,
+    "sameStop": true,
+    "sameTraceCount": true,
+    "sameViaCount": true,
+    "identicalEmittedCopper": true
+  },
+  {
+    "board": "orangecrab-local",
+    "previousRelease": "0.0.3269 with merged selector fix",
+    "latestRelease": "0.0.3271",
+    "previousSeconds": 200.135,
+    "latestSeconds": 194.423,
+    "sameStop": true,
+    "sameTraceCount": true,
+    "sameViaCount": true,
+    "identicalEmittedCopper": true
+  },
+  {
+    "board": "orangecrab-native",
+    "previousRelease": "0.0.3269 with merged selector fix",
+    "latestRelease": "0.0.3271",
+    "previousSeconds": 600.265,
+    "latestSeconds": 600.278,
+    "sameStop": true,
+    "sameTraceCount": true,
+    "sameViaCount": true,
+    "identicalEmittedCopper": null
+  },
+  {
+    "board": "orangecrab-spaced",
+    "previousRelease": "0.0.3269 with merged selector fix",
+    "latestRelease": "0.0.3271",
+    "previousSeconds": 263.426,
+    "latestSeconds": 257.129,
+    "sameStop": true,
+    "sameTraceCount": true,
+    "sameViaCount": true,
+    "identicalEmittedCopper": true
+  }
+]

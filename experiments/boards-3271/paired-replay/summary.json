@@ -1,0 +1,53 @@
+{
+  "environment": "Blacksmith 32-vCPU ARM Ubuntu 24.04; Bun 1.4.3; tscircuit 0.0.3271; fresh processes on the same machine per board",
+  "samples": [
+    {
+      "board": "h616-local",
+      "run": 44946026421,
+      "order": [
+        "base",
+        "head",
+        "head",
+        "base"
+      ],
+      "beforeSeconds": 46.1120143295,
+      "afterSeconds": 43.781375228499996,
+      "durationReductionPercent": 5.054299047415467,
+      "beforeCpuSeconds": 59.507065,
+      "afterCpuSeconds": 57.1526455,
+      "identicalCircuitJson": true
+    },
+    {
+      "board": "icepi-native",
+      "run": 44946026421,
+      "order": [
+        "base",
+        "head",
+        "head",
+        "base"
+      ],
+      "beforeSeconds": 28.947973470499996,
+      "afterSeconds": 28.64804476,
+      "durationReductionPercent": 1.0360957073753063,
+      "beforeCpuSeconds": 35.015218,
+      "afterCpuSeconds": 34.706328,
+      "identicalCircuitJson": true
+    },
+    {
+      "board": "orangecrab-local",
+      "run": 44946026421,
+      "order": [
+        "base",
+        "head",
+        "head",
+        "base"
+      ],
+      "beforeSeconds": 161.10948372049995,
+      "afterSeconds": 155.19163201799995,
+      "durationReductionPercent": 3.673186435608322,
+      "beforeCpuSeconds": 196.7588605,
+      "afterCpuSeconds": 190.14918649999998,
+      "identicalCircuitJson": true
+    }
+  ]
+}

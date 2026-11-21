@@ -1,0 +1,58 @@
+[
+  {
+    "board": "orangecrab-local",
+    "variant": "base",
+    "ordinal": 1,
+    "exit": 0,
+    "stop": "settled",
+    "seconds": 162.41752235599998,
+    "coreEntrySha256": "9c8d8e22f24ba2115b7dd353cd37a09d0198e6ebf12eb4c4913619a3af092548",
+    "circuitSha256": "147a8160a286a0afb2f85d12e6b6772b84f41575ea2a40397d6721a959e75366",
+    "cpu": {
+      "user": 189164104,
+      "system": 8910431
+    }
+  },
+  {
+    "board": "orangecrab-local",
+    "variant": "head",
+    "ordinal": 2,
+    "exit": 0,
+    "stop": "settled",
+    "seconds": 155.84028181699998,
+    "coreEntrySha256": "e5cd7df5ec0ac81115f66f219ece258eaf988d5baae35acfa4dc2f052a4c8fcc",
+    "circuitSha256": "147a8160a286a0afb2f85d12e6b6772b84f41575ea2a40397d6721a959e75366",
+    "cpu": {
+      "user": 182026047,
+      "system": 8923215
+    }
+  },
+  {
+    "board": "orangecrab-local",
+    "variant": "head",
+    "ordinal": 3,
+    "exit": 0,
+    "stop": "settled",
+    "seconds": 154.54298221899995,
+    "coreEntrySha256": "e5cd7df5ec0ac81115f66f219ece258eaf988d5baae35acfa4dc2f052a4c8fcc",
+    "circuitSha256": "147a8160a286a0afb2f85d12e6b6772b84f41575ea2a40397d6721a959e75366",
+    "cpu": {
+      "user": 180522552,
+      "system": 8826559
+    }
+  },
+  {
+    "board": "orangecrab-local",
+    "variant": "base",
+    "ordinal": 4,
+    "exit": 0,
+    "stop": "settled",
+    "seconds": 159.80144508499995,
+    "coreEntrySha256": "9c8d8e22f24ba2115b7dd353cd37a09d0198e6ebf12eb4c4913619a3af092548",
+    "circuitSha256": "147a8160a286a0afb2f85d12e6b6772b84f41575ea2a40397d6721a959e75366",
+    "cpu": {
+      "user": 185829813,
+      "system": 9613373
+    }
+  }
+]

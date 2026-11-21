@@ -1,0 +1,6 @@
+{
+  "sourcePatchSha256": "6a883f3750877bd4ab437e484cc857859c4fcce635720cc86e9aed578221d295",
+  "beforeSha256": "9c8d8e22f24ba2115b7dd353cd37a09d0198e6ebf12eb4c4913619a3af092548",
+  "afterSha256": "e5cd7df5ec0ac81115f66f219ece258eaf988d5baae35acfa4dc2f052a4c8fcc",
+  "scope": "Replace only the embedded bus-lanes getBoardGrid raster loop with the transpiled source fix; preserve its cache, key and all routing code."
+}

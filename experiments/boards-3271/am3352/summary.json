@@ -1,0 +1,942 @@
+{
+  "samples": [
+    {
+      "sample": "control",
+      "main": {
+        "status": "accepted",
+        "accepted": true,
+        "solveMilliseconds": 19125.149428,
+        "wallMilliseconds": 20107.964367999997,
+        "budgetedMilliseconds": 19125.149428,
+        "inputSha256": "b7a4e9d09a22fe0ed131a544548b14eef20fbf4e88b6dc6ffaa11ca44e6bfe59",
+        "reason": null,
+        "busSkews": [
+          {
+            "name": "DDR_BYTE0",
+            "skewMm": 0.6350000000675919,
+            "toleranceMm": 0.635
+          },
+          {
+            "name": "DDR_BYTE1",
+            "skewMm": 0.6350000100064577,
+            "toleranceMm": 0.635
+          }
+        ],
+        "pairSkews": [
+          {
+            "name": "pair_0",
+            "skewMm": 0.0778683245814733,
+            "toleranceMm": 0.127
+          },
+          {
+            "name": "pair_1",
+            "skewMm": 0.12688373178988854,
+            "toleranceMm": 0.127
+          },
+          {
+            "name": "pair_2",
+            "skewMm": 0.07282965286481868,
+            "toleranceMm": 0.127
+          }
+        ]
+      },
+      "pr": {
+        "status": "accepted",
+        "accepted": true,
+        "solveMilliseconds": 19167.615315,
+        "wallMilliseconds": 20131.757301,
+        "budgetedMilliseconds": 19167.615315,
+        "inputSha256": "b7a4e9d09a22fe0ed131a544548b14eef20fbf4e88b6dc6ffaa11ca44e6bfe59",
+        "reason": null,
+        "busSkews": [
+          {
+            "name": "DDR_BYTE0",
+            "skewMm": 0.6350000000675919,
+            "toleranceMm": 0.635
+          },
+          {
+            "name": "DDR_BYTE1",
+            "skewMm": 0.6350000100064577,
+            "toleranceMm": 0.635
+          }
+        ],
+        "pairSkews": [
+          {
+            "name": "pair_0",
+            "skewMm": 0.0778683245814733,
+            "toleranceMm": 0.127
+          },
+          {
+            "name": "pair_1",
+            "skewMm": 0.12688373178988854,
+            "toleranceMm": 0.127
+          },
+          {
+            "name": "pair_2",
+            "skewMm": 0.07282965286481868,
+            "toleranceMm": 0.127
+          }
+        ]
+      },
+      "comparable": true
+    },
+    {
+      "sample": "control-inner1",
+      "main": {
+        "status": "accepted",
+        "accepted": true,
+        "solveMilliseconds": 566474.630998,
+        "wallMilliseconds": 567958.4587300001,
+        "budgetedMilliseconds": 566474.630998,
+        "inputSha256": "14b5b318540ce7bac367cf22338abd7f9fffd2f7ce6c2a12f903116f50ca9bde",
+        "reason": null,
+        "busSkews": [
+          {
+            "name": "DDR_BYTE0",
+            "skewMm": 0.6350000000017673,
+            "toleranceMm": 0.635
+          },
+          {
+            "name": "DDR_BYTE1",
+            "skewMm": 0.6349999999999554,
+            "toleranceMm": 0.635
+          }
+        ],
+        "pairSkews": [
+          {
+            "name": "pair_0",
+            "skewMm": 0.04889964467002983,
+            "toleranceMm": 0.127
+          },
+          {
+            "name": "pair_1",
+            "skewMm": 0.004719837709238561,
+            "toleranceMm": 0.127
+          },
+          {
+            "name": "pair_2",
+            "skewMm": 0.03021530790510596,
+            "toleranceMm": 0.127
+          }
+        ]
+      },
+      "pr": {
+        "status": "accepted",
+        "accepted": true,
+        "solveMilliseconds": 503581.065386,
+        "wallMilliseconds": 505295.944733,
+        "budgetedMilliseconds": 503581.065386,
+        "inputSha256": "14b5b318540ce7bac367cf22338abd7f9fffd2f7ce6c2a12f903116f50ca9bde",
+        "reason": null,
+        "busSkews": [
+          {
+            "name": "DDR_BYTE0",
+            "skewMm": 0.6350000000017673,
+            "toleranceMm": 0.635
+          },
+          {
+            "name": "DDR_BYTE1",
+            "skewMm": 0.6349999999999554,
+            "toleranceMm": 0.635
+          }
+        ],
+        "pairSkews": [
+          {
+            "name": "pair_0",
+            "skewMm": 0.04889964467002983,
+            "toleranceMm": 0.127
+          },
+          {
+            "name": "pair_1",
+            "skewMm": 0.004719837709238561,
+            "toleranceMm": 0.127
+          },
+          {
+            "name": "pair_2",
+            "skewMm": 0.03021530790510596,
+            "toleranceMm": 0.127
+          }
+        ]
+      },
+      "comparable": true
+    },
+    {
+      "sample": "right",
+      "main": {
+        "status": "accepted",
+        "accepted": true,
+        "solveMilliseconds": 17603.442397,
+        "wallMilliseconds": 19086.435416,
+        "budgetedMilliseconds": 17603.442397,
+        "inputSha256": "78c22c8d818ee2c2abe2eec9c6b6e408161a9d0eaf09afbafc3242e71e8f5778",
+        "reason": null,
+        "busSkews": [
+          {
+            "name": "DDR_BYTE0",
+            "skewMm": 0.635000000000467,
+            "toleranceMm": 0.635
+          },
+          {
+            "name": "DDR_BYTE1",
+            "skewMm": 0.6349999999999696,
+            "toleranceMm": 0.635
+          }
+        ],
+        "pairSkews": [
+          {
+            "name": "pair_0",
+            "skewMm": 0.09604665360949838,
+            "toleranceMm": 0.127
+          },
+          {
+            "name": "pair_1",
+            "skewMm": 0.12180230740349174,
+            "toleranceMm": 0.127
+          },
+          {
+            "name": "pair_2",
+            "skewMm": 0.10264381675825973,
+            "toleranceMm": 0.127
+          }
+        ]
+      },
+      "pr": {
+        "status": "accepted",
+        "accepted": true,
+        "solveMilliseconds": 17024.529546,
+        "wallMilliseconds": 18366.153522000004,
+        "budgetedMilliseconds": 17024.529546,
+        "inputSha256": "78c22c8d818ee2c2abe2eec9c6b6e408161a9d0eaf09afbafc3242e71e8f5778",
+        "reason": null,
+        "busSkews": [
+          {
+            "name": "DDR_BYTE0",
+            "skewMm": 0.635000000000467,
+            "toleranceMm": 0.635
+          },
+          {
+            "name": "DDR_BYTE1",
+            "skewMm": 0.6349999999999696,
+            "toleranceMm": 0.635
+          }
+        ],
+        "pairSkews": [
+          {
+            "name": "pair_0",
+            "skewMm": 0.09604665360949838,
+            "toleranceMm": 0.127
+          },
+          {
+            "name": "pair_1",
+            "skewMm": 0.12180230740349174,
+            "toleranceMm": 0.127
+          },
+          {
+            "name": "pair_2",
+            "skewMm": 0.10264381675825973,
+            "toleranceMm": 0.127
+          }
+        ]
+      },
+      "comparable": true
+    },
+    {
+      "sample": "left",
+      "main": {
+        "status": "accepted",
+        "accepted": true,
+        "solveMilliseconds": 22787.271629,
+        "wallMilliseconds": 25160.690222,
+        "budgetedMilliseconds": 22787.271629,
+        "inputSha256": "6042ca0f0889a983a6ccf8f929a6a46b18cc57134e1b9f3b49c19063b936caa5",
+        "reason": null,
+        "busSkews": [
+          {
+            "name": "DDR_BYTE0",
+            "skewMm": 0.635000009997654,
+            "toleranceMm": 0.635
+          },
+          {
+            "name": "DDR_BYTE1",
+            "skewMm": 0.5111468252001927,
+            "toleranceMm": 0.635
+          }
+        ],
+        "pairSkews": [
+          {
+            "name": "pair_0",
+            "skewMm": 0.010514368851048062,
+            "toleranceMm": 0.127
+          },
+          {
+            "name": "pair_1",
+            "skewMm": 0.12699999999991718,
+            "toleranceMm": 0.127
+          },
+          {
+            "name": "pair_2",
+            "skewMm": 0.10542851386562901,
+            "toleranceMm": 0.127
+          }
+        ]
+      },
+      "pr": {
+        "status": "accepted",
+        "accepted": true,
+        "solveMilliseconds": 24384.437646,
+        "wallMilliseconds": 26739.761267,
+        "budgetedMilliseconds": 24384.437646,
+        "inputSha256": "6042ca0f0889a983a6ccf8f929a6a46b18cc57134e1b9f3b49c19063b936caa5",
+        "reason": null,
+        "busSkews": [
+          {
+            "name": "DDR_BYTE0",
+            "skewMm": 0.635000009997654,
+            "toleranceMm": 0.635
+          },
+          {
+            "name": "DDR_BYTE1",
+            "skewMm": 0.5111468252001927,
+            "toleranceMm": 0.635
+          }
+        ],
+        "pairSkews": [
+          {
+            "name": "pair_0",
+            "skewMm": 0.010514368851048062,
+            "toleranceMm": 0.127
+          },
+          {
+            "name": "pair_1",
+            "skewMm": 0.12699999999991718,
+            "toleranceMm": 0.127
+          },
+          {
+            "name": "pair_2",
+            "skewMm": 0.10542851386562901,
+            "toleranceMm": 0.127
+          }
+        ]
+      },
+      "comparable": true
+    },
+    {
+      "sample": "above",
+      "main": {
+        "status": "accepted",
+        "accepted": true,
+        "solveMilliseconds": 23153.688291,
+        "wallMilliseconds": 24818.519102,
+        "budgetedMilliseconds": 23153.688291,
+        "inputSha256": "20fc884f08accd368e4ce049ab3fc180a1926f425787a504dbc4040f651bfa69",
+        "reason": null,
+        "busSkews": [
+          {
+            "name": "DDR_BYTE0",
+            "skewMm": 0.6350000000108622,
+            "toleranceMm": 0.635
+          },
+          {
+            "name": "DDR_BYTE1",
+            "skewMm": 0.635000000003032,
+            "toleranceMm": 0.635
+          }
+        ],
+        "pairSkews": [
+          {
+            "name": "pair_0",
+            "skewMm": 0.12700000000003797,
+            "toleranceMm": 0.127
+          },
+          {
+            "name": "pair_1",
+            "skewMm": 0.1269999999999456,
+            "toleranceMm": 0.127
+          },
+          {
+            "name": "pair_2",
+            "skewMm": 0.12699999999998823,
+            "toleranceMm": 0.127
+          }
+        ]
+      },
+      "pr": {
+        "status": "accepted",
+        "accepted": true,
+        "solveMilliseconds": 23166.646156000003,
+        "wallMilliseconds": 24650.986864,
+        "budgetedMilliseconds": 23166.646156000003,
+        "inputSha256": "20fc884f08accd368e4ce049ab3fc180a1926f425787a504dbc4040f651bfa69",
+        "reason": null,
+        "busSkews": [
+          {
+            "name": "DDR_BYTE0",
+            "skewMm": 0.6350000000108622,
+            "toleranceMm": 0.635
+          },
+          {
+            "name": "DDR_BYTE1",
+            "skewMm": 0.635000000003032,
+            "toleranceMm": 0.635
+          }
+        ],
+        "pairSkews": [
+          {
+            "name": "pair_0",
+            "skewMm": 0.12700000000003797,
+            "toleranceMm": 0.127
+          },
+          {
+            "name": "pair_1",
+            "skewMm": 0.1269999999999456,
+            "toleranceMm": 0.127
+          },
+          {
+            "name": "pair_2",
+            "skewMm": 0.12699999999998823,
+            "toleranceMm": 0.127
+          }
+        ]
+      },
+      "comparable": true
+    },
+    {
+      "sample": "inner-layers",
+      "main": {
+        "status": "accepted",
+        "accepted": true,
+        "solveMilliseconds": 28425.605048,
+        "wallMilliseconds": 29362.138021,
+        "budgetedMilliseconds": 28425.605048,
+        "inputSha256": "1b91e6c5207e4b7e132aa5ac246e94777f926c7beab8675adf0356634b8280ad",
+        "reason": null,
+        "busSkews": [
+          {
+            "name": "DDR_BYTE0",
+            "skewMm": 0.6349999999628082,
+            "toleranceMm": 0.635
+          },
+          {
+            "name": "DDR_BYTE1",
+            "skewMm": 0.6350000109864098,
+            "toleranceMm": 0.635
+          }
+        ],
+        "pairSkews": [
+          {
+            "name": "pair_0",
+            "skewMm": 0.0778683245814733,
+            "toleranceMm": 0.127
+          },
+          {
+            "name": "pair_1",
+            "skewMm": 0.12688373178988854,
+            "toleranceMm": 0.127
+          },
+          {
+            "name": "pair_2",
+            "skewMm": 0.12699999999976797,
+            "toleranceMm": 0.127
+          }
+        ]
+      },
+      "pr": {
+        "status": "accepted",
+        "accepted": true,
+        "solveMilliseconds": 29358.167404,
+        "wallMilliseconds": 30410.446126,
+        "budgetedMilliseconds": 29358.167404,
+        "inputSha256": "1b91e6c5207e4b7e132aa5ac246e94777f926c7beab8675adf0356634b8280ad",
+        "reason": null,
+        "busSkews": [
+          {
+            "name": "DDR_BYTE0",
+            "skewMm": 0.6349999999628082,
+            "toleranceMm": 0.635
+          },
+          {
+            "name": "DDR_BYTE1",
+            "skewMm": 0.6350000109864098,
+            "toleranceMm": 0.635
+          }
+        ],
+        "pairSkews": [
+          {
+            "name": "pair_0",
+            "skewMm": 0.0778683245814733,
+            "toleranceMm": 0.127
+          },
+          {
+            "name": "pair_1",
+            "skewMm": 0.12688373178988854,
+            "toleranceMm": 0.127
+          },
+          {
+            "name": "pair_2",
+            "skewMm": 0.12699999999976797,
+            "toleranceMm": 0.127
+          }
+        ]
+      },
+      "comparable": true
+    },
+    {
+      "sample": "inner-layers-right",
+      "main": {
+        "status": "accepted",
+        "accepted": true,
+        "solveMilliseconds": 44847.79818,
+        "wallMilliseconds": 46136.836974000005,
+        "budgetedMilliseconds": 44847.79818,
+        "inputSha256": "2eaf3dedcd84fbfed10262f4d4c99370a0ca00a7a060f87b7a1cdcba9de37a8e",
+        "reason": null,
+        "busSkews": [
+          {
+            "name": "DDR_BYTE0",
+            "skewMm": 0.6350000110508631,
+            "toleranceMm": 0.635
+          },
+          {
+            "name": "DDR_BYTE1",
+            "skewMm": 0.6349999999999696,
+            "toleranceMm": 0.635
+          }
+        ],
+        "pairSkews": [
+          {
+            "name": "pair_0",
+            "skewMm": 0.12700001096276736,
+            "toleranceMm": 0.127
+          },
+          {
+            "name": "pair_1",
+            "skewMm": 0.12699999999998113,
+            "toleranceMm": 0.127
+          },
+          {
+            "name": "pair_2",
+            "skewMm": 0.1270000000000593,
+            "toleranceMm": 0.127
+          }
+        ]
+      },
+      "pr": {
+        "status": "accepted",
+        "accepted": true,
+        "solveMilliseconds": 44969.697491,
+        "wallMilliseconds": 46197.33714999999,
+        "budgetedMilliseconds": 44969.697491,
+        "inputSha256": "2eaf3dedcd84fbfed10262f4d4c99370a0ca00a7a060f87b7a1cdcba9de37a8e",
+        "reason": null,
+        "busSkews": [
+          {
+            "name": "DDR_BYTE0",
+            "skewMm": 0.6350000110508631,
+            "toleranceMm": 0.635
+          },
+          {
+            "name": "DDR_BYTE1",
+            "skewMm": 0.6349999999999696,
+            "toleranceMm": 0.635
+          }
+        ],
+        "pairSkews": [
+          {
+            "name": "pair_0",
+            "skewMm": 0.12700001096276736,
+            "toleranceMm": 0.127
+          },
+          {
+            "name": "pair_1",
+            "skewMm": 0.12699999999998113,
+            "toleranceMm": 0.127
+          },
+          {
+            "name": "pair_2",
+            "skewMm": 0.1270000000000593,
+            "toleranceMm": 0.127
+          }
+        ]
+      },
+      "comparable": true
+    },
+    {
+      "sample": "inner-layers-left",
+      "main": {
+        "status": "accepted",
+        "accepted": true,
+        "solveMilliseconds": 135514.25239100002,
+        "wallMilliseconds": 138169.54590599998,
+        "budgetedMilliseconds": 135514.25239100002,
+        "inputSha256": "1c3db8ee018bc90df7fbbb0c198c42efcc0ca948a6a213338650cf81a51f7ab2",
+        "reason": null,
+        "busSkews": [
+          {
+            "name": "DDR_BYTE0",
+            "skewMm": 0.634990371865257,
+            "toleranceMm": 0.635
+          },
+          {
+            "name": "DDR_BYTE1",
+            "skewMm": 0.6349920303628309,
+            "toleranceMm": 0.635
+          }
+        ],
+        "pairSkews": [
+          {
+            "name": "pair_0",
+            "skewMm": 0.12699000000001348,
+            "toleranceMm": 0.127
+          },
+          {
+            "name": "pair_1",
+            "skewMm": 5.274709806712963e-7,
+            "toleranceMm": 0.127
+          },
+          {
+            "name": "pair_2",
+            "skewMm": 0.10542851386563257,
+            "toleranceMm": 0.127
+          }
+        ]
+      },
+      "pr": {
+        "status": "accepted",
+        "accepted": true,
+        "solveMilliseconds": 124428.18542099999,
+        "wallMilliseconds": 126978.775149,
+        "budgetedMilliseconds": 124428.18542099999,
+        "inputSha256": "1c3db8ee018bc90df7fbbb0c198c42efcc0ca948a6a213338650cf81a51f7ab2",
+        "reason": null,
+        "busSkews": [
+          {
+            "name": "DDR_BYTE0",
+            "skewMm": 0.634990371865257,
+            "toleranceMm": 0.635
+          },
+          {
+            "name": "DDR_BYTE1",
+            "skewMm": 0.6349920303628309,
+            "toleranceMm": 0.635
+          }
+        ],
+        "pairSkews": [
+          {
+            "name": "pair_0",
+            "skewMm": 0.12699000000001348,
+            "toleranceMm": 0.127
+          },
+          {
+            "name": "pair_1",
+            "skewMm": 5.274709806712963e-7,
+            "toleranceMm": 0.127
+          },
+          {
+            "name": "pair_2",
+            "skewMm": 0.10542851386563257,
+            "toleranceMm": 0.127
+          }
+        ]
+      },
+      "comparable": true
+    },
+    {
+      "sample": "inner-layers-above",
+      "main": {
+        "status": "accepted",
+        "accepted": true,
+        "solveMilliseconds": 170561.229035,
+        "wallMilliseconds": 172989.68941999998,
+        "budgetedMilliseconds": 170561.229035,
+        "inputSha256": "68a86ef74f8ec9628954e909464c009d98fb2c902a6376e20b3a32d4b5cff555",
+        "reason": null,
+        "busSkews": [
+          {
+            "name": "DDR_BYTE0",
+            "skewMm": 0.6349909297154568,
+            "toleranceMm": 0.635
+          },
+          {
+            "name": "DDR_BYTE1",
+            "skewMm": 0.6349927153210047,
+            "toleranceMm": 0.635
+          }
+        ],
+        "pairSkews": [
+          {
+            "name": "pair_0",
+            "skewMm": 0.12691534384281056,
+            "toleranceMm": 0.127
+          },
+          {
+            "name": "pair_1",
+            "skewMm": 0.12698980000070037,
+            "toleranceMm": 0.127
+          },
+          {
+            "name": "pair_2",
+            "skewMm": 6.186337131453001e-7,
+            "toleranceMm": 0.127
+          }
+        ]
+      },
+      "pr": {
+        "status": "accepted",
+        "accepted": true,
+        "solveMilliseconds": 149624.055016,
+        "wallMilliseconds": 151616.025918,
+        "budgetedMilliseconds": 149624.055016,
+        "inputSha256": "68a86ef74f8ec9628954e909464c009d98fb2c902a6376e20b3a32d4b5cff555",
+        "reason": null,
+        "busSkews": [
+          {
+            "name": "DDR_BYTE0",
+            "skewMm": 0.6349909297154568,
+            "toleranceMm": 0.635
+          },
+          {
+            "name": "DDR_BYTE1",
+            "skewMm": 0.6349927153210047,
+            "toleranceMm": 0.635
+          }
+        ],
+        "pairSkews": [
+          {
+            "name": "pair_0",
+            "skewMm": 0.12691534384281056,
+            "toleranceMm": 0.127
+          },
+          {
+            "name": "pair_1",
+            "skewMm": 0.12698980000070037,
+            "toleranceMm": 0.127
+          },
+          {
+            "name": "pair_2",
+            "skewMm": 6.186337131453001e-7,
+            "toleranceMm": 0.127
+          }
+        ]
+      },
+      "comparable": true
+    },
+    {
+      "sample": "inner-layers-complete-ca",
+      "main": {
+        "status": "accepted",
+        "accepted": true,
+        "solveMilliseconds": 145743.84919200002,
+        "wallMilliseconds": 152496.68184300003,
+        "budgetedMilliseconds": 145743.84919200002,
+        "inputSha256": "a6def279fa2d3356a66ee94b1760a76eebb6c6d8e605005ce5903bd2fbca8776",
+        "reason": null,
+        "busSkews": [
+          {
+            "name": "DDR_BYTE0",
+            "skewMm": 0.6349902427763041,
+            "toleranceMm": 0.635
+          },
+          {
+            "name": "DDR_BYTE1",
+            "skewMm": 0.6349916843630794,
+            "toleranceMm": 0.635
+          },
+          {
+            "name": "DDR_ADDR_CTRL_CK",
+            "skewMm": 0.6349944579905653,
+            "toleranceMm": 0.635
+          }
+        ],
+        "pairSkews": [
+          {
+            "name": "pair_0",
+            "skewMm": 0.07535887199949798,
+            "toleranceMm": 0.127
+          },
+          {
+            "name": "pair_1",
+            "skewMm": 8.526512829121202e-14,
+            "toleranceMm": 0.127
+          },
+          {
+            "name": "pair_2",
+            "skewMm": 0.06638387191047457,
+            "toleranceMm": 0.127
+          }
+        ]
+      },
+      "pr": {
+        "status": "accepted",
+        "accepted": true,
+        "solveMilliseconds": 150423.089575,
+        "wallMilliseconds": 156153.606446,
+        "budgetedMilliseconds": 150423.089575,
+        "inputSha256": "a6def279fa2d3356a66ee94b1760a76eebb6c6d8e605005ce5903bd2fbca8776",
+        "reason": null,
+        "busSkews": [
+          {
+            "name": "DDR_BYTE0",
+            "skewMm": 0.6349902427763041,
+            "toleranceMm": 0.635
+          },
+          {
+            "name": "DDR_BYTE1",
+            "skewMm": 0.6349916843630794,
+            "toleranceMm": 0.635
+          },
+          {
+            "name": "DDR_ADDR_CTRL_CK",
+            "skewMm": 0.6349944579905653,
+            "toleranceMm": 0.635
+          }
+        ],
+        "pairSkews": [
+          {
+            "name": "pair_0",
+            "skewMm": 0.07535887199949798,
+            "toleranceMm": 0.127
+          },
+          {
+            "name": "pair_1",
+            "skewMm": 8.526512829121202e-14,
+            "toleranceMm": 0.127
+          },
+          {
+            "name": "pair_2",
+            "skewMm": 0.06638387191047457,
+            "toleranceMm": 0.127
+          }
+        ]
+      },
+      "comparable": true
+    },
+    {
+      "sample": "outer-layers",
+      "main": {
+        "status": "accepted",
+        "accepted": true,
+        "solveMilliseconds": 541235.292879,
+        "wallMilliseconds": 543640.774116,
+        "budgetedMilliseconds": 541235.292879,
+        "inputSha256": "de3fd915f3c7d8c9bf4fd3c9b197596ba5e08c1be328f9c5223d7ab78736588f",
+        "reason": null,
+        "busSkews": [
+          {
+            "name": "DDR_BYTE0",
+            "skewMm": 0.6350000110165794,
+            "toleranceMm": 0.635
+          },
+          {
+            "name": "DDR_BYTE1",
+            "skewMm": 0.6349999999999838,
+            "toleranceMm": 0.635
+          }
+        ],
+        "pairSkews": [
+          {
+            "name": "pair_0",
+            "skewMm": 0.019219371674388697,
+            "toleranceMm": 0.127
+          },
+          {
+            "name": "pair_1",
+            "skewMm": 0.12700000000001666,
+            "toleranceMm": 0.127
+          },
+          {
+            "name": "pair_2",
+            "skewMm": 0.12699999999989586,
+            "toleranceMm": 0.127
+          }
+        ]
+      },
+      "pr": {
+        "status": "accepted",
+        "accepted": true,
+        "solveMilliseconds": 553568.210772,
+        "wallMilliseconds": 555310.976158,
+        "budgetedMilliseconds": 553568.210772,
+        "inputSha256": "de3fd915f3c7d8c9bf4fd3c9b197596ba5e08c1be328f9c5223d7ab78736588f",
+        "reason": null,
+        "busSkews": [
+          {
+            "name": "DDR_BYTE0",
+            "skewMm": 0.6350000110165794,
+            "toleranceMm": 0.635
+          },
+          {
+            "name": "DDR_BYTE1",
+            "skewMm": 0.6349999999999838,
+            "toleranceMm": 0.635
+          }
+        ],
+        "pairSkews": [
+          {
+            "name": "pair_0",
+            "skewMm": 0.019219371674388697,
+            "toleranceMm": 0.127
+          },
+          {
+            "name": "pair_1",
+            "skewMm": 0.12700000000001666,
+            "toleranceMm": 0.127
+          },
+          {
+            "name": "pair_2",
+            "skewMm": 0.12699999999989586,
+            "toleranceMm": 0.127
+          }
+        ]
+      },
+      "comparable": true
+    }
+  ],
+  "artifactComplete": true,
+  "inputComparable": true,
+  "metadataComparable": true,
+  "main": {
+    "accepted": 11,
+    "timeouts": 0,
+    "failures": 0,
+    "budgeted": {
+      "p50": 44847.79818,
+      "p80": 170561.229035,
+      "p90": 541235.292879,
+      "p95": 553854.9619384999
+    }
+  },
+  "pr": {
+    "accepted": 11,
+    "timeouts": 0,
+    "failures": 0,
+    "budgeted": {
+      "p50": 44969.697491,
+      "p80": 150423.089575,
+      "p90": 503581.065386,
+      "p95": 528574.6380789999
+    }
+  },
+  "lost": [],
+  "gained": [],
+  "matched": {
+    "count": 11,
+    "main": {
+      "p50": 44847.79818,
+      "p80": 170561.229035,
+      "p90": 541235.292879,
+      "p95": 553854.9619384999
+    },
+    "pr": {
+      "p50": 44969.697491,
+      "p80": 150423.089575,
+      "p90": 503581.065386,
+      "p95": 528574.6380789999
+    },
+    "deltaPercent": {
+      "p50": 0.2718066793619366,
+      "p80": -11.80698542918424,
+      "p90": -6.957090195043519,
+      "p95": -4.56443032865834
+    }
+  }
+}

@@ -1,0 +1,869 @@
+[
+  {
+    "board": "butterstick-local",
+    "tscircuit": "0.0.3271",
+    "diagnosticBudgetSeconds": 120,
+    "completeRender": false,
+    "totalSamples": 99360,
+    "topInclusiveFrames": [
+      {
+        "function": "(root)",
+        "file": "",
+        "line": 0,
+        "samples": 99360,
+        "percent": 100.0
+      },
+      {
+        "function": "tick",
+        "file": "@tscircuit/core/dist/index.js",
+        "line": 123950,
+        "samples": 69858,
+        "percent": 70.30797101449275
+      },
+      {
+        "function": "step",
+        "file": "@tscircuit/core/dist/index.js",
+        "line": 69020,
+        "samples": 69850,
+        "percent": 70.29991948470209
+      },
+      {
+        "function": "_step",
+        "file": "file:///workspace/work/rerun-3271/observer.ts",
+        "line": 37,
+        "samples": 69849,
+        "percent": 70.29891304347827
+      },
+      {
+        "function": "_step",
+        "file": "@tscircuit/core/dist/index.js",
+        "line": 123555,
+        "samples": 69685,
+        "percent": 70.13385668276973
+      },
+      {
+        "function": "generatorResume",
+        "file": "",
+        "line": 1,
+        "samples": 69680,
+        "percent": 70.12882447665056
+      },
+      {
+        "function": "routeMultiTerminalBuses",
+        "file": "@tscircuit/core/dist/index.js",
+        "line": 88508,
+        "samples": 69678,
+        "percent": 70.1268115942029
+      },
+      {
+        "function": "GridVisibilitySearch",
+        "file": "@tscircuit/core/dist/index.js",
+        "line": 62521,
+        "samples": 62338,
+        "percent": 62.739533011272144
+      },
+      {
+        "function": "next",
+        "file": "",
+        "line": 1,
+        "samples": 53090,
+        "percent": 53.43196457326892
+      },
+      {
+        "function": "getBoardGrid",
+        "file": "@tscircuit/core/dist/index.js",
+        "line": 61919,
+        "samples": 45346,
+        "percent": 45.638083735909824
+      },
+      {
+        "function": "boardSegmentIsClear",
+        "file": "@tscircuit/core/dist/index.js",
+        "line": 59843,
+        "samples": 41272,
+        "percent": 41.5378421900161
+      },
+      {
+        "function": "every",
+        "file": "",
+        "line": 1,
+        "samples": 38902,
+        "percent": 39.15257648953301
+      },
+      {
+        "function": "selectBranchAttachment",
+        "file": "@tscircuit/core/dist/index.js",
+        "line": 88463,
+        "samples": 38770,
+        "percent": 39.019726247987116
+      },
+      {
+        "function": "_step",
+        "file": "@tscircuit/core/dist/index.js",
+        "line": 69948,
+        "samples": 29185,
+        "percent": 29.372987117552334
+      },
+      {
+        "function": "renderUntilSettled",
+        "file": "@tscircuit/core/dist/index.js",
+        "line": 165261,
+        "samples": 28174,
+        "percent": 28.355475040257648
+      },
+      {
+        "function": "render",
+        "file": "@tscircuit/core/dist/index.js",
+        "line": 165244,
+        "samples": 28118,
+        "percent": 28.29911433172303
+      },
+      {
+        "function": "runRenderCycle",
+        "file": "@tscircuit/core/dist/chunk-2MGRCJPJ.js",
+        "line": 426,
+        "samples": 28117,
+        "percent": 28.298107890499196
+      },
+      {
+        "function": "runRenderPhase",
+        "file": "@tscircuit/core/dist/chunk-2MGRCJPJ.js",
+        "line": 439,
+        "samples": 27976,
+        "percent": 28.156199677938808
+      },
+      {
+        "function": "route",
+        "file": "@tscircuit/core/dist/index.js",
+        "line": 69573,
+        "samples": 24913,
+        "percent": 25.073470209339774
+      },
+      {
+        "function": "_queueAsyncEffect",
+        "file": "@tscircuit/core/dist/chunk-2MGRCJPJ.js",
+        "line": 309,
+        "samples": 23273,
+        "percent": 23.42290660225443
+      },
+      {
+        "function": "",
+        "file": "@tscircuit/core/dist/index.js",
+        "line": 59859,
+        "samples": 22590,
+        "percent": 22.735507246376812
+      },
+      {
+        "function": "(module)",
+        "file": "file:///workspace/work/rerun-3271/render.tsx",
+        "line": 1,
+        "samples": 20470,
+        "percent": 20.60185185185185
+      },
+      {
+        "function": "pendingPackageExits",
+        "file": "@tscircuit/core/dist/index.js",
+        "line": 64941,
+        "samples": 20263,
+        "percent": 20.39351851851852
+      },
+      {
+        "function": "",
+        "file": "@tscircuit/core/dist/index.js",
+        "line": 165804,
+        "samples": 18551,
+        "percent": 18.670491143317232
+      },
+      {
+        "function": "Board_doInitialPcbPlacementDesignRuleChecks",
+        "file": "@tscircuit/core/dist/index.js",
+        "line": 165789,
+        "samples": 18532,
+        "percent": 18.65136876006441
+      },
+      {
+        "function": "doInitialPcbPlacementDesignRuleChecks",
+        "file": "@tscircuit/core/dist/index.js",
+        "line": 166467,
+        "samples": 18532,
+        "percent": 18.65136876006441
+      },
+      {
+        "function": "runAllPlacementChecks",
+        "file": "@tscircuit/checks/dist/index.js",
+        "line": 23399,
+        "samples": 18503,
+        "percent": 18.62218196457327
+      },
+      {
+        "function": "filter",
+        "file": "",
+        "line": 1,
+        "samples": 18133,
+        "percent": 18.249798711755233
+      },
+      {
+        "function": "covered",
+        "file": "@flatten-js/core/dist/main.mjs",
+        "line": 2962,
+        "samples": 17650,
+        "percent": 17.763687600644122
+      },
+      {
+        "function": "relatePolygon2Polygon",
+        "file": "@flatten-js/core/dist/main.mjs",
+        "line": 3185,
+        "samples": 17634,
+        "percent": 17.747584541062803
+      },
+      {
+        "function": "cover",
+        "file": "@flatten-js/core/dist/main.mjs",
+        "line": 2983,
+        "samples": 17058,
+        "percent": 17.167874396135264
+      },
+      {
+        "function": "some",
+        "file": "",
+        "line": 1,
+        "samples": 16950,
+        "percent": 17.059178743961354
+      },
+      {
+        "function": "contains",
+        "file": "@flatten-js/core/dist/main.mjs",
+        "line": 8331,
+        "samples": 16866,
+        "percent": 16.97463768115942
+      },
+      {
+        "function": "booleanOpBinary",
+        "file": "@flatten-js/core/dist/main.mjs",
+        "line": 2007,
+        "samples": 14361,
+        "percent": 14.453502415458937
+      },
+      {
+        "function": "clone",
+        "file": "@flatten-js/core/dist/main.mjs",
+        "line": 7896,
+        "samples": 12432,
+        "percent": 12.51207729468599
+      },
+      {
+        "function": "markBox",
+        "file": "@tscircuit/core/dist/index.js",
+        "line": 62614,
+        "samples": 12157,
+        "percent": 12.235305958132045
+      },
+      {
+        "function": "addFace",
+        "file": "@flatten-js/core/dist/main.mjs",
+        "line": 7964,
+        "samples": 11982,
+        "percent": 12.059178743961352
+      },
+      {
+        "function": "Face",
+        "file": "@flatten-js/core/dist/main.mjs",
+        "line": 7100,
+        "samples": 11655,
+        "percent": 11.730072463768115
+      },
+      {
+        "function": "shapes2face",
+        "file": "@flatten-js/core/dist/main.mjs",
+        "line": 7280,
+        "samples": 11578,
+        "percent": 11.652576489533011
+      },
+      {
+        "function": "add",
+        "file": "@flatten-js/core/dist/main.mjs",
+        "line": 4247,
+        "samples": 11249,
+        "percent": 11.32145732689211
+      }
+    ]
+  },
+  {
+    "board": "h616-local",
+    "tscircuit": "0.0.3271",
+    "diagnosticBudgetSeconds": null,
+    "completeRender": true,
+    "totalSamples": 35570,
+    "topInclusiveFrames": [
+      {
+        "function": "(root)",
+        "file": "",
+        "line": 0,
+        "samples": 35570,
+        "percent": 100.0
+      },
+      {
+        "function": "runCycleAndQueueNextCycle",
+        "file": "@tscircuit/core/dist/index.js",
+        "line": 148910,
+        "samples": 21717,
+        "percent": 61.05425920719708
+      },
+      {
+        "function": "stepSolver",
+        "file": "@tscircuit/core/dist/index.js",
+        "line": 148900,
+        "samples": 20557,
+        "percent": 57.79308405960079
+      },
+      {
+        "function": "step",
+        "file": "@tscircuit/capacity-autorouter/dist/index.js",
+        "line": 1,
+        "samples": 20345,
+        "percent": 57.19707618779871
+      },
+      {
+        "function": "",
+        "file": "file:///workspace/work/rerun-3271/observer.ts",
+        "line": 85,
+        "samples": 20085,
+        "percent": 56.4661231374754
+      },
+      {
+        "function": "_step",
+        "file": "@tscircuit/capacity-autorouter/dist/index.js",
+        "line": 1,
+        "samples": 19094,
+        "percent": 53.68006747258926
+      },
+      {
+        "function": "step",
+        "file": "@tscircuit/solver-utils/dist/index.js",
+        "line": 30,
+        "samples": 16730,
+        "percent": 47.03401743041889
+      },
+      {
+        "function": "_step",
+        "file": "@tscircuit/solver-utils/dist/index.js",
+        "line": 130,
+        "samples": 15651,
+        "percent": 44.000562271577174
+      },
+      {
+        "function": "expand",
+        "file": "@tscircuit/capacity-autorouter/dist/index.js",
+        "line": 1,
+        "samples": 6188,
+        "percent": 17.396682597694685
+      },
+      {
+        "function": "tick",
+        "file": "@tscircuit/core/dist/index.js",
+        "line": 123950,
+        "samples": 5953,
+        "percent": 16.736013494517852
+      },
+      {
+        "function": "_step",
+        "file": "file:///workspace/work/rerun-3271/observer.ts",
+        "line": 37,
+        "samples": 5947,
+        "percent": 16.719145347202698
+      },
+      {
+        "function": "step",
+        "file": "@tscircuit/core/dist/index.js",
+        "line": 69020,
+        "samples": 5947,
+        "percent": 16.719145347202698
+      },
+      {
+        "function": "_step",
+        "file": "@tscircuit/core/dist/index.js",
+        "line": 123555,
+        "samples": 5909,
+        "percent": 16.61231374754006
+      },
+      {
+        "function": "",
+        "file": "@tscircuit/capacity-autorouter/dist/index.js",
+        "line": 1,
+        "samples": 5848,
+        "percent": 16.44082091650267
+      },
+      {
+        "function": "_step",
+        "file": "@tscircuit/core/dist/index.js",
+        "line": 69948,
+        "samples": 5552,
+        "percent": 15.608658982288445
+      },
+      {
+        "function": "renderUntilSettled",
+        "file": "@tscircuit/core/dist/index.js",
+        "line": 165261,
+        "samples": 4334,
+        "percent": 12.184425077312342
+      },
+      {
+        "function": "runRenderCycle",
+        "file": "@tscircuit/core/dist/chunk-2MGRCJPJ.js",
+        "line": 426,
+        "samples": 4319,
+        "percent": 12.142254709024458
+      },
+      {
+        "function": "render",
+        "file": "@tscircuit/core/dist/index.js",
+        "line": 165244,
+        "samples": 4319,
+        "percent": 12.142254709024458
+      },
+      {
+        "function": "GridVisibilitySearch",
+        "file": "@tscircuit/core/dist/index.js",
+        "line": 62521,
+        "samples": 4255,
+        "percent": 11.96232780432949
+      },
+      {
+        "function": "runRenderPhase",
+        "file": "@tscircuit/core/dist/chunk-2MGRCJPJ.js",
+        "line": 439,
+        "samples": 4252,
+        "percent": 11.953893730671915
+      },
+      {
+        "function": "filter",
+        "file": "",
+        "line": 1,
+        "samples": 4071,
+        "percent": 11.44503795333146
+      },
+      {
+        "function": "onOutOfCandidates",
+        "file": "@tscircuit/capacity-autorouter/dist/index.js",
+        "line": 1,
+        "samples": 3853,
+        "percent": 10.832161934214225
+      },
+      {
+        "function": "findRelaxedBlockerPathPreferringPreservedRoutes",
+        "file": "@tscircuit/capacity-autorouter/dist/index.js",
+        "line": 1,
+        "samples": 3769,
+        "percent": 10.59600787180208
+      },
+      {
+        "function": "findRelaxedBlockerPath",
+        "file": "@tscircuit/capacity-autorouter/dist/index.js",
+        "line": 1,
+        "samples": 3381,
+        "percent": 9.50520101208884
+      },
+      {
+        "function": "runAllPlacementChecks",
+        "file": "@tscircuit/checks/dist/index.js",
+        "line": 23399,
+        "samples": 3283,
+        "percent": 9.229687939274669
+      },
+      {
+        "function": "$Q",
+        "file": "@tscircuit/capacity-autorouter/dist/index.js",
+        "line": 1,
+        "samples": 3230,
+        "percent": 9.080685971324149
+      },
+      {
+        "function": "generatorResume",
+        "file": "",
+        "line": 1,
+        "samples": 3225,
+        "percent": 9.066629181894855
+      },
+      {
+        "function": "route",
+        "file": "@tscircuit/core/dist/index.js",
+        "line": 69573,
+        "samples": 3222,
+        "percent": 9.058195108237278
+      },
+      {
+        "function": "negotiateLanes",
+        "file": "@tscircuit/core/dist/index.js",
+        "line": 65936,
+        "samples": 3166,
+        "percent": 8.900759066629181
+      },
+      {
+        "function": "every",
+        "file": "",
+        "line": 1,
+        "samples": 3047,
+        "percent": 8.566207478211977
+      },
+      {
+        "function": "covered",
+        "file": "@flatten-js/core/dist/main.mjs",
+        "line": 2962,
+        "samples": 2853,
+        "percent": 8.020804048355355
+      },
+      {
+        "function": "relatePolygon2Polygon",
+        "file": "@flatten-js/core/dist/main.mjs",
+        "line": 3185,
+        "samples": 2846,
+        "percent": 8.001124543154344
+      },
+      {
+        "function": "getRelaxedSearchHops",
+        "file": "@tscircuit/capacity-autorouter/dist/index.js",
+        "line": 1,
+        "samples": 2643,
+        "percent": 7.430418892324993
+      },
+      {
+        "function": "boardSegmentIsClear",
+        "file": "@tscircuit/core/dist/index.js",
+        "line": 59843,
+        "samples": 2634,
+        "percent": 7.405116671352263
+      },
+      {
+        "function": "initialize",
+        "file": "@tscircuit/core/dist/index.js",
+        "line": 69373,
+        "samples": 2317,
+        "percent": 6.513916221535001
+      },
+      {
+        "function": "startLane",
+        "file": "@tscircuit/core/dist/index.js",
+        "line": 69519,
+        "samples": 2313,
+        "percent": 6.502670789991566
+      },
+      {
+        "function": "booleanOpBinary",
+        "file": "@flatten-js/core/dist/main.mjs",
+        "line": 2007,
+        "samples": 2288,
+        "percent": 6.432386842845094
+      },
+      {
+        "function": "_queueAsyncEffect",
+        "file": "@tscircuit/core/dist/chunk-2MGRCJPJ.js",
+        "line": 309,
+        "samples": 2207,
+        "percent": 6.204666854090526
+      },
+      {
+        "function": "getBoardGrid",
+        "file": "@tscircuit/core/dist/index.js",
+        "line": 61919,
+        "samples": 2167,
+        "percent": 6.092212538656171
+      },
+      {
+        "function": "(module)",
+        "file": "file:///workspace/work/rerun-3271/render.tsx",
+        "line": 1,
+        "samples": 2147,
+        "percent": 6.035985380938993
+      }
+    ]
+  },
+  {
+    "board": "icepi-native",
+    "tscircuit": "0.0.3271",
+    "diagnosticBudgetSeconds": null,
+    "completeRender": true,
+    "totalSamples": 19570,
+    "topInclusiveFrames": [
+      {
+        "function": "(root)",
+        "file": "",
+        "line": 0,
+        "samples": 19570,
+        "percent": 100.0
+      },
+      {
+        "function": "renderUntilSettled",
+        "file": "@tscircuit/core/dist/index.js",
+        "line": 165261,
+        "samples": 6657,
+        "percent": 34.01635155850792
+      },
+      {
+        "function": "runRenderCycle",
+        "file": "@tscircuit/core/dist/chunk-2MGRCJPJ.js",
+        "line": 426,
+        "samples": 6654,
+        "percent": 34.00102197240675
+      },
+      {
+        "function": "render",
+        "file": "@tscircuit/core/dist/index.js",
+        "line": 165244,
+        "samples": 6654,
+        "percent": 34.00102197240675
+      },
+      {
+        "function": "runRenderPhase",
+        "file": "@tscircuit/core/dist/chunk-2MGRCJPJ.js",
+        "line": 439,
+        "samples": 6429,
+        "percent": 32.8513030148186
+      },
+      {
+        "function": "",
+        "file": "@tscircuit/core/dist/index.js",
+        "line": 173612,
+        "samples": 5678,
+        "percent": 29.013796627491057
+      },
+      {
+        "function": "(module)",
+        "file": "file:///workspace/work/rerun-3271/render.tsx",
+        "line": 1,
+        "samples": 5312,
+        "percent": 27.143587123147675
+      },
+      {
+        "function": "getOutput",
+        "file": "@tscircuit/copper-pour-solver/dist/index.js",
+        "line": 991,
+        "samples": 4481,
+        "percent": 22.897291773122127
+      },
+      {
+        "function": "_queueAsyncEffect",
+        "file": "@tscircuit/core/dist/chunk-2MGRCJPJ.js",
+        "line": 309,
+        "samples": 4433,
+        "percent": 22.652018395503323
+      },
+      {
+        "function": "solveFanout",
+        "file": "@tscircuit/core/dist/index.js",
+        "line": 56292,
+        "samples": 4330,
+        "percent": 22.125702606029638
+      },
+      {
+        "function": "startFanout",
+        "file": "@tscircuit/core/dist/index.js",
+        "line": 56335,
+        "samples": 4330,
+        "percent": 22.125702606029638
+      },
+      {
+        "function": "",
+        "file": "@tscircuit/core/dist/index.js",
+        "line": 56363,
+        "samples": 4330,
+        "percent": 22.125702606029638
+      },
+      {
+        "function": "solve",
+        "file": "file:///workspace/work/rerun-3271/observer.ts",
+        "line": 21,
+        "samples": 4303,
+        "percent": 21.98773633111906
+      },
+      {
+        "function": "solve",
+        "file": "@tscircuit/solver-utils/dist/index.js",
+        "line": 65,
+        "samples": 3996,
+        "percent": 20.41900868676546
+      },
+      {
+        "function": "step",
+        "file": "@tscircuit/solver-utils/dist/index.js",
+        "line": 26,
+        "samples": 3995,
+        "percent": 20.41389882473173
+      },
+      {
+        "function": "_step",
+        "file": "file:///workspace/work/rerun-3271/observer.ts",
+        "line": 12,
+        "samples": 3986,
+        "percent": 20.367910066428205
+      },
+      {
+        "function": "_step",
+        "file": "@tscircuit/core/dist/index.js",
+        "line": 55630,
+        "samples": 3979,
+        "percent": 20.33214103219213
+      },
+      {
+        "function": "stepActiveOperation",
+        "file": "@tscircuit/core/dist/index.js",
+        "line": 51860,
+        "samples": 3972,
+        "percent": 20.296371997956054
+      },
+      {
+        "function": "_step",
+        "file": "@tscircuit/core/dist/index.js",
+        "line": 50877,
+        "samples": 3963,
+        "percent": 20.25038323965253
+      },
+      {
+        "function": "generatorResume",
+        "file": "",
+        "line": 1,
+        "samples": 3962,
+        "percent": 20.245273377618805
+      },
+      {
+        "function": "map",
+        "file": "",
+        "line": 1,
+        "samples": 3938,
+        "percent": 20.1226366888094
+      },
+      {
+        "function": "evaluateAssignmentSteps",
+        "file": "@tscircuit/core/dist/index.js",
+        "line": 55174,
+        "samples": 3783,
+        "percent": 19.330608073582013
+      },
+      {
+        "function": "routeBusAlternatives",
+        "file": "@tscircuit/core/dist/index.js",
+        "line": 33078,
+        "samples": 3782,
+        "percent": 19.32549821154829
+      },
+      {
+        "function": "routeBusAlternativesSteps",
+        "file": "@tscircuit/core/dist/index.js",
+        "line": 33000,
+        "samples": 3781,
+        "percent": 19.320388349514563
+      },
+      {
+        "function": "routeBus",
+        "file": "@tscircuit/core/dist/index.js",
+        "line": 33084,
+        "samples": 3779,
+        "percent": 19.310168625447112
+      },
+      {
+        "function": "evaluateAssignmentWithStrategySteps",
+        "file": "@tscircuit/core/dist/index.js",
+        "line": 54868,
+        "samples": 3777,
+        "percent": 19.29994890137966
+      },
+      {
+        "function": "_runLocalAutorouting",
+        "file": "@tscircuit/core/dist/index.js",
+        "line": 162173,
+        "samples": 3554,
+        "percent": 18.160449667858966
+      },
+      {
+        "function": "doInitialPcbTraceRender",
+        "file": "@tscircuit/core/dist/index.js",
+        "line": 163068,
+        "samples": 3439,
+        "percent": 17.57281553398058
+      },
+      {
+        "function": "",
+        "file": "@tscircuit/core/dist/index.js",
+        "line": 163034,
+        "samples": 3367,
+        "percent": 17.204905467552376
+      },
+      {
+        "function": "_startAsyncAutorouting",
+        "file": "@tscircuit/core/dist/index.js",
+        "line": 163030,
+        "samples": 3367,
+        "percent": 17.204905467552376
+      },
+      {
+        "function": "",
+        "file": "@tscircuit/manifold-2d/vendor/manifold.js",
+        "line": 1,
+        "samples": 3213,
+        "percent": 16.41798671435871
+      },
+      {
+        "function": "getSimpleRouteJsonFromCircuitJson",
+        "file": "@tscircuit/core/dist/index.js",
+        "line": 150611,
+        "samples": 3195,
+        "percent": 16.32600919775166
+      },
+      {
+        "function": "runRenderPhaseForChildren",
+        "file": "@tscircuit/core/dist/index.js",
+        "line": 166477,
+        "samples": 2996,
+        "percent": 15.309146653040369
+      },
+      {
+        "function": "runRenderPhaseForChildren",
+        "file": "@tscircuit/core/dist/chunk-2MGRCJPJ.js",
+        "line": 484,
+        "samples": 2994,
+        "percent": 15.298926928972918
+      },
+      {
+        "function": "dynCall",
+        "file": "@tscircuit/manifold-2d/vendor/manifold.js",
+        "line": 1,
+        "samples": 2848,
+        "percent": 14.552887072049055
+      },
+      {
+        "function": "subtractBlockersFromPour",
+        "file": "@tscircuit/copper-pour-solver/dist/index.js",
+        "line": 210,
+        "samples": 2819,
+        "percent": 14.404701073071028
+      },
+      {
+        "function": "runManifoldOperation",
+        "file": "@tscircuit/copper-pour-solver/dist/index.js",
+        "line": 110,
+        "samples": 2798,
+        "percent": 14.2973939703628
+      },
+      {
+        "function": "routePlaneTerminatedBus",
+        "file": "@tscircuit/core/dist/index.js",
+        "line": 32564,
+        "samples": 2560,
+        "percent": 13.081246806336228
+      },
+      {
+        "function": "runAllRoutingChecks",
+        "file": "@tscircuit/checks/dist/index.js",
+        "line": 23449,
+        "samples": 2277,
+        "percent": 11.635155850792028
+      },
+      {
+        "function": "",
+        "file": "@tscircuit/core/dist/index.js",
+        "line": 165675,
+        "samples": 2277,
+        "percent": 11.635155850792028
+      }
+    ]
+  }
+]

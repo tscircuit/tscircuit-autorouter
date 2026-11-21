@@ -1,0 +1,112 @@
+{
+  "runtime": "tscircuit 0.0.3271; core 0.0.2450; autorouter 0.0.1147; fanout 0.0.99; bus lanes 0.0.63",
+  "busLanesBase": "165a7f2ff7d0bbd00a8b56b986834aa22b203fef",
+  "busLanesRepro": "628e507bd18d2e35c94949ce4685ed50fcfb4437",
+  "busLanesFix": "b51deb1c63cbd951932c6580a22af6535487f71d",
+  "selectedRuns": {
+    "allBoardsBefore": {
+      "id": 44944070317,
+      "artifact": 14723600001,
+      "sha256": "ce28a86cb12b05e292618115aba681e0a512c6e2876e017deab02fc31269dce4",
+      "source": "35cdf8febe826e37e9564105fdb1ace7e7661c50"
+    },
+    "allBoardsAfter": {
+      "id": 44945429622,
+      "artifact": 14723896127,
+      "sha256": "e6006f0c01d8a7998cf4caad15ed9158ae533a34d85496529a8b42a438518ad2",
+      "source": "2dc5a843f44c6607f9d74847210c2ad5ca964b71"
+    },
+    "pairedReplay": {
+      "id": 44946026421,
+      "source": "fc740808f77ad04529d7600d4a5c92425a9ef2b6",
+      "artifacts": [
+        {
+          "board": "h616-local",
+          "id": 14723792125,
+          "sha256": "24cf68345df4d9bcbbef384e6294e4edf56eefc1348a7e531485cd6467c055dc"
+        },
+        {
+          "board": "icepi-native",
+          "id": 14723712134,
+          "sha256": "64a830a570bbbcf62b6e507279c7646229719a197bfd1322f06dc49946b50e19"
+        },
+        {
+          "board": "orangecrab-local",
+          "id": 14723423038,
+          "sha256": "8b3966a066f02b81b40431d7115c846f53b1a089d77e491bc7cd5a2b187cc9ef"
+        }
+      ]
+    },
+    "fullCiTests": {
+      "repo": "tscircuit/bus-lanes-solver",
+      "id": 44946336804,
+      "commit": "99e1626e18a786b98721111b167a4166de151ed9",
+      "passedTests": 614,
+      "failedTests": 0,
+      "passedShards": 6
+    },
+    "am3352Comparison": {
+      "repo": "tscircuit/bus-lanes-solver",
+      "id": 44946336901,
+      "budgetSecondsPerSolverSample": 3600,
+      "status": "passed: 11/11 fresh base and head solves; connectivity, DRC, matching, coupling and fixed-copper preservation accepted",
+      "beforeAccepted": 11,
+      "afterAccepted": 11,
+      "signalsPerCase": 47,
+      "identicalValidationAndQualityMetrics": 11,
+      "artifacts": "am3352/artifacts.json"
+    },
+    "reproCiTests": {
+      "repo": "tscircuit/bus-lanes-solver",
+      "id": 44946087386,
+      "commit": "93c2bcf7468882452061b146da17531363c4ffa5",
+      "status": "passed"
+    }
+  },
+  "override": {
+    "sourcePatchSha256": "6a883f3750877bd4ab437e484cc857859c4fcce635720cc86e9aed578221d295",
+    "beforeSha256": "9c8d8e22f24ba2115b7dd353cd37a09d0198e6ebf12eb4c4913619a3af092548",
+    "afterSha256": "e5cd7df5ec0ac81115f66f219ece258eaf988d5baae35acfa4dc2f052a4c8fcc",
+    "scope": "Replace only the embedded bus-lanes getBoardGrid raster loop with the transpiled source fix; preserve its cache, key and all routing code.",
+    "finalSourcePatchSha256": "ce55cb6a0fa8246c2f25b1d806c250519933629a6ff166f8c13d15922da428af",
+    "rasterBodySha256": "d60cd6587edabafc2ef816352aa57a4bc8b10209f558400f3cbe179ef7cb6e34",
+    "finalRasterMatchesTestedJavaScriptExactly": true,
+    "sourceOnlyCleanupAfterCapture": "Combined two type-only imports from ./types; the transpiled raster body is byte-identical. The benchmark applies only that body."
+  },
+  "originalFilesByteIdentical": 45,
+  "localBuild": "pass",
+  "localTypecheck": "pass",
+  "localFullSuite": "Stopped duplicate local execution after all six final-revision CI shards passed; not counted as a completed local run.",
+  "reproPointQueries": {
+    "concaveGrid": {
+      "before": 8183,
+      "after": 2
+    },
+    "freshH616ByteZero": {
+      "before": 1704029,
+      "after": 333
+    }
+  },
+  "reproAcceptance": "Both PCB samples complete with original endpoint connectivity and copper DRC validated before writing snapshots; H616 retains all 760 obstacles and all 38 native outline vertices.",
+  "shadowRaster": {
+    "grids": 2,
+    "cells": 3407392,
+    "identical": true
+  },
+  "cause": "Grid construction called the general outline capsule predicate at each point. Each call repeated the same row crossings and checked all outline edges. The fix computes crossings and nearby edges once per row, then applies the same exact point-clearance and bounds comparisons.",
+  "limits": [
+    "Fifteen settled boards retain existing routing errors, and none fully routes.",
+    "Four boards exceed the unchanged 600-second budget; equivalence beyond that budget is unproven.",
+    "Parallel all-board wall times are contended observations. Performance claims use base/head/head/base fresh-process replays on one Blacksmith machine per board.",
+    "Butterstick CPU profile stops at 120 seconds for diagnosis; it is not a complete-render timing.",
+    "AM3352 uses one sequential base/head pair per case. Its median time changes from 44.85s to 44.97s and P95 from 553.85s to 528.57s; individual timings vary and seven cases are slower in this single comparison."
+  ],
+  "finalDocumentationUpdate": {
+    "testedRepro": "93c2bcf7468882452061b146da17531363c4ffa5",
+    "testedFix": "99e1626e18a786b98721111b167a4166de151ed9",
+    "changedPaths": [
+      "tests/fixtures/h616-full-board-byte0/README.md"
+    ],
+    "allExecutableFilesByteIdenticalToTestedFix": true
+  }
+}
