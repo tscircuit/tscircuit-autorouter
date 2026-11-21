@@ -34,7 +34,9 @@
   "runner": "Blacksmith 32 vCPU ARM Ubuntu 24.04; Bun 1.4.3",
   "originalEntrypoints": 19,
   "perBoardBudgetSeconds": 600,
-  "reproCommit": "ed8d93b94670ea37edb1b658afbcfdb543f87b8d",
-  "fixCommit": "7d0a1e46cf92626fd08d45d93111735bd278c1ee",
-  "sourcePatchSha256": "75f5210c294f6ba9230a95e508520b9c535154d7754184696a120c4c85b867bd"
+  "reproCommit": "d93cf1eedc9de1ed25d74ea881ec78f28b4d1534",
+  "fixCommit": "f5069520857fa9804358d75b3cb57b8227925be2",
+  "sourcePatchSha256": "75f5210c294f6ba9230a95e508520b9c535154d7754184696a120c4c85b867bd",
+  "testedFixCommit": "7d0a1e46cf92626fd08d45d93111735bd278c1ee",
+  "finalCommitNote": "Rebased onto corrected iCEPi Solderpad/Apache source-license attribution; production code, tests and snapshots are identical to the tested fix commit."
 }
