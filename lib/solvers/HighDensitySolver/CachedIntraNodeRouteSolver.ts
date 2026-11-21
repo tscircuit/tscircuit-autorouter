@@ -8,12 +8,16 @@ import { CachableSolver, CacheProvider } from "lib/cache/types"
 import type { HighDensityIntraNodeRoute } from "../../types/high-density-types"
 
 import { IntraNodeRouteSolver } from "./IntraNodeSolver"
+import { serializeIntraNodeCacheKey } from "./serializeIntraNodeCacheKey"
 
 type CachedSolvedIntraNodeRouteSolver =
   | { success: true; solvedRoutes: HighDensityIntraNodeRoute[] }
   | { success: false; error?: string }
 
 type CacheToIntraNodeSolverTransform = Record<string, never>
+type PadObstacles = IntraNodeRouteSolver["padObstacles"]
+
+const padObstacleCacheKeys = new WeakMap<PadObstacles, string>()
 
 const roundCoord = (n: number) => Math.round(n * 200) / 200
 
@@ -24,8 +28,8 @@ const cloneValue = <T>(value: T): T =>
 
 setupGlobalCaches()
 
-// Version 6 replaces typed object serialization with tagged JSON.
-const INTRA_NODE_CACHE_SCHEMA_VERSION = 6
+// Canonical fixed routes participate in the search and cache identity.
+const INTRA_NODE_CACHE_SCHEMA_VERSION = 10
 
 export class CachedIntraNodeRouteSolver
   extends IntraNodeRouteSolver
@@ -153,8 +157,27 @@ export class CachedIntraNodeRouteSolver
         }))
       : undefined
 
+    let padObstaclesCacheKey = padObstacleCacheKeys.get(this.padObstacles)
+    if (padObstaclesCacheKey === undefined) {
+      padObstaclesCacheKey = objectHash(
+        serializeIntraNodeCacheKey(
+          this.padObstacles.map((obstacle) => ({
+            obstacleId: obstacle.obstacleId,
+            center: obstacle.center,
+            width: obstacle.width,
+            height: obstacle.height,
+            shape: obstacle.shape,
+            ccwRotationDegrees: obstacle.ccwRotationDegrees,
+            zLayers: obstacle.__zLayers,
+            connectedTo: obstacle.connectedTo,
+          })),
+        ),
+      )
+      padObstacleCacheKeys.set(this.padObstacles, padObstaclesCacheKey)
+    }
     const keyData = {
       cacheSchemaVersion: INTRA_NODE_CACHE_SCHEMA_VERSION,
+      fixedHdRoutes: this.fixedHdRoutes,
       node: {
         width: roundCoord(this.nodeWithPortPoints.width),
         height: roundCoord(this.nodeWithPortPoints.height),
@@ -167,6 +190,7 @@ export class CachedIntraNodeRouteSolver
           : undefined,
         portPoints: normalizedPortPoints,
       },
+      padObstacles: padObstaclesCacheKey,
       normalizedConnections,
       normalizedHyperParameters,
       minDistBetweenEnteringPoints: roundCoord(
@@ -179,21 +203,7 @@ export class CachedIntraNodeRouteSolver
     }
 
     // Tags retain special numbers and optional values without string collisions.
-    const serializedKeyData = JSON.stringify(
-      keyData,
-      (_key: string, value: unknown): unknown => {
-        if (typeof value === "number" && !Number.isFinite(value)) {
-          return `n:${value.toString()}`
-        }
-        if (
-          typeof value === "string" &&
-          (value === "u:" || value.startsWith("n:") || value.startsWith("s:"))
-        ) {
-          return `s:${value}`
-        }
-        return value === undefined ? "u:" : value
-      },
-    )
+    const serializedKeyData = serializeIntraNodeCacheKey(keyData)
     const cacheKey = `intranode-solver:${objectHash(serializedKeyData)}`
     const cacheToSolveSpaceTransform: CacheToIntraNodeSolverTransform = {}
 

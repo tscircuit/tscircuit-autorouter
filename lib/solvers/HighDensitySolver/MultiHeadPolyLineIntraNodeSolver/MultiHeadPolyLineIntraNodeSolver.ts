@@ -112,7 +112,7 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
     this.uniqueConnections = uniqueConnections
 
     const { numSameLayerCrossings, numEntryExitLayerChanges } =
-      getIntraNodeCrossings(this.nodeWithPortPoints)
+      getIntraNodeCrossings(this.nodeWithPortPoints, this.connMap)
 
     this.minViaCount = numSameLayerCrossings * 2 + numEntryExitLayerChanges
     this.maxViaCount = Math.min(

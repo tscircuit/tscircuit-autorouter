@@ -5,14 +5,21 @@ import {
   getSegmentIntersection,
   pointToBoxDistance,
 } from "@tscircuit/math-utils"
+import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
 import {
   type ConnectionPoint,
   type Obstacle,
   type SimpleRouteConnection,
   type SimpleRouteJson,
+  getConnectionPointLayers,
   isSingleLayerConnectionPoint,
 } from "lib/types"
+import {
+  areIdsInitiallyConnected,
+  getInitiallyConnectedMapFromSimpleRouteJson,
+} from "lib/utils/get-initially-connected-map-from-simple-route-json"
+import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 import { minimumDistanceBetweenSegments } from "lib/utils/minimumDistanceBetweenSegments"
 import { isPointInRect } from "lib/utils/isPointInRect"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
@@ -60,6 +67,8 @@ interface PointOwner {
 }
 
 export interface EscapeViaLocationSolverOptions {
+  /** Net connectivity for ogSrj, reused from the pipeline after preprocessing. */
+  connMap?: ConnectivityMap
   viaDiameter?: number
   minTraceWidth?: number
   obstacleMargin?: number
@@ -105,6 +114,8 @@ export class EscapeViaLocationSolver extends BaseSolver {
   escapeViaMetadataByPointId: Map<string, EscapeViaMetadata>
   createdEscapeVias: EscapeViaMetadata[]
   nextEscapeViaIndex = 0
+  private readonly initiallyConnectedMap: ConnectivityMap
+  private readonly connMap: ConnectivityMap
 
   constructor(
     public readonly ogSrj: SimpleRouteJson,
@@ -129,6 +140,9 @@ export class EscapeViaLocationSolver extends BaseSolver {
     this.outputSrj = ogSrj
     this.escapeViaMetadataByPointId = new Map()
     this.createdEscapeVias = []
+    this.initiallyConnectedMap =
+      getInitiallyConnectedMapFromSimpleRouteJson(ogSrj)
+    this.connMap = opts.connMap ?? getConnectivityMapFromSimpleRouteJson(ogSrj)
   }
 
   private getConnectionNetIds(connection: SimpleRouteConnection): Set<string> {
@@ -894,6 +908,87 @@ export class EscapeViaLocationSolver extends BaseSolver {
     })
   }
 
+  /**
+   * Reuses copper at a terminal, or a via on a trace physically connected to
+   * that terminal. Positions are board XY points in mm (+X right, +Y up).
+   * Net membership alone does not prove that a remote via reaches the point.
+   */
+  private getExistingPlaneAccesses(params: {
+    point: ConnectionPoint
+    connectionNetIds: Set<string>
+    matchingCopperPours: Obstacle[]
+  }): Obstacle[] {
+    const { point, connectionNetIds, matchingCopperPours } = params
+    if (!point.pointId) return []
+    const pointIds = new Set([point.pointId, point.pcb_port_id])
+    const pointLayers = getConnectionPointLayers(point)
+    const accessiblePours = new Set<Obstacle>()
+
+    for (const obstacle of this.ogSrj.obstacles) {
+      if (
+        obstacle.isCopperPour ||
+        obstacle.isNonPlatedHole ||
+        obstacle.shape !== "circle" ||
+        !pointMatches(point, obstacle.center) ||
+        !pointLayers.some((layer) => obstacle.layers.includes(layer)) ||
+        !obstacle.connectedTo.some(
+          (id) => pointIds.has(id) || connectionNetIds.has(id),
+        )
+      ) {
+        continue
+      }
+      for (const pour of matchingCopperPours) {
+        if (
+          pour.layers.some((layer) => obstacle.layers.includes(layer)) &&
+          isPointInRect(obstacle.center, pour)
+        ) {
+          accessiblePours.add(pour)
+        }
+      }
+    }
+
+    for (const trace of this.ogSrj.traces ?? []) {
+      const physicallyConnected = Array.from(pointIds).some(
+        (id) =>
+          id !== undefined &&
+          areIdsInitiallyConnected(
+            this.initiallyConnectedMap,
+            id,
+            trace.pcb_trace_id,
+          ),
+      )
+      const sameNet = this.connMap.areIdsConnected(
+        point.pointId,
+        trace.pcb_trace_id,
+      )
+      if (!physicallyConnected && !sameNet) continue
+
+      for (const via of trace.route) {
+        if (via.route_type !== "via") continue
+        const layers =
+          via.layers ??
+          this.getViaSpanLayers(via.from_layer, via.to_layer).layers
+        if (
+          !physicallyConnected &&
+          (!pointMatches(point, via) ||
+            !pointLayers.some((layer) => layers.includes(layer)))
+        ) {
+          continue
+        }
+        for (const pour of matchingCopperPours) {
+          if (
+            pour.layers.some((layer) => layers.includes(layer)) &&
+            isPointInRect(via, pour)
+          ) {
+            accessiblePours.add(pour)
+          }
+        }
+      }
+    }
+
+    return Array.from(accessiblePours)
+  }
+
   _step() {
     const copperPours = this.ogSrj.obstacles.filter(
       (obstacle) => obstacle.isCopperPour,
@@ -951,6 +1046,34 @@ export class EscapeViaLocationSolver extends BaseSolver {
       })
 
       for (const { point, pointOwner, sourceObstacle } of pointPlacementPlans) {
+        const existingPlaneAccesses = this.getExistingPlaneAccesses({
+          point,
+          connectionNetIds,
+          matchingCopperPours,
+        })
+        if (existingPlaneAccesses.length > 0) {
+          for (const pour of existingPlaneAccesses) {
+            const representativePour = connectedPourRepresentatives.get(pour)
+            if (!representativePour) {
+              throw new Error("Missing connected copper pour region")
+            }
+            const pourKey = getObstacleKey(representativePour)
+            const pointIds = groupedEscapePointIds.get(pourKey)
+            if (pointIds) {
+              pointIds.push(point.pointId!)
+            } else {
+              groupedEscapePointIds.set(pourKey, [point.pointId!])
+            }
+            if (!representativeConnectionNameByPourKey.has(pourKey)) {
+              representativeConnectionNameByPourKey.set(
+                pourKey,
+                pointOwner.connection.name,
+              )
+            }
+          }
+          continue
+        }
+
         const escapeViaCandidate = this.findBestEscapeViaCandidate({
           connection: pointOwner.connection,
           point,

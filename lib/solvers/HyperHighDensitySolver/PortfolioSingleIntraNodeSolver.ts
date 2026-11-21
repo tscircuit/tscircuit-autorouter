@@ -1,6 +1,8 @@
+import { createIntraNodeSegmentValidator } from "./createIntraNodeSegmentValidator"
 import {
-  HighDensitySolverA03 as HighDensityA03Solver,
   HighDensitySolverA01,
+  HighDensitySolverA03 as HighDensityA03Solver,
+  type StaticSegmentValidator,
 } from "@tscircuit/high-density-a01"
 import { HighDensitySolverA13 } from "@tscircuit/high-density-a13"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
@@ -58,6 +60,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     typeof CachedIntraNodeRouteSolver
   >[0] & {
     boardGeometry?: HighDensityBoardGeometry
+    preservePhysicalGeometry?: boolean
     solutionValidator?: (routes: HighDensityIntraNodeRoute[]) => boolean
   }
   solvedRoutes: HighDensityIntraNodeRoute[] = []
@@ -131,6 +134,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       gridSearchWorkScale?: number
       rejectOverlappingTerminals?: boolean
       boardGeometry?: HighDensityBoardGeometry
+      preservePhysicalGeometry?: boolean
       solutionValidator?: (routes: HighDensityIntraNodeRoute[]) => boolean
     },
   ) {
@@ -226,7 +230,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     let priorityEligible = false
     if (this.constructorParams.priorityDagSearch) {
       this.precomputedIntraNodeRouteParams ??= precomputeIntraNodeRouteParams(
-        this.nodeWithPortPoints,
+        this.constructorParams,
       )
       const groups = [
         ...this.precomputedIntraNodeRouteParams.connectionPointsByName.entries(),
@@ -616,8 +620,15 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     // Each grow/shrink attempt owns a distinct node and portfolio. Keep this
     // shared data local so later attempts and caller edits are recomputed.
     this.precomputedIntraNodeRouteParams ??= precomputeIntraNodeRouteParams(
-      this.nodeWithPortPoints,
+      this.constructorParams,
     )
+    const preservePhysicalGeometry =
+      this.constructorParams.preservePhysicalGeometry ??
+      Boolean(this.constructorParams.fixedHdRoutes?.length)
+    let traceMargin = 0.1
+    if (preservePhysicalGeometry) {
+      traceMargin = this.constructorParams.obstacleMargin ?? 0.15
+    }
     if (hyperParameters.SINGLE_LAYER_NO_DIFFERENT_ROOT_INTERSECTIONS) {
       if (
         !SingleLayerNoDifferentRootIntersectionsIntraNodeSolver.isApplicable(
@@ -660,7 +671,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
         viaDiameter: this.constructorParams.viaDiameter ?? 0.3,
         viaMinDistFromBorder: (this.constructorParams.viaDiameter ?? 0.3) / 2,
         traceThickness: this.constructorParams.traceWidth ?? 0.15,
-        traceMargin: 0.1,
+        traceMargin,
         // Use the optimized kernel in batches; fitness accounts for search work
         // rather than the number of calls into the kernel.
         stepMultiplier: 1000,
@@ -677,7 +688,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
         cellSizeMm: 0.1,
         viaDiameter: this.constructorParams.viaDiameter ?? 0.3,
         viaMinDistFromBorder: (this.constructorParams.viaDiameter ?? 0.3) / 2,
-        traceMargin: 0.1,
+        traceMargin,
         traceThickness: this.constructorParams.traceWidth ?? 0.15,
         effort: this.effort,
         hyperParameters: {
@@ -687,19 +698,32 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       return solver as any
     }
     if (hyperParameters.HIGH_DENSITY_A03) {
+      let traceThickness = 0.1
+      if (preservePhysicalGeometry) {
+        traceThickness = this.constructorParams.traceWidth ?? 0.15
+      }
+      let staticSegmentValidator: StaticSegmentValidator | undefined
+      const fixedHdRoutes = this.constructorParams.fixedHdRoutes
+      if (preservePhysicalGeometry && fixedHdRoutes?.length) {
+        staticSegmentValidator = createIntraNodeSegmentValidator({
+          fixedHdRoutes,
+          connMap: this.connMap ?? new ConnectivityMap({}),
+          layerCount: this.constructorParams.layerCount ?? 2,
+          clearance: this.constructorParams.obstacleMargin ?? 0.1,
+          allowBlindAndBuriedVias:
+            this.constructorParams.allowBlindAndBuriedVias,
+        })
+      }
       const solver = new HighDensityA03Solver({
         nodeWithPortPoints: this.nodeWithPortPoints,
         highResolutionCellSize: 0.1,
         highResolutionCellThickness: 8,
         lowResolutionCellSize: 0.4,
+        staticSegmentValidator,
         viaDiameter: this.constructorParams.viaDiameter ?? 0.3,
         viaMinDistFromBorder: (this.constructorParams.viaDiameter ?? 0.3) / 2,
-        traceMargin: 0.1,
-        // This likely needs to be corrected to use the actual trace width-
-        // but using anything but 0.1 for traceThickness is causing issues
-        // needs more debugging- repro01 in the high-density-a01 repo
-        // has a good reproduction
-        traceThickness: 0.1, // this.constructorParams.traceWidth ?? 0.15,
+        traceMargin,
+        traceThickness,
         effort: this.effort,
         hyperParameters,
       })

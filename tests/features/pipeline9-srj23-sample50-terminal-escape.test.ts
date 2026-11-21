@@ -69,5 +69,13 @@ test("Pipeline9 preserves an SRJ23 terminal whose center has unavoidable copper 
       pcb_trace_error_id:
         "overlap_source_net_5_mst0_0_routed_pcb_plated_hole_11",
     }),
+    // This existing gap was hidden by an opposite-layer endpoint net alias.
+    expect.objectContaining({
+      type: "pcb_pad_trace_clearance_error",
+      pcb_pad_id: "pcb_plated_hole_10",
+      pcb_trace_id: "source_net_2_mst0_0_routed",
+      minimum_clearance: 0.1,
+      actual_clearance: expect.closeTo(0.023702609587495746, 8),
+    }),
   ])
 })

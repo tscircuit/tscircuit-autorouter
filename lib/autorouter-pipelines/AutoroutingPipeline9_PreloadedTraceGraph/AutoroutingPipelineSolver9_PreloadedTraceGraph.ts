@@ -23,7 +23,9 @@ import {
 } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver"
 import { MultiGraphTopologyPlannerSolver } from "lib/solvers/TopologyPlanningSolver/MultiGraphTopologyPlannerSolver"
 import { TopologyMergingSolver } from "lib/solvers/TopologyMergingSolver/TopologyMergingSolver"
-import { createPreloadedInnerLayerPortValidator } from "./createPreloadedInnerLayerPortValidator"
+import { splitNodesWithoutThroughViaSite } from "./splitNodesWithoutThroughViaSite"
+import { createPreloadedPortValidator } from "./createPreloadedPortValidator"
+import { reservePreloadedCopperPorts } from "./reservePreloadedCopperPorts"
 import { UniformPortDistributionSolver } from "lib/solvers/UniformPortDistributionSolver/UniformPortDistributionSolver"
 import { getColorMap } from "lib/solvers/colors"
 import {
@@ -54,6 +56,7 @@ import {
 import { getPresuppliedTraceVisualization } from "lib/utils/getPresuppliedTraceVisualization"
 import { calculateOptimalCapacityDepth } from "lib/utils/getTunedTotalCapacity1"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
+import { getExistingViaInPadByPcbPortId } from "lib/utils/getExistingViaInPadByPcbPortId"
 import {
   AvailableSegmentPointSolver,
   type SharedEdgeSegment,
@@ -309,6 +312,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   srjWithEscapeViaLocations?: SimpleRouteJson
   srjWithPointPairs?: SimpleRouteJson
   originalSrj: SimpleRouteJson
+  private hasRefinedFixedWireViaSites = false
   capacityNodes: CapacityMeshNode[] | null = null
   capacityEdges: CapacityMeshEdge[] | null = null
   /** Available segment points after non-component cramped points are filtered. */
@@ -343,6 +347,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       (cms) => [
         cms.srj,
         {
+          connMap: cms.connMap,
           viaDiameter: cms.viaDiameter,
           minTraceWidth: cms.minTraceWidth,
           obstacleMargin: cms.srj.defaultObstacleMargin ?? 0.15,
@@ -548,6 +553,17 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             (seg) => seg.portPoints,
           ),
           simpleRouteJsonConnections: cms.srjWithPointPairs!.connections,
+          existingViaInPadByPcbPortId: getExistingViaInPadByPcbPortId(
+            cms.srjWithPointPairs!,
+          ),
+        })
+
+        reservePreloadedCopperPorts({
+          graph,
+          srj: cms.srj,
+          connMap: cms.connMap,
+          traceWidth: cms.minTraceWidth,
+          viaDiameter: cms.viaDiameter,
         })
 
         return [
@@ -608,7 +624,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           layerCount: cms.srj.layerCount,
           useLayerAwareGeometry: cms.srj.layerCount > 2,
           preserveSolitaryPorts: Boolean(cms.srj.traces?.length),
-          isPortPointClear: createPreloadedInnerLayerPortValidator({
+          isPortPointClear: createPreloadedPortValidator({
             srj: cms.srj,
             connMap: cms.connMap,
             traceWidth: cms.minTraceWidth,
@@ -700,6 +716,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         {
           inputSrj: cms.srj,
           nodeWithPortPoints: cms.highDensityNodePortPoints ?? [],
+          fixedHdRoutes: cms
+            .highDensityRouteSolver!.getUpdatedFixedHdRoutes()
+            .filter((route) => route.isFixed === true),
           hdRoutes: simplifyPipeline9CollinearRoutePoints(
             materializePipeline9HdRouteVias(cms.highDensityRouteSolver!.routes),
           ),
@@ -793,8 +812,11 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             .getChangedPreloadedTraceSections()
             .map((section) => section.connectionName),
         )
-        const newHdRoutes = cms.highDensityStitchSolver!.mergedHdRoutes.filter(
-          (route) => !materializedConnectionNames.has(route.connectionName),
+        // Via merging requires exactly co-located layer transitions.
+        const newHdRoutes = canonicalizePipeline9HdRoutes(
+          cms.highDensityStitchSolver!.mergedHdRoutes.filter(
+            (route) => !materializedConnectionNames.has(route.connectionName),
+          ),
         )
         const netByConnectionName = getPipeline9NetByConnectionName(
           [...newHdRoutes, ...preloadedHdRoutes],
@@ -1229,6 +1251,40 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     )
   }
 
+  private refineFixedWireViaSites(): boolean {
+    if (
+      this.hasRefinedFixedWireViaSites ||
+      !this.originalSrj.traces?.some((trace) => trace.isFixed)
+    ) {
+      return false
+    }
+    const plannedNodes =
+      this.portPointPathingSolver!.getOutput().nodesWithPortPoints
+    const layerChangeNodeIds = new Set(
+      plannedNodes
+        .filter((node) =>
+          node.portPointsInPairs?.some(([entry, exit]) => entry.z !== exit.z),
+        )
+        .map((node) => node.capacityMeshNodeId),
+    )
+    const nodes = this.capacityNodes!
+    const refined = splitNodesWithoutThroughViaSite({
+      nodes,
+      layerChangeNodeIds,
+      srj: this.originalSrj,
+      connMap: this.connMap,
+      viaDiameter: this.viaDiameter,
+    })
+    if (nodes === refined) return false
+
+    // The provisional plan uses a physically impossible via. Rebuild the edges,
+    // shared ports and path on the constrained mesh before exposing the plan.
+    this.hasRefinedFixedWireViaSites = true
+    this.capacityNodes = refined
+    this.portPointPathingSolver = undefined
+    return true
+  }
+
   _step() {
     const pipelineStepDef = this.pipelineDef[this.currentPipelineStepIndex]
     if (!pipelineStepDef) {
@@ -1245,7 +1301,16 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           this.startTimeOfPhase[pipelineStepDef.solverName]
         pipelineStepDef.onSolved?.(this)
         this.activeSubSolver = null
-        this.currentPipelineStepIndex++
+        if (
+          pipelineStepDef.solverName === "portPointPathingSolver" &&
+          this.refineFixedWireViaSites()
+        ) {
+          this.currentPipelineStepIndex = this.pipelineDef.findIndex(
+            (step) => step.solverName === "edgeSolver",
+          )
+        } else {
+          this.currentPipelineStepIndex++
+        }
       } else if (this.activeSubSolver.failed) {
         this.error = this.activeSubSolver?.error
         this.failed = true

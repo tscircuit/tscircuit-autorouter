@@ -1,10 +1,9 @@
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import type { Obstacle, SimpleRouteJson } from "lib/types"
+import type { SimpleRouteJson } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { generateApproximatingRects } from "lib/utils/addApproximatingRectsToSrj"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 import { minimumDistanceBetweenSegments } from "lib/utils/minimumDistanceBetweenSegments"
-import type { PreloadedHighDensityRoute } from "./convertPreloadedTraceToHdRoutes"
 import { getPipeline9LayerTransitionViaEndpoint } from "./getPipeline9LayerTransitionViaEndpoint"
 
 export type Pipeline9RouteWireSegment = {
@@ -39,10 +38,11 @@ export type Pipeline9AxisAlignedRect = {
   height: number
 }
 
-const FIXED_WIRE_MAX_APPROXIMATION_LENGTH = 0.75
+type RouteCopperGeometryKey = string
+
 const routeCopperGeometryCache = new WeakMap<
   HighDensityRoute,
-  Map<string, Pipeline9RouteCopperGeometry>
+  Map<RouteCopperGeometryKey, Pipeline9RouteCopperGeometry>
 >()
 
 export const getPipeline9RouteCopperGeometry = (
@@ -162,76 +162,23 @@ export const getPipeline9AxisAlignedWireApproximations = (
   )
 }
 
-export const getPipeline9FixedRouteObstacles = ({
-  fixedObstacleRoutes,
-  layerCount,
-  allowBlindAndBuriedVias,
-}: {
-  fixedObstacleRoutes: PreloadedHighDensityRoute[]
-  layerCount: number
-  allowBlindAndBuriedVias?: boolean
-}): Obstacle[] => {
-  return fixedObstacleRoutes.flatMap((route, routeIndex) => {
-    const connectedTo = [route.connectionName, route.rootConnectionName].filter(
-      (connectedId): connectedId is string => typeof connectedId === "string",
-    )
-    const geometry = getPipeline9RouteCopperGeometry(route, {
-      layerCount,
-      allowBlindAndBuriedVias,
-    })
-    return [
-      ...geometry.wireSegments.flatMap((segment, segmentIndex): Obstacle[] => {
-        const approximatingRects = getPipeline9AxisAlignedWireApproximations(
-          segment,
-          FIXED_WIRE_MAX_APPROXIMATION_LENGTH,
-          2,
-        )
-        return approximatingRects.map((rect, approximationIndex) => ({
-          obstacleId: `pipeline9_fixed_obstacle_${routeIndex}_wire_${segmentIndex}_${approximationIndex}`,
-          type: "rect",
-          layers: [mapZToLayerName(segment.z, layerCount)],
-          center: rect.center,
-          width: rect.width,
-          height: rect.height,
-          connectedTo,
-        }))
-      }),
-      ...geometry.viaSpans.map(
-        (via, viaIndex): Obstacle => ({
-          obstacleId: `pipeline9_fixed_obstacle_${routeIndex}_via_${viaIndex}`,
-          type: "rect",
-          layers: Array.from(
-            { length: via.maxZ - via.minZ + 1 },
-            (_, layerOffset) =>
-              mapZToLayerName(via.minZ + layerOffset, layerCount),
-          ),
-          center: via.center,
-          width: via.diameter,
-          height: via.diameter,
-          connectedTo,
-        }),
-      ),
-    ]
-  })
-}
-
 export const arePipeline9RoutesOnSameNet = (
-  left: Pick<HighDensityRoute, "connectionName" | "rootConnectionName">,
-  right: Pick<HighDensityRoute, "connectionName" | "rootConnectionName">,
+  {
+    left,
+    right,
+  }: {
+    left: Pick<HighDensityRoute, "connectionName" | "rootConnectionName">
+    right: Pick<HighDensityRoute, "connectionName" | "rootConnectionName">
+  },
   connMap: ConnectivityMap,
 ): boolean => {
-  const leftIds = [left.connectionName, left.rootConnectionName].filter(
-    (id): id is string => typeof id === "string",
-  )
-  const rightIds = [right.connectionName, right.rootConnectionName].filter(
-    (id): id is string => typeof id === "string",
-  )
-  return leftIds.some((leftId) =>
-    rightIds.some(
-      (rightId) =>
-        leftId === rightId || connMap.areIdsConnected(leftId, rightId),
-    ),
-  )
+  const leftNetIds = [left.connectionName, left.rootConnectionName]
+    .filter((id): id is string => typeof id === "string")
+    .map((id) => connMap.getNetConnectedToId(id) ?? id)
+  const rightNetIds = [right.connectionName, right.rootConnectionName]
+    .filter((id): id is string => typeof id === "string")
+    .map((id) => connMap.getNetConnectedToId(id) ?? id)
+  return leftNetIds.some((netId) => rightNetIds.includes(netId))
 }
 
 const boundsOverlap = (

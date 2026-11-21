@@ -67,7 +67,8 @@ export const preparePipeline9TracePairRepair = ({
     const routeEnd = route.route.at(-1)!
     const adjacentRoutes = [...routes, ...fixedObstacleRoutes].filter(
       (other) =>
-        other !== route && arePipeline9RoutesOnSameNet(route, other, connMap),
+        other !== route &&
+        arePipeline9RoutesOnSameNet({ left: route, right: other }, connMap),
     )
     for (const other of adjacentRoutes) {
       for (const anchor of [other.route[0]!, other.route.at(-1)!]) {

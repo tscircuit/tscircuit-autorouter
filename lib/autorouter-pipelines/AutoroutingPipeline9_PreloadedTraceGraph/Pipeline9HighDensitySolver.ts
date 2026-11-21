@@ -16,6 +16,7 @@ import type {
   HighDensityIntraNodeRoute,
   HighDensityRoute,
   NodeWithPortPoints,
+  PortPoint,
 } from "lib/types/high-density-types"
 import type { Obstacle, SimpleRouteJson } from "lib/types/srj-types"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
@@ -25,7 +26,6 @@ import type { PreloadedHighDensityRoute } from "./convertPreloadedTraceToHdRoute
 import {
   arePipeline9RoutesOnSameNet,
   doPipeline9RoutesHaveCopperConflict,
-  getPipeline9FixedRouteObstacles,
   getPipeline9RouteCopperGeometry,
 } from "./pipeline9FixedRouteCopper"
 import {
@@ -34,6 +34,10 @@ import {
   spliceFixedRouteSectionWithMutationMask,
 } from "./pipeline9RegionalFallback"
 import { Pipeline9RegionalFallbackSolver } from "./Pipeline9RegionalFallbackSolver"
+import {
+  addTerminalPcbPortIds,
+  preparePreloadedTerminalRoutes,
+} from "./pipeline9TerminalRoutes"
 
 export type Pipeline9HighDensitySolverParams = {
   nodePortPoints: NodeWithPortPoints[]
@@ -248,62 +252,31 @@ const convertObstacleToB01Obstacle = ({
   }
 }
 
-const addTerminalPcbPortIds = (
-  routes: HighDensityIntraNodeRoute[],
-  node: NodeWithPortPoints,
-): HighDensityIntraNodeRoute[] => {
-  const terminalPortPoints = node.portPoints.filter(
-    (portPoint) => portPoint.pcb_port_id !== undefined,
-  )
-  return routes.map((route) => {
-    const start = route.route[0]
-    const end = route.route.at(-1)
-    const startTerminal = terminalPortPoints.find(
-      (terminal) =>
-        start !== undefined &&
-        terminal.connectionName === route.connectionName &&
-        terminal.x === start.x &&
-        terminal.y === start.y &&
-        terminal.z === start.z,
-    )
-    const endTerminal = terminalPortPoints.find(
-      (terminal) =>
-        end !== undefined &&
-        terminal.connectionName === route.connectionName &&
-        terminal.x === end.x &&
-        terminal.y === end.y &&
-        terminal.z === end.z,
-    )
-
-    return {
-      ...route,
-      startPcbPortId: startTerminal?.pcb_port_id,
-      endPcbPortId: endTerminal?.pcb_port_id,
-    }
-  })
-}
+const normalizePortPoint = (
+  portPoint: PortPoint,
+  connMap: ConnectivityMap,
+): PortPoint => ({
+  ...portPoint,
+  rootConnectionName:
+    connMap.getNetConnectedToId(
+      portPoint.rootConnectionName ?? portPoint.connectionName,
+    ) ??
+    portPoint.rootConnectionName ??
+    portPoint.connectionName,
+})
 
 export const normalizePipeline9NodeRootConnectionNames = (
   node: NodeWithPortPoints,
   connMap: ConnectivityMap,
 ): NodeWithPortPoints => {
-  const normalizePortPoint = (
-    portPoint: NodeWithPortPoints["portPoints"][number],
-  ): NodeWithPortPoints["portPoints"][number] => ({
-    ...portPoint,
-    rootConnectionName:
-      connMap.getNetConnectedToId(
-        portPoint.rootConnectionName ?? portPoint.connectionName,
-      ) ??
-      portPoint.rootConnectionName ??
-      portPoint.connectionName,
-  })
   return {
     ...node,
-    portPoints: node.portPoints.map(normalizePortPoint),
+    portPoints: node.portPoints.map((portPoint) =>
+      normalizePortPoint(portPoint, connMap),
+    ),
     portPointsInPairs: node.portPointsInPairs?.map(([start, end]) => [
-      normalizePortPoint(start),
-      normalizePortPoint(end),
+      normalizePortPoint(start, connMap),
+      normalizePortPoint(end, connMap),
     ]),
   }
 }
@@ -438,8 +411,8 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
 
   constructor(private readonly params: Pipeline9HighDensitySolverParams) {
     super()
-    this.fixedHdRoutes = params.fixedHdRoutes
     this.connMap = params.connMap
+    this.fixedHdRoutes = preparePreloadedTerminalRoutes(params)
     this.colorMap = params.colorMap ?? {}
     this.obstacles = params.obstacles
     this.boardGeometry = params.boardGeometry
@@ -658,7 +631,11 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       : routes
     this.routes.push(
       ...(this.preserveTerminalPcbPortIds && this.activeNode
-        ? addTerminalPcbPortIds(solvedRoutes, this.activeNode)
+        ? addTerminalPcbPortIds({
+            routes: solvedRoutes,
+            portPoints: this.activeNode.portPoints,
+            connMap: this.connMap,
+          })
         : solvedRoutes),
     )
     this.stats.solvedNodeCount = Number(this.stats.solvedNodeCount ?? 0) + 1
@@ -777,11 +754,26 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     this.activeFallbackPromotedFixedRouteConnectionNames = new Set(
       promotedFixedRouteConnectionNames,
     )
-    const fixedRouteObstacles = getPipeline9FixedRouteObstacles({
-      fixedObstacleRoutes: this.activeFallbackFixedObstacleRoutes,
-      layerCount: this.layerCount,
-      allowBlindAndBuriedVias: this.allowBlindAndBuriedVias,
-    })
+    const hasImmutablePreload = this.fixedHdRoutes.some(
+      (route) => route.isFixed === true,
+    )
+    let regionalCopperRoutes: HighDensityRoute[] =
+      this.activeFallbackFixedObstacleRoutes
+    if (hasImmutablePreload) {
+      // Native-copper repairs can leave the mesh cell. Keep completed neighbors
+      // in their physical frame along with the immutable preloaded paths.
+      const regionalBounds = getNodeBounds(regionalNode, this.obstacleMargin)
+      const routedCopperRoutes = this.routes.filter((route) =>
+        routeOverlapsNode(
+          route,
+          regionalNode,
+          regionalBounds,
+          Math.max(this.traceWidth, this.viaDiameter) / 2,
+          this,
+        ),
+      )
+      regionalCopperRoutes = [...regionalCopperRoutes, ...routedCopperRoutes]
+    }
     this.activeFallbackSolver = new Pipeline9RegionalFallbackSolver({
       captureSearchDebug: this.params.captureSearchDebug,
       nodeWithPortPoints: fallbackProblem.nodeWithPortPoints,
@@ -794,8 +786,14 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       viaCopperClearance: this.params.viaCopperClearance,
       effort: this.effort,
       nodePfById: this.nodePfById,
-      obstacles: [...this.obstacles, ...fixedRouteObstacles],
+      obstacles: this.obstacles,
       boardObstacles: this.obstacles,
+      fixedHdRoutes: regionalCopperRoutes,
+      preservePhysicalGeometry:
+        hasImmutablePreload && regionalCopperRoutes.length > 0,
+      immutableHdRoutes: this.activeFallbackFixedObstacleRoutes.filter(
+        (route) => route.isFixed === true || route.isThroughObstacle === true,
+      ),
       movablePreloadedConnectionNames: movableFixedRouteConnectionNames,
       viaToPadClearance: this.viaToPadClearance,
       layerCount: this.layerCount,
@@ -901,7 +899,10 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     for (const candidateRoute of candidateRoutes) {
       for (const fixedRoute of fixedObstacleRoutes) {
         if (
-          arePipeline9RoutesOnSameNet(candidateRoute, fixedRoute, this.connMap)
+          arePipeline9RoutesOnSameNet(
+            { left: candidateRoute, right: fixedRoute },
+            this.connMap,
+          )
         ) {
           continue
         }

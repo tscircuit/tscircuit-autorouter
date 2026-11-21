@@ -51,6 +51,7 @@ export class MultiHeadPolyLineIntraNodeSolver3 extends MultiHeadPolyLineIntraNod
         SHUFFLE_SEED: shuffleSeed,
       },
       viaDiameter: this.viaDiameter,
+      connMap: this.connMap,
     })
 
     viaSolver.solve()
