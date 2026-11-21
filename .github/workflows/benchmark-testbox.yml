@@ -23,11 +23,11 @@ jobs:
         run: python3 experiments/boards-3273-no-pours/apply-regional-padding.py
       - name: Run all 19 TSX boards with default routing
         env:
-          BOARD_VARIANT: regional-padding-final
+          BOARD_VARIANT: regional-overlap-final
           BOARD_FIX_PROVENANCE: experiments/boards-3273-no-pours/regional-padding-provenance.json
         run: python3 experiments/boards-3273-no-pours/run.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: boards-tscircuit-3273-no-pours-regional-padding-final
+          name: boards-tscircuit-3273-no-pours-regional-overlap-final
           path: board-benchmark-results/

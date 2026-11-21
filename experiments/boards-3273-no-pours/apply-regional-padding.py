@@ -17,6 +17,6 @@ provenance={
  'sourcePatchSha256':hashlib.sha256(gzip.decompress((experiment/'regional-padding-source.patch.gz').read_bytes())).hexdigest(),
  'beforeModuleSha256':hashlib.sha256(original).hexdigest(),
  'afterModuleSha256':hashlib.sha256(updated).hexdigest(),
- 'scope':'Only apply the existing regional clearance expansion when movable copper sections are present, in addition to the existing promoted-copper condition. No solver budgets, copper constraints or other routing stages change.',
+ 'scope':'Apply the existing regional clearance expansion only when a newly cut movable-copper endpoint overlaps an unrelated original terminal on the same layer, in addition to the existing promoted-copper condition. No budgets or constraints change.',
 }
 (experiment/'regional-padding-provenance.json').write_text(json.dumps(provenance,indent=2)+'\n')
