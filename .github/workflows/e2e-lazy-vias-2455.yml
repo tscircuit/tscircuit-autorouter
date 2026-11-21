@@ -112,14 +112,12 @@ jobs:
           TS
           cd core/replay
           bun run.ts before
-          bun run.ts distance_once
-          bun run.ts hoist_endpoint
-          bun run.ts segments_first
-          bun run.ts hoist_segments
+          bun run.ts lazy_vias
+          bun run.ts reuse_blocker
           bun run.ts before_repeat
           python3 - <<'PY'
           import json
-          modes=['before','distance_once','hoist_endpoint','segments_first','hoist_segments','before_repeat']
+          modes=['before','lazy_vias','reuse_blocker','before_repeat']
           captures=[json.load(open(mode+'.json')) for mode in modes]
           for entry in captures[1:]:
               for field in ['plans','output','attempts']:assert entry[field]==captures[0][field],field+entry['summary']['mode']
