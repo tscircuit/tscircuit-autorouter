@@ -21,6 +21,10 @@ import {
 } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver"
 import { MultiGraphTopologyPlannerSolver } from "lib/solvers/TopologyPlanningSolver/MultiGraphTopologyPlannerSolver"
 import { TopologyMergingSolver } from "lib/solvers/TopologyMergingSolver/TopologyMergingSolver"
+import {
+  findConflictingGapKeys,
+  type ClearanceGapKey,
+} from "./findConflictingGapKeys"
 import { splitNodesWithoutThroughViaSite } from "./splitNodesWithoutThroughViaSite"
 import { createPreloadedPortValidator } from "./createPreloadedPortValidator"
 import { reservePreloadedCopperPorts } from "./reservePreloadedCopperPorts"
@@ -308,7 +312,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   srjWithEscapeViaLocations?: SimpleRouteJson
   srjWithPointPairs?: SimpleRouteJson
   originalSrj: SimpleRouteJson
-  private readonly excludedGapPortSites = new Set<string>()
+  private readonly excludedGapKeys = new Set<ClearanceGapKey>()
   private hasRefinedFixedWireViaSites = false
   capacityNodes: CapacityMeshNode[] | null = null
   capacityEdges: CapacityMeshEdge[] | null = null
@@ -527,18 +531,14 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         cms.sharedEdgeSegmentsWithNecessaryCrampedPortPoints!,
         cms.srjWithPointPairs!,
       ],
-      {
-        onSolved: (cms) => {
-          cms.preloadedTraceGraphSolver!.removeExcludedGapPorts(
-            cms.excludedGapPortSites,
-          )
-        },
-      },
     ),
     definePipelineStep(
       "portPointPathingSolver",
       TinyHypergraphPortPointPathingSolver,
       (cms) => {
+        cms.preloadedTraceGraphSolver!.removeExcludedGapPorts(
+          cms.excludedGapKeys,
+        )
         const sharedEdgeSegments =
           cms.sharedEdgeSegmentsWithNecessaryCrampedPortPoints ??
           cms.necessaryCrampedPortPointSolver?.getOutput() ??
@@ -1245,17 +1245,11 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     )
   }
 
-  private refineFixedWireViaSites(): boolean {
-    if (
-      this.hasRefinedFixedWireViaSites ||
-      !this.originalSrj.traces?.some((trace) => trace.isFixed)
-    ) {
-      return false
-    }
-    const plannedNodes =
-      this.portPointPathingSolver!.getOutput().nodesWithPortPoints
+  private refineFixedWireViaSites(
+    nodesWithPortPoints: readonly NodeWithPortPoints[],
+  ): boolean {
     const layerChangeNodeIds = new Set(
-      plannedNodes
+      nodesWithPortPoints
         .filter((node) =>
           node.portPointsInPairs?.some(([entry, exit]) => entry.z !== exit.z),
         )
@@ -1275,6 +1269,31 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     // shared ports and path on the constrained mesh before exposing the plan.
     this.hasRefinedFixedWireViaSites = true
     this.capacityNodes = refined
+    return true
+  }
+
+  private refinePortPointPlan(): boolean {
+    const { clearanceGapsByPortId } = this.preloadedTraceGraphSolver!
+    const checkViaSites =
+      !this.hasRefinedFixedWireViaSites &&
+      this.originalSrj.traces?.some((trace) => trace.isFixed)
+    if (!checkViaSites && clearanceGapsByPortId.size < 2) return false
+
+    const { nodesWithPortPoints } = this.portPointPathingSolver!.getOutput()
+    if (checkViaSites && this.refineFixedWireViaSites(nodesWithPortPoints)) {
+      this.currentPipelineStepIndex = this.pipelineDef.findIndex(
+        (step) => step.solverName === "edgeSolver",
+      )
+    } else {
+      const conflictingGapKeys = findConflictingGapKeys({
+        nodesWithPortPoints,
+        clearanceGapsByPortId,
+        connMap: this.connMap,
+        srj: this.srjWithPointPairs!,
+      })
+      if (conflictingGapKeys.size === 0) return false
+      for (const key of conflictingGapKeys) this.excludedGapKeys.add(key)
+    }
     this.portPointPathingSolver = undefined
     return true
   }
@@ -1297,24 +1316,11 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         this.activeSubSolver = null
         if (
           pipelineStepDef.solverName === "portPointPathingSolver" &&
-          this.refineFixedWireViaSites()
+          this.refinePortPointPlan()
         ) {
-          this.currentPipelineStepIndex = this.pipelineDef.findIndex(
-            (step) => step.solverName === "edgeSolver",
-          )
-        } else if (
-          pipelineStepDef.solverName === "portPointPathingSolver" &&
-          this.preloadedTraceGraphSolver!.removeOverlappingGapPorts({
-            nodes: this.portPointPathingSolver!.getOutput().nodesWithPortPoints,
-            connMap: this.connMap,
-            excludedSites: this.excludedGapPortSites,
-          })
-        ) {
-          // Replan on the same mesh after removing the conflicting crossings.
-          this.portPointPathingSolver = undefined
-        } else {
-          this.currentPipelineStepIndex++
+          return
         }
+        this.currentPipelineStepIndex++
       } else if (this.activeSubSolver.failed) {
         this.error = this.activeSubSolver?.error
         this.failed = true
