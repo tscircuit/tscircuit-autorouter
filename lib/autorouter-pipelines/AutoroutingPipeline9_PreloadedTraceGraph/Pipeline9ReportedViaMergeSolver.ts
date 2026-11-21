@@ -25,6 +25,7 @@ export type Pipeline9ReportedViaMergeParams = {
   connMap: ConnectivityMap
   drcEvaluator: DrcEvaluator
   referenceResult?: ReturnType<DrcEvaluator>
+  lockedConnectionNames?: ReadonlySet<string>
 }
 
 type ViaMergePhase =
@@ -68,13 +69,16 @@ export class Pipeline9ReportedViaMergeSolver extends BaseSolver {
     const traceIds = beforeErrors
       .filter((error): boolean => error.type === "pcb_via_clearance_error")
       .flatMap(getDrcErrorTraceIds)
-    this.movableRoutes = routes.filter((route): boolean =>
-      traceIds.some(
+    this.movableRoutes = routes.filter((route): boolean => {
+      if (this.params.lockedConnectionNames?.has(route.connectionName)) {
+        return false
+      }
+      return traceIds.some(
         (traceId): boolean =>
           traceId === route.connectionName ||
           traceId.startsWith(`${route.connectionName}_`),
-      ),
-    )
+      )
+    })
     if (this.movableRoutes.length === 0) {
       this.phase = "done"
       this.solved = true

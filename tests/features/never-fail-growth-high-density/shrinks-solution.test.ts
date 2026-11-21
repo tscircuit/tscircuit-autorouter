@@ -7,6 +7,7 @@ test("GrowShrinkHighDensityIntraNodeSolver shrinks solved routes back to the ori
     nodeWithPortPoints: makeNode(),
   })
   solver.scaleFactor = 2
+  solver.coordinateScale = 2
 
   solver.activeSubSolver = {
     failed: false,

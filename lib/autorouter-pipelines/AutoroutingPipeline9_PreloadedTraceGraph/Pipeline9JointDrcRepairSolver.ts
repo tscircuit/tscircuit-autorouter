@@ -56,7 +56,6 @@ import {
   type Pipeline9CollapsedTraceParticipant,
   type Pipeline9PreloadRepairTraceIds,
 } from "./pipeline9JointDrcRepairUtils"
-import { getPipeline9FixedRouteObstacles } from "./pipeline9FixedRouteCopper"
 import { preparePipeline9DrcRoutedTracesWithMetadata } from "./preparePipeline9DrcRoutedTraces"
 
 // Finish Circuit JSON repairs before targeting projected earlier copper.
@@ -2182,15 +2181,6 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       originalSrj: {
         ...this.params.originalSrj,
         traces: undefined,
-        obstacles: [
-          ...this.params.originalSrj.obstacles,
-          ...getPipeline9FixedRouteObstacles({
-            fixedObstacleRoutes: this.fixedPreloadedObstacleRoutes,
-            layerCount: this.params.layerCount,
-            allowBlindAndBuriedVias:
-              this.params.originalSrj.allowBlindAndBuriedVias,
-          }),
-        ],
         connections: [
           ...this.params.originalSrj.connections,
           ...this.params.newConnections,
@@ -2200,6 +2190,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         ],
       },
       routes: regionalB01RepairResult.routes,
+      fixedHdRoutes: this.fixedPreloadedObstacleRoutes,
       viaHoleDiameter: this.params.defaultViaHoleDiameter,
       syntheticConnectionNames: this.syntheticConnectionNames,
       drcEvaluator: this.cachedReferenceDrcEvaluator!,

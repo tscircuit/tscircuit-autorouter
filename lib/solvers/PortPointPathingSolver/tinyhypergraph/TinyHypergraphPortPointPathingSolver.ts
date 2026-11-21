@@ -1,5 +1,6 @@
 import { createAllowedLayerSegmentFilter } from "./createAllowedLayerSegmentFilter"
 import type { AllowedLayersByConnection } from "lib/utils/getAllowedLayersByConnection"
+import type { NetId as SrjNetId } from "lib/types"
 import type { SerializedHyperGraph } from "@tscircuit/hypergraph"
 import type { GraphicsObject } from "graphics-debug"
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
@@ -201,6 +202,7 @@ type TinyPortMetadata = {
   tinyHypergraphPortPenalty?: number
   duplicatedFromPortId?: string
   _preloadedFixedNetIds?: string[]
+  _preloadedCopperNetIds?: SrjNetId[]
   _preloadedTracePortAssignments?: PreloadedTracePortAssignment[]
 }
 
@@ -214,6 +216,7 @@ type LoadedTinyGraph = {
     routeMetadata?: RouteMetadata[]
     routeNet: Int32Array
     regionNetId: Int32Array
+    portReservationNetId?: Int32Array
     portPenalty?: Float64Array
     metadataPortPenaltiesApplied?: boolean
   }
@@ -441,6 +444,7 @@ const toSerializedPortData = (
     tinyHypergraphPortPenalty: port.d.tinyHypergraphPortPenalty,
     cramped: port.d.cramped,
     _preloadedFixedNetIds: port.d._preloadedFixedNetIds,
+    _preloadedCopperNetIds: port.d._preloadedCopperNetIds,
     _preloadedTracePortAssignments: port.d._preloadedTracePortAssignments,
   }
 }
@@ -747,8 +751,8 @@ const buildInputNodesWithPortPoints = (
   })
 }
 
-const applyTerminalRegionNetIds = (loaded: LoadedTinyGraph) => {
-  const netIndexById = new Map<string, number>()
+const applyGraphNetReservations = (loaded: LoadedTinyGraph): void => {
+  const netIndexById = new Map<SrjNetId, number>()
   for (let routeId = 0; routeId < loaded.problem.routeNet.length; routeId++) {
     const routeMetadata = loaded.problem.routeMetadata?.[routeId]
     const netId = routeMetadata?.mutuallyConnectedNetworkId
@@ -773,6 +777,25 @@ const applyTerminalRegionNetIds = (loaded: LoadedTinyGraph) => {
       continue
     }
     loaded.problem.regionNetId[regionIndex] = netIndex
+  }
+
+  if (loaded.problem.portReservationNetId) return
+  let portReservationNetId: Int32Array | undefined
+  for (let portIndex = 0; portIndex < loaded.topology.portCount; portIndex++) {
+    const metadata = loaded.topology.portMetadata?.[portIndex]
+    const fixedNetIds = metadata?._preloadedCopperNetIds
+    if (!fixedNetIds?.length) continue
+    portReservationNetId ??= new Int32Array(loaded.topology.portCount).fill(-1)
+    // Different copper nets cannot share this crossing. A net absent from the
+    // route list also has no active route that could legally use its copper.
+    let reservedNetIndex = -2
+    if (fixedNetIds.length === 1) {
+      reservedNetIndex = netIndexById.get(fixedNetIds[0]!) ?? -2
+    }
+    portReservationNetId[portIndex] = reservedNetIndex
+  }
+  if (portReservationNetId) {
+    loaded.problem.portReservationNetId = portReservationNetId
   }
 }
 
@@ -982,7 +1005,7 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
     const metadataPortPenaltyCount = applyMetadataPortPenalties(loaded)
     const { duplicatePortPenaltyCount, crampedPortPenaltyCount } =
       applyPortMetadataPenalties(loaded, this.crampedPortTraversalPenalty)
-    applyTerminalRegionNetIds(loaded)
+    applyGraphNetReservations(loaded)
     clearPreloadedEndpointRegionNetIds(loaded)
     this.metadataPortPenaltyCount = Math.max(
       this.metadataPortPenaltyCount,
@@ -1050,7 +1073,7 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
     ) {
       const loadedSolver = solver as typeof solver & LoadedTinyGraph
       applyMetadataPortPenalties(loadedSolver)
-      applyTerminalRegionNetIds(loadedSolver)
+      applyGraphNetReservations(loadedSolver)
       clearPreloadedEndpointRegionNetIds(loadedSolver)
     }
 
@@ -1159,34 +1182,43 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         )
       : undefined
     let graphForTiny = serializedGraph
-    const duplicateCongestedPortSolver = new DuplicateCongestedPortSolver(
-      serializedGraph,
-      {
-        duplicatePortProximity: 0.05,
-        useSerializedPortPenalties: false,
-        routeSolveOptions: {
-          ...getTinyViaSizeOptions(params.minViaPadDiameter),
-          USE_SPARSE_CANDIDATE_STORAGE: false,
-          ACCEPT_BEST_SOLUTION_ON_TIMEOUT: true,
-          GREEDY_FINAL_ROUTE_ITERS: 4,
-          MAX_ITERATIONS: Math.ceil(2_000_000 * getEffortScale(params.effort)),
-          RIP_THRESHOLD_RAMP_ATTEMPTS: 0,
-          STATIC_REACHABILITY_PRECHECK: true,
-        },
-      },
+    // Extra logical crossings cannot increase space beside immutable copper.
+    // Keep the physical boundary capacity instead of crowding fixed ports.
+    const hasFixedCopperReservations = serializedGraph.ports.some((port) =>
+      Boolean(asTinyPortMetadata(port.d)._preloadedCopperNetIds?.length),
     )
-    duplicateCongestedPortSolver.solve()
-    if (duplicateCongestedPortSolver.failed) {
-      this.duplicateCongestedPortError =
-        duplicateCongestedPortSolver.error ?? "unknown error"
-    } else {
-      this.duplicateCongestedPortReport = duplicateCongestedPortSolver.report
-      graphForTiny = duplicateCongestedPortSolver.getOutput()
-      for (const port of graphForTiny.ports) {
-        const metadata = asTinyPortMetadata(port.d)
-        if (typeof metadata.duplicatedFromPortId !== "string") continue
-        delete metadata._preloadedFixedNetIds
-        delete metadata._preloadedTracePortAssignments
+    if (!hasFixedCopperReservations) {
+      const duplicateCongestedPortSolver = new DuplicateCongestedPortSolver(
+        serializedGraph,
+        {
+          duplicatePortProximity: 0.05,
+          useSerializedPortPenalties: false,
+          routeSolveOptions: {
+            ...getTinyViaSizeOptions(params.minViaPadDiameter),
+            USE_SPARSE_CANDIDATE_STORAGE: false,
+            ACCEPT_BEST_SOLUTION_ON_TIMEOUT: true,
+            GREEDY_FINAL_ROUTE_ITERS: 4,
+            MAX_ITERATIONS: Math.ceil(
+              2_000_000 * getEffortScale(params.effort),
+            ),
+            RIP_THRESHOLD_RAMP_ATTEMPTS: 0,
+            STATIC_REACHABILITY_PRECHECK: true,
+          },
+        },
+      )
+      duplicateCongestedPortSolver.solve()
+      if (duplicateCongestedPortSolver.failed) {
+        this.duplicateCongestedPortError =
+          duplicateCongestedPortSolver.error ?? "unknown error"
+      } else {
+        this.duplicateCongestedPortReport = duplicateCongestedPortSolver.report
+        graphForTiny = duplicateCongestedPortSolver.getOutput()
+        for (const port of graphForTiny.ports) {
+          const metadata = asTinyPortMetadata(port.d)
+          if (typeof metadata.duplicatedFromPortId !== "string") continue
+          delete metadata._preloadedFixedNetIds
+          delete metadata._preloadedTracePortAssignments
+        }
       }
     }
     this.duplicatedPortCount =
