@@ -188,7 +188,8 @@
   "intentionalChanges": [
     {
       "path": "native/native-full-board.tsx",
-      "change": "Default planes=false; disables copper pours, fanout plane mappings and plane-specific escapes. Power nets are routed explicitly."
+      "change": "Default planes=false; disables copper pours, fanout plane mappings and plane-specific escapes. Power nets are routed explicitly.",
+      "modifiedSha256": "e9294834440e0171138d0f55c0d9c033d33167fabf458cf4bb55f07617faa033"
     }
   ]
 }

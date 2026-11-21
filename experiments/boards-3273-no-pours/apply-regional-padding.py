@@ -17,6 +17,6 @@ provenance={
  'sourcePatchSha256':hashlib.sha256(gzip.decompress((experiment/'regional-padding-source.patch.gz').read_bytes())).hexdigest(),
  'beforeModuleSha256':hashlib.sha256(original).hexdigest(),
  'afterModuleSha256':hashlib.sha256(updated).hexdigest(),
- 'scope':'Only pad the regional copper-cutting window by the existing clearance envelope before creating repair endpoints. No solver budgets, copper constraints or other routing stages change.',
+ 'scope':'Only apply the existing regional clearance expansion when movable copper sections are present, in addition to the existing promoted-copper condition. No solver budgets, copper constraints or other routing stages change.',
 }
 (experiment/'regional-padding-provenance.json').write_text(json.dumps(provenance,indent=2)+'\n')
