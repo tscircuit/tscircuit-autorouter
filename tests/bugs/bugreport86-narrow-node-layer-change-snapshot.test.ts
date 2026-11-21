@@ -14,8 +14,10 @@ test("port point pathing narrow node layer change snapshot", (): void => {
 
   const center = { x: -0.56, y: -8.0 }
   const halfSize = 1.8 / 2
-  const isInside = (p: { x: number; y: number }): boolean =>
-    Math.abs(p.x - center.x) <= halfSize && Math.abs(p.y - center.y) <= halfSize
+  const minX = center.x - halfSize
+  const maxX = center.x + halfSize
+  const minY = center.y - halfSize
+  const maxY = center.y + halfSize
 
   const output = solver.getOutput()
   const highlightedNodes = output.nodesWithPortPoints.filter((node) => {
@@ -40,12 +42,30 @@ test("port point pathing narrow node layer change snapshot", (): void => {
 
   const filtered: GraphicsObject = {
     rects: [
-      ...(viz.rects?.filter((r) => isInside(r.center)) ?? []),
+      ...(viz.rects?.filter(
+        (r) =>
+          r.center.x >= minX &&
+          r.center.x <= maxX &&
+          r.center.y >= minY &&
+          r.center.y <= maxY,
+      ) ?? []),
       ...overlayRects,
     ],
-    points: viz.points?.filter((p) => isInside(p)),
-    circles: viz.circles?.filter((c) => isInside(c.center)),
-    lines: viz.lines?.filter((l) => l.points.some(isInside)),
+    points: viz.points?.filter(
+      (p) => p.x >= minX && p.x <= maxX && p.y >= minY && p.y <= maxY,
+    ),
+    circles: viz.circles?.filter(
+      (c) =>
+        c.center.x >= minX &&
+        c.center.x <= maxX &&
+        c.center.y >= minY &&
+        c.center.y <= maxY,
+    ),
+    lines: viz.lines?.filter((l) =>
+      l.points.some(
+        (p) => p.x >= minX && p.x <= maxX && p.y >= minY && p.y <= maxY,
+      ),
+    ),
     texts: [
       {
         x: center.x,
