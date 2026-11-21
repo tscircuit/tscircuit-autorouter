@@ -1,33 +1,36 @@
-name: Latest boards with indexed breakout selectors
+name: Paired full-circuit breakout selector comparison
 on:
   workflow_dispatch:
 permissions:
   contents: read
 jobs:
-  boards:
+  replay:
     runs-on: blacksmith-32vcpu-ubuntu-2404-arm
-    timeout-minutes: 30
+    timeout-minutes: 50
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        board: [icepi-native, h616-local, orangecrab-local]
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.4.3
-      - name: Unpack original board sources
+      - name: Unpack original frozen sources
         run: |
           mkdir -p experiments/boards-3269/runtime
           unzip -q experiments/boards-3269/boards.zip -d experiments/boards-3269/runtime
-      - name: Install latest tscircuit with its frozen dependencies
+      - name: Install once before measuring either revision
         working-directory: experiments/boards-3269/runtime
         run: bun install --frozen-lockfile
-      - name: Apply the minimal breakout selector fix
-        run: python3 experiments/boards-3269/apply-breakout-selector-fix.py
-      - name: Run all 19 original TSX boards through tscircuit
+      - name: Run base-head-head-base in fresh processes on the same machine
         env:
-          BOARD_VARIANT: indexed-breakouts
-          BOARD_FIX_PROVENANCE: breakout-selector-provenance.json
-        run: python3 experiments/boards-3269/run.py
+          BOARD_SAMPLE: ${{ matrix.board }}
+          BOARD_REPLAY_ORDER: ${{ matrix.board == 'orangecrab-local' && '["base","head"]' || '["base","head","head","base"]' }}
+        run: python3 experiments/boards-3269/replay-paired.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: boards-tscircuit-3269-indexed-breakouts
-          path: board-benchmark-results
+          name: paired-breakout-selectors-${{ matrix.board }}
+          path: paired-results/
