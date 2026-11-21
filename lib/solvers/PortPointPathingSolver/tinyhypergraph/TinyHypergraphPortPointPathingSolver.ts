@@ -1,4 +1,4 @@
-import { createAllowedLayerSegmentFilter } from "./createAllowedLayerSegmentFilter"
+import { getRouteAllowedZ } from "./getRouteAllowedZ"
 import type { AllowedLayersByConnection } from "lib/utils/getAllowedLayersByConnection"
 import type { NetId as SrjNetId } from "lib/types"
 import type { SerializedHyperGraph } from "@tscircuit/hypergraph"
@@ -998,8 +998,8 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
       loaded,
       this.inputProblem.serializedHyperGraph,
     )
-    loaded.problem.routeSegmentFilter = createAllowedLayerSegmentFilter(
-      loaded,
+    loaded.problem.routeAllowedZ = getRouteAllowedZ(
+      loaded.problem,
       this.allowedLayersByConnection,
     )
     const metadataPortPenaltyCount = applyMetadataPortPenalties(loaded)
