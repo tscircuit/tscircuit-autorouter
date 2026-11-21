@@ -1,0 +1,132 @@
+name: Measure existing segment index in native fanout search
+on:
+  push:
+    branches: [analysis/e2e-search-index-2455]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  replay:
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        sample: [icepi-original, butterstick-original, imx6-original, imx6-spaced]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Install pinned current native dependencies
+        run: |
+          mkdir -p core/replay
+          cat > core/package.json <<'JSON'
+          {"name":"native-reuse-experiments","private":true,"type":"module","dependencies":{"@tscircuit/fanout-solver":"0.0.101","@tscircuit/capacity-autorouter":"0.0.1148","@tscircuit/checks":"0.0.282","graphics-debug":"0.0.99"}}
+          JSON
+          cd core
+          bun install --ignore-scripts
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 44960044216
+          name: full-circuit-interception-${{ matrix.sample }}
+          path: captures
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Replay equal inputs and compare complete plans, output and search histories
+        env:
+          SAMPLE: ${{ matrix.sample }}
+        run: |
+          cp core/node_modules/@tscircuit/fanout-solver/lib/route-bus/route-plane-terminated-bus.ts core/replay/original-plane.txt
+          cp core/node_modules/@tscircuit/fanout-solver/lib/route-bus/plane-endpoint.ts core/replay/original-endpoint.txt
+          cp core/node_modules/@tscircuit/fanout-solver/lib/route-bus/plan-static-clearance.ts core/replay/original-static.txt
+          cp core/node_modules/@tscircuit/fanout-solver/lib/route-bus/plan-mutual-clearance.ts core/replay/original-mutual.txt
+          cp core/node_modules/@tscircuit/fanout-solver/lib/route-bus/plan-clearance.ts core/replay/original-clearance.txt
+          cat > core/replay/run.ts <<'TS'
+          import { readFileSync, writeFileSync } from "node:fs"
+          import { gunzipSync } from "node:zlib"
+          const mode = process.argv[2]
+          const root = "../node_modules/@tscircuit/fanout-solver/lib/route-bus/"
+          let plane = readFileSync("original-plane.txt", "utf8")
+          let endpoint = readFileSync("original-endpoint.txt", "utf8")
+          let statics = readFileSync("original-static.txt", "utf8")
+          let mutual = readFileSync("original-mutual.txt", "utf8")
+          let clearanceSource = readFileSync("original-clearance.txt", "utf8")
+          function replaceUnique(source: string, edit: { before: string; after: string }): string {
+            if (source.split(edit.before).length !== 2) throw new Error("Patch marker changed: " + edit.before)
+            return source.replace(edit.before, edit.after)
+          }
+          if (mode === "distance_once") {
+            endpoint = replaceUnique(endpoint, {before: "  if (\n    distance(sourcePoint, targetPoint) <= 1e-6 ||\n    distance(sourcePoint, targetPoint) > nearbyEndpointLimit\n  )", after: "  const endpointDistance = distance(sourcePoint, targetPoint)\n  if (endpointDistance <= 1e-6 || endpointDistance > nearbyEndpointLimit)"})
+          }
+          if (mode === "hoist_endpoint") {
+            const block = "            const endpointViaCandidates = getPlaneEndpointViaCandidates({\n              preparedConnection,\n              bus: directionalBus,\n              viaDiameter,\n              clearance,\n            })\n"
+            plane = replaceUnique(plane, {before: block, after: ""})
+            plane = replaceUnique(plane, {before: "          let plan: FanoutRoutePlan | undefined", after: block.split("\n").map(line => line.startsWith("  ") ? line.slice(2) : line).join("\n") + "          let plan: FanoutRoutePlan | undefined"})
+          }
+          if (mode === "segments_first") {
+            mutual = replaceUnique(mutual, {before: "    const otherVias = getPlanVias(otherPlan)\n", after: ""})
+            mutual = replaceUnique(mutual, {before: "        if (!segmentsAreClear(segment, otherSegment, clearance)) {\n          recordBlocker()\n          return false\n        }\n      }\n      for (const otherVia of otherVias) {", after: "        if (!segmentsAreClear(segment, otherSegment, clearance)) {\n          recordBlocker()\n          return false\n        }\n      }\n    }\n    const otherVias = getPlanVias(otherPlan)\n    for (const segment of planSegments) {\n      for (const otherVia of otherVias) {"})
+          }
+          if (mode === "hoist_segments") {
+            statics = replaceUnique(statics, {before: "  const segments = getPlanSegments(plan)\n", after: ""})
+            statics = replaceUnique(statics, {before: "  const routableBounds = getRoutableBounds(srj.bounds, sharedBoundary)", after: "  const segments = getPlanSegments(plan)\n  const routableBounds = getRoutableBounds(srj.bounds, sharedBoundary)"})
+            statics = replaceUnique(statics, {before: "    getPlanSegments(plan).some(", after: "    segments.some("})
+            statics = replaceUnique(statics, {before: "    for (const segment of getPlanSegments(plan)) {", after: "    for (const segment of segments) {"})
+          }
+          
+          if (mode === "search_index") {
+            clearanceSource = replaceUnique(clearanceSource, {before:"export function planIsClear(params:", after:"const segmentIndexesByStaticCache = new WeakMap<\n  RouteBusStaticClearanceCache,\n  WeakMap<FanoutRoutePlan, RouteSegmentSpatialIndex>\n>()\n\nexport function planIsClear(params:"})
+            clearanceSource = replaceUnique(clearanceSource, {before:"  return (\n    staticallyClear &&", after:"  let segmentIndexes = staticClearanceCache && segmentIndexesByStaticCache.get(staticClearanceCache)\n  if (staticallyClear && staticClearanceCache && !segmentIndexes) {\n    segmentIndexes = new WeakMap()\n    segmentIndexesByStaticCache.set(staticClearanceCache, segmentIndexes)\n  }\n  return (\n    staticallyClear &&"})
+            clearanceSource = replaceUnique(clearanceSource, {before:"      blockingBusCounts,\n    })", after:"      blockingBusCounts,\n      segmentIndexes,\n    })"})
+          }
+          
+          writeFileSync(root + "plan-clearance.ts", clearanceSource)
+          writeFileSync(root + "route-plane-terminated-bus.ts", plane)
+          writeFileSync(root + "plane-endpoint.ts", endpoint)
+          writeFileSync(root + "plan-static-clearance.ts", statics)
+          writeFileSync(root + "plan-mutual-clearance.ts", mutual)
+          const { FanoutSolver } = await import("../node_modules/@tscircuit/fanout-solver/lib/fanout-solver")
+          const { validateRoutedCopperDrc } = await import("../node_modules/@tscircuit/fanout-solver/lib/validate-routed-copper-drc")
+          const sample = process.env.SAMPLE
+          const folder = "../../captures/" + sample
+          const report = JSON.parse(readFileSync(folder + "/report.json", "utf8"))
+          const record = report.solvers.find(entry => entry.name === "FanoutSolver")
+          const [input, options] = JSON.parse(gunzipSync(readFileSync(folder + "/solver-" + record.id + "-input.json.gz")).toString())
+          const solver = new FanoutSolver(input, options)
+          const start = performance.now()
+          solver.solve()
+          const best = Reflect.get(solver, "bestAttempt")
+          const output = best.outputSrj
+          const elapsedMs = performance.now() - start
+          const drc = validateRoutedCopperDrc({inputSrj:input, routedSrj:output, clearance:solver.config.clearance, allowBlindAndBuriedVias:solver.config.allowBlindAndBuriedVias})
+          if (!drc.valid) throw new Error("Native DRC failed")
+          const hash = (source: string) => new Bun.CryptoHasher("sha256").update(source).digest("hex")
+          const summary = {sample, mode, elapsedMs, escapes:best.plans.length, vias:drc.checkedViaCount, assignments:solver.attempts.length, planeHash:hash(plane), endpointHash:hash(endpoint), staticHash:hash(statics), mutualHash:hash(mutual), clearanceSourceHash:hash(clearanceSource),fanoutVersion:"0.0.101"}
+          writeFileSync(mode + ".json", JSON.stringify({summary, plans:best.plans, output, attempts:solver.attempts}))
+          console.log("REUSE_CANDIDATE_RESULT", JSON.stringify(summary))
+          
+          TS
+          cd core/replay
+          bun run.ts before
+          bun run.ts search_index
+          bun run.ts before_repeat
+          python3 - <<'PY'
+          import json
+          modes=['before','search_index','before_repeat']
+          captures=[json.load(open(mode+'.json')) for mode in modes]
+          for entry in captures[1:]:
+              for field in ['plans','output','attempts']:assert entry[field]==captures[0][field],field+entry['summary']['mode']
+          print('REUSE_CANDIDATE_IDENTICAL',json.dumps([entry['summary'] for entry in captures]))
+          PY
+          if [ "$SAMPLE" = "butterstick-original" ]; then
+            bun --cpu-prof --cpu-prof-name=native.cpuprofile run.ts profile
+            python3 - <<'PY'
+          import json
+          p=json.load(open('native.cpuprofile'));counts={}
+          for n in p['nodes']:
+              f=n['callFrame'];key=(f.get('url',''),f['functionName'],f.get('lineNumber',-1))
+              counts[key]=counts.get(key,0)+n.get('hitCount',0)
+          print('REUSE_CPU_TOTAL_TICKS',sum(n.get('hitCount',0) for n in p['nodes']))
+          print('REUSE_CPU_PROFILE',json.dumps([{'file':k[0],'function':k[1],'line':k[2]+1,'ticks':v} for k,v in sorted(counts.items(),key=lambda x:-x[1])[:30]]))
+          PY
+          fi
