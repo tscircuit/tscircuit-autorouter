@@ -1039,7 +1039,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
           params.layerCount,
           params.defaultViaDiameter,
           params.connMap,
-        ).map((route) => ({
+        ).map((route): PreloadedHighDensityRoute => ({
           ...route,
           // Repair resolves SRJ aliases; private connectivity keys can collide.
           rootConnectionName: trace.connection_name,
