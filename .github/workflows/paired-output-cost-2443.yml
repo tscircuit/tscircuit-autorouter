@@ -30,7 +30,16 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.4.3
-      - run: cd core && bun install --ignore-scripts
+      - name: Install pinned standalone audit dependencies
+        run: |
+          python3 - <<'PYDEPS'
+          from pathlib import Path
+          import json
+          packages={'@tscircuit/fanout-solver':'0.0.96','@tscircuit/capacity-autorouter':'0.0.1143','@tscircuit/checks':'0.0.282','graphics-debug':'0.0.99'}
+          Path('core/package.json').write_text(json.dumps({'name':'full-circuit-audit','private':True,'type':'module','dependencies':packages}))
+          PYDEPS
+          cd core
+          bun install --ignore-scripts
       - uses: actions/download-artifact@v4
         with:
           run-id: 44876574547
