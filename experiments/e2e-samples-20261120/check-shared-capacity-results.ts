@@ -43,11 +43,14 @@ for (const sample of manifest.samples.map((entry: any) => entry.name.replace(/\.
   const afterSvg = join(captures[1].folder, "pcb.svg")
   const identicalPcbSvg = existsSync(beforeSvg) && existsSync(afterSvg) ? readFileSync(beforeSvg).equals(readFileSync(afterSvg)) : null
   const winding = captures.map((capture) => capture.report.solvers.filter((entry: any) => entry.name === "WindingBreakoutSolver"))
-  if (winding[0].length !== winding[1].length) throw new Error(`Winding call count changed: ${sample}`)
+  const windingInputs = captures.map((capture, modeIndex) => winding[modeIndex].map((entry: any) => readGzip(join(capture.folder, `solver-${entry.id}-input.json.gz`))[0]))
+  const matchedAfterIndexes = new Set<number>()
   const windingComparisons = []
   for (let index = 0; index < winding[0].length; index++) {
-    const inputs = captures.map((capture, modeIndex) => readGzip(join(capture.folder, `solver-${winding[modeIndex][index].id}-input.json.gz`))[0])
-    if (!isDeepStrictEqual(inputs[0], inputs[1])) throw new Error(`Winding input changed: ${sample}/${index}`)
+    const afterIndex = windingInputs[1].findIndex((input: unknown, candidateIndex: number) => !matchedAfterIndexes.has(candidateIndex) && isDeepStrictEqual(windingInputs[0][index], input))
+    if (afterIndex < 0) throw new Error(`Original winding input missing: ${sample}/${index}`)
+    matchedAfterIndexes.add(afterIndex)
+    const inputs = [windingInputs[0][index], windingInputs[1][afterIndex]]
     const replay = [BeforeWinding, AfterWinding].map((Constructor, modeIndex) => {
       const solver = new Constructor(inputs[modeIndex])
       let error: string | null = null
@@ -60,10 +63,15 @@ for (const sample of manifest.samples.map((entry: any) => entry.name.replace(/\.
       return { solved: true, points: points.length, layers: Object.fromEntries([...new Set(points.map((point) => point.layer))].map((layer) => [layer, points.filter((point) => point.layer === layer).length])) }
     })
     if (replay[0].solved && !replay[1].solved) throw new Error(`Winding placement regressed: ${sample}/${index}`)
-    if (replay[0].solved !== winding[0][index].solved || replay[1].solved !== winding[1][index].solved) throw new Error(`Captured and replayed winding status differs: ${sample}/${index}`)
-    windingComparisons.push({ index, beforeId: winding[0][index].id, afterId: winding[1][index].id, before: replay[0], after: replay[1] })
+    if (replay[0].solved !== winding[0][index].solved || replay[1].solved !== winding[1][afterIndex].solved) throw new Error(`Captured and replayed winding status differs: ${sample}/${index}`)
+    windingComparisons.push({ index, beforeId: winding[0][index].id, afterId: winding[1][afterIndex].id, before: replay[0], after: replay[1] })
   }
-  const row = { sample, winding: windingComparisons, sameFanoutConstructorInputs: sameInputs, sameCompletedAssignmentPrefix: sameHistory, comparedAssignments, firstChangedAssignment, identicalCompletedOutput, identicalPcbSvg, captures: [] as any[] }
+  const additionalWinding = winding[1].filter((_: unknown, index: number) => !matchedAfterIndexes.has(index))
+  const circuits = captures.map((capture) => readGzip(join(capture.folder, "circuit.json.gz")))
+  const padGeometry = circuits.map((circuit) => circuit.filter((element: any) => ["pcb_smtpad", "pcb_plated_hole", "pcb_hole"].includes(element.type)).map((element: any) => Object.fromEntries(Object.entries(element).filter(([key]) => !key.endsWith("_id") && key !== "pcb_port_id" && key !== "subcircuit_connectivity_map_key"))))
+  const samePadGeometry = isDeepStrictEqual(padGeometry[0], padGeometry[1])
+  if (!samePadGeometry) throw new Error(`Physical pad geometry changed: ${sample}`)
+  const row = { sample, winding: windingComparisons, additionalWinding, samePadGeometry, sameFanoutConstructorInputs: sameInputs, sameCompletedAssignmentPrefix: sameHistory, comparedAssignments, firstChangedAssignment, identicalCompletedOutput, identicalPcbSvg, captures: [] as any[] }
   for (const { mode, folder, report, solver: summary, args, state, history } of captures) {
     const assessed = read(join(folder, "assessment.json"))
     if (assessed.components !== assessed.expectedComponents || assessed.pads !== assessed.expectedPads || assessed.membershipErrors.length) throw new Error(`Component or membership mismatch: ${sample}/${mode}`)
@@ -100,7 +108,7 @@ for (const sample of manifest.samples.map((entry: any) => entry.name.replace(/\.
       const graphics = visualizeSimpleRouteJson({ ...best.outputSrj, bounds, obstacles })
       graphics.texts = [
         { x: bounds.minX, y: bounds.maxY + 0.9, text: `${sample}: ${best.summary.routedConnectionCount}/${input.connections.length} partial escapes; ${drc.checkedViaCount} vias`, fontSize: 0.23, color: "#0f172a", anchorSide: "center_left" },
-        { x: bounds.minX, y: bounds.maxY + 0.45, text: `${history.length} assignments; ${(fanoutElapsedMs / 1000).toFixed(1)}s fanout search; failed`, fontSize: 0.2, color: "#475569", anchorSide: "center_left" },
+        { x: bounds.minX, y: bounds.maxY + 0.45, text: `${history.length} assignments; ${(fanoutElapsedMs / 1000).toFixed(1)}s fanout search; ${state.solved ? "fanout solved" : "incomplete"}`, fontSize: 0.2, color: "#475569", anchorSide: "center_left" },
       ]
       writeFileSync(join(output, `${sample}-${mode}.svg`), getSvgFromGraphicsObject(graphics, { backgroundColor: "white", svgWidth: 1000, svgHeight: 1000 }))
     }
