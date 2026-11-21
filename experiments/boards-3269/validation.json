@@ -1,0 +1,89 @@
+{
+  "tscircuit": "0.0.3269",
+  "coreBase": "91c208aeb25a40f3634a084650fd86f8339565c0",
+  "coreRepro": "b03ec75c5430b44f2c812d3d0e929edeeff91fba",
+  "coreFix": "9d2d54e1bb62d0fd206b37f7dc117c6faabf1707",
+  "windingSolverGitPin": "08d8da9d8dbb037eba332e7bfd685063f8805ed4",
+  "selectedRuns": {
+    "allBoardsBefore": {
+      "id": 44905488171,
+      "artifact": 14707443557,
+      "artifactSha256": "60078de82bb28595dea935ac660fb8ab1bb3ab815886f3ff19c8b4bd4e8466da",
+      "source": "4822a3251b10d7ad1aca356d8c9b788ce52beaf8"
+    },
+    "allBoardsAfter": {
+      "id": 44906228580,
+      "artifact": 14707909439,
+      "artifactSha256": "393949390e9d776d1739dad0d49d3b0b4dbcc9ba96619e450961d55745ed9a86",
+      "source": "299dd95ff7ad9c3cd4ff5fef8c7c6da4aeead7c6"
+    },
+    "pairedReplay": {
+      "id": 44906232480,
+      "source": "8f2c8293ffe8983c6898bd9c6bfaf79370a71152",
+      "artifacts": [
+        {
+          "board": "icepi-native",
+          "id": 14707799305,
+          "sha256": "aea2846b27ef333c14bc6eb1fc62de23966e9b65a1f9629c2049b86a2e1fefda"
+        },
+        {
+          "board": "h616-local",
+          "id": 14708042285,
+          "sha256": "3e37c8dc23237e3b783a96a93114cc1a69171cf1789a91ccfca4f30de34b9305"
+        },
+        {
+          "board": "orangecrab-local",
+          "id": 14708445718,
+          "sha256": "011b1d994390473d50b1e8c347ac101ec0cca32ced0c83d19d47cd2ec2029a1a"
+        }
+      ]
+    }
+  },
+  "sourcePatchSha256": "996b5a8cb619db86f869bc5661354537ae4c001bca947291b827fdc2b5c191e0",
+  "benchmarkSourcePatchMatchesFixPr": true,
+  "originalFilesByteIdentical": 45,
+  "localValidation": {
+    "tests": {
+      "pass": 89,
+      "existingSkipped": 2,
+      "fail": 0,
+      "files": 82,
+      "assertions": 2282
+    },
+    "esmAndDeclarationBuild": "pass",
+    "typecheck": "pass"
+  },
+  "githubValidation": {
+    "testShards": "10/10 passed",
+    "preview": "pass",
+    "smokeTest": "pass",
+    "vercel": "pass"
+  },
+  "profiling": {
+    "runtime": "0.0.3268",
+    "board": "icepi-native",
+    "function": "Breakout.doInitialCreateAutoplacedBreakoutPoints",
+    "inclusiveSamples": 14565,
+    "totalSamples": 34786,
+    "inclusiveSamplePercent": 41.87029264646697,
+    "note": "Diagnostic profile predates the final 0.0.3269 rerun; paired and all-board results use 0.0.3269. The method was unchanged by the release."
+  },
+  "cause": "Automatic breakout creation runs before the normal selector-index phase. Each inserted point invalidates selectors, so resolving trace ports repeatedly walks the board. Warm the existing index before the scan and append the points together afterward; prevent duplicate port entries when the index is warmed again.",
+  "reproClassAliasChecks": {
+    "icepiRealGeometry": {
+      "before": 34588068,
+      "after": 0
+    },
+    "focusedThreeConnections": {
+      "before": 498,
+      "after": 108
+    }
+  },
+  "limits": [
+    "Four boards exceed the unchanged 600-second render budget, so final output equivalence cannot be asserted for them.",
+    "All 15 settled boards retain existing routing errors; this fix improves render time, not routing completion.",
+    "All-board matrix wall times are contended observations; performance conclusions use same-machine paired replays.",
+    "iCEPi and H616 use base/head/head/base; OrangeCrab is one base/head pair, so small control-board timing differences are not reliable speedup estimates.",
+    "Intermediate experimental runs are excluded; only selectedRuns validate the final production patch."
+  ]
+}

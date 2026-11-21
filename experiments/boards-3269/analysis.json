@@ -1,0 +1,40 @@
+{
+  "latestTscircuit": "0.0.3269",
+  "resolved": {
+    "core": "0.0.2447",
+    "autorouter": "0.0.1145",
+    "fanoutSolver": "0.0.97",
+    "busLanesSolver": "0.0.63",
+    "connectivityMapBefore": "0.0.36",
+    "connectivityMapAfter": "0.0.36"
+  },
+  "boards": 19,
+  "settledWithRoutingErrors": 15,
+  "timeouts": [
+    "butterstick-local",
+    "butterstick-spaced",
+    "imx6-local",
+    "orangecrab-native"
+  ],
+  "fullyRouted": 0,
+  "identicalSettledCircuitJson": 15,
+  "sharedInputFiles": 158,
+  "sharedInputMismatches": [],
+  "blockingStages": {
+    "bus lanes": 2,
+    "fanout": 6,
+    "highDensityRouteSolver": 8,
+    "portPointPathingSolver": 3
+  },
+  "previousReleaseEmittedCopperUnchanged": true,
+  "preloadedTraceAudit": {
+    "board": "h616-local",
+    "phase": "remaining",
+    "nativeTraceCount": 16,
+    "fixedTraceCount": 16,
+    "obstacles": 760,
+    "obstaclesWithoutCircuitMetadata": 4,
+    "allUnattributedObstaclesAreNonPlatedHoles": true
+  },
+  "interpretation": "The fix removes repeated CSS selector scans; it does not resolve existing routing failures. Shared matrix wall times are contended observations, not speedup claims. Use the same-machine paired results for performance conclusions."
+}

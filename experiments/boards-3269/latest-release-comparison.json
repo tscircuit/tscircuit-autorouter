@@ -1,0 +1,211 @@
+[
+  {
+    "board": "butterstick-local",
+    "previousRelease": "0.0.3268",
+    "latestRelease": "0.0.3269",
+    "previousSeconds": 600.185,
+    "latestSeconds": 600.196,
+    "sameStop": true,
+    "sameTraceCount": true,
+    "sameViaCount": true,
+    "identicalEmittedCopper": null
+  },
+  {
+    "board": "butterstick-native",
+    "previousRelease": "0.0.3268",
+    "latestRelease": "0.0.3269",
+    "previousSeconds": 205.856,
+    "latestSeconds": 206.829,
+    "sameStop": true,
+    "sameTraceCount": true,
+    "sameViaCount": true,
+    "identicalEmittedCopper": true
+  },
+  {
+    "board": "butterstick-spaced",
+    "previousRelease": "0.0.3268",
+    "latestRelease": "0.0.3269",
+    "previousSeconds": 600.275,
+    "latestSeconds": 600.341,
+    "sameStop": true,
+    "sameTraceCount": true,
+    "sameViaCount": true,
+    "identicalEmittedCopper": null
+  },
+  {
+    "board": "glider-local",
+    "previousRelease": "0.0.3268",
+    "latestRelease": "0.0.3269",
+    "previousSeconds": 322.395,
+    "latestSeconds": 322.969,
+    "sameStop": true,
+    "sameTraceCount": true,
+    "sameViaCount": true,
+    "identicalEmittedCopper": true
+  },
+  {
+    "board": "glider-native",
+    "previousRelease": "0.0.3268",
+    "latestRelease": "0.0.3269",
+    "previousSeconds": 306.092,
+    "latestSeconds": 304.113,
+    "sameStop": true,
+    "sameTraceCount": true,
+    "sameViaCount": true,
+    "identicalEmittedCopper": true
+  },
+  {
+    "board": "glider-spaced",
+    "previousRelease": "0.0.3268",
+    "latestRelease": "0.0.3269",
+    "previousSeconds": 172.824,
+    "latestSeconds": 172.272,
+    "sameStop": true,
+    "sameTraceCount": true,
+    "sameViaCount": true,
+    "identicalEmittedCopper": true
+  },
+  {
+    "board": "h616-default-order-local",
+    "previousRelease": "0.0.3268",
+    "latestRelease": "0.0.3269",
+    "previousSeconds": 35.089,
+    "latestSeconds": 33.981,
+    "sameStop": true,
+    "sameTraceCount": true,
+    "sameViaCount": true,
+    "identicalEmittedCopper": true
+  },
+  {
+    "board": "h616-local",
+    "previousRelease": "0.0.3268",
+    "latestRelease": "0.0.3269",
+    "previousSeconds": 56.187,
+    "latestSeconds": 58.39,
+    "sameStop": true,
+    "sameTraceCount": true,
+    "sameViaCount": true,
+    "identicalEmittedCopper": true
+  },
+  {
+    "board": "h616-native",
+    "previousRelease": "0.0.3268",
+    "latestRelease": "0.0.3269",
+    "previousSeconds": 388.926,
+    "latestSeconds": 372.374,
+    "sameStop": true,
+    "sameTraceCount": true,
+    "sameViaCount": true,
+    "identicalEmittedCopper": true
+  },
+  {
+    "board": "h616-spaced",
+    "previousRelease": "0.0.3268",
+    "latestRelease": "0.0.3269",
+    "previousSeconds": 34.1,
+    "latestSeconds": 33.045,
+    "sameStop": true,
+    "sameTraceCount": true,
+    "sameViaCount": true,
+    "identicalEmittedCopper": true
+  },
+  {
+    "board": "icepi-local",
+    "previousRelease": "0.0.3268",
+    "latestRelease": "0.0.3269",
+    "previousSeconds": 201.936,
+    "latestSeconds": 198.15,
+    "sameStop": true,
+    "sameTraceCount": true,
+    "sameViaCount": true,
+    "identicalEmittedCopper": true
+  },
+  {
+    "board": "icepi-native",
+    "previousRelease": "0.0.3268",
+    "latestRelease": "0.0.3269",
+    "previousSeconds": 80.198,
+    "latestSeconds": 82.591,
+    "sameStop": true,
+    "sameTraceCount": true,
+    "sameViaCount": true,
+    "identicalEmittedCopper": true
+  },
+  {
+    "board": "icepi-spaced",
+    "previousRelease": "0.0.3268",
+    "latestRelease": "0.0.3269",
+    "previousSeconds": 342.928,
+    "latestSeconds": 378.034,
+    "sameStop": true,
+    "sameTraceCount": true,
+    "sameViaCount": true,
+    "identicalEmittedCopper": true
+  },
+  {
+    "board": "imx6-local",
+    "previousRelease": "0.0.3268",
+    "latestRelease": "0.0.3269",
+    "previousSeconds": 600.515,
+    "latestSeconds": 600.557,
+    "sameStop": true,
+    "sameTraceCount": true,
+    "sameViaCount": true,
+    "identicalEmittedCopper": null
+  },
+  {
+    "board": "imx6-native",
+    "previousRelease": "0.0.3268",
+    "latestRelease": "0.0.3269",
+    "previousSeconds": 141.644,
+    "latestSeconds": 147.74,
+    "sameStop": true,
+    "sameTraceCount": true,
+    "sameViaCount": true,
+    "identicalEmittedCopper": true
+  },
+  {
+    "board": "imx6-spaced",
+    "previousRelease": "0.0.3268",
+    "latestRelease": "0.0.3269",
+    "previousSeconds": 542.794,
+    "latestSeconds": 526.033,
+    "sameStop": true,
+    "sameTraceCount": true,
+    "sameViaCount": true,
+    "identicalEmittedCopper": true
+  },
+  {
+    "board": "orangecrab-local",
+    "previousRelease": "0.0.3268",
+    "latestRelease": "0.0.3269",
+    "previousSeconds": 197.667,
+    "latestSeconds": 196.015,
+    "sameStop": true,
+    "sameTraceCount": true,
+    "sameViaCount": true,
+    "identicalEmittedCopper": true
+  },
+  {
+    "board": "orangecrab-native",
+    "previousRelease": "0.0.3268",
+    "latestRelease": "0.0.3269",
+    "previousSeconds": 600.172,
+    "latestSeconds": 600.258,
+    "sameStop": true,
+    "sameTraceCount": true,
+    "sameViaCount": true,
+    "identicalEmittedCopper": null
+  },
+  {
+    "board": "orangecrab-spaced",
+    "previousRelease": "0.0.3268",
+    "latestRelease": "0.0.3269",
+    "previousSeconds": 263.178,
+    "latestSeconds": 263.854,
+    "sameStop": true,
+    "sameTraceCount": true,
+    "sameViaCount": true,
+    "identicalEmittedCopper": true
+  }
+]

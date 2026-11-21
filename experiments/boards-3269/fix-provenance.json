@@ -1,0 +1,15 @@
+{
+  "sourcePatchSha256": "996b5a8cb619db86f869bc5661354537ae4c001bca947291b827fdc2b5c191e0",
+  "files": [
+    {
+      "path": "node_modules/@tscircuit/core/dist/index.js",
+      "beforeSha256": "2fef07facd3535a3972f48d85abd625d09c81986f24b4e94ccf63e664ea8aea6",
+      "afterSha256": "3e3acae02d05c7cb71ea49dd296213e2839aad0b705c37be87ed25c01daf5b73"
+    },
+    {
+      "path": "node_modules/@tscircuit/core/dist/chunk-CP7OIOQG.js",
+      "beforeSha256": "8a33cd0fa46cfa103e99b3dd0cf24daede45fe3751685e1435c173728931793f",
+      "afterSha256": "326eb89aa14ee9c40180aa1215bedcd3a7d1eb2dff91323732d51ffba8c601fe"
+    }
+  ]
+}

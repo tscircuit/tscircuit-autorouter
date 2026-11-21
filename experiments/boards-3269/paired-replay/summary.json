@@ -1,0 +1,51 @@
+{
+  "environment": "Blacksmith 32-vCPU ARM Ubuntu 24.04; Bun 1.4.3; fresh process per render on the same machine per board",
+  "samples": [
+    {
+      "board": "icepi-native",
+      "run": 44906232480,
+      "order": [
+        "base",
+        "head",
+        "head",
+        "base"
+      ],
+      "beforeSeconds": 54.2241754075,
+      "afterSeconds": 28.42027041849999,
+      "durationReductionPercent": 47.58745484847143,
+      "beforeCpuSeconds": 60.278719,
+      "afterCpuSeconds": 34.2909365,
+      "identicalCircuitJson": true
+    },
+    {
+      "board": "h616-local",
+      "run": 44906232480,
+      "order": [
+        "base",
+        "head",
+        "head",
+        "base"
+      ],
+      "beforeSeconds": 45.18042351249999,
+      "afterSeconds": 44.6311751235,
+      "durationReductionPercent": 1.2156778230465903,
+      "beforeCpuSeconds": 58.568535,
+      "afterCpuSeconds": 57.7623835,
+      "identicalCircuitJson": true
+    },
+    {
+      "board": "orangecrab-local",
+      "run": 44906232480,
+      "order": [
+        "base",
+        "head"
+      ],
+      "beforeSeconds": 175.166634286,
+      "afterSeconds": 169.994259657,
+      "durationReductionPercent": 2.952830971539322,
+      "beforeCpuSeconds": 214.360179,
+      "afterCpuSeconds": 207.737552,
+      "identicalCircuitJson": true
+    }
+  ]
+}
