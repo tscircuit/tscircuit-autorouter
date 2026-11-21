@@ -1,4 +1,4 @@
-name: Uploaded boards with outline broad phase
+name: Uploaded boards with outline clearance broad phase
 on:
   workflow_dispatch:
 permissions:
@@ -20,14 +20,14 @@ jobs:
         working-directory: experiments/boards-3266/runtime
         run: bun install --frozen-lockfile
       - name: Apply exact embedded bus solver predicate replacement
-        run: python3 experiments/boards-3266/apply-outline-broad-phase.py
+        run: python3 experiments/boards-3266/apply-outline-clearance.py
       - name: Run all 19 original TSX boards through tscircuit
         env:
-          BOARD_VARIANT: outline-broad-phase
-          BOARD_FIX_PROVENANCE: experiments/boards-3266/outline-provenance.json
+          BOARD_VARIANT: outline-clearance
+          BOARD_FIX_PROVENANCE: experiments/boards-3266/outline-clearance-provenance.json
         run: python3 experiments/boards-3266/run.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: boards-tscircuit-3266-outline-broad-phase
+          name: boards-tscircuit-3266-outline-clearance
           path: board-benchmark-results
