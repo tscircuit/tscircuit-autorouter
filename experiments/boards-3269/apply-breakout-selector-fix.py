@@ -15,12 +15,11 @@ part=part.replace('this.add(breakoutPoint);','pendingBreakoutPoints.push(breakou
 assert part.endswith('    }\n  }\n')
 part=part[:-len('  }\n')]+'    this.addAll(pendingBreakoutPoints);\n  }\n'
 updated_index=s[:a]+part+s[b:]
-s=chunk.read_text();needle='  doInitialOptimizeSelectorCache() {\n    if (!this.isSubcircuit) return;'
+s=chunk.read_text();needle="""            if (ar) {
+              ar.push(port);"""
 assert s.count(needle)==1
-s=s.replace(needle,'  doInitialOptimizeSelectorCache() {\n    this._cachedSelectAllQueries.clear();\n    this._cachedSelectOneQueries.clear();\n    if (!this.isSubcircuit) return;')
-needle='  updateOptimizeSelectorCache() {\n    this._cachedSelectAllQueries.clear();\n    this._cachedSelectOneQueries.clear();\n    this.doInitialOptimizeSelectorCache();'
-assert s.count(needle)==1
-updated_chunk=s.replace(needle,'  updateOptimizeSelectorCache() {\n    this.doInitialOptimizeSelectorCache();')
+updated_chunk=s.replace(needle,"""            if (ar) {
+              if (!ar.includes(port)) ar.push(port);""")
 provenance={'sourcePatchSha256':hashlib.sha256(gzip.decompress(Path('experiments/boards-3269/breakout-selector.patch.gz').read_bytes())).hexdigest(),'files':[]}
 for p,updated in [(index,updated_index),(chunk,updated_chunk)]:
  before=hashlib.sha256(p.read_bytes()).hexdigest();temporary=p.with_suffix('.temporary.js');temporary.write_text(updated);temporary.replace(p)
