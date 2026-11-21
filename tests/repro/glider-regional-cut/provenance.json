@@ -1,0 +1,16 @@
+{
+  "board": "glider-local",
+  "tscircuit": "0.0.3273",
+  "autorouter": "0.0.1148",
+  "copperPours": false,
+  "capture": "Actual other_signals routing-stage input and accepted-neighbor context at new-cmn_78-651. The context was captured after earlier regional repairs; this test replays the selected node with the same original ports and preloaded copper on both revisions.",
+  "inputSha256": "72f2e33e85b9f817723a629112367f945a29bf570bb3fd1b6559dbf8f4a98924",
+  "originalCircuitSha256": "1d1a368cc4ad5e28ed170b7a68b0c0e7f26650318e711c49765b14b3cb7ab89f",
+  "source": {
+    "repo": "Modos-Labs/Glider",
+    "commit": "ed94ef7fd95a42cfdcdaf5e5da1dcdd709122763",
+    "path": "pcb/mainboard/pcb.kicad_pcb"
+  },
+  "license": "CERN-OHL-S-2.0.txt",
+  "modifications": "Converted source geometry to the uploaded local TSX variant; routed fresh with no copper pours, then captured this regional repair and ordinary Circuit JSON render."
+}
