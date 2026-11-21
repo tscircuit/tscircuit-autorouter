@@ -178,6 +178,7 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
       preservePhysicalGeometry: params.preservePhysicalGeometry,
       layerCount: params.layerCount,
       useGrowShrinkHighDensityIntraNodeSolver: true,
+      rejectOverlappingTerminals: params.preservePhysicalGeometry,
       preserveTerminalPcbPortIds: false,
       growShrinkFallbackToInvalidGeometryOnFailure: false,
       growShrinkSolutionValidator: (routes): boolean =>
