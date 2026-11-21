@@ -536,20 +536,14 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       "portPointPathingSolver",
       TinyHypergraphPortPointPathingSolver,
       (cms) => {
-        cms.preloadedTraceGraphSolver!.removeExcludedGapPorts(
-          cms.excludedGapKeys,
-        )
-        const sharedEdgeSegments =
-          cms.sharedEdgeSegmentsWithNecessaryCrampedPortPoints ??
-          cms.necessaryCrampedPortPointSolver?.getOutput() ??
-          cms.availableSegmentPointSolver!.getOutput()
         const { graph, connections } = buildHyperGraph({
           capacityMeshNodes: cms.capacityNodes!,
           layerCount: cms.srj.layerCount,
           connectivityMap: cms.connMap,
-          segmentPortPoints: sharedEdgeSegments.flatMap(
-            (seg) => seg.portPoints,
-          ),
+          segmentPortPoints:
+            cms.preloadedTraceGraphSolver!.getRoutablePortPoints(
+              cms.excludedGapKeys,
+            ),
           simpleRouteJsonConnections: cms.srjWithPointPairs!.connections,
           existingViaInPadByPcbPortId: getExistingViaInPadByPcbPortId(
             cms.srjWithPointPairs!,

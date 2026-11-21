@@ -24,10 +24,7 @@ import type {
   PortPointId,
 } from "./findConflictingGapKeys"
 
-type ClearanceGapPort = ClearanceGap & {
-  segment: SharedEdgeSegment
-  port: SegmentPortPoint
-}
+type ClearanceGapPort = ClearanceGap & { port: SegmentPortPoint }
 
 type RoutePoint = SimplifiedPcbTrace["route"][number]
 type WireRoutePoint = Extract<RoutePoint, { route_type: "wire" }>
@@ -503,21 +500,22 @@ export class PreloadedTraceGraphSolver extends BaseSolver {
         key: JSON.stringify([segment.nodeIds, z, [gapStart, gapEnd]]),
         start: gapStart,
         end: gapEnd,
-        segment,
         port,
       })
     }
   }
 
-  removeExcludedGapPorts(excludedGapKeys: ReadonlySet<ClearanceGapKey>): void {
-    if (excludedGapKeys.size === 0) return
-    for (const [portPointId, gap] of this.clearanceGapsByPortId) {
-      if (!excludedGapKeys.has(gap.key)) continue
-      gap.segment.portPoints = gap.segment.portPoints.filter(
-        (port) => port !== gap.port,
-      )
-      this.clearanceGapsByPortId.delete(portPointId)
+  getRoutablePortPoints(
+    excludedGapKeys: ReadonlySet<ClearanceGapKey>,
+  ): SegmentPortPoint[] {
+    const portPoints = this.getOutput().flatMap((segment) => segment.portPoints)
+    if (excludedGapKeys.size === 0) return portPoints
+
+    const excludedPorts = new Set<SegmentPortPoint>()
+    for (const gap of this.clearanceGapsByPortId.values()) {
+      if (excludedGapKeys.has(gap.key)) excludedPorts.add(gap.port)
     }
+    return portPoints.filter((port) => !excludedPorts.has(port))
   }
 
   getOutput(): SharedEdgeSegment[] {
