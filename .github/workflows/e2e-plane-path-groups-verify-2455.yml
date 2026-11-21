@@ -1,0 +1,118 @@
+name: Verify final source path group fix and repository checks
+on:
+  push:
+    branches: [analysis/e2e-plane-path-groups-verify-2455]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  replay:
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        sample: [icepi-original, butterstick-original, imx6-original, imx6-spaced]
+        repeat: [1, 2]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: 0d52936a9e1fef1d3ccda70c7ded962f9f904807
+          path: fanout-fix
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Install pinned current native dependencies
+        run: |
+          mkdir -p core/replay
+          cat > core/package.json <<'JSON'
+          {"name":"native-reuse-experiments","private":true,"type":"module","dependencies":{"@tscircuit/fanout-solver":"0.0.101","@tscircuit/capacity-autorouter":"0.0.1148","@tscircuit/checks":"0.0.282","graphics-debug":"0.0.99"}}
+          JSON
+          cd core
+          bun install --ignore-scripts
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 44960044216
+          name: full-circuit-interception-${{ matrix.sample }}
+          path: captures
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Replay equal inputs and compare complete plans, output and search histories
+        env:
+          SAMPLE: ${{ matrix.sample }}
+          TRIAL: ${{ matrix.repeat }}
+        run: |
+          cp core/node_modules/@tscircuit/fanout-solver/lib/route-bus/route-plane-terminated-bus.ts core/replay/original-plane.txt
+          cp core/node_modules/@tscircuit/fanout-solver/lib/route-bus/plane-endpoint.ts core/replay/original-endpoint.txt
+          cp core/node_modules/@tscircuit/fanout-solver/lib/route-bus/plan-static-clearance.ts core/replay/original-static.txt
+          cp core/node_modules/@tscircuit/fanout-solver/lib/route-bus/plan-mutual-clearance.ts core/replay/original-mutual.txt
+          cp fanout-fix/lib/route-bus/route-plane-terminated-bus.ts core/replay/fixed-plane.txt
+          cat > core/replay/run.ts <<'TS'
+          import { readFileSync, writeFileSync } from "node:fs"
+          import { gunzipSync } from "node:zlib"
+          const mode = process.argv[2]
+          const root = "../node_modules/@tscircuit/fanout-solver/lib/route-bus/"
+          let plane = readFileSync("original-plane.txt", "utf8")
+          const endpoint = readFileSync("original-endpoint.txt", "utf8")
+          const statics = readFileSync("original-static.txt", "utf8")
+          const mutual = readFileSync("original-mutual.txt", "utf8")
+          if (mode === "fixed_source") plane = readFileSync("fixed-plane.txt", "utf8")
+          writeFileSync(root + "route-plane-terminated-bus.ts", plane)
+          writeFileSync(root + "plane-endpoint.ts", endpoint)
+          writeFileSync(root + "plan-static-clearance.ts", statics)
+          writeFileSync(root + "plan-mutual-clearance.ts", mutual)
+          const { FanoutSolver } = await import("../node_modules/@tscircuit/fanout-solver/lib/fanout-solver")
+          const { validateRoutedCopperDrc } = await import("../node_modules/@tscircuit/fanout-solver/lib/validate-routed-copper-drc")
+          const sample = process.env.SAMPLE
+          const folder = "../../captures/" + sample
+          const report = JSON.parse(readFileSync(folder + "/report.json", "utf8"))
+          const record = report.solvers.find(entry => entry.name === "FanoutSolver")
+          const [input, options] = JSON.parse(gunzipSync(readFileSync(folder + "/solver-" + record.id + "-input.json.gz")).toString())
+          const solver = new FanoutSolver(input, options)
+          const start = performance.now()
+          solver.solve()
+          const best = Reflect.get(solver, "bestAttempt")
+          const output = best.outputSrj
+          const elapsedMs = performance.now() - start
+          const drc = validateRoutedCopperDrc({inputSrj:input, routedSrj:output, clearance:solver.config.clearance, allowBlindAndBuriedVias:solver.config.allowBlindAndBuriedVias})
+          if (!drc.valid) throw new Error("Native DRC failed")
+          const hash = (source: string) => new Bun.CryptoHasher("sha256").update(source).digest("hex")
+          const summary = {sample, mode, trial:process.env.TRIAL, elapsedMs, escapes:best.plans.length, vias:drc.checkedViaCount, assignments:solver.attempts.length, planeHash:hash(plane), endpointHash:hash(endpoint), staticHash:hash(statics), mutualHash:hash(mutual), fanoutVersion:"0.0.101"}
+          writeFileSync(mode + ".json", JSON.stringify({summary, plans:best.plans, output, attempts:solver.attempts}))
+          console.log("REUSE_CANDIDATE_RESULT", JSON.stringify(summary))
+          
+          TS
+          cd core/replay
+          bun run.ts before
+          bun run.ts fixed_source
+          bun run.ts before_repeat
+          python3 - <<'PY'
+          import json
+          modes=['before','fixed_source','before_repeat']
+          captures=[json.load(open(mode+'.json')) for mode in modes]
+          for entry in captures[1:]:
+              for field in ['plans','output','attempts']:assert entry[field]==captures[0][field],field+entry['summary']['mode']
+          print('REUSE_CANDIDATE_IDENTICAL',json.dumps([entry['summary'] for entry in captures]))
+          PY
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: 0d52936a9e1fef1d3ccda70c7ded962f9f904807
+          path: fanout
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Install exact repository lockfile
+        working-directory: fanout
+        run: bun install --frozen-lockfile
+      - name: Run repository typecheck
+        working-directory: fanout
+        run: bun run typecheck
+      - name: Check repository formatting without changes
+        working-directory: fanout
+        run: bun run format:check
