@@ -12,10 +12,12 @@ type SearchParams = ConstructorParameters<
 test("ButterStick regional route through-via clearance queries", (): void => {
   const { opts } = JSON.parse(
     gunzipSync(
-      readFileSync(
-        new URL(
-          "../fixtures/assets/butterstick-regional-via-search.json.gz",
-          import.meta.url,
+      new Uint8Array(
+        readFileSync(
+          new URL(
+            "../fixtures/assets/butterstick-regional-via-search.json.gz",
+            import.meta.url,
+          ),
         ),
       ),
     ).toString(),
