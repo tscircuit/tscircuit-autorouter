@@ -19,10 +19,15 @@ jobs:
       - name: Install latest tscircuit with frozen dependencies
         working-directory: experiments/boards-3273/runtime
         run: bun install --frozen-lockfile
+      - name: Apply the board-clip reuse candidate
+        run: python3 experiments/boards-3273/apply-board-clip-cache.py
       - name: Run all 19 original TSX boards through tscircuit
+        env:
+          BOARD_VARIANT: board-clip-cache
+          BOARD_FIX_PROVENANCE: board-clip-cache-provenance.json
         run: python3 experiments/boards-3273/run.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: boards-tscircuit-3273
+          name: boards-tscircuit-3273-board-clip-cache
           path: board-benchmark-results
