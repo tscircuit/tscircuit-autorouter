@@ -806,7 +806,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     return (node.z * this.gridHeight + yIndex) * this.gridWidth + xIndex
   }
 
-  getNeighbors(node: Node) {
+  getNeighbors(node: Node): Node[] {
     const neighbors: Node[] = []
     let sharedPlanarObstacleQuery: PlanarObstacleQuery | undefined
     let queriedPlanarNeighbors = false
