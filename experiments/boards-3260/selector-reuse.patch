@@ -1,0 +1,17 @@
+diff --git a/lib/components/base-components/PrimitiveComponent/PrimitiveComponent.ts b/lib/components/base-components/PrimitiveComponent/PrimitiveComponent.ts
+index b1f1209..6adac53 100644
+--- a/lib/components/base-components/PrimitiveComponent/PrimitiveComponent.ts
++++ b/lib/components/base-components/PrimitiveComponent/PrimitiveComponent.ts
+@@ -1372,11 +1372,7 @@ export abstract class PrimitiveComponent<
+     }
+     let result: PrimitiveComponent | null = null
+     if (options?.type) {
+-      const allMatching = selectAll(
+-        selector,
+-        this,
+-        cssSelectOptionsInsideSubcircuit,
+-      )
++      const allMatching = this.selectAll(selectorRaw)
+       const matchingComponents = allMatching.filter(
+         (n) => n.lowercaseComponentName === options.type,
+       )
