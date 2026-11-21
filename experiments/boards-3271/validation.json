@@ -54,7 +54,9 @@
       "afterAccepted": 11,
       "signalsPerCase": 47,
       "identicalValidationAndQualityMetrics": 11,
-      "artifacts": "am3352/artifacts.json"
+      "artifacts": "am3352/artifacts.json",
+      "optimizedRasterPathExercised": false,
+      "coverage": "All 11 AM3352 fixtures lack outlines, so they are controls for unrelated routing/matching behavior. The actual outline path is covered by the real TSX runs, focused and full-board SVG repros, and 3,407,392-cell shadow comparison."
     },
     "reproCiTests": {
       "repo": "tscircuit/bus-lanes-solver",

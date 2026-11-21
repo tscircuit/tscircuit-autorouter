@@ -1,0 +1,46 @@
+[
+  {
+    "sample": "control",
+    "outlineVertices": 0
+  },
+  {
+    "sample": "control-inner1",
+    "outlineVertices": 0
+  },
+  {
+    "sample": "right",
+    "outlineVertices": 0
+  },
+  {
+    "sample": "left",
+    "outlineVertices": 0
+  },
+  {
+    "sample": "above",
+    "outlineVertices": 0
+  },
+  {
+    "sample": "inner-layers",
+    "outlineVertices": 0
+  },
+  {
+    "sample": "inner-layers-right",
+    "outlineVertices": 0
+  },
+  {
+    "sample": "inner-layers-left",
+    "outlineVertices": 0
+  },
+  {
+    "sample": "inner-layers-above",
+    "outlineVertices": 0
+  },
+  {
+    "sample": "inner-layers-complete-ca",
+    "outlineVertices": 0
+  },
+  {
+    "sample": "outer-layers",
+    "outlineVertices": 0
+  }
+]
