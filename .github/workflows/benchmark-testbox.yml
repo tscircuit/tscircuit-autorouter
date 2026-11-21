@@ -19,12 +19,15 @@ jobs:
       - name: Install latest released tscircuit from frozen lockfile
         working-directory: experiments/boards-3273-no-pours/runtime
         run: bun install --frozen-lockfile
+      - name: Apply clearance padding to regional trace cuts
+        run: python3 experiments/boards-3273-no-pours/apply-regional-padding.py
       - name: Run all 19 TSX boards with default routing
         env:
-          BOARD_VARIANT: no-pours
+          BOARD_VARIANT: regional-padding
+          BOARD_FIX_PROVENANCE: experiments/boards-3273-no-pours/regional-padding-provenance.json
         run: python3 experiments/boards-3273-no-pours/run.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: boards-tscircuit-3273-no-pours
+          name: boards-tscircuit-3273-no-pours-regional-padding
           path: board-benchmark-results/

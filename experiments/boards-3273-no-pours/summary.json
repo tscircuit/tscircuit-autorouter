@@ -1,0 +1,25 @@
+{
+  "tscircuit": "0.0.3273",
+  "copperPours": false,
+  "planeNetSpecialHandling": false,
+  "boards": 19,
+  "settledWithRoutingErrors": 15,
+  "fullyRouted": 0,
+  "timeouts": [
+    "butterstick-local",
+    "butterstick-spaced",
+    "imx6-local",
+    "orangecrab-native"
+  ],
+  "blockingStages": {
+    "finish_native_surface_carriers": 2,
+    "fanout": 6,
+    "highDensityRouteSolver": 8,
+    "portPointPathingSolver": 3
+  },
+  "baselineRun": 44957123465,
+  "baselineCommit": "2cf78a0cb033ac05ec311e52f8043f39f30ad289",
+  "artifact": 14727907724,
+  "artifactSha256": "15d60d459c7f374692908c639c3113b8dd986b0e1b507c3b78f638b6bc73a8bd",
+  "interpretation": "Native variants now route power nets explicitly. Local/spaced variants already had no pours and retain their original full outputs. No completed board is fully routed. Matrix times are contended observations."
+}
