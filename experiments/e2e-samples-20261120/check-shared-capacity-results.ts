@@ -145,6 +145,10 @@ for (const sample of manifest.samples.map((entry: any) => entry.name.replace(/\.
       changedVias.push({ source: JSON.parse(source as string), before: { connection: (beforePlan as any).connectionName, bus: (beforePlan as any).busId, termination: (beforePlan as any).termination, sourceLayer: (beforePlan as any).sourceLayer, targetLayer: (beforePlan as any).targetLayer, vias: beforeVias, endpoints: captures[0].args[0].connections[(beforePlan as any).connectionIndex].pointsToConnect }, after: { connection: afterPlan.connectionName, bus: afterPlan.busId, termination: afterPlan.termination, sourceLayer: afterPlan.sourceLayer, targetLayer: afterPlan.targetLayer, vias: afterVias, endpoints: captures[1].args[0].connections[afterPlan.connectionIndex].pointsToConnect } })
     }
     Reflect.set(row, "changedViaConnections", changedVias)
+    Reflect.set(row, "fanoutRuleContexts", captures.map((capture) => {
+      const solver = new FanoutSolver(capture.args[0], capture.args[1])
+      return { mode: capture.mode, config: solver.config, options: capture.args[1], buses: solver.preparedBuses.filter((bus: any) => bus.busId === "DDR_BUS_byte1").map((bus: any) => ({ busId: bus.busId, direction: bus.direction, preferredExit: bus.preferredExit, allowedLayers: bus.allowedLayers, termination: bus.termination })) }
+    }))
   }
   rows.push(row)
 }
