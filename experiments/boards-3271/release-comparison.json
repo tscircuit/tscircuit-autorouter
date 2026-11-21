@@ -1,0 +1,173 @@
+[
+  {
+    "board": "butterstick-local",
+    "previousTscircuit": "0.0.3269 with merged selector fix",
+    "currentTscircuit": "0.0.3271",
+    "previousStop": "600-second render budget",
+    "currentStop": "600-second render budget",
+    "sameErrors": true,
+    "sameEmittedCopper": null
+  },
+  {
+    "board": "butterstick-native",
+    "previousTscircuit": "0.0.3269 with merged selector fix",
+    "currentTscircuit": "0.0.3271",
+    "previousStop": "settled",
+    "currentStop": "settled",
+    "sameErrors": true,
+    "sameEmittedCopper": true
+  },
+  {
+    "board": "butterstick-spaced",
+    "previousTscircuit": "0.0.3269 with merged selector fix",
+    "currentTscircuit": "0.0.3271",
+    "previousStop": "600-second render budget",
+    "currentStop": "600-second render budget",
+    "sameErrors": true,
+    "sameEmittedCopper": null
+  },
+  {
+    "board": "glider-local",
+    "previousTscircuit": "0.0.3269 with merged selector fix",
+    "currentTscircuit": "0.0.3271",
+    "previousStop": "settled",
+    "currentStop": "settled",
+    "sameErrors": true,
+    "sameEmittedCopper": true
+  },
+  {
+    "board": "glider-native",
+    "previousTscircuit": "0.0.3269 with merged selector fix",
+    "currentTscircuit": "0.0.3271",
+    "previousStop": "settled",
+    "currentStop": "settled",
+    "sameErrors": true,
+    "sameEmittedCopper": true
+  },
+  {
+    "board": "glider-spaced",
+    "previousTscircuit": "0.0.3269 with merged selector fix",
+    "currentTscircuit": "0.0.3271",
+    "previousStop": "settled",
+    "currentStop": "settled",
+    "sameErrors": true,
+    "sameEmittedCopper": true
+  },
+  {
+    "board": "h616-default-order-local",
+    "previousTscircuit": "0.0.3269 with merged selector fix",
+    "currentTscircuit": "0.0.3271",
+    "previousStop": "settled",
+    "currentStop": "settled",
+    "sameErrors": true,
+    "sameEmittedCopper": true
+  },
+  {
+    "board": "h616-local",
+    "previousTscircuit": "0.0.3269 with merged selector fix",
+    "currentTscircuit": "0.0.3271",
+    "previousStop": "settled",
+    "currentStop": "settled",
+    "sameErrors": true,
+    "sameEmittedCopper": true
+  },
+  {
+    "board": "h616-native",
+    "previousTscircuit": "0.0.3269 with merged selector fix",
+    "currentTscircuit": "0.0.3271",
+    "previousStop": "settled",
+    "currentStop": "settled",
+    "sameErrors": true,
+    "sameEmittedCopper": true
+  },
+  {
+    "board": "h616-spaced",
+    "previousTscircuit": "0.0.3269 with merged selector fix",
+    "currentTscircuit": "0.0.3271",
+    "previousStop": "settled",
+    "currentStop": "settled",
+    "sameErrors": true,
+    "sameEmittedCopper": true
+  },
+  {
+    "board": "icepi-local",
+    "previousTscircuit": "0.0.3269 with merged selector fix",
+    "currentTscircuit": "0.0.3271",
+    "previousStop": "settled",
+    "currentStop": "settled",
+    "sameErrors": true,
+    "sameEmittedCopper": true
+  },
+  {
+    "board": "icepi-native",
+    "previousTscircuit": "0.0.3269 with merged selector fix",
+    "currentTscircuit": "0.0.3271",
+    "previousStop": "settled",
+    "currentStop": "settled",
+    "sameErrors": true,
+    "sameEmittedCopper": true
+  },
+  {
+    "board": "icepi-spaced",
+    "previousTscircuit": "0.0.3269 with merged selector fix",
+    "currentTscircuit": "0.0.3271",
+    "previousStop": "settled",
+    "currentStop": "settled",
+    "sameErrors": true,
+    "sameEmittedCopper": true
+  },
+  {
+    "board": "imx6-local",
+    "previousTscircuit": "0.0.3269 with merged selector fix",
+    "currentTscircuit": "0.0.3271",
+    "previousStop": "600-second render budget",
+    "currentStop": "600-second render budget",
+    "sameErrors": true,
+    "sameEmittedCopper": null
+  },
+  {
+    "board": "imx6-native",
+    "previousTscircuit": "0.0.3269 with merged selector fix",
+    "currentTscircuit": "0.0.3271",
+    "previousStop": "settled",
+    "currentStop": "settled",
+    "sameErrors": true,
+    "sameEmittedCopper": true
+  },
+  {
+    "board": "imx6-spaced",
+    "previousTscircuit": "0.0.3269 with merged selector fix",
+    "currentTscircuit": "0.0.3271",
+    "previousStop": "settled",
+    "currentStop": "settled",
+    "sameErrors": true,
+    "sameEmittedCopper": true
+  },
+  {
+    "board": "orangecrab-local",
+    "previousTscircuit": "0.0.3269 with merged selector fix",
+    "currentTscircuit": "0.0.3271",
+    "previousStop": "settled",
+    "currentStop": "settled",
+    "sameErrors": true,
+    "sameEmittedCopper": true
+  },
+  {
+    "board": "orangecrab-native",
+    "previousTscircuit": "0.0.3269 with merged selector fix",
+    "currentTscircuit": "0.0.3271",
+    "previousStop": "600-second render budget",
+    "currentStop": "600-second render budget",
+    "sameErrors": true,
+    "sameEmittedCopper": null
+  },
+  {
+    "board": "orangecrab-spaced",
+    "previousTscircuit": "0.0.3269 with merged selector fix",
+    "currentTscircuit": "0.0.3271",
+    "previousStop": "settled",
+    "currentStop": "settled",
+    "sameErrors": true,
+    "sameEmittedCopper": true
+  }
+]

@@ -4,30 +4,32 @@ on:
 permissions:
   contents: read
 jobs:
-  boards:
+  replay:
     runs-on: blacksmith-32vcpu-ubuntu-2404-arm
-    timeout-minutes: 30
+    timeout-minutes: 50
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        board: [h616-local, orangecrab-local, icepi-native]
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.4.3
-      - name: Unpack original board sources
+      - name: Unpack original frozen sources
         run: |
           mkdir -p experiments/boards-3271/runtime
           unzip -q experiments/boards-3271/boards.zip -d experiments/boards-3271/runtime
-      - name: Install latest tscircuit with frozen dependencies
+      - name: Install once before measuring either revision
         working-directory: experiments/boards-3271/runtime
         run: bun install --frozen-lockfile
-      - name: Apply the row-rasterization candidate
-        run: python3 experiments/boards-3271/apply-board-grid-fix.py
-      - name: Run all 19 original TSX boards through tscircuit
+      - name: Run base-head-head-base in fresh processes on the same machine
         env:
-          BOARD_VARIANT: row-grid
-          BOARD_FIX_PROVENANCE: board-grid-fix-provenance.json
-        run: python3 experiments/boards-3271/run.py
+          BOARD_SAMPLE: ${{ matrix.board }}
+        run: python3 experiments/boards-3271/replay-paired.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: boards-tscircuit-3271-row-grid
-          path: board-benchmark-results
+          name: paired-row-grid-${{ matrix.board }}
+          path: paired-results/
