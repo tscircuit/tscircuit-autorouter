@@ -13,7 +13,7 @@ type RegionalParams = ConstructorParameters<
   typeof Pipeline9RegionalFallbackSolver
 >[0]
 
-test("ButterStick regional repair retains search diagnostics by default", (): void => {
+test("ButterStick regional repair omits search diagnostics by default", (): void => {
   const { params } = JSON.parse(
     gunzipSync(
       new Uint8Array(
@@ -50,7 +50,7 @@ test("ButterStick regional repair retains search diagnostics by default", (): vo
     (count, search) => count + search.debug_exploredNodesOrdered.length,
     0,
   )
-  expect(retainedNodes).toBeGreaterThan(0)
+  expect(retainedNodes).toBe(0)
 
   const node = params.nodeWithPortPoints
   const graphics = convertSrjToGraphicsObject({

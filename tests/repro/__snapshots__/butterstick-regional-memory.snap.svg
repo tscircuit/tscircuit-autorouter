@@ -41,4 +41,4 @@
               document.currentScript.parentElement.addEventListener('mouseleave', () => {
                 document.currentScript.parentElement.getElementById('crosshair').style.display = 'none';
               });
-            ]]></script><g data-testid="retained-search-nodes"><rect x="12" y="12" width="610" height="44" rx="6" fill="white" stroke="#172554"/><text x="24" y="40" font-family="Arial, sans-serif" font-size="19" fill="#172554">Retained diagnostic nodes: 1688757</text></g></svg>
+            ]]></script><g data-testid="retained-search-nodes"><rect x="12" y="12" width="610" height="44" rx="6" fill="white" stroke="#172554"/><text x="24" y="40" font-family="Arial, sans-serif" font-size="19" fill="#172554">Retained diagnostic nodes: 0</text></g></svg>
