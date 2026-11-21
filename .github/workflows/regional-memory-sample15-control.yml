@@ -1,0 +1,44 @@
+name: Check sample15 memory with reversed order
+on:
+  push:
+    branches: [analysis/regional-memory-sample15-control]
+    paths: [.github/workflows/regional-memory-sample15-control.yml]
+permissions:
+  contents: read
+jobs:
+  benchmark:
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 05d4c3a4fde5e1be28a3f126dcb77d36ef804a30
+          path: candidate
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: 87c5bb0b065c3188dd1bfab0e3210f738ee27811
+          path: baseline
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.4.2'
+      - name: Install both source revisions
+        run: |
+          (cd candidate && bun install)
+          (cd baseline && bun install)
+      - name: Run the candidate first, then the baseline
+        env:
+          BENCHMARK_TASK_TIMEOUT_PER_EFFORT_MS: '60000'
+          BENCHMARK_HEARTBEAT_INTERVAL_MS: '30000'
+          BENCHMARK_TERMINATE_TIMEOUT_MS: '1000'
+        run: |
+          for revision in candidate baseline; do
+            (cd "$revision" && bash ./benchmark.sh --dataset srj18 --sample-numbers 15 --concurrency 1 --threads 1)
+            cp "$revision/benchmark-result.json" "$revision-result.json"
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: sample15-reverse-order
+          path: '*-result.json'
