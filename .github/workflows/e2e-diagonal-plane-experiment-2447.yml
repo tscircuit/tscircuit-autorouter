@@ -1,0 +1,81 @@
+name: Try continued diagonal plane escapes on current captures
+on:
+  push:
+    branches: [analysis/e2e-diagonal-plane-experiment-2447]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  replay:
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        sample: [icepi-original, butterstick-original, imx6-original, imx6-spaced, glider-original]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Install pinned native routing dependencies
+        run: |
+          mkdir -p core/replay
+          cat > core/package.json <<'JSON'
+          {"name":"fanout-current-capture-replay","private":true,"type":"module","dependencies":{"@tscircuit/fanout-solver":"0.0.97","@tscircuit/capacity-autorouter":"0.0.1145","@tscircuit/checks":"0.0.282","graphics-debug":"0.0.99"}}
+          JSON
+          cd core
+          bun install --ignore-scripts
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 44904481212
+          name: full-circuit-interception-${{ matrix.sample }}
+          path: captures
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Replay equal inputs and compare actual copper and search histories
+        env:
+          SAMPLE: ${{ matrix.sample }}
+        run: |
+          cp core/node_modules/@tscircuit/fanout-solver/lib/route-bus/plan-mutual-clearance.ts core/replay/original-mutual.txt
+          cat > core/replay/run.ts <<'TS'
+          import { readFileSync, writeFileSync } from "node:fs"
+          import { gunzipSync } from "node:zlib"
+          const mode = process.argv[2]
+          let source = readFileSync("original-mutual.txt", "utf8")
+          const original = source
+          const sourcePath = "../node_modules/@tscircuit/fanout-solver/lib/route-bus/get-plane-source-escape-paths.ts"
+          let planeSource = readFileSync(sourcePath, "utf8")
+          if (mode === "diagonal") {
+            const anchor = "  return sourceEscapePaths"
+            if (!planeSource.includes(anchor)) throw new Error("Missing source escape return")
+            planeSource = planeSource.replace(anchor, "  // Continue diagonal pad escapes to farther interstices when the first via\n  // cannot clear the surrounding pads.\n  if (viaHandedness !== 0) {\n    for (let step = 1; step <= maximumEscapeSteps; step++) {\n      const axis = adjacentAxis + sign * step * directionPitch\n      const escapeDistance = Math.abs(axis - getAxis(sourcePoint, direction))\n      const viaPoint = makePoint({\n        axis,\n        perpendicularAxis:\n          getPerpendicularAxis(sourcePoint, direction) +\n          viaHandedness * escapeDistance,\n        direction,\n      })\n      sourceEscapePaths.push([sourcePoint, viaPoint])\n    }\n  }\n" + anchor)
+            writeFileSync(sourcePath, planeSource)
+          }
+          const { FanoutSolver } = await import("../node_modules/@tscircuit/fanout-solver/lib/fanout-solver")
+          const { validateRoutedCopperDrc } = await import("../node_modules/@tscircuit/fanout-solver/lib/validate-routed-copper-drc")
+          const sample = process.env.SAMPLE
+          const folder = "../../captures/" + sample
+          const report = JSON.parse(readFileSync(folder + "/report.json", "utf8"))
+          const record = report.solvers.find((entry) => entry.name === "FanoutSolver")
+          const [input, options] = JSON.parse(gunzipSync(readFileSync(folder + "/solver-" + record.id + "-input.json.gz")).toString())
+          const solver = new FanoutSolver(input, options)
+          const start = performance.now()
+          solver.solve()
+          const best = Reflect.get(solver, "bestAttempt")
+          const output = best.outputSrj
+          const elapsedMs = performance.now() - start
+          const drc = validateRoutedCopperDrc({ inputSrj: input, routedSrj: output, clearance: solver.config.clearance, allowBlindAndBuriedVias: solver.config.allowBlindAndBuriedVias })
+          if (!drc.valid) throw new Error("Native DRC failed")
+          const summary = { sample, mode, elapsedMs, escapes: best.plans.length, vias: drc.checkedViaCount, assignments: solver.attempts.length, sourceSha256: new Bun.CryptoHasher("sha256").update(source).digest("hex") }
+          writeFileSync(mode + ".json", JSON.stringify({ summary, plans: best.plans, output, attempts: solver.attempts }))
+          console.log("DIAGONAL_RESULT", JSON.stringify(summary))
+          TS
+          cd core/replay
+          bun run.ts before
+          bun run.ts diagonal
+          python3 - <<'PY'
+          import json
+          before=json.load(open('before.json'))
+          after=json.load(open('diagonal.json'))
+          print('DIAGONAL_COMPARISON',json.dumps([before['summary'],after['summary']]))
+          PY
