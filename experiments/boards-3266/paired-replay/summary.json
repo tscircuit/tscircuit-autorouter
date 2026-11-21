@@ -1,0 +1,171 @@
+{
+  "run": 44879258962,
+  "runtime": "Bun 1.4.3, one board at a time on the same blacksmith-32vcpu-ubuntu-2404-arm runner; each trial is a fresh process",
+  "renderBudgetSeconds": 600,
+  "boards": [
+    {
+      "board": "glider-local",
+      "run": 44879258962,
+      "order": [
+        "base",
+        "head",
+        "head",
+        "base"
+      ],
+      "sameMachine": true,
+      "allCircuitJsonsIdentical": true,
+      "trials": [
+        {
+          "board": "glider-local",
+          "variant": "base",
+          "ordinal": 1,
+          "exit": 0,
+          "stop": "settled",
+          "seconds": 355.62373238600003,
+          "coreEntrySha256": "302ea2a78c747edf4f2db67b2a27269b0e1b3b018116b8905ba4645b057f4371",
+          "circuitSha256": "706efc1db7d5650404c4a4728ac8eea0536a06e63b15fc84ace723811d845237",
+          "cpu": {
+            "user": 388853127,
+            "system": 14582526
+          }
+        },
+        {
+          "board": "glider-local",
+          "variant": "head",
+          "ordinal": 2,
+          "exit": 0,
+          "stop": "settled",
+          "seconds": 294.60475335900003,
+          "coreEntrySha256": "63e7e919a27a88eade722eaf3eaf6ceed99e0edad9f6f58a8475c4755978c99e",
+          "circuitSha256": "706efc1db7d5650404c4a4728ac8eea0536a06e63b15fc84ace723811d845237",
+          "cpu": {
+            "user": 326690101,
+            "system": 14011186
+          }
+        },
+        {
+          "board": "glider-local",
+          "variant": "head",
+          "ordinal": 3,
+          "exit": 0,
+          "stop": "settled",
+          "seconds": 290.07348185499995,
+          "coreEntrySha256": "63e7e919a27a88eade722eaf3eaf6ceed99e0edad9f6f58a8475c4755978c99e",
+          "circuitSha256": "706efc1db7d5650404c4a4728ac8eea0536a06e63b15fc84ace723811d845237",
+          "cpu": {
+            "user": 323500830,
+            "system": 13794406
+          }
+        },
+        {
+          "board": "glider-local",
+          "variant": "base",
+          "ordinal": 4,
+          "exit": 0,
+          "stop": "settled",
+          "seconds": 343.88951054000006,
+          "coreEntrySha256": "302ea2a78c747edf4f2db67b2a27269b0e1b3b018116b8905ba4645b057f4371",
+          "circuitSha256": "706efc1db7d5650404c4a4728ac8eea0536a06e63b15fc84ace723811d845237",
+          "cpu": {
+            "user": 374296110,
+            "system": 14302930
+          }
+        }
+      ],
+      "base": {
+        "meanWallSeconds": 349.75662146300004,
+        "minWallSeconds": 343.88951054000006,
+        "maxWallSeconds": 355.62373238600003,
+        "meanCpuSeconds": 396.01734650000003
+      },
+      "head": {
+        "meanWallSeconds": 292.339117607,
+        "minWallSeconds": 290.07348185499995,
+        "maxWallSeconds": 294.60475335900003,
+        "meanCpuSeconds": 338.9982615
+      }
+    },
+    {
+      "board": "icepi-spaced",
+      "run": 44879258962,
+      "order": [
+        "base",
+        "head",
+        "head",
+        "base"
+      ],
+      "sameMachine": true,
+      "allCircuitJsonsIdentical": true,
+      "trials": [
+        {
+          "board": "icepi-spaced",
+          "variant": "base",
+          "ordinal": 1,
+          "exit": 0,
+          "stop": "settled",
+          "seconds": 308.093181463,
+          "coreEntrySha256": "302ea2a78c747edf4f2db67b2a27269b0e1b3b018116b8905ba4645b057f4371",
+          "circuitSha256": "82d0321b6f3c37d1658f032414910551ad3e457497e79eb1721182fb07f1b305",
+          "cpu": {
+            "user": 353860352,
+            "system": 17213725
+          }
+        },
+        {
+          "board": "icepi-spaced",
+          "variant": "head",
+          "ordinal": 2,
+          "exit": 0,
+          "stop": "settled",
+          "seconds": 309.269875595,
+          "coreEntrySha256": "63e7e919a27a88eade722eaf3eaf6ceed99e0edad9f6f58a8475c4755978c99e",
+          "circuitSha256": "82d0321b6f3c37d1658f032414910551ad3e457497e79eb1721182fb07f1b305",
+          "cpu": {
+            "user": 350493423,
+            "system": 17393452
+          }
+        },
+        {
+          "board": "icepi-spaced",
+          "variant": "head",
+          "ordinal": 3,
+          "exit": 0,
+          "stop": "settled",
+          "seconds": 307.41885762799996,
+          "coreEntrySha256": "63e7e919a27a88eade722eaf3eaf6ceed99e0edad9f6f58a8475c4755978c99e",
+          "circuitSha256": "82d0321b6f3c37d1658f032414910551ad3e457497e79eb1721182fb07f1b305",
+          "cpu": {
+            "user": 348166014,
+            "system": 17899267
+          }
+        },
+        {
+          "board": "icepi-spaced",
+          "variant": "base",
+          "ordinal": 4,
+          "exit": 0,
+          "stop": "settled",
+          "seconds": 308.67331217700007,
+          "coreEntrySha256": "302ea2a78c747edf4f2db67b2a27269b0e1b3b018116b8905ba4645b057f4371",
+          "circuitSha256": "82d0321b6f3c37d1658f032414910551ad3e457497e79eb1721182fb07f1b305",
+          "cpu": {
+            "user": 349514566,
+            "system": 20357046
+          }
+        }
+      ],
+      "base": {
+        "meanWallSeconds": 308.38324682000007,
+        "minWallSeconds": 308.093181463,
+        "maxWallSeconds": 308.67331217700007,
+        "meanCpuSeconds": 370.4728445
+      },
+      "head": {
+        "meanWallSeconds": 308.34436661149994,
+        "minWallSeconds": 307.41885762799996,
+        "maxWallSeconds": 309.269875595,
+        "meanCpuSeconds": 366.97607800000003
+      }
+    }
+  ]
+}

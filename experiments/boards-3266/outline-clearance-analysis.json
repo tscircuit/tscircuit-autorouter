@@ -1,0 +1,1621 @@
+{
+  "runtimeBefore": {
+    "tscircuit": {
+      "version": "0.0.3266",
+      "entrySha256": "cfd669f2d96ac77eb054aab53ff34a80120bcd3db72b87f969b3d8b8d2af78a3"
+    },
+    "@tscircuit/core": {
+      "version": "0.0.2443",
+      "entrySha256": "302ea2a78c747edf4f2db67b2a27269b0e1b3b018116b8905ba4645b057f4371"
+    },
+    "@tscircuit/fanout-solver": {
+      "version": "0.0.96",
+      "entrySha256": "ee06af452060e90d70c49f00a37cf516638f7649817fc4e94decb39da4d07cf9"
+    },
+    "@tscircuit/capacity-autorouter": {
+      "version": "0.0.1143",
+      "entrySha256": "23dfc01cb529e7ec243abf25513f6305da9a2b9756cfffec215b5bf523bbc899"
+    }
+  },
+  "runtimeAfter": {
+    "tscircuit": {
+      "version": "0.0.3266",
+      "entrySha256": "cfd669f2d96ac77eb054aab53ff34a80120bcd3db72b87f969b3d8b8d2af78a3"
+    },
+    "@tscircuit/core": {
+      "version": "0.0.2443",
+      "entrySha256": "63e7e919a27a88eade722eaf3eaf6ceed99e0edad9f6f58a8475c4755978c99e"
+    },
+    "@tscircuit/fanout-solver": {
+      "version": "0.0.96",
+      "entrySha256": "ee06af452060e90d70c49f00a37cf516638f7649817fc4e94decb39da4d07cf9"
+    },
+    "@tscircuit/capacity-autorouter": {
+      "version": "0.0.1143",
+      "entrySha256": "23dfc01cb529e7ec243abf25513f6305da9a2b9756cfffec215b5bf523bbc899"
+    }
+  },
+  "baselineRun": 44876682145,
+  "fixRun": 44877875894,
+  "patchProvenance": {
+    "coreBaseVersion": "0.0.2443",
+    "busLanesBaseVersion": "0.0.62",
+    "busLanesBaseCommit": "202b034",
+    "method": "Replace only the compiled outline-clearance predicate corresponding to outline-clearance.patch. Every other released dependency and byte is retained.",
+    "entryBeforeSha256": "302ea2a78c747edf4f2db67b2a27269b0e1b3b018116b8905ba4645b057f4371",
+    "entryAfterSha256": "63e7e919a27a88eade722eaf3eaf6ceed99e0edad9f6f58a8475c4755978c99e",
+    "sourcePatchSha256": "486d9c8e2f7cab36142beb489b17ddd1e385d4a061e4c9717ac88ce25ab7d0bb"
+  },
+  "setupDefinition": "Time from observer preload to the first autorouting:start event in the full original TSX render.",
+  "budgetPerBoardSeconds": 600,
+  "parallelBoards": 19,
+  "runner": "blacksmith-32vcpu-ubuntu-2404-arm",
+  "beforeSettled": 15,
+  "afterSettled": 15,
+  "comparableCircuits": 15,
+  "identicalCircuitJsons": 15,
+  "identicalCopper": 15,
+  "unchangedErrorCounts": 15,
+  "sharedRoutingInputs": 46,
+  "changedRoutingInputs": [],
+  "firstRouteTimeBeforeSum": 609.987,
+  "firstRouteTimeAfterSum": 624.049,
+  "firstRouteMedianSpeedup": 0.9924996394057407,
+  "comparableRenderBeforeSum": 3541.157,
+  "comparableRenderAfterSum": 3377.5750000000003,
+  "boards": [
+    {
+      "board": "butterstick-local",
+      "beforeSeconds": 600.293,
+      "afterSeconds": 600.2,
+      "beforeStop": "600-second render budget",
+      "afterStop": "600-second render budget",
+      "beforeFirstRouteSeconds": 45.727,
+      "afterFirstRouteSeconds": 44.927,
+      "setupSecondsSaved": 0.8,
+      "beforeTraces": null,
+      "afterTraces": null,
+      "beforeVias": null,
+      "afterVias": null,
+      "circuitJsonIdentical": null,
+      "copperIdentical": null,
+      "errorCountsIdentical": null
+    },
+    {
+      "board": "butterstick-native",
+      "beforeSeconds": 222.217,
+      "afterSeconds": 228.572,
+      "beforeStop": "settled",
+      "afterStop": "settled",
+      "beforeFirstRouteSeconds": 67.984,
+      "afterFirstRouteSeconds": 73.336,
+      "setupSecondsSaved": -5.352,
+      "beforeTraces": 0,
+      "afterTraces": 0,
+      "beforeVias": 0,
+      "afterVias": 0,
+      "circuitJsonIdentical": true,
+      "copperIdentical": true,
+      "errorCountsIdentical": true,
+      "fanoutSearchIdentical": true
+    },
+    {
+      "board": "butterstick-spaced",
+      "beforeSeconds": 600.348,
+      "afterSeconds": 600.37,
+      "beforeStop": "600-second render budget",
+      "afterStop": "600-second render budget",
+      "beforeFirstRouteSeconds": 21.785,
+      "afterFirstRouteSeconds": 21.378,
+      "setupSecondsSaved": 0.407,
+      "beforeTraces": null,
+      "afterTraces": null,
+      "beforeVias": null,
+      "afterVias": null,
+      "circuitJsonIdentical": null,
+      "copperIdentical": null,
+      "errorCountsIdentical": null
+    },
+    {
+      "board": "glider-local",
+      "beforeSeconds": 376.957,
+      "afterSeconds": 319.79,
+      "beforeStop": "settled",
+      "afterStop": "settled",
+      "beforeFirstRouteSeconds": 49.607,
+      "afterFirstRouteSeconds": 47.502,
+      "setupSecondsSaved": 2.105,
+      "beforeTraces": 53,
+      "afterTraces": 53,
+      "beforeVias": 100,
+      "afterVias": 100,
+      "circuitJsonIdentical": true,
+      "copperIdentical": true,
+      "errorCountsIdentical": true
+    },
+    {
+      "board": "glider-native",
+      "beforeSeconds": 304.251,
+      "afterSeconds": 306.552,
+      "beforeStop": "settled",
+      "afterStop": "settled",
+      "beforeFirstRouteSeconds": 52.672,
+      "afterFirstRouteSeconds": 54.353,
+      "setupSecondsSaved": -1.681,
+      "beforeTraces": 0,
+      "afterTraces": 0,
+      "beforeVias": 0,
+      "afterVias": 0,
+      "circuitJsonIdentical": true,
+      "copperIdentical": true,
+      "errorCountsIdentical": true,
+      "fanoutSearchIdentical": true
+    },
+    {
+      "board": "glider-spaced",
+      "beforeSeconds": 174.677,
+      "afterSeconds": 175.879,
+      "beforeStop": "settled",
+      "afterStop": "settled",
+      "beforeFirstRouteSeconds": 22.841,
+      "afterFirstRouteSeconds": 23.292,
+      "setupSecondsSaved": -0.45,
+      "beforeTraces": 16,
+      "afterTraces": 16,
+      "beforeVias": 30,
+      "afterVias": 30,
+      "circuitJsonIdentical": true,
+      "copperIdentical": true,
+      "errorCountsIdentical": true
+    },
+    {
+      "board": "h616-default-order-local",
+      "beforeSeconds": 46.482,
+      "afterSeconds": 34.863,
+      "beforeStop": "settled",
+      "afterStop": "settled",
+      "beforeFirstRouteSeconds": 8.242,
+      "afterFirstRouteSeconds": 8.218,
+      "setupSecondsSaved": 0.024,
+      "beforeTraces": 16,
+      "afterTraces": 16,
+      "beforeVias": 32,
+      "afterVias": 32,
+      "circuitJsonIdentical": true,
+      "copperIdentical": true,
+      "errorCountsIdentical": true
+    },
+    {
+      "board": "h616-local",
+      "beforeSeconds": 70.108,
+      "afterSeconds": 55.055,
+      "beforeStop": "settled",
+      "afterStop": "settled",
+      "beforeFirstRouteSeconds": 8.385,
+      "afterFirstRouteSeconds": 8.39,
+      "setupSecondsSaved": -0.005,
+      "beforeTraces": 16,
+      "afterTraces": 16,
+      "beforeVias": 32,
+      "afterVias": 32,
+      "circuitJsonIdentical": true,
+      "copperIdentical": true,
+      "errorCountsIdentical": true
+    },
+    {
+      "board": "h616-native",
+      "beforeSeconds": 376.751,
+      "afterSeconds": 371.038,
+      "beforeStop": "settled",
+      "afterStop": "settled",
+      "beforeFirstRouteSeconds": 13.73,
+      "afterFirstRouteSeconds": 12.554,
+      "setupSecondsSaved": 1.176,
+      "beforeTraces": 0,
+      "afterTraces": 0,
+      "beforeVias": 0,
+      "afterVias": 0,
+      "circuitJsonIdentical": true,
+      "copperIdentical": true,
+      "errorCountsIdentical": true,
+      "fanoutSearchIdentical": true
+    },
+    {
+      "board": "h616-spaced",
+      "beforeSeconds": 35.623,
+      "afterSeconds": 33.609,
+      "beforeStop": "settled",
+      "afterStop": "settled",
+      "beforeFirstRouteSeconds": 6.881,
+      "afterFirstRouteSeconds": 6.933,
+      "setupSecondsSaved": -0.052,
+      "beforeTraces": 16,
+      "afterTraces": 16,
+      "beforeVias": 32,
+      "afterVias": 32,
+      "circuitJsonIdentical": true,
+      "copperIdentical": true,
+      "errorCountsIdentical": true
+    },
+    {
+      "board": "icepi-local",
+      "beforeSeconds": 251.882,
+      "afterSeconds": 202.103,
+      "beforeStop": "settled",
+      "afterStop": "settled",
+      "beforeFirstRouteSeconds": 35.876,
+      "afterFirstRouteSeconds": 37.382,
+      "setupSecondsSaved": -1.506,
+      "beforeTraces": 16,
+      "afterTraces": 16,
+      "beforeVias": 30,
+      "afterVias": 30,
+      "circuitJsonIdentical": true,
+      "copperIdentical": true,
+      "errorCountsIdentical": true
+    },
+    {
+      "board": "icepi-native",
+      "beforeSeconds": 100.2,
+      "afterSeconds": 104.46,
+      "beforeStop": "settled",
+      "afterStop": "settled",
+      "beforeFirstRouteSeconds": 55.482,
+      "afterFirstRouteSeconds": 57.793,
+      "setupSecondsSaved": -2.311,
+      "beforeTraces": 0,
+      "afterTraces": 0,
+      "beforeVias": 0,
+      "afterVias": 0,
+      "circuitJsonIdentical": true,
+      "copperIdentical": true,
+      "errorCountsIdentical": true,
+      "fanoutSearchIdentical": true
+    },
+    {
+      "board": "icepi-spaced",
+      "beforeSeconds": 342.932,
+      "afterSeconds": 363.569,
+      "beforeStop": "settled",
+      "afterStop": "settled",
+      "beforeFirstRouteSeconds": 15.863,
+      "afterFirstRouteSeconds": 15.136,
+      "setupSecondsSaved": 0.727,
+      "beforeTraces": 52,
+      "afterTraces": 52,
+      "beforeVias": 98,
+      "afterVias": 98,
+      "circuitJsonIdentical": true,
+      "copperIdentical": true,
+      "errorCountsIdentical": true
+    },
+    {
+      "board": "imx6-local",
+      "beforeSeconds": 600.384,
+      "afterSeconds": 600.543,
+      "beforeStop": "600-second render budget",
+      "afterStop": "600-second render budget",
+      "beforeFirstRouteSeconds": 33.037,
+      "afterFirstRouteSeconds": 34.475,
+      "setupSecondsSaved": -1.438,
+      "beforeTraces": null,
+      "afterTraces": null,
+      "beforeVias": null,
+      "afterVias": null,
+      "circuitJsonIdentical": null,
+      "copperIdentical": null,
+      "errorCountsIdentical": null
+    },
+    {
+      "board": "imx6-native",
+      "beforeSeconds": 190.153,
+      "afterSeconds": 195.215,
+      "beforeStop": "settled",
+      "afterStop": "settled",
+      "beforeFirstRouteSeconds": 104.458,
+      "afterFirstRouteSeconds": 109.378,
+      "setupSecondsSaved": -4.921,
+      "beforeTraces": 0,
+      "afterTraces": 0,
+      "beforeVias": 0,
+      "afterVias": 0,
+      "circuitJsonIdentical": true,
+      "copperIdentical": true,
+      "errorCountsIdentical": true,
+      "fanoutSearchIdentical": true
+    },
+    {
+      "board": "imx6-spaced",
+      "beforeSeconds": 541.669,
+      "afterSeconds": 527.392,
+      "beforeStop": "settled",
+      "afterStop": "settled",
+      "beforeFirstRouteSeconds": 26.483,
+      "afterFirstRouteSeconds": 26.544,
+      "setupSecondsSaved": -0.061,
+      "beforeTraces": 17,
+      "afterTraces": 17,
+      "beforeVias": 30,
+      "afterVias": 30,
+      "circuitJsonIdentical": true,
+      "copperIdentical": true,
+      "errorCountsIdentical": true
+    },
+    {
+      "board": "orangecrab-local",
+      "beforeSeconds": 244.308,
+      "afterSeconds": 198.235,
+      "beforeStop": "settled",
+      "afterStop": "settled",
+      "beforeFirstRouteSeconds": 19.2,
+      "afterFirstRouteSeconds": 19.324,
+      "setupSecondsSaved": -0.123,
+      "beforeTraces": 52,
+      "afterTraces": 52,
+      "beforeVias": 93,
+      "afterVias": 93,
+      "circuitJsonIdentical": true,
+      "copperIdentical": true,
+      "errorCountsIdentical": true
+    },
+    {
+      "board": "orangecrab-native",
+      "beforeSeconds": 600.261,
+      "afterSeconds": 600.268,
+      "beforeStop": "600-second render budget",
+      "afterStop": "600-second render budget",
+      "beforeFirstRouteSeconds": 13.274,
+      "afterFirstRouteSeconds": 14.485,
+      "setupSecondsSaved": -1.211,
+      "beforeTraces": null,
+      "afterTraces": null,
+      "beforeVias": null,
+      "afterVias": null,
+      "circuitJsonIdentical": null,
+      "copperIdentical": null,
+      "errorCountsIdentical": null
+    },
+    {
+      "board": "orangecrab-spaced",
+      "beforeSeconds": 262.947,
+      "afterSeconds": 261.243,
+      "beforeStop": "settled",
+      "afterStop": "settled",
+      "beforeFirstRouteSeconds": 8.46,
+      "afterFirstRouteSeconds": 8.649,
+      "setupSecondsSaved": -0.189,
+      "beforeTraces": 52,
+      "afterTraces": 52,
+      "beforeVias": 106,
+      "afterVias": 106,
+      "circuitJsonIdentical": true,
+      "copperIdentical": true,
+      "errorCountsIdentical": true
+    }
+  ],
+  "finalFixRepository": "tscircuit/bus-lanes-solver",
+  "finalFixCommit": "cef688a181d401913384d2afdbdbdcc5abb70679",
+  "reproCommit": "e16fabec258bc7fbac25a13e8dd2b97ecd0da47f",
+  "reproPr": 226,
+  "fixPr": 227,
+  "beforeFullyRouted": 0,
+  "afterFullyRouted": 0,
+  "originalFilesUnmodified": true,
+  "sharedCompletedBusPhases": [
+    {
+      "board": "butterstick-spaced",
+      "phase": "byte0",
+      "ordinal": 1,
+      "beforeSeconds": 329.02670344800003,
+      "afterSeconds": 273.023792001,
+      "requestedConnections": 8
+    },
+    {
+      "board": "glider-local",
+      "phase": "byte0",
+      "ordinal": 1,
+      "beforeSeconds": 33.92736188700001,
+      "afterSeconds": 11.50537158000001,
+      "requestedConnections": 8
+    },
+    {
+      "board": "glider-local",
+      "phase": "byte1",
+      "ordinal": 2,
+      "beforeSeconds": 48.48984772599998,
+      "afterSeconds": 13.758998607999992,
+      "requestedConnections": 8
+    },
+    {
+      "board": "glider-spaced",
+      "phase": "byte0",
+      "ordinal": 1,
+      "beforeSeconds": 5.066650647000003,
+      "afterSeconds": 5.049130917000003,
+      "requestedConnections": 8
+    },
+    {
+      "board": "glider-spaced",
+      "phase": "byte1",
+      "ordinal": 2,
+      "beforeSeconds": 5.233959888000001,
+      "afterSeconds": 3.9756719460000056,
+      "requestedConnections": 8
+    },
+    {
+      "board": "h616-default-order-local",
+      "phase": "byte0",
+      "ordinal": 1,
+      "beforeSeconds": 8.142681182999999,
+      "afterSeconds": 3.1299481489999987,
+      "requestedConnections": 8
+    },
+    {
+      "board": "h616-default-order-local",
+      "phase": "byte1",
+      "ordinal": 2,
+      "beforeSeconds": 11.602767873000001,
+      "afterSeconds": 4.253446448999998,
+      "requestedConnections": 8
+    },
+    {
+      "board": "h616-local",
+      "phase": "byte0",
+      "ordinal": 1,
+      "beforeSeconds": 8.148308672999999,
+      "afterSeconds": 3.1099942779999985,
+      "requestedConnections": 8
+    },
+    {
+      "board": "h616-local",
+      "phase": "byte1",
+      "ordinal": 2,
+      "beforeSeconds": 11.757002246000003,
+      "afterSeconds": 4.156087942000001,
+      "requestedConnections": 8
+    },
+    {
+      "board": "h616-spaced",
+      "phase": "byte0",
+      "ordinal": 1,
+      "beforeSeconds": 4.565860236000001,
+      "afterSeconds": 3.7965963670000002,
+      "requestedConnections": 8
+    },
+    {
+      "board": "h616-spaced",
+      "phase": "byte1",
+      "ordinal": 2,
+      "beforeSeconds": 5.363461083999997,
+      "afterSeconds": 3.9088999510000004,
+      "requestedConnections": 8
+    },
+    {
+      "board": "icepi-local",
+      "phase": "byte0",
+      "ordinal": 1,
+      "beforeSeconds": 28.953487755999994,
+      "afterSeconds": 11.015394869999994,
+      "requestedConnections": 8
+    },
+    {
+      "board": "icepi-local",
+      "phase": "byte1",
+      "ordinal": 2,
+      "beforeSeconds": 51.382415927,
+      "afterSeconds": 14.871107111999997,
+      "requestedConnections": 8
+    },
+    {
+      "board": "icepi-spaced",
+      "phase": "byte0",
+      "ordinal": 1,
+      "beforeSeconds": 8.69194234,
+      "afterSeconds": 6.553623103999998,
+      "requestedConnections": 8
+    },
+    {
+      "board": "icepi-spaced",
+      "phase": "byte1",
+      "ordinal": 2,
+      "beforeSeconds": 10.972697250999996,
+      "afterSeconds": 9.143623241,
+      "requestedConnections": 8
+    },
+    {
+      "board": "imx6-local",
+      "phase": "byte0",
+      "ordinal": 1,
+      "beforeSeconds": 18.205573508999997,
+      "afterSeconds": 7.896765142000007,
+      "requestedConnections": 8
+    },
+    {
+      "board": "imx6-local",
+      "phase": "byte1",
+      "ordinal": 2,
+      "beforeSeconds": 260.144324858,
+      "afterSeconds": 180.01920078899997,
+      "requestedConnections": 8
+    },
+    {
+      "board": "imx6-spaced",
+      "phase": "byte0",
+      "ordinal": 1,
+      "beforeSeconds": 10.270081263999995,
+      "afterSeconds": 8.343806842999992,
+      "requestedConnections": 8
+    },
+    {
+      "board": "imx6-spaced",
+      "phase": "byte1",
+      "ordinal": 2,
+      "beforeSeconds": 233.50296018999998,
+      "afterSeconds": 218.052475813,
+      "requestedConnections": 8
+    },
+    {
+      "board": "orangecrab-local",
+      "phase": "byte0",
+      "ordinal": 1,
+      "beforeSeconds": 17.756753336999996,
+      "afterSeconds": 6.826313911,
+      "requestedConnections": 8
+    },
+    {
+      "board": "orangecrab-local",
+      "phase": "byte1",
+      "ordinal": 2,
+      "beforeSeconds": 53.290413715,
+      "afterSeconds": 11.585019808999995,
+      "requestedConnections": 8
+    },
+    {
+      "board": "orangecrab-spaced",
+      "phase": "byte0",
+      "ordinal": 1,
+      "beforeSeconds": 6.4747414370000005,
+      "afterSeconds": 5.5360974590000005,
+      "requestedConnections": 8
+    },
+    {
+      "board": "orangecrab-spaced",
+      "phase": "byte1",
+      "ordinal": 2,
+      "beforeSeconds": 8.366916175,
+      "afterSeconds": 6.480988873000001,
+      "requestedConnections": 8
+    }
+  ],
+  "newlyCompletedBusPhases": [
+    {
+      "board": "butterstick-local",
+      "phase": "byte0",
+      "ordinal": 1,
+      "renderSeconds": 475.117060394,
+      "routingSeconds": 430.19020317800005,
+      "requestedConnections": 8,
+      "traceCount": 16
+    }
+  ],
+  "blockingStages": {
+    "butterstick-local": {
+      "stage": "bus_lanes",
+      "lastEvent": {
+        "key": "bus-progress",
+        "seconds": 579.142385736,
+        "id": 1,
+        "phase": "route_multi_terminal_buses",
+        "iterations": 3394,
+        "solved": false,
+        "failed": false,
+        "error": null,
+        "attempt": 0,
+        "traces": 0,
+        "childKeys": []
+      },
+      "error": null
+    },
+    "butterstick-native": {
+      "stage": "fanout",
+      "lastEvent": {
+        "key": "error",
+        "seconds": 192.37849773200003,
+        "type": "autorouting:error",
+        "subcircuit_id": "subcircuit_source_group_3",
+        "componentDisplayName": "<board#2867 />",
+        "routingPhaseIndex": null,
+        "_actualRoutingPhaseOrderIndex": 0,
+        "phaseOrdinal": 1,
+        "phaseCount": 10,
+        "connectionCount": 91,
+        "obstacleCount": 2733,
+        "previousTraceCount": 0,
+        "isReroutePhase": false,
+        "autorouterName": "fanout",
+        "solverName": "FanoutSolver",
+        "cacheStatus": "disabled",
+        "cacheDisabledReason": "strategy_not_cacheable",
+        "error": {
+          "message": "Fanout failed for U11: only 62 of 91 connections could escape to the breakout boundary. The breakout boundary is 0.7mm from the pads at its narrowest point, which all 91 escapes have to share. Give the fanout more room by increasing the breakout's padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors) so their pads sit inside the boundary instead of against it."
+        },
+        "traceCount": 0,
+        "obstaclesWithoutCircuitMetadata": 1023,
+        "fixedTraceCount": 0
+      },
+      "error": {
+        "message": "Fanout failed for U11: only 62 of 91 connections could escape to the breakout boundary. The breakout boundary is 0.7mm from the pads at its narrowest point, which all 91 escapes have to share. Give the fanout more room by increasing the breakout's padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors) so their pads sit inside the boundary instead of against it."
+      }
+    },
+    "butterstick-spaced": {
+      "stage": "bus_lanes",
+      "lastEvent": {
+        "key": "bus-progress",
+        "seconds": 597.9677815160001,
+        "id": 5,
+        "phase": "finish_native_surface_carriers",
+        "iterations": 22168,
+        "solved": false,
+        "failed": false,
+        "error": null,
+        "attempt": 0,
+        "traces": 0,
+        "child": "_BusLanesSolver",
+        "childIterations": 12000,
+        "childPhase": "failed",
+        "childKeys": [
+          "MAX_ITERATIONS",
+          "solved",
+          "failed",
+          "iterations",
+          "progress",
+          "error",
+          "activeSubSolver",
+          "failedSubSolvers",
+          "timeToSolve",
+          "stats",
+          "_setupDone",
+          "terminalLayers",
+          "input",
+          "options",
+          "phase",
+          "failureCode",
+          "traces",
+          "widths",
+          "fixed",
+          "orders",
+          "attempt",
+          "lane",
+          "search",
+          "bestPartial",
+          "pairedTraces",
+          "isRefinement",
+          "pairVariant",
+          "pairIndex",
+          "congestionPass",
+          "conflictingLanes",
+          "independent",
+          "independentAttempted",
+          "pairedNetwork",
+          "pairedNetworkAttempted",
+          "negotiated",
+          "pendingExits",
+          "pendingExitSearch",
+          "reservePackageExits",
+          "pairSearch",
+          "reportedRoutes",
+          "lengthStats"
+        ]
+      },
+      "error": null
+    },
+    "glider-local": {
+      "stage": "detailed_routing",
+      "lastEvent": {
+        "key": "error",
+        "seconds": 343.58949766399996,
+        "type": "autorouting:error",
+        "subcircuit_id": "subcircuit_source_group_0",
+        "componentDisplayName": "<board#2412 />",
+        "phaseName": "other_signals",
+        "phaseStageIndex": 0,
+        "phaseStageCount": 1,
+        "routingPhaseIndex": 3,
+        "_actualRoutingPhaseOrderIndex": 3,
+        "phaseOrdinal": 4,
+        "phaseCount": 5,
+        "connectionCount": 283,
+        "obstacleCount": 1710,
+        "previousTraceCount": 53,
+        "isReroutePhase": false,
+        "autorouterName": "tscircuit",
+        "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+        "cacheStatus": "disabled",
+        "cacheDisabledReason": "no_cache_engine",
+        "error": {
+          "message": "Pipeline9 primary high-density routing failed: B01 failed: No path found for source_net_184; regional fallback failed: Failed to solve 1 nodes, new-cmn_78-651. err0: GrowShrinkHighDensityIntraNodeSolver failed after resizing to 256x. Last error: Unrelated route terminals overlap at the requested trace width. (capacity-autorouter@0.0.1143)"
+        },
+        "traceCount": 53,
+        "obstaclesWithoutCircuitMetadata": 10,
+        "fixedTraceCount": 16
+      },
+      "error": {
+        "message": "Pipeline9 primary high-density routing failed: B01 failed: No path found for source_net_184; regional fallback failed: Failed to solve 1 nodes, new-cmn_78-651. err0: GrowShrinkHighDensityIntraNodeSolver failed after resizing to 256x. Last error: Unrelated route terminals overlap at the requested trace width. (capacity-autorouter@0.0.1143)"
+      }
+    },
+    "glider-native": {
+      "stage": "fanout",
+      "lastEvent": {
+        "key": "error",
+        "seconds": 296.944896654,
+        "type": "autorouting:error",
+        "subcircuit_id": "subcircuit_source_group_2",
+        "componentDisplayName": "<board#2828 />",
+        "routingPhaseIndex": null,
+        "_actualRoutingPhaseOrderIndex": 0,
+        "phaseOrdinal": 1,
+        "phaseCount": 8,
+        "connectionCount": 95,
+        "obstacleCount": 2286,
+        "previousTraceCount": 0,
+        "isReroutePhase": false,
+        "autorouterName": "fanout",
+        "solverName": "FanoutSolver",
+        "cacheStatus": "disabled",
+        "cacheDisabledReason": "strategy_not_cacheable",
+        "error": {
+          "message": "Fanout failed for U12: only 86 of 95 connections could escape to the breakout boundary. The breakout boundary is 0.7mm from the pads at its narrowest point, which all 95 escapes have to share. Give the fanout more room by increasing the breakout's padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors) so their pads sit inside the boundary instead of against it."
+        },
+        "traceCount": 0,
+        "obstaclesWithoutCircuitMetadata": 586,
+        "fixedTraceCount": 0
+      },
+      "error": {
+        "message": "Fanout failed for U12: only 86 of 95 connections could escape to the breakout boundary. The breakout boundary is 0.7mm from the pads at its narrowest point, which all 95 escapes have to share. Give the fanout more room by increasing the breakout's padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors) so their pads sit inside the boundary instead of against it."
+      }
+    },
+    "glider-spaced": {
+      "stage": "detailed_routing",
+      "lastEvent": {
+        "key": "error",
+        "seconds": 163.277969856,
+        "type": "autorouting:error",
+        "subcircuit_id": "subcircuit_source_group_0",
+        "componentDisplayName": "<board#2412 />",
+        "phaseName": "remaining",
+        "phaseStageIndex": 0,
+        "phaseStageCount": 1,
+        "routingPhaseIndex": 2,
+        "_actualRoutingPhaseOrderIndex": 2,
+        "phaseOrdinal": 3,
+        "phaseCount": 5,
+        "connectionCount": 33,
+        "obstacleCount": 1710,
+        "previousTraceCount": 16,
+        "isReroutePhase": false,
+        "autorouterName": "tscircuit",
+        "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+        "cacheStatus": "disabled",
+        "cacheDisabledReason": "no_cache_engine",
+        "error": {
+          "message": "Pipeline9 primary high-density routing failed: B01 failed: No path found for source_net_17; regional fallback failed: Failed to solve 1 nodes, cmn_8__sub_0_0. err0: GrowShrinkHighDensityIntraNodeSolver failed after resizing to 8x. Last error: All solvers failed in hyper solver. Example failures: ViaPossibilitiesSolver2 failed with: Exceeded max via count of 5, ViaPossibilitiesSolver2 failed with: Exceeded max via count of 5, SingleHighDensityRouteSolver ran out of iterations (MAX_ITERATIONS=10000), SingleHighDensityRouteSolver ran out of iterations (MAX_ITERATIONS=10000), SingleHighDensityRouteSolver ran out of iterations (MAX_ITERATIONS=10000). (capacity-autorouter@0.0.1143)"
+        },
+        "traceCount": 16,
+        "obstaclesWithoutCircuitMetadata": 10,
+        "fixedTraceCount": 16
+      },
+      "error": {
+        "message": "Pipeline9 primary high-density routing failed: B01 failed: No path found for source_net_17; regional fallback failed: Failed to solve 1 nodes, cmn_8__sub_0_0. err0: GrowShrinkHighDensityIntraNodeSolver failed after resizing to 8x. Last error: All solvers failed in hyper solver. Example failures: ViaPossibilitiesSolver2 failed with: Exceeded max via count of 5, ViaPossibilitiesSolver2 failed with: Exceeded max via count of 5, SingleHighDensityRouteSolver ran out of iterations (MAX_ITERATIONS=10000), SingleHighDensityRouteSolver ran out of iterations (MAX_ITERATIONS=10000), SingleHighDensityRouteSolver ran out of iterations (MAX_ITERATIONS=10000). (capacity-autorouter@0.0.1143)"
+      }
+    },
+    "h616-default-order-local": {
+      "stage": "graph",
+      "lastEvent": {
+        "key": "error",
+        "seconds": 42.860833269000004,
+        "type": "autorouting:error",
+        "subcircuit_id": "subcircuit_source_group_0",
+        "componentDisplayName": "<board#990 />",
+        "phaseName": "remaining",
+        "phaseStageIndex": 0,
+        "phaseStageCount": 1,
+        "routingPhaseIndex": 2,
+        "_actualRoutingPhaseOrderIndex": 2,
+        "phaseOrdinal": 3,
+        "phaseCount": 5,
+        "connectionCount": 37,
+        "obstacleCount": 760,
+        "previousTraceCount": 16,
+        "isReroutePhase": false,
+        "autorouterName": "tscircuit",
+        "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+        "cacheStatus": "disabled",
+        "cacheDisabledReason": "no_cache_engine",
+        "error": {
+          "message": "KQ ran out of iterations (capacity-autorouter@0.0.1143)"
+        },
+        "traceCount": 16,
+        "obstaclesWithoutCircuitMetadata": 4,
+        "fixedTraceCount": 16
+      },
+      "error": {
+        "message": "KQ ran out of iterations (capacity-autorouter@0.0.1143)"
+      }
+    },
+    "h616-local": {
+      "stage": "detailed_routing",
+      "lastEvent": {
+        "key": "error",
+        "seconds": 66.31661510200001,
+        "type": "autorouting:error",
+        "subcircuit_id": "subcircuit_source_group_0",
+        "componentDisplayName": "<board#990 />",
+        "phaseName": "remaining",
+        "phaseStageIndex": 0,
+        "phaseStageCount": 1,
+        "routingPhaseIndex": 2,
+        "_actualRoutingPhaseOrderIndex": 2,
+        "phaseOrdinal": 3,
+        "phaseCount": 5,
+        "connectionCount": 41,
+        "obstacleCount": 760,
+        "previousTraceCount": 16,
+        "isReroutePhase": false,
+        "autorouterName": "tscircuit",
+        "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+        "cacheStatus": "disabled",
+        "cacheDisabledReason": "no_cache_engine",
+        "error": {
+          "message": "KQ ran out of iterations (capacity-autorouter@0.0.1143)"
+        },
+        "traceCount": 16,
+        "obstaclesWithoutCircuitMetadata": 4,
+        "fixedTraceCount": 16
+      },
+      "error": {
+        "message": "KQ ran out of iterations (capacity-autorouter@0.0.1143)"
+      }
+    },
+    "h616-native": {
+      "stage": "fanout",
+      "lastEvent": {
+        "key": "error",
+        "seconds": 372.55288703900004,
+        "type": "autorouting:error",
+        "subcircuit_id": "subcircuit_source_group_2",
+        "componentDisplayName": "<board#1409 />",
+        "routingPhaseIndex": null,
+        "_actualRoutingPhaseOrderIndex": 0,
+        "phaseOrdinal": 1,
+        "phaseCount": 8,
+        "connectionCount": 174,
+        "obstacleCount": 1094,
+        "previousTraceCount": 0,
+        "isReroutePhase": false,
+        "autorouterName": "fanout",
+        "solverName": "FanoutSolver",
+        "cacheStatus": "disabled",
+        "cacheDisabledReason": "strategy_not_cacheable",
+        "error": {
+          "message": "Fanout failed for U1: only 109 of 174 connections could escape to the breakout boundary. The breakout boundary is 0.7mm from the pads at its narrowest point, which all 174 escapes have to share. Give the fanout more room by increasing the breakout's padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors) so their pads sit inside the boundary instead of against it."
+        },
+        "traceCount": 0,
+        "obstaclesWithoutCircuitMetadata": 338,
+        "fixedTraceCount": 0
+      },
+      "error": {
+        "message": "Fanout failed for U1: only 109 of 174 connections could escape to the breakout boundary. The breakout boundary is 0.7mm from the pads at its narrowest point, which all 174 escapes have to share. Give the fanout more room by increasing the breakout's padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors) so their pads sit inside the boundary instead of against it."
+      }
+    },
+    "h616-spaced": {
+      "stage": "graph",
+      "lastEvent": {
+        "key": "error",
+        "seconds": 33.206686233,
+        "type": "autorouting:error",
+        "subcircuit_id": "subcircuit_source_group_0",
+        "componentDisplayName": "<board#990 />",
+        "phaseName": "remaining",
+        "phaseStageIndex": 0,
+        "phaseStageCount": 1,
+        "routingPhaseIndex": 2,
+        "_actualRoutingPhaseOrderIndex": 2,
+        "phaseOrdinal": 3,
+        "phaseCount": 5,
+        "connectionCount": 37,
+        "obstacleCount": 760,
+        "previousTraceCount": 16,
+        "isReroutePhase": false,
+        "autorouterName": "tscircuit",
+        "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+        "cacheStatus": "disabled",
+        "cacheDisabledReason": "no_cache_engine",
+        "error": {
+          "message": "KQ ran out of iterations (capacity-autorouter@0.0.1143)"
+        },
+        "traceCount": 16,
+        "obstaclesWithoutCircuitMetadata": 4,
+        "fixedTraceCount": 16
+      },
+      "error": {
+        "message": "KQ ran out of iterations (capacity-autorouter@0.0.1143)"
+      }
+    },
+    "icepi-local": {
+      "stage": "detailed_routing",
+      "lastEvent": {
+        "key": "error",
+        "seconds": 224.956956092,
+        "type": "autorouting:error",
+        "subcircuit_id": "subcircuit_source_group_0",
+        "componentDisplayName": "<board#1908 />",
+        "phaseName": "remaining",
+        "phaseStageIndex": 0,
+        "phaseStageCount": 1,
+        "routingPhaseIndex": 2,
+        "_actualRoutingPhaseOrderIndex": 2,
+        "phaseOrdinal": 3,
+        "phaseCount": 5,
+        "connectionCount": 34,
+        "obstacleCount": 1426,
+        "previousTraceCount": 16,
+        "isReroutePhase": false,
+        "autorouterName": "tscircuit",
+        "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+        "cacheStatus": "disabled",
+        "cacheDisabledReason": "no_cache_engine",
+        "error": {
+          "message": "Pipeline9 primary high-density routing failed: B01 failed: No path found for source_net_3_mst1; regional fallback failed: Failed to solve 1 nodes, cmn_31. err0: GrowShrinkHighDensityIntraNodeSolver failed after resizing to 8x. Last error: All solvers failed in hyper solver. Example failures: ViaPossibilitiesSolver2 failed with: Exceeded max via count of 5, ViaPossibilitiesSolver2 failed with: Exceeded max via count of 5, SingleHighDensityRouteSolver ran out of iterations (MAX_ITERATIONS=10000), SingleHighDensityRouteSolver ran out of iterations (MAX_ITERATIONS=10000), SingleHighDensityRouteSolver ran out of iterations (MAX_ITERATIONS=10000). (capacity-autorouter@0.0.1143)"
+        },
+        "traceCount": 16,
+        "obstaclesWithoutCircuitMetadata": 12,
+        "fixedTraceCount": 16
+      },
+      "error": {
+        "message": "Pipeline9 primary high-density routing failed: B01 failed: No path found for source_net_3_mst1; regional fallback failed: Failed to solve 1 nodes, cmn_31. err0: GrowShrinkHighDensityIntraNodeSolver failed after resizing to 8x. Last error: All solvers failed in hyper solver. Example failures: ViaPossibilitiesSolver2 failed with: Exceeded max via count of 5, ViaPossibilitiesSolver2 failed with: Exceeded max via count of 5, SingleHighDensityRouteSolver ran out of iterations (MAX_ITERATIONS=10000), SingleHighDensityRouteSolver ran out of iterations (MAX_ITERATIONS=10000), SingleHighDensityRouteSolver ran out of iterations (MAX_ITERATIONS=10000). (capacity-autorouter@0.0.1143)"
+      }
+    },
+    "icepi-native": {
+      "stage": "fanout",
+      "lastEvent": {
+        "key": "error",
+        "seconds": 64.386396672,
+        "type": "autorouting:error",
+        "subcircuit_id": "subcircuit_source_group_3",
+        "componentDisplayName": "<board#2618 />",
+        "routingPhaseIndex": null,
+        "_actualRoutingPhaseOrderIndex": 0,
+        "phaseOrdinal": 1,
+        "phaseCount": 10,
+        "connectionCount": 32,
+        "obstacleCount": 2038,
+        "previousTraceCount": 0,
+        "isReroutePhase": false,
+        "autorouterName": "fanout",
+        "solverName": "FanoutSolver",
+        "cacheStatus": "disabled",
+        "cacheDisabledReason": "strategy_not_cacheable",
+        "error": {
+          "message": "Fanout failed for U22: only 14 of 32 connections could escape to the breakout boundary. The breakout boundary is 0.7mm from the pads at its narrowest point, which all 32 escapes have to share. Give the fanout more room by increasing the breakout's padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors) so their pads sit inside the boundary instead of against it."
+        },
+        "traceCount": 0,
+        "obstaclesWithoutCircuitMetadata": 624,
+        "fixedTraceCount": 0
+      },
+      "error": {
+        "message": "Fanout failed for U22: only 14 of 32 connections could escape to the breakout boundary. The breakout boundary is 0.7mm from the pads at its narrowest point, which all 32 escapes have to share. Give the fanout more room by increasing the breakout's padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors) so their pads sit inside the boundary instead of against it."
+      }
+    },
+    "icepi-spaced": {
+      "stage": "detailed_routing",
+      "lastEvent": {
+        "key": "error",
+        "seconds": 335.815576493,
+        "type": "autorouting:error",
+        "subcircuit_id": "subcircuit_source_group_0",
+        "componentDisplayName": "<board#1908 />",
+        "phaseName": "other_signals",
+        "phaseStageIndex": 0,
+        "phaseStageCount": 1,
+        "routingPhaseIndex": 3,
+        "_actualRoutingPhaseOrderIndex": 3,
+        "phaseOrdinal": 4,
+        "phaseCount": 5,
+        "connectionCount": 166,
+        "obstacleCount": 1426,
+        "previousTraceCount": 52,
+        "isReroutePhase": false,
+        "autorouterName": "tscircuit",
+        "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+        "cacheStatus": "disabled",
+        "cacheDisabledReason": "no_cache_engine",
+        "error": {
+          "message": "Pipeline9 primary high-density routing failed: B01 failed: No path found for source_net_34_mst0; regional fallback failed: Failed to solve 1 nodes, topology_merge_12872. err0: GrowShrinkHighDensityIntraNodeSolver failed after resizing to 32x. Last error: Unrelated route terminals overlap at the requested trace width. (capacity-autorouter@0.0.1143)"
+        },
+        "traceCount": 52,
+        "obstaclesWithoutCircuitMetadata": 12,
+        "fixedTraceCount": 16
+      },
+      "error": {
+        "message": "Pipeline9 primary high-density routing failed: B01 failed: No path found for source_net_34_mst0; regional fallback failed: Failed to solve 1 nodes, topology_merge_12872. err0: GrowShrinkHighDensityIntraNodeSolver failed after resizing to 32x. Last error: Unrelated route terminals overlap at the requested trace width. (capacity-autorouter@0.0.1143)"
+      }
+    },
+    "imx6-local": {
+      "stage": "detailed_routing",
+      "lastEvent": {
+        "key": "density-progress",
+        "seconds": 585.5590568069999,
+        "pipeline": 1,
+        "iterations": 2953697,
+        "stats": {
+          "nodeCount": 627,
+          "solvedNodeCount": 491,
+          "fixedObstacleCount": 134,
+          "fixedObstacleUses": 291,
+          "boardObstacleUses": 176,
+          "fallbackNodeCount": 20,
+          "regularNodeCount": 409,
+          "b01NodeCount": 83,
+          "reroutedFixedRouteCount": 0,
+          "reroutedFixedRouteSectionCount": 0,
+          "promotedFallbackAttemptCount": 0,
+          "promotedFixedRouteCount": 0,
+          "regionalPreloadedViaCandidateRejectionCount": 0,
+          "regionalForceImproveCandidateRejectionCount": 0,
+          "regionalRepairCandidateRejectionCount": 0
+        },
+        "node": "cmn_18",
+        "child": "Pipeline9RegionalFallbackSolver",
+        "regional": null
+      },
+      "error": null
+    },
+    "imx6-native": {
+      "stage": "fanout",
+      "lastEvent": {
+        "key": "error",
+        "seconds": 117.527391784,
+        "type": "autorouting:error",
+        "subcircuit_id": "subcircuit_source_group_3",
+        "componentDisplayName": "<board#3445 />",
+        "routingPhaseIndex": null,
+        "_actualRoutingPhaseOrderIndex": 0,
+        "phaseOrdinal": 1,
+        "phaseCount": 10,
+        "connectionCount": 32,
+        "obstacleCount": 3212,
+        "previousTraceCount": 0,
+        "isReroutePhase": false,
+        "autorouterName": "fanout",
+        "solverName": "FanoutSolver",
+        "cacheStatus": "disabled",
+        "cacheDisabledReason": "strategy_not_cacheable",
+        "error": {
+          "message": "Fanout failed for U10: only 9 of 32 connections could escape to the breakout boundary. The breakout boundary is 0.7mm from the pads at its narrowest point, which all 32 escapes have to share. Give the fanout more room by increasing the breakout's padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors) so their pads sit inside the boundary instead of against it."
+        },
+        "traceCount": 0,
+        "obstaclesWithoutCircuitMetadata": 1286,
+        "fixedTraceCount": 0
+      },
+      "error": {
+        "message": "Fanout failed for U10: only 9 of 32 connections could escape to the breakout boundary. The breakout boundary is 0.7mm from the pads at its narrowest point, which all 32 escapes have to share. Give the fanout more room by increasing the breakout's padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors) so their pads sit inside the boundary instead of against it."
+      }
+    },
+    "imx6-spaced": {
+      "stage": "detailed_routing",
+      "lastEvent": {
+        "key": "error",
+        "seconds": 529.8143019150001,
+        "type": "autorouting:error",
+        "subcircuit_id": "subcircuit_source_group_0",
+        "componentDisplayName": "<board#2768 />",
+        "phaseName": "remaining",
+        "phaseStageIndex": 0,
+        "phaseStageCount": 1,
+        "routingPhaseIndex": 2,
+        "_actualRoutingPhaseOrderIndex": 2,
+        "phaseOrdinal": 3,
+        "phaseCount": 5,
+        "connectionCount": 37,
+        "obstacleCount": 1936,
+        "previousTraceCount": 17,
+        "isReroutePhase": false,
+        "autorouterName": "tscircuit",
+        "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+        "cacheStatus": "disabled",
+        "cacheDisabledReason": "no_cache_engine",
+        "error": {
+          "message": "Pipeline9 primary high-density routing failed: B01 failed: No path found for source_net_247_mst2; regional fallback failed: Failed to solve 1 nodes, topology_merge_11911_no_via_z1. err0: GrowShrinkHighDensityIntraNodeSolver failed after resizing to 8x. Last error: All solvers failed in hyper solver. Example failures: Candidate solution rejected by validator, Candidate solution rejected by validator, CachedIntraNodeRouteSolver ran out of iterations (MAX_ITERATIONS=1000), CachedIntraNodeRouteSolver ran out of iterations (MAX_ITERATIONS=1000), CachedIntraNodeRouteSolver ran out of iterations (MAX_ITERATIONS=1000). (capacity-autorouter@0.0.1143)"
+        },
+        "traceCount": 17,
+        "obstaclesWithoutCircuitMetadata": 10,
+        "fixedTraceCount": 17
+      },
+      "error": {
+        "message": "Pipeline9 primary high-density routing failed: B01 failed: No path found for source_net_247_mst2; regional fallback failed: Failed to solve 1 nodes, topology_merge_11911_no_via_z1. err0: GrowShrinkHighDensityIntraNodeSolver failed after resizing to 8x. Last error: All solvers failed in hyper solver. Example failures: Candidate solution rejected by validator, Candidate solution rejected by validator, CachedIntraNodeRouteSolver ran out of iterations (MAX_ITERATIONS=1000), CachedIntraNodeRouteSolver ran out of iterations (MAX_ITERATIONS=1000), CachedIntraNodeRouteSolver ran out of iterations (MAX_ITERATIONS=1000). (capacity-autorouter@0.0.1143)"
+      }
+    },
+    "orangecrab-local": {
+      "stage": "detailed_routing",
+      "lastEvent": {
+        "key": "error",
+        "seconds": 230.930019282,
+        "type": "autorouting:error",
+        "subcircuit_id": "subcircuit_source_group_0",
+        "componentDisplayName": "<board#1107 />",
+        "phaseName": "other_signals",
+        "phaseStageIndex": 0,
+        "phaseStageCount": 1,
+        "routingPhaseIndex": 3,
+        "_actualRoutingPhaseOrderIndex": 3,
+        "phaseOrdinal": 4,
+        "phaseCount": 5,
+        "connectionCount": 93,
+        "obstacleCount": 1050,
+        "previousTraceCount": 52,
+        "isReroutePhase": false,
+        "autorouterName": "tscircuit",
+        "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+        "cacheStatus": "disabled",
+        "cacheDisabledReason": "no_cache_engine",
+        "error": {
+          "message": "Pipeline9 primary high-density routing failed: B01 failed: No path found for source_net_138_mst1; regional fallback failed: Failed to solve 1 nodes, cmn_266. err0: GrowShrinkHighDensityIntraNodeSolver failed after resizing to 32x. Last error: Unrelated route terminals overlap at the requested trace width. (capacity-autorouter@0.0.1143)"
+        },
+        "traceCount": 52,
+        "obstaclesWithoutCircuitMetadata": 4,
+        "fixedTraceCount": 16
+      },
+      "error": {
+        "message": "Pipeline9 primary high-density routing failed: B01 failed: No path found for source_net_138_mst1; regional fallback failed: Failed to solve 1 nodes, cmn_266. err0: GrowShrinkHighDensityIntraNodeSolver failed after resizing to 32x. Last error: Unrelated route terminals overlap at the requested trace width. (capacity-autorouter@0.0.1143)"
+      }
+    },
+    "orangecrab-native": {
+      "stage": "fanout",
+      "lastEvent": {
+        "key": "fanout-progress",
+        "seconds": 570.4181384039999,
+        "iterations": 92716,
+        "attempts": 118,
+        "best": 149
+      },
+      "error": null
+    },
+    "orangecrab-spaced": {
+      "stage": "detailed_routing",
+      "lastEvent": {
+        "key": "error",
+        "seconds": 259.511694216,
+        "type": "autorouting:error",
+        "subcircuit_id": "subcircuit_source_group_0",
+        "componentDisplayName": "<board#1107 />",
+        "phaseName": "other_signals",
+        "phaseStageIndex": 0,
+        "phaseStageCount": 1,
+        "routingPhaseIndex": 3,
+        "_actualRoutingPhaseOrderIndex": 3,
+        "phaseOrdinal": 4,
+        "phaseCount": 5,
+        "connectionCount": 93,
+        "obstacleCount": 1050,
+        "previousTraceCount": 52,
+        "isReroutePhase": false,
+        "autorouterName": "tscircuit",
+        "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+        "cacheStatus": "disabled",
+        "cacheDisabledReason": "no_cache_engine",
+        "error": {
+          "message": "Pipeline9 primary high-density routing failed: B01 failed: No path found for source_net_64_mst12; regional fallback failed: Failed to solve 1 nodes, topology_merge_13629. err0: GrowShrinkHighDensityIntraNodeSolver failed after resizing to 8x. Last error: Unrelated route terminals overlap at the requested trace width. (capacity-autorouter@0.0.1143)"
+        },
+        "traceCount": 52,
+        "obstaclesWithoutCircuitMetadata": 4,
+        "fixedTraceCount": 16
+      },
+      "error": {
+        "message": "Pipeline9 primary high-density routing failed: B01 failed: No path found for source_net_64_mst12; regional fallback failed: Failed to solve 1 nodes, topology_merge_13629. err0: GrowShrinkHighDensityIntraNodeSolver failed after resizing to 8x. Last error: Unrelated route terminals overlap at the requested trace width. (capacity-autorouter@0.0.1143)"
+      }
+    }
+  },
+  "finalProductionPatchMatchesBenchmark": true,
+  "sharedCompletedBusPhaseSecondsBefore": 1179.33691265,
+  "sharedCompletedBusPhaseSecondsAfter": 815.9923551539999,
+  "reproScope": {
+    "real": "Existing native H616 hardware byte-zero fixture: all 760 physical obstacles and 34-point outline; both before and after route all eight requests with connectivity and DRC acceptance. Uploaded local/spaced variants have their own authored placement/outline and are measured separately in the full TSX matrix.",
+    "realDistanceProjectionsBefore": 106820249,
+    "realDistanceProjectionsAfter": 9192059,
+    "focusedDistanceProjectionsBefore": 4148,
+    "focusedDistanceProjectionsAfter": 332
+  },
+  "comparisonLimit": "Four renders time out in both variants, so their complete final Circuit JSON cannot be compared. The one 19-way matrix has timing variation; icepi-spaced was +6% overall despite faster bus phases, so a counterbalanced paired replay is run separately.",
+  "pairedReplay": [
+    {
+      "board": "glider-local",
+      "run": 44879258962,
+      "order": [
+        "base",
+        "head",
+        "head",
+        "base"
+      ],
+      "sameMachine": true,
+      "allCircuitJsonsIdentical": true,
+      "trials": [
+        {
+          "board": "glider-local",
+          "variant": "base",
+          "ordinal": 1,
+          "exit": 0,
+          "stop": "settled",
+          "seconds": 355.62373238600003,
+          "coreEntrySha256": "302ea2a78c747edf4f2db67b2a27269b0e1b3b018116b8905ba4645b057f4371",
+          "circuitSha256": "706efc1db7d5650404c4a4728ac8eea0536a06e63b15fc84ace723811d845237",
+          "cpu": {
+            "user": 388853127,
+            "system": 14582526
+          }
+        },
+        {
+          "board": "glider-local",
+          "variant": "head",
+          "ordinal": 2,
+          "exit": 0,
+          "stop": "settled",
+          "seconds": 294.60475335900003,
+          "coreEntrySha256": "63e7e919a27a88eade722eaf3eaf6ceed99e0edad9f6f58a8475c4755978c99e",
+          "circuitSha256": "706efc1db7d5650404c4a4728ac8eea0536a06e63b15fc84ace723811d845237",
+          "cpu": {
+            "user": 326690101,
+            "system": 14011186
+          }
+        },
+        {
+          "board": "glider-local",
+          "variant": "head",
+          "ordinal": 3,
+          "exit": 0,
+          "stop": "settled",
+          "seconds": 290.07348185499995,
+          "coreEntrySha256": "63e7e919a27a88eade722eaf3eaf6ceed99e0edad9f6f58a8475c4755978c99e",
+          "circuitSha256": "706efc1db7d5650404c4a4728ac8eea0536a06e63b15fc84ace723811d845237",
+          "cpu": {
+            "user": 323500830,
+            "system": 13794406
+          }
+        },
+        {
+          "board": "glider-local",
+          "variant": "base",
+          "ordinal": 4,
+          "exit": 0,
+          "stop": "settled",
+          "seconds": 343.88951054000006,
+          "coreEntrySha256": "302ea2a78c747edf4f2db67b2a27269b0e1b3b018116b8905ba4645b057f4371",
+          "circuitSha256": "706efc1db7d5650404c4a4728ac8eea0536a06e63b15fc84ace723811d845237",
+          "cpu": {
+            "user": 374296110,
+            "system": 14302930
+          }
+        }
+      ],
+      "base": {
+        "meanWallSeconds": 349.75662146300004,
+        "minWallSeconds": 343.88951054000006,
+        "maxWallSeconds": 355.62373238600003,
+        "meanCpuSeconds": 396.01734650000003
+      },
+      "head": {
+        "meanWallSeconds": 292.339117607,
+        "minWallSeconds": 290.07348185499995,
+        "maxWallSeconds": 294.60475335900003,
+        "meanCpuSeconds": 338.9982615
+      }
+    },
+    {
+      "board": "icepi-spaced",
+      "run": 44879258962,
+      "order": [
+        "base",
+        "head",
+        "head",
+        "base"
+      ],
+      "sameMachine": true,
+      "allCircuitJsonsIdentical": true,
+      "trials": [
+        {
+          "board": "icepi-spaced",
+          "variant": "base",
+          "ordinal": 1,
+          "exit": 0,
+          "stop": "settled",
+          "seconds": 308.093181463,
+          "coreEntrySha256": "302ea2a78c747edf4f2db67b2a27269b0e1b3b018116b8905ba4645b057f4371",
+          "circuitSha256": "82d0321b6f3c37d1658f032414910551ad3e457497e79eb1721182fb07f1b305",
+          "cpu": {
+            "user": 353860352,
+            "system": 17213725
+          }
+        },
+        {
+          "board": "icepi-spaced",
+          "variant": "head",
+          "ordinal": 2,
+          "exit": 0,
+          "stop": "settled",
+          "seconds": 309.269875595,
+          "coreEntrySha256": "63e7e919a27a88eade722eaf3eaf6ceed99e0edad9f6f58a8475c4755978c99e",
+          "circuitSha256": "82d0321b6f3c37d1658f032414910551ad3e457497e79eb1721182fb07f1b305",
+          "cpu": {
+            "user": 350493423,
+            "system": 17393452
+          }
+        },
+        {
+          "board": "icepi-spaced",
+          "variant": "head",
+          "ordinal": 3,
+          "exit": 0,
+          "stop": "settled",
+          "seconds": 307.41885762799996,
+          "coreEntrySha256": "63e7e919a27a88eade722eaf3eaf6ceed99e0edad9f6f58a8475c4755978c99e",
+          "circuitSha256": "82d0321b6f3c37d1658f032414910551ad3e457497e79eb1721182fb07f1b305",
+          "cpu": {
+            "user": 348166014,
+            "system": 17899267
+          }
+        },
+        {
+          "board": "icepi-spaced",
+          "variant": "base",
+          "ordinal": 4,
+          "exit": 0,
+          "stop": "settled",
+          "seconds": 308.67331217700007,
+          "coreEntrySha256": "302ea2a78c747edf4f2db67b2a27269b0e1b3b018116b8905ba4645b057f4371",
+          "circuitSha256": "82d0321b6f3c37d1658f032414910551ad3e457497e79eb1721182fb07f1b305",
+          "cpu": {
+            "user": 349514566,
+            "system": 20357046
+          }
+        }
+      ],
+      "base": {
+        "meanWallSeconds": 308.38324682000007,
+        "minWallSeconds": 308.093181463,
+        "maxWallSeconds": 308.67331217700007,
+        "meanCpuSeconds": 370.4728445
+      },
+      "head": {
+        "meanWallSeconds": 308.34436661149994,
+        "minWallSeconds": 307.41885762799996,
+        "maxWallSeconds": 309.269875595,
+        "meanCpuSeconds": 366.97607800000003
+      }
+    }
+  ],
+  "artifacts": {
+    "baseline": {
+      "run": 44876682145,
+      "artifactId": 14696392653,
+      "sha256": "b0e0252557d4cfce4de4b8de5930da98cdb3bed652969a0abea31542d188b5ff"
+    },
+    "finalFix": {
+      "run": 44877875894,
+      "artifactId": 14696623988,
+      "sha256": "ac76db09a951d56a9f3521847b592891fbd78adc3c4cf34e85a7735907aec372"
+    },
+    "pairedReplay": {
+      "run": 44879258962
+    },
+    "am3352Gallery": {
+      "run": 44878324731
+    },
+    "requiredFixAm3352Ci": {
+      "run": 44878087758,
+      "attempt": 2,
+      "accepted": 11,
+      "total": 11
+    }
+  },
+  "butterstickByte0Validation": {
+    "scope": "Byte zero of the original uploaded Butterstick-local TSX; whole board still reaches its 600-second limit",
+    "tscircuit": "0.0.3266",
+    "run": 44877875894,
+    "connectivity": {
+      "valid": true,
+      "checkedConnectionCount": 8,
+      "connectedConnectionCount": 8,
+      "checkedEndpointCount": 24,
+      "connectedEndpointCount": 24,
+      "issues": []
+    },
+    "drc": {
+      "valid": true,
+      "checkedTraceCount": 16,
+      "checkedSegmentCount": 120,
+      "checkedViaCount": 16,
+      "issues": []
+    },
+    "matchedOriginalPhysicalObstacles": 1710,
+    "renderedFromOriginalTsxGeometry": true
+  },
+  "am3352": {
+    "run": 44878324731,
+    "baseCommit": "e16fabec258bc7fbac25a13e8dd2b97ecd0da47f",
+    "headCommit": "cef688a181d401913384d2afdbdbdcc5abb70679",
+    "runtime": "Bun 1.4.0, blacksmith-4vcpu-ubuntu-2404; BUN_JSC_forceRAMSize=2147483648",
+    "perSolverSampleBudgetSeconds": 3600,
+    "method": "Fresh ./benchmark.sh --worker solves, base then head sequentially on the same runner for each sample; install both revisions before measuring. Only accepted complete and matched outputs are exported.",
+    "acceptedBefore": 11,
+    "acceptedAfter": 11,
+    "samples": [
+      {
+        "sample": "above",
+        "baseSolveSeconds": 30.077334836,
+        "headSolveSeconds": 29.414807298,
+        "baseAccepted": true,
+        "headAccepted": true,
+        "requestedSignals": 47,
+        "routedSignals": 47,
+        "inputSha256": "20fc884f08accd368e4ce049ab3fc180a1926f425787a504dbc4040f651bfa69",
+        "inputIdentical": true,
+        "iterationsIdentical": true,
+        "routedCopperIdentical": true,
+        "qualityReportsIdentical": true,
+        "fixedCopperPreserved": true
+      },
+      {
+        "sample": "control",
+        "baseSolveSeconds": 18.347193640999997,
+        "headSolveSeconds": 18.358713834000003,
+        "baseAccepted": true,
+        "headAccepted": true,
+        "requestedSignals": 47,
+        "routedSignals": 47,
+        "inputSha256": "b7a4e9d09a22fe0ed131a544548b14eef20fbf4e88b6dc6ffaa11ca44e6bfe59",
+        "inputIdentical": true,
+        "iterationsIdentical": true,
+        "routedCopperIdentical": true,
+        "qualityReportsIdentical": true,
+        "fixedCopperPreserved": true
+      },
+      {
+        "sample": "control-inner1",
+        "baseSolveSeconds": 816.232449269,
+        "headSolveSeconds": 721.2828945890001,
+        "baseAccepted": true,
+        "headAccepted": true,
+        "requestedSignals": 47,
+        "routedSignals": 47,
+        "inputSha256": "14b5b318540ce7bac367cf22338abd7f9fffd2f7ce6c2a12f903116f50ca9bde",
+        "inputIdentical": true,
+        "iterationsIdentical": true,
+        "routedCopperIdentical": true,
+        "qualityReportsIdentical": true,
+        "fixedCopperPreserved": true
+      },
+      {
+        "sample": "inner-layers",
+        "baseSolveSeconds": 28.364524562,
+        "headSolveSeconds": 28.223519597,
+        "baseAccepted": true,
+        "headAccepted": true,
+        "requestedSignals": 47,
+        "routedSignals": 47,
+        "inputSha256": "1b91e6c5207e4b7e132aa5ac246e94777f926c7beab8675adf0356634b8280ad",
+        "inputIdentical": true,
+        "iterationsIdentical": true,
+        "routedCopperIdentical": true,
+        "qualityReportsIdentical": true,
+        "fixedCopperPreserved": true
+      },
+      {
+        "sample": "inner-layers-above",
+        "baseSolveSeconds": 166.378776858,
+        "headSolveSeconds": 159.920649498,
+        "baseAccepted": true,
+        "headAccepted": true,
+        "requestedSignals": 47,
+        "routedSignals": 47,
+        "inputSha256": "68a86ef74f8ec9628954e909464c009d98fb2c902a6376e20b3a32d4b5cff555",
+        "inputIdentical": true,
+        "iterationsIdentical": true,
+        "routedCopperIdentical": true,
+        "qualityReportsIdentical": true,
+        "fixedCopperPreserved": true
+      },
+      {
+        "sample": "inner-layers-complete-ca",
+        "baseSolveSeconds": 156.37996542700003,
+        "headSolveSeconds": 157.69289510299998,
+        "baseAccepted": true,
+        "headAccepted": true,
+        "requestedSignals": 47,
+        "routedSignals": 47,
+        "inputSha256": "a6def279fa2d3356a66ee94b1760a76eebb6c6d8e605005ce5903bd2fbca8776",
+        "inputIdentical": true,
+        "iterationsIdentical": true,
+        "routedCopperIdentical": true,
+        "qualityReportsIdentical": true,
+        "fixedCopperPreserved": true
+      },
+      {
+        "sample": "inner-layers-left",
+        "baseSolveSeconds": 132.67893512,
+        "headSolveSeconds": 136.08130382,
+        "baseAccepted": true,
+        "headAccepted": true,
+        "requestedSignals": 47,
+        "routedSignals": 47,
+        "inputSha256": "1c3db8ee018bc90df7fbbb0c198c42efcc0ca948a6a213338650cf81a51f7ab2",
+        "inputIdentical": true,
+        "iterationsIdentical": true,
+        "routedCopperIdentical": true,
+        "qualityReportsIdentical": true,
+        "fixedCopperPreserved": true
+      },
+      {
+        "sample": "inner-layers-right",
+        "baseSolveSeconds": 43.754994112,
+        "headSolveSeconds": 44.542630203,
+        "baseAccepted": true,
+        "headAccepted": true,
+        "requestedSignals": 47,
+        "routedSignals": 47,
+        "inputSha256": "2eaf3dedcd84fbfed10262f4d4c99370a0ca00a7a060f87b7a1cdcba9de37a8e",
+        "inputIdentical": true,
+        "iterationsIdentical": true,
+        "routedCopperIdentical": true,
+        "qualityReportsIdentical": true,
+        "fixedCopperPreserved": true
+      },
+      {
+        "sample": "left",
+        "baseSolveSeconds": 23.016756383,
+        "headSolveSeconds": 22.785753623,
+        "baseAccepted": true,
+        "headAccepted": true,
+        "requestedSignals": 47,
+        "routedSignals": 47,
+        "inputSha256": "6042ca0f0889a983a6ccf8f929a6a46b18cc57134e1b9f3b49c19063b936caa5",
+        "inputIdentical": true,
+        "iterationsIdentical": true,
+        "routedCopperIdentical": true,
+        "qualityReportsIdentical": true,
+        "fixedCopperPreserved": true
+      },
+      {
+        "sample": "outer-layers",
+        "baseSolveSeconds": 551.85584985,
+        "headSolveSeconds": 546.42559434,
+        "baseAccepted": true,
+        "headAccepted": true,
+        "requestedSignals": 47,
+        "routedSignals": 47,
+        "inputSha256": "de3fd915f3c7d8c9bf4fd3c9b197596ba5e08c1be328f9c5223d7ab78736588f",
+        "inputIdentical": true,
+        "iterationsIdentical": true,
+        "routedCopperIdentical": true,
+        "qualityReportsIdentical": true,
+        "fixedCopperPreserved": true
+      },
+      {
+        "sample": "right",
+        "baseSolveSeconds": 16.959185075,
+        "headSolveSeconds": 17.093778171,
+        "baseAccepted": true,
+        "headAccepted": true,
+        "requestedSignals": 47,
+        "routedSignals": 47,
+        "inputSha256": "78c22c8d818ee2c2abe2eec9c6b6e408161a9d0eaf09afbafc3242e71e8f5778",
+        "inputIdentical": true,
+        "iterationsIdentical": true,
+        "routedCopperIdentical": true,
+        "qualityReportsIdentical": true,
+        "fixedCopperPreserved": true
+      }
+    ]
+  },
+  "localProfilesPurpose": "CPU diagnosis only; all timing comparisons use the recorded Blacksmith runs. Local snapshot test durations include mock counter overhead and are not used as benchmark claims.",
+  "pairedReplayInterpretation": "Icepi-spaced averaged 308.383s base and 308.344s head in counterbalanced runs; its +6% in the contended matrix was not reproduced. Glider-local averaged 349.757s base and 292.339s head. All four Circuit JSONs are identical within each case.",
+  "limitations": "No entire uploaded board fully routes. Fifteen settled renders are byte-identical; four timeouts prevent a complete final-Circuit-JSON comparison for those boards. Butterstick byte zero is independently validated complete, but the rest of that board still times out."
+}

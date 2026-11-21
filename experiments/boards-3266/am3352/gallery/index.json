@@ -1,0 +1,68 @@
+[
+  {
+    "sample": "above",
+    "snapshot": "above/accepted.pcb.svg",
+    "baseAndHeadSvgIdentical": true,
+    "sha256": "bc03a7f78beea7b81dd72f53f8df82261d871edf66b510b8d8362d2527cfa776"
+  },
+  {
+    "sample": "control",
+    "snapshot": "control/accepted.pcb.svg",
+    "baseAndHeadSvgIdentical": true,
+    "sha256": "73e55702360c94eda4cf6408055eb0c28fb9ab7f611a863880e6850a73110a14"
+  },
+  {
+    "sample": "control-inner1",
+    "snapshot": "control-inner1/accepted.pcb.svg",
+    "baseAndHeadSvgIdentical": true,
+    "sha256": "a742d39d54b18b2c3b6977ba7e1763c18c9b972f3ab85e4ed110e17037dc849a"
+  },
+  {
+    "sample": "inner-layers",
+    "snapshot": "inner-layers/accepted.pcb.svg",
+    "baseAndHeadSvgIdentical": true,
+    "sha256": "c0e61571cf85f6cd048cae88e0293fdaeb569474b5d3f2fa3cb5145630f84804"
+  },
+  {
+    "sample": "inner-layers-above",
+    "snapshot": "inner-layers-above/accepted.pcb.svg",
+    "baseAndHeadSvgIdentical": true,
+    "sha256": "0fec9a547debbb48410c3b0dddb2c9ba8be361675d386abcce685bb715009153"
+  },
+  {
+    "sample": "inner-layers-complete-ca",
+    "snapshot": "inner-layers-complete-ca/accepted.pcb.svg",
+    "baseAndHeadSvgIdentical": true,
+    "sha256": "cee9544201ebaa16716c1fd4bea28ea595d852ff9ec637196d8ffed3e0e0b018"
+  },
+  {
+    "sample": "inner-layers-left",
+    "snapshot": "inner-layers-left/accepted.pcb.svg",
+    "baseAndHeadSvgIdentical": true,
+    "sha256": "ea2f75615683500c01f99b468d0f297a4cf1f28de557d1b0467b9500c196df5d"
+  },
+  {
+    "sample": "inner-layers-right",
+    "snapshot": "inner-layers-right/accepted.pcb.svg",
+    "baseAndHeadSvgIdentical": true,
+    "sha256": "7efbe1407f3a3a68da3b5e2a0c099ed4ffb8aa3f2b4c44623ca4d64e14cc0b12"
+  },
+  {
+    "sample": "left",
+    "snapshot": "left/accepted.pcb.svg",
+    "baseAndHeadSvgIdentical": true,
+    "sha256": "f26d4333aa5557549b6fde63e9b00e41fa9fb1146c2fb78c7f5edb72b27cc908"
+  },
+  {
+    "sample": "outer-layers",
+    "snapshot": "outer-layers/accepted.pcb.svg",
+    "baseAndHeadSvgIdentical": true,
+    "sha256": "6eb5ae67d8b6611781cea4c5a3c11bd493eb4c7b9be25494aaad526b66bd2328"
+  },
+  {
+    "sample": "right",
+    "snapshot": "right/accepted.pcb.svg",
+    "baseAndHeadSvgIdentical": true,
+    "sha256": "1b855b7e21d10091dfa1011045fbb4e1e4c950880633f2ccc9528035d96b1ea0"
+  }
+]

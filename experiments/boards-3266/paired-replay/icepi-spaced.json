@@ -1,0 +1,82 @@
+{
+  "board": "icepi-spaced",
+  "run": 44879258962,
+  "order": [
+    "base",
+    "head",
+    "head",
+    "base"
+  ],
+  "sameMachine": true,
+  "allCircuitJsonsIdentical": true,
+  "trials": [
+    {
+      "board": "icepi-spaced",
+      "variant": "base",
+      "ordinal": 1,
+      "exit": 0,
+      "stop": "settled",
+      "seconds": 308.093181463,
+      "coreEntrySha256": "302ea2a78c747edf4f2db67b2a27269b0e1b3b018116b8905ba4645b057f4371",
+      "circuitSha256": "82d0321b6f3c37d1658f032414910551ad3e457497e79eb1721182fb07f1b305",
+      "cpu": {
+        "user": 353860352,
+        "system": 17213725
+      }
+    },
+    {
+      "board": "icepi-spaced",
+      "variant": "head",
+      "ordinal": 2,
+      "exit": 0,
+      "stop": "settled",
+      "seconds": 309.269875595,
+      "coreEntrySha256": "63e7e919a27a88eade722eaf3eaf6ceed99e0edad9f6f58a8475c4755978c99e",
+      "circuitSha256": "82d0321b6f3c37d1658f032414910551ad3e457497e79eb1721182fb07f1b305",
+      "cpu": {
+        "user": 350493423,
+        "system": 17393452
+      }
+    },
+    {
+      "board": "icepi-spaced",
+      "variant": "head",
+      "ordinal": 3,
+      "exit": 0,
+      "stop": "settled",
+      "seconds": 307.41885762799996,
+      "coreEntrySha256": "63e7e919a27a88eade722eaf3eaf6ceed99e0edad9f6f58a8475c4755978c99e",
+      "circuitSha256": "82d0321b6f3c37d1658f032414910551ad3e457497e79eb1721182fb07f1b305",
+      "cpu": {
+        "user": 348166014,
+        "system": 17899267
+      }
+    },
+    {
+      "board": "icepi-spaced",
+      "variant": "base",
+      "ordinal": 4,
+      "exit": 0,
+      "stop": "settled",
+      "seconds": 308.67331217700007,
+      "coreEntrySha256": "302ea2a78c747edf4f2db67b2a27269b0e1b3b018116b8905ba4645b057f4371",
+      "circuitSha256": "82d0321b6f3c37d1658f032414910551ad3e457497e79eb1721182fb07f1b305",
+      "cpu": {
+        "user": 349514566,
+        "system": 20357046
+      }
+    }
+  ],
+  "base": {
+    "meanWallSeconds": 308.38324682000007,
+    "minWallSeconds": 308.093181463,
+    "maxWallSeconds": 308.67331217700007,
+    "meanCpuSeconds": 370.4728445
+  },
+  "head": {
+    "meanWallSeconds": 308.34436661149994,
+    "minWallSeconds": 307.41885762799996,
+    "maxWallSeconds": 309.269875595,
+    "meanCpuSeconds": 366.97607800000003
+  }
+}

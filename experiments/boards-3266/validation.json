@@ -1,0 +1,24 @@
+{
+  "fixCommit": "cef688a181d401913384d2afdbdbdcc5abb70679",
+  "reproCommit": "e16fabec258bc7fbac25a13e8dd2b97ecd0da47f",
+  "localTests": {
+    "pass": 24,
+    "fail": 0,
+    "files": 7
+  },
+  "build": "pass (JavaScript bundle and validated declarations)",
+  "typecheck": "pass",
+  "freshAm3352": {
+    "before": 11,
+    "after": 11,
+    "connectedMatchedDrcValid": true,
+    "copperAndQualityReportsIdentical": true
+  },
+  "inspectedImages": [
+    "focused before/after",
+    "native H616 fixture before/after",
+    "original uploaded Butterstick-local completed byte0 on full board",
+    "all eleven AM3352 base and head images"
+  ],
+  "ciNotes": "Initial npm Rollup 4.68.8 tarball 404 resolved. Final fix code checks and required 11/11 benchmark passed on retry. Repro-only runner-loss checks were separately retried."
+}

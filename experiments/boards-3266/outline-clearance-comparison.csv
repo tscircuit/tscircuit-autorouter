@@ -1,0 +1,20 @@
+board,beforeSeconds,afterSeconds,beforeStop,afterStop,beforeFirstRouteSeconds,afterFirstRouteSeconds,setupSecondsSaved,beforeTraces,afterTraces,beforeVias,afterVias,circuitJsonIdentical,copperIdentical,errorCountsIdentical,fanoutSearchIdentical
+butterstick-local,600.293,600.2,600-second render budget,600-second render budget,45.727,44.927,0.8,,,,,,,,
+butterstick-native,222.217,228.572,settled,settled,67.984,73.336,-5.352,0,0,0,0,True,True,True,True
+butterstick-spaced,600.348,600.37,600-second render budget,600-second render budget,21.785,21.378,0.407,,,,,,,,
+glider-local,376.957,319.79,settled,settled,49.607,47.502,2.105,53,53,100,100,True,True,True,
+glider-native,304.251,306.552,settled,settled,52.672,54.353,-1.681,0,0,0,0,True,True,True,True
+glider-spaced,174.677,175.879,settled,settled,22.841,23.292,-0.45,16,16,30,30,True,True,True,
+h616-default-order-local,46.482,34.863,settled,settled,8.242,8.218,0.024,16,16,32,32,True,True,True,
+h616-local,70.108,55.055,settled,settled,8.385,8.39,-0.005,16,16,32,32,True,True,True,
+h616-native,376.751,371.038,settled,settled,13.73,12.554,1.176,0,0,0,0,True,True,True,True
+h616-spaced,35.623,33.609,settled,settled,6.881,6.933,-0.052,16,16,32,32,True,True,True,
+icepi-local,251.882,202.103,settled,settled,35.876,37.382,-1.506,16,16,30,30,True,True,True,
+icepi-native,100.2,104.46,settled,settled,55.482,57.793,-2.311,0,0,0,0,True,True,True,True
+icepi-spaced,342.932,363.569,settled,settled,15.863,15.136,0.727,52,52,98,98,True,True,True,
+imx6-local,600.384,600.543,600-second render budget,600-second render budget,33.037,34.475,-1.438,,,,,,,,
+imx6-native,190.153,195.215,settled,settled,104.458,109.378,-4.921,0,0,0,0,True,True,True,True
+imx6-spaced,541.669,527.392,settled,settled,26.483,26.544,-0.061,17,17,30,30,True,True,True,
+orangecrab-local,244.308,198.235,settled,settled,19.2,19.324,-0.123,52,52,93,93,True,True,True,
+orangecrab-native,600.261,600.268,600-second render budget,600-second render budget,13.274,14.485,-1.211,,,,,,,,
+orangecrab-spaced,262.947,261.243,settled,settled,8.46,8.649,-0.189,52,52,106,106,True,True,True,

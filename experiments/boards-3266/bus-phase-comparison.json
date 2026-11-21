@@ -1,0 +1,199 @@
+{
+  "shared": [
+    {
+      "board": "butterstick-spaced",
+      "phase": "byte0",
+      "ordinal": 1,
+      "beforeSeconds": 329.02670344800003,
+      "afterSeconds": 273.023792001,
+      "requestedConnections": 8
+    },
+    {
+      "board": "glider-local",
+      "phase": "byte0",
+      "ordinal": 1,
+      "beforeSeconds": 33.92736188700001,
+      "afterSeconds": 11.50537158000001,
+      "requestedConnections": 8
+    },
+    {
+      "board": "glider-local",
+      "phase": "byte1",
+      "ordinal": 2,
+      "beforeSeconds": 48.48984772599998,
+      "afterSeconds": 13.758998607999992,
+      "requestedConnections": 8
+    },
+    {
+      "board": "glider-spaced",
+      "phase": "byte0",
+      "ordinal": 1,
+      "beforeSeconds": 5.066650647000003,
+      "afterSeconds": 5.049130917000003,
+      "requestedConnections": 8
+    },
+    {
+      "board": "glider-spaced",
+      "phase": "byte1",
+      "ordinal": 2,
+      "beforeSeconds": 5.233959888000001,
+      "afterSeconds": 3.9756719460000056,
+      "requestedConnections": 8
+    },
+    {
+      "board": "h616-default-order-local",
+      "phase": "byte0",
+      "ordinal": 1,
+      "beforeSeconds": 8.142681182999999,
+      "afterSeconds": 3.1299481489999987,
+      "requestedConnections": 8
+    },
+    {
+      "board": "h616-default-order-local",
+      "phase": "byte1",
+      "ordinal": 2,
+      "beforeSeconds": 11.602767873000001,
+      "afterSeconds": 4.253446448999998,
+      "requestedConnections": 8
+    },
+    {
+      "board": "h616-local",
+      "phase": "byte0",
+      "ordinal": 1,
+      "beforeSeconds": 8.148308672999999,
+      "afterSeconds": 3.1099942779999985,
+      "requestedConnections": 8
+    },
+    {
+      "board": "h616-local",
+      "phase": "byte1",
+      "ordinal": 2,
+      "beforeSeconds": 11.757002246000003,
+      "afterSeconds": 4.156087942000001,
+      "requestedConnections": 8
+    },
+    {
+      "board": "h616-spaced",
+      "phase": "byte0",
+      "ordinal": 1,
+      "beforeSeconds": 4.565860236000001,
+      "afterSeconds": 3.7965963670000002,
+      "requestedConnections": 8
+    },
+    {
+      "board": "h616-spaced",
+      "phase": "byte1",
+      "ordinal": 2,
+      "beforeSeconds": 5.363461083999997,
+      "afterSeconds": 3.9088999510000004,
+      "requestedConnections": 8
+    },
+    {
+      "board": "icepi-local",
+      "phase": "byte0",
+      "ordinal": 1,
+      "beforeSeconds": 28.953487755999994,
+      "afterSeconds": 11.015394869999994,
+      "requestedConnections": 8
+    },
+    {
+      "board": "icepi-local",
+      "phase": "byte1",
+      "ordinal": 2,
+      "beforeSeconds": 51.382415927,
+      "afterSeconds": 14.871107111999997,
+      "requestedConnections": 8
+    },
+    {
+      "board": "icepi-spaced",
+      "phase": "byte0",
+      "ordinal": 1,
+      "beforeSeconds": 8.69194234,
+      "afterSeconds": 6.553623103999998,
+      "requestedConnections": 8
+    },
+    {
+      "board": "icepi-spaced",
+      "phase": "byte1",
+      "ordinal": 2,
+      "beforeSeconds": 10.972697250999996,
+      "afterSeconds": 9.143623241,
+      "requestedConnections": 8
+    },
+    {
+      "board": "imx6-local",
+      "phase": "byte0",
+      "ordinal": 1,
+      "beforeSeconds": 18.205573508999997,
+      "afterSeconds": 7.896765142000007,
+      "requestedConnections": 8
+    },
+    {
+      "board": "imx6-local",
+      "phase": "byte1",
+      "ordinal": 2,
+      "beforeSeconds": 260.144324858,
+      "afterSeconds": 180.01920078899997,
+      "requestedConnections": 8
+    },
+    {
+      "board": "imx6-spaced",
+      "phase": "byte0",
+      "ordinal": 1,
+      "beforeSeconds": 10.270081263999995,
+      "afterSeconds": 8.343806842999992,
+      "requestedConnections": 8
+    },
+    {
+      "board": "imx6-spaced",
+      "phase": "byte1",
+      "ordinal": 2,
+      "beforeSeconds": 233.50296018999998,
+      "afterSeconds": 218.052475813,
+      "requestedConnections": 8
+    },
+    {
+      "board": "orangecrab-local",
+      "phase": "byte0",
+      "ordinal": 1,
+      "beforeSeconds": 17.756753336999996,
+      "afterSeconds": 6.826313911,
+      "requestedConnections": 8
+    },
+    {
+      "board": "orangecrab-local",
+      "phase": "byte1",
+      "ordinal": 2,
+      "beforeSeconds": 53.290413715,
+      "afterSeconds": 11.585019808999995,
+      "requestedConnections": 8
+    },
+    {
+      "board": "orangecrab-spaced",
+      "phase": "byte0",
+      "ordinal": 1,
+      "beforeSeconds": 6.4747414370000005,
+      "afterSeconds": 5.5360974590000005,
+      "requestedConnections": 8
+    },
+    {
+      "board": "orangecrab-spaced",
+      "phase": "byte1",
+      "ordinal": 2,
+      "beforeSeconds": 8.366916175,
+      "afterSeconds": 6.480988873000001,
+      "requestedConnections": 8
+    }
+  ],
+  "newlyCompleted": [
+    {
+      "board": "butterstick-local",
+      "phase": "byte0",
+      "ordinal": 1,
+      "renderSeconds": 475.117060394,
+      "routingSeconds": 430.19020317800005,
+      "requestedConnections": 8,
+      "traceCount": 16
+    }
+  ]
+}

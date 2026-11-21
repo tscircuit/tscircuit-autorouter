@@ -1,0 +1,485 @@
+{
+  "sample": "above",
+  "cpu": {
+    "x": 0,
+    "y": 0
+  },
+  "ram": {
+    "x": 0,
+    "y": 27
+  },
+  "allowedLayers": null,
+  "carrierLayerCounts": {
+    "bottom": 14,
+    "inner2": 15,
+    "inner1": 18
+  },
+  "status": "solved",
+  "solved": true,
+  "timeoutSeconds": 3600,
+  "solveMilliseconds": 30077.334835999998,
+  "milliseconds": 31912.260507,
+  "iterations": 101425,
+  "requestedSignals": 47,
+  "routedSignals": 47,
+  "fixedPowerDogbones": 161,
+  "inputUnchanged": true,
+  "fixedPowerPreserved": true,
+  "inputSha256": "20fc884f08accd368e4ce049ab3fc180a1926f425787a504dbc4040f651bfa69",
+  "failureCode": null,
+  "error": null,
+  "validation": {
+    "valid": true,
+    "complete": true,
+    "matched": true,
+    "fixedPowerTraces": 161,
+    "fixedPowerVias": 161,
+    "fixedPowerPadJoins": 161,
+    "fixedDrc": {
+      "valid": true,
+      "checkedTraceCount": 161,
+      "checkedSegmentCount": 183,
+      "checkedViaCount": 161,
+      "issues": []
+    },
+    "combinedDrc": {
+      "valid": true,
+      "checkedTraceCount": 208,
+      "checkedSegmentCount": 23598,
+      "checkedViaCount": 255,
+      "issues": []
+    },
+    "busLengths": [
+      {
+        "busId": "DDR_BYTE0",
+        "minLengthMm": null,
+        "aboveMinimumLength": true,
+        "maxLengthMm": null,
+        "withinLengthLimit": true,
+        "toleranceMm": 0.635,
+        "skewMm": 0.6350000000108622,
+        "matched": true,
+        "lengths": [
+          {
+            "name": "source_trace_14",
+            "carrierLengthMm": 50.65646586810246,
+            "fixedLengthMm": 0,
+            "totalLengthMm": 50.65646586810246
+          },
+          {
+            "name": "source_trace_30",
+            "carrierLengthMm": 50.656465868060785,
+            "fixedLengthMm": 0,
+            "totalLengthMm": 50.656465868060785
+          },
+          {
+            "name": "source_trace_3",
+            "carrierLengthMm": 51.29146586807165,
+            "fixedLengthMm": 0,
+            "totalLengthMm": 51.29146586807165
+          },
+          {
+            "name": "source_trace_40",
+            "carrierLengthMm": 50.65646586806121,
+            "fixedLengthMm": 0,
+            "totalLengthMm": 50.65646586806121
+          },
+          {
+            "name": "source_trace_17",
+            "carrierLengthMm": 50.65646586806112,
+            "fixedLengthMm": 0,
+            "totalLengthMm": 50.65646586806112
+          },
+          {
+            "name": "source_trace_41",
+            "carrierLengthMm": 50.656465868061076,
+            "fixedLengthMm": 0,
+            "totalLengthMm": 50.656465868061076
+          },
+          {
+            "name": "source_trace_4",
+            "carrierLengthMm": 50.65646586806115,
+            "fixedLengthMm": 0,
+            "totalLengthMm": 50.65646586806115
+          },
+          {
+            "name": "source_trace_31",
+            "carrierLengthMm": 50.65646586806107,
+            "fixedLengthMm": 0,
+            "totalLengthMm": 50.65646586806107
+          },
+          {
+            "name": "source_trace_29",
+            "carrierLengthMm": 50.65646586806091,
+            "fixedLengthMm": 0,
+            "totalLengthMm": 50.65646586806091
+          },
+          {
+            "name": "source_trace_15",
+            "carrierLengthMm": 50.811327916519645,
+            "fixedLengthMm": 0,
+            "totalLengthMm": 50.811327916519645
+          },
+          {
+            "name": "source_trace_16",
+            "carrierLengthMm": 50.68432791651961,
+            "fixedLengthMm": 0,
+            "totalLengthMm": 50.68432791651961
+          }
+        ]
+      },
+      {
+        "busId": "DDR_BYTE1",
+        "minLengthMm": null,
+        "aboveMinimumLength": true,
+        "maxLengthMm": null,
+        "withinLengthLimit": true,
+        "toleranceMm": 0.635,
+        "skewMm": 0.635000000003032,
+        "matched": true,
+        "lengths": [
+          {
+            "name": "source_trace_28",
+            "carrierLengthMm": 57.39872539568981,
+            "fixedLengthMm": 0,
+            "totalLengthMm": 57.39872539568981
+          },
+          {
+            "name": "source_trace_12",
+            "carrierLengthMm": 56.76372539570547,
+            "fixedLengthMm": 0,
+            "totalLengthMm": 56.76372539570547
+          },
+          {
+            "name": "source_trace_39",
+            "carrierLengthMm": 56.76372539568678,
+            "fixedLengthMm": 0,
+            "totalLengthMm": 56.76372539568678
+          },
+          {
+            "name": "source_trace_2",
+            "carrierLengthMm": 56.76372539570541,
+            "fixedLengthMm": 0,
+            "totalLengthMm": 56.76372539570541
+          },
+          {
+            "name": "source_trace_25",
+            "carrierLengthMm": 56.76372539570537,
+            "fixedLengthMm": 0,
+            "totalLengthMm": 56.76372539570537
+          },
+          {
+            "name": "source_trace_1",
+            "carrierLengthMm": 57.136021858255546,
+            "fixedLengthMm": 0,
+            "totalLengthMm": 57.136021858255546
+          },
+          {
+            "name": "source_trace_38",
+            "carrierLengthMm": 56.76372539570547,
+            "fixedLengthMm": 0,
+            "totalLengthMm": 56.76372539570547
+          },
+          {
+            "name": "source_trace_11",
+            "carrierLengthMm": 56.763725395705464,
+            "fixedLengthMm": 0,
+            "totalLengthMm": 56.763725395705464
+          },
+          {
+            "name": "source_trace_13",
+            "carrierLengthMm": 56.763725395705414,
+            "fixedLengthMm": 0,
+            "totalLengthMm": 56.763725395705414
+          },
+          {
+            "name": "source_trace_27",
+            "carrierLengthMm": 56.763725395704974,
+            "fixedLengthMm": 0,
+            "totalLengthMm": 56.763725395704974
+          },
+          {
+            "name": "source_trace_26",
+            "carrierLengthMm": 56.89072539570492,
+            "fixedLengthMm": 0,
+            "totalLengthMm": 56.89072539570492
+          }
+        ]
+      }
+    ],
+    "pairLengths": [
+      {
+        "busId": "pair_0",
+        "minLengthMm": null,
+        "aboveMinimumLength": true,
+        "maxLengthMm": null,
+        "withinLengthLimit": true,
+        "toleranceMm": 0.127,
+        "skewMm": 0.12700000000003797,
+        "matched": true,
+        "lengths": [
+          {
+            "name": "source_trace_15",
+            "carrierLengthMm": 50.811327916519645,
+            "fixedLengthMm": 0,
+            "totalLengthMm": 50.811327916519645
+          },
+          {
+            "name": "source_trace_16",
+            "carrierLengthMm": 50.68432791651961,
+            "fixedLengthMm": 0,
+            "totalLengthMm": 50.68432791651961
+          }
+        ]
+      },
+      {
+        "busId": "pair_1",
+        "minLengthMm": null,
+        "aboveMinimumLength": true,
+        "maxLengthMm": null,
+        "withinLengthLimit": true,
+        "toleranceMm": 0.127,
+        "skewMm": 0.1269999999999456,
+        "matched": true,
+        "lengths": [
+          {
+            "name": "source_trace_27",
+            "carrierLengthMm": 56.763725395704974,
+            "fixedLengthMm": 0,
+            "totalLengthMm": 56.763725395704974
+          },
+          {
+            "name": "source_trace_26",
+            "carrierLengthMm": 56.89072539570492,
+            "fixedLengthMm": 0,
+            "totalLengthMm": 56.89072539570492
+          }
+        ]
+      },
+      {
+        "busId": "pair_2",
+        "minLengthMm": null,
+        "aboveMinimumLength": true,
+        "maxLengthMm": null,
+        "withinLengthLimit": true,
+        "toleranceMm": 0.127,
+        "skewMm": 0.12699999999998823,
+        "matched": true,
+        "lengths": [
+          {
+            "name": "source_trace_32",
+            "carrierLengthMm": 51.30858243277705,
+            "fixedLengthMm": 0,
+            "totalLengthMm": 51.30858243277705
+          },
+          {
+            "name": "source_trace_33",
+            "carrierLengthMm": 51.18158243277706,
+            "fixedLengthMm": 0,
+            "totalLengthMm": 51.18158243277706
+          }
+        ]
+      }
+    ],
+    "quality": {
+      "signalCount": 47,
+      "footprint": {
+        "bounds": {
+          "minX": -6.432846126699998,
+          "maxX": 8.300001000000004,
+          "minY": -7.950000999999999,
+          "maxY": 33.75,
+          "widthMm": 14.732847126700001,
+          "heightMm": 41.700001,
+          "areaMm2": 614.3597399162372
+        },
+        "allCopperBounds": {
+          "minX": -7.401000000000001,
+          "maxX": 8.300001000000004,
+          "minY": -7.950000999999999,
+          "maxY": 33.75,
+          "widthMm": 15.701001000000005,
+          "heightMm": 41.700001,
+          "areaMm2": 654.7317574010012
+        },
+        "layers": [
+          {
+            "layer": "top",
+            "minX": -6.05,
+            "maxX": 4.150000000000001,
+            "minY": -7.350000000000002,
+            "maxY": 33.55,
+            "widthMm": 10.200000000000001,
+            "heightMm": 40.9,
+            "areaMm2": 417.18
+          },
+          {
+            "layer": "inner1",
+            "minX": -6.432846126699998,
+            "maxX": 6.200000000000003,
+            "minY": -7.950000999999999,
+            "maxY": 33.55,
+            "widthMm": 12.6328461267,
+            "heightMm": 41.500001,
+            "areaMm2": 524.2631268908962
+          },
+          {
+            "layer": "inner2",
+            "minX": -6.149999999999998,
+            "maxX": 8.300001000000004,
+            "minY": -7.950000999999998,
+            "maxY": 33.75,
+            "widthMm": 14.450001,
+            "heightMm": 41.700001,
+            "areaMm2": 602.565056150001
+          },
+          {
+            "layer": "bottom",
+            "minX": -6.149999999999998,
+            "maxX": 5.410000000000004,
+            "minY": -7.809999999999997,
+            "maxY": 33.55,
+            "widthMm": 11.560000000000002,
+            "heightMm": 41.35999999999999,
+            "areaMm2": 478.1216
+          }
+        ],
+        "middleRegionMaxCenterOffsetMm": 8.300001000000004,
+        "middleRegionVacancy": {
+          "layers": [
+            {
+              "layer": "bottom",
+              "envelopeAreaMm2": 150.54448124000004,
+              "unoccupiedAreaMm2": 80.59221866855754,
+              "unoccupiedFraction": 0.5353382469070808,
+              "largestFreeRectangleMm2": 37.79462989803897,
+              "gridResolutionMm": 0.1
+            },
+            {
+              "layer": "inner2",
+              "envelopeAreaMm2": 188.180614572879,
+              "unoccupiedAreaMm2": 59.37175167861353,
+              "unoccupiedFraction": 0.3155040800210582,
+              "largestFreeRectangleMm2": 18.07009428696664,
+              "gridResolutionMm": 0.1
+            },
+            {
+              "layer": "inner1",
+              "envelopeAreaMm2": 164.51602653363278,
+              "unoccupiedAreaMm2": 26.580457974538977,
+              "unoccupiedFraction": 0.16156759031075313,
+              "largestFreeRectangleMm2": 2.936903280668927,
+              "gridResolutionMm": 0.1
+            }
+          ],
+          "envelopeAreaMm2": 503.2411223465118,
+          "unoccupiedAreaMm2": 166.54442832171003
+        }
+      },
+      "totalPlanarLengthMm": 2100.8152108476634,
+      "maxDetourRatio": 1.5928485038259055,
+      "meanDetourRatio": 1.3553822912735924,
+      "ordinaryTurns": 747,
+      "shortJogs": 226,
+      "acuteCorners": 0,
+      "sharpCurveCorners": 0,
+      "illegalOrdinaryCorners": 0,
+      "nonOctilinearOrdinarySegments": 0,
+      "pairGaps": [
+        {
+          "connectionNames": [
+            "source_trace_15",
+            "source_trace_16"
+          ],
+          "requestedGapMm": 0.12,
+          "sharedSectionPresent": true,
+          "minEdgeGapMm": 0.11979060874800372,
+          "maxEdgeGapMm": 0.13774884330447518,
+          "maxSamplingErrorMm": 0.0009999797738577034,
+          "sharedCopperMm": [
+            29.086034315171453,
+            28.951343839589313
+          ],
+          "maxAllowedEdgeGapMm": 0.14012628406432667,
+          "matched": true
+        },
+        {
+          "connectionNames": [
+            "source_trace_27",
+            "source_trace_26"
+          ],
+          "requestedGapMm": 0.12,
+          "sharedSectionPresent": true,
+          "minEdgeGapMm": 0.11990112695668835,
+          "maxEdgeGapMm": 0.1377475330937794,
+          "maxSamplingErrorMm": 0.0009999081448705343,
+          "sharedCopperMm": [
+            38.44585875166947,
+            38.08135081678115
+          ],
+          "maxAllowedEdgeGapMm": 0.14012628406432667,
+          "matched": true
+        },
+        {
+          "connectionNames": [
+            "source_trace_32",
+            "source_trace_33"
+          ],
+          "requestedGapMm": 0.12,
+          "sharedSectionPresent": true,
+          "minEdgeGapMm": 0.11999999999999654,
+          "maxEdgeGapMm": 0.13774658539549878,
+          "maxSamplingErrorMm": 0.00099999282722334,
+          "sharedCopperMm": [
+            43.867941596043195,
+            44.59695746581985
+          ],
+          "maxAllowedEdgeGapMm": 0.14012628406432667,
+          "matched": true
+        }
+      ],
+      "exteriorPairGaps": [
+        {
+          "connectionNames": [
+            "source_trace_15",
+            "source_trace_16"
+          ],
+          "applicable": true,
+          "matched": true,
+          "maxExteriorEdgeGapMm": 0.13774789892821854,
+          "maxSamplingErrorMm": 0.0009999797738577034,
+          "separatedExteriorLengthMm": 0
+        },
+        {
+          "connectionNames": [
+            "source_trace_27",
+            "source_trace_26"
+          ],
+          "applicable": true,
+          "matched": true,
+          "maxExteriorEdgeGapMm": 0.1377475330937794,
+          "maxSamplingErrorMm": 0.0009999081448705343,
+          "separatedExteriorLengthMm": 0
+        },
+        {
+          "connectionNames": [
+            "source_trace_32",
+            "source_trace_33"
+          ],
+          "applicable": true,
+          "matched": true,
+          "maxExteriorEdgeGapMm": 0.13775071632532215,
+          "maxSamplingErrorMm": 0.000999969831476809,
+          "separatedExteriorLengthMm": 0
+        }
+      ],
+      "issues": []
+    },
+    "issues": []
+  },
+  "envelopeOptimization": {
+    "beforeAreaMm2": 638.4000000000001,
+    "afterAreaMm2": 614.3597399162372,
+    "milliseconds": 8101.2653930000015
+  }
+}

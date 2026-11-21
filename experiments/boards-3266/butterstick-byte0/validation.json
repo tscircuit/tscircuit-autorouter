@@ -1,0 +1,22 @@
+{
+  "scope": "Byte zero of the original uploaded Butterstick-local TSX; whole board still reaches its 600-second limit",
+  "tscircuit": "0.0.3266",
+  "run": 44877875894,
+  "connectivity": {
+    "valid": true,
+    "checkedConnectionCount": 8,
+    "connectedConnectionCount": 8,
+    "checkedEndpointCount": 24,
+    "connectedEndpointCount": 24,
+    "issues": []
+  },
+  "drc": {
+    "valid": true,
+    "checkedTraceCount": 16,
+    "checkedSegmentCount": 120,
+    "checkedViaCount": 16,
+    "issues": []
+  },
+  "matchedOriginalPhysicalObstacles": 1710,
+  "renderedFromOriginalTsxGeometry": true
+}

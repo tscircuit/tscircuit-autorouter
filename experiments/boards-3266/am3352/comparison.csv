@@ -1,0 +1,12 @@
+sample,baseSolveSeconds,headSolveSeconds,baseAccepted,headAccepted,requestedSignals,routedSignals,inputSha256,inputIdentical,iterationsIdentical,routedCopperIdentical,qualityReportsIdentical,fixedCopperPreserved
+above,30.077334836,29.414807298,True,True,47,47,20fc884f08accd368e4ce049ab3fc180a1926f425787a504dbc4040f651bfa69,True,True,True,True,True
+control,18.347193640999997,18.358713834000003,True,True,47,47,b7a4e9d09a22fe0ed131a544548b14eef20fbf4e88b6dc6ffaa11ca44e6bfe59,True,True,True,True,True
+control-inner1,816.232449269,721.2828945890001,True,True,47,47,14b5b318540ce7bac367cf22338abd7f9fffd2f7ce6c2a12f903116f50ca9bde,True,True,True,True,True
+inner-layers,28.364524562,28.223519597,True,True,47,47,1b91e6c5207e4b7e132aa5ac246e94777f926c7beab8675adf0356634b8280ad,True,True,True,True,True
+inner-layers-above,166.378776858,159.920649498,True,True,47,47,68a86ef74f8ec9628954e909464c009d98fb2c902a6376e20b3a32d4b5cff555,True,True,True,True,True
+inner-layers-complete-ca,156.37996542700003,157.69289510299998,True,True,47,47,a6def279fa2d3356a66ee94b1760a76eebb6c6d8e605005ce5903bd2fbca8776,True,True,True,True,True
+inner-layers-left,132.67893512,136.08130382,True,True,47,47,1c3db8ee018bc90df7fbbb0c198c42efcc0ca948a6a213338650cf81a51f7ab2,True,True,True,True,True
+inner-layers-right,43.754994112,44.542630203,True,True,47,47,2eaf3dedcd84fbfed10262f4d4c99370a0ca00a7a060f87b7a1cdcba9de37a8e,True,True,True,True,True
+left,23.016756383,22.785753623,True,True,47,47,6042ca0f0889a983a6ccf8f929a6a46b18cc57134e1b9f3b49c19063b936caa5,True,True,True,True,True
+outer-layers,551.85584985,546.42559434,True,True,47,47,de3fd915f3c7d8c9bf4fd3c9b197596ba5e08c1be328f9c5223d7ab78736588f,True,True,True,True,True
+right,16.959185075,17.093778171,True,True,47,47,78c22c8d818ee2c2abe2eec9c6b6e408161a9d0eaf09afbafc3242e71e8f5778,True,True,True,True,True
