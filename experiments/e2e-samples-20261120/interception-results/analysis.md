@@ -1,8 +1,10 @@
 # Ten supplied full circuits: intercepted pipeline analysis
 
-**Latest refresh:** [Core 0.0.2437 / fanout 0.0.95: verified plane-search fix, native before/after and statistics](plane-order-replay-analysis.md).
+**Latest refresh:** [Core 0.0.2443 / autorouter 0.0.1143: deferred output conversion, current full-circuit analysis and before/after](deferred-output-analysis.md).
 
-**Previous refresh:** [Core 0.0.2436 / autorouter 0.0.1139 and the verified prefix-cache fix](failed-prefix-cache-analysis.md).
+**Previous refresh:** [Core 0.0.2437 / fanout 0.0.95: verified plane-search fix](plane-order-replay-analysis.md).
+
+**Earlier refresh:** [Core 0.0.2436 / autorouter 0.0.1139 and the verified prefix-cache fix](failed-prefix-cache-analysis.md).
 
 **Earlier follow-up:** [verified source-turn fix, before/after statistics and remaining failures](source-turn-analysis.md).
 
