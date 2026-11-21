@@ -1,24 +1,18 @@
 import { expect, test } from "bun:test"
 import { getSvgFromGraphicsObject } from "graphics-debug"
-import {
-  InitialBgaTopologySolver,
-  type InitialBgaTopologySolverInput,
-} from "lib/solvers/BgaTopologyGeneratorSolver/InitialBgaTopologySolver"
-import initialBgaInput from "../../fixtures/bug-reports/bugreport104-initial-bga-topology.json" with {
-  type: "json",
-}
+import { InitialBgaTopologySolver } from "lib/solvers/BgaTopologyGeneratorSolver/InitialBgaTopologySolver"
+import { loadBugreport104InitialBgaTopologyInput } from "../fixtures/loadBugreport104InitialBgaTopologyInput"
 
 test("bugreport104 BGA pad gap mesh node visualization snapshot", (): void => {
-  const solver = new InitialBgaTopologySolver(
-    initialBgaInput as unknown as InitialBgaTopologySolverInput,
-  )
+  const initialBgaInput = loadBugreport104InitialBgaTopologyInput()
+  const solver = new InitialBgaTopologySolver(initialBgaInput)
   solver.solve()
 
   expect(solver.solved).toBe(true)
 
   const srj = initialBgaInput.srj
   const minTraceChannelWidth =
-    srj.minTraceWidth + 2 * srj.minTraceToPadEdgeClearance
+    srj.minTraceWidth + 2 * srj.minTraceToPadEdgeClearance!
   const redRects = solver
     .getOutput()
     .filter(

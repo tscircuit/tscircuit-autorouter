@@ -1,18 +1,12 @@
 import { expect, test } from "bun:test"
-import {
-  InitialBgaTopologySolver,
-  type InitialBgaTopologySolverInput,
-} from "lib/solvers/BgaTopologyGeneratorSolver/InitialBgaTopologySolver"
-import initialBgaInput from "../../fixtures/bug-reports/bugreport104-initial-bga-topology.json" with {
-  type: "json",
-}
+import { InitialBgaTopologySolver } from "lib/solvers/BgaTopologyGeneratorSolver/InitialBgaTopologySolver"
+import { loadBugreport104InitialBgaTopologyInput } from "../fixtures/loadBugreport104InitialBgaTopologyInput"
 
 test.failing(
   "InitialBgaTopologySolver keeps the pad layer out of BGA pad gaps too narrow for a trace",
   (): void => {
-    const solver = new InitialBgaTopologySolver(
-      initialBgaInput as unknown as InitialBgaTopologySolverInput,
-    )
+    const initialBgaInput = loadBugreport104InitialBgaTopologyInput()
+    const solver = new InitialBgaTopologySolver(initialBgaInput)
     solver.solve()
 
     expect(solver.solved).toBe(true)
