@@ -17,7 +17,7 @@ after=before.decode().replace(old,new).encode()
 chunk.write_bytes(after)
 provenance={
  'coreBaseVersion':'0.0.2438',
- 'fixCommit':'aea0287c77451e32c13ae8c39d9b2a9694455d91',
+ 'fixCommit':'5f2f8aa0f90cd4fb8f1e8912b0168b8f02089730',
  'fixRepository':'tscircuit/core',
  'method':'Replace the one compiled call corresponding to selector-reuse.patch; preserve every other released dependency and byte.',
  'chunkBeforeSha256':hashlib.sha256(before).hexdigest(),

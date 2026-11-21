@@ -1,0 +1,103 @@
+{
+  "purpose": "CPU diagnosis of original IcePi native TSX; local profiles are not used as formal benchmark timings. All before/after benchmark claims come from Blacksmith.",
+  "profiles": {
+    "before": {
+      "samples": 68846,
+      "typedPortLookupStacks": [
+        {
+          "samples": 31836,
+          "callers": [
+            "selectOne",
+            "",
+            "map",
+            "Trace__findConnectedPorts",
+            "doInitialCreateAutoplacedBreakoutPoints",
+            "runRenderPhase"
+          ]
+        },
+        {
+          "samples": 19,
+          "callers": [
+            "selectOne",
+            "traceHasEndpointMatchingConnectionSelector",
+            "some",
+            "getTraceRoutingPhaseIndex",
+            "Group_getRoutingPhasePlans",
+            "_getRoutingPhasePlans"
+          ]
+        },
+        {
+          "samples": 19,
+          "callers": [
+            "selectOne",
+            "traceHasEndpointMatchingConnectionSelector",
+            "some",
+            "getTraceRoutingPhaseIndex",
+            "Group_getRoutingPhasePlans",
+            "_getRoutingPhasePlans"
+          ]
+        },
+        {
+          "samples": 17,
+          "callers": [
+            "selectOne",
+            "traceHasEndpointMatchingConnectionSelector",
+            "some",
+            "getTraceRoutingPhaseIndex",
+            "Group_getRoutingPhasePlans",
+            "_getRoutingPhasePlans"
+          ]
+        }
+      ]
+    },
+    "after": {
+      "samples": 55123,
+      "typedPortLookupStacks": [
+        {
+          "samples": 14336,
+          "callers": [
+            "selectOne",
+            "",
+            "map",
+            "Trace__findConnectedPorts",
+            "doInitialCreateAutoplacedBreakoutPoints",
+            "runRenderPhase"
+          ]
+        },
+        {
+          "samples": 19,
+          "callers": [
+            "selectOne",
+            "traceHasEndpointMatchingConnectionSelector",
+            "some",
+            "getTraceRoutingPhaseIndex",
+            "Group_getRoutingPhasePlans",
+            "_getRoutingPhasePlans"
+          ]
+        },
+        {
+          "samples": 6,
+          "callers": [
+            "selectOne",
+            "createNetsFromProps",
+            "doInitialCreateNetsFromProps",
+            "runRenderPhase",
+            "runRenderPhaseForChildren",
+            "runRenderPhaseForChildren"
+          ]
+        },
+        {
+          "samples": 3,
+          "callers": [
+            "selectOne",
+            "_resolveNet",
+            "",
+            "map",
+            "_findConnectedNets",
+            "doInitialSourceTraceRender"
+          ]
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "fixCommit": "5f2f8aa0f90cd4fb8f1e8912b0168b8f02089730",
+  "reproCommit": "73e27d4b966136168eeee8c4d3a4526faef6065e",
+  "targetedTests": {
+    "firstRun": {
+      "pass": 112,
+      "skip": 3,
+      "fail": 0,
+      "files": 91
+    },
+    "additionalRun": {
+      "pass": 12,
+      "fail": 0,
+      "files": 12
+    },
+    "finalRepros": {
+      "pass": 2,
+      "fail": 0,
+      "files": 2
+    }
+  },
+  "build": "pass, ESM and declarations",
+  "typecheck": "pass, bun node_modules/typescript/bin/tsc --noEmit --pretty false",
+  "ci": "All 10 test shards pass on each PR; see fix-ci-checks.json and repro-ci-checks.json."
+}

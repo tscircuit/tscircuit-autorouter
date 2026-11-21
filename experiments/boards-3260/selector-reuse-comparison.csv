@@ -1,0 +1,20 @@
+board,beforeSeconds,afterSeconds,beforeStop,afterStop,beforeFirstRouteSeconds,afterFirstRouteSeconds,setupSecondsSaved,beforeTraces,afterTraces,beforeVias,afterVias,circuitJsonIdentical,copperIdentical,errorCountsIdentical,fanoutSearchIdentical
+butterstick-local,600.323,600.338,600-second render budget,600-second render budget,47.834,46.282,1.552,,,,,,,,
+butterstick-native,335.641,282.985,settled,settled,129.035,72.753,56.282,0,0,0,0,True,True,True,True
+butterstick-spaced,600.48,600.496,600-second render budget,600-second render budget,22.727,22.574,0.153,,,,,,,,
+glider-local,395.027,376.343,settled,settled,58.959,48.656,10.303,53,53,100,100,True,True,True,
+glider-native,573.557,529.918,settled,settled,99.455,55.716,43.739,0,0,0,0,True,True,True,True
+glider-spaced,180.82,176.412,settled,settled,24.773,22.769,2.004,16,16,30,30,True,True,True,
+h616-default-order-local,47.758,47.674,settled,settled,8.81,8.665,0.144,16,16,32,32,True,True,True,
+h616-local,59.964,59.268,settled,settled,8.736,8.622,0.114,16,16,32,32,True,True,True,
+h616-native,600.191,600.2,600-second render budget,600-second render budget,21.765,14.019,7.747,,,,,,,,
+h616-spaced,37.891,35.3,settled,settled,7.405,7.199,0.206,16,16,32,32,True,True,True,
+icepi-local,234.539,235.753,settled,settled,37.514,36.996,0.518,16,16,30,30,True,True,True,
+icepi-native,152.962,107.496,settled,settled,102.042,57.031,45.011,0,0,0,0,True,True,True,True
+icepi-spaced,279.836,275.666,settled,settled,16.245,15.909,0.336,52,52,98,98,True,True,True,
+imx6-local,600.415,600.473,600-second render budget,600-second render budget,35.394,37.771,-2.377,,,,,,,,
+imx6-native,285.294,202.162,settled,settled,196.781,110.814,85.966,0,0,0,0,True,True,True,True
+imx6-spaced,412.9,397.515,settled,settled,28.62,26.362,2.258,17,17,30,30,True,True,True,
+orangecrab-local,222.604,220.964,settled,settled,20.588,19.575,1.013,52,52,93,93,True,True,True,
+orangecrab-native,600.183,600.199,600-second render budget,600-second render budget,24.287,16.229,8.058,,,,,,,,
+orangecrab-spaced,195.839,195.441,settled,settled,9.256,9.226,0.03,52,52,101,101,True,True,True,
