@@ -15,5 +15,9 @@ test("default Pipeline9 DRC count on the full Bluetooth gamepad", async () => {
     return solver.getOutputSimplifiedPcbTraces()
   })
   expect(completed).toBe(true)
-  expect(errors.length).toMatchInlineSnapshot(`10`)
+  const contacts = errors.filter((e) =>
+    e.message.includes("accidental contact"),
+  )
+  expect(contacts).toHaveLength(0)
+  expect(errors.length).toMatchInlineSnapshot(`8`)
 })
