@@ -4,8 +4,11 @@ import type {
 } from "lib/solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
 import type { PreloadedCopperLookup } from "./createPreloadedCopperLookup"
 import { PRELOADED_TRACE_TOLERANCE } from "./getPreloadedTracePrimitives"
+import type { ClearanceGap } from "./ClearanceGapIndex"
 
-/** Add a crossing candidate in each clear boundary interval that has no free port. */
+export type ClearanceGapPort = ClearanceGap & { port: SegmentPortPoint }
+
+/** Return a crossing candidate for each clear boundary interval that has no free port. */
 export function getPreloadedClearanceGapPorts({
   segment,
   z,
@@ -14,7 +17,7 @@ export function getPreloadedClearanceGapPorts({
   segment: SharedEdgeSegment
   z: number
   copperLookup: PreloadedCopperLookup
-}): SegmentPortPoint[] {
+}): ClearanceGapPort[] {
   const dx = segment.end.x - segment.start.x
   const dy = segment.end.y - segment.start.y
   const lengthSquared = dx * dx + dy * dy
@@ -32,7 +35,7 @@ export function getPreloadedClearanceGapPorts({
         ((port.x - segment.start.x) * dx + (port.y - segment.start.y) * dy) /
         lengthSquared,
     )
-  const gapPorts: SegmentPortPoint[] = []
+  const gapPorts: ClearanceGapPort[] = []
   const clearSpans = copperLookup.getClearSpans({ ...segment, z })
   for (const [index, [start, end]] of clearSpans.entries()) {
     if ((end - start) * length <= PRELOADED_TRACE_TOLERANCE) continue
@@ -41,7 +44,7 @@ export function getPreloadedClearanceGapPorts({
     )
     if (hasFreePort) continue
     const fraction = (start + end) / 2
-    gapPorts.push({
+    const port: SegmentPortPoint = {
       ...template,
       segmentPortPointId: `${segment.edgeId}_preloadgap${index}_z${z}`,
       x: segment.start.x + dx * fraction,
@@ -52,6 +55,18 @@ export function getPreloadedClearanceGapPorts({
       _preloadedFixedNetIds: undefined,
       _preloadedTracePortAssignments: undefined,
       distToCentermostPortOnZ: Math.abs(fraction - 0.5) * length,
+    }
+    gapPorts.push({
+      z,
+      start: {
+        x: segment.start.x + dx * start,
+        y: segment.start.y + dy * start,
+      },
+      end: {
+        x: segment.start.x + dx * end,
+        y: segment.start.y + dy * end,
+      },
+      port,
     })
   }
   return gapPorts

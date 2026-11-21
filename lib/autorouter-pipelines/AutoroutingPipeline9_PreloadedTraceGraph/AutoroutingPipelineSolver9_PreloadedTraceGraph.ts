@@ -14,6 +14,8 @@ import type { NodeDimensionSubdivisionSolver } from "lib/solvers/NodeDimensionSu
 import { TinyHypergraphPortPointPathingSolver } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver"
 import type { MultiGraphTopologyPlannerSolver } from "lib/solvers/TopologyPlanningSolver/MultiGraphTopologyPlannerSolver"
 import type { TopologyMergingSolver } from "lib/solvers/TopologyMergingSolver/TopologyMergingSolver"
+import { ClearanceGapIndex } from "./ClearanceGapIndex"
+import { findConflictingGaps } from "./findConflictingGaps"
 import { splitNodesWithoutThroughViaSite } from "./splitNodesWithoutThroughViaSite"
 import type { UniformPortDistributionSolver } from "lib/solvers/UniformPortDistributionSolver/UniformPortDistributionSolver"
 import { getColorMap } from "lib/solvers/colors"
@@ -144,6 +146,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   srjWithEscapeViaLocations?: SimpleRouteJson
   srjWithPointPairs?: SimpleRouteJson
   originalSrj: SimpleRouteJson
+  private readonly excludedGaps = new ClearanceGapIndex()
   private hasRefinedFixedWireViaSites = false
   capacityNodes: CapacityMeshNode[] | null = null
   capacityEdges: CapacityMeshEdge[] | null = null
@@ -172,13 +175,10 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       solverName: "portPointPathingSolver",
       solverClass: TinyHypergraphPortPointPathingSolver,
       getConstructorParams: (pipeline) => {
-        const sharedEdgeSegments =
-          pipeline.sharedEdgeSegmentsWithNecessaryCrampedPortPoints ??
-          pipeline.necessaryCrampedPortPointSolver?.getOutput() ??
-          pipeline.availableSegmentPointSolver!.getOutput()
-        const segmentPortPoints = sharedEdgeSegments.flatMap(
-          (segment) => segment.portPoints,
-        )
+        const segmentPortPoints =
+          pipeline.preloadedTraceGraphSolver!.getRoutablePortPoints(
+            pipeline.excludedGaps,
+          )
         return [getPipeline9PortPointPathingInput(segmentPortPoints, pipeline)]
       },
     }),
@@ -306,17 +306,11 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     )
   }
 
-  private refineFixedWireViaSites(): boolean {
-    if (
-      this.hasRefinedFixedWireViaSites ||
-      !this.originalSrj.traces?.some((trace) => trace.isFixed)
-    ) {
-      return false
-    }
-    const plannedNodes =
-      this.portPointPathingSolver!.getOutput().nodesWithPortPoints
+  private refineFixedWireViaSites(
+    nodesWithPortPoints: readonly NodeWithPortPoints[],
+  ): boolean {
     const layerChangeNodeIds = new Set(
-      plannedNodes
+      nodesWithPortPoints
         .filter((node) =>
           node.portPointsInPairs?.some(([entry, exit]) => entry.z !== exit.z),
         )
@@ -336,6 +330,31 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     // shared ports and path on the constrained mesh before exposing the plan.
     this.hasRefinedFixedWireViaSites = true
     this.capacityNodes = refined
+    return true
+  }
+
+  private refinePortPointPlan(): boolean {
+    const { clearanceGapsByPortId } = this.preloadedTraceGraphSolver!
+    const checkViaSites =
+      !this.hasRefinedFixedWireViaSites &&
+      this.originalSrj.traces?.some((trace) => trace.isFixed)
+    if (!checkViaSites && clearanceGapsByPortId.size < 2) return false
+
+    const { nodesWithPortPoints } = this.portPointPathingSolver!.getOutput()
+    if (checkViaSites && this.refineFixedWireViaSites(nodesWithPortPoints)) {
+      this.currentPipelineStepIndex = this.pipelineDef.findIndex(
+        (step) => step.solverName === "edgeSolver",
+      )
+    } else {
+      const conflictingGaps = findConflictingGaps({
+        nodesWithPortPoints,
+        clearanceGapsByPortId,
+        connMap: this.connMap,
+        srj: this.srjWithPointPairs!,
+      })
+      if (conflictingGaps.length === 0) return false
+      for (const gap of conflictingGaps) this.excludedGaps.add(gap)
+    }
     this.portPointPathingSolver = undefined
     return true
   }
@@ -358,14 +377,11 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         this.activeSubSolver = null
         if (
           pipelineStepDef.solverName === "portPointPathingSolver" &&
-          this.refineFixedWireViaSites()
+          this.refinePortPointPlan()
         ) {
-          this.currentPipelineStepIndex = this.pipelineDef.findIndex(
-            (step) => step.solverName === "edgeSolver",
-          )
-        } else {
-          this.currentPipelineStepIndex++
+          return
         }
+        this.currentPipelineStepIndex++
       } else if (this.activeSubSolver.failed) {
         this.error = this.activeSubSolver?.error
         this.failed = true

@@ -1,17 +1,25 @@
 import Flatbush from "flatbush"
 import { BaseSolver } from "lib/solvers/BaseSolver"
-import type { SharedEdgeSegment } from "lib/solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
+import type {
+  SegmentPortPoint,
+  SharedEdgeSegment,
+} from "lib/solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
 import type { SimpleRouteJson } from "lib/types"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 import { minimumDistanceBetweenSegments } from "lib/utils/minimumDistanceBetweenSegments"
 import { assignPreloadedTraceToBoundary } from "./assignPreloadedTraceToBoundary"
 import { createPreloadedCopperLookup } from "./createPreloadedCopperLookup"
-import { getPreloadedClearanceGapPorts } from "./getPreloadedClearanceGapPorts"
+import {
+  getPreloadedClearanceGapPorts,
+  type ClearanceGapPort,
+} from "./getPreloadedClearanceGapPorts"
 import {
   getPreloadedTracePrimitives,
   PRELOADED_TRACE_TOLERANCE,
   type PreloadedTracePrimitive,
 } from "./getPreloadedTracePrimitives"
+import type { ClearanceGapIndex } from "./ClearanceGapIndex"
+import type { PortPointId } from "./findConflictingGaps"
 
 /**
  * Loads saved copper onto capacity-graph boundary ports. Empty clearance gaps
@@ -19,6 +27,7 @@ import {
  */
 export class PreloadedTraceGraphSolver extends BaseSolver {
   private readonly primitives: PreloadedTracePrimitive[]
+  readonly clearanceGapsByPortId = new Map<PortPointId, ClearanceGapPort>()
   private readonly boundaryIndex: Flatbush | null
 
   constructor(
@@ -125,14 +134,30 @@ export class PreloadedTraceGraphSolver extends BaseSolver {
     })
     for (const segment of this.sharedEdgeSegments) {
       for (const z of segment.availableZ) {
-        const gapPorts = getPreloadedClearanceGapPorts({
+        for (const gap of getPreloadedClearanceGapPorts({
           segment,
           z,
           copperLookup,
-        })
-        for (const port of gapPorts) segment.portPoints.push(port)
+        })) {
+          segment.portPoints.push(gap.port)
+          this.clearanceGapsByPortId.set(
+            `${gap.port.segmentPortPointId}::${z}`,
+            gap,
+          )
+        }
       }
     }
+  }
+
+  getRoutablePortPoints(excludedGaps: ClearanceGapIndex): SegmentPortPoint[] {
+    const portPoints = this.getOutput().flatMap((segment) => segment.portPoints)
+    if (excludedGaps.gaps.length === 0) return portPoints
+
+    const excludedPorts = new Set<SegmentPortPoint>()
+    for (const gap of this.clearanceGapsByPortId.values()) {
+      if (excludedGaps.has(gap)) excludedPorts.add(gap.port)
+    }
+    return portPoints.filter((port) => !excludedPorts.has(port))
   }
 
   getOutput(): SharedEdgeSegment[] {

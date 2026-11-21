@@ -34,7 +34,7 @@ test("plans inner1 DDR crossings between the two fixed iCEPi fanout vias", async
   const crossings = portPairs.filter(
     ([entry, exit]) => entry.z === 1 && exit.z === 1,
   )
-  expect(crossings).toHaveLength(2)
+  expect(crossings).toHaveLength(1)
 
   const fixedTraces = inputSrj.traces!.filter((trace) => trace.isFixed)
   const viaLands = fixedTraces
@@ -67,7 +67,7 @@ test("plans inner1 DDR crossings between the two fixed iCEPi fanout vias", async
       return centerlineDistance < inputSrj.minTraceWidth - 1e-6
     }),
   )
-  expect(overlappingPairs).toHaveLength(1)
+  expect(overlappingPairs).toHaveLength(0)
   const svg = getSvgFromGraphicsObject(
     {
       rects: [
