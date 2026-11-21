@@ -67,7 +67,6 @@ test("plans inner1 DDR crossings between the two fixed iCEPi fanout vias", async
           height: 0.24,
           fill: "none",
           stroke: "#94a3b8",
-          strokeWidth: 0.004,
         },
       ],
       circles: lands,
