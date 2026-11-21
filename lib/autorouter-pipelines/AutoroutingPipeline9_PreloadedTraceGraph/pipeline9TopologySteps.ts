@@ -1,3 +1,4 @@
+import { splitNodesAtViaKeepouts } from "lib/utils/splitNodesAtViaKeepouts"
 import { ComponentDetectionSolver } from "lib/solvers/ComponentDetectionSolver/ComponentDetectionSolver"
 import { MultiTargetNecessaryCrampedPortPointSolver } from "lib/solvers/NecessaryCrampedPortPointSolver/MultiTargetNecessaryCrampedPortPointSolver"
 import { retainRequiredCrampedPortPoints } from "lib/solvers/NecessaryCrampedPortPointSolver/retainRequiredCrampedPortPoints"
@@ -162,8 +163,13 @@ export const pipeline9TopologySteps = [
       pipeline.minNodeArea,
     ],
     onSolved: (pipeline) => {
-      pipeline.capacityNodes =
-        pipeline.nodeDimensionSubdivisionSolver!.outputNodes
+      pipeline.capacityNodes = splitNodesAtViaKeepouts(
+        pipeline.nodeDimensionSubdivisionSolver!.outputNodes,
+        pipeline.srj.viaKeepouts ?? [],
+        pipeline.viaDiameter,
+        pipeline.srj.layerCount,
+        pipeline.srj.allowBlindAndBuriedVias,
+      )
     },
   }),
   definePipeline9Step({

@@ -1,3 +1,4 @@
+import { assertTracesAvoidViaKeepouts } from "lib/utils/assertTracesAvoidViaKeepouts"
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import type { Pipeline9EffortCleanupSolver } from "./Pipeline9EffortCleanupSolver"
 import type { RectDiffPipeline } from "@tscircuit/rectdiff"
@@ -102,6 +103,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   topologyPlanningSolver?: MultiGraphTopologyPlannerSolver
   topologyMergingSolver?: TopologyMergingSolver
   globalTopologyGeneratorSolver?: RectDiffPipeline
+  static readonly supportsViaKeepouts = true
+
   nodeDimensionSubdivisionSolver?: NodeDimensionSubdivisionSolver
   nodeTargetMerger?: CapacityNodeTargetMerger
   edgeSolver?: CapacityMeshEdgeSolver
@@ -570,12 +573,14 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         "Pipeline9 invariant violated: solved pipeline is missing the unconditional power-trace expansion solver",
       )
     }
-    return [
+    const traces = [
       ...this.getPowerTraceExpansionFixedTraces().filter(
         (trace) => trace.__replaces_pcb_trace_id !== undefined,
       ),
       ...this.powerTraceExpansionSolver.getOutput(),
     ]
+    assertTracesAvoidViaKeepouts(traces, this.originalSrj)
+    return traces
   }
 
   getOutputSimpleRouteJson(): SimpleRouteJson {
@@ -591,6 +596,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       ...this.getPowerTraceExpansionFixedTraces(),
       ...this.powerTraceExpansionSolver.getOutput(),
     ]
+    assertTracesAvoidViaKeepouts(traces, this.originalSrj)
     return {
       ...this.originalSrj,
       traces,
