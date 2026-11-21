@@ -21,7 +21,8 @@ export const convertPreloadedTraceToHdRoutes = (
   defaultViaDiameter: number,
   connMap: ConnectivityMap,
 ): PreloadedHighDensityRoute[] => {
-  const rootConnectionName = trace.connection_name
+  const rootConnectionName =
+    connMap.getNetConnectedToId(trace.connection_name) ?? trace.connection_name
   const routes: PreloadedHighDensityRoute[] = []
   const addRoute = (
     route: HighDensityRoute["route"],

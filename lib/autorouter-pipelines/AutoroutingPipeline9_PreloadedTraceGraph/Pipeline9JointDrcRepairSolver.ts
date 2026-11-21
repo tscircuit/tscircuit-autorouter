@@ -244,12 +244,10 @@ const combinePreloadedTraceSectionGroup = ({
   trace,
   sectionGroup,
   syntheticConnectionName,
-  connMap,
 }: {
   trace: SimplifiedPcbTrace
   sectionGroup: PreloadedTraceSectionGroup
   syntheticConnectionName: string
-  connMap: ConnectivityMap
 }): HighDensityRoute => {
   const traceSections = sectionGroup.routes
   if (traceSections.length === 0) {
@@ -298,9 +296,7 @@ const combinePreloadedTraceSectionGroup = ({
 
   return {
     connectionName: syntheticConnectionName,
-    rootConnectionName:
-      connMap.getNetConnectedToId(trace.connection_name) ??
-      trace.connection_name,
+    rootConnectionName: trace.connection_name,
     traceThickness: Math.max(
       ...traceSections.map((section) => section.traceThickness),
     ),
@@ -1021,7 +1017,6 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
             trace,
             sectionGroup,
             syntheticConnectionName,
-            connMap: params.connMap,
           }),
         })
       }
@@ -1044,7 +1039,11 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
           params.layerCount,
           params.defaultViaDiameter,
           params.connMap,
-        )
+        ).map((route) => ({
+          ...route,
+          // Repair resolves SRJ aliases; private connectivity keys can collide.
+          rootConnectionName: trace.connection_name,
+        }))
         if (!movablePreloadedTraceIds.has(trace.pcb_trace_id)) {
           return fixedRoutes
         }
