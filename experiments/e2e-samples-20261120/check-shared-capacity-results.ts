@@ -60,8 +60,9 @@ for (const sample of manifest.samples.map((entry: any) => entry.name.replace(/\.
       }
       if (!solver.solved) return { solved: false, error }
       const points = solver.getOutput().breakoutPoints
-      return { solved: true, points: points.length, layers: Object.fromEntries([...new Set(points.map((point) => point.layer))].map((layer) => [layer, points.filter((point) => point.layer === layer).length])) }
+      return { solved: true, outputSha256: new Bun.CryptoHasher("sha256").update(JSON.stringify(solver.getOutput())).digest("hex"), points: points.length, layers: Object.fromEntries([...new Set(points.map((point) => point.layer))].map((layer) => [layer, points.filter((point) => point.layer === layer).length])) }
     })
+    if (replay[0].solved && replay[0].outputSha256 !== replay[1].outputSha256) throw new Error(`Working winding output changed: ${sample}/${index}`)
     if (replay[0].solved && !replay[1].solved) throw new Error(`Winding placement regressed: ${sample}/${index}`)
     if (replay[0].solved !== winding[0][index].solved || replay[1].solved !== winding[1][afterIndex].solved) throw new Error(`Captured and replayed winding status differs: ${sample}/${index}`)
     windingComparisons.push({ index, beforeId: winding[0][index].id, afterId: winding[1][afterIndex].id, before: replay[0], after: replay[1] })
