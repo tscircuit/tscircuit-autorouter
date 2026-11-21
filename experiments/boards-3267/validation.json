@@ -1,0 +1,97 @@
+{
+  "coreTests": {
+    "passed": 20,
+    "files": 12,
+    "expectations": 86
+  },
+  "coreBuild": "pass",
+  "coreTypecheck": "pass",
+  "tscircuitBuild": "pass",
+  "tscircuitTests": {
+    "passed": 5,
+    "files": 5
+  },
+  "coreReproPr": 5777,
+  "coreFixPr": 5778,
+  "tscircuitFixPr": 6577,
+  "reproCommit": "36b5e538c7b8d829d18d678c2297076d357abc64",
+  "coreFixCommit": "9bb8d8d3415d87ef93700e5347316f9c5cec4da5",
+  "tscircuitFixCommit": "7dc9f206d64cdb67027b9c00446cc30179968713",
+  "rawArtifacts": [
+    {
+      "run": 44897743200,
+      "artifact": 14705365291,
+      "sha256": "c40fafd35861206ed3366b1c254943aacadfca12447ce3de476199f516f30677",
+      "role": "latest baseline"
+    },
+    {
+      "run": 44898519671,
+      "artifact": 14705003069,
+      "sha256": "608fbc9ee4ae5bf5ce926fb26cbaf76c629dcc1019160d733dc9c2f2ab1605fd",
+      "role": "one-dependency update, preserving nested math-utils"
+    },
+    {
+      "run": 44898637680,
+      "artifact": 14704952366,
+      "sha256": "68accba4a7db20530158c7ac08fe3bdd12f8ef48f5b2ae3f5a3ecd06cce1b508",
+      "role": "paired H616 control"
+    },
+    {
+      "run": 44898637680,
+      "artifact": 14704834505,
+      "sha256": "b8871aaca5aa59b31b7f54e399984b269fcbdc27a27ed81f6365c561fe687a42",
+      "role": "paired real iCEPi"
+    },
+    {
+      "run": 44899532476,
+      "artifact": 14705078842,
+      "sha256": "42d782c7b730059de39c788d6ad053acf6ae5a7bb652dbcac209f39892e89739",
+      "role": "Isolated OrangeCrab follow-up pair for the apparent shared-matrix slowdown"
+    }
+  ],
+  "excludedRuns": [
+    {
+      "run": 44898260211,
+      "reason": "Experiment archive was ignored by .gitignore; no boards ran. Corrected by explicitly committing the verified archive."
+    },
+    {
+      "run": 44898313309,
+      "reason": "Cancelled diagnostic run omitted the pre-existing nested math-utils copy. Replaced with the isolated run 44898519671."
+    }
+  ],
+  "benchmarkPolicy": "Run all original TSX through RootCircuit.renderUntilSettled on Blacksmith; default fanout, bus lane and autorouter paths retained. 600-second budget per board; same-machine paired repeats use fresh processes.",
+  "rootCause": {
+    "selectedDependencyRange": "^0.0.33",
+    "resolvedBefore": "0.0.33",
+    "publishedIndexedVersion": "0.0.36",
+    "profiling": "29.7% of sampled iCEPi-native CPU is under getFullConnectivityMapFromCircuitJson; the largest caller is copper-pour conversion, which rebuilds it for each of 76 pour regions.",
+    "chosenFix": "Use the existing published indexed implementation through a one-line manifest update, with the same version in core and tscircuit."
+  },
+  "coreCi": {
+    "repro": {
+      "testShards": "10/10 passed",
+      "typecheck": "pass",
+      "formatcheck": "pass",
+      "buildSmoke": "pass"
+    },
+    "fix": {
+      "testShards": "10/10 passed",
+      "packagePreview": "pass",
+      "buildSmoke": "pass",
+      "vercel": "pass"
+    }
+  },
+  "tscircuitCi": {
+    "tests": "pass",
+    "packageDependencySources": "pass",
+    "smokeInit": "pass"
+  },
+  "realRepro": {
+    "test": "tests/repros/icepi-connectivity-work.test.tsx",
+    "fixture": "Existing full iCEPi TSX fixture, with routing disabled; its parsed hardware source JSON equals the original upload.",
+    "beforeSetMembershipCalls": 5106064,
+    "afterSetMembershipCalls": 0,
+    "normalPcbSvg": "tests/repros/__snapshots__/icepi-connectivity-work-pcb.snap.svg",
+    "beforeAfterDifference": "Only the measured membership-work note changes; no custom diagram replaces the circuit."
+  }
+}

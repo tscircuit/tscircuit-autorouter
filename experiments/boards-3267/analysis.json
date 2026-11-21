@@ -1,0 +1,91 @@
+{
+  "latestTscircuit": "0.0.3267",
+  "resolved": {
+    "core": "0.0.2444",
+    "autorouter": "0.0.1145",
+    "fanoutSolver": "0.0.97",
+    "busLanesSolver": "0.0.63",
+    "connectivityMapBefore": "0.0.33",
+    "connectivityMapAfter": "0.0.36"
+  },
+  "boards": 19,
+  "settledWithRoutingErrors": 15,
+  "timeouts": [
+    "butterstick-local",
+    "butterstick-spaced",
+    "imx6-local",
+    "orangecrab-native"
+  ],
+  "fullyRouted": 0,
+  "identicalSettledCircuitJson": 15,
+  "sharedInputFiles": 158,
+  "sharedInputMismatches": [],
+  "blockingStages": {
+    "bus lanes": 2,
+    "fanout": 6,
+    "highDensityRouteSolver": 8,
+    "portPointPathingSolver": 3
+  },
+  "previousReleaseEmittedCopperUnchanged": true,
+  "preloadedTraceAudit": {
+    "board": "h616-local",
+    "phase": "remaining",
+    "nativeTraceCount": 16,
+    "fixedTraceCount": 16,
+    "obstacles": 760,
+    "obstaclesWithoutCircuitMetadata": 4
+  },
+  "interpretation": "The fix removes connectivity-map work; it does not resolve existing routing failures. Shared matrix wall times are contended observations, not speedup claims. Use the same-machine paired results for performance conclusions.",
+  "performanceVerification": {
+    "environment": "Blacksmith 32-vCPU ARM Ubuntu 24.04, Bun 1.4.3; same machine per case, fresh process per render",
+    "samples": [
+      {
+        "board": "icepi-native",
+        "run": 44898637680,
+        "order": [
+          "base",
+          "head",
+          "head",
+          "base"
+        ],
+        "beforeSeconds": 72.855799836,
+        "afterSeconds": 52.736137654,
+        "beforeCpuSeconds": 79.361594,
+        "afterCpuSeconds": 58.508505,
+        "identicalCircuitJson": true,
+        "durationReductionPercent": 27.61573166074602
+      },
+      {
+        "board": "h616-local",
+        "run": 44898637680,
+        "order": [
+          "base",
+          "head",
+          "head",
+          "base"
+        ],
+        "beforeSeconds": 44.7063485195,
+        "afterSeconds": 44.35584358650001,
+        "beforeCpuSeconds": 57.6435075,
+        "afterCpuSeconds": 57.232648,
+        "identicalCircuitJson": true,
+        "durationReductionPercent": 0.78401601698046
+      },
+      {
+        "board": "orangecrab-local",
+        "run": 44899532476,
+        "order": [
+          "base",
+          "head"
+        ],
+        "beforeSeconds": 172.01163934299998,
+        "afterSeconds": 167.530426619,
+        "beforeCpuSeconds": 209.747922,
+        "afterCpuSeconds": 205.031816,
+        "identicalCircuitJson": true,
+        "durationReductionPercent": 2.605179940797042
+      }
+    ],
+    "interpretation": "The iCEPi full-render gain repeats in both orders. H616 is within 0.8%. The apparent OrangeCrab matrix slowdown does not repeat in one isolated pair; do not interpret that single pair as a precise speedup estimate."
+  }
+}

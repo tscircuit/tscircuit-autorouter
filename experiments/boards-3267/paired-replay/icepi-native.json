@@ -1,0 +1,62 @@
+[
+  {
+    "board": "icepi-native",
+    "variant": "base",
+    "ordinal": 1,
+    "exit": 0,
+    "stop": "settled",
+    "seconds": 73.761980559,
+    "connectivityVersion": "0.0.33",
+    "connectivityEntrySha256": "40f28a9fa682f2abbb7519ef56b31258cdff27665fc4e48727bf6466395e034c",
+    "circuitSha256": "70bf643fae7a9f306587a602e52556407f19573e39a857bda1b9f361f58fb0e9",
+    "cpu": {
+      "user": 78470025,
+      "system": 1801124
+    }
+  },
+  {
+    "board": "icepi-native",
+    "variant": "head",
+    "ordinal": 2,
+    "exit": 0,
+    "stop": "settled",
+    "seconds": 53.11111760499999,
+    "connectivityVersion": "0.0.36",
+    "connectivityEntrySha256": "e662de4ccfd38f09d91f3c7b2fe9296c20ceac8d6b67f548abc7c2e02b52043f",
+    "circuitSha256": "70bf643fae7a9f306587a602e52556407f19573e39a857bda1b9f361f58fb0e9",
+    "cpu": {
+      "user": 57628573,
+      "system": 1232956
+    }
+  },
+  {
+    "board": "icepi-native",
+    "variant": "head",
+    "ordinal": 3,
+    "exit": 0,
+    "stop": "settled",
+    "seconds": 52.361157703,
+    "connectivityVersion": "0.0.36",
+    "connectivityEntrySha256": "e662de4ccfd38f09d91f3c7b2fe9296c20ceac8d6b67f548abc7c2e02b52043f",
+    "circuitSha256": "70bf643fae7a9f306587a602e52556407f19573e39a857bda1b9f361f58fb0e9",
+    "cpu": {
+      "user": 56898863,
+      "system": 1256618
+    }
+  },
+  {
+    "board": "icepi-native",
+    "variant": "base",
+    "ordinal": 4,
+    "exit": 0,
+    "stop": "settled",
+    "seconds": 71.94961911300001,
+    "connectivityVersion": "0.0.33",
+    "connectivityEntrySha256": "40f28a9fa682f2abbb7519ef56b31258cdff27665fc4e48727bf6466395e034c",
+    "circuitSha256": "70bf643fae7a9f306587a602e52556407f19573e39a857bda1b9f361f58fb0e9",
+    "cpu": {
+      "user": 76828293,
+      "system": 1623746
+    }
+  }
+]

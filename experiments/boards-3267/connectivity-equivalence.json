@@ -1,0 +1,122 @@
+[
+  {
+    "board": "butterstick-native",
+    "beforeChecks": 5651447,
+    "afterChecks": 0,
+    "networks": 361,
+    "identicalNetworksAndOrdering": true,
+    "identicalIdLookupAndOrdering": true
+  },
+  {
+    "board": "glider-local",
+    "beforeChecks": 6271920,
+    "afterChecks": 0,
+    "networks": 459,
+    "identicalNetworksAndOrdering": true,
+    "identicalIdLookupAndOrdering": true
+  },
+  {
+    "board": "glider-native",
+    "beforeChecks": 6668029,
+    "afterChecks": 0,
+    "networks": 459,
+    "identicalNetworksAndOrdering": true,
+    "identicalIdLookupAndOrdering": true
+  },
+  {
+    "board": "glider-spaced",
+    "beforeChecks": 6154001,
+    "afterChecks": 0,
+    "networks": 459,
+    "identicalNetworksAndOrdering": true,
+    "identicalIdLookupAndOrdering": true
+  },
+  {
+    "board": "h616-default-order-local",
+    "beforeChecks": 1021264,
+    "afterChecks": 0,
+    "networks": 264,
+    "identicalNetworksAndOrdering": true,
+    "identicalIdLookupAndOrdering": true
+  },
+  {
+    "board": "h616-local",
+    "beforeChecks": 1021264,
+    "afterChecks": 0,
+    "networks": 264,
+    "identicalNetworksAndOrdering": true,
+    "identicalIdLookupAndOrdering": true
+  },
+  {
+    "board": "h616-native",
+    "beforeChecks": 1549654,
+    "afterChecks": 0,
+    "networks": 264,
+    "identicalNetworksAndOrdering": true,
+    "identicalIdLookupAndOrdering": true
+  },
+  {
+    "board": "h616-spaced",
+    "beforeChecks": 1021264,
+    "afterChecks": 0,
+    "networks": 264,
+    "identicalNetworksAndOrdering": true,
+    "identicalIdLookupAndOrdering": true
+  },
+  {
+    "board": "icepi-local",
+    "beforeChecks": 3619072,
+    "afterChecks": 0,
+    "networks": 473,
+    "identicalNetworksAndOrdering": true,
+    "identicalIdLookupAndOrdering": true
+  },
+  {
+    "board": "icepi-native",
+    "beforeChecks": 5106064,
+    "afterChecks": 0,
+    "networks": 473,
+    "identicalNetworksAndOrdering": true,
+    "identicalIdLookupAndOrdering": true
+  },
+  {
+    "board": "icepi-spaced",
+    "beforeChecks": 3734439,
+    "afterChecks": 0,
+    "networks": 473,
+    "identicalNetworksAndOrdering": true,
+    "identicalIdLookupAndOrdering": true
+  },
+  {
+    "board": "imx6-native",
+    "beforeChecks": 8852943,
+    "afterChecks": 0,
+    "networks": 588,
+    "identicalNetworksAndOrdering": true,
+    "identicalIdLookupAndOrdering": true
+  },
+  {
+    "board": "imx6-spaced",
+    "beforeChecks": 6933942,
+    "afterChecks": 0,
+    "networks": 588,
+    "identicalNetworksAndOrdering": true,
+    "identicalIdLookupAndOrdering": true
+  },
+  {
+    "board": "orangecrab-local",
+    "beforeChecks": 1303120,
+    "afterChecks": 0,
+    "networks": 177,
+    "identicalNetworksAndOrdering": true,
+    "identicalIdLookupAndOrdering": true
+  },
+  {
+    "board": "orangecrab-spaced",
+    "beforeChecks": 1307590,
+    "afterChecks": 0,
+    "networks": 177,
+    "identicalNetworksAndOrdering": true,
+    "identicalIdLookupAndOrdering": true
+  }
+]

@@ -1,0 +1,254 @@
+[
+  {
+    "board": "butterstick-local",
+    "phase": "byte0",
+    "solver": "BusLanesPipelineSolver",
+    "startSeconds": 46.728174957,
+    "endSeconds": 457.275201613,
+    "seconds": 410.54702665599996,
+    "traces": 16
+  },
+  {
+    "board": "butterstick-spaced",
+    "phase": "byte0",
+    "solver": "BusLanesPipelineSolver",
+    "startSeconds": 22.360128095,
+    "endSeconds": 300.078576331,
+    "seconds": 277.71844823600003,
+    "traces": 16
+  },
+  {
+    "board": "glider-local",
+    "phase": "byte0",
+    "solver": "BusLanesPipelineSolver",
+    "startSeconds": 49.11691188499999,
+    "endSeconds": 60.940064695000004,
+    "seconds": 11.82315281000001,
+    "traces": 8
+  },
+  {
+    "board": "glider-local",
+    "phase": "byte1",
+    "solver": "BusLanesPipelineSolver",
+    "startSeconds": 61.72760639199999,
+    "endSeconds": 75.61119919500001,
+    "seconds": 13.88359280300002,
+    "traces": 16
+  },
+  {
+    "board": "glider-local",
+    "phase": "remaining",
+    "solver": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+    "startSeconds": 76.46118174600001,
+    "endSeconds": 154.348651569,
+    "seconds": 77.88746982299999,
+    "traces": 53
+  },
+  {
+    "board": "glider-spaced",
+    "phase": "byte0",
+    "solver": "BusLanesPipelineSolver",
+    "startSeconds": 23.264441769999998,
+    "endSeconds": 27.723410202,
+    "seconds": 4.4589684320000025,
+    "traces": 8
+  },
+  {
+    "board": "glider-spaced",
+    "phase": "byte1",
+    "solver": "BusLanesPipelineSolver",
+    "startSeconds": 28.539612655,
+    "endSeconds": 32.576025716,
+    "seconds": 4.0364130609999975,
+    "traces": 16
+  },
+  {
+    "board": "h616-default-order-local",
+    "phase": "byte0",
+    "solver": "BusLanesPipelineSolver",
+    "startSeconds": 8.524281881,
+    "endSeconds": 11.746754149000001,
+    "seconds": 3.2224722680000006,
+    "traces": 8
+  },
+  {
+    "board": "h616-default-order-local",
+    "phase": "byte1",
+    "solver": "BusLanesPipelineSolver",
+    "startSeconds": 11.945587654,
+    "endSeconds": 16.108452076000003,
+    "seconds": 4.162864422000002,
+    "traces": 16
+  },
+  {
+    "board": "h616-local",
+    "phase": "byte0",
+    "solver": "BusLanesPipelineSolver",
+    "startSeconds": 8.416075785999999,
+    "endSeconds": 11.675444394,
+    "seconds": 3.259368608000001,
+    "traces": 8
+  },
+  {
+    "board": "h616-local",
+    "phase": "byte1",
+    "solver": "BusLanesPipelineSolver",
+    "startSeconds": 11.880925315,
+    "endSeconds": 16.123326791,
+    "seconds": 4.2424014759999995,
+    "traces": 16
+  },
+  {
+    "board": "h616-spaced",
+    "phase": "byte0",
+    "solver": "BusLanesPipelineSolver",
+    "startSeconds": 7.080748614,
+    "endSeconds": 10.283682843000001,
+    "seconds": 3.202934229000001,
+    "traces": 8
+  },
+  {
+    "board": "h616-spaced",
+    "phase": "byte1",
+    "solver": "BusLanesPipelineSolver",
+    "startSeconds": 10.49161785,
+    "endSeconds": 14.655509039,
+    "seconds": 4.163891188999999,
+    "traces": 16
+  },
+  {
+    "board": "icepi-local",
+    "phase": "byte0",
+    "solver": "BusLanesPipelineSolver",
+    "startSeconds": 37.605164121,
+    "endSeconds": 48.794134565,
+    "seconds": 11.188970443999999,
+    "traces": 8
+  },
+  {
+    "board": "icepi-local",
+    "phase": "byte1",
+    "solver": "BusLanesPipelineSolver",
+    "startSeconds": 49.297503525,
+    "endSeconds": 64.191941536,
+    "seconds": 14.894438010999998,
+    "traces": 16
+  },
+  {
+    "board": "icepi-spaced",
+    "phase": "byte0",
+    "solver": "BusLanesPipelineSolver",
+    "startSeconds": 15.701091848,
+    "endSeconds": 22.907111412,
+    "seconds": 7.206019563999998,
+    "traces": 8
+  },
+  {
+    "board": "icepi-spaced",
+    "phase": "byte1",
+    "solver": "BusLanesPipelineSolver",
+    "startSeconds": 23.42773883,
+    "endSeconds": 32.640614112,
+    "seconds": 9.212875282000002,
+    "traces": 16
+  },
+  {
+    "board": "icepi-spaced",
+    "phase": "remaining",
+    "solver": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+    "startSeconds": 33.271896671,
+    "endSeconds": 298.583007842,
+    "seconds": 265.311111171,
+    "traces": 52
+  },
+  {
+    "board": "imx6-local",
+    "phase": "byte0",
+    "solver": "BusLanesPipelineSolver",
+    "startSeconds": 34.409571428,
+    "endSeconds": 42.343704324,
+    "seconds": 7.934132896000001,
+    "traces": 8
+  },
+  {
+    "board": "imx6-local",
+    "phase": "byte1",
+    "solver": "BusLanesPipelineSolver",
+    "startSeconds": 43.237844048999996,
+    "endSeconds": 227.38946447499998,
+    "seconds": 184.151620426,
+    "traces": 17
+  },
+  {
+    "board": "imx6-spaced",
+    "phase": "byte0",
+    "solver": "BusLanesPipelineSolver",
+    "startSeconds": 28.197822731,
+    "endSeconds": 36.926376321000006,
+    "seconds": 8.728553590000008,
+    "traces": 8
+  },
+  {
+    "board": "imx6-spaced",
+    "phase": "byte1",
+    "solver": "BusLanesPipelineSolver",
+    "startSeconds": 37.853553884,
+    "endSeconds": 265.877430497,
+    "seconds": 228.02387661299997,
+    "traces": 17
+  },
+  {
+    "board": "orangecrab-local",
+    "phase": "byte0",
+    "solver": "BusLanesPipelineSolver",
+    "startSeconds": 19.633264398999998,
+    "endSeconds": 26.293922789,
+    "seconds": 6.660658390000002,
+    "traces": 8
+  },
+  {
+    "board": "orangecrab-local",
+    "phase": "byte1",
+    "solver": "BusLanesPipelineSolver",
+    "startSeconds": 26.582909109,
+    "endSeconds": 38.108715384999996,
+    "seconds": 11.525806275999997,
+    "traces": 16
+  },
+  {
+    "board": "orangecrab-local",
+    "phase": "remaining",
+    "solver": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+    "startSeconds": 38.42606082,
+    "endSeconds": 127.151292199,
+    "seconds": 88.72523137900001,
+    "traces": 52
+  },
+  {
+    "board": "orangecrab-spaced",
+    "phase": "byte0",
+    "solver": "BusLanesPipelineSolver",
+    "startSeconds": 8.803814531,
+    "endSeconds": 14.324111951,
+    "seconds": 5.52029742,
+    "traces": 8
+  },
+  {
+    "board": "orangecrab-spaced",
+    "phase": "byte1",
+    "solver": "BusLanesPipelineSolver",
+    "startSeconds": 14.597004324,
+    "endSeconds": 21.114314083,
+    "seconds": 6.517309759,
+    "traces": 16
+  },
+  {
+    "board": "orangecrab-spaced",
+    "phase": "remaining",
+    "solver": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+    "startSeconds": 21.426915452,
+    "endSeconds": 114.78810843199999,
+    "seconds": 93.36119297999998,
+    "traces": 52
+  }
+]

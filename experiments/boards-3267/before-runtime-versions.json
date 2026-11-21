@@ -1,0 +1,18 @@
+{
+  "tscircuit": {
+    "version": "0.0.3267",
+    "entrySha256": "cfd669f2d96ac77eb054aab53ff34a80120bcd3db72b87f969b3d8b8d2af78a3"
+  },
+  "@tscircuit/core": {
+    "version": "0.0.2444",
+    "entrySha256": "6ad63e825d7f0089795f8fbab99f31aa419af8a8f38b0099048c5397f77a6417"
+  },
+  "@tscircuit/fanout-solver": {
+    "version": "0.0.97",
+    "entrySha256": "ee06af452060e90d70c49f00a37cf516638f7649817fc4e94decb39da4d07cf9"
+  },
+  "@tscircuit/capacity-autorouter": {
+    "version": "0.0.1145",
+    "entrySha256": "a21ac8dad6df0c64054097037c90286a6e57d04b55611ad5acad0a9525feb616"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "dependency": "circuit-json-to-connectivity-map",
+  "before": "0.0.33",
+  "after": "0.0.36",
+  "previousEntrySha256": "40f28a9fa682f2abbb7519ef56b31258cdff27665fc4e48727bf6466395e034c",
+  "nextEntrySha256": "e662de4ccfd38f09d91f3c7b2fe9296c20ceac8d6b67f548abc7c2e02b52043f",
+  "archiveIntegrity": "sha512-rzXiLnChbZKW5BlKpoP2NNIv1z11oaLRHnswsnbsbUEkDEpFIYcFN8XC8ERNqlvzbfkZGVEbuypBOjL8Z7OWwA==",
+  "change": "Replace only the root dependency with the verified published 0.0.36 package; leave all circuit sources, routing options and remaining installed packages unchanged."
+}

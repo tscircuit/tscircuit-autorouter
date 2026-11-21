@@ -1,0 +1,32 @@
+[
+  {
+    "board": "orangecrab-local",
+    "variant": "base",
+    "ordinal": 1,
+    "exit": 0,
+    "stop": "settled",
+    "seconds": 172.01163934299998,
+    "connectivityVersion": "0.0.33",
+    "connectivityEntrySha256": "40f28a9fa682f2abbb7519ef56b31258cdff27665fc4e48727bf6466395e034c",
+    "circuitSha256": "aa847e48b8c39e59406b85e158ee90a3b70f974709775bc809b6e73c5b8789d1",
+    "cpu": {
+      "user": 199827837,
+      "system": 9920085
+    }
+  },
+  {
+    "board": "orangecrab-local",
+    "variant": "head",
+    "ordinal": 2,
+    "exit": 0,
+    "stop": "settled",
+    "seconds": 167.530426619,
+    "connectivityVersion": "0.0.36",
+    "connectivityEntrySha256": "e662de4ccfd38f09d91f3c7b2fe9296c20ceac8d6b67f548abc7c2e02b52043f",
+    "circuitSha256": "aa847e48b8c39e59406b85e158ee90a3b70f974709775bc809b6e73c5b8789d1",
+    "cpu": {
+      "user": 195298934,
+      "system": 9732882
+    }
+  }
+]

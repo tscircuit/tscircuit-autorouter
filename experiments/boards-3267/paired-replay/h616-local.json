@@ -1,0 +1,62 @@
+[
+  {
+    "board": "h616-local",
+    "variant": "base",
+    "ordinal": 1,
+    "exit": 0,
+    "stop": "settled",
+    "seconds": 45.66405005199999,
+    "connectivityVersion": "0.0.33",
+    "connectivityEntrySha256": "40f28a9fa682f2abbb7519ef56b31258cdff27665fc4e48727bf6466395e034c",
+    "circuitSha256": "8e082025c236a1ab92e61ee2c024a78f3f9b6b21f47238b684e53d09b7635e82",
+    "cpu": {
+      "user": 55547323,
+      "system": 3504327
+    }
+  },
+  {
+    "board": "h616-local",
+    "variant": "head",
+    "ordinal": 2,
+    "exit": 0,
+    "stop": "settled",
+    "seconds": 44.858939866,
+    "connectivityVersion": "0.0.36",
+    "connectivityEntrySha256": "e662de4ccfd38f09d91f3c7b2fe9296c20ceac8d6b67f548abc7c2e02b52043f",
+    "circuitSha256": "8e082025c236a1ab92e61ee2c024a78f3f9b6b21f47238b684e53d09b7635e82",
+    "cpu": {
+      "user": 54963258,
+      "system": 3167837
+    }
+  },
+  {
+    "board": "h616-local",
+    "variant": "head",
+    "ordinal": 3,
+    "exit": 0,
+    "stop": "settled",
+    "seconds": 43.852747307000016,
+    "connectivityVersion": "0.0.36",
+    "connectivityEntrySha256": "e662de4ccfd38f09d91f3c7b2fe9296c20ceac8d6b67f548abc7c2e02b52043f",
+    "circuitSha256": "8e082025c236a1ab92e61ee2c024a78f3f9b6b21f47238b684e53d09b7635e82",
+    "cpu": {
+      "user": 53239273,
+      "system": 3094928
+    }
+  },
+  {
+    "board": "h616-local",
+    "variant": "base",
+    "ordinal": 4,
+    "exit": 0,
+    "stop": "settled",
+    "seconds": 43.748646987,
+    "connectivityVersion": "0.0.33",
+    "connectivityEntrySha256": "40f28a9fa682f2abbb7519ef56b31258cdff27665fc4e48727bf6466395e034c",
+    "circuitSha256": "8e082025c236a1ab92e61ee2c024a78f3f9b6b21f47238b684e53d09b7635e82",
+    "cpu": {
+      "user": 53324814,
+      "system": 2910551
+    }
+  }
+]

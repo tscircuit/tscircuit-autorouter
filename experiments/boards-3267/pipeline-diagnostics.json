@@ -1,0 +1,1859 @@
+[
+  {
+    "board": "butterstick-local",
+    "fanoutAttempts": [],
+    "pipelineErrors": [],
+    "graphRebuilds": 0,
+    "lastGraph": [],
+    "lastGraphFinishers": [],
+    "lastEvent": {
+      "key": "bus-progress",
+      "seconds": 599.756986898,
+      "phase": "finish_native_surface_carriers",
+      "attempt": 1,
+      "iterations": 12246,
+      "child": "_BusLanesSolver",
+      "childPhase": "failed",
+      "childIterations": 5388,
+      "attempts": null,
+      "best": null
+    }
+  },
+  {
+    "board": "butterstick-native",
+    "fanoutAttempts": [
+      {
+        "connections": 91,
+        "bestRouted": 62,
+        "attempts": 256,
+        "error": "FanoutSolver: best layer assignment routed 62/91 connections"
+      }
+    ],
+    "pipelineErrors": [
+      {
+        "key": "error",
+        "seconds": 203.624273926,
+        "type": "autorouting:error",
+        "subcircuit_id": "subcircuit_source_group_3",
+        "componentDisplayName": "<board#2867 />",
+        "routingPhaseIndex": null,
+        "_actualRoutingPhaseOrderIndex": 0,
+        "phaseOrdinal": 1,
+        "phaseCount": 10,
+        "connectionCount": 91,
+        "obstacleCount": 2733,
+        "previousTraceCount": 0,
+        "isReroutePhase": false,
+        "autorouterName": "fanout",
+        "solverName": "FanoutSolver",
+        "cacheStatus": "disabled",
+        "cacheDisabledReason": "strategy_not_cacheable",
+        "error": {
+          "message": "Fanout failed for U11: only 62 of 91 connections could escape to the breakout boundary. The breakout boundary is 0.7mm from the pads at its narrowest point, which all 91 escapes have to share. Give the fanout more room by increasing the breakout's padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors) so their pads sit inside the boundary instead of against it."
+        },
+        "traceCount": 0,
+        "obstaclesWithoutCircuitMetadata": 1023,
+        "fixedTraceCount": 0
+      }
+    ],
+    "graphRebuilds": 0,
+    "lastGraph": [],
+    "lastGraphFinishers": [],
+    "lastEvent": {
+      "key": "error",
+      "seconds": 203.624273926,
+      "phase": null,
+      "attempt": null,
+      "iterations": null,
+      "child": null,
+      "childPhase": null,
+      "childIterations": null,
+      "attempts": null,
+      "best": null
+    }
+  },
+  {
+    "board": "butterstick-spaced",
+    "fanoutAttempts": [],
+    "pipelineErrors": [],
+    "graphRebuilds": 0,
+    "lastGraph": [],
+    "lastGraphFinishers": [],
+    "lastEvent": {
+      "key": "bus-progress",
+      "seconds": 580.452725633,
+      "phase": "route_multi_terminal_buses",
+      "attempt": 0,
+      "iterations": 39208,
+      "child": null,
+      "childPhase": null,
+      "childIterations": null,
+      "attempts": null,
+      "best": null
+    }
+  },
+  {
+    "board": "glider-local",
+    "fanoutAttempts": [],
+    "pipelineErrors": [
+      {
+        "key": "density-failure",
+        "seconds": 291.67086327199996,
+        "error": "Pipeline9 primary high-density routing failed: B01 failed: No path found for source_net_184; regional fallback failed: Failed to solve 1 nodes, new-cmn_78-651. err0: GrowShrinkHighDensityIntraNodeSolver failed after resizing to 256x. Last error: Unrelated route terminals overlap at the requested trace width.",
+        "failed": [
+          {
+            "name": "HighDensitySolverB01",
+            "error": "No path found for source_net_189",
+            "iterations": 10
+          },
+          {
+            "name": "HighDensitySolverB01",
+            "error": "No path found for source_net_189",
+            "iterations": 1799
+          },
+          {
+            "name": "HighDensitySolverB01",
+            "error": "No path found for source_net_184",
+            "iterations": 9
+          }
+        ]
+      },
+      {
+        "key": "pipeline-failure",
+        "seconds": 291.671832559,
+        "pipeline": 2,
+        "phase": "highDensityRouteSolver",
+        "error": "Pipeline9 primary high-density routing failed: B01 failed: No path found for source_net_184; regional fallback failed: Failed to solve 1 nodes, new-cmn_78-651. err0: GrowShrinkHighDensityIntraNodeSolver failed after resizing to 256x. Last error: Unrelated route terminals overlap at the requested trace width.",
+        "iterations": 2203653
+      },
+      {
+        "key": "error",
+        "seconds": 291.68358099,
+        "type": "autorouting:error",
+        "subcircuit_id": "subcircuit_source_group_0",
+        "componentDisplayName": "<board#2412 />",
+        "phaseName": "other_signals",
+        "phaseStageIndex": 0,
+        "phaseStageCount": 1,
+        "routingPhaseIndex": 3,
+        "_actualRoutingPhaseOrderIndex": 3,
+        "phaseOrdinal": 4,
+        "phaseCount": 5,
+        "connectionCount": 283,
+        "obstacleCount": 1710,
+        "previousTraceCount": 53,
+        "isReroutePhase": false,
+        "autorouterName": "tscircuit",
+        "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+        "cacheStatus": "disabled",
+        "cacheDisabledReason": "no_cache_engine",
+        "error": {
+          "message": "Pipeline9 primary high-density routing failed: B01 failed: No path found for source_net_184; regional fallback failed: Failed to solve 1 nodes, new-cmn_78-651. err0: GrowShrinkHighDensityIntraNodeSolver failed after resizing to 256x. Last error: Unrelated route terminals overlap at the requested trace width. (capacity-autorouter@0.0.1145)"
+        },
+        "traceCount": 53,
+        "obstaclesWithoutCircuitMetadata": 10,
+        "fixedTraceCount": 16
+      }
+    ],
+    "graphRebuilds": 2,
+    "lastGraph": [
+      {
+        "key": "graph-created",
+        "seconds": 181.110529213,
+        "pipeline": 2,
+        "graph": 1,
+        "routes": 575,
+        "ports": 77469,
+        "regions": 18328,
+        "iterations": 0,
+        "reservedPorts": 1178
+      }
+    ],
+    "lastGraphFinishers": [
+      {
+        "key": "graph-finisher",
+        "seconds": 201.91011864200001,
+        "pipeline": 2,
+        "graph": 1,
+        "attempt": -1,
+        "pending": 0,
+        "solved": true,
+        "failed": false,
+        "error": null,
+        "rips": 3,
+        "iterations": 2122853
+      }
+    ],
+    "lastEvent": {
+      "key": "error",
+      "seconds": 291.68358099,
+      "phase": null,
+      "attempt": null,
+      "iterations": null,
+      "child": null,
+      "childPhase": null,
+      "childIterations": null,
+      "attempts": null,
+      "best": null
+    }
+  },
+  {
+    "board": "glider-native",
+    "fanoutAttempts": [
+      {
+        "connections": 95,
+        "bestRouted": 86,
+        "attempts": 256,
+        "error": "FanoutSolver: best layer assignment routed 86/95 connections"
+      }
+    ],
+    "pipelineErrors": [
+      {
+        "key": "error",
+        "seconds": 299.96981077600003,
+        "type": "autorouting:error",
+        "subcircuit_id": "subcircuit_source_group_2",
+        "componentDisplayName": "<board#2828 />",
+        "routingPhaseIndex": null,
+        "_actualRoutingPhaseOrderIndex": 0,
+        "phaseOrdinal": 1,
+        "phaseCount": 8,
+        "connectionCount": 95,
+        "obstacleCount": 2286,
+        "previousTraceCount": 0,
+        "isReroutePhase": false,
+        "autorouterName": "fanout",
+        "solverName": "FanoutSolver",
+        "cacheStatus": "disabled",
+        "cacheDisabledReason": "strategy_not_cacheable",
+        "error": {
+          "message": "Fanout failed for U12: only 86 of 95 connections could escape to the breakout boundary. The breakout boundary is 0.7mm from the pads at its narrowest point, which all 95 escapes have to share. Give the fanout more room by increasing the breakout's padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors) so their pads sit inside the boundary instead of against it."
+        },
+        "traceCount": 0,
+        "obstaclesWithoutCircuitMetadata": 586,
+        "fixedTraceCount": 0
+      }
+    ],
+    "graphRebuilds": 0,
+    "lastGraph": [],
+    "lastGraphFinishers": [],
+    "lastEvent": {
+      "key": "error",
+      "seconds": 299.96981077600003,
+      "phase": null,
+      "attempt": null,
+      "iterations": null,
+      "child": null,
+      "childPhase": null,
+      "childIterations": null,
+      "attempts": null,
+      "best": null
+    }
+  },
+  {
+    "board": "glider-spaced",
+    "fanoutAttempts": [],
+    "pipelineErrors": [
+      {
+        "key": "density-failure",
+        "seconds": 165.486678346,
+        "error": "Pipeline9 primary high-density routing failed: B01 failed: No path found for source_net_17; regional fallback failed: Failed to solve 1 nodes, cmn_8__sub_0_0. err0: GrowShrinkHighDensityIntraNodeSolver failed after resizing to 8x. Last error: All solvers failed in hyper solver. Example failures: ViaPossibilitiesSolver2 failed with: Exceeded max via count of 5, ViaPossibilitiesSolver2 failed with: Exceeded max via count of 5, SingleHighDensityRouteSolver ran out of iterations (MAX_ITERATIONS=10000), SingleHighDensityRouteSolver ran out of iterations (MAX_ITERATIONS=10000), SingleHighDensityRouteSolver ran out of iterations (MAX_ITERATIONS=10000).",
+        "failed": [
+          {
+            "name": "HighDensitySolverB01",
+            "error": "No path found for source_net_314",
+            "iterations": 8349
+          },
+          {
+            "name": "HighDensitySolverB01",
+            "error": "No path found for source_net_321",
+            "iterations": 25
+          },
+          {
+            "name": "HighDensitySolverB01",
+            "error": "No path found for source_net_314",
+            "iterations": 3
+          },
+          {
+            "name": "HighDensitySolverB01",
+            "error": "No path found for source_net_322",
+            "iterations": 3
+          },
+          {
+            "name": "HighDensitySolverB01",
+            "error": "No path found for source_net_322",
+            "iterations": 3
+          },
+          {
+            "name": "HighDensitySolverB01",
+            "error": "No path found for source_net_322",
+            "iterations": 3
+          },
+          {
+            "name": "HighDensitySolverB01",
+            "error": "No path found for source_net_322",
+            "iterations": 3
+          },
+          {
+            "name": "HighDensitySolverB01",
+            "error": "No path found for source_net_16",
+            "iterations": 16
+          },
+          {
+            "name": "HighDensitySolverB01",
+            "error": "No path found for source_net_16",
+            "iterations": 3
+          },
+          {
+            "name": "HighDensitySolverB01",
+            "error": "No path found for source_net_16",
+            "iterations": 5
+          },
+          {
+            "name": "HighDensitySolverB01",
+            "error": "Convergence failure: exceeded MAX_RIPS 200",
+            "iterations": 2715
+          },
+          {
+            "name": "HighDensitySolverB01",
+            "error": "No path found for source_net_321",
+            "iterations": 3
+          },
+          {
+            "name": "HighDensitySolverB01",
+            "error": "No path found for source_net_321",
+            "iterations": 3
+          },
+          {
+            "name": "HighDensitySolverB01",
+            "error": "No path found for source_net_322",
+            "iterations": 8
+          },
+          {
+            "name": "HighDensitySolverB01",
+            "error": "No path found for source_net_322",
+            "iterations": 3
+          },
+          {
+            "name": "HighDensitySolverB01",
+            "error": "No path found for source_net_322",
+            "iterations": 3
+          },
+          {
+            "name": "HighDensitySolverB01",
+            "error": "No path found for source_net_320",
+            "iterations": 4
+          },
+          {
+            "name": "HighDensitySolverB01",
+            "error": "No path found for source_net_320",
+            "iterations": 36
+          },
+          {
+            "name": "HighDensitySolverB01",
+            "error": "No path found for source_net_320",
+            "iterations": 14
+          },
+          {
+            "name": "HighDensitySolverB01",
+            "error": "No path found for source_net_321",
+            "iterations": 3
+          },
+          {
+            "name": "HighDensitySolverB01",
+            "error": "No path found for source_net_321",
+            "iterations": 3
+          },
+          {
+            "name": "HighDensitySolverB01",
+            "error": "No path found for source_net_321",
+            "iterations": 8
+          },
+          {
+            "name": "HighDensitySolverB01",
+            "error": "No path found for source_net_319",
+            "iterations": 22
+          },
+          {
+            "name": "HighDensitySolverB01",
+            "error": "No path found for source_net_8_mst0",
+            "iterations": 3
+          },
+          {
+            "name": "HighDensitySolverB01",
+            "error": "No path found for source_net_8_mst0",
+            "iterations": 9
+          },
+          {
+            "name": "HighDensitySolverB01",
+            "error": "No path found for source_net_8_mst0",
+            "iterations": 3
+          },
+          {
+            "name": "HighDensitySolverB01",
+            "error": "No path found for source_net_42_mst1",
+            "iterations": 3
+          },
+          {
+            "name": "HighDensitySolverB01",
+            "error": "No path found for source_net_42_mst1",
+            "iterations": 14
+          },
+          {
+            "name": "HighDensitySolverB01",
+            "error": "Convergence failure: exceeded MAX_RIPS 200",
+            "iterations": 31257
+          },
+          {
+            "name": "HighDensitySolverB01",
+            "error": "No path found for source_net_18",
+            "iterations": 466
+          },
+          {
+            "name": "HighDensitySolverB01",
+            "error": "No path found for source_net_17",
+            "iterations": 10229
+          }
+        ]
+      },
+      {
+        "key": "pipeline-failure",
+        "seconds": 165.488414192,
+        "pipeline": 1,
+        "phase": "highDensityRouteSolver",
+        "error": "Pipeline9 primary high-density routing failed: B01 failed: No path found for source_net_17; regional fallback failed: Failed to solve 1 nodes, cmn_8__sub_0_0. err0: GrowShrinkHighDensityIntraNodeSolver failed after resizing to 8x. Last error: All solvers failed in hyper solver. Example failures: ViaPossibilitiesSolver2 failed with: Exceeded max via count of 5, ViaPossibilitiesSolver2 failed with: Exceeded max via count of 5, SingleHighDensityRouteSolver ran out of iterations (MAX_ITERATIONS=10000), SingleHighDensityRouteSolver ran out of iterations (MAX_ITERATIONS=10000), SingleHighDensityRouteSolver ran out of iterations (MAX_ITERATIONS=10000).",
+        "iterations": 2451141
+      },
+      {
+        "key": "error",
+        "seconds": 165.49138385100002,
+        "type": "autorouting:error",
+        "subcircuit_id": "subcircuit_source_group_0",
+        "componentDisplayName": "<board#2412 />",
+        "phaseName": "remaining",
+        "phaseStageIndex": 0,
+        "phaseStageCount": 1,
+        "routingPhaseIndex": 2,
+        "_actualRoutingPhaseOrderIndex": 2,
+        "phaseOrdinal": 3,
+        "phaseCount": 5,
+        "connectionCount": 33,
+        "obstacleCount": 1710,
+        "previousTraceCount": 16,
+        "isReroutePhase": false,
+        "autorouterName": "tscircuit",
+        "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+        "cacheStatus": "disabled",
+        "cacheDisabledReason": "no_cache_engine",
+        "error": {
+          "message": "Pipeline9 primary high-density routing failed: B01 failed: No path found for source_net_17; regional fallback failed: Failed to solve 1 nodes, cmn_8__sub_0_0. err0: GrowShrinkHighDensityIntraNodeSolver failed after resizing to 8x. Last error: All solvers failed in hyper solver. Example failures: ViaPossibilitiesSolver2 failed with: Exceeded max via count of 5, ViaPossibilitiesSolver2 failed with: Exceeded max via count of 5, SingleHighDensityRouteSolver ran out of iterations (MAX_ITERATIONS=10000), SingleHighDensityRouteSolver ran out of iterations (MAX_ITERATIONS=10000), SingleHighDensityRouteSolver ran out of iterations (MAX_ITERATIONS=10000). (capacity-autorouter@0.0.1145)"
+        },
+        "traceCount": 16,
+        "obstaclesWithoutCircuitMetadata": 10,
+        "fixedTraceCount": 16
+      }
+    ],
+    "graphRebuilds": 1,
+    "lastGraph": [
+      {
+        "key": "graph-created",
+        "seconds": 45.680658535,
+        "pipeline": 1,
+        "graph": 1,
+        "routes": 73,
+        "ports": 75099,
+        "regions": 17871,
+        "iterations": 0,
+        "reservedPorts": 1235
+      }
+    ],
+    "lastGraphFinishers": [],
+    "lastEvent": {
+      "key": "error",
+      "seconds": 165.49138385100002,
+      "phase": null,
+      "attempt": null,
+      "iterations": null,
+      "child": null,
+      "childPhase": null,
+      "childIterations": null,
+      "attempts": null,
+      "best": null
+    }
+  },
+  {
+    "board": "h616-default-order-local",
+    "fanoutAttempts": [],
+    "pipelineErrors": [
+      {
+        "key": "pipeline-failure",
+        "seconds": 31.297589478000003,
+        "pipeline": 1,
+        "phase": "portPointPathingSolver",
+        "error": "KQ ran out of iterations",
+        "iterations": 2042207
+      },
+      {
+        "key": "error",
+        "seconds": 31.301956554,
+        "type": "autorouting:error",
+        "subcircuit_id": "subcircuit_source_group_0",
+        "componentDisplayName": "<board#990 />",
+        "phaseName": "remaining",
+        "phaseStageIndex": 0,
+        "phaseStageCount": 1,
+        "routingPhaseIndex": 2,
+        "_actualRoutingPhaseOrderIndex": 2,
+        "phaseOrdinal": 3,
+        "phaseCount": 5,
+        "connectionCount": 37,
+        "obstacleCount": 760,
+        "previousTraceCount": 16,
+        "isReroutePhase": false,
+        "autorouterName": "tscircuit",
+        "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+        "cacheStatus": "disabled",
+        "cacheDisabledReason": "no_cache_engine",
+        "error": {
+          "message": "KQ ran out of iterations (capacity-autorouter@0.0.1145)"
+        },
+        "traceCount": 16,
+        "obstaclesWithoutCircuitMetadata": 4,
+        "fixedTraceCount": 16
+      }
+    ],
+    "graphRebuilds": 1,
+    "lastGraph": [
+      {
+        "key": "graph-created",
+        "seconds": 21.269617431000004,
+        "pipeline": 1,
+        "graph": 1,
+        "routes": 94,
+        "ports": 37668,
+        "regions": 11716,
+        "iterations": 0,
+        "reservedPorts": 1723
+      }
+    ],
+    "lastGraphFinishers": [
+      {
+        "key": "graph-finisher",
+        "seconds": 31.070395939,
+        "pipeline": 1,
+        "graph": 1,
+        "attempt": 0,
+        "pending": 3,
+        "solved": false,
+        "failed": true,
+        "error": "EQ ran out of iterations",
+        "rips": 0,
+        "iterations": 50000
+      },
+      {
+        "key": "graph-finisher",
+        "seconds": 31.148142285000002,
+        "pipeline": 1,
+        "graph": 1,
+        "attempt": 1,
+        "pending": 2,
+        "solved": false,
+        "failed": true,
+        "error": "EQ ran out of iterations",
+        "rips": 0,
+        "iterations": 50000
+      },
+      {
+        "key": "graph-finisher",
+        "seconds": 31.225259415,
+        "pipeline": 1,
+        "graph": 1,
+        "attempt": 2,
+        "pending": 3,
+        "solved": false,
+        "failed": true,
+        "error": "EQ ran out of iterations",
+        "rips": 0,
+        "iterations": 50000
+      },
+      {
+        "key": "graph-finisher",
+        "seconds": 31.297087624,
+        "pipeline": 1,
+        "graph": 1,
+        "attempt": 3,
+        "pending": 2,
+        "solved": false,
+        "failed": true,
+        "error": "EQ ran out of iterations",
+        "rips": 0,
+        "iterations": 50000
+      }
+    ],
+    "lastEvent": {
+      "key": "error",
+      "seconds": 31.301956554,
+      "phase": null,
+      "attempt": null,
+      "iterations": null,
+      "child": null,
+      "childPhase": null,
+      "childIterations": null,
+      "attempts": null,
+      "best": null
+    }
+  },
+  {
+    "board": "h616-local",
+    "fanoutAttempts": [],
+    "pipelineErrors": [
+      {
+        "key": "pipeline-failure",
+        "seconds": 52.59172794,
+        "pipeline": 1,
+        "phase": "portPointPathingSolver",
+        "error": "KQ ran out of iterations",
+        "iterations": 6054906
+      },
+      {
+        "key": "error",
+        "seconds": 52.594195005,
+        "type": "autorouting:error",
+        "subcircuit_id": "subcircuit_source_group_0",
+        "componentDisplayName": "<board#990 />",
+        "phaseName": "remaining",
+        "phaseStageIndex": 0,
+        "phaseStageCount": 1,
+        "routingPhaseIndex": 2,
+        "_actualRoutingPhaseOrderIndex": 2,
+        "phaseOrdinal": 3,
+        "phaseCount": 5,
+        "connectionCount": 41,
+        "obstacleCount": 760,
+        "previousTraceCount": 16,
+        "isReroutePhase": false,
+        "autorouterName": "tscircuit",
+        "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+        "cacheStatus": "disabled",
+        "cacheDisabledReason": "no_cache_engine",
+        "error": {
+          "message": "KQ ran out of iterations (capacity-autorouter@0.0.1145)"
+        },
+        "traceCount": 16,
+        "obstaclesWithoutCircuitMetadata": 4,
+        "fixedTraceCount": 16
+      }
+    ],
+    "graphRebuilds": 3,
+    "lastGraph": [
+      {
+        "key": "graph-created",
+        "seconds": 43.259068613,
+        "pipeline": 1,
+        "graph": 3,
+        "routes": 93,
+        "ports": 37552,
+        "regions": 12035,
+        "iterations": 0,
+        "reservedPorts": 1651
+      }
+    ],
+    "lastGraphFinishers": [
+      {
+        "key": "graph-finisher",
+        "seconds": 52.364381338,
+        "pipeline": 1,
+        "graph": 3,
+        "attempt": 0,
+        "pending": 25,
+        "solved": false,
+        "failed": true,
+        "error": "EQ ran out of iterations",
+        "rips": 0,
+        "iterations": 50000
+      },
+      {
+        "key": "graph-finisher",
+        "seconds": 52.448921864999996,
+        "pipeline": 1,
+        "graph": 3,
+        "attempt": 1,
+        "pending": 32,
+        "solved": false,
+        "failed": true,
+        "error": "EQ ran out of iterations",
+        "rips": 0,
+        "iterations": 50000
+      },
+      {
+        "key": "graph-finisher",
+        "seconds": 52.526978858999996,
+        "pipeline": 1,
+        "graph": 3,
+        "attempt": 2,
+        "pending": 27,
+        "solved": false,
+        "failed": true,
+        "error": "EQ ran out of iterations",
+        "rips": 0,
+        "iterations": 50000
+      },
+      {
+        "key": "graph-finisher",
+        "seconds": 52.591431492,
+        "pipeline": 1,
+        "graph": 3,
+        "attempt": 3,
+        "pending": 8,
+        "solved": false,
+        "failed": true,
+        "error": "EQ ran out of iterations",
+        "rips": 1,
+        "iterations": 50000
+      }
+    ],
+    "lastEvent": {
+      "key": "error",
+      "seconds": 52.594195005,
+      "phase": null,
+      "attempt": null,
+      "iterations": null,
+      "child": null,
+      "childPhase": null,
+      "childIterations": null,
+      "attempts": null,
+      "best": null
+    }
+  },
+  {
+    "board": "h616-native",
+    "fanoutAttempts": [
+      {
+        "connections": 174,
+        "bestRouted": 109,
+        "attempts": 256,
+        "error": "FanoutSolver: best layer assignment routed 109/174 connections"
+      }
+    ],
+    "pipelineErrors": [
+      {
+        "key": "error",
+        "seconds": 373.716748192,
+        "type": "autorouting:error",
+        "subcircuit_id": "subcircuit_source_group_2",
+        "componentDisplayName": "<board#1409 />",
+        "routingPhaseIndex": null,
+        "_actualRoutingPhaseOrderIndex": 0,
+        "phaseOrdinal": 1,
+        "phaseCount": 8,
+        "connectionCount": 174,
+        "obstacleCount": 1094,
+        "previousTraceCount": 0,
+        "isReroutePhase": false,
+        "autorouterName": "fanout",
+        "solverName": "FanoutSolver",
+        "cacheStatus": "disabled",
+        "cacheDisabledReason": "strategy_not_cacheable",
+        "error": {
+          "message": "Fanout failed for U1: only 109 of 174 connections could escape to the breakout boundary. The breakout boundary is 0.7mm from the pads at its narrowest point, which all 174 escapes have to share. Give the fanout more room by increasing the breakout's padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors) so their pads sit inside the boundary instead of against it."
+        },
+        "traceCount": 0,
+        "obstaclesWithoutCircuitMetadata": 338,
+        "fixedTraceCount": 0
+      }
+    ],
+    "graphRebuilds": 0,
+    "lastGraph": [],
+    "lastGraphFinishers": [],
+    "lastEvent": {
+      "key": "error",
+      "seconds": 373.716748192,
+      "phase": null,
+      "attempt": null,
+      "iterations": null,
+      "child": null,
+      "childPhase": null,
+      "childIterations": null,
+      "attempts": null,
+      "best": null
+    }
+  },
+  {
+    "board": "h616-spaced",
+    "fanoutAttempts": [],
+    "pipelineErrors": [
+      {
+        "key": "pipeline-failure",
+        "seconds": 31.297898205000003,
+        "pipeline": 1,
+        "phase": "portPointPathingSolver",
+        "error": "KQ ran out of iterations",
+        "iterations": 2041471
+      },
+      {
+        "key": "error",
+        "seconds": 31.300038622,
+        "type": "autorouting:error",
+        "subcircuit_id": "subcircuit_source_group_0",
+        "componentDisplayName": "<board#990 />",
+        "phaseName": "remaining",
+        "phaseStageIndex": 0,
+        "phaseStageCount": 1,
+        "routingPhaseIndex": 2,
+        "_actualRoutingPhaseOrderIndex": 2,
+        "phaseOrdinal": 3,
+        "phaseCount": 5,
+        "connectionCount": 37,
+        "obstacleCount": 760,
+        "previousTraceCount": 16,
+        "isReroutePhase": false,
+        "autorouterName": "tscircuit",
+        "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+        "cacheStatus": "disabled",
+        "cacheDisabledReason": "no_cache_engine",
+        "error": {
+          "message": "KQ ran out of iterations (capacity-autorouter@0.0.1145)"
+        },
+        "traceCount": 16,
+        "obstaclesWithoutCircuitMetadata": 4,
+        "fixedTraceCount": 16
+      }
+    ],
+    "graphRebuilds": 1,
+    "lastGraph": [
+      {
+        "key": "graph-created",
+        "seconds": 20.232390802999998,
+        "pipeline": 1,
+        "graph": 1,
+        "routes": 90,
+        "ports": 43899,
+        "regions": 11668,
+        "iterations": 0,
+        "reservedPorts": 1439
+      }
+    ],
+    "lastGraphFinishers": [
+      {
+        "key": "graph-finisher",
+        "seconds": 30.944088262,
+        "pipeline": 1,
+        "graph": 1,
+        "attempt": 0,
+        "pending": 4,
+        "solved": false,
+        "failed": true,
+        "error": "EQ ran out of iterations",
+        "rips": 0,
+        "iterations": 50000
+      },
+      {
+        "key": "graph-finisher",
+        "seconds": 31.061076471,
+        "pipeline": 1,
+        "graph": 1,
+        "attempt": 1,
+        "pending": 3,
+        "solved": false,
+        "failed": true,
+        "error": "EQ ran out of iterations",
+        "rips": 0,
+        "iterations": 50000
+      },
+      {
+        "key": "graph-finisher",
+        "seconds": 31.176030026,
+        "pipeline": 1,
+        "graph": 1,
+        "attempt": 2,
+        "pending": 15,
+        "solved": false,
+        "failed": true,
+        "error": "EQ ran out of iterations",
+        "rips": 0,
+        "iterations": 50000
+      },
+      {
+        "key": "graph-finisher",
+        "seconds": 31.297386952,
+        "pipeline": 1,
+        "graph": 1,
+        "attempt": 3,
+        "pending": 3,
+        "solved": false,
+        "failed": true,
+        "error": "EQ ran out of iterations",
+        "rips": 0,
+        "iterations": 50000
+      }
+    ],
+    "lastEvent": {
+      "key": "error",
+      "seconds": 31.300038622,
+      "phase": null,
+      "attempt": null,
+      "iterations": null,
+      "child": null,
+      "childPhase": null,
+      "childIterations": null,
+      "attempts": null,
+      "best": null
+    }
+  },
+  {
+    "board": "icepi-local",
+    "fanoutAttempts": [],
+    "pipelineErrors": [
+      {
+        "key": "density-failure",
+        "seconds": 174.75512557399998,
+        "error": "Pipeline9 primary high-density routing failed: B01 failed: No path found for source_net_3_mst1; regional fallback failed: Failed to solve 1 nodes, cmn_31. err0: GrowShrinkHighDensityIntraNodeSolver failed after resizing to 8x. Last error: All solvers failed in hyper solver. Example failures: ViaPossibilitiesSolver2 failed with: Exceeded max via count of 5, ViaPossibilitiesSolver2 failed with: Exceeded max via count of 5, SingleHighDensityRouteSolver ran out of iterations (MAX_ITERATIONS=10000), SingleHighDensityRouteSolver ran out of iterations (MAX_ITERATIONS=10000), SingleHighDensityRouteSolver ran out of iterations (MAX_ITERATIONS=10000).",
+        "failed": [
+          {
+            "name": "HighDensitySolverB01",
+            "error": "Convergence failure: exceeded MAX_RIPS 200",
+            "iterations": 1704
+          },
+          {
+            "name": "HighDensitySolverB01",
+            "error": "No path found for source_net_3_mst0",
+            "iterations": 4
+          },
+          {
+            "name": "HighDensitySolverB01",
+            "error": "No path found for source_net_13",
+            "iterations": 24
+          },
+          {
+            "name": "HighDensitySolverB01",
+            "error": "No path found for source_net_3_mst1",
+            "iterations": 4
+          },
+          {
+            "name": "HighDensitySolverB01",
+            "error": "No path found for source_net_3_mst1",
+            "iterations": 3
+          },
+          {
+            "name": "HighDensitySolverB01",
+            "error": "No path found for source_net_55",
+            "iterations": 27
+          },
+          {
+            "name": "HighDensitySolverB01",
+            "error": "No path found for source_net_3_mst1",
+            "iterations": 4
+          },
+          {
+            "name": "HighDensitySolverB01",
+            "error": "No path found for source_net_4",
+            "iterations": 15
+          },
+          {
+            "name": "HighDensitySolverB01",
+            "error": "No path found for source_net_24",
+            "iterations": 22
+          },
+          {
+            "name": "HighDensitySolverB01",
+            "error": "No path found for source_net_26",
+            "iterations": 27
+          },
+          {
+            "name": "HighDensitySolverB01",
+            "error": "No path found for source_net_57",
+            "iterations": 4
+          },
+          {
+            "name": "HighDensitySolverB01",
+            "error": "No path found for source_net_8",
+            "iterations": 15
+          },
+          {
+            "name": "HighDensitySolverB01",
+            "error": "No path found for source_net_16",
+            "iterations": 21
+          },
+          {
+            "name": "HighDensitySolverB01",
+            "error": "No path found for source_net_54",
+            "iterations": 4
+          },
+          {
+            "name": "HighDensitySolverB01",
+            "error": "No path found for source_net_54",
+            "iterations": 4
+          },
+          {
+            "name": "HighDensitySolverB01",
+            "error": "No path found for source_net_3_mst1",
+            "iterations": 5
+          },
+          {
+            "name": "HighDensitySolverB01",
+            "error": "No path found for source_net_3_mst1",
+            "iterations": 3
+          },
+          {
+            "name": "HighDensitySolverB01",
+            "error": "No path found for source_net_3_mst1",
+            "iterations": 3
+          },
+          {
+            "name": "HighDensitySolverB01",
+            "error": "No path found for source_net_3_mst1",
+            "iterations": 3
+          },
+          {
+            "name": "HighDensitySolverB01",
+            "error": "No path found for source_net_3_mst1",
+            "iterations": 3
+          },
+          {
+            "name": "HighDensitySolverB01",
+            "error": "No path found for source_net_3_mst1",
+            "iterations": 3
+          },
+          {
+            "name": "HighDensitySolverB01",
+            "error": "No path found for source_net_3_mst1",
+            "iterations": 3
+          },
+          {
+            "name": "HighDensitySolverB01",
+            "error": "No path found for source_net_56",
+            "iterations": 4
+          },
+          {
+            "name": "HighDensitySolverB01",
+            "error": "No path found for source_net_56",
+            "iterations": 4
+          },
+          {
+            "name": "HighDensitySolverB01",
+            "error": "No path found for source_net_56",
+            "iterations": 4
+          },
+          {
+            "name": "HighDensitySolverB01",
+            "error": "No path found for source_net_3_mst1",
+            "iterations": 2580
+          }
+        ]
+      },
+      {
+        "key": "pipeline-failure",
+        "seconds": 174.75656057199998,
+        "pipeline": 1,
+        "phase": "highDensityRouteSolver",
+        "error": "Pipeline9 primary high-density routing failed: B01 failed: No path found for source_net_3_mst1; regional fallback failed: Failed to solve 1 nodes, cmn_31. err0: GrowShrinkHighDensityIntraNodeSolver failed after resizing to 8x. Last error: All solvers failed in hyper solver. Example failures: ViaPossibilitiesSolver2 failed with: Exceeded max via count of 5, ViaPossibilitiesSolver2 failed with: Exceeded max via count of 5, SingleHighDensityRouteSolver ran out of iterations (MAX_ITERATIONS=10000), SingleHighDensityRouteSolver ran out of iterations (MAX_ITERATIONS=10000), SingleHighDensityRouteSolver ran out of iterations (MAX_ITERATIONS=10000).",
+        "iterations": 6252348
+      },
+      {
+        "key": "error",
+        "seconds": 174.75985692,
+        "type": "autorouting:error",
+        "subcircuit_id": "subcircuit_source_group_0",
+        "componentDisplayName": "<board#1908 />",
+        "phaseName": "remaining",
+        "phaseStageIndex": 0,
+        "phaseStageCount": 1,
+        "routingPhaseIndex": 2,
+        "_actualRoutingPhaseOrderIndex": 2,
+        "phaseOrdinal": 3,
+        "phaseCount": 5,
+        "connectionCount": 34,
+        "obstacleCount": 1426,
+        "previousTraceCount": 16,
+        "isReroutePhase": false,
+        "autorouterName": "tscircuit",
+        "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+        "cacheStatus": "disabled",
+        "cacheDisabledReason": "no_cache_engine",
+        "error": {
+          "message": "Pipeline9 primary high-density routing failed: B01 failed: No path found for source_net_3_mst1; regional fallback failed: Failed to solve 1 nodes, cmn_31. err0: GrowShrinkHighDensityIntraNodeSolver failed after resizing to 8x. Last error: All solvers failed in hyper solver. Example failures: ViaPossibilitiesSolver2 failed with: Exceeded max via count of 5, ViaPossibilitiesSolver2 failed with: Exceeded max via count of 5, SingleHighDensityRouteSolver ran out of iterations (MAX_ITERATIONS=10000), SingleHighDensityRouteSolver ran out of iterations (MAX_ITERATIONS=10000), SingleHighDensityRouteSolver ran out of iterations (MAX_ITERATIONS=10000). (capacity-autorouter@0.0.1145)"
+        },
+        "traceCount": 16,
+        "obstaclesWithoutCircuitMetadata": 12,
+        "fixedTraceCount": 16
+      }
+    ],
+    "graphRebuilds": 3,
+    "lastGraph": [
+      {
+        "key": "graph-created",
+        "seconds": 101.743415312,
+        "pipeline": 1,
+        "graph": 3,
+        "routes": 66,
+        "ports": 70661,
+        "regions": 19556,
+        "iterations": 0,
+        "reservedPorts": 1297
+      }
+    ],
+    "lastGraphFinishers": [],
+    "lastEvent": {
+      "key": "error",
+      "seconds": 174.75985692,
+      "phase": null,
+      "attempt": null,
+      "iterations": null,
+      "child": null,
+      "childPhase": null,
+      "childIterations": null,
+      "attempts": null,
+      "best": null
+    }
+  },
+  {
+    "board": "icepi-native",
+    "fanoutAttempts": [
+      {
+        "connections": 32,
+        "bestRouted": 14,
+        "attempts": 256,
+        "error": "FanoutSolver: best layer assignment routed 14/32 connections"
+      }
+    ],
+    "pipelineErrors": [
+      {
+        "key": "error",
+        "seconds": 69.91730654400001,
+        "type": "autorouting:error",
+        "subcircuit_id": "subcircuit_source_group_3",
+        "componentDisplayName": "<board#2618 />",
+        "routingPhaseIndex": null,
+        "_actualRoutingPhaseOrderIndex": 0,
+        "phaseOrdinal": 1,
+        "phaseCount": 10,
+        "connectionCount": 32,
+        "obstacleCount": 2038,
+        "previousTraceCount": 0,
+        "isReroutePhase": false,
+        "autorouterName": "fanout",
+        "solverName": "FanoutSolver",
+        "cacheStatus": "disabled",
+        "cacheDisabledReason": "strategy_not_cacheable",
+        "error": {
+          "message": "Fanout failed for U22: only 14 of 32 connections could escape to the breakout boundary. The breakout boundary is 0.7mm from the pads at its narrowest point, which all 32 escapes have to share. Give the fanout more room by increasing the breakout's padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors) so their pads sit inside the boundary instead of against it."
+        },
+        "traceCount": 0,
+        "obstaclesWithoutCircuitMetadata": 624,
+        "fixedTraceCount": 0
+      }
+    ],
+    "graphRebuilds": 0,
+    "lastGraph": [],
+    "lastGraphFinishers": [],
+    "lastEvent": {
+      "key": "error",
+      "seconds": 69.91730654400001,
+      "phase": null,
+      "attempt": null,
+      "iterations": null,
+      "child": null,
+      "childPhase": null,
+      "childIterations": null,
+      "attempts": null,
+      "best": null
+    }
+  },
+  {
+    "board": "icepi-spaced",
+    "fanoutAttempts": [],
+    "pipelineErrors": [
+      {
+        "key": "density-failure",
+        "seconds": 346.10223183999994,
+        "error": "Pipeline9 primary high-density routing failed: B01 failed: No path found for source_net_34_mst0; regional fallback failed: Failed to solve 1 nodes, topology_merge_12872. err0: GrowShrinkHighDensityIntraNodeSolver failed after resizing to 32x. Last error: Unrelated route terminals overlap at the requested trace width.",
+        "failed": [
+          {
+            "name": "HighDensitySolverB01",
+            "error": "No path found for source_net_34_mst0",
+            "iterations": 51
+          },
+          {
+            "name": "HighDensitySolverB01",
+            "error": "No path found for source_net_34_mst0",
+            "iterations": 4
+          }
+        ]
+      },
+      {
+        "key": "pipeline-failure",
+        "seconds": 346.10277522399997,
+        "pipeline": 2,
+        "phase": "highDensityRouteSolver",
+        "error": "Pipeline9 primary high-density routing failed: B01 failed: No path found for source_net_34_mst0; regional fallback failed: Failed to solve 1 nodes, topology_merge_12872. err0: GrowShrinkHighDensityIntraNodeSolver failed after resizing to 32x. Last error: Unrelated route terminals overlap at the requested trace width.",
+        "iterations": 2082748
+      },
+      {
+        "key": "error",
+        "seconds": 346.12222183299997,
+        "type": "autorouting:error",
+        "subcircuit_id": "subcircuit_source_group_0",
+        "componentDisplayName": "<board#1908 />",
+        "phaseName": "other_signals",
+        "phaseStageIndex": 0,
+        "phaseStageCount": 1,
+        "routingPhaseIndex": 3,
+        "_actualRoutingPhaseOrderIndex": 3,
+        "phaseOrdinal": 4,
+        "phaseCount": 5,
+        "connectionCount": 166,
+        "obstacleCount": 1426,
+        "previousTraceCount": 52,
+        "isReroutePhase": false,
+        "autorouterName": "tscircuit",
+        "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+        "cacheStatus": "disabled",
+        "cacheDisabledReason": "no_cache_engine",
+        "error": {
+          "message": "Pipeline9 primary high-density routing failed: B01 failed: No path found for source_net_34_mst0; regional fallback failed: Failed to solve 1 nodes, topology_merge_12872. err0: GrowShrinkHighDensityIntraNodeSolver failed after resizing to 32x. Last error: Unrelated route terminals overlap at the requested trace width. (capacity-autorouter@0.0.1145)"
+        },
+        "traceCount": 52,
+        "obstaclesWithoutCircuitMetadata": 12,
+        "fixedTraceCount": 16
+      }
+    ],
+    "graphRebuilds": 3,
+    "lastGraph": [
+      {
+        "key": "graph-created",
+        "seconds": 314.660803718,
+        "pipeline": 2,
+        "graph": 1,
+        "routes": 375,
+        "ports": 82678,
+        "regions": 20475,
+        "iterations": 0,
+        "reservedPorts": 1212
+      }
+    ],
+    "lastGraphFinishers": [
+      {
+        "key": "graph-finisher",
+        "seconds": 339.746394247,
+        "pipeline": 2,
+        "graph": 1,
+        "attempt": 1,
+        "pending": 65,
+        "solved": false,
+        "failed": true,
+        "error": "EQ ran out of iterations",
+        "rips": 0,
+        "iterations": 50000
+      },
+      {
+        "key": "graph-finisher",
+        "seconds": 339.870613917,
+        "pipeline": 2,
+        "graph": 1,
+        "attempt": 2,
+        "pending": 55,
+        "solved": false,
+        "failed": true,
+        "error": "EQ ran out of iterations",
+        "rips": 0,
+        "iterations": 50000
+      },
+      {
+        "key": "graph-finisher",
+        "seconds": 339.995410491,
+        "pipeline": 2,
+        "graph": 1,
+        "attempt": 3,
+        "pending": 60,
+        "solved": false,
+        "failed": true,
+        "error": "EQ ran out of iterations",
+        "rips": 0,
+        "iterations": 50000
+      },
+      {
+        "key": "graph-finisher",
+        "seconds": 340.019916359,
+        "pipeline": 2,
+        "graph": 1,
+        "attempt": 4,
+        "pending": 0,
+        "solved": true,
+        "failed": false,
+        "error": null,
+        "rips": 0,
+        "iterations": 5466
+      }
+    ],
+    "lastEvent": {
+      "key": "error",
+      "seconds": 346.12222183299997,
+      "phase": null,
+      "attempt": null,
+      "iterations": null,
+      "child": null,
+      "childPhase": null,
+      "childIterations": null,
+      "attempts": null,
+      "best": null
+    }
+  },
+  {
+    "board": "imx6-local",
+    "fanoutAttempts": [],
+    "pipelineErrors": [],
+    "graphRebuilds": 2,
+    "lastGraph": [
+      {
+        "key": "graph-created",
+        "seconds": 283.83345566699995,
+        "pipeline": 1,
+        "graph": 2,
+        "routes": 82,
+        "ports": 104282,
+        "regions": 24904,
+        "iterations": 0,
+        "reservedPorts": 1850
+      }
+    ],
+    "lastGraphFinishers": [
+      {
+        "key": "graph-finisher",
+        "seconds": 276.752335321,
+        "pipeline": 1,
+        "graph": 1,
+        "attempt": -1,
+        "pending": 0,
+        "solved": true,
+        "failed": false,
+        "error": null,
+        "rips": 1,
+        "iterations": 2885057
+      },
+      {
+        "key": "graph-finisher",
+        "seconds": 315.570477363,
+        "pipeline": 1,
+        "graph": 2,
+        "attempt": -1,
+        "pending": 0,
+        "solved": true,
+        "failed": false,
+        "error": null,
+        "rips": 1,
+        "iterations": 2885020
+      }
+    ],
+    "lastEvent": {
+      "key": "density-progress",
+      "seconds": 588.468432182,
+      "phase": null,
+      "attempt": null,
+      "iterations": 3616227,
+      "child": "Pipeline9RegionalFallbackSolver",
+      "childPhase": null,
+      "childIterations": null,
+      "attempts": null,
+      "best": null
+    }
+  },
+  {
+    "board": "imx6-native",
+    "fanoutAttempts": [
+      {
+        "connections": 32,
+        "bestRouted": 9,
+        "attempts": 256,
+        "error": "FanoutSolver: best layer assignment routed 9/32 connections"
+      }
+    ],
+    "pipelineErrors": [
+      {
+        "key": "error",
+        "seconds": 127.909135612,
+        "type": "autorouting:error",
+        "subcircuit_id": "subcircuit_source_group_3",
+        "componentDisplayName": "<board#3445 />",
+        "routingPhaseIndex": null,
+        "_actualRoutingPhaseOrderIndex": 0,
+        "phaseOrdinal": 1,
+        "phaseCount": 10,
+        "connectionCount": 32,
+        "obstacleCount": 3212,
+        "previousTraceCount": 0,
+        "isReroutePhase": false,
+        "autorouterName": "fanout",
+        "solverName": "FanoutSolver",
+        "cacheStatus": "disabled",
+        "cacheDisabledReason": "strategy_not_cacheable",
+        "error": {
+          "message": "Fanout failed for U10: only 9 of 32 connections could escape to the breakout boundary. The breakout boundary is 0.7mm from the pads at its narrowest point, which all 32 escapes have to share. Give the fanout more room by increasing the breakout's padding, or by extending the breakout to include the parts crowding it (decoupling capacitors, series resistors) so their pads sit inside the boundary instead of against it."
+        },
+        "traceCount": 0,
+        "obstaclesWithoutCircuitMetadata": 1286,
+        "fixedTraceCount": 0
+      }
+    ],
+    "graphRebuilds": 0,
+    "lastGraph": [],
+    "lastGraphFinishers": [],
+    "lastEvent": {
+      "key": "error",
+      "seconds": 127.909135612,
+      "phase": null,
+      "attempt": null,
+      "iterations": null,
+      "child": null,
+      "childPhase": null,
+      "childIterations": null,
+      "attempts": null,
+      "best": null
+    }
+  },
+  {
+    "board": "imx6-spaced",
+    "fanoutAttempts": [],
+    "pipelineErrors": [
+      {
+        "key": "density-failure",
+        "seconds": 510.745100229,
+        "error": "Pipeline9 primary high-density routing failed: B01 failed: No path found for source_net_247_mst2; regional fallback failed: Failed to solve 1 nodes, topology_merge_11911_no_via_z1. err0: GrowShrinkHighDensityIntraNodeSolver failed after resizing to 8x. Last error: All solvers failed in hyper solver. Example failures: Candidate solution rejected by validator, Candidate solution rejected by validator, CachedIntraNodeRouteSolver ran out of iterations (MAX_ITERATIONS=1000), CachedIntraNodeRouteSolver ran out of iterations (MAX_ITERATIONS=1000), CachedIntraNodeRouteSolver ran out of iterations (MAX_ITERATIONS=1000).",
+        "failed": [
+          {
+            "name": "HighDensitySolverB01",
+            "error": "No path found for source_net_237",
+            "iterations": 8
+          },
+          {
+            "name": "HighDensitySolverB01",
+            "error": "No path found for source_net_240",
+            "iterations": 8
+          },
+          {
+            "name": "HighDensitySolverB01",
+            "error": "No path found for source_net_279",
+            "iterations": 10
+          },
+          {
+            "name": "HighDensitySolverB01",
+            "error": "No path found for source_net_238",
+            "iterations": 6
+          },
+          {
+            "name": "HighDensitySolverB01",
+            "error": "No path found for source_net_250",
+            "iterations": 6
+          },
+          {
+            "name": "HighDensitySolverB01",
+            "error": "Convergence failure: exceeded MAX_RIPS 200",
+            "iterations": 1405
+          },
+          {
+            "name": "HighDensitySolverB01",
+            "error": "No path found for source_net_172_mst1",
+            "iterations": 5
+          },
+          {
+            "name": "HighDensitySolverB01",
+            "error": "No path found for source_net_247_mst2",
+            "iterations": 5
+          }
+        ]
+      },
+      {
+        "key": "pipeline-failure",
+        "seconds": 510.746218818,
+        "pipeline": 1,
+        "phase": "highDensityRouteSolver",
+        "error": "Pipeline9 primary high-density routing failed: B01 failed: No path found for source_net_247_mst2; regional fallback failed: Failed to solve 1 nodes, topology_merge_11911_no_via_z1. err0: GrowShrinkHighDensityIntraNodeSolver failed after resizing to 8x. Last error: All solvers failed in hyper solver. Example failures: Candidate solution rejected by validator, Candidate solution rejected by validator, CachedIntraNodeRouteSolver ran out of iterations (MAX_ITERATIONS=1000), CachedIntraNodeRouteSolver ran out of iterations (MAX_ITERATIONS=1000), CachedIntraNodeRouteSolver ran out of iterations (MAX_ITERATIONS=1000).",
+        "iterations": 8715723
+      },
+      {
+        "key": "error",
+        "seconds": 510.749194182,
+        "type": "autorouting:error",
+        "subcircuit_id": "subcircuit_source_group_0",
+        "componentDisplayName": "<board#2768 />",
+        "phaseName": "remaining",
+        "phaseStageIndex": 0,
+        "phaseStageCount": 1,
+        "routingPhaseIndex": 2,
+        "_actualRoutingPhaseOrderIndex": 2,
+        "phaseOrdinal": 3,
+        "phaseCount": 5,
+        "connectionCount": 37,
+        "obstacleCount": 1936,
+        "previousTraceCount": 17,
+        "isReroutePhase": false,
+        "autorouterName": "tscircuit",
+        "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+        "cacheStatus": "disabled",
+        "cacheDisabledReason": "no_cache_engine",
+        "error": {
+          "message": "Pipeline9 primary high-density routing failed: B01 failed: No path found for source_net_247_mst2; regional fallback failed: Failed to solve 1 nodes, topology_merge_11911_no_via_z1. err0: GrowShrinkHighDensityIntraNodeSolver failed after resizing to 8x. Last error: All solvers failed in hyper solver. Example failures: Candidate solution rejected by validator, Candidate solution rejected by validator, CachedIntraNodeRouteSolver ran out of iterations (MAX_ITERATIONS=1000), CachedIntraNodeRouteSolver ran out of iterations (MAX_ITERATIONS=1000), CachedIntraNodeRouteSolver ran out of iterations (MAX_ITERATIONS=1000). (capacity-autorouter@0.0.1145)"
+        },
+        "traceCount": 17,
+        "obstaclesWithoutCircuitMetadata": 10,
+        "fixedTraceCount": 17
+      }
+    ],
+    "graphRebuilds": 4,
+    "lastGraph": [
+      {
+        "key": "graph-created",
+        "seconds": 429.51537696500003,
+        "pipeline": 1,
+        "graph": 4,
+        "routes": 75,
+        "ports": 118714,
+        "regions": 24962,
+        "iterations": 0,
+        "reservedPorts": 1845
+      }
+    ],
+    "lastGraphFinishers": [
+      {
+        "key": "graph-finisher",
+        "seconds": 374.774837368,
+        "pipeline": 1,
+        "graph": 2,
+        "attempt": -1,
+        "pending": 0,
+        "solved": true,
+        "failed": false,
+        "error": null,
+        "rips": 0,
+        "iterations": 3621763
+      },
+      {
+        "key": "graph-finisher",
+        "seconds": 426.850494659,
+        "pipeline": 1,
+        "graph": 3,
+        "attempt": -1,
+        "pending": 1,
+        "solved": false,
+        "failed": true,
+        "error": "QQ ran out of iterations",
+        "rips": 0,
+        "iterations": 4000000
+      },
+      {
+        "key": "graph-finisher",
+        "seconds": 426.88317852999995,
+        "pipeline": 1,
+        "graph": 3,
+        "attempt": 0,
+        "pending": 0,
+        "solved": true,
+        "failed": false,
+        "error": null,
+        "rips": 1,
+        "iterations": 3254
+      },
+      {
+        "key": "graph-finisher",
+        "seconds": 473.923439424,
+        "pipeline": 1,
+        "graph": 4,
+        "attempt": -1,
+        "pending": 0,
+        "solved": true,
+        "failed": false,
+        "error": null,
+        "rips": 0,
+        "iterations": 3614399
+      }
+    ],
+    "lastEvent": {
+      "key": "error",
+      "seconds": 510.749194182,
+      "phase": null,
+      "attempt": null,
+      "iterations": null,
+      "child": null,
+      "childPhase": null,
+      "childIterations": null,
+      "attempts": null,
+      "best": null
+    }
+  },
+  {
+    "board": "orangecrab-local",
+    "fanoutAttempts": [],
+    "pipelineErrors": [
+      {
+        "key": "density-failure",
+        "seconds": 182.677596319,
+        "error": "Pipeline9 primary high-density routing failed: B01 failed: No path found for source_net_138_mst1; regional fallback failed: Failed to solve 1 nodes, cmn_266. err0: GrowShrinkHighDensityIntraNodeSolver failed after resizing to 32x. Last error: Unrelated route terminals overlap at the requested trace width.",
+        "failed": [
+          {
+            "name": "HighDensitySolverB01",
+            "error": "No path found for source_net_139",
+            "iterations": 135
+          },
+          {
+            "name": "HighDensitySolverB01",
+            "error": "No path found for source_net_138_mst1",
+            "iterations": 7
+          }
+        ]
+      },
+      {
+        "key": "pipeline-failure",
+        "seconds": 182.678353739,
+        "pipeline": 2,
+        "phase": "highDensityRouteSolver",
+        "error": "Pipeline9 primary high-density routing failed: B01 failed: No path found for source_net_138_mst1; regional fallback failed: Failed to solve 1 nodes, cmn_266. err0: GrowShrinkHighDensityIntraNodeSolver failed after resizing to 32x. Last error: Unrelated route terminals overlap at the requested trace width.",
+        "iterations": 4081617
+      },
+      {
+        "key": "error",
+        "seconds": 182.681536883,
+        "type": "autorouting:error",
+        "subcircuit_id": "subcircuit_source_group_0",
+        "componentDisplayName": "<board#1107 />",
+        "phaseName": "other_signals",
+        "phaseStageIndex": 0,
+        "phaseStageCount": 1,
+        "routingPhaseIndex": 3,
+        "_actualRoutingPhaseOrderIndex": 3,
+        "phaseOrdinal": 4,
+        "phaseCount": 5,
+        "connectionCount": 93,
+        "obstacleCount": 1050,
+        "previousTraceCount": 52,
+        "isReroutePhase": false,
+        "autorouterName": "tscircuit",
+        "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+        "cacheStatus": "disabled",
+        "cacheDisabledReason": "no_cache_engine",
+        "error": {
+          "message": "Pipeline9 primary high-density routing failed: B01 failed: No path found for source_net_138_mst1; regional fallback failed: Failed to solve 1 nodes, cmn_266. err0: GrowShrinkHighDensityIntraNodeSolver failed after resizing to 32x. Last error: Unrelated route terminals overlap at the requested trace width. (capacity-autorouter@0.0.1145)"
+        },
+        "traceCount": 52,
+        "obstaclesWithoutCircuitMetadata": 4,
+        "fixedTraceCount": 16
+      }
+    ],
+    "graphRebuilds": 3,
+    "lastGraph": [
+      {
+        "key": "graph-created",
+        "seconds": 162.834283944,
+        "pipeline": 2,
+        "graph": 2,
+        "routes": 298,
+        "ports": 72767,
+        "regions": 17649,
+        "iterations": 0,
+        "reservedPorts": 1618
+      }
+    ],
+    "lastGraphFinishers": [
+      {
+        "key": "graph-finisher",
+        "seconds": 155.74861982599998,
+        "pipeline": 2,
+        "graph": 1,
+        "attempt": -1,
+        "pending": 0,
+        "solved": true,
+        "failed": false,
+        "error": null,
+        "rips": 0,
+        "iterations": 2578145
+      },
+      {
+        "key": "graph-finisher",
+        "seconds": 178.655701268,
+        "pipeline": 2,
+        "graph": 2,
+        "attempt": -1,
+        "pending": 0,
+        "solved": true,
+        "failed": false,
+        "error": null,
+        "rips": 0,
+        "iterations": 2474140
+      }
+    ],
+    "lastEvent": {
+      "key": "error",
+      "seconds": 182.681536883,
+      "phase": null,
+      "attempt": null,
+      "iterations": null,
+      "child": null,
+      "childPhase": null,
+      "childIterations": null,
+      "attempts": null,
+      "best": null
+    }
+  },
+  {
+    "board": "orangecrab-native",
+    "fanoutAttempts": [],
+    "pipelineErrors": [],
+    "graphRebuilds": 0,
+    "lastGraph": [],
+    "lastGraphFinishers": [],
+    "lastEvent": {
+      "key": "fanout-progress",
+      "seconds": 570.376257666,
+      "phase": null,
+      "attempt": null,
+      "iterations": 90626,
+      "child": null,
+      "childPhase": null,
+      "childIterations": null,
+      "attempts": 115,
+      "best": 149
+    }
+  },
+  {
+    "board": "orangecrab-spaced",
+    "fanoutAttempts": [],
+    "pipelineErrors": [
+      {
+        "key": "density-failure",
+        "seconds": 258.46743599300004,
+        "error": "Pipeline9 primary high-density routing failed: B01 failed: No path found for source_net_64_mst12; regional fallback failed: Failed to solve 1 nodes, topology_merge_13629. err0: GrowShrinkHighDensityIntraNodeSolver failed after resizing to 8x. Last error: Unrelated route terminals overlap at the requested trace width.",
+        "failed": [
+          {
+            "name": "HighDensitySolverB01",
+            "error": "No path found for source_net_64_mst12",
+            "iterations": 3
+          },
+          {
+            "name": "HighDensitySolverB01",
+            "error": "No path found for source_net_64_mst12",
+            "iterations": 3
+          },
+          {
+            "name": "HighDensitySolverB01",
+            "error": "No path found for source_net_64_mst12",
+            "iterations": 3
+          }
+        ]
+      },
+      {
+        "key": "pipeline-failure",
+        "seconds": 258.468236099,
+        "pipeline": 2,
+        "phase": "highDensityRouteSolver",
+        "error": "Pipeline9 primary high-density routing failed: B01 failed: No path found for source_net_64_mst12; regional fallback failed: Failed to solve 1 nodes, topology_merge_13629. err0: GrowShrinkHighDensityIntraNodeSolver failed after resizing to 8x. Last error: Unrelated route terminals overlap at the requested trace width.",
+        "iterations": 4078267
+      },
+      {
+        "key": "error",
+        "seconds": 258.47097576100003,
+        "type": "autorouting:error",
+        "subcircuit_id": "subcircuit_source_group_0",
+        "componentDisplayName": "<board#1107 />",
+        "phaseName": "other_signals",
+        "phaseStageIndex": 0,
+        "phaseStageCount": 1,
+        "routingPhaseIndex": 3,
+        "_actualRoutingPhaseOrderIndex": 3,
+        "phaseOrdinal": 4,
+        "phaseCount": 5,
+        "connectionCount": 93,
+        "obstacleCount": 1050,
+        "previousTraceCount": 52,
+        "isReroutePhase": false,
+        "autorouterName": "tscircuit",
+        "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+        "cacheStatus": "disabled",
+        "cacheDisabledReason": "no_cache_engine",
+        "error": {
+          "message": "Pipeline9 primary high-density routing failed: B01 failed: No path found for source_net_64_mst12; regional fallback failed: Failed to solve 1 nodes, topology_merge_13629. err0: GrowShrinkHighDensityIntraNodeSolver failed after resizing to 8x. Last error: Unrelated route terminals overlap at the requested trace width. (capacity-autorouter@0.0.1145)"
+        },
+        "traceCount": 52,
+        "obstaclesWithoutCircuitMetadata": 4,
+        "fixedTraceCount": 16
+      }
+    ],
+    "graphRebuilds": 3,
+    "lastGraph": [
+      {
+        "key": "graph-created",
+        "seconds": 196.228022235,
+        "pipeline": 2,
+        "graph": 2,
+        "routes": 313,
+        "ports": 104032,
+        "regions": 17908,
+        "iterations": 0,
+        "reservedPorts": 1639
+      }
+    ],
+    "lastGraphFinishers": [
+      {
+        "key": "graph-finisher",
+        "seconds": 186.757387419,
+        "pipeline": 2,
+        "graph": 1,
+        "attempt": 2,
+        "pending": 0,
+        "solved": true,
+        "failed": false,
+        "error": null,
+        "rips": 0,
+        "iterations": 5727
+      },
+      {
+        "key": "graph-finisher",
+        "seconds": 254.51549019700002,
+        "pipeline": 2,
+        "graph": 2,
+        "attempt": -1,
+        "pending": 22,
+        "solved": false,
+        "failed": true,
+        "error": "QQ ran out of iterations",
+        "rips": 0,
+        "iterations": 4000000
+      },
+      {
+        "key": "graph-finisher",
+        "seconds": 254.680335329,
+        "pipeline": 2,
+        "graph": 2,
+        "attempt": 0,
+        "pending": 28,
+        "solved": false,
+        "failed": true,
+        "error": "EQ ran out of iterations",
+        "rips": 0,
+        "iterations": 50000
+      },
+      {
+        "key": "graph-finisher",
+        "seconds": 254.752557246,
+        "pipeline": 2,
+        "graph": 2,
+        "attempt": 1,
+        "pending": 0,
+        "solved": true,
+        "failed": false,
+        "error": null,
+        "rips": 0,
+        "iterations": 5905
+      }
+    ],
+    "lastEvent": {
+      "key": "error",
+      "seconds": 258.47097576100003,
+      "phase": null,
+      "attempt": null,
+      "iterations": null,
+      "child": null,
+      "childPhase": null,
+      "childIterations": null,
+      "attempts": null,
+      "best": null
+    }
+  }
+]
