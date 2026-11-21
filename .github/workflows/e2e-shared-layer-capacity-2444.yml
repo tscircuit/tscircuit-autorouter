@@ -25,7 +25,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: tscircuit/winding-breakout-point-solver
-          ref: 203f4872a9745a830f99981da0a7c43507e6f6aa
+          ref: 36bacae68490c0c78633f6d69f1d8f7e1a4aa4dd
           path: winding-patch
       - uses: oven-sh/setup-bun@v2
         with:
@@ -77,7 +77,8 @@ jobs:
           revisions['interception']='read-only winding stages and original fanout clearance rejections'
           revisions['corePatchApplied']=False
           revisions['windingLayerAssignmentSha256']=hashlib.sha256(Path('core/node_modules/@tscircuit/winding-breakout-point-solver/lib/layer-assignment/assign-connection-layers.ts').read_bytes()).hexdigest()
-          revisions['windingPatch']='203f487;assign-connection-layers.ts only'
+          revisions['windingPatch']='36bacae;assign-connection-layers.ts only'
+          assert revisions['windingLayerAssignmentSha256']=='91d9dfa3b4b789ba8c2597f746057367f30e3f323b4ece8af62c9f5caaeb214f'
           (runtime/'revisions.json').write_text(json.dumps(revisions,indent=2)+'\n')
           print(json.dumps(revisions))
           PYSAMPLES
