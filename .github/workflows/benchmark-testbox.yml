@@ -4,30 +4,32 @@ on:
 permissions:
   contents: read
 jobs:
-  boards:
+  replay:
     runs-on: blacksmith-32vcpu-ubuntu-2404-arm
-    timeout-minutes: 30
+    timeout-minutes: 50
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        board: [icepi-native, imx6-native, h616-local]
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.4.3
-      - name: Unpack original board sources
+      - name: Unpack original frozen sources
         run: |
           mkdir -p experiments/boards-3273/runtime
           unzip -q experiments/boards-3273/boards.zip -d experiments/boards-3273/runtime
-      - name: Install latest tscircuit with frozen dependencies
+      - name: Install once before measuring either revision
         working-directory: experiments/boards-3273/runtime
         run: bun install --frozen-lockfile
-      - name: Apply the board-clip reuse candidate
-        run: python3 experiments/boards-3273/apply-board-clip-cache.py
-      - name: Run all 19 original TSX boards through tscircuit
+      - name: Run base-head-head-base in fresh processes on the same machine
         env:
-          BOARD_VARIANT: board-clip-cache
-          BOARD_FIX_PROVENANCE: board-clip-cache-provenance.json
-        run: python3 experiments/boards-3273/run.py
+          BOARD_SAMPLE: ${{ matrix.board }}
+        run: python3 experiments/boards-3273/replay-paired.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: boards-tscircuit-3273-board-clip-cache
-          path: board-benchmark-results
+          name: paired-board-clips-${{ matrix.board }}
+          path: paired-results/
