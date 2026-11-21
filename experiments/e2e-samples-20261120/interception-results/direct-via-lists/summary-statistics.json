@@ -1,0 +1,2568 @@
+{
+  "summary": {
+    "tscircuit": "0.0.3271",
+    "core": "0.0.2450",
+    "fanout": "0.0.99",
+    "capacityAutorouter": "0.0.1147",
+    "busLanes": "0.0.63",
+    "coreCommit": "e01d7fb5299c2fbc7d86dd7c309a75edba229e55",
+    "fanoutMainCommit": "6900f1088acc51aa852d08bcadea8daef5ee9d8a",
+    "windingCommit": "08d8da9d8dbb037eba332e7bfd685063f8805ed4",
+    "fixCommit": "9a48cdf369e64a7296f5c862e45a87c04bb23a08",
+    "reproCommit": "4d5818d80c49868afabca0f285bb62c8a0eb5856",
+    "productionModuleSha256": "cf90ab51337e2f9f65f0304e4e8acedd0f0dbf664b2389cab1e761d5166cde7b",
+    "archiveSha256": "1991ad1891a953dcd660818aaceb73f7aa42dbf704e677e635753b9159f7a6b7",
+    "baselineRun": 44943960114,
+    "afterRun": 44945880146,
+    "pairedPerformanceRun": 44945167490,
+    "physicalAuditRun": 44946094562,
+    "sourceChecksRun": 44945987366,
+    "nativeTestsRun": 44945931975,
+    "nativeRegressionStatus": "passed",
+    "reproNativeTestsRun": 44945529915,
+    "pairedSearchBeforeMs": 98506.0991615,
+    "pairedSearchAfterMs": 87725.281386,
+    "pairedSearchReductionPercent": 10.944314988887061,
+    "focusedFilterPassesBefore": 14,
+    "focusedFilterPassesAfter": 0,
+    "allFanoutConstructorInputsIdentical": true,
+    "allCompletedAssignmentPrefixesIdentical": true,
+    "allPhysicalPadsIdentical": true,
+    "completedSearchOutputsCompared": 7,
+    "physicalPartialsChecked": 20,
+    "nativeDrcFindings": 0,
+    "independentViaInPadFindings": 0,
+    "completeBoards": [
+      0,
+      0
+    ],
+    "wholeBoardSvgsIdentical": true,
+    "alreadyConnectedPourNets": [
+      19,
+      19
+    ],
+    "partialEscapeTotals": [
+      688,
+      688
+    ],
+    "diagnosticViaTotals": [
+      416,
+      416
+    ],
+    "windingSolved": [
+      87,
+      87
+    ],
+    "windingCalls": [
+      88,
+      88
+    ],
+    "baselineRejectionEvents": {
+      "accepted-plan-copper": 28363996,
+      "pad-trace": 350151,
+      "pad-via": 97611,
+      "outside-boundary": 123907
+    },
+    "interpretation": "Diagnostic partial fanout connections are not completed board nets or committed PCB routes."
+  },
+  "performance": [
+    {
+      "sample": "butterstick-original",
+      "beforeMs": 80169.320415,
+      "afterMs": 69710.723283,
+      "reductionPercent": 13.045635260297338
+    },
+    {
+      "sample": "icepi-original",
+      "beforeMs": 4267.442838000001,
+      "afterMs": 4317.178611,
+      "reductionPercent": -1.1654701630006814
+    },
+    {
+      "sample": "imx6-original",
+      "beforeMs": 5817.3034745,
+      "afterMs": 5628.132846,
+      "reductionPercent": 3.251861095595654
+    },
+    {
+      "sample": "imx6-spaced",
+      "beforeMs": 8252.032434,
+      "afterMs": 8069.2466460000005,
+      "reductionPercent": 2.2150396215953605
+    }
+  ],
+  "rows": [
+    {
+      "sample": "butterstick-original",
+      "samePreviousInput": true,
+      "sameInputs": true,
+      "sameHistory": true,
+      "comparedAssignments": 256,
+      "samePadGeometry": true,
+      "identicalCompletedOutput": true,
+      "identicalPcbSvg": true,
+      "captures": [
+        {
+          "mode": "before",
+          "reportStatus": "failed",
+          "solved": false,
+          "failed": true,
+          "partialEscapes": 62,
+          "requested": 91,
+          "assignments": 256,
+          "vias": 42,
+          "nativeDrc": {
+            "valid": true,
+            "checkedTraceCount": 62,
+            "checkedSegmentCount": 191,
+            "checkedViaCount": 42,
+            "issues": []
+          },
+          "independentViaInPadFindings": 0,
+          "windingCalls": 10,
+          "windingSolved": 10,
+          "committedTraces": 0,
+          "committedVias": 0,
+          "assessment": {
+            "sample": "butterstick-original",
+            "requestedNets": 317,
+            "connectedNets": 9,
+            "groups": {
+              "board": {
+                "requested": 262,
+                "connected": 9
+              },
+              "ddr_remaining": {
+                "requested": 39,
+                "connected": 0
+              },
+              "byte0": {
+                "requested": 8,
+                "connected": 0
+              },
+              "byte1": {
+                "requested": 8,
+                "connected": 0
+              }
+            },
+            "membershipErrors": [],
+            "components": 350,
+            "expectedComponents": 350,
+            "pads": 1623,
+            "expectedPads": 1623,
+            "traces": 0,
+            "vias": 0,
+            "wireLengthMm": 0,
+            "copperPours": 59,
+            "drc": {
+              "overlap": 0,
+              "padTrace": 0,
+              "viaTrace": 0,
+              "viaPad": 0,
+              "viaSpacing": 0,
+              "continuity": 0,
+              "viaInPad": 0,
+              "holeTrace": 0,
+              "width": 0
+            }
+          }
+        },
+        {
+          "mode": "after",
+          "reportStatus": "failed",
+          "solved": false,
+          "failed": true,
+          "partialEscapes": 62,
+          "requested": 91,
+          "assignments": 256,
+          "vias": 42,
+          "nativeDrc": {
+            "valid": true,
+            "checkedTraceCount": 62,
+            "checkedSegmentCount": 191,
+            "checkedViaCount": 42,
+            "issues": []
+          },
+          "independentViaInPadFindings": 0,
+          "windingCalls": 10,
+          "windingSolved": 10,
+          "committedTraces": 0,
+          "committedVias": 0,
+          "assessment": {
+            "sample": "butterstick-original",
+            "requestedNets": 317,
+            "connectedNets": 9,
+            "groups": {
+              "board": {
+                "requested": 262,
+                "connected": 9
+              },
+              "ddr_remaining": {
+                "requested": 39,
+                "connected": 0
+              },
+              "byte0": {
+                "requested": 8,
+                "connected": 0
+              },
+              "byte1": {
+                "requested": 8,
+                "connected": 0
+              }
+            },
+            "membershipErrors": [],
+            "components": 350,
+            "expectedComponents": 350,
+            "pads": 1623,
+            "expectedPads": 1623,
+            "traces": 0,
+            "vias": 0,
+            "wireLengthMm": 0,
+            "copperPours": 59,
+            "drc": {
+              "overlap": 0,
+              "padTrace": 0,
+              "viaTrace": 0,
+              "viaPad": 0,
+              "viaSpacing": 0,
+              "continuity": 0,
+              "viaInPad": 0,
+              "holeTrace": 0,
+              "width": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "sample": "butterstick-spaced",
+      "samePreviousInput": null,
+      "sameInputs": true,
+      "sameHistory": true,
+      "comparedAssignments": 256,
+      "samePadGeometry": true,
+      "identicalCompletedOutput": true,
+      "identicalPcbSvg": true,
+      "captures": [
+        {
+          "mode": "before",
+          "reportStatus": "failed",
+          "solved": false,
+          "failed": true,
+          "partialEscapes": 78,
+          "requested": 91,
+          "assignments": 256,
+          "vias": 49,
+          "nativeDrc": {
+            "valid": true,
+            "checkedTraceCount": 78,
+            "checkedSegmentCount": 320,
+            "checkedViaCount": 49,
+            "issues": []
+          },
+          "independentViaInPadFindings": 0,
+          "windingCalls": 11,
+          "windingSolved": 11,
+          "committedTraces": 0,
+          "committedVias": 0,
+          "assessment": {
+            "sample": "butterstick-spaced",
+            "requestedNets": 317,
+            "connectedNets": 0,
+            "groups": {
+              "power": {
+                "requested": 12,
+                "connected": 0
+              },
+              "other_signals": {
+                "requested": 250,
+                "connected": 0
+              },
+              "remaining": {
+                "requested": 39,
+                "connected": 0
+              },
+              "byte1": {
+                "requested": 8,
+                "connected": 0
+              },
+              "byte0": {
+                "requested": 8,
+                "connected": 0
+              }
+            },
+            "membershipErrors": [],
+            "components": 350,
+            "expectedComponents": 350,
+            "pads": 1623,
+            "expectedPads": 1623,
+            "traces": 0,
+            "vias": 0,
+            "wireLengthMm": 0,
+            "copperPours": 0,
+            "drc": {
+              "overlap": 0,
+              "padTrace": 0,
+              "viaTrace": 0,
+              "viaPad": 0,
+              "viaSpacing": 0,
+              "continuity": 0,
+              "viaInPad": 0,
+              "holeTrace": 0,
+              "width": 0
+            }
+          }
+        },
+        {
+          "mode": "after",
+          "reportStatus": "failed",
+          "solved": false,
+          "failed": true,
+          "partialEscapes": 78,
+          "requested": 91,
+          "assignments": 256,
+          "vias": 49,
+          "nativeDrc": {
+            "valid": true,
+            "checkedTraceCount": 78,
+            "checkedSegmentCount": 320,
+            "checkedViaCount": 49,
+            "issues": []
+          },
+          "independentViaInPadFindings": 0,
+          "windingCalls": 11,
+          "windingSolved": 11,
+          "committedTraces": 0,
+          "committedVias": 0,
+          "assessment": {
+            "sample": "butterstick-spaced",
+            "requestedNets": 317,
+            "connectedNets": 0,
+            "groups": {
+              "power": {
+                "requested": 12,
+                "connected": 0
+              },
+              "other_signals": {
+                "requested": 250,
+                "connected": 0
+              },
+              "remaining": {
+                "requested": 39,
+                "connected": 0
+              },
+              "byte1": {
+                "requested": 8,
+                "connected": 0
+              },
+              "byte0": {
+                "requested": 8,
+                "connected": 0
+              }
+            },
+            "membershipErrors": [],
+            "components": 350,
+            "expectedComponents": 350,
+            "pads": 1623,
+            "expectedPads": 1623,
+            "traces": 0,
+            "vias": 0,
+            "wireLengthMm": 0,
+            "copperPours": 0,
+            "drc": {
+              "overlap": 0,
+              "padTrace": 0,
+              "viaTrace": 0,
+              "viaPad": 0,
+              "viaSpacing": 0,
+              "continuity": 0,
+              "viaInPad": 0,
+              "holeTrace": 0,
+              "width": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "sample": "glider-original",
+      "samePreviousInput": null,
+      "sameInputs": true,
+      "sameHistory": true,
+      "comparedAssignments": 256,
+      "samePadGeometry": true,
+      "identicalCompletedOutput": true,
+      "identicalPcbSvg": true,
+      "captures": [
+        {
+          "mode": "before",
+          "reportStatus": "failed",
+          "solved": false,
+          "failed": true,
+          "partialEscapes": 86,
+          "requested": 95,
+          "assignments": 256,
+          "vias": 58,
+          "nativeDrc": {
+            "valid": true,
+            "checkedTraceCount": 86,
+            "checkedSegmentCount": 237,
+            "checkedViaCount": 58,
+            "issues": []
+          },
+          "independentViaInPadFindings": 0,
+          "windingCalls": 7,
+          "windingSolved": 7,
+          "committedTraces": 0,
+          "committedVias": 0,
+          "assessment": {
+            "sample": "glider-original",
+            "requestedNets": 356,
+            "connectedNets": 0,
+            "groups": {
+              "board": {
+                "requested": 307,
+                "connected": 0
+              },
+              "ddr_remaining": {
+                "requested": 33,
+                "connected": 0
+              },
+              "byte0": {
+                "requested": 8,
+                "connected": 0
+              },
+              "byte1": {
+                "requested": 8,
+                "connected": 0
+              }
+            },
+            "membershipErrors": [],
+            "components": 379,
+            "expectedComponents": 379,
+            "pads": 1700,
+            "expectedPads": 1700,
+            "traces": 0,
+            "vias": 0,
+            "wireLengthMm": 0,
+            "copperPours": 6,
+            "drc": {
+              "overlap": 0,
+              "padTrace": 0,
+              "viaTrace": 0,
+              "viaPad": 0,
+              "viaSpacing": 0,
+              "continuity": 0,
+              "viaInPad": 0,
+              "holeTrace": 0,
+              "width": 0
+            }
+          }
+        },
+        {
+          "mode": "after",
+          "reportStatus": "failed",
+          "solved": false,
+          "failed": true,
+          "partialEscapes": 86,
+          "requested": 95,
+          "assignments": 256,
+          "vias": 58,
+          "nativeDrc": {
+            "valid": true,
+            "checkedTraceCount": 86,
+            "checkedSegmentCount": 237,
+            "checkedViaCount": 58,
+            "issues": []
+          },
+          "independentViaInPadFindings": 0,
+          "windingCalls": 7,
+          "windingSolved": 7,
+          "committedTraces": 0,
+          "committedVias": 0,
+          "assessment": {
+            "sample": "glider-original",
+            "requestedNets": 356,
+            "connectedNets": 0,
+            "groups": {
+              "board": {
+                "requested": 307,
+                "connected": 0
+              },
+              "ddr_remaining": {
+                "requested": 33,
+                "connected": 0
+              },
+              "byte0": {
+                "requested": 8,
+                "connected": 0
+              },
+              "byte1": {
+                "requested": 8,
+                "connected": 0
+              }
+            },
+            "membershipErrors": [],
+            "components": 379,
+            "expectedComponents": 379,
+            "pads": 1700,
+            "expectedPads": 1700,
+            "traces": 0,
+            "vias": 0,
+            "wireLengthMm": 0,
+            "copperPours": 6,
+            "drc": {
+              "overlap": 0,
+              "padTrace": 0,
+              "viaTrace": 0,
+              "viaPad": 0,
+              "viaSpacing": 0,
+              "continuity": 0,
+              "viaInPad": 0,
+              "holeTrace": 0,
+              "width": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "sample": "glider-spaced",
+      "samePreviousInput": null,
+      "sameInputs": true,
+      "sameHistory": true,
+      "comparedAssignments": 27,
+      "samePadGeometry": true,
+      "identicalCompletedOutput": null,
+      "identicalPcbSvg": true,
+      "captures": [
+        {
+          "mode": "before",
+          "reportStatus": "failed",
+          "solved": false,
+          "failed": false,
+          "partialEscapes": 135,
+          "requested": 211,
+          "assignments": 27,
+          "vias": 67,
+          "nativeDrc": {
+            "valid": true,
+            "checkedTraceCount": 135,
+            "checkedSegmentCount": 515,
+            "checkedViaCount": 67,
+            "issues": []
+          },
+          "independentViaInPadFindings": 0,
+          "windingCalls": 8,
+          "windingSolved": 8,
+          "committedTraces": 0,
+          "committedVias": 0,
+          "assessment": {
+            "sample": "glider-spaced",
+            "requestedNets": 356,
+            "connectedNets": 0,
+            "groups": {
+              "other_signals": {
+                "requested": 283,
+                "connected": 0
+              },
+              "power": {
+                "requested": 24,
+                "connected": 0
+              },
+              "remaining": {
+                "requested": 33,
+                "connected": 0
+              },
+              "byte0": {
+                "requested": 8,
+                "connected": 0
+              },
+              "byte1": {
+                "requested": 8,
+                "connected": 0
+              }
+            },
+            "membershipErrors": [],
+            "components": 379,
+            "expectedComponents": 379,
+            "pads": 1700,
+            "expectedPads": 1700,
+            "traces": 0,
+            "vias": 0,
+            "wireLengthMm": 0,
+            "copperPours": 0,
+            "drc": {
+              "overlap": 0,
+              "padTrace": 0,
+              "viaTrace": 0,
+              "viaPad": 0,
+              "viaSpacing": 0,
+              "continuity": 0,
+              "viaInPad": 0,
+              "holeTrace": 0,
+              "width": 0
+            }
+          }
+        },
+        {
+          "mode": "after",
+          "reportStatus": "failed",
+          "solved": false,
+          "failed": false,
+          "partialEscapes": 135,
+          "requested": 211,
+          "assignments": 31,
+          "vias": 67,
+          "nativeDrc": {
+            "valid": true,
+            "checkedTraceCount": 135,
+            "checkedSegmentCount": 515,
+            "checkedViaCount": 67,
+            "issues": []
+          },
+          "independentViaInPadFindings": 0,
+          "windingCalls": 8,
+          "windingSolved": 8,
+          "committedTraces": 0,
+          "committedVias": 0,
+          "assessment": {
+            "sample": "glider-spaced",
+            "requestedNets": 356,
+            "connectedNets": 0,
+            "groups": {
+              "other_signals": {
+                "requested": 283,
+                "connected": 0
+              },
+              "power": {
+                "requested": 24,
+                "connected": 0
+              },
+              "remaining": {
+                "requested": 33,
+                "connected": 0
+              },
+              "byte0": {
+                "requested": 8,
+                "connected": 0
+              },
+              "byte1": {
+                "requested": 8,
+                "connected": 0
+              }
+            },
+            "membershipErrors": [],
+            "components": 379,
+            "expectedComponents": 379,
+            "pads": 1700,
+            "expectedPads": 1700,
+            "traces": 0,
+            "vias": 0,
+            "wireLengthMm": 0,
+            "copperPours": 0,
+            "drc": {
+              "overlap": 0,
+              "padTrace": 0,
+              "viaTrace": 0,
+              "viaPad": 0,
+              "viaSpacing": 0,
+              "continuity": 0,
+              "viaInPad": 0,
+              "holeTrace": 0,
+              "width": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "sample": "h616-original",
+      "samePreviousInput": null,
+      "sameInputs": true,
+      "sameHistory": true,
+      "comparedAssignments": 230,
+      "samePadGeometry": true,
+      "identicalCompletedOutput": null,
+      "identicalPcbSvg": true,
+      "captures": [
+        {
+          "mode": "before",
+          "reportStatus": "failed",
+          "solved": false,
+          "failed": false,
+          "partialEscapes": 109,
+          "requested": 174,
+          "assignments": 230,
+          "vias": 74,
+          "nativeDrc": {
+            "valid": true,
+            "checkedTraceCount": 109,
+            "checkedSegmentCount": 274,
+            "checkedViaCount": 74,
+            "issues": []
+          },
+          "independentViaInPadFindings": 0,
+          "windingCalls": 6,
+          "windingSolved": 6,
+          "committedTraces": 0,
+          "committedVias": 0,
+          "assessment": {
+            "sample": "h616-original",
+            "requestedNets": 121,
+            "connectedNets": 0,
+            "groups": {
+              "board": {
+                "requested": 68,
+                "connected": 0
+              },
+              "byte0": {
+                "requested": 8,
+                "connected": 0
+              },
+              "byte1": {
+                "requested": 8,
+                "connected": 0
+              },
+              "ddr_remaining": {
+                "requested": 37,
+                "connected": 0
+              }
+            },
+            "membershipErrors": [],
+            "components": 125,
+            "expectedComponents": 125,
+            "pads": 760,
+            "expectedPads": 760,
+            "traces": 0,
+            "vias": 0,
+            "wireLengthMm": 0,
+            "copperPours": 231,
+            "drc": {
+              "overlap": 0,
+              "padTrace": 0,
+              "viaTrace": 0,
+              "viaPad": 0,
+              "viaSpacing": 0,
+              "continuity": 0,
+              "viaInPad": 0,
+              "holeTrace": 0,
+              "width": 0
+            }
+          }
+        },
+        {
+          "mode": "after",
+          "reportStatus": "failed",
+          "solved": false,
+          "failed": true,
+          "partialEscapes": 109,
+          "requested": 174,
+          "assignments": 256,
+          "vias": 74,
+          "nativeDrc": {
+            "valid": true,
+            "checkedTraceCount": 109,
+            "checkedSegmentCount": 274,
+            "checkedViaCount": 74,
+            "issues": []
+          },
+          "independentViaInPadFindings": 0,
+          "windingCalls": 6,
+          "windingSolved": 6,
+          "committedTraces": 0,
+          "committedVias": 0,
+          "assessment": {
+            "sample": "h616-original",
+            "requestedNets": 121,
+            "connectedNets": 0,
+            "groups": {
+              "board": {
+                "requested": 68,
+                "connected": 0
+              },
+              "byte0": {
+                "requested": 8,
+                "connected": 0
+              },
+              "byte1": {
+                "requested": 8,
+                "connected": 0
+              },
+              "ddr_remaining": {
+                "requested": 37,
+                "connected": 0
+              }
+            },
+            "membershipErrors": [],
+            "components": 125,
+            "expectedComponents": 125,
+            "pads": 760,
+            "expectedPads": 760,
+            "traces": 0,
+            "vias": 0,
+            "wireLengthMm": 0,
+            "copperPours": 231,
+            "drc": {
+              "overlap": 0,
+              "padTrace": 0,
+              "viaTrace": 0,
+              "viaPad": 0,
+              "viaSpacing": 0,
+              "continuity": 0,
+              "viaInPad": 0,
+              "holeTrace": 0,
+              "width": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "sample": "h616-spaced",
+      "samePreviousInput": null,
+      "sameInputs": true,
+      "sameHistory": true,
+      "comparedAssignments": 146,
+      "samePadGeometry": true,
+      "identicalCompletedOutput": null,
+      "identicalPcbSvg": true,
+      "captures": [
+        {
+          "mode": "before",
+          "reportStatus": "failed",
+          "solved": false,
+          "failed": false,
+          "partialEscapes": 111,
+          "requested": 174,
+          "assignments": 146,
+          "vias": 72,
+          "nativeDrc": {
+            "valid": true,
+            "checkedTraceCount": 111,
+            "checkedSegmentCount": 472,
+            "checkedViaCount": 72,
+            "issues": []
+          },
+          "independentViaInPadFindings": 0,
+          "windingCalls": 8,
+          "windingSolved": 8,
+          "committedTraces": 0,
+          "committedVias": 0,
+          "assessment": {
+            "sample": "h616-spaced",
+            "requestedNets": 121,
+            "connectedNets": 0,
+            "groups": {
+              "power": {
+                "requested": 12,
+                "connected": 0
+              },
+              "other_signals": {
+                "requested": 56,
+                "connected": 0
+              },
+              "remaining": {
+                "requested": 37,
+                "connected": 0
+              },
+              "byte1": {
+                "requested": 8,
+                "connected": 0
+              },
+              "byte0": {
+                "requested": 8,
+                "connected": 0
+              }
+            },
+            "membershipErrors": [],
+            "components": 125,
+            "expectedComponents": 125,
+            "pads": 760,
+            "expectedPads": 760,
+            "traces": 0,
+            "vias": 0,
+            "wireLengthMm": 0,
+            "copperPours": 0,
+            "drc": {
+              "overlap": 0,
+              "padTrace": 0,
+              "viaTrace": 0,
+              "viaPad": 0,
+              "viaSpacing": 0,
+              "continuity": 0,
+              "viaInPad": 0,
+              "holeTrace": 0,
+              "width": 0
+            }
+          }
+        },
+        {
+          "mode": "after",
+          "reportStatus": "failed",
+          "solved": false,
+          "failed": false,
+          "partialEscapes": 111,
+          "requested": 174,
+          "assignments": 161,
+          "vias": 72,
+          "nativeDrc": {
+            "valid": true,
+            "checkedTraceCount": 111,
+            "checkedSegmentCount": 472,
+            "checkedViaCount": 72,
+            "issues": []
+          },
+          "independentViaInPadFindings": 0,
+          "windingCalls": 8,
+          "windingSolved": 8,
+          "committedTraces": 0,
+          "committedVias": 0,
+          "assessment": {
+            "sample": "h616-spaced",
+            "requestedNets": 121,
+            "connectedNets": 0,
+            "groups": {
+              "power": {
+                "requested": 12,
+                "connected": 0
+              },
+              "other_signals": {
+                "requested": 56,
+                "connected": 0
+              },
+              "remaining": {
+                "requested": 37,
+                "connected": 0
+              },
+              "byte1": {
+                "requested": 8,
+                "connected": 0
+              },
+              "byte0": {
+                "requested": 8,
+                "connected": 0
+              }
+            },
+            "membershipErrors": [],
+            "components": 125,
+            "expectedComponents": 125,
+            "pads": 760,
+            "expectedPads": 760,
+            "traces": 0,
+            "vias": 0,
+            "wireLengthMm": 0,
+            "copperPours": 0,
+            "drc": {
+              "overlap": 0,
+              "padTrace": 0,
+              "viaTrace": 0,
+              "viaPad": 0,
+              "viaSpacing": 0,
+              "continuity": 0,
+              "viaInPad": 0,
+              "holeTrace": 0,
+              "width": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "sample": "icepi-original",
+      "samePreviousInput": true,
+      "sameInputs": true,
+      "sameHistory": true,
+      "comparedAssignments": 256,
+      "samePadGeometry": true,
+      "identicalCompletedOutput": true,
+      "identicalPcbSvg": true,
+      "captures": [
+        {
+          "mode": "before",
+          "reportStatus": "failed",
+          "solved": false,
+          "failed": true,
+          "partialEscapes": 14,
+          "requested": 32,
+          "assignments": 256,
+          "vias": 6,
+          "nativeDrc": {
+            "valid": true,
+            "checkedTraceCount": 14,
+            "checkedSegmentCount": 25,
+            "checkedViaCount": 6,
+            "issues": []
+          },
+          "independentViaInPadFindings": 0,
+          "windingCalls": 8,
+          "windingSolved": 8,
+          "committedTraces": 0,
+          "committedVias": 0,
+          "assessment": {
+            "sample": "icepi-original",
+            "requestedNets": 230,
+            "connectedNets": 7,
+            "groups": {
+              "board": {
+                "requested": 180,
+                "connected": 7
+              },
+              "ddr_remaining": {
+                "requested": 34,
+                "connected": 0
+              },
+              "byte0": {
+                "requested": 8,
+                "connected": 0
+              },
+              "byte1": {
+                "requested": 8,
+                "connected": 0
+              }
+            },
+            "membershipErrors": [],
+            "components": 280,
+            "expectedComponents": 280,
+            "pads": 1426,
+            "expectedPads": 1426,
+            "traces": 0,
+            "vias": 0,
+            "wireLengthMm": 0,
+            "copperPours": 194,
+            "drc": {
+              "overlap": 0,
+              "padTrace": 0,
+              "viaTrace": 0,
+              "viaPad": 0,
+              "viaSpacing": 0,
+              "continuity": 0,
+              "viaInPad": 0,
+              "holeTrace": 0,
+              "width": 0
+            }
+          }
+        },
+        {
+          "mode": "after",
+          "reportStatus": "failed",
+          "solved": false,
+          "failed": true,
+          "partialEscapes": 14,
+          "requested": 32,
+          "assignments": 256,
+          "vias": 6,
+          "nativeDrc": {
+            "valid": true,
+            "checkedTraceCount": 14,
+            "checkedSegmentCount": 25,
+            "checkedViaCount": 6,
+            "issues": []
+          },
+          "independentViaInPadFindings": 0,
+          "windingCalls": 8,
+          "windingSolved": 8,
+          "committedTraces": 0,
+          "committedVias": 0,
+          "assessment": {
+            "sample": "icepi-original",
+            "requestedNets": 230,
+            "connectedNets": 7,
+            "groups": {
+              "board": {
+                "requested": 180,
+                "connected": 7
+              },
+              "ddr_remaining": {
+                "requested": 34,
+                "connected": 0
+              },
+              "byte0": {
+                "requested": 8,
+                "connected": 0
+              },
+              "byte1": {
+                "requested": 8,
+                "connected": 0
+              }
+            },
+            "membershipErrors": [],
+            "components": 280,
+            "expectedComponents": 280,
+            "pads": 1426,
+            "expectedPads": 1426,
+            "traces": 0,
+            "vias": 0,
+            "wireLengthMm": 0,
+            "copperPours": 194,
+            "drc": {
+              "overlap": 0,
+              "padTrace": 0,
+              "viaTrace": 0,
+              "viaPad": 0,
+              "viaSpacing": 0,
+              "continuity": 0,
+              "viaInPad": 0,
+              "holeTrace": 0,
+              "width": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "sample": "icepi-spaced",
+      "samePreviousInput": null,
+      "sameInputs": true,
+      "sameHistory": true,
+      "comparedAssignments": 256,
+      "samePadGeometry": true,
+      "identicalCompletedOutput": true,
+      "identicalPcbSvg": true,
+      "captures": [
+        {
+          "mode": "before",
+          "reportStatus": "failed",
+          "solved": false,
+          "failed": true,
+          "partialEscapes": 77,
+          "requested": 92,
+          "assignments": 256,
+          "vias": 37,
+          "nativeDrc": {
+            "valid": true,
+            "checkedTraceCount": 77,
+            "checkedSegmentCount": 293,
+            "checkedViaCount": 37,
+            "issues": []
+          },
+          "independentViaInPadFindings": 0,
+          "windingCalls": 11,
+          "windingSolved": 10,
+          "committedTraces": 0,
+          "committedVias": 0,
+          "assessment": {
+            "sample": "icepi-spaced",
+            "requestedNets": 230,
+            "connectedNets": 0,
+            "groups": {
+              "remaining": {
+                "requested": 34,
+                "connected": 0
+              },
+              "power": {
+                "requested": 14,
+                "connected": 0
+              },
+              "other_signals": {
+                "requested": 166,
+                "connected": 0
+              },
+              "byte1": {
+                "requested": 8,
+                "connected": 0
+              },
+              "byte0": {
+                "requested": 8,
+                "connected": 0
+              }
+            },
+            "membershipErrors": [],
+            "components": 280,
+            "expectedComponents": 280,
+            "pads": 1426,
+            "expectedPads": 1426,
+            "traces": 0,
+            "vias": 0,
+            "wireLengthMm": 0,
+            "copperPours": 0,
+            "drc": {
+              "overlap": 0,
+              "padTrace": 0,
+              "viaTrace": 0,
+              "viaPad": 0,
+              "viaSpacing": 0,
+              "continuity": 0,
+              "viaInPad": 0,
+              "holeTrace": 0,
+              "width": 0
+            }
+          }
+        },
+        {
+          "mode": "after",
+          "reportStatus": "failed",
+          "solved": false,
+          "failed": true,
+          "partialEscapes": 77,
+          "requested": 92,
+          "assignments": 256,
+          "vias": 37,
+          "nativeDrc": {
+            "valid": true,
+            "checkedTraceCount": 77,
+            "checkedSegmentCount": 293,
+            "checkedViaCount": 37,
+            "issues": []
+          },
+          "independentViaInPadFindings": 0,
+          "windingCalls": 11,
+          "windingSolved": 10,
+          "committedTraces": 0,
+          "committedVias": 0,
+          "assessment": {
+            "sample": "icepi-spaced",
+            "requestedNets": 230,
+            "connectedNets": 0,
+            "groups": {
+              "remaining": {
+                "requested": 34,
+                "connected": 0
+              },
+              "power": {
+                "requested": 14,
+                "connected": 0
+              },
+              "other_signals": {
+                "requested": 166,
+                "connected": 0
+              },
+              "byte1": {
+                "requested": 8,
+                "connected": 0
+              },
+              "byte0": {
+                "requested": 8,
+                "connected": 0
+              }
+            },
+            "membershipErrors": [],
+            "components": 280,
+            "expectedComponents": 280,
+            "pads": 1426,
+            "expectedPads": 1426,
+            "traces": 0,
+            "vias": 0,
+            "wireLengthMm": 0,
+            "copperPours": 0,
+            "drc": {
+              "overlap": 0,
+              "padTrace": 0,
+              "viaTrace": 0,
+              "viaPad": 0,
+              "viaSpacing": 0,
+              "continuity": 0,
+              "viaInPad": 0,
+              "holeTrace": 0,
+              "width": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "sample": "imx6-original",
+      "samePreviousInput": true,
+      "sameInputs": true,
+      "sameHistory": true,
+      "comparedAssignments": 256,
+      "samePadGeometry": true,
+      "identicalCompletedOutput": true,
+      "identicalPcbSvg": true,
+      "captures": [
+        {
+          "mode": "before",
+          "reportStatus": "failed",
+          "solved": false,
+          "failed": true,
+          "partialEscapes": 9,
+          "requested": 32,
+          "assignments": 256,
+          "vias": 7,
+          "nativeDrc": {
+            "valid": true,
+            "checkedTraceCount": 9,
+            "checkedSegmentCount": 18,
+            "checkedViaCount": 7,
+            "issues": []
+          },
+          "independentViaInPadFindings": 0,
+          "windingCalls": 8,
+          "windingSolved": 8,
+          "committedTraces": 0,
+          "committedVias": 0,
+          "assessment": {
+            "sample": "imx6-original",
+            "requestedNets": 404,
+            "connectedNets": 3,
+            "groups": {
+              "board": {
+                "requested": 351,
+                "connected": 3
+              },
+              "ddr_remaining": {
+                "requested": 37,
+                "connected": 0
+              },
+              "byte0": {
+                "requested": 8,
+                "connected": 0
+              },
+              "byte1": {
+                "requested": 8,
+                "connected": 0
+              }
+            },
+            "membershipErrors": [],
+            "components": 498,
+            "expectedComponents": 498,
+            "pads": 1904,
+            "expectedPads": 1904,
+            "traces": 0,
+            "vias": 0,
+            "wireLengthMm": 0,
+            "copperPours": 372,
+            "drc": {
+              "overlap": 0,
+              "padTrace": 0,
+              "viaTrace": 0,
+              "viaPad": 0,
+              "viaSpacing": 0,
+              "continuity": 0,
+              "viaInPad": 0,
+              "holeTrace": 0,
+              "width": 0
+            }
+          }
+        },
+        {
+          "mode": "after",
+          "reportStatus": "failed",
+          "solved": false,
+          "failed": true,
+          "partialEscapes": 9,
+          "requested": 32,
+          "assignments": 256,
+          "vias": 7,
+          "nativeDrc": {
+            "valid": true,
+            "checkedTraceCount": 9,
+            "checkedSegmentCount": 18,
+            "checkedViaCount": 7,
+            "issues": []
+          },
+          "independentViaInPadFindings": 0,
+          "windingCalls": 8,
+          "windingSolved": 8,
+          "committedTraces": 0,
+          "committedVias": 0,
+          "assessment": {
+            "sample": "imx6-original",
+            "requestedNets": 404,
+            "connectedNets": 3,
+            "groups": {
+              "board": {
+                "requested": 351,
+                "connected": 3
+              },
+              "ddr_remaining": {
+                "requested": 37,
+                "connected": 0
+              },
+              "byte0": {
+                "requested": 8,
+                "connected": 0
+              },
+              "byte1": {
+                "requested": 8,
+                "connected": 0
+              }
+            },
+            "membershipErrors": [],
+            "components": 498,
+            "expectedComponents": 498,
+            "pads": 1904,
+            "expectedPads": 1904,
+            "traces": 0,
+            "vias": 0,
+            "wireLengthMm": 0,
+            "copperPours": 372,
+            "drc": {
+              "overlap": 0,
+              "padTrace": 0,
+              "viaTrace": 0,
+              "viaPad": 0,
+              "viaSpacing": 0,
+              "continuity": 0,
+              "viaInPad": 0,
+              "holeTrace": 0,
+              "width": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "sample": "imx6-spaced",
+      "samePreviousInput": true,
+      "sameInputs": true,
+      "sameHistory": true,
+      "comparedAssignments": 256,
+      "samePadGeometry": true,
+      "identicalCompletedOutput": true,
+      "identicalPcbSvg": true,
+      "captures": [
+        {
+          "mode": "before",
+          "reportStatus": "failed",
+          "solved": false,
+          "failed": true,
+          "partialEscapes": 7,
+          "requested": 32,
+          "assignments": 256,
+          "vias": 4,
+          "nativeDrc": {
+            "valid": true,
+            "checkedTraceCount": 7,
+            "checkedSegmentCount": 16,
+            "checkedViaCount": 4,
+            "issues": []
+          },
+          "independentViaInPadFindings": 0,
+          "windingCalls": 11,
+          "windingSolved": 11,
+          "committedTraces": 0,
+          "committedVias": 0,
+          "assessment": {
+            "sample": "imx6-spaced",
+            "requestedNets": 404,
+            "connectedNets": 0,
+            "groups": {
+              "power": {
+                "requested": 24,
+                "connected": 0
+              },
+              "other_signals": {
+                "requested": 327,
+                "connected": 0
+              },
+              "remaining": {
+                "requested": 37,
+                "connected": 0
+              },
+              "byte0": {
+                "requested": 8,
+                "connected": 0
+              },
+              "byte1": {
+                "requested": 8,
+                "connected": 0
+              }
+            },
+            "membershipErrors": [],
+            "components": 498,
+            "expectedComponents": 498,
+            "pads": 1904,
+            "expectedPads": 1904,
+            "traces": 0,
+            "vias": 0,
+            "wireLengthMm": 0,
+            "copperPours": 0,
+            "drc": {
+              "overlap": 0,
+              "padTrace": 0,
+              "viaTrace": 0,
+              "viaPad": 0,
+              "viaSpacing": 0,
+              "continuity": 0,
+              "viaInPad": 0,
+              "holeTrace": 0,
+              "width": 0
+            }
+          }
+        },
+        {
+          "mode": "after",
+          "reportStatus": "failed",
+          "solved": false,
+          "failed": true,
+          "partialEscapes": 7,
+          "requested": 32,
+          "assignments": 256,
+          "vias": 4,
+          "nativeDrc": {
+            "valid": true,
+            "checkedTraceCount": 7,
+            "checkedSegmentCount": 16,
+            "checkedViaCount": 4,
+            "issues": []
+          },
+          "independentViaInPadFindings": 0,
+          "windingCalls": 11,
+          "windingSolved": 11,
+          "committedTraces": 0,
+          "committedVias": 0,
+          "assessment": {
+            "sample": "imx6-spaced",
+            "requestedNets": 404,
+            "connectedNets": 0,
+            "groups": {
+              "power": {
+                "requested": 24,
+                "connected": 0
+              },
+              "other_signals": {
+                "requested": 327,
+                "connected": 0
+              },
+              "remaining": {
+                "requested": 37,
+                "connected": 0
+              },
+              "byte0": {
+                "requested": 8,
+                "connected": 0
+              },
+              "byte1": {
+                "requested": 8,
+                "connected": 0
+              }
+            },
+            "membershipErrors": [],
+            "components": 498,
+            "expectedComponents": 498,
+            "pads": 1904,
+            "expectedPads": 1904,
+            "traces": 0,
+            "vias": 0,
+            "wireLengthMm": 0,
+            "copperPours": 0,
+            "drc": {
+              "overlap": 0,
+              "padTrace": 0,
+              "viaTrace": 0,
+              "viaPad": 0,
+              "viaSpacing": 0,
+              "continuity": 0,
+              "viaInPad": 0,
+              "holeTrace": 0,
+              "width": 0
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "baselineInterception": [
+    {
+      "sample": "glider-spaced",
+      "status": "failed",
+      "elapsedMs": 639331.032537,
+      "rejectionEvents": {
+        "accepted-plan-copper": 2000496,
+        "pad-trace": 93990,
+        "pad-via": 14078,
+        "outside-boundary": 28696
+      },
+      "assignments": 27,
+      "windingSolved": 8,
+      "windingCalls": 8,
+      "partial": [
+        {
+          "routed": 135,
+          "requested": 211,
+          "vias": 67,
+          "drcValid": true
+        }
+      ]
+    },
+    {
+      "sample": "imx6-original",
+      "status": "failed",
+      "elapsedMs": 49119.824871,
+      "rejectionEvents": {
+        "accepted-plan-copper": 41398,
+        "pad-trace": 17946,
+        "outside-boundary": 3991,
+        "pad-via": 1740
+      },
+      "assignments": 256,
+      "windingSolved": 8,
+      "windingCalls": 8,
+      "partial": [
+        {
+          "routed": 9,
+          "requested": 32,
+          "vias": 7,
+          "drcValid": true
+        }
+      ]
+    },
+    {
+      "sample": "butterstick-original",
+      "status": "failed",
+      "elapsedMs": 221076.767192,
+      "rejectionEvents": {
+        "accepted-plan-copper": 2838486,
+        "pad-via": 11170,
+        "pad-trace": 21197,
+        "outside-boundary": 9885
+      },
+      "assignments": 256,
+      "windingSolved": 10,
+      "windingCalls": 10,
+      "partial": [
+        {
+          "routed": 62,
+          "requested": 91,
+          "vias": 42,
+          "drcValid": true
+        }
+      ]
+    },
+    {
+      "sample": "glider-original",
+      "status": "failed",
+      "elapsedMs": 418690.363784,
+      "rejectionEvents": {
+        "accepted-plan-copper": 6669799,
+        "pad-trace": 23379,
+        "outside-boundary": 9537,
+        "pad-via": 1901
+      },
+      "assignments": 256,
+      "windingSolved": 7,
+      "windingCalls": 7,
+      "partial": [
+        {
+          "routed": 86,
+          "requested": 95,
+          "vias": 58,
+          "drcValid": true
+        }
+      ]
+    },
+    {
+      "sample": "h616-spaced",
+      "status": "failed",
+      "elapsedMs": 610257.90426,
+      "rejectionEvents": {
+        "accepted-plan-copper": 5365370,
+        "pad-trace": 58282,
+        "pad-via": 20555,
+        "outside-boundary": 19887
+      },
+      "assignments": 146,
+      "windingSolved": 8,
+      "windingCalls": 8,
+      "partial": [
+        {
+          "routed": 111,
+          "requested": 174,
+          "vias": 72,
+          "drcValid": true
+        }
+      ]
+    },
+    {
+      "sample": "icepi-spaced",
+      "status": "failed",
+      "elapsedMs": 274700.888944,
+      "rejectionEvents": {
+        "accepted-plan-copper": 3724194,
+        "outside-boundary": 13197,
+        "pad-via": 7271,
+        "pad-trace": 18846
+      },
+      "assignments": 256,
+      "windingSolved": 10,
+      "windingCalls": 11,
+      "partial": [
+        {
+          "routed": 77,
+          "requested": 92,
+          "vias": 37,
+          "drcValid": true
+        }
+      ]
+    },
+    {
+      "sample": "icepi-original",
+      "status": "failed",
+      "elapsedMs": 30054.327515999998,
+      "rejectionEvents": {
+        "accepted-plan-copper": 64722,
+        "pad-trace": 14261,
+        "outside-boundary": 2155,
+        "pad-via": 1606
+      },
+      "assignments": 256,
+      "windingSolved": 8,
+      "windingCalls": 8,
+      "partial": [
+        {
+          "routed": 14,
+          "requested": 32,
+          "vias": 6,
+          "drcValid": true
+        }
+      ]
+    },
+    {
+      "sample": "h616-original",
+      "status": "failed",
+      "elapsedMs": 603989.4962769999,
+      "rejectionEvents": {
+        "accepted-plan-copper": 4555600,
+        "pad-trace": 77167,
+        "pad-via": 15825,
+        "outside-boundary": 15569
+      },
+      "assignments": 230,
+      "windingSolved": 6,
+      "windingCalls": 6,
+      "partial": [
+        {
+          "routed": 109,
+          "requested": 174,
+          "vias": 74,
+          "drcValid": true
+        }
+      ]
+    },
+    {
+      "sample": "imx6-spaced",
+      "status": "failed",
+      "elapsedMs": 130007.52372599998,
+      "rejectionEvents": {
+        "accepted-plan-copper": 5118,
+        "pad-via": 13409,
+        "outside-boundary": 8618,
+        "pad-trace": 6424
+      },
+      "assignments": 256,
+      "windingSolved": 11,
+      "windingCalls": 11,
+      "partial": [
+        {
+          "routed": 7,
+          "requested": 32,
+          "vias": 4,
+          "drcValid": true
+        }
+      ]
+    },
+    {
+      "sample": "butterstick-spaced",
+      "status": "failed",
+      "elapsedMs": 389955.78878500004,
+      "rejectionEvents": {
+        "accepted-plan-copper": 3098813,
+        "pad-via": 10056,
+        "pad-trace": 18659,
+        "outside-boundary": 12372
+      },
+      "assignments": 256,
+      "windingSolved": 11,
+      "windingCalls": 11,
+      "partial": [
+        {
+          "routed": 78,
+          "requested": 91,
+          "vias": 49,
+          "drcValid": true
+        }
+      ]
+    }
+  ],
+  "experiments": {
+    "clearanceCandidates": [
+      {
+        "sample": "icepi-original",
+        "mode": "before",
+        "elapsedMs": 4531.488667,
+        "escapes": 14,
+        "vias": 6,
+        "assignments": 256,
+        "copperSha256": "7d875247c8b7041279f56199d5d83eabf086d4cb01b87f5adde7aedd7ded4fe2",
+        "mutualSha256": "081466c8152372354fe46c3f9968b85b2f2d84897fa8660a0e1e29c65c28776f",
+        "staticSha256": "a73f5a162268f9ae89945a3754ba1df0e12a54c3eaae20ef938c2782eb45913f",
+        "fanoutVersion": "0.0.99"
+      },
+      {
+        "sample": "icepi-original",
+        "mode": "arrays",
+        "elapsedMs": 4490.411655,
+        "escapes": 14,
+        "vias": 6,
+        "assignments": 256,
+        "copperSha256": "57fe9a692608f880116b27f5d4f541975f1d7818996ec04b039e393ed10cacf7",
+        "mutualSha256": "081466c8152372354fe46c3f9968b85b2f2d84897fa8660a0e1e29c65c28776f",
+        "staticSha256": "a73f5a162268f9ae89945a3754ba1df0e12a54c3eaae20ef938c2782eb45913f",
+        "fanoutVersion": "0.0.99"
+      },
+      {
+        "sample": "icepi-original",
+        "mode": "via_bounds",
+        "elapsedMs": 4484.92185,
+        "escapes": 14,
+        "vias": 6,
+        "assignments": 256,
+        "copperSha256": "7d875247c8b7041279f56199d5d83eabf086d4cb01b87f5adde7aedd7ded4fe2",
+        "mutualSha256": "7af7d061b6a573e11bb6cb623d4b3892e1abee32f4de949f148d18e4303dbdf6",
+        "staticSha256": "a73f5a162268f9ae89945a3754ba1df0e12a54c3eaae20ef938c2782eb45913f",
+        "fanoutVersion": "0.0.99"
+      },
+      {
+        "sample": "icepi-original",
+        "mode": "pad_bounds",
+        "elapsedMs": 4437.918501,
+        "escapes": 14,
+        "vias": 6,
+        "assignments": 256,
+        "copperSha256": "7d875247c8b7041279f56199d5d83eabf086d4cb01b87f5adde7aedd7ded4fe2",
+        "mutualSha256": "081466c8152372354fe46c3f9968b85b2f2d84897fa8660a0e1e29c65c28776f",
+        "staticSha256": "4c8056151bdf47feb11573a35adcb3b34495fb4ef51621a3b07446aa77c5113d",
+        "fanoutVersion": "0.0.99"
+      },
+      {
+        "sample": "icepi-original",
+        "mode": "before_repeat",
+        "elapsedMs": 4613.352862,
+        "escapes": 14,
+        "vias": 6,
+        "assignments": 256,
+        "copperSha256": "7d875247c8b7041279f56199d5d83eabf086d4cb01b87f5adde7aedd7ded4fe2",
+        "mutualSha256": "081466c8152372354fe46c3f9968b85b2f2d84897fa8660a0e1e29c65c28776f",
+        "staticSha256": "a73f5a162268f9ae89945a3754ba1df0e12a54c3eaae20ef938c2782eb45913f",
+        "fanoutVersion": "0.0.99"
+      },
+      {
+        "sample": "imx6-original",
+        "mode": "before",
+        "elapsedMs": 5661.880759,
+        "escapes": 9,
+        "vias": 7,
+        "assignments": 256,
+        "copperSha256": "7d875247c8b7041279f56199d5d83eabf086d4cb01b87f5adde7aedd7ded4fe2",
+        "mutualSha256": "081466c8152372354fe46c3f9968b85b2f2d84897fa8660a0e1e29c65c28776f",
+        "staticSha256": "a73f5a162268f9ae89945a3754ba1df0e12a54c3eaae20ef938c2782eb45913f",
+        "fanoutVersion": "0.0.99"
+      },
+      {
+        "sample": "imx6-original",
+        "mode": "arrays",
+        "elapsedMs": 5600.140776,
+        "escapes": 9,
+        "vias": 7,
+        "assignments": 256,
+        "copperSha256": "57fe9a692608f880116b27f5d4f541975f1d7818996ec04b039e393ed10cacf7",
+        "mutualSha256": "081466c8152372354fe46c3f9968b85b2f2d84897fa8660a0e1e29c65c28776f",
+        "staticSha256": "a73f5a162268f9ae89945a3754ba1df0e12a54c3eaae20ef938c2782eb45913f",
+        "fanoutVersion": "0.0.99"
+      },
+      {
+        "sample": "imx6-original",
+        "mode": "via_bounds",
+        "elapsedMs": 5827.656113,
+        "escapes": 9,
+        "vias": 7,
+        "assignments": 256,
+        "copperSha256": "7d875247c8b7041279f56199d5d83eabf086d4cb01b87f5adde7aedd7ded4fe2",
+        "mutualSha256": "7af7d061b6a573e11bb6cb623d4b3892e1abee32f4de949f148d18e4303dbdf6",
+        "staticSha256": "a73f5a162268f9ae89945a3754ba1df0e12a54c3eaae20ef938c2782eb45913f",
+        "fanoutVersion": "0.0.99"
+      },
+      {
+        "sample": "imx6-original",
+        "mode": "pad_bounds",
+        "elapsedMs": 5849.3829319999995,
+        "escapes": 9,
+        "vias": 7,
+        "assignments": 256,
+        "copperSha256": "7d875247c8b7041279f56199d5d83eabf086d4cb01b87f5adde7aedd7ded4fe2",
+        "mutualSha256": "081466c8152372354fe46c3f9968b85b2f2d84897fa8660a0e1e29c65c28776f",
+        "staticSha256": "4c8056151bdf47feb11573a35adcb3b34495fb4ef51621a3b07446aa77c5113d",
+        "fanoutVersion": "0.0.99"
+      },
+      {
+        "sample": "imx6-original",
+        "mode": "before_repeat",
+        "elapsedMs": 5351.052684,
+        "escapes": 9,
+        "vias": 7,
+        "assignments": 256,
+        "copperSha256": "7d875247c8b7041279f56199d5d83eabf086d4cb01b87f5adde7aedd7ded4fe2",
+        "mutualSha256": "081466c8152372354fe46c3f9968b85b2f2d84897fa8660a0e1e29c65c28776f",
+        "staticSha256": "a73f5a162268f9ae89945a3754ba1df0e12a54c3eaae20ef938c2782eb45913f",
+        "fanoutVersion": "0.0.99"
+      },
+      {
+        "sample": "imx6-spaced",
+        "mode": "before",
+        "elapsedMs": 9369.136095,
+        "escapes": 7,
+        "vias": 4,
+        "assignments": 256,
+        "copperSha256": "7d875247c8b7041279f56199d5d83eabf086d4cb01b87f5adde7aedd7ded4fe2",
+        "mutualSha256": "081466c8152372354fe46c3f9968b85b2f2d84897fa8660a0e1e29c65c28776f",
+        "staticSha256": "a73f5a162268f9ae89945a3754ba1df0e12a54c3eaae20ef938c2782eb45913f",
+        "fanoutVersion": "0.0.99"
+      },
+      {
+        "sample": "imx6-spaced",
+        "mode": "arrays",
+        "elapsedMs": 9271.96418,
+        "escapes": 7,
+        "vias": 4,
+        "assignments": 256,
+        "copperSha256": "57fe9a692608f880116b27f5d4f541975f1d7818996ec04b039e393ed10cacf7",
+        "mutualSha256": "081466c8152372354fe46c3f9968b85b2f2d84897fa8660a0e1e29c65c28776f",
+        "staticSha256": "a73f5a162268f9ae89945a3754ba1df0e12a54c3eaae20ef938c2782eb45913f",
+        "fanoutVersion": "0.0.99"
+      },
+      {
+        "sample": "imx6-spaced",
+        "mode": "via_bounds",
+        "elapsedMs": 9259.014794,
+        "escapes": 7,
+        "vias": 4,
+        "assignments": 256,
+        "copperSha256": "7d875247c8b7041279f56199d5d83eabf086d4cb01b87f5adde7aedd7ded4fe2",
+        "mutualSha256": "7af7d061b6a573e11bb6cb623d4b3892e1abee32f4de949f148d18e4303dbdf6",
+        "staticSha256": "a73f5a162268f9ae89945a3754ba1df0e12a54c3eaae20ef938c2782eb45913f",
+        "fanoutVersion": "0.0.99"
+      },
+      {
+        "sample": "imx6-spaced",
+        "mode": "pad_bounds",
+        "elapsedMs": 8861.787545,
+        "escapes": 7,
+        "vias": 4,
+        "assignments": 256,
+        "copperSha256": "7d875247c8b7041279f56199d5d83eabf086d4cb01b87f5adde7aedd7ded4fe2",
+        "mutualSha256": "081466c8152372354fe46c3f9968b85b2f2d84897fa8660a0e1e29c65c28776f",
+        "staticSha256": "4c8056151bdf47feb11573a35adcb3b34495fb4ef51621a3b07446aa77c5113d",
+        "fanoutVersion": "0.0.99"
+      },
+      {
+        "sample": "imx6-spaced",
+        "mode": "before_repeat",
+        "elapsedMs": 9342.231416,
+        "escapes": 7,
+        "vias": 4,
+        "assignments": 256,
+        "copperSha256": "7d875247c8b7041279f56199d5d83eabf086d4cb01b87f5adde7aedd7ded4fe2",
+        "mutualSha256": "081466c8152372354fe46c3f9968b85b2f2d84897fa8660a0e1e29c65c28776f",
+        "staticSha256": "a73f5a162268f9ae89945a3754ba1df0e12a54c3eaae20ef938c2782eb45913f",
+        "fanoutVersion": "0.0.99"
+      },
+      {
+        "sample": "butterstick-original",
+        "mode": "before",
+        "elapsedMs": 66657.105102,
+        "escapes": 62,
+        "vias": 42,
+        "assignments": 256,
+        "copperSha256": "7d875247c8b7041279f56199d5d83eabf086d4cb01b87f5adde7aedd7ded4fe2",
+        "mutualSha256": "081466c8152372354fe46c3f9968b85b2f2d84897fa8660a0e1e29c65c28776f",
+        "staticSha256": "a73f5a162268f9ae89945a3754ba1df0e12a54c3eaae20ef938c2782eb45913f",
+        "fanoutVersion": "0.0.99"
+      },
+      {
+        "sample": "butterstick-original",
+        "mode": "arrays",
+        "elapsedMs": 63551.920376,
+        "escapes": 62,
+        "vias": 42,
+        "assignments": 256,
+        "copperSha256": "57fe9a692608f880116b27f5d4f541975f1d7818996ec04b039e393ed10cacf7",
+        "mutualSha256": "081466c8152372354fe46c3f9968b85b2f2d84897fa8660a0e1e29c65c28776f",
+        "staticSha256": "a73f5a162268f9ae89945a3754ba1df0e12a54c3eaae20ef938c2782eb45913f",
+        "fanoutVersion": "0.0.99"
+      },
+      {
+        "sample": "butterstick-original",
+        "mode": "via_bounds",
+        "elapsedMs": 63279.063129999995,
+        "escapes": 62,
+        "vias": 42,
+        "assignments": 256,
+        "copperSha256": "7d875247c8b7041279f56199d5d83eabf086d4cb01b87f5adde7aedd7ded4fe2",
+        "mutualSha256": "7af7d061b6a573e11bb6cb623d4b3892e1abee32f4de949f148d18e4303dbdf6",
+        "staticSha256": "a73f5a162268f9ae89945a3754ba1df0e12a54c3eaae20ef938c2782eb45913f",
+        "fanoutVersion": "0.0.99"
+      },
+      {
+        "sample": "butterstick-original",
+        "mode": "pad_bounds",
+        "elapsedMs": 63491.70732,
+        "escapes": 62,
+        "vias": 42,
+        "assignments": 256,
+        "copperSha256": "7d875247c8b7041279f56199d5d83eabf086d4cb01b87f5adde7aedd7ded4fe2",
+        "mutualSha256": "081466c8152372354fe46c3f9968b85b2f2d84897fa8660a0e1e29c65c28776f",
+        "staticSha256": "4c8056151bdf47feb11573a35adcb3b34495fb4ef51621a3b07446aa77c5113d",
+        "fanoutVersion": "0.0.99"
+      },
+      {
+        "sample": "butterstick-original",
+        "mode": "before_repeat",
+        "elapsedMs": 69201.094539,
+        "escapes": 62,
+        "vias": 42,
+        "assignments": 256,
+        "copperSha256": "7d875247c8b7041279f56199d5d83eabf086d4cb01b87f5adde7aedd7ded4fe2",
+        "mutualSha256": "081466c8152372354fe46c3f9968b85b2f2d84897fa8660a0e1e29c65c28776f",
+        "staticSha256": "a73f5a162268f9ae89945a3754ba1df0e12a54c3eaae20ef938c2782eb45913f",
+        "fanoutVersion": "0.0.99"
+      },
+      {
+        "sample": "butterstick-original",
+        "mode": "profile",
+        "elapsedMs": 70032.792482,
+        "escapes": 62,
+        "vias": 42,
+        "assignments": 256,
+        "copperSha256": "7d875247c8b7041279f56199d5d83eabf086d4cb01b87f5adde7aedd7ded4fe2",
+        "mutualSha256": "081466c8152372354fe46c3f9968b85b2f2d84897fa8660a0e1e29c65c28776f",
+        "staticSha256": "a73f5a162268f9ae89945a3754ba1df0e12a54c3eaae20ef938c2782eb45913f",
+        "fanoutVersion": "0.0.99"
+      }
+    ],
+    "zeroRotation": [
+      {
+        "sample": "imx6-original",
+        "mode": "before",
+        "elapsedMs": 5567.084904,
+        "escapes": 9,
+        "vias": 7,
+        "assignments": 256,
+        "copperSha256": "7d875247c8b7041279f56199d5d83eabf086d4cb01b87f5adde7aedd7ded4fe2",
+        "mutualSha256": "081466c8152372354fe46c3f9968b85b2f2d84897fa8660a0e1e29c65c28776f",
+        "staticSha256": "a73f5a162268f9ae89945a3754ba1df0e12a54c3eaae20ef938c2782eb45913f",
+        "geometrySha256": "96940e883f8ce97f157331a8f9bfc7adf11d456d2f3bac6b72f1e2a9c65115f4",
+        "fanoutVersion": "0.0.99"
+      },
+      {
+        "sample": "imx6-original",
+        "mode": "zero_rotation",
+        "elapsedMs": 5571.276156,
+        "escapes": 9,
+        "vias": 7,
+        "assignments": 256,
+        "copperSha256": "7d875247c8b7041279f56199d5d83eabf086d4cb01b87f5adde7aedd7ded4fe2",
+        "mutualSha256": "081466c8152372354fe46c3f9968b85b2f2d84897fa8660a0e1e29c65c28776f",
+        "staticSha256": "a73f5a162268f9ae89945a3754ba1df0e12a54c3eaae20ef938c2782eb45913f",
+        "geometrySha256": "30ca919b2b557197f32d88d813a07811ef3dd28c03f593fe247604b5838af5c5",
+        "fanoutVersion": "0.0.99"
+      },
+      {
+        "sample": "imx6-original",
+        "mode": "before_repeat",
+        "elapsedMs": 5607.0548069999995,
+        "escapes": 9,
+        "vias": 7,
+        "assignments": 256,
+        "copperSha256": "7d875247c8b7041279f56199d5d83eabf086d4cb01b87f5adde7aedd7ded4fe2",
+        "mutualSha256": "081466c8152372354fe46c3f9968b85b2f2d84897fa8660a0e1e29c65c28776f",
+        "staticSha256": "a73f5a162268f9ae89945a3754ba1df0e12a54c3eaae20ef938c2782eb45913f",
+        "geometrySha256": "96940e883f8ce97f157331a8f9bfc7adf11d456d2f3bac6b72f1e2a9c65115f4",
+        "fanoutVersion": "0.0.99"
+      },
+      {
+        "sample": "imx6-spaced",
+        "mode": "before",
+        "elapsedMs": 8393.712448999999,
+        "escapes": 7,
+        "vias": 4,
+        "assignments": 256,
+        "copperSha256": "7d875247c8b7041279f56199d5d83eabf086d4cb01b87f5adde7aedd7ded4fe2",
+        "mutualSha256": "081466c8152372354fe46c3f9968b85b2f2d84897fa8660a0e1e29c65c28776f",
+        "staticSha256": "a73f5a162268f9ae89945a3754ba1df0e12a54c3eaae20ef938c2782eb45913f",
+        "geometrySha256": "96940e883f8ce97f157331a8f9bfc7adf11d456d2f3bac6b72f1e2a9c65115f4",
+        "fanoutVersion": "0.0.99"
+      },
+      {
+        "sample": "imx6-spaced",
+        "mode": "zero_rotation",
+        "elapsedMs": 8278.296054,
+        "escapes": 7,
+        "vias": 4,
+        "assignments": 256,
+        "copperSha256": "7d875247c8b7041279f56199d5d83eabf086d4cb01b87f5adde7aedd7ded4fe2",
+        "mutualSha256": "081466c8152372354fe46c3f9968b85b2f2d84897fa8660a0e1e29c65c28776f",
+        "staticSha256": "a73f5a162268f9ae89945a3754ba1df0e12a54c3eaae20ef938c2782eb45913f",
+        "geometrySha256": "30ca919b2b557197f32d88d813a07811ef3dd28c03f593fe247604b5838af5c5",
+        "fanoutVersion": "0.0.99"
+      },
+      {
+        "sample": "imx6-spaced",
+        "mode": "before_repeat",
+        "elapsedMs": 8704.272420000001,
+        "escapes": 7,
+        "vias": 4,
+        "assignments": 256,
+        "copperSha256": "7d875247c8b7041279f56199d5d83eabf086d4cb01b87f5adde7aedd7ded4fe2",
+        "mutualSha256": "081466c8152372354fe46c3f9968b85b2f2d84897fa8660a0e1e29c65c28776f",
+        "staticSha256": "a73f5a162268f9ae89945a3754ba1df0e12a54c3eaae20ef938c2782eb45913f",
+        "geometrySha256": "96940e883f8ce97f157331a8f9bfc7adf11d456d2f3bac6b72f1e2a9c65115f4",
+        "fanoutVersion": "0.0.99"
+      },
+      {
+        "sample": "icepi-original",
+        "mode": "before",
+        "elapsedMs": 4708.035322,
+        "escapes": 14,
+        "vias": 6,
+        "assignments": 256,
+        "copperSha256": "7d875247c8b7041279f56199d5d83eabf086d4cb01b87f5adde7aedd7ded4fe2",
+        "mutualSha256": "081466c8152372354fe46c3f9968b85b2f2d84897fa8660a0e1e29c65c28776f",
+        "staticSha256": "a73f5a162268f9ae89945a3754ba1df0e12a54c3eaae20ef938c2782eb45913f",
+        "geometrySha256": "96940e883f8ce97f157331a8f9bfc7adf11d456d2f3bac6b72f1e2a9c65115f4",
+        "fanoutVersion": "0.0.99"
+      },
+      {
+        "sample": "icepi-original",
+        "mode": "zero_rotation",
+        "elapsedMs": 4451.436578,
+        "escapes": 14,
+        "vias": 6,
+        "assignments": 256,
+        "copperSha256": "7d875247c8b7041279f56199d5d83eabf086d4cb01b87f5adde7aedd7ded4fe2",
+        "mutualSha256": "081466c8152372354fe46c3f9968b85b2f2d84897fa8660a0e1e29c65c28776f",
+        "staticSha256": "a73f5a162268f9ae89945a3754ba1df0e12a54c3eaae20ef938c2782eb45913f",
+        "geometrySha256": "30ca919b2b557197f32d88d813a07811ef3dd28c03f593fe247604b5838af5c5",
+        "fanoutVersion": "0.0.99"
+      },
+      {
+        "sample": "icepi-original",
+        "mode": "before_repeat",
+        "elapsedMs": 4408.507936999999,
+        "escapes": 14,
+        "vias": 6,
+        "assignments": 256,
+        "copperSha256": "7d875247c8b7041279f56199d5d83eabf086d4cb01b87f5adde7aedd7ded4fe2",
+        "mutualSha256": "081466c8152372354fe46c3f9968b85b2f2d84897fa8660a0e1e29c65c28776f",
+        "staticSha256": "a73f5a162268f9ae89945a3754ba1df0e12a54c3eaae20ef938c2782eb45913f",
+        "geometrySha256": "96940e883f8ce97f157331a8f9bfc7adf11d456d2f3bac6b72f1e2a9c65115f4",
+        "fanoutVersion": "0.0.99"
+      },
+      {
+        "sample": "butterstick-original",
+        "mode": "before",
+        "elapsedMs": 63380.045629,
+        "escapes": 62,
+        "vias": 42,
+        "assignments": 256,
+        "copperSha256": "7d875247c8b7041279f56199d5d83eabf086d4cb01b87f5adde7aedd7ded4fe2",
+        "mutualSha256": "081466c8152372354fe46c3f9968b85b2f2d84897fa8660a0e1e29c65c28776f",
+        "staticSha256": "a73f5a162268f9ae89945a3754ba1df0e12a54c3eaae20ef938c2782eb45913f",
+        "geometrySha256": "96940e883f8ce97f157331a8f9bfc7adf11d456d2f3bac6b72f1e2a9c65115f4",
+        "fanoutVersion": "0.0.99"
+      },
+      {
+        "sample": "butterstick-original",
+        "mode": "zero_rotation",
+        "elapsedMs": 62508.839941,
+        "escapes": 62,
+        "vias": 42,
+        "assignments": 256,
+        "copperSha256": "7d875247c8b7041279f56199d5d83eabf086d4cb01b87f5adde7aedd7ded4fe2",
+        "mutualSha256": "081466c8152372354fe46c3f9968b85b2f2d84897fa8660a0e1e29c65c28776f",
+        "staticSha256": "a73f5a162268f9ae89945a3754ba1df0e12a54c3eaae20ef938c2782eb45913f",
+        "geometrySha256": "30ca919b2b557197f32d88d813a07811ef3dd28c03f593fe247604b5838af5c5",
+        "fanoutVersion": "0.0.99"
+      },
+      {
+        "sample": "butterstick-original",
+        "mode": "before_repeat",
+        "elapsedMs": 66303.971253,
+        "escapes": 62,
+        "vias": 42,
+        "assignments": 256,
+        "copperSha256": "7d875247c8b7041279f56199d5d83eabf086d4cb01b87f5adde7aedd7ded4fe2",
+        "mutualSha256": "081466c8152372354fe46c3f9968b85b2f2d84897fa8660a0e1e29c65c28776f",
+        "staticSha256": "a73f5a162268f9ae89945a3754ba1df0e12a54c3eaae20ef938c2782eb45913f",
+        "geometrySha256": "96940e883f8ce97f157331a8f9bfc7adf11d456d2f3bac6b72f1e2a9c65115f4",
+        "fanoutVersion": "0.0.99"
+      }
+    ],
+    "cpuProfileTop": [
+      {
+        "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/route-bus/plan-copper.ts",
+        "function": "getPlanVias",
+        "line": 10,
+        "ticks": 14918
+      },
+      {
+        "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/route-bus/plan-static-clearance.ts",
+        "function": "segmentIsClearOfObstacles",
+        "line": 29,
+        "ticks": 7686
+      },
+      {
+        "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/route-bus/route-analytic-boundary-alternatives.ts",
+        "function": "searchConnectionOrder",
+        "line": 67,
+        "ticks": 6020
+      },
+      {
+        "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/route-bus/route-plane-terminated-bus.ts",
+        "function": "routePlaneTerminatedBus",
+        "line": 23,
+        "ticks": 5877
+      },
+      {
+        "file": "",
+        "function": "hypot",
+        "line": 0,
+        "ticks": 4119
+      },
+      {
+        "file": "",
+        "function": "filter",
+        "line": 1,
+        "ticks": 2168
+      },
+      {
+        "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/route-bus/build-plan.ts",
+        "function": "buildPlan",
+        "line": 11,
+        "ticks": 2067
+      },
+      {
+        "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/route-bus/plan-static-clearance.ts",
+        "function": "",
+        "line": 224,
+        "ticks": 1787
+      },
+      {
+        "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/route-bus/plan-mutual-clearance.ts",
+        "function": "planIsClearOfPlans",
+        "line": 28,
+        "ticks": 1537
+      },
+      {
+        "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/route-bus/plan-static-clearance.ts",
+        "function": "planIsStaticallyClear",
+        "line": 109,
+        "ticks": 1063
+      },
+      {
+        "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/net-identity.ts",
+        "function": "obstacleSharesElectricalNet",
+        "line": 157,
+        "ticks": 1057
+      },
+      {
+        "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/route-bus/track-candidates.ts",
+        "function": "getTrackCandidates",
+        "line": 35,
+        "ticks": 965
+      },
+      {
+        "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/geometry.ts",
+        "function": "distancePointToObstacle",
+        "line": 122,
+        "ticks": 745
+      },
+      {
+        "file": "",
+        "function": "some",
+        "line": 1,
+        "ticks": 738
+      },
+      {
+        "file": "",
+        "function": "copyDataProperties",
+        "line": 0,
+        "ticks": 600
+      },
+      {
+        "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/fanout-output-ids.ts",
+        "function": "createFanoutOutputIds",
+        "line": 11,
+        "ticks": 547
+      },
+      {
+        "file": "",
+        "function": "sort",
+        "line": 0,
+        "ticks": 538
+      },
+      {
+        "file": "",
+        "function": "from",
+        "line": 1,
+        "ticks": 530
+      },
+      {
+        "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/fanout-solver.ts",
+        "function": "evaluateAssignmentWithStrategySteps",
+        "line": 5643,
+        "ticks": 421
+      },
+      {
+        "file": "",
+        "function": "map",
+        "line": 1,
+        "ticks": 385
+      },
+      {
+        "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/route-bus/source-escape.ts",
+        "function": "chamferOrthogonalPolyline",
+        "line": 114,
+        "ticks": 384
+      },
+      {
+        "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/route-bus/connection-order.ts",
+        "function": "getConnectionRank",
+        "line": 46,
+        "ticks": 355
+      },
+      {
+        "file": "",
+        "function": "flatIntoArray",
+        "line": 1,
+        "ticks": 347
+      },
+      {
+        "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/route-bus/source-escape.ts",
+        "function": "chamferOrthogonalCorners",
+        "line": 20,
+        "ticks": 334
+      },
+      {
+        "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/route-bus/source-escape.ts",
+        "function": "appendSegment",
+        "line": 97,
+        "ticks": 328
+      },
+      {
+        "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/route-bus/source-escape.ts",
+        "function": "getStraightOr45ConnectorVariants",
+        "line": 70,
+        "ticks": 292
+      },
+      {
+        "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/route-bus/route-plane-terminated-bus.ts",
+        "function": "isClear",
+        "line": 346,
+        "ticks": 291
+      },
+      {
+        "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/route-bus/plan-mutual-clearance.ts",
+        "function": "",
+        "line": 124,
+        "ticks": 288
+      },
+      {
+        "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/route-bus/plan-clearance.ts",
+        "function": "planIsClear",
+        "line": 13,
+        "ticks": 263
+      },
+      {
+        "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/net-identity.ts",
+        "function": "getKnownNetKeys",
+        "line": 35,
+        "ticks": 242
+      }
+    ],
+    "directVias": [
+      {
+        "sample": "imx6-spaced",
+        "mode": "before",
+        "elapsedMs": 8350.460131,
+        "escapes": 7,
+        "vias": 4,
+        "assignments": 256,
+        "copperSha256": "7d875247c8b7041279f56199d5d83eabf086d4cb01b87f5adde7aedd7ded4fe2",
+        "mutualSha256": "081466c8152372354fe46c3f9968b85b2f2d84897fa8660a0e1e29c65c28776f",
+        "staticSha256": "a73f5a162268f9ae89945a3754ba1df0e12a54c3eaae20ef938c2782eb45913f",
+        "fanoutVersion": "0.0.99"
+      },
+      {
+        "sample": "imx6-spaced",
+        "mode": "direct_vias",
+        "elapsedMs": 8069.2466460000005,
+        "escapes": 7,
+        "vias": 4,
+        "assignments": 256,
+        "copperSha256": "cf90ab51337e2f9f65f0304e4e8acedd0f0dbf664b2389cab1e761d5166cde7b",
+        "mutualSha256": "081466c8152372354fe46c3f9968b85b2f2d84897fa8660a0e1e29c65c28776f",
+        "staticSha256": "a73f5a162268f9ae89945a3754ba1df0e12a54c3eaae20ef938c2782eb45913f",
+        "fanoutVersion": "0.0.99"
+      },
+      {
+        "sample": "imx6-spaced",
+        "mode": "arrays",
+        "elapsedMs": 8185.765193000001,
+        "escapes": 7,
+        "vias": 4,
+        "assignments": 256,
+        "copperSha256": "57fe9a692608f880116b27f5d4f541975f1d7818996ec04b039e393ed10cacf7",
+        "mutualSha256": "081466c8152372354fe46c3f9968b85b2f2d84897fa8660a0e1e29c65c28776f",
+        "staticSha256": "a73f5a162268f9ae89945a3754ba1df0e12a54c3eaae20ef938c2782eb45913f",
+        "fanoutVersion": "0.0.99"
+      },
+      {
+        "sample": "imx6-spaced",
+        "mode": "before_repeat",
+        "elapsedMs": 8153.604737,
+        "escapes": 7,
+        "vias": 4,
+        "assignments": 256,
+        "copperSha256": "7d875247c8b7041279f56199d5d83eabf086d4cb01b87f5adde7aedd7ded4fe2",
+        "mutualSha256": "081466c8152372354fe46c3f9968b85b2f2d84897fa8660a0e1e29c65c28776f",
+        "staticSha256": "a73f5a162268f9ae89945a3754ba1df0e12a54c3eaae20ef938c2782eb45913f",
+        "fanoutVersion": "0.0.99"
+      },
+      {
+        "sample": "imx6-original",
+        "mode": "before",
+        "elapsedMs": 5775.740070000001,
+        "escapes": 9,
+        "vias": 7,
+        "assignments": 256,
+        "copperSha256": "7d875247c8b7041279f56199d5d83eabf086d4cb01b87f5adde7aedd7ded4fe2",
+        "mutualSha256": "081466c8152372354fe46c3f9968b85b2f2d84897fa8660a0e1e29c65c28776f",
+        "staticSha256": "a73f5a162268f9ae89945a3754ba1df0e12a54c3eaae20ef938c2782eb45913f",
+        "fanoutVersion": "0.0.99"
+      },
+      {
+        "sample": "imx6-original",
+        "mode": "direct_vias",
+        "elapsedMs": 5628.132846,
+        "escapes": 9,
+        "vias": 7,
+        "assignments": 256,
+        "copperSha256": "cf90ab51337e2f9f65f0304e4e8acedd0f0dbf664b2389cab1e761d5166cde7b",
+        "mutualSha256": "081466c8152372354fe46c3f9968b85b2f2d84897fa8660a0e1e29c65c28776f",
+        "staticSha256": "a73f5a162268f9ae89945a3754ba1df0e12a54c3eaae20ef938c2782eb45913f",
+        "fanoutVersion": "0.0.99"
+      },
+      {
+        "sample": "imx6-original",
+        "mode": "arrays",
+        "elapsedMs": 5393.275404,
+        "escapes": 9,
+        "vias": 7,
+        "assignments": 256,
+        "copperSha256": "57fe9a692608f880116b27f5d4f541975f1d7818996ec04b039e393ed10cacf7",
+        "mutualSha256": "081466c8152372354fe46c3f9968b85b2f2d84897fa8660a0e1e29c65c28776f",
+        "staticSha256": "a73f5a162268f9ae89945a3754ba1df0e12a54c3eaae20ef938c2782eb45913f",
+        "fanoutVersion": "0.0.99"
+      },
+      {
+        "sample": "imx6-original",
+        "mode": "before_repeat",
+        "elapsedMs": 5858.866879,
+        "escapes": 9,
+        "vias": 7,
+        "assignments": 256,
+        "copperSha256": "7d875247c8b7041279f56199d5d83eabf086d4cb01b87f5adde7aedd7ded4fe2",
+        "mutualSha256": "081466c8152372354fe46c3f9968b85b2f2d84897fa8660a0e1e29c65c28776f",
+        "staticSha256": "a73f5a162268f9ae89945a3754ba1df0e12a54c3eaae20ef938c2782eb45913f",
+        "fanoutVersion": "0.0.99"
+      },
+      {
+        "sample": "icepi-original",
+        "mode": "before",
+        "elapsedMs": 4254.92348,
+        "escapes": 14,
+        "vias": 6,
+        "assignments": 256,
+        "copperSha256": "7d875247c8b7041279f56199d5d83eabf086d4cb01b87f5adde7aedd7ded4fe2",
+        "mutualSha256": "081466c8152372354fe46c3f9968b85b2f2d84897fa8660a0e1e29c65c28776f",
+        "staticSha256": "a73f5a162268f9ae89945a3754ba1df0e12a54c3eaae20ef938c2782eb45913f",
+        "fanoutVersion": "0.0.99"
+      },
+      {
+        "sample": "icepi-original",
+        "mode": "direct_vias",
+        "elapsedMs": 4317.178611,
+        "escapes": 14,
+        "vias": 6,
+        "assignments": 256,
+        "copperSha256": "cf90ab51337e2f9f65f0304e4e8acedd0f0dbf664b2389cab1e761d5166cde7b",
+        "mutualSha256": "081466c8152372354fe46c3f9968b85b2f2d84897fa8660a0e1e29c65c28776f",
+        "staticSha256": "a73f5a162268f9ae89945a3754ba1df0e12a54c3eaae20ef938c2782eb45913f",
+        "fanoutVersion": "0.0.99"
+      },
+      {
+        "sample": "icepi-original",
+        "mode": "arrays",
+        "elapsedMs": 4357.523472999999,
+        "escapes": 14,
+        "vias": 6,
+        "assignments": 256,
+        "copperSha256": "57fe9a692608f880116b27f5d4f541975f1d7818996ec04b039e393ed10cacf7",
+        "mutualSha256": "081466c8152372354fe46c3f9968b85b2f2d84897fa8660a0e1e29c65c28776f",
+        "staticSha256": "a73f5a162268f9ae89945a3754ba1df0e12a54c3eaae20ef938c2782eb45913f",
+        "fanoutVersion": "0.0.99"
+      },
+      {
+        "sample": "icepi-original",
+        "mode": "before_repeat",
+        "elapsedMs": 4279.962196,
+        "escapes": 14,
+        "vias": 6,
+        "assignments": 256,
+        "copperSha256": "7d875247c8b7041279f56199d5d83eabf086d4cb01b87f5adde7aedd7ded4fe2",
+        "mutualSha256": "081466c8152372354fe46c3f9968b85b2f2d84897fa8660a0e1e29c65c28776f",
+        "staticSha256": "a73f5a162268f9ae89945a3754ba1df0e12a54c3eaae20ef938c2782eb45913f",
+        "fanoutVersion": "0.0.99"
+      },
+      {
+        "sample": "butterstick-original",
+        "mode": "before",
+        "elapsedMs": 80371.921108,
+        "escapes": 62,
+        "vias": 42,
+        "assignments": 256,
+        "copperSha256": "7d875247c8b7041279f56199d5d83eabf086d4cb01b87f5adde7aedd7ded4fe2",
+        "mutualSha256": "081466c8152372354fe46c3f9968b85b2f2d84897fa8660a0e1e29c65c28776f",
+        "staticSha256": "a73f5a162268f9ae89945a3754ba1df0e12a54c3eaae20ef938c2782eb45913f",
+        "fanoutVersion": "0.0.99"
+      },
+      {
+        "sample": "butterstick-original",
+        "mode": "direct_vias",
+        "elapsedMs": 69710.723283,
+        "escapes": 62,
+        "vias": 42,
+        "assignments": 256,
+        "copperSha256": "cf90ab51337e2f9f65f0304e4e8acedd0f0dbf664b2389cab1e761d5166cde7b",
+        "mutualSha256": "081466c8152372354fe46c3f9968b85b2f2d84897fa8660a0e1e29c65c28776f",
+        "staticSha256": "a73f5a162268f9ae89945a3754ba1df0e12a54c3eaae20ef938c2782eb45913f",
+        "fanoutVersion": "0.0.99"
+      },
+      {
+        "sample": "butterstick-original",
+        "mode": "arrays",
+        "elapsedMs": 69174.18013600001,
+        "escapes": 62,
+        "vias": 42,
+        "assignments": 256,
+        "copperSha256": "57fe9a692608f880116b27f5d4f541975f1d7818996ec04b039e393ed10cacf7",
+        "mutualSha256": "081466c8152372354fe46c3f9968b85b2f2d84897fa8660a0e1e29c65c28776f",
+        "staticSha256": "a73f5a162268f9ae89945a3754ba1df0e12a54c3eaae20ef938c2782eb45913f",
+        "fanoutVersion": "0.0.99"
+      },
+      {
+        "sample": "butterstick-original",
+        "mode": "before_repeat",
+        "elapsedMs": 79966.71972200001,
+        "escapes": 62,
+        "vias": 42,
+        "assignments": 256,
+        "copperSha256": "7d875247c8b7041279f56199d5d83eabf086d4cb01b87f5adde7aedd7ded4fe2",
+        "mutualSha256": "081466c8152372354fe46c3f9968b85b2f2d84897fa8660a0e1e29c65c28776f",
+        "staticSha256": "a73f5a162268f9ae89945a3754ba1df0e12a54c3eaae20ef938c2782eb45913f",
+        "fanoutVersion": "0.0.99"
+      }
+    ]
+  }
+}
