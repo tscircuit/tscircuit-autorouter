@@ -1,0 +1,94 @@
+name: Measure conservative via bounds and allocation on fanout 98
+on:
+  push:
+    branches: [analysis/e2e-via-clearance-experiments-2448]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  replay:
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        sample: [icepi-original, butterstick-original, imx6-original]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Install pinned native routing dependencies
+        run: |
+          mkdir -p core/replay
+          cat > core/package.json <<'JSON'
+          {"name":"fanout-current-capture-replay","private":true,"type":"module","dependencies":{"@tscircuit/fanout-solver":"0.0.98","@tscircuit/capacity-autorouter":"0.0.1145","@tscircuit/checks":"0.0.282","graphics-debug":"0.0.99"}}
+          JSON
+          cd core
+          bun install --ignore-scripts
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 44906708885
+          name: full-circuit-interception-${{ matrix.sample }}
+          path: captures
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Replay equal inputs and compare actual copper and search histories
+        env:
+          SAMPLE: ${{ matrix.sample }}
+        run: |
+          cp core/node_modules/@tscircuit/fanout-solver/lib/route-bus/plan-mutual-clearance.ts core/replay/original-mutual.txt
+          cp core/node_modules/@tscircuit/fanout-solver/lib/route-bus/plan-copper.ts core/replay/original-copper.txt
+          cat > core/replay/run.ts <<'TS'
+          import { readFileSync, writeFileSync } from "node:fs"
+          import { gunzipSync } from "node:zlib"
+          const mode = process.argv[2]
+          let source = readFileSync("original-mutual.txt", "utf8")
+          const original = source
+          if (mode === "bounds") {
+            source = source.replace('import type { FanoutRoutePlan }', 'import type { FanoutRoutePlan, RoutedSegment, RoutedVia }')
+            source = source.replace("export function planIsClearOfPlans", "function viaIsNearSegment({\n  via,\n  segment,\n  clearance,\n}: {\n  via: RoutedVia\n  segment: RoutedSegment\n  clearance: number\n}): boolean {\n  const margin = (via.diameter + segment.width) / 2 + clearance + 1e-9\n  return (\n    via.center.x >= Math.min(segment.start.x, segment.end.x) - margin &&\n    via.center.x <= Math.max(segment.start.x, segment.end.x) + margin &&\n    via.center.y >= Math.min(segment.start.y, segment.end.y) - margin &&\n    via.center.y <= Math.max(segment.start.y, segment.end.y) + margin\n  )\n}\n\n" + "export function planIsClearOfPlans")
+            source = source.replace("otherVia.spanLayers.includes(segment.layer) &&", "otherVia.spanLayers.includes(segment.layer) &&\n          viaIsNearSegment({ via: otherVia, segment, clearance }) &&")
+            source = source.replace("planVia.spanLayers.includes(otherSegment.layer) &&", "planVia.spanLayers.includes(otherSegment.layer) &&\n          viaIsNearSegment({ via: planVia, segment: otherSegment, clearance }) &&")
+          }
+          const copperPath = "../node_modules/@tscircuit/fanout-solver/lib/route-bus/plan-copper.ts"
+          let copper = readFileSync("original-copper.txt", "utf8")
+          if (mode === "arrays") {
+            const oldBody = "  return [\n    plan.via,\n    ...(plan.additionalVias ?? []),\n    plan.planeEndpointVia,\n  ].filter((via): via is NonNullable<FanoutRoutePlan[\"via\"]> => Boolean(via))"
+            if (!copper.includes(oldBody)) throw new Error("Missing original via collector")
+            copper = copper.replace(oldBody, "  const vias: NonNullable<FanoutRoutePlan[\"via\"]>[] = []\n  if (plan.via) vias.push(plan.via)\n  if (plan.additionalVias) vias.push(...plan.additionalVias)\n  if (plan.planeEndpointVia) vias.push(plan.planeEndpointVia)\n  return vias")
+          }
+          writeFileSync(copperPath, copper)
+          if (mode === "bounds" && source === original) throw new Error("Missing bounds experiment patch")
+          writeFileSync("../node_modules/@tscircuit/fanout-solver/lib/route-bus/plan-mutual-clearance.ts", source)
+          const { FanoutSolver } = await import("../node_modules/@tscircuit/fanout-solver/lib/fanout-solver")
+          const { validateRoutedCopperDrc } = await import("../node_modules/@tscircuit/fanout-solver/lib/validate-routed-copper-drc")
+          const sample = process.env.SAMPLE
+          const folder = "../../captures/" + sample
+          const report = JSON.parse(readFileSync(folder + "/report.json", "utf8"))
+          const record = report.solvers.find((entry) => entry.name === "FanoutSolver")
+          const [input, options] = JSON.parse(gunzipSync(readFileSync(folder + "/solver-" + record.id + "-input.json.gz")).toString())
+          const solver = new FanoutSolver(input, options)
+          const start = performance.now()
+          solver.solve()
+          const best = Reflect.get(solver, "bestAttempt")
+          const output = best.outputSrj
+          const elapsedMs = performance.now() - start
+          const drc = validateRoutedCopperDrc({ inputSrj: input, routedSrj: output, clearance: solver.config.clearance, allowBlindAndBuriedVias: solver.config.allowBlindAndBuriedVias })
+          if (!drc.valid) throw new Error("Native DRC failed")
+          const summary = { sample, mode, elapsedMs, escapes: best.plans.length, vias: drc.checkedViaCount, assignments: solver.attempts.length, sourceSha256: new Bun.CryptoHasher("sha256").update(source).digest("hex"), fanoutVersion: "0.0.98" }
+          writeFileSync(mode + ".json", JSON.stringify({ summary, plans: best.plans, output, attempts: solver.attempts }))
+          console.log("VIA_CLEARANCE_RESULT", JSON.stringify(summary))
+          TS
+          cd core/replay
+          bun run.ts before
+          bun run.ts bounds
+          bun run.ts arrays
+          bun run.ts before_repeat
+          python3 - <<'PY'
+          import json
+          modes=['before','bounds','arrays','before_repeat']
+          captures=[json.load(open(mode+'.json')) for mode in modes]
+          for entry in captures[1:]:
+              for field in ['plans','output','attempts']:assert entry[field]==captures[0][field],field+entry['summary']['mode']
+          print('VIA_CLEARANCE_IDENTICAL',json.dumps([entry['summary'] for entry in captures]))
+          PY
