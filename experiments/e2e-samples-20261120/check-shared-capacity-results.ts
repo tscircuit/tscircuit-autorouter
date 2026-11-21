@@ -116,7 +116,7 @@ for (const sample of manifest.samples.map((entry: any) => entry.name.replace(/\.
   }
   rows.push(row)
 }
-const statistics = { baselineRun: 44897719641, candidateRun: 44898746412, archiveSha256: manifest.archiveSha256, interpretation: "Best diagnostic partial fanout; not committed PCB routing or completed board nets", rows }
+const statistics = { baselineRun: 44897719641, candidateRun: 44899751288, archiveSha256: manifest.archiveSha256, interpretation: "Best diagnostic partial fanout; not committed PCB routing or completed board nets", rows }
 writeFileSync(join(output, "shared-capacity-statistics.json"), JSON.stringify(statistics, null, 2))
 console.log("SHARED_CAPACITY_PHYSICAL", JSON.stringify(rows.map((row) => ({ sample: row.sample, identicalInputs: row.sameFanoutConstructorInputs, sameCompletedAssignmentPrefix: row.sameCompletedAssignmentPrefix, comparedAssignments: row.comparedAssignments, identicalCompletedOutput: row.identicalCompletedOutput, captures: row.captures.map(({ mode, partialEscapes, requests, nativeVias, fanoutElapsedMs, assignments, nativeDrc, independentViaInPadFindings }: any) => ({ mode, partialEscapes, requests, nativeVias, fanoutElapsedMs, assignments, drcValid: nativeDrc?.valid, viaInPad: independentViaInPadFindings?.length })) }))))
 if (invalid) throw new Error("A captured partial fails physical validation; see the saved findings")

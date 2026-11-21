@@ -13,7 +13,7 @@ jobs:
       - name: Wait for every candidate capture
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh run watch 44898746412 -R tscircuit/tscircuit-autorouter 
+        run: gh run watch 44899751288 -R tscircuit/tscircuit-autorouter 
       - uses: actions/checkout@v4
       - uses: actions/checkout@v4
         with:
@@ -23,7 +23,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: tscircuit/winding-breakout-point-solver
-          ref: cb2a281234d98e65374b5eb634324916f09d6493
+          ref: f5cabaac17c50ac4be93150cae431e9c81e18c1b
           path: winding-patch
       - uses: oven-sh/setup-bun@v2
         with:
@@ -46,14 +46,16 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
       - uses: actions/download-artifact@v4
         with:
-          run-id: 44898746412
+          run-id: 44899751288
           pattern: full-circuit-interception-*
           path: core/e2e-runtime/after
           github-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Prepare separate pinned winding replays
         run: |
           cp -R core/node_modules/@tscircuit/winding-breakout-point-solver core/winding-after
-          cp winding-patch/lib/layer-assignment/assign-connection-layers.ts core/winding-after/lib/layer-assignment/assign-connection-layers.ts
+          for path in layer-assignment/assign-connection-layers.ts gate-placement/get-gate-axis-layout.ts gate-placement/place-breakout-gates.ts solvers/GatePlacementSolver.ts; do
+            cp "winding-patch/lib/$path" "core/winding-after/lib/$path"
+          done
       - name: Check original geometry, replay winding failures and validate partial copper
         run: |
           cp experiments/e2e-samples-20261120/check-shared-capacity-results.ts experiments/e2e-samples-20261120/inputs.json core/e2e-runtime/
