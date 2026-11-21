@@ -1,0 +1,28 @@
+name: Check direct via-list fix source
+on:
+  push:
+    branches: [analysis/e2e-direct-via-sourcecheck-2450]
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: 9a48cdf369e64a7296f5c862e45a87c04bb23a08
+          path: fanout
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Install exact repository lockfile
+        working-directory: fanout
+        run: bun install --frozen-lockfile
+      - name: Run repository typecheck
+        working-directory: fanout
+        run: bun run typecheck
+      - name: Check repository formatting without changes
+        working-directory: fanout
+        run: bun run format:check
