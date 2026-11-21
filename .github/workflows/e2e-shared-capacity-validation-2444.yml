@@ -1,7 +1,10 @@
-name: Verify identical full-circuit inputs and physical copper in every capture
+name: Verify recovered winding placements and full-circuit physical copper
 on:
   push:
     branches: [analysis/e2e-shared-capacity-validation-2444]
+concurrency:
+  group: e2e-capacity-audit-${{ github.ref }}
+  cancel-in-progress: true
 permissions:
   contents: read
   actions: read

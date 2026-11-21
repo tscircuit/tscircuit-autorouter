@@ -115,6 +115,20 @@ for (const sample of manifest.samples.map((entry: any) => entry.name.replace(/\.
     }
     invalid ||= !drc.valid || viaInPad.length > 0
   }
+  if (sample === "glider-spaced" && !captures[0].solver && captures[1].args) {
+    const [input, options] = captures[1].args
+    const boundary = options.sharedBoundary
+    const bounds = { minX: boundary.minX - 0.7, maxX: boundary.maxX + 0.7, minY: boundary.minY - 0.7, maxY: boundary.maxY + 0.7 }
+    const obstacles = input.obstacles.filter((obstacle: any) => obstacle.center.x + obstacle.width / 2 >= bounds.minX && obstacle.center.x - obstacle.width / 2 <= bounds.maxX && obstacle.center.y + obstacle.height / 2 >= bounds.minY && obstacle.center.y - obstacle.height / 2 <= bounds.maxY)
+    // No before fanout SRJ exists. Show only the verified unchanged original
+    // pad geometry, using the same native renderer and viewport as the partial.
+    const graphics = visualizeSimpleRouteJson({ ...input, bounds, obstacles, connections: [], traces: [] })
+    graphics.texts = [
+      { x: bounds.minX, y: bounds.maxY + 0.9, text: "glider-spaced: fanout never started", fontSize: 0.23, color: "#0f172a", anchorSide: "center_left" },
+      { x: bounds.minX, y: bounds.maxY + 0.45, text: "Original pads; winding placement failed; no fanout copper", fontSize: 0.2, color: "#475569", anchorSide: "center_left" },
+    ]
+    writeFileSync(join(output, "glider-spaced-before.svg"), getSvgFromGraphicsObject(graphics, { backgroundColor: "white", svgWidth: 1000, svgHeight: 1000 }))
+  }
   rows.push(row)
 }
 const statistics = { baselineRun: 44897719641, candidateRun: 44899751288, archiveSha256: manifest.archiveSha256, interpretation: "Best diagnostic partial fanout; not committed PCB routing or completed board nets", rows }
