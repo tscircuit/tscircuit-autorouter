@@ -1,0 +1,58 @@
+[
+  {
+    "board": "h616-local",
+    "variant": "base",
+    "ordinal": 1,
+    "exit": 0,
+    "stop": "settled",
+    "seconds": 48.573166372,
+    "copperPourEntrySha256": "314328664648c09a0502b4e5dd60a835a14b10c63be66c3e4654fa5da6a51157",
+    "circuitSha256": "1678baeb323fa29593c69665b55d4892c82ae7dd7665aac7be768339fad17b51",
+    "cpu": {
+      "user": 59002741,
+      "system": 3779966
+    }
+  },
+  {
+    "board": "h616-local",
+    "variant": "head",
+    "ordinal": 2,
+    "exit": 0,
+    "stop": "settled",
+    "seconds": 46.019647625000005,
+    "copperPourEntrySha256": "500dab677414cdadb93ede45accdf635fd3e32ded8fbd3249decf05773180415",
+    "circuitSha256": "1678baeb323fa29593c69665b55d4892c82ae7dd7665aac7be768339fad17b51",
+    "cpu": {
+      "user": 56772382,
+      "system": 3346685
+    }
+  },
+  {
+    "board": "h616-local",
+    "variant": "head",
+    "ordinal": 3,
+    "exit": 0,
+    "stop": "settled",
+    "seconds": 47.47804348199999,
+    "copperPourEntrySha256": "500dab677414cdadb93ede45accdf635fd3e32ded8fbd3249decf05773180415",
+    "circuitSha256": "1678baeb323fa29593c69665b55d4892c82ae7dd7665aac7be768339fad17b51",
+    "cpu": {
+      "user": 58086407,
+      "system": 3441368
+    }
+  },
+  {
+    "board": "h616-local",
+    "variant": "base",
+    "ordinal": 4,
+    "exit": 0,
+    "stop": "settled",
+    "seconds": 49.822835465,
+    "copperPourEntrySha256": "314328664648c09a0502b4e5dd60a835a14b10c63be66c3e4654fa5da6a51157",
+    "circuitSha256": "1678baeb323fa29593c69665b55d4892c82ae7dd7665aac7be768339fad17b51",
+    "cpu": {
+      "user": 60891251,
+      "system": 3630652
+    }
+  }
+]

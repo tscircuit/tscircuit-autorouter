@@ -1,0 +1,211 @@
+[
+  {
+    "board": "butterstick-local",
+    "previousRelease": "0.0.3271 with merged bus raster fix",
+    "latestRelease": "0.0.3273",
+    "previousSeconds": 600.083,
+    "latestSeconds": 600.196,
+    "sameStop": true,
+    "sameTraceCount": true,
+    "sameViaCount": true,
+    "identicalEmittedCopper": null
+  },
+  {
+    "board": "butterstick-native",
+    "previousRelease": "0.0.3271 with merged bus raster fix",
+    "latestRelease": "0.0.3273",
+    "previousSeconds": 128.906,
+    "latestSeconds": 118.852,
+    "sameStop": true,
+    "sameTraceCount": true,
+    "sameViaCount": true,
+    "identicalEmittedCopper": true
+  },
+  {
+    "board": "butterstick-spaced",
+    "previousRelease": "0.0.3271 with merged bus raster fix",
+    "latestRelease": "0.0.3273",
+    "previousSeconds": 600.127,
+    "latestSeconds": 600.247,
+    "sameStop": true,
+    "sameTraceCount": true,
+    "sameViaCount": true,
+    "identicalEmittedCopper": null
+  },
+  {
+    "board": "glider-local",
+    "previousRelease": "0.0.3271 with merged bus raster fix",
+    "latestRelease": "0.0.3273",
+    "previousSeconds": 301.6,
+    "latestSeconds": 299.797,
+    "sameStop": true,
+    "sameTraceCount": true,
+    "sameViaCount": true,
+    "identicalEmittedCopper": true
+  },
+  {
+    "board": "glider-native",
+    "previousRelease": "0.0.3271 with merged bus raster fix",
+    "latestRelease": "0.0.3273",
+    "previousSeconds": 216.959,
+    "latestSeconds": 171.644,
+    "sameStop": true,
+    "sameTraceCount": true,
+    "sameViaCount": true,
+    "identicalEmittedCopper": true
+  },
+  {
+    "board": "glider-spaced",
+    "previousRelease": "0.0.3271 with merged bus raster fix",
+    "latestRelease": "0.0.3273",
+    "previousSeconds": 161.191,
+    "latestSeconds": 150.993,
+    "sameStop": true,
+    "sameTraceCount": true,
+    "sameViaCount": true,
+    "identicalEmittedCopper": true
+  },
+  {
+    "board": "h616-default-order-local",
+    "previousRelease": "0.0.3271 with merged bus raster fix",
+    "latestRelease": "0.0.3273",
+    "previousSeconds": 33.405,
+    "latestSeconds": 32.424,
+    "sameStop": true,
+    "sameTraceCount": true,
+    "sameViaCount": true,
+    "identicalEmittedCopper": true
+  },
+  {
+    "board": "h616-local",
+    "previousRelease": "0.0.3271 with merged bus raster fix",
+    "latestRelease": "0.0.3273",
+    "previousSeconds": 55.001,
+    "latestSeconds": 53.431,
+    "sameStop": true,
+    "sameTraceCount": true,
+    "sameViaCount": true,
+    "identicalEmittedCopper": true
+  },
+  {
+    "board": "h616-native",
+    "previousRelease": "0.0.3271 with merged bus raster fix",
+    "latestRelease": "0.0.3273",
+    "previousSeconds": 253.696,
+    "latestSeconds": 215.06,
+    "sameStop": true,
+    "sameTraceCount": true,
+    "sameViaCount": true,
+    "identicalEmittedCopper": true
+  },
+  {
+    "board": "h616-spaced",
+    "previousRelease": "0.0.3271 with merged bus raster fix",
+    "latestRelease": "0.0.3273",
+    "previousSeconds": 32.461,
+    "latestSeconds": 31.551,
+    "sameStop": true,
+    "sameTraceCount": true,
+    "sameViaCount": true,
+    "identicalEmittedCopper": true
+  },
+  {
+    "board": "icepi-local",
+    "previousRelease": "0.0.3271 with merged bus raster fix",
+    "latestRelease": "0.0.3273",
+    "previousSeconds": 184.889,
+    "latestSeconds": 174.968,
+    "sameStop": true,
+    "sameTraceCount": true,
+    "sameViaCount": true,
+    "identicalEmittedCopper": true
+  },
+  {
+    "board": "icepi-native",
+    "previousRelease": "0.0.3271 with merged bus raster fix",
+    "latestRelease": "0.0.3273",
+    "previousSeconds": 34.891,
+    "latestSeconds": 36.152,
+    "sameStop": true,
+    "sameTraceCount": true,
+    "sameViaCount": true,
+    "identicalEmittedCopper": true
+  },
+  {
+    "board": "icepi-spaced",
+    "previousRelease": "0.0.3271 with merged bus raster fix",
+    "latestRelease": "0.0.3273",
+    "previousSeconds": 329.139,
+    "latestSeconds": 312.762,
+    "sameStop": true,
+    "sameTraceCount": true,
+    "sameViaCount": true,
+    "identicalEmittedCopper": true
+  },
+  {
+    "board": "imx6-local",
+    "previousRelease": "0.0.3271 with merged bus raster fix",
+    "latestRelease": "0.0.3273",
+    "previousSeconds": 600.514,
+    "latestSeconds": 600.41,
+    "sameStop": true,
+    "sameTraceCount": true,
+    "sameViaCount": true,
+    "identicalEmittedCopper": null
+  },
+  {
+    "board": "imx6-native",
+    "previousRelease": "0.0.3271 with merged bus raster fix",
+    "latestRelease": "0.0.3273",
+    "previousSeconds": 55.212,
+    "latestSeconds": 52.029,
+    "sameStop": true,
+    "sameTraceCount": true,
+    "sameViaCount": true,
+    "identicalEmittedCopper": true
+  },
+  {
+    "board": "imx6-spaced",
+    "previousRelease": "0.0.3271 with merged bus raster fix",
+    "latestRelease": "0.0.3273",
+    "previousSeconds": 513.615,
+    "latestSeconds": 503.855,
+    "sameStop": true,
+    "sameTraceCount": true,
+    "sameViaCount": true,
+    "identicalEmittedCopper": true
+  },
+  {
+    "board": "orangecrab-local",
+    "previousRelease": "0.0.3271 with merged bus raster fix",
+    "latestRelease": "0.0.3273",
+    "previousSeconds": 187.843,
+    "latestSeconds": 188.491,
+    "sameStop": true,
+    "sameTraceCount": true,
+    "sameViaCount": true,
+    "identicalEmittedCopper": true
+  },
+  {
+    "board": "orangecrab-native",
+    "previousRelease": "0.0.3271 with merged bus raster fix",
+    "latestRelease": "0.0.3273",
+    "previousSeconds": 600.255,
+    "latestSeconds": 600.293,
+    "sameStop": true,
+    "sameTraceCount": true,
+    "sameViaCount": true,
+    "identicalEmittedCopper": null
+  },
+  {
+    "board": "orangecrab-spaced",
+    "previousRelease": "0.0.3271 with merged bus raster fix",
+    "latestRelease": "0.0.3273",
+    "previousSeconds": 249.282,
+    "latestSeconds": 252.029,
+    "sameStop": true,
+    "sameTraceCount": true,
+    "sameViaCount": true,
+    "identicalEmittedCopper": true
+  }
+]

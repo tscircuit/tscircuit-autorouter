@@ -1,0 +1,237 @@
+[
+  {
+    "board": "butterstick-local",
+    "stage": "bus lanes",
+    "stop": "600-second render budget",
+    "diagnostic": {
+      "key": "bus-progress",
+      "phase": "finish_native_surface_carriers",
+      "error": null,
+      "iterations": 46531
+    }
+  },
+  {
+    "board": "butterstick-native",
+    "stage": "fanout",
+    "stop": "settled",
+    "diagnostic": {
+      "key": "fanout",
+      "error": "FanoutSolver: best layer assignment routed 62/91 connections",
+      "requests": 91,
+      "best": 62,
+      "attempts": 256,
+      "iterations": 60716
+    }
+  },
+  {
+    "board": "butterstick-spaced",
+    "stage": "bus lanes",
+    "stop": "600-second render budget",
+    "diagnostic": {
+      "key": "bus-progress",
+      "phase": "finish_native_surface_carriers",
+      "error": null,
+      "iterations": 61741
+    }
+  },
+  {
+    "board": "glider-local",
+    "stage": "highDensityRouteSolver",
+    "stop": "settled",
+    "diagnostic": {
+      "key": "pipeline-failure",
+      "phase": "highDensityRouteSolver",
+      "error": "Pipeline9 primary high-density routing failed: B01 failed: No path found for source_net_184; regional fallback failed: Failed to solve 1 nodes, new-cmn_78-651. err0: GrowShrinkHighDensityIntraNodeSolver failed after resizing to 256x. Last error: Unrelated route terminals overlap at the requested trace width.",
+      "iterations": 2203653
+    }
+  },
+  {
+    "board": "glider-native",
+    "stage": "fanout",
+    "stop": "settled",
+    "diagnostic": {
+      "key": "fanout",
+      "error": "FanoutSolver: best layer assignment routed 86/95 connections",
+      "requests": 95,
+      "best": 86,
+      "attempts": 256,
+      "iterations": 74553
+    }
+  },
+  {
+    "board": "glider-spaced",
+    "stage": "highDensityRouteSolver",
+    "stop": "settled",
+    "diagnostic": {
+      "key": "pipeline-failure",
+      "phase": "highDensityRouteSolver",
+      "error": "Pipeline9 primary high-density routing failed: B01 failed: No path found for source_net_17; regional fallback failed: Failed to solve 1 nodes, cmn_8__sub_0_0. err0: GrowShrinkHighDensityIntraNodeSolver failed after resizing to 8x. Last error: All solvers failed in hyper solver. Example failures: ViaPossibilitiesSolver2 failed with: Exceeded max via count of 5, ViaPossibilitiesSolver2 failed with: Exceeded max via count of 5, SingleHighDensityRouteSolver ran out of iterations (MAX_ITERATIONS=10000), SingleHighDensityRouteSolver ran out of iterations (MAX_ITERATIONS=10000), SingleHighDensityRouteSolver ran out of iterations (MAX_ITERATIONS=10000).",
+      "iterations": 2451141
+    }
+  },
+  {
+    "board": "h616-default-order-local",
+    "stage": "portPointPathingSolver",
+    "stop": "settled",
+    "diagnostic": {
+      "key": "pipeline-failure",
+      "phase": "portPointPathingSolver",
+      "error": "KQ ran out of iterations",
+      "iterations": 2042207
+    }
+  },
+  {
+    "board": "h616-local",
+    "stage": "portPointPathingSolver",
+    "stop": "settled",
+    "diagnostic": {
+      "key": "pipeline-failure",
+      "phase": "portPointPathingSolver",
+      "error": "KQ ran out of iterations",
+      "iterations": 6054906
+    }
+  },
+  {
+    "board": "h616-native",
+    "stage": "fanout",
+    "stop": "settled",
+    "diagnostic": {
+      "key": "fanout",
+      "error": "FanoutSolver: best layer assignment routed 109/174 connections",
+      "requests": 174,
+      "best": 109,
+      "attempts": 256,
+      "iterations": 124519
+    }
+  },
+  {
+    "board": "h616-spaced",
+    "stage": "portPointPathingSolver",
+    "stop": "settled",
+    "diagnostic": {
+      "key": "pipeline-failure",
+      "phase": "portPointPathingSolver",
+      "error": "KQ ran out of iterations",
+      "iterations": 2041471
+    }
+  },
+  {
+    "board": "icepi-local",
+    "stage": "highDensityRouteSolver",
+    "stop": "settled",
+    "diagnostic": {
+      "key": "pipeline-failure",
+      "phase": "highDensityRouteSolver",
+      "error": "Pipeline9 primary high-density routing failed: B01 failed: No path found for source_net_3_mst1; regional fallback failed: Failed to solve 1 nodes, cmn_31. err0: GrowShrinkHighDensityIntraNodeSolver failed after resizing to 8x. Last error: All solvers failed in hyper solver. Example failures: ViaPossibilitiesSolver2 failed with: Exceeded max via count of 5, ViaPossibilitiesSolver2 failed with: Exceeded max via count of 5, SingleHighDensityRouteSolver ran out of iterations (MAX_ITERATIONS=10000), SingleHighDensityRouteSolver ran out of iterations (MAX_ITERATIONS=10000), SingleHighDensityRouteSolver ran out of iterations (MAX_ITERATIONS=10000).",
+      "iterations": 6252348
+    }
+  },
+  {
+    "board": "icepi-native",
+    "stage": "fanout",
+    "stop": "settled",
+    "diagnostic": {
+      "key": "fanout",
+      "error": "FanoutSolver: best layer assignment routed 14/32 connections",
+      "requests": 32,
+      "best": 14,
+      "attempts": 256,
+      "iterations": 26139
+    }
+  },
+  {
+    "board": "icepi-spaced",
+    "stage": "highDensityRouteSolver",
+    "stop": "settled",
+    "diagnostic": {
+      "key": "pipeline-failure",
+      "phase": "highDensityRouteSolver",
+      "error": "Pipeline9 primary high-density routing failed: B01 failed: No path found for source_net_34_mst0; regional fallback failed: Failed to solve 1 nodes, topology_merge_12872. err0: GrowShrinkHighDensityIntraNodeSolver failed after resizing to 32x. Last error: Unrelated route terminals overlap at the requested trace width.",
+      "iterations": 2082748
+    }
+  },
+  {
+    "board": "imx6-local",
+    "stage": "highDensityRouteSolver",
+    "stop": "600-second render budget",
+    "diagnostic": {
+      "key": "density-progress",
+      "iterations": 3906056,
+      "stats": {
+        "nodeCount": 627,
+        "solvedNodeCount": 491,
+        "fixedObstacleCount": 134,
+        "fixedObstacleUses": 291,
+        "boardObstacleUses": 176,
+        "fallbackNodeCount": 20,
+        "regularNodeCount": 409,
+        "b01NodeCount": 83,
+        "reroutedFixedRouteCount": 0,
+        "reroutedFixedRouteSectionCount": 0,
+        "promotedFallbackAttemptCount": 0,
+        "promotedFixedRouteCount": 0,
+        "regionalPreloadedViaCandidateRejectionCount": 0,
+        "regionalForceImproveCandidateRejectionCount": 0,
+        "regionalRepairCandidateRejectionCount": 0
+      },
+      "regional": null
+    }
+  },
+  {
+    "board": "imx6-native",
+    "stage": "fanout",
+    "stop": "settled",
+    "diagnostic": {
+      "key": "fanout",
+      "error": "FanoutSolver: best layer assignment routed 9/32 connections",
+      "requests": 32,
+      "best": 9,
+      "attempts": 256,
+      "iterations": 26135
+    }
+  },
+  {
+    "board": "imx6-spaced",
+    "stage": "highDensityRouteSolver",
+    "stop": "settled",
+    "diagnostic": {
+      "key": "pipeline-failure",
+      "phase": "highDensityRouteSolver",
+      "error": "Pipeline9 primary high-density routing failed: B01 failed: No path found for source_net_247_mst2; regional fallback failed: Failed to solve 1 nodes, topology_merge_11911_no_via_z1. err0: GrowShrinkHighDensityIntraNodeSolver failed after resizing to 8x. Last error: All solvers failed in hyper solver. Example failures: Candidate solution rejected by validator, Candidate solution rejected by validator, CachedIntraNodeRouteSolver ran out of iterations (MAX_ITERATIONS=1000), CachedIntraNodeRouteSolver ran out of iterations (MAX_ITERATIONS=1000), CachedIntraNodeRouteSolver ran out of iterations (MAX_ITERATIONS=1000).",
+      "iterations": 8715723
+    }
+  },
+  {
+    "board": "orangecrab-local",
+    "stage": "highDensityRouteSolver",
+    "stop": "settled",
+    "diagnostic": {
+      "key": "pipeline-failure",
+      "phase": "highDensityRouteSolver",
+      "error": "Pipeline9 primary high-density routing failed: B01 failed: No path found for source_net_138_mst1; regional fallback failed: Failed to solve 1 nodes, cmn_266. err0: GrowShrinkHighDensityIntraNodeSolver failed after resizing to 32x. Last error: Unrelated route terminals overlap at the requested trace width.",
+      "iterations": 4081617
+    }
+  },
+  {
+    "board": "orangecrab-native",
+    "stage": "fanout",
+    "stop": "600-second render budget",
+    "diagnostic": {
+      "key": "fanout-progress",
+      "best": 149,
+      "attempts": 199,
+      "iterations": 156384
+    }
+  },
+  {
+    "board": "orangecrab-spaced",
+    "stage": "highDensityRouteSolver",
+    "stop": "settled",
+    "diagnostic": {
+      "key": "pipeline-failure",
+      "phase": "highDensityRouteSolver",
+      "error": "Pipeline9 primary high-density routing failed: B01 failed: No path found for source_net_64_mst12; regional fallback failed: Failed to solve 1 nodes, topology_merge_13629. err0: GrowShrinkHighDensityIntraNodeSolver failed after resizing to 8x. Last error: Unrelated route terminals overlap at the requested trace width.",
+      "iterations": 4078267
+    }
+  }
+]

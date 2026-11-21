@@ -1,0 +1,58 @@
+[
+  {
+    "board": "icepi-native",
+    "variant": "base",
+    "ordinal": 1,
+    "exit": 0,
+    "stop": "settled",
+    "seconds": 27.223975247,
+    "copperPourEntrySha256": "314328664648c09a0502b4e5dd60a835a14b10c63be66c3e4654fa5da6a51157",
+    "circuitSha256": "e2eab77b380e26267a91474c4a1575e170dc7811d213d16c3ce35648764faa80",
+    "cpu": {
+      "user": 31686184,
+      "system": 1455396
+    }
+  },
+  {
+    "board": "icepi-native",
+    "variant": "head",
+    "ordinal": 2,
+    "exit": 0,
+    "stop": "settled",
+    "seconds": 24.966274054000003,
+    "copperPourEntrySha256": "500dab677414cdadb93ede45accdf635fd3e32ded8fbd3249decf05773180415",
+    "circuitSha256": "e2eab77b380e26267a91474c4a1575e170dc7811d213d16c3ce35648764faa80",
+    "cpu": {
+      "user": 29664680,
+      "system": 1215046
+    }
+  },
+  {
+    "board": "icepi-native",
+    "variant": "head",
+    "ordinal": 3,
+    "exit": 0,
+    "stop": "settled",
+    "seconds": 26.116704349000003,
+    "copperPourEntrySha256": "500dab677414cdadb93ede45accdf635fd3e32ded8fbd3249decf05773180415",
+    "circuitSha256": "e2eab77b380e26267a91474c4a1575e170dc7811d213d16c3ce35648764faa80",
+    "cpu": {
+      "user": 30843740,
+      "system": 1041938
+    }
+  },
+  {
+    "board": "icepi-native",
+    "variant": "base",
+    "ordinal": 4,
+    "exit": 0,
+    "stop": "settled",
+    "seconds": 27.621705772,
+    "copperPourEntrySha256": "314328664648c09a0502b4e5dd60a835a14b10c63be66c3e4654fa5da6a51157",
+    "circuitSha256": "e2eab77b380e26267a91474c4a1575e170dc7811d213d16c3ce35648764faa80",
+    "cpu": {
+      "user": 32359464,
+      "system": 1281324
+    }
+  }
+]

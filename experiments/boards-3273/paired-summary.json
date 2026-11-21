@@ -1,0 +1,50 @@
+[
+  {
+    "board": "icepi-native",
+    "beforeSeconds": 27.4228405095,
+    "afterSeconds": 25.541489201500003,
+    "reductionPercent": 6.8605267472136795,
+    "sameCircuitJson": true,
+    "allSettled": true,
+    "beforeSamples": [
+      27.223975247,
+      27.621705772
+    ],
+    "afterSamples": [
+      24.966274054000003,
+      26.116704349000003
+    ]
+  },
+  {
+    "board": "h616-local",
+    "beforeSeconds": 49.1980009185,
+    "afterSeconds": 46.7488455535,
+    "reductionPercent": 4.978160330248384,
+    "sameCircuitJson": true,
+    "allSettled": true,
+    "beforeSamples": [
+      48.573166372,
+      49.822835465
+    ],
+    "afterSamples": [
+      46.019647625000005,
+      47.47804348199999
+    ]
+  },
+  {
+    "board": "imx6-native",
+    "beforeSeconds": 44.10806174849999,
+    "afterSeconds": 43.755144075,
+    "reductionPercent": 0.8001205664222979,
+    "sameCircuitJson": true,
+    "allSettled": true,
+    "beforeSamples": [
+      44.614874773000004,
+      43.60124872399999
+    ],
+    "afterSamples": [
+      44.005303868,
+      43.504984281999995
+    ]
+  }
+]

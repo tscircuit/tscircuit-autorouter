@@ -1,0 +1,6 @@
+{
+  "sourcePatchSha256": "75f5210c294f6ba9230a95e508520b9c535154d7754184696a120c4c85b867bd",
+  "beforeSha256": "314328664648c09a0502b4e5dd60a835a14b10c63be66c3e4654fa5da6a51157",
+  "afterSha256": "500dab677414cdadb93ede45accdf635fd3e32ded8fbd3249decf05773180415",
+  "scope": "Apply only the per-getOutput board-section cache to released copper-pour-solver 0.0.74. The same getOutput code is shared with source main 0.0.75."
+}

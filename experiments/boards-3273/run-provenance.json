@@ -1,0 +1,40 @@
+{
+  "tscircuit": "0.0.3273",
+  "sourceMain": "c019580a2d104fd0087625c4b23114e51cae3453",
+  "runtimeCopperPour": "0.0.74",
+  "sourceCopperPour": "0.0.75",
+  "note": "getOutput is identical in the released runtime and source main before this fix. Runtime patch changes only that method; source main already includes independent BRep simplification.",
+  "baseline": {
+    "run": 44953769192,
+    "commit": "fc7f1d106ab17d9d86cd83534820562eb7aa98ac",
+    "artifact": 14726868266,
+    "sha256": "d3aec6008ef3c238151e0639a577cfb8099c243ea61b942797242c6501fbbe82"
+  },
+  "head": {
+    "run": 44954816562,
+    "commit": "d3a03d2ce1d01e4a0a28ecbedd4eef3d2721fa4e",
+    "artifact": 14726599220,
+    "sha256": "1c17e92287b03d179247c9922cf161aca49437d0a6252eb5ee0556201d392d18"
+  },
+  "paired": {
+    "run": 44955338447,
+    "commit": "4db3dbd1cf806edea4cf9791fbaa578c70e39db6",
+    "order": [
+      "base",
+      "head",
+      "head",
+      "base"
+    ],
+    "artifacts": {
+      "icepi-native": 14727128847,
+      "h616-local": 14727253603,
+      "imx6-native": 14727575925
+    }
+  },
+  "runner": "Blacksmith 32 vCPU ARM Ubuntu 24.04; Bun 1.4.3",
+  "originalEntrypoints": 19,
+  "perBoardBudgetSeconds": 600,
+  "reproCommit": "ed8d93b94670ea37edb1b658afbcfdb543f87b8d",
+  "fixCommit": "7d0a1e46cf92626fd08d45d93111735bd278c1ee",
+  "sourcePatchSha256": "75f5210c294f6ba9230a95e508520b9c535154d7754184696a120c4c85b867bd"
+}

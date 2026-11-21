@@ -1,0 +1,792 @@
+[
+  {
+    "board": "butterstick-local",
+    "file": "start-1.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "butterstick-local",
+    "file": "bus-3-input.json.gz",
+    "identical": true
+  },
+  {
+    "board": "butterstick-local",
+    "file": "bus-5-input.json.gz",
+    "identical": true
+  },
+  {
+    "board": "butterstick-local",
+    "file": "bus-2-input.json.gz",
+    "identical": true
+  },
+  {
+    "board": "butterstick-local",
+    "file": "start-2.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "butterstick-local",
+    "file": "bus-4-input.json.gz",
+    "identical": true
+  },
+  {
+    "board": "butterstick-local",
+    "file": "end-1.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "butterstick-local",
+    "file": "bus-1-input.json.gz",
+    "identical": true
+  },
+  {
+    "board": "butterstick-native",
+    "file": "fanout-1-input.json.gz",
+    "identical": true
+  },
+  {
+    "board": "butterstick-native",
+    "file": "start-1.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "butterstick-native",
+    "file": "error-1.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "butterstick-spaced",
+    "file": "start-1.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "butterstick-spaced",
+    "file": "bus-3-input.json.gz",
+    "identical": true
+  },
+  {
+    "board": "butterstick-spaced",
+    "file": "bus-5-input.json.gz",
+    "identical": true
+  },
+  {
+    "board": "butterstick-spaced",
+    "file": "bus-2-input.json.gz",
+    "identical": true
+  },
+  {
+    "board": "butterstick-spaced",
+    "file": "start-2.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "butterstick-spaced",
+    "file": "bus-4-input.json.gz",
+    "identical": true
+  },
+  {
+    "board": "butterstick-spaced",
+    "file": "end-1.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "butterstick-spaced",
+    "file": "bus-1-input.json.gz",
+    "identical": true
+  },
+  {
+    "board": "glider-local",
+    "file": "start-3.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "glider-local",
+    "file": "error-4.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "glider-local",
+    "file": "start-1.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "glider-local",
+    "file": "start-4.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "glider-local",
+    "file": "end-3.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "glider-local",
+    "file": "graph-2-1-input.json.gz",
+    "identical": true
+  },
+  {
+    "board": "glider-local",
+    "file": "bus-2-input.json.gz",
+    "identical": true
+  },
+  {
+    "board": "glider-local",
+    "file": "start-2.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "glider-local",
+    "file": "graph-1-1-input.json.gz",
+    "identical": true
+  },
+  {
+    "board": "glider-local",
+    "file": "end-1.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "glider-local",
+    "file": "bus-1-input.json.gz",
+    "identical": true
+  },
+  {
+    "board": "glider-local",
+    "file": "end-2.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "glider-native",
+    "file": "fanout-1-input.json.gz",
+    "identical": true
+  },
+  {
+    "board": "glider-native",
+    "file": "start-1.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "glider-native",
+    "file": "error-1.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "glider-spaced",
+    "file": "start-3.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "glider-spaced",
+    "file": "start-1.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "glider-spaced",
+    "file": "error-3.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "glider-spaced",
+    "file": "bus-2-input.json.gz",
+    "identical": true
+  },
+  {
+    "board": "glider-spaced",
+    "file": "start-2.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "glider-spaced",
+    "file": "graph-1-1-input.json.gz",
+    "identical": true
+  },
+  {
+    "board": "glider-spaced",
+    "file": "end-1.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "glider-spaced",
+    "file": "bus-1-input.json.gz",
+    "identical": true
+  },
+  {
+    "board": "glider-spaced",
+    "file": "end-2.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "h616-default-order-local",
+    "file": "start-3.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "h616-default-order-local",
+    "file": "start-1.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "h616-default-order-local",
+    "file": "error-3.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "h616-default-order-local",
+    "file": "bus-2-input.json.gz",
+    "identical": true
+  },
+  {
+    "board": "h616-default-order-local",
+    "file": "start-2.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "h616-default-order-local",
+    "file": "graph-1-1-input.json.gz",
+    "identical": true
+  },
+  {
+    "board": "h616-default-order-local",
+    "file": "end-1.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "h616-default-order-local",
+    "file": "bus-1-input.json.gz",
+    "identical": true
+  },
+  {
+    "board": "h616-default-order-local",
+    "file": "end-2.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "h616-local",
+    "file": "start-3.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "h616-local",
+    "file": "start-1.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "h616-local",
+    "file": "error-3.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "h616-local",
+    "file": "graph-1-3-input.json.gz",
+    "identical": true
+  },
+  {
+    "board": "h616-local",
+    "file": "graph-1-2-input.json.gz",
+    "identical": true
+  },
+  {
+    "board": "h616-local",
+    "file": "bus-2-input.json.gz",
+    "identical": true
+  },
+  {
+    "board": "h616-local",
+    "file": "start-2.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "h616-local",
+    "file": "graph-1-1-input.json.gz",
+    "identical": true
+  },
+  {
+    "board": "h616-local",
+    "file": "end-1.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "h616-local",
+    "file": "bus-1-input.json.gz",
+    "identical": true
+  },
+  {
+    "board": "h616-local",
+    "file": "end-2.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "h616-native",
+    "file": "fanout-1-input.json.gz",
+    "identical": true
+  },
+  {
+    "board": "h616-native",
+    "file": "start-1.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "h616-native",
+    "file": "error-1.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "h616-spaced",
+    "file": "start-3.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "h616-spaced",
+    "file": "start-1.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "h616-spaced",
+    "file": "error-3.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "h616-spaced",
+    "file": "bus-2-input.json.gz",
+    "identical": true
+  },
+  {
+    "board": "h616-spaced",
+    "file": "start-2.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "h616-spaced",
+    "file": "graph-1-1-input.json.gz",
+    "identical": true
+  },
+  {
+    "board": "h616-spaced",
+    "file": "end-1.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "h616-spaced",
+    "file": "bus-1-input.json.gz",
+    "identical": true
+  },
+  {
+    "board": "h616-spaced",
+    "file": "end-2.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "icepi-local",
+    "file": "start-3.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "icepi-local",
+    "file": "start-1.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "icepi-local",
+    "file": "error-3.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "icepi-local",
+    "file": "graph-1-3-input.json.gz",
+    "identical": true
+  },
+  {
+    "board": "icepi-local",
+    "file": "graph-1-2-input.json.gz",
+    "identical": true
+  },
+  {
+    "board": "icepi-local",
+    "file": "bus-2-input.json.gz",
+    "identical": true
+  },
+  {
+    "board": "icepi-local",
+    "file": "start-2.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "icepi-local",
+    "file": "graph-1-1-input.json.gz",
+    "identical": true
+  },
+  {
+    "board": "icepi-local",
+    "file": "end-1.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "icepi-local",
+    "file": "bus-1-input.json.gz",
+    "identical": true
+  },
+  {
+    "board": "icepi-local",
+    "file": "end-2.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "icepi-native",
+    "file": "fanout-1-input.json.gz",
+    "identical": true
+  },
+  {
+    "board": "icepi-native",
+    "file": "start-1.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "icepi-native",
+    "file": "error-1.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "icepi-spaced",
+    "file": "start-3.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "icepi-spaced",
+    "file": "error-4.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "icepi-spaced",
+    "file": "start-1.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "icepi-spaced",
+    "file": "start-4.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "icepi-spaced",
+    "file": "end-3.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "icepi-spaced",
+    "file": "graph-2-1-input.json.gz",
+    "identical": true
+  },
+  {
+    "board": "icepi-spaced",
+    "file": "graph-1-2-input.json.gz",
+    "identical": true
+  },
+  {
+    "board": "icepi-spaced",
+    "file": "bus-2-input.json.gz",
+    "identical": true
+  },
+  {
+    "board": "icepi-spaced",
+    "file": "start-2.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "icepi-spaced",
+    "file": "graph-1-1-input.json.gz",
+    "identical": true
+  },
+  {
+    "board": "icepi-spaced",
+    "file": "end-1.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "icepi-spaced",
+    "file": "bus-1-input.json.gz",
+    "identical": true
+  },
+  {
+    "board": "icepi-spaced",
+    "file": "end-2.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "imx6-local",
+    "file": "start-3.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "imx6-local",
+    "file": "start-1.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "imx6-local",
+    "file": "bus-3-input.json.gz",
+    "identical": true
+  },
+  {
+    "board": "imx6-local",
+    "file": "graph-1-2-input.json.gz",
+    "identical": true
+  },
+  {
+    "board": "imx6-local",
+    "file": "bus-2-input.json.gz",
+    "identical": true
+  },
+  {
+    "board": "imx6-local",
+    "file": "start-2.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "imx6-local",
+    "file": "graph-1-1-input.json.gz",
+    "identical": true
+  },
+  {
+    "board": "imx6-local",
+    "file": "bus-4-input.json.gz",
+    "identical": true
+  },
+  {
+    "board": "imx6-local",
+    "file": "end-1.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "imx6-local",
+    "file": "bus-1-input.json.gz",
+    "identical": true
+  },
+  {
+    "board": "imx6-local",
+    "file": "end-2.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "imx6-native",
+    "file": "fanout-1-input.json.gz",
+    "identical": true
+  },
+  {
+    "board": "imx6-native",
+    "file": "start-1.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "imx6-native",
+    "file": "error-1.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "imx6-spaced",
+    "file": "start-3.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "imx6-spaced",
+    "file": "start-1.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "imx6-spaced",
+    "file": "error-3.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "imx6-spaced",
+    "file": "bus-3-input.json.gz",
+    "identical": true
+  },
+  {
+    "board": "imx6-spaced",
+    "file": "graph-1-3-input.json.gz",
+    "identical": true
+  },
+  {
+    "board": "imx6-spaced",
+    "file": "graph-1-4-input.json.gz",
+    "identical": true
+  },
+  {
+    "board": "imx6-spaced",
+    "file": "graph-1-2-input.json.gz",
+    "identical": true
+  },
+  {
+    "board": "imx6-spaced",
+    "file": "bus-2-input.json.gz",
+    "identical": true
+  },
+  {
+    "board": "imx6-spaced",
+    "file": "start-2.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "imx6-spaced",
+    "file": "graph-1-1-input.json.gz",
+    "identical": true
+  },
+  {
+    "board": "imx6-spaced",
+    "file": "bus-4-input.json.gz",
+    "identical": true
+  },
+  {
+    "board": "imx6-spaced",
+    "file": "end-1.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "imx6-spaced",
+    "file": "bus-1-input.json.gz",
+    "identical": true
+  },
+  {
+    "board": "imx6-spaced",
+    "file": "end-2.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "orangecrab-local",
+    "file": "start-3.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "orangecrab-local",
+    "file": "graph-2-2-input.json.gz",
+    "identical": true
+  },
+  {
+    "board": "orangecrab-local",
+    "file": "error-4.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "orangecrab-local",
+    "file": "start-1.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "orangecrab-local",
+    "file": "start-4.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "orangecrab-local",
+    "file": "end-3.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "orangecrab-local",
+    "file": "graph-2-1-input.json.gz",
+    "identical": true
+  },
+  {
+    "board": "orangecrab-local",
+    "file": "bus-2-input.json.gz",
+    "identical": true
+  },
+  {
+    "board": "orangecrab-local",
+    "file": "start-2.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "orangecrab-local",
+    "file": "graph-1-1-input.json.gz",
+    "identical": true
+  },
+  {
+    "board": "orangecrab-local",
+    "file": "end-1.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "orangecrab-local",
+    "file": "bus-1-input.json.gz",
+    "identical": true
+  },
+  {
+    "board": "orangecrab-local",
+    "file": "end-2.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "orangecrab-native",
+    "file": "fanout-1-input.json.gz",
+    "identical": true
+  },
+  {
+    "board": "orangecrab-native",
+    "file": "start-1.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "orangecrab-spaced",
+    "file": "start-3.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "orangecrab-spaced",
+    "file": "graph-2-2-input.json.gz",
+    "identical": true
+  },
+  {
+    "board": "orangecrab-spaced",
+    "file": "error-4.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "orangecrab-spaced",
+    "file": "start-1.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "orangecrab-spaced",
+    "file": "start-4.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "orangecrab-spaced",
+    "file": "end-3.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "orangecrab-spaced",
+    "file": "graph-2-1-input.json.gz",
+    "identical": true
+  },
+  {
+    "board": "orangecrab-spaced",
+    "file": "bus-2-input.json.gz",
+    "identical": true
+  },
+  {
+    "board": "orangecrab-spaced",
+    "file": "start-2.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "orangecrab-spaced",
+    "file": "graph-1-1-input.json.gz",
+    "identical": true
+  },
+  {
+    "board": "orangecrab-spaced",
+    "file": "end-1.srj.json.gz",
+    "identical": true
+  },
+  {
+    "board": "orangecrab-spaced",
+    "file": "bus-1-input.json.gz",
+    "identical": true
+  },
+  {
+    "board": "orangecrab-spaced",
+    "file": "end-2.srj.json.gz",
+    "identical": true
+  }
+]

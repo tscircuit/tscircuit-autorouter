@@ -1,0 +1,58 @@
+[
+  {
+    "board": "imx6-native",
+    "variant": "base",
+    "ordinal": 1,
+    "exit": 0,
+    "stop": "settled",
+    "seconds": 44.614874773000004,
+    "copperPourEntrySha256": "314328664648c09a0502b4e5dd60a835a14b10c63be66c3e4654fa5da6a51157",
+    "circuitSha256": "f58aaa54375fb9d19951c64c57149cb5344614e0ee7ee70ca9f09c37068ff4cc",
+    "cpu": {
+      "user": 50314702,
+      "system": 1955645
+    }
+  },
+  {
+    "board": "imx6-native",
+    "variant": "head",
+    "ordinal": 2,
+    "exit": 0,
+    "stop": "settled",
+    "seconds": 44.005303868,
+    "copperPourEntrySha256": "500dab677414cdadb93ede45accdf635fd3e32ded8fbd3249decf05773180415",
+    "circuitSha256": "f58aaa54375fb9d19951c64c57149cb5344614e0ee7ee70ca9f09c37068ff4cc",
+    "cpu": {
+      "user": 50050065,
+      "system": 1588165
+    }
+  },
+  {
+    "board": "imx6-native",
+    "variant": "head",
+    "ordinal": 3,
+    "exit": 0,
+    "stop": "settled",
+    "seconds": 43.504984281999995,
+    "copperPourEntrySha256": "500dab677414cdadb93ede45accdf635fd3e32ded8fbd3249decf05773180415",
+    "circuitSha256": "f58aaa54375fb9d19951c64c57149cb5344614e0ee7ee70ca9f09c37068ff4cc",
+    "cpu": {
+      "user": 49428318,
+      "system": 1748364
+    }
+  },
+  {
+    "board": "imx6-native",
+    "variant": "base",
+    "ordinal": 4,
+    "exit": 0,
+    "stop": "settled",
+    "seconds": 43.60124872399999,
+    "copperPourEntrySha256": "314328664648c09a0502b4e5dd60a835a14b10c63be66c3e4654fa5da6a51157",
+    "circuitSha256": "f58aaa54375fb9d19951c64c57149cb5344614e0ee7ee70ca9f09c37068ff4cc",
+    "cpu": {
+      "user": 49474516,
+      "system": 1650541
+    }
+  }
+]

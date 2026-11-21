@@ -1,0 +1,17 @@
+{
+  "board": "icepi-native",
+  "tscircuit": "0.0.3273",
+  "capture": "Original TSX, default full render, Bun CPU profile",
+  "copperPourGetOutputInclusiveSamples": 4186,
+  "totalSamples": 21948,
+  "inclusivePercent": 19.072352833971205,
+  "measuredRootCause": {
+    "regions": 76,
+    "pads": 1717,
+    "uniqueBoardOutlinesAndMargins": 1,
+    "beforeBoardClipBuilds": 76,
+    "afterBoardClipBuilds": 1
+  },
+  "decision": "Share the existing immutable physical-board clip inside getOutput. No routing strategy, geometry algorithm, budget, dependency or public API changes. Duplicate ring deduplication and lazy error geometry were also inspected, but avoided to keep the change focused.",
+  "limits": "Does not fix existing bus, fanout, pathing or high-density routing failures. Paired full renders have two samples per revision in base/head/head/base order; iMX6 difference is within ordinary run variation. Matrix wall times are contended and are not speedup evidence."
+}
