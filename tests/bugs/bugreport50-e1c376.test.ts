@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { AutoroutingPipelineSolver7_MultiGraph as AutoroutingPipelineSolver } from "lib"
+import { AutoroutingPipelineSolver } from "lib"
 import bugReport from "../../fixtures/bug-reports/bugreport50-e1c376/bugreport50-e1c376.json" with {
   type: "json",
 }
@@ -8,7 +8,7 @@ import { getLastStepSvg } from "../fixtures/getLastStepSvg"
 
 const srj = bugReport.simple_route_json as SimpleRouteJson
 
-test.skip("bugreport50-e1c376.json", () => {
+test("bugreport50-e1c376.json", () => {
   const solver = new AutoroutingPipelineSolver(srj)
   solver.solve()
   expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
