@@ -1,0 +1,26 @@
+diff --git a/lib/board-outline.ts b/lib/board-outline.ts
+index 145e10e..f4f0619 100644
+--- a/lib/board-outline.ts
++++ b/lib/board-outline.ts
+@@ -84,11 +84,16 @@ export function boardSegmentIsClear({
+   if (start.x === end.x && start.y === end.y)
+     return (
+       inside(start, ring) &&
+-      ring.every(
+-        (p, i) =>
+-          pointSegmentDistanceToPoints(start, p, ring[(i + 1) % ring.length]) >=
+-          margin - epsilon,
+-      )
++      ring.every((p, i) => {
++        const q = ring[(i + 1) % ring.length]
++        return (
++          start.x < Math.min(p.x, q.x) - margin ||
++          start.x > Math.max(p.x, q.x) + margin ||
++          start.y < Math.min(p.y, q.y) - margin ||
++          start.y > Math.max(p.y, q.y) + margin ||
++          pointSegmentDistanceToPoints(start, p, q) >= margin - epsilon
++        )
++      })
+     )
+   if (!inside(start, ring) || !inside(end, ring)) return false
+   return ring.every(
