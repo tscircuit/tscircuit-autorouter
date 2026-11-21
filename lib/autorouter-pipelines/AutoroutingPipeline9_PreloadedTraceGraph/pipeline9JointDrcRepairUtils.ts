@@ -146,17 +146,33 @@ export const getPipeline9DrcContact = (
     typeof error.actual_clearance === "number" &&
     error.actual_clearance < 0
   if (!isContact) return undefined
-  if (typeof error.pcb_smtpad_id === "string") {
-    const key = `${error.pcb_trace_id} touches ${error.pcb_smtpad_id}`
-    return { kind: "identified", key }
+  const unidentified: Pipeline9DrcContact = { kind: "unidentified" }
+  const traceId = error.pcb_trace_id
+  const obstacleIds = [error.pcb_smtpad_id, error.pcb_plated_hole_id].filter(
+    (id) => id !== undefined,
+  )
+  if (obstacleIds.length > 0) {
+    // A trace on a pad or plated hole names one trace and one obstacle.
+    const obstacleId = obstacleIds[0]
+    const isNamed =
+      obstacleIds.length === 1 &&
+      typeof obstacleId === "string" &&
+      obstacleId !== "" &&
+      typeof traceId === "string" &&
+      traceId !== ""
+    if (!isNamed) return unidentified
+    return { kind: "identified", key: `${traceId} touches ${obstacleId}` }
   }
-  if (typeof error.pcb_plated_hole_id === "string") {
-    const key = `${error.pcb_trace_id} touches ${error.pcb_plated_hole_id}`
-    return { kind: "identified", key }
-  }
-  // A trace touching another trace or its via: both traces are listed.
-  if (!Array.isArray(error.pcb_trace_ids)) return { kind: "unidentified" }
-  const key = [...error.pcb_trace_ids].sort().join(" touches ")
+  // A trace touching another trace or its via names two different traces.
+  const traceIds: unknown[] = Array.isArray(error.pcb_trace_ids)
+    ? error.pcb_trace_ids
+    : []
+  const isTracePair =
+    traceIds.length === 2 &&
+    traceIds.every((id) => typeof id === "string" && id !== "") &&
+    traceIds[0] !== traceIds[1]
+  if (!isTracePair) return unidentified
+  const key = traceIds.map(String).sort().join(" touches ")
   return { kind: "identified", key }
 }
 

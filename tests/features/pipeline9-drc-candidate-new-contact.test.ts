@@ -39,6 +39,30 @@ test("pipeline9 DRC candidate that adds a contact is not better when new contact
     pcb_trace_id: "tA",
     actual_clearance: -0.02,
   }
+  // Named ids that cannot identify a contact.
+  const padContactWithoutTrace: Pipeline9DrcError = {
+    type: "pcb_trace_error",
+    pcb_smtpad_id: "pad1",
+    actual_clearance: -0.02,
+  }
+  const emptyTracePair: Pipeline9DrcError = {
+    type: "pcb_trace_error",
+    pcb_trace_id: "tA",
+    pcb_trace_ids: [],
+    actual_clearance: -0.02,
+  }
+  const singleTracePair: Pipeline9DrcError = {
+    type: "pcb_trace_error",
+    pcb_trace_id: "tA",
+    pcb_trace_ids: ["tA"],
+    actual_clearance: -0.02,
+  }
+  const repeatedTracePair: Pipeline9DrcError = {
+    type: "pcb_trace_error",
+    pcb_trace_id: "tA",
+    pcb_trace_ids: ["tA", "tA"],
+    actual_clearance: -0.02,
+  }
   // The same objects 0.05mm apart: a clearance error, not a contact.
   const traceANearPad2: Pipeline9DrcError = {
     ...traceAOnPad2,
@@ -77,4 +101,18 @@ test("pipeline9 DRC candidate that adds a contact is not better when new contact
       rejectNewContacts,
     ),
   ).toBe(false)
+  for (const invalidContact of [
+    padContactWithoutTrace,
+    emptyTracePair,
+    singleTracePair,
+    repeatedTracePair,
+  ]) {
+    expect(
+      isPipeline9DrcCandidateBetter(
+        [traceAOnPad1, invalidContact],
+        current,
+        rejectNewContacts,
+      ),
+    ).toBe(false)
+  }
 })
