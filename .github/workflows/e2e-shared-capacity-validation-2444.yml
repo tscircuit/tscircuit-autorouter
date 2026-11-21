@@ -1,0 +1,86 @@
+name: Verify identical full-circuit inputs and physical copper in every capture
+on:
+  push:
+    branches: [analysis/e2e-shared-capacity-validation-2444]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - name: Wait for every candidate capture
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh run watch 44898746412 -R tscircuit/tscircuit-autorouter 
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/core
+          ref: a277cef7ca8c77eca992c7c350419c7eb835250b
+          path: core
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/winding-breakout-point-solver
+          ref: cb2a281234d98e65374b5eb634324916f09d6493
+          path: winding-patch
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Install pinned standalone audit dependencies
+        run: |
+          python3 - <<'PYDEPS'
+          from pathlib import Path
+          import json
+          packages={'@tscircuit/fanout-solver':'0.0.97','@tscircuit/capacity-autorouter':'0.0.1145','@tscircuit/checks':'0.0.282','graphics-debug':'0.0.99','@tscircuit/winding-breakout-point-solver':'github:tscircuit/winding-breakout-point-solver#202dbe9eb0088633b6fa094120dba6f2f41f8803'}
+          Path('core/package.json').write_text(json.dumps({'name':'full-circuit-audit','private':True,'type':'module','dependencies':packages}))
+          PYDEPS
+          cd core
+          bun install --ignore-scripts
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 44897719641
+          pattern: full-circuit-interception-*
+          path: core/e2e-runtime/before
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 44898746412
+          pattern: full-circuit-interception-*
+          path: core/e2e-runtime/after
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Prepare separate pinned winding replays
+        run: |
+          cp -R core/node_modules/@tscircuit/winding-breakout-point-solver core/winding-after
+          cp winding-patch/lib/layer-assignment/assign-connection-layers.ts core/winding-after/lib/layer-assignment/assign-connection-layers.ts
+      - name: Check original geometry, replay winding failures and validate partial copper
+        run: |
+          cp experiments/e2e-samples-20261120/check-shared-capacity-results.ts experiments/e2e-samples-20261120/inputs.json core/e2e-runtime/
+          cd core/e2e-runtime
+          bun check-shared-capacity-results.ts "$GITHUB_WORKSPACE/results"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: shared-capacity-physical-results
+          path: results
+      - name: Export machine-readable findings
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import base64,gzip,io,zipfile
+          from pathlib import Path
+          p=Path('results/shared-capacity-statistics.json')
+          if p.exists():
+              print('SHARED_CAPACITY_RESULTS_BEGIN')
+              encoded=base64.b64encode(gzip.compress(p.read_bytes(),mtime=0)).decode()
+              for offset in range(0,len(encoded),8000):print(encoded[offset:offset+8000])
+              print('SHARED_CAPACITY_RESULTS_END')
+          buffer=io.BytesIO()
+          with zipfile.ZipFile(buffer,'w',zipfile.ZIP_DEFLATED) as z:
+              for p in Path('results').glob('*.svg'):z.writestr(p.name,p.read_bytes())
+          print('SHARED_CAPACITY_SVGS_BEGIN')
+          encoded=base64.b64encode(buffer.getvalue()).decode()
+          for offset in range(0,len(encoded),8000):print(encoded[offset:offset+8000])
+          print('SHARED_CAPACITY_SVGS_END')
+          PY
