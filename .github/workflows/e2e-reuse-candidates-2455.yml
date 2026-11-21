@@ -63,7 +63,7 @@ jobs:
           }
           if (mode === "segments_first") {
             mutual = replaceUnique(mutual, {before: "    const otherVias = getPlanVias(otherPlan)\n", after: ""})
-            mutual = replaceUnique(mutual, {before: "      for (const otherVia of otherVias) {", after: "    }\n    const otherVias = getPlanVias(otherPlan)\n    for (const segment of planSegments) {\n      for (const otherVia of otherVias) {"})
+            mutual = replaceUnique(mutual, {before: "\n      for (const otherVia of otherVias) {", after: "\n    }\n    const otherVias = getPlanVias(otherPlan)\n    for (const segment of planSegments) {\n      for (const otherVia of otherVias) {"})
           }
           if (mode === "hoist_segments") {
             statics = replaceUnique(statics, {before: "  const segments = getPlanSegments(plan)\n", after: ""})
