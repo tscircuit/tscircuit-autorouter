@@ -46,9 +46,9 @@ The existing focused fixture has the same connections, options and rule fields a
 
 | Focused native repro before | After |
 | --- | --- |
-| ![Before](https://raw.githubusercontent.com/tscircuit/fanout-solver/73446512c382b45f0750157682f01341469a1cb4/tests/__snapshots__/repro-rebuilt-boundary-candidates.snap.svg) | ![After](https://raw.githubusercontent.com/tscircuit/fanout-solver/b7d4e48b907213cb848b610e20acb5510efff393/tests/__snapshots__/repro-rebuilt-boundary-candidates.snap.svg) |
+| ![Before](https://raw.githubusercontent.com/tscircuit/fanout-solver/73446512c382b45f0750157682f01341469a1cb4/tests/__snapshots__/repro-rebuilt-boundary-candidates.snap.svg) | ![After](https://raw.githubusercontent.com/tscircuit/fanout-solver/3599697cba90e5c2b212cfa259aa105c70d126e5/tests/__snapshots__/repro-rebuilt-boundary-candidates.snap.svg) |
 
-These actual full-circuit partials use the same native renderer, pad coordinates and viewport. The copper remains identical, as expected for a work reduction.
+The iCE/Pi and ButterStick completed-search examples below have identical copper and use the same native renderer, pad coordinates and viewport. The Glider example shows progress within the fixed time budget.
 
 | iCE/Pi original before | After |
 | --- | --- |
