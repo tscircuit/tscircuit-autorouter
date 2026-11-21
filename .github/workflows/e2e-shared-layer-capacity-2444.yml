@@ -25,7 +25,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: tscircuit/winding-breakout-point-solver
-          ref: 203f487
+          ref: 203f4872a9745a830f99981da0a7c43507e6f6aa
           path: winding-patch
       - uses: oven-sh/setup-bun@v2
         with:
