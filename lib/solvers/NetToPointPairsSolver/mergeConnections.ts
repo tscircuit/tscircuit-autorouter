@@ -18,6 +18,10 @@ import { getPointKey } from "lib/utils/getPointKey"
  */
 export function mergeConnections(
   simpleRouteConnections: SimpleRouteConnection[],
+  sourceConnectionsByMergedConnection?: Map<
+    SimpleRouteConnection,
+    SimpleRouteConnection[]
+  >,
 ): SimpleRouteConnection[] {
   if (simpleRouteConnections.length === 0) {
     return []
@@ -155,6 +159,10 @@ export function mergeConnections(
       nominalTraceWidth: nominalTraceWidth, // Keep the first found nominalTraceWidth
     }
 
+    sourceConnectionsByMergedConnection?.set(
+      newSimpleRouteConnection,
+      simpleRouteConnectionGroup,
+    )
     mergedSimpleRouteConnections.push(newSimpleRouteConnection)
   }
 

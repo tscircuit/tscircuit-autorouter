@@ -156,6 +156,8 @@ export interface Obstacle {
   zLayers?: number[]
   /** Canonicalized z-layer indexes used by autorouter internals. */
   __zLayers?: number[]
+  /** Use the source copper shape when converting an electrical layer transition. */
+  __usePhysicalCopperGeometry?: true
   center: { x: number; y: number }
   width: number
   height: number
@@ -192,6 +194,8 @@ export interface SimpleRouteConnection {
 }
 
 export interface SimplifiedPcbTrace {
+  /** Requested width of this routed branch for power trace expansion. */
+  nominalTraceWidth?: number
   type: "pcb_trace"
   pcb_trace_id: TraceId
   /** Preserve this preloaded trace's copper geometry throughout routing. */

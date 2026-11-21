@@ -192,19 +192,19 @@ export class DisjointSet {
   constructor(points: Point[]) {
     // Initialize each point as a separate set
     for (const point of points) {
-      const key = this.pointToKey(point)
+      const key = DisjointSet.pointToKey(point)
       this.parent.set(key, key)
       this.rank.set(key, 0)
     }
     this.componentCount = this.parent.size
   }
 
-  private pointToKey(point: Point): PointKey {
+  static pointToKey(point: Point): PointKey {
     return `${point.x},${point.y}`
   }
 
   find(point: Point): PointKey {
-    const key = this.pointToKey(point)
+    const key = DisjointSet.pointToKey(point)
     if (!this.parent.has(key)) {
       throw new Error(`Point ${key} not found in DisjointSet`)
     }

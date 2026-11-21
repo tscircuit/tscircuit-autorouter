@@ -9,12 +9,29 @@ import {
 } from "lib/types"
 import { seededRandom } from "lib/utils/cloneAndShuffleArray"
 import { BaseSolver } from "../BaseSolver"
-import { buildMinimumSpanningTree } from "./buildMinimumSpanningTree"
+import { buildMinimumSpanningTree, type Edge } from "./buildMinimumSpanningTree"
 import { getInitiallyConnectedStateForConnection } from "./get-initially-connected-state-for-connection"
 import { mergeConnections } from "./mergeConnections"
 import { orderMstEdgesForStablePairNames } from "./orderMstEdgesForStablePairNames"
 
 type ConnectionName = SimpleRouteConnection["name"]
+
+export type MergedConnectionTopologyEdge = Pick<
+  Edge<ConnectionPoint>,
+  "from" | "to"
+>
+
+export type MergedConnectionTopology = {
+  connection: SimpleRouteConnection
+  sources: readonly SimpleRouteConnection[]
+  edges: readonly MergedConnectionTopologyEdge[]
+  emittedNames: ReadonlyMap<MergedConnectionTopologyEdge, ConnectionName>
+}
+
+export type MergedConnectionTopologyObserver = (
+  topology: MergedConnectionTopology,
+) => void
+
 interface PathHop {
   fromPointId: PointId
   toPointId: PointId
@@ -51,6 +68,10 @@ export class NetToPointPairsSolver extends BaseSolver {
   unprocessedConnections: Array<SimpleRouteConnection>
   newConnections: Array<SimpleRouteConnection>
   readonly initiallyConnectedMap: ConnectivityMap
+  private readonly sourceConnectionsByMergedConnection?: Map<
+    SimpleRouteConnection,
+    SimpleRouteConnection[]
+  >
   /** Each connection's `path` as hops, in written order. */
   readonly pathHopsByConnectionName = new Map<ConnectionName, PathHop[]>()
 
@@ -58,8 +79,12 @@ export class NetToPointPairsSolver extends BaseSolver {
     public ogSrj: SimpleRouteJson,
     public colorMap: Record<string, string> = {},
     initiallyConnectedMap: ConnectivityMap,
+    private readonly onMergedConnectionTopology?: MergedConnectionTopologyObserver,
   ) {
     super()
+    if (onMergedConnectionTopology) {
+      this.sourceConnectionsByMergedConnection = new Map()
+    }
     const busTraceWidthsByConnectionName = new Map<ConnectionName, number>()
     for (const bus of ogSrj.buses ?? []) {
       if (bus.traceWidth === undefined) continue
@@ -90,6 +115,7 @@ export class NetToPointPairsSolver extends BaseSolver {
     )
     this.unprocessedConnections = mergeConnections(
       connectionsWithBusTraceWidths,
+      this.sourceConnectionsByMergedConnection,
     )
     this.newConnections = []
     this.initiallyConnectedMap = initiallyConnectedMap
@@ -143,6 +169,7 @@ export class NetToPointPairsSolver extends BaseSolver {
     }
     const connection = this.unprocessedConnections.pop()!
     const pathEdges = this.getPathEdges(connection)
+    const sources = this.sourceConnectionsByMergedConnection?.get(connection)
 
     const { zeroWeightEdges, arePointsConnected } =
       getInitiallyConnectedStateForConnection(
@@ -151,10 +178,8 @@ export class NetToPointPairsSolver extends BaseSolver {
       )
 
     if (connection.pointsToConnect.length === 2) {
-      const [startPoint, endPoint] = connection.pointsToConnect
-      if (startPoint && endPoint && arePointsConnected(startPoint, endPoint)) {
-        return
-      }
+      const [from, to] = connection.pointsToConnect
+      if (from && to && arePointsConnected(from, to)) return
       this.emitConnection(
         {
           ...connection,
@@ -164,6 +189,15 @@ export class NetToPointPairsSolver extends BaseSolver {
         },
         pathEdges[0],
       )
+      if (sources && from && to) {
+        const edge = { from, to }
+        this.onMergedConnectionTopology?.({
+          connection,
+          sources,
+          edges: [edge],
+          emittedNames: new Map([[edge, connection.name]]),
+        })
+      }
       return
     }
 
@@ -189,17 +223,23 @@ export class NetToPointPairsSolver extends BaseSolver {
       originalEdges,
       optimizedEdges,
     })
+    const emittedNames = sources
+      ? new Map<MergedConnectionTopologyEdge, ConnectionName>()
+      : undefined
 
     let mstIdx = 0
     for (const edge of edges) {
       if (arePointsConnected(edge.from, edge.to)) {
         continue
       }
+      const name = `${connection.name}_mst${mstIdx++}`
+      // Keep the selected endpoints before an off-board substitution.
+      emittedNames?.set(edge, name)
       this.emitConnection(
         {
           ...connection,
           pointsToConnect: [edge.from, edge.to],
-          name: `${connection.name}_mst${mstIdx++}`,
+          name,
           __rootConnectionNames: connection.__rootConnectionNames ?? [
             connection.name,
           ],
@@ -207,6 +247,14 @@ export class NetToPointPairsSolver extends BaseSolver {
         },
         pathEdges.find((pathEdge) => pathEdge === edge),
       )
+    }
+    if (sources && emittedNames) {
+      this.onMergedConnectionTopology?.({
+        connection,
+        sources,
+        edges,
+        emittedNames,
+      })
     }
   }
 

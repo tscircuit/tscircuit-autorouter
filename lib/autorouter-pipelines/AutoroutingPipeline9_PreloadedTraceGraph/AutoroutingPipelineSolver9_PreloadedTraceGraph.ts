@@ -36,6 +36,7 @@ import {
   NodeWithPortPoints,
 } from "lib/types/high-density-types"
 import { combineVisualizations } from "lib/utils/combineVisualizations"
+import { checkTraceContinuity } from "lib/utils/autorouting-drc/checkTraceContinuity"
 import { applyNetColorsToGraphicsObject } from "lib/utils/applyNetColorsToGraphicsObject"
 import {
   convertSrjToGraphicsObject,
@@ -74,6 +75,9 @@ import { TraceSimplificationSolver } from "@tscircuit/trace-simplification-solve
 import { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolver"
 import { LengthMatchingPostProcessingSolver } from "../../solvers/length-matching-post-processing-solver"
 import { applyFixedRouteReplacementsToPreloadedTraces } from "./applyFixedRouteReplacementsToPreloadedTraces"
+import { applyPipeline9PowerTraceWidthTargets } from "./applyPipeline9PowerTraceWidthTargets"
+import { collectPipeline9PowerTraceWidthTargets } from "./collectPipeline9PowerTraceWidthTargets"
+import { repairPipeline9ThroughObstacleTransitions } from "./repairPipeline9ThroughObstacleTransitions"
 import { assignUniquePcbTraceIdsToNewTraces } from "./assignUniquePcbTraceIdsToNewTraces"
 import { getTerminalLayerIndicesByPcbPortId } from "./getTerminalLayerIndicesByPcbPortId"
 import { getPipeline9NetByConnectionName } from "./getPipeline9NetByConnectionName"
@@ -99,7 +103,7 @@ import { PreloadedTraceGraphSolver } from "./PreloadedTraceGraphSolver"
 import { PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver } from "./PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver"
 import { MergedComponentTopologyView } from "../AutoroutingPipeline7_MultiGraph/MergedComponentTopologyView"
 import { PowerTraceExpansionSolver } from "../AutoroutingPipeline7_MultiGraph/PowerTraceExpansionSolver"
-import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "../AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
+import { createPipeline7HdRoutesToSimplifiedPcbTracesConverter } from "../AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
 import { getPowerTraceExpansionConnectionNames } from "../AutoroutingPipeline7_MultiGraph/getPowerTraceExpansionConnectionNames"
 import { lockHdRouteTerminals } from "../AutoroutingPipeline7_MultiGraph/lock-hd-route-terminals"
 import {
@@ -258,6 +262,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   preprocessSimpleRouteJsonSolver?: PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver
   escapeViaLocationSolver?: EscapeViaLocationSolver
   netToPointPairsSolver?: NetToPointPairsSolver
+  private readonly powerTraceWidthTargets = new Map<string, number>()
   componentTopologyGeneratorSolver?: MergedComponentTopologyView
   topologyPlanningSolver?: MultiGraphTopologyPlannerSolver
   topologyMergingSolver?: TopologyMergingSolver
@@ -362,6 +367,13 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           inputSrj,
           cms.colorMap,
           getInitiallyConnectedMapFromSimpleRouteJson(inputSrj),
+          (topology) => {
+            collectPipeline9PowerTraceWidthTargets(
+              topology,
+              inputSrj.nominalTraceWidth ?? inputSrj.minTraceWidth,
+              cms.powerTraceWidthTargets,
+            )
+          },
         ]
       },
       {
@@ -946,19 +958,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         const hdRoutes = canonicalizePipeline9HdRoutes(
           cms.pipeline9JointDrcRepairSolver!.getOutput(),
         )
-        const convert = (routes: HighDensityRoute[]): SimplifiedPcbTraces =>
-          assignUniquePcbTraceIdsToNewTraces(
-            convertPipeline7HdRoutesToSimplifiedPcbTraces({
-              connections: cms.netToPointPairsSolver!.newConnections,
-              originalConnections: cms.originalSrj.connections,
-              hdRoutes: canonicalizePipeline9HdRoutes(routes),
-              layerCount: cms.srj.layerCount,
-              obstacles: cms.srj.obstacles,
-              defaultViaHoleDiameter: cms.viaHoleDiameter,
-              connMap: cms.connMap,
-            }),
-            cms.originalSrj.traces ?? [],
-          )
+        const convert = cms.createRouteConverter()
         const evaluateCleanupDrc = createPipeline9AutoroutingDrcEvaluator({
           inputSrj,
           srjWithPointPairs: cms.srjWithPointPairs!,
@@ -1020,10 +1020,10 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             },
             isValid: (routes: HighDensityRoute[]): boolean =>
               evaluateCleanupDrc(convert(routes)).errors.length === 0,
-            refineTraceWidths: (
+            finalizeRoutes: (
               routes: HighDensityRoute[],
-            ): HighDensityRoute[] =>
-              cms.traceWidthSolver!.refineWidths({
+            ): HighDensityRoute[] => {
+              const refined = cms.traceWidthSolver!.refineWidths({
                 hdRoutes: routes,
                 otherHdRoutes: otherHdRoutes.map(
                   (route): HighDensityRoute => ({
@@ -1033,7 +1033,39 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
                         .connection_name,
                   }),
                 ),
-              }),
+              })
+              const convertPhysicalRoutes = cms.createRouteConverter({
+                usePhysicalCopperGeometry: true,
+              })
+              let baseline: Set<string> | undefined
+              return repairPipeline9ThroughObstacleTransitions({
+                hdRoutes: refined,
+                physicalObstacles: inputSrj.obstacles,
+                connMap: cms.connMap,
+                layerCount: inputSrj.layerCount,
+                isValid: (candidate) => {
+                  const baselineErrors = (baseline ??= new Set(
+                    evaluateCleanupDrc(convertPhysicalRoutes(refined)).errors.map(
+                      (error) => JSON.stringify(error),
+                    ),
+                  ))
+                  const result = evaluateCleanupDrc(
+                    convertPhysicalRoutes(candidate),
+                    { includeTraceContinuity: false },
+                  )
+                  // Most trial placements fail clearance. Only build the
+                  // physical connectivity graph for clear candidates.
+                  return (
+                    result.errors.every((error) =>
+                      baselineErrors.has(JSON.stringify(error)),
+                    ) &&
+                    checkTraceContinuity(result.circuitJson).every(
+                      (error) => baselineErrors.has(JSON.stringify(error)),
+                    )
+                  )
+                },
+              })
+            },
           },
         ]
       },
@@ -1087,15 +1119,21 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           configuredOptions.onlyConnectionNames ??
           getPowerTraceExpansionConnectionNames(cms.originalSrj)
         return [
-          preparePipeline7PowerTraceExpansionInput({
-            originalSrj: cms.originalSrj,
-            newlyRoutedTraces: cms.getNewTracesBeforePowerExpansion(),
-            currentPreloadedTraces: cms.getUpdatedPreloadedTraces(),
-            expandedConnectionNames: onlyConnectionNames,
-            resolveConnectedTraceAliases: true,
-          }),
+          {
+            ...preparePipeline7PowerTraceExpansionInput({
+              originalSrj: cms.originalSrj,
+              newlyRoutedTraces: cms.getNewTracesBeforePowerExpansion(),
+              currentPreloadedTraces: cms.getUpdatedPreloadedTraces(),
+              expandedConnectionNames: onlyConnectionNames,
+              resolveConnectedTraceAliases: true,
+            }),
+            boardOutline: cms.originalSrj.outline?.length
+              ? cms.originalSrj.outline
+              : undefined,
+          },
           {
             allowNewVias: false,
+            finishBranchWidthsInPlace: true,
             ...configuredOptions,
             onlyConnectionNames,
           },
@@ -1676,24 +1714,54 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     )
   }
 
+  private createRouteConverter({
+    usePhysicalCopperGeometry = false,
+    nominalTraceWidthByConnectionName,
+  }: {
+    usePhysicalCopperGeometry?: boolean
+    nominalTraceWidthByConnectionName?: ReadonlyMap<string, number>
+  } = {}): (routes: HighDensityRoute[]) => SimplifiedPcbTraces {
+    const srj = usePhysicalCopperGeometry ? this.originalSrj : this.srj
+    const connections = this.netToPointPairsSolver!.newConnections
+    const convert = createPipeline7HdRoutesToSimplifiedPcbTracesConverter({
+      connections,
+      originalConnections: this.originalSrj.connections,
+      layerCount: srj.layerCount,
+      obstacles: usePhysicalCopperGeometry
+        ? srj.obstacles.map((obstacle) => ({
+            ...obstacle,
+            __usePhysicalCopperGeometry: true,
+          }))
+        : srj.obstacles,
+      defaultViaHoleDiameter: this.viaHoleDiameter,
+      connMap: this.connMap,
+    })
+    return (routes) => {
+      const hdRoutes = canonicalizePipeline9HdRoutes(routes)
+      const traces = convert(hdRoutes)
+      if (nominalTraceWidthByConnectionName?.size) {
+        applyPipeline9PowerTraceWidthTargets({
+          connections,
+          hdRoutes,
+          routedTraces: traces,
+          widthTargets: nominalTraceWidthByConnectionName,
+        })
+      }
+      return assignUniquePcbTraceIdsToNewTraces(
+        traces,
+        this.originalSrj.traces ?? [],
+      )
+    }
+  }
+
   getNewTracesBeforePowerExpansion(): SimplifiedPcbTraces {
     if (!this.highDensityRouteSolver) {
       throw new Error("Cannot get new traces before high-density routing")
     }
-
-    const routedTraces = convertPipeline7HdRoutesToSimplifiedPcbTraces({
-      connections: this.netToPointPairsSolver?.newConnections ?? [],
-      originalConnections: this.originalSrj.connections,
-      hdRoutes: canonicalizePipeline9HdRoutes(this._getOutputHdRoutes()),
-      layerCount: this.srj.layerCount,
-      obstacles: this.srj.obstacles,
-      defaultViaHoleDiameter: this.viaHoleDiameter,
-      connMap: this.connMap,
-    })
-    return assignUniquePcbTraceIdsToNewTraces(
-      routedTraces,
-      this.originalSrj.traces ?? [],
-    )
+    return this.createRouteConverter({
+      usePhysicalCopperGeometry: true,
+      nominalTraceWidthByConnectionName: this.powerTraceWidthTargets,
+    })(this._getOutputHdRoutes())
   }
 
   private getPowerTraceExpansionFixedTraces(): SimplifiedPcbTraces {
