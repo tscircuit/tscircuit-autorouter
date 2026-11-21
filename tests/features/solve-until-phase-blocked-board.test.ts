@@ -114,7 +114,7 @@ beforeAll(async (): Promise<void> => {
       svgHeight: 560,
     })
   })
-  // Snapshot failures must not be swallowed by test.failing.
+  // Snapshot and control failures remain independent of the regression assertion.
   const svg = stackSvgsHorizontally(panels, { gap: 16 }).replace(
     /[ \t]+$/gm,
     "",
@@ -122,29 +122,26 @@ beforeAll(async (): Promise<void> => {
   await expect(svg).toMatchSvgSnapshot(import.meta.path)
 })
 
-test.failing(
-  "blocked-board phase waits preserve the real failure without terminal steps",
-  (): void => {
-    expect(
-      waits.map((wait) => ({
-        error: wait.error,
-        stepCalls: wait.stepCalls,
-        terminalStepCalls: wait.terminalStepCalls,
-        state: wait.after,
-      })),
-    ).toEqual([
-      {
-        error: new Error(terminalState.error!),
-        stepCalls: terminalState.iterations,
-        terminalStepCalls: 0,
-        state: terminalState,
-      },
-      {
-        error: new Error(terminalState.error!),
-        stepCalls: 0,
-        terminalStepCalls: 0,
-        state: terminalState,
-      },
-    ])
-  },
-)
+test("blocked-board phase waits preserve the real failure without terminal steps", (): void => {
+  expect(
+    waits.map((wait) => ({
+      error: wait.error,
+      stepCalls: wait.stepCalls,
+      terminalStepCalls: wait.terminalStepCalls,
+      state: wait.after,
+    })),
+  ).toEqual([
+    {
+      error: new Error(terminalState.error!),
+      stepCalls: terminalState.iterations,
+      terminalStepCalls: 0,
+      state: terminalState,
+    },
+    {
+      error: new Error(terminalState.error!),
+      stepCalls: 0,
+      terminalStepCalls: 0,
+      state: terminalState,
+    },
+  ])
+})
