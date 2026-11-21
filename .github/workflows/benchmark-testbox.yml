@@ -1,36 +1,28 @@
-name: Check OrangeCrab full-circuit matrix timing
+name: Uploaded boards on latest tscircuit 3268
 on:
   workflow_dispatch:
 permissions:
   contents: read
 jobs:
-  replay:
+  boards:
     runs-on: blacksmith-32vcpu-ubuntu-2404-arm
-    timeout-minutes: 50
-    strategy:
-      fail-fast: false
-      max-parallel: 2
-      matrix:
-        board: [orangecrab-local]
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.4.3
-      - name: Unpack original frozen sources
+      - name: Unpack original board sources
         run: |
-          mkdir -p experiments/boards-3267/runtime
-          unzip -q experiments/boards-3267/boards.zip -d experiments/boards-3267/runtime
-      - name: Install once before measuring either revision
-        working-directory: experiments/boards-3267/runtime
+          mkdir -p experiments/boards-3268/runtime
+          unzip -q experiments/boards-3268/boards.zip -d experiments/boards-3268/runtime
+      - name: Install latest tscircuit with its frozen dependencies
+        working-directory: experiments/boards-3268/runtime
         run: bun install --frozen-lockfile
-      - name: Run base-head-head-base in fresh processes on the same machine
-        env:
-          BOARD_SAMPLE: ${{ matrix.board }}
-          BOARD_REPLAY_ORDER: '["base","head"]'
-        run: python3 experiments/boards-3267/replay-paired.py
+      - name: Run all 19 original TSX boards through tscircuit
+        run: python3 experiments/boards-3268/run.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: paired-connectivity-${{ matrix.board }}
-          path: paired-results/
+          name: boards-tscircuit-3268
+          path: board-benchmark-results
