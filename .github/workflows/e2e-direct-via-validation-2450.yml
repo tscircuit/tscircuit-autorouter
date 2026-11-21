@@ -50,7 +50,7 @@ jobs:
           from pathlib import Path
           import hashlib,shutil
           target=Path('core/node_modules/@tscircuit/fanout-solver/lib/route-bus/plan-copper.ts')
-          assert hashlib.sha256(target.read_bytes()).hexdigest()=='7d875247c8b7041279f56199d5d83eabf086d4cb01b87f5adde7ded4fe2'
+          assert hashlib.sha256(target.read_bytes()).hexdigest()=='7d875247c8b7041279f56199d5d83eabf086d4cb01b87f5adde7aedd7ded4fe2'
           source=Path('fanout-fix/lib/route-bus/plan-copper.ts')
           assert hashlib.sha256(source.read_bytes()).hexdigest()=='cf90ab51337e2f9f65f0304e4e8acedd0f0dbf664b2389cab1e761d5166cde7b'
           target.unlink()
