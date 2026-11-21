@@ -1039,11 +1039,13 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
           params.layerCount,
           params.defaultViaDiameter,
           params.connMap,
-        ).map((route): PreloadedHighDensityRoute => ({
-          ...route,
-          // Repair resolves SRJ aliases; private connectivity keys can collide.
-          rootConnectionName: trace.connection_name,
-        }))
+        ).map(
+          (route): PreloadedHighDensityRoute => ({
+            ...route,
+            // Repair resolves SRJ aliases; private connectivity keys can collide.
+            rootConnectionName: trace.connection_name,
+          }),
+        )
         if (!movablePreloadedTraceIds.has(trace.pcb_trace_id)) {
           return fixedRoutes
         }
