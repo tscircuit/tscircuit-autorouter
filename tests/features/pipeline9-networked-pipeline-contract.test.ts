@@ -60,6 +60,7 @@ test("Pipeline9 networked is effort-1-only, async-only, and replaces only the hi
       "AutoroutingPipelineSolver9_Networked",
     )
     for (const [stepIndex, step] of networkedSolver.pipelineDef.entries()) {
+      expect(step).not.toBe(localSolver.pipelineDef[stepIndex])
       if (stepIndex === highDensityStepIndex) continue
       expect(step.solverClass).toBe(
         localSolver.pipelineDef[stepIndex]!.solverClass,
