@@ -1,0 +1,83 @@
+name: Verify identical full-circuit inputs and physical copper in every capture
+on:
+  push:
+    branches: [analysis/e2e-deferred-output-validation-2443]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - name: Wait for every candidate capture
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh run watch 44877300802 -R tscircuit/tscircuit-autorouter 
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/core
+          ref: 24a204d22f26d4d93bff0e82c4aa2a992bc8ba6e
+          path: core
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - run: cd core && bun install --ignore-scripts
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 44876574547
+          pattern: full-circuit-interception-*
+          path: core/e2e-runtime/before
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 44877300802
+          pattern: full-circuit-interception-*
+          path: core/e2e-runtime/after
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Check original pads and exact captured fanout inputs
+        run: |
+          cp experiments/e2e-samples-20261120/check-deferred-output-results.ts experiments/e2e-samples-20261120/inputs.json core/e2e-runtime/
+          cd core/e2e-runtime
+          bun check-deferred-output-results.ts "$GITHUB_WORKSPACE/results"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: deferred-output-physical-results
+          path: results
+      - name: Export machine-readable findings
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import base64,gzip,io,zipfile
+          from pathlib import Path
+          p=Path('results/deferred-output-final-statistics.json')
+          if p.exists():
+              print('DEFERRED_OUTPUT_RESULTS_BEGIN')
+              encoded=base64.b64encode(gzip.compress(p.read_bytes(),mtime=0)).decode()
+              for offset in range(0,len(encoded),8000):print(encoded[offset:offset+8000])
+              print('DEFERRED_OUTPUT_RESULTS_END')
+          buffer=io.BytesIO()
+          with zipfile.ZipFile(buffer,'w',zipfile.ZIP_DEFLATED) as z:
+              for p in Path('results').glob('*.svg'):z.writestr(p.name,p.read_bytes())
+          print('DEFERRED_OUTPUT_SVGS_BEGIN')
+          encoded=base64.b64encode(buffer.getvalue()).decode()
+          for offset in range(0,len(encoded),8000):print(encoded[offset:offset+8000])
+          print('DEFERRED_OUTPUT_SVGS_END')
+          PY
+  source-checks:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: 1dea8d29f27a4169ba50e3928844be88b9ea798f
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - run: bun install --frozen-lockfile
+      - run: bun run typecheck
+      - run: bun run format:check
+      - run: bun test tests/repro-unused-fanout-output-conversion.test.ts --timeout 9999999
