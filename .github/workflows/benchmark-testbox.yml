@@ -1,4 +1,4 @@
-name: Counterbalanced connectivity update on original circuits
+name: Check OrangeCrab full-circuit matrix timing
 on:
   workflow_dispatch:
 permissions:
@@ -11,7 +11,7 @@ jobs:
       fail-fast: false
       max-parallel: 2
       matrix:
-        board: [icepi-native, h616-local]
+        board: [orangecrab-local]
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
@@ -27,6 +27,7 @@ jobs:
       - name: Run base-head-head-base in fresh processes on the same machine
         env:
           BOARD_SAMPLE: ${{ matrix.board }}
+          BOARD_REPLAY_ORDER: '["base","head"]'
         run: python3 experiments/boards-3267/replay-paired.py
       - uses: actions/upload-artifact@v4
         if: always()

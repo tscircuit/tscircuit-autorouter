@@ -10,7 +10,7 @@ assert json.loads((package/'package.json').read_text())['version']=='0.0.33'
 rows=[]
 with tempfile.TemporaryDirectory() as temp:
  baseline=Path(temp)/'connectivity-map-33';shutil.copytree(package,baseline)
- for ordinal,variant in enumerate(['base','head','head','base'],1):
+ for ordinal,variant in enumerate(json.loads(os.environ.get('BOARD_REPLAY_ORDER','["base","head","head","base"]')),1):
   shutil.rmtree(package);shutil.copytree(baseline,package)
   if variant=='head':subprocess.run(['python3','experiments/boards-3267/apply-connectivity-update.py'],check=True)
   d=out/(str(ordinal)+'-'+variant);d.mkdir(exist_ok=True)
