@@ -48,7 +48,7 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           run-id: 44906708885
-          pattern: full-circuit-interception-*
+          name: full-circuit-interception-glider-spaced
           path: core/audit/after/full-circuit-interception-glider-spaced
           github-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Compare constructor inputs and search decisions; check physical copper
