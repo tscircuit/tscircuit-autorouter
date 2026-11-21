@@ -308,6 +308,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   srjWithEscapeViaLocations?: SimpleRouteJson
   srjWithPointPairs?: SimpleRouteJson
   originalSrj: SimpleRouteJson
+  private readonly excludedGapPortSites = new Set<string>()
   private hasRefinedFixedWireViaSites = false
   capacityNodes: CapacityMeshNode[] | null = null
   capacityEdges: CapacityMeshEdge[] | null = null
@@ -526,6 +527,13 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         cms.sharedEdgeSegmentsWithNecessaryCrampedPortPoints!,
         cms.srjWithPointPairs!,
       ],
+      {
+        onSolved: (cms) => {
+          cms.preloadedTraceGraphSolver!.removeExcludedGapPorts(
+            cms.excludedGapPortSites,
+          )
+        },
+      },
     ),
     definePipelineStep(
       "portPointPathingSolver",
@@ -1294,6 +1302,16 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           this.currentPipelineStepIndex = this.pipelineDef.findIndex(
             (step) => step.solverName === "edgeSolver",
           )
+        } else if (
+          pipelineStepDef.solverName === "portPointPathingSolver" &&
+          this.preloadedTraceGraphSolver!.removeOverlappingGapPorts({
+            nodes: this.portPointPathingSolver!.getOutput().nodesWithPortPoints,
+            connMap: this.connMap,
+            excludedSites: this.excludedGapPortSites,
+          })
+        ) {
+          // Replan on the same mesh after removing the conflicting crossings.
+          this.portPointPathingSolver = undefined
         } else {
           this.currentPipelineStepIndex++
         }

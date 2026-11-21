@@ -57,7 +57,7 @@ test("plans inner1 DDR crossings between the two fixed iCEPi fanout vias", async
       )
     }),
   )
-  expect(overlappingPairs).toHaveLength(1)
+  expect(overlappingPairs).toHaveLength(0)
   const svg = getSvgFromGraphicsObject(
     {
       rects: [

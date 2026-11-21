@@ -2,6 +2,7 @@ import {
   getSegmentIntersection,
   pointToSegmentDistance,
 } from "@tscircuit/math-utils"
+import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import Flatbush from "flatbush"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import type {
@@ -10,6 +11,8 @@ import type {
   SegmentPortPoint,
 } from "lib/solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
 import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
+import type { NodeWithPortPoints } from "lib/types/high-density-types"
+import { RELAXED_DRC_OPTIONS } from "lib/utils/drcPresets"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { minimumDistanceBetweenSegments } from "lib/utils/minimumDistanceBetweenSegments"
@@ -19,6 +22,12 @@ import {
 } from "./createPreloadedCopperLookup"
 
 type Point = { x: number; y: number }
+type ClearanceGap = {
+  key: string
+  segment: SharedEdgeSegment
+  port: SegmentPortPoint
+  ends: [Point, Point]
+}
 type RoutePoint = SimplifiedPcbTrace["route"][number]
 type WireRoutePoint = Extract<RoutePoint, { route_type: "wire" }>
 type ViaRoutePoint = Extract<RoutePoint, { route_type: "via" }>
@@ -316,6 +325,7 @@ const preloadPort = (
  */
 export class PreloadedTraceGraphSolver extends BaseSolver {
   private readonly primitives: PreloadedTracePrimitive[]
+  private readonly clearanceGaps = new Map<string, ClearanceGap>()
   private readonly boundaryIndex: Flatbush | null
 
   constructor(
@@ -466,7 +476,7 @@ export class PreloadedTraceGraphSolver extends BaseSolver {
       )
       if (hasFreePort) continue
       const fraction = (start + end) / 2
-      segment.portPoints.push({
+      const port: SegmentPortPoint = {
         ...template,
         segmentPortPointId: `${segment.edgeId}_preloadgap${index}_z${z}`,
         x: segment.start.x + dx * fraction,
@@ -477,7 +487,97 @@ export class PreloadedTraceGraphSolver extends BaseSolver {
         _preloadedFixedNetIds: undefined,
         _preloadedTracePortAssignments: undefined,
         distToCentermostPortOnZ: Math.abs(fraction - 0.5) * length,
+      }
+      segment.portPoints.push(port)
+      const ends: [Point, Point] = [
+        { x: segment.start.x + dx * start, y: segment.start.y + dy * start },
+        { x: segment.start.x + dx * end, y: segment.start.y + dy * end },
+      ]
+      this.clearanceGaps.set(`${port.segmentPortPointId}::${z}`, {
+        // Mesh refinement can renumber edges. Match the same physical gap.
+        key: JSON.stringify([segment.nodeIds, z, ends]),
+        segment,
+        port,
+        ends,
       })
+    }
+  }
+
+  removeOverlappingGapPorts({
+    nodes,
+    connMap,
+    excludedSites,
+  }: {
+    nodes: NodeWithPortPoints[]
+    connMap: ConnectivityMap
+    excludedSites: Set<string>
+  }): boolean {
+    if (this.clearanceGaps.size < 2) return false
+    const assigned = new Map<string, { gap: ClearanceGap; net: string }>()
+    for (const node of nodes) {
+      for (const point of node.portPoints) {
+        if (!point.portPointId || assigned.has(point.portPointId)) continue
+        const gap = this.clearanceGaps.get(point.portPointId)
+        if (!gap) continue
+        const name = point.rootConnectionName ?? point.connectionName
+        assigned.set(point.portPointId, {
+          gap,
+          net: connMap.getNetConnectedToId(name) ?? name,
+        })
+      }
+    }
+    if (assigned.size < 2) return false
+    const crossings = [...assigned.values()]
+    const index = new Flatbush(crossings.length)
+    for (const {
+      gap: { port },
+    } of crossings) {
+      index.add(port.x, port.y, port.x, port.y)
+    }
+    index.finish()
+    const clearance =
+      this.srj.minTraceToPadEdgeClearance ??
+      this.srj.defaultObstacleMargin ??
+      RELAXED_DRC_OPTIONS.traceClearance
+    const pitch = this.srj.minTraceWidth + clearance
+    const previousCount = excludedSites.size
+    for (const [i, { gap, net }] of crossings.entries()) {
+      const { x, y, availableZ } = gap.port
+      const neighbors = index.search(x - pitch, y - pitch, x + pitch, y + pitch)
+      const conflicts = neighbors.some((j) => {
+        if (j >= i) return false
+        const other = crossings[j]!
+        if (
+          net === other.net ||
+          availableZ[0] !== other.gap.port.availableZ[0] ||
+          excludedSites.has(other.gap.key)
+        ) {
+          return false
+        }
+        // The farthest two points on these straight spans are endpoints. If
+        // even they are too close, moving the planned crossings cannot help.
+        return gap.ends.every((a) =>
+          other.gap.ends.every(
+            (b) =>
+              Math.hypot(a.x - b.x, a.y - b.y) < pitch - GEOMETRIC_TOLERANCE,
+          ),
+        )
+      })
+      if (conflicts) excludedSites.add(gap.key)
+    }
+    if (excludedSites.size === previousCount) return false
+    this.removeExcludedGapPorts(excludedSites)
+    return true
+  }
+
+  removeExcludedGapPorts(excludedSites: ReadonlySet<string>): void {
+    if (excludedSites.size === 0) return
+    for (const [id, gap] of this.clearanceGaps) {
+      if (!excludedSites.has(gap.key)) continue
+      gap.segment.portPoints = gap.segment.portPoints.filter(
+        (port) => port !== gap.port,
+      )
+      this.clearanceGaps.delete(id)
     }
   }
 
