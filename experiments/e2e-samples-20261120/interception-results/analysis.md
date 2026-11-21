@@ -1,8 +1,12 @@
 # Ten supplied full circuits: intercepted pipeline analysis
 
-**Latest refresh:** [Core 0.0.2436 / autorouter 0.0.1139 and the verified prefix-cache fix](failed-prefix-cache-analysis.md).
+**Latest refresh:** [Core 0.0.2437 / fanout 0.0.95: verified plane-search fix, native before/after and statistics](plane-order-replay-analysis.md).
 
-**Previous follow-up:** [verified source-turn fix, before/after statistics and remaining failures](source-turn-analysis.md).
+**Previous refresh:** [Core 0.0.2436 / autorouter 0.0.1139 and the verified prefix-cache fix](failed-prefix-cache-analysis.md).
+
+**Earlier follow-up:** [verified source-turn fix, before/after statistics and remaining failures](source-turn-analysis.md).
+
+The remainder of this page is the initial interception report; use the latest refresh above for current results.
 
 All ten circuits from the uploaded ZIP were run with the agreed **fanout → DDR bus lanes → remaining routing** workflow. **0/10 complete.** No production routing fix is claimed in this report.
 
