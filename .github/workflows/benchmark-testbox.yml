@@ -4,32 +4,27 @@ on:
 permissions:
   contents: read
 jobs:
-  replay:
+  boards:
     runs-on: blacksmith-32vcpu-ubuntu-2404-arm
-    timeout-minutes: 50
-    strategy:
-      fail-fast: false
-      max-parallel: 3
-      matrix:
-        board: [icepi-native, imx6-native, h616-local]
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.4.3
-      - name: Unpack original frozen sources
+      - name: Unpack boards with copper pours disabled
         run: |
-          mkdir -p experiments/boards-3273/runtime
-          unzip -q experiments/boards-3273/boards.zip -d experiments/boards-3273/runtime
-      - name: Install once before measuring either revision
-        working-directory: experiments/boards-3273/runtime
+          mkdir -p experiments/boards-3273-no-pours/runtime
+          unzip -q experiments/boards-3273-no-pours/boards.zip -d experiments/boards-3273-no-pours/runtime
+      - name: Install latest released tscircuit from frozen lockfile
+        working-directory: experiments/boards-3273-no-pours/runtime
         run: bun install --frozen-lockfile
-      - name: Run base-head-head-base in fresh processes on the same machine
+      - name: Run all 19 TSX boards with default routing
         env:
-          BOARD_SAMPLE: ${{ matrix.board }}
-        run: python3 experiments/boards-3273/replay-paired.py
+          BOARD_VARIANT: no-pours
+        run: python3 experiments/boards-3273-no-pours/run.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: paired-board-clips-${{ matrix.board }}
-          path: paired-results/
+          name: boards-tscircuit-3273-no-pours
+          path: board-benchmark-results/
