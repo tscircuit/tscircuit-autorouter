@@ -1,4 +1,4 @@
-name: Uploaded boards with typed selector reuse
+name: Uploaded boards on latest tscircuit 3266
 on:
   workflow_dispatch:
 permissions:
@@ -14,20 +14,15 @@ jobs:
           bun-version: 1.4.3
       - name: Unpack original board sources
         run: |
-          mkdir -p experiments/boards-3260/runtime
-          unzip -q experiments/boards-3260/boards.zip -d experiments/boards-3260/runtime
+          mkdir -p experiments/boards-3266/runtime
+          unzip -q experiments/boards-3266/boards.zip -d experiments/boards-3266/runtime
       - name: Install latest tscircuit with its frozen dependencies
-        working-directory: experiments/boards-3260/runtime
+        working-directory: experiments/boards-3266/runtime
         run: bun install --frozen-lockfile
-      - name: Apply the exact core selector call replacement
-        run: python3 experiments/boards-3260/apply-selector-reuse.py
       - name: Run all 19 original TSX boards through tscircuit
-        env:
-          BOARD_VARIANT: selector-reuse
-          BOARD_FIX_PROVENANCE: experiments/boards-3260/selector-reuse-provenance.json
-        run: python3 experiments/boards-3260/run.py
+        run: python3 experiments/boards-3266/run.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: boards-tscircuit-3260-selector-reuse
+          name: boards-tscircuit-3266
           path: board-benchmark-results
