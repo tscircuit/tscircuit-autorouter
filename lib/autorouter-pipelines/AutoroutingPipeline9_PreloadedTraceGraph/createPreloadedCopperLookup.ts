@@ -14,6 +14,7 @@ import { getPipeline9RouteCopperGeometry } from "./pipeline9FixedRouteCopper"
 type Point = { x: number; y: number }
 type CopperPrimitive = {
   route: PreloadedHighDensityRoute
+  kind: "wire" | "via"
   start: Point
   end: Point
   minZ: number
@@ -40,11 +41,13 @@ export type PreloadedCopperLookup = {
   getClearSpans: (segment: CopperSegment) => Array<[number, number]>
 }
 
-function getPreloadedCopperPrimitives({
+export function createPreloadedCopperIndex({
   srj,
   connMap,
   viaDiameter,
-}: PreloadedCopperInput): CopperPrimitive[] {
+}: Pick<PreloadedCopperInput, "srj" | "connMap" | "viaDiameter">):
+  | FlatbushIndex<CopperPrimitive>
+  | undefined {
   const copper: CopperPrimitive[] = []
   for (const [traceIndex, trace] of (srj.traces ?? []).entries()) {
     const routes = convertPreloadedTraceToHdRoutes(
@@ -59,6 +62,7 @@ function getPreloadedCopperPrimitives({
       for (const wire of geometry.wireSegments) {
         copper.push({
           route,
+          kind: "wire",
           start: wire.start,
           end: wire.end,
           minZ: wire.z,
@@ -69,6 +73,7 @@ function getPreloadedCopperPrimitives({
       for (const via of geometry.viaSpans) {
         copper.push({
           route,
+          kind: "via",
           start: via.center,
           end: via.center,
           minZ: via.minZ,
@@ -78,7 +83,19 @@ function getPreloadedCopperPrimitives({
       }
     }
   }
-  return copper
+  if (copper.length === 0) return undefined
+  const index = new FlatbushIndex<CopperPrimitive>(copper.length)
+  for (const primitive of copper) {
+    index.insert(
+      primitive,
+      Math.min(primitive.start.x, primitive.end.x) - primitive.radius,
+      Math.min(primitive.start.y, primitive.end.y) - primitive.radius,
+      Math.max(primitive.start.x, primitive.end.x) + primitive.radius,
+      Math.max(primitive.start.y, primitive.end.y) + primitive.radius,
+    )
+  }
+  index.finish()
+  return index
 }
 
 function getCopperBlockers(
@@ -152,21 +169,10 @@ function getClearCopperSpans(
 export function createPreloadedCopperLookup(
   input: PreloadedCopperInput,
 ): PreloadedCopperLookup {
-  const copper = getPreloadedCopperPrimitives(input)
-  if (copper.length === 0) {
+  const index = createPreloadedCopperIndex(input)
+  if (!index) {
     return { getBlockers: () => [], getClearSpans: () => [[0, 1]] }
   }
-  const index = new FlatbushIndex<CopperPrimitive>(copper.length)
-  for (const primitive of copper) {
-    index.insert(
-      primitive,
-      Math.min(primitive.start.x, primitive.end.x) - primitive.radius,
-      Math.min(primitive.start.y, primitive.end.y) - primitive.radius,
-      Math.max(primitive.start.x, primitive.end.x) + primitive.radius,
-      Math.max(primitive.start.y, primitive.end.y) + primitive.radius,
-    )
-  }
-  index.finish()
   const clearance =
     input.srj.minTraceToPadEdgeClearance ??
     input.srj.defaultObstacleMargin ??

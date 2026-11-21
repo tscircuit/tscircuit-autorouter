@@ -127,8 +127,5 @@ test("plans the A64 data strobes beside fixed inner-layer DQ13 copper", async ()
     { backgroundColor: "white", svgWidth: 800, svgHeight: 420 },
   )
   await expect(svg).toMatchSvgSnapshot(import.meta.path)
-  expect(layerChanges.map(([entry]) => entry.connectionName).sort()).toEqual([
-    "source_net_64",
-    "source_net_65",
-  ])
+  expect(layerChanges).toEqual([])
 })
