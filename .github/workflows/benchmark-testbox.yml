@@ -1,4 +1,4 @@
-name: Uploaded boards on latest tscircuit 3268
+name: Latest boards with indexed breakout selectors
 on:
   workflow_dispatch:
 permissions:
@@ -19,10 +19,15 @@ jobs:
       - name: Install latest tscircuit with its frozen dependencies
         working-directory: experiments/boards-3268/runtime
         run: bun install --frozen-lockfile
+      - name: Apply the minimal breakout selector fix
+        run: python3 experiments/boards-3268/apply-breakout-selector-fix.py
       - name: Run all 19 original TSX boards through tscircuit
+        env:
+          BOARD_VARIANT: indexed-breakouts
+          BOARD_FIX_PROVENANCE: breakout-selector-provenance.json
         run: python3 experiments/boards-3268/run.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: boards-tscircuit-3268
+          name: boards-tscircuit-3268-indexed-breakouts
           path: board-benchmark-results
