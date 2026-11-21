@@ -1,0 +1,85 @@
+name: Audit conservative via bounds against full-circuit physical rules
+on:
+  push:
+    branches: [analysis/e2e-far-via-bounds-audit-2451]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  audit:
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Install pinned physical audit tools
+        run: |
+          mkdir -p core/audit
+          cat > core/package.json <<'JSON'
+          {"name":"boundary-cache-audit","private":true,"type":"module","dependencies":{"@tscircuit/fanout-solver":"0.0.100","@tscircuit/capacity-autorouter":"0.0.1147","@tscircuit/checks":"0.0.282","graphics-debug":"0.0.99"}}
+          JSON
+          cd core
+          bun install --ignore-scripts
+      - name: Wait for the complete ten-board rerun
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python3 - <<'PY'
+          import json,os,time,urllib.request
+          start=time.monotonic()
+          while True:
+              req=urllib.request.Request('https://api.github.com/repos/tscircuit/tscircuit-autorouter/actions/runs/44953355895',headers={'Authorization':'Bearer '+os.environ['GH_TOKEN']})
+              run=json.load(urllib.request.urlopen(req))
+              if run['status']=='completed':
+                  assert run['conclusion']=='success',run['conclusion']
+                  print('All ten captures are complete')
+                  break
+              if time.monotonic()-start>1200:raise RuntimeError('Full-circuit capture still pending')
+              time.sleep(15)
+          PY
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 44950971733
+          pattern: full-circuit-interception-*
+          path: core/audit/before
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 44953355895
+          pattern: full-circuit-interception-*
+          path: core/audit/after
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 44945880146
+          pattern: full-circuit-interception-*
+          path: core/audit/previous
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Compare constructor inputs and search decisions; check physical copper
+        run: |
+          cp experiments/e2e-samples-20261120/audit-far-via-bounds.ts core/audit/audit.ts
+          cp experiments/e2e-samples-20261120/inputs.json core/audit/inputs.json
+          cd core/audit
+          bun audit.ts
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e2e-far-via-bounds-verified
+          path: core/audit/verified
+          if-no-files-found: error
+      - name: Export reviewable results
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import base64,io,zipfile
+          from pathlib import Path
+          stream=io.BytesIO()
+          with zipfile.ZipFile(stream,'w',zipfile.ZIP_DEFLATED,compresslevel=9) as z:
+              for path in Path('core/audit/verified').glob('*'):z.writestr(path.name,path.read_bytes())
+          print('FAR_VIA_AUDIT_BEGIN')
+          encoded=base64.b64encode(stream.getvalue()).decode()
+          for offset in range(0,len(encoded),8000):print(encoded[offset:offset+8000])
+          print('FAR_VIA_AUDIT_END')
+          PY
