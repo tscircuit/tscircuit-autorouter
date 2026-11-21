@@ -1,33 +1,66 @@
-name: Uploaded boards with outline clearance broad phase
+name: Validated AM3352 outline comparison and gallery
 on:
   workflow_dispatch:
 permissions:
   contents: read
 jobs:
-  boards:
-    runs-on: blacksmith-32vcpu-ubuntu-2404-arm
-    timeout-minutes: 30
+  benchmark:
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    timeout-minutes: 150
+    strategy:
+      fail-fast: false
+      max-parallel: 11
+      matrix:
+        sample: [control, control-inner1, right, left, above, inner-layers, inner-layers-right, inner-layers-left, inner-layers-above, inner-layers-complete-ca, outer-layers]
+    env:
+      BUN_JSC_forceRAMSize: "2147483648"
+      BUN_JSC_miniVMHeapGrowthFactor: "1.05"
     steps:
       - uses: actions/checkout@v4
+        with:
+          path: controller
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/bus-lanes-solver
+          ref: e16fabec258bc7fbac25a13e8dd2b97ecd0da47f
+          path: base
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/bus-lanes-solver
+          ref: cef688a181d401913384d2afdbdbdcc5abb70679
+          path: head
+          persist-credentials: false
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: 1.4.3
-      - name: Unpack original board sources
+          bun-version: 1.4.0
+      - name: Install both revisions before measuring
         run: |
-          mkdir -p experiments/boards-3266/runtime
-          unzip -q experiments/boards-3266/boards.zip -d experiments/boards-3266/runtime
-      - name: Install latest tscircuit with its frozen dependencies
-        working-directory: experiments/boards-3266/runtime
-        run: bun install --frozen-lockfile
-      - name: Apply exact embedded bus solver predicate replacement
-        run: python3 experiments/boards-3266/apply-outline-clearance.py
-      - name: Run all 19 original TSX boards through tscircuit
+          (cd base && bun install --ignore-scripts)
+          (cd head && bun install --ignore-scripts)
+      - name: Fresh paired solves with the original benchmark entrypoint
         env:
-          BOARD_VARIANT: outline-clearance
-          BOARD_FIX_PROVENANCE: experiments/boards-3266/outline-clearance-provenance.json
-        run: python3 experiments/boards-3266/run.py
+          SAMPLE: ${{ matrix.sample }}
+        run: |
+          mkdir -p "results/$SAMPLE/base" "results/$SAMPLE/head"
+          for variant in base head; do
+            set +e
+            (cd "$variant" && timeout --signal=TERM --kill-after=15 3720 ./benchmark.sh --worker "$SAMPLE" --timeout-seconds 3600 --routes-directory "$GITHUB_WORKSPACE/results/$SAMPLE/$variant") > "results/$SAMPLE/$variant.log" 2>&1
+            result=$?
+            set -e
+            echo "$result" > "results/$SAMPLE/$variant.exit"
+          done
+      - name: Export only accepted routes
+        if: always()
+        env:
+          SAMPLE: ${{ matrix.sample }}
+        run: |
+          for variant in base head; do
+            bun controller/experiments/boards-3266/render-am3352.mjs "$SAMPLE" "$variant" "results/$SAMPLE/$variant"
+          done
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: boards-tscircuit-3266-outline-clearance
-          path: board-benchmark-results
+          name: outline-am3352-${{ matrix.sample }}
+          path: results/
