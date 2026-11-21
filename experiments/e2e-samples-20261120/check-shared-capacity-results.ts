@@ -107,7 +107,11 @@ for (const sample of manifest.samples.map((entry: any) => entry.name.replace(/\.
       const bounds = { minX: boundary.minX - 0.7, maxX: boundary.maxX + 0.7, minY: boundary.minY - 0.7, maxY: boundary.maxY + 0.7 }
       const obstacles = input.obstacles.filter((obstacle: any) => obstacle.center.x + obstacle.width / 2 >= bounds.minX && obstacle.center.x - obstacle.width / 2 <= bounds.maxX && obstacle.center.y + obstacle.height / 2 >= bounds.minY && obstacle.center.y - obstacle.height / 2 <= bounds.maxY)
       const graphics = visualizeSimpleRouteJson({ ...best.outputSrj, bounds, obstacles })
-      graphics.texts = [
+      graphics.rects ??= []
+      graphics.rects.push({ center: { x: (bounds.minX + bounds.maxX) / 2, y: (bounds.minY + bounds.maxY) / 2 }, width: bounds.maxX - bounds.minX, height: bounds.maxY - bounds.minY, fill: "transparent", stroke: "transparent" })
+      graphics.rects ??= []
+    graphics.rects.push({ center: { x: (bounds.minX + bounds.maxX) / 2, y: (bounds.minY + bounds.maxY) / 2 }, width: bounds.maxX - bounds.minX, height: bounds.maxY - bounds.minY, fill: "transparent", stroke: "transparent" })
+    graphics.texts = [
         { x: bounds.minX, y: bounds.maxY + 0.9, text: `${sample}: ${best.summary.routedConnectionCount}/${input.connections.length} partial escapes; ${drc.checkedViaCount} vias`, fontSize: 0.23, color: "#0f172a", anchorSide: "center_left" },
         { x: bounds.minX, y: bounds.maxY + 0.45, text: `${history.length} assignments; ${(fanoutElapsedMs / 1000).toFixed(1)}s fanout search; ${state.solved ? "fanout solved" : "incomplete"}`, fontSize: 0.2, color: "#475569", anchorSide: "center_left" },
       ]
@@ -123,6 +127,8 @@ for (const sample of manifest.samples.map((entry: any) => entry.name.replace(/\.
     // No before fanout SRJ exists. Show only the verified unchanged original
     // pad geometry, using the same native renderer and viewport as the partial.
     const graphics = visualizeSimpleRouteJson({ ...input, bounds, obstacles, connections: [], traces: [] })
+    graphics.rects ??= []
+    graphics.rects.push({ center: { x: (bounds.minX + bounds.maxX) / 2, y: (bounds.minY + bounds.maxY) / 2 }, width: bounds.maxX - bounds.minX, height: bounds.maxY - bounds.minY, fill: "transparent", stroke: "transparent" })
     graphics.texts = [
       { x: bounds.minX, y: bounds.maxY + 0.9, text: "glider-spaced: fanout never started", fontSize: 0.23, color: "#0f172a", anchorSide: "center_left" },
       { x: bounds.minX, y: bounds.maxY + 0.45, text: "Original pads; winding placement failed; no fanout copper", fontSize: 0.2, color: "#475569", anchorSide: "center_left" },
@@ -131,7 +137,7 @@ for (const sample of manifest.samples.map((entry: any) => entry.name.replace(/\.
   }
   rows.push(row)
 }
-const statistics = { baselineRun: 44897719641, candidateRun: 44899751288, archiveSha256: manifest.archiveSha256, interpretation: "Best diagnostic partial fanout; not committed PCB routing or completed board nets", rows }
+const statistics = { baselineRun: 44897719641, candidateRun: 44900830468, unchangedControlsRun: 44899751288, archiveSha256: manifest.archiveSha256, interpretation: "Best diagnostic partial fanout; not committed PCB routing or completed board nets", rows }
 writeFileSync(join(output, "shared-capacity-statistics.json"), JSON.stringify(statistics, null, 2))
 console.log("SHARED_CAPACITY_PHYSICAL", JSON.stringify(rows.map((row) => ({ sample: row.sample, identicalInputs: row.sameFanoutConstructorInputs, sameCompletedAssignmentPrefix: row.sameCompletedAssignmentPrefix, comparedAssignments: row.comparedAssignments, identicalCompletedOutput: row.identicalCompletedOutput, captures: row.captures.map(({ mode, partialEscapes, requests, nativeVias, fanoutElapsedMs, assignments, nativeDrc, independentViaInPadFindings }: any) => ({ mode, partialEscapes, requests, nativeVias, fanoutElapsedMs, assignments, drcValid: nativeDrc?.valid, viaInPad: independentViaInPadFindings?.length })) }))))
 if (invalid) throw new Error("A captured partial fails physical validation; see the saved findings")
