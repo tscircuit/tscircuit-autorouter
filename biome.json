@@ -8,7 +8,12 @@
     "indentStyle": "space"
   },
   "files": {
-    "ignore": ["cosmos-export", "dist", "**/*.json"]
+    "ignore": [
+      "cosmos-export",
+      "dist",
+      "**/*.json",
+      "fixtures/repro/bluetooth-gamepad/board"
+    ]
   },
   "javascript": {
     "formatter": {
