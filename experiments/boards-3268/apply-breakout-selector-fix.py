@@ -17,7 +17,7 @@ part=part[:-len('  }\n')]+'    this.addAll(pendingBreakoutPoints);\n  }\n'
 updated_index=s[:a]+part+s[b:]
 s=chunk.read_text();needle='  doInitialOptimizeSelectorCache() {\n    if (!this.isSubcircuit) return;'
 assert s.count(needle)==1
-s=s.replace(needle,needle+'\n    this._cachedSelectAllQueries.clear();\n    this._cachedSelectOneQueries.clear();')
+s=s.replace(needle,'  doInitialOptimizeSelectorCache() {\n    this._cachedSelectAllQueries.clear();\n    this._cachedSelectOneQueries.clear();\n    if (!this.isSubcircuit) return;')
 needle='  updateOptimizeSelectorCache() {\n    this._cachedSelectAllQueries.clear();\n    this._cachedSelectOneQueries.clear();\n    this.doInitialOptimizeSelectorCache();'
 assert s.count(needle)==1
 updated_chunk=s.replace(needle,'  updateOptimizeSelectorCache() {\n    this.doInitialOptimizeSelectorCache();')
