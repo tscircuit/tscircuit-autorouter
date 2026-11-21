@@ -1,0 +1,44 @@
+<svg width="800" height="420" viewBox="0 0 800 420" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="white"/><g><polyline data-points="1.5455000000000005,-10.485500000000002 1.5455000000000005,-9.723500000000001" data-type="line" data-label="" points="253.55905511811318,380 253.55905511811318,40" fill="none" stroke="#fde9be" stroke-linejoin="round" stroke-width="202.57217847769016"/></g><g><polyline data-points="1.5455000000000005,-10.485500000000002 1.5455000000000005,-9.723500000000001" data-type="line" data-label="" points="253.55905511811318,380 253.55905511811318,40" fill="none" stroke="#ac5e0b" stroke-linejoin="round" stroke-width="56.666666666666636"/></g><g><polyline data-points="1.3999999999999886,-10.225000000000005 1.3999999999999886,-10.225000000000005" data-type="line" data-label="" points="188.63779527558813,263.7664041994758 188.63779527558813,263.7664041994758" fill="none" stroke="#823655" stroke-linejoin="round" stroke-width="4.01574803149606" stroke-dasharray="4 3"/></g><g><polyline data-points="1.3999999999999886,-10.225000000000005 1.4260228567910733,-10.050000000000004" data-type="line" data-label="" points="188.63779527558813,263.7664041994758 200.24904371255514,185.68241469816348" fill="none" stroke="#823655" stroke-linejoin="round" stroke-width="4.01574803149606" stroke-dasharray="4 3"/></g><g><polygon data-type="polygon" data-label="" data-points="1.4,-10.4 1.75,-10.4 1.75,-10.049999999999999 1.4,-10.049999999999999" points="188.63779527559325,341.8503937007863 344.8057742782179,341.8503937007863 344.8057742782179,185.68241469816167 188.63779527559325,185.68241469816167" fill="none" stroke="#243d53" stroke-width="2.2309711286089224"/></g><circle data-type="circle" data-label="" data-x="1.3999999999999886" data-y="-10.225000000000005" cx="188.63779527558813" cy="263.7664041994758" r="5.354330708661414" fill="#823655" stroke="black" stroke-width="0.0022411764705882365"/><circle data-type="circle" data-label="" data-x="1.3999999999999886" data-y="-10.225000000000005" cx="188.63779527558813" cy="263.7664041994758" r="5.354330708661414" fill="#823655" stroke="black" stroke-width="0.0022411764705882365"/><circle data-type="circle" data-label="" data-x="1.3999999999999886" data-y="-10.225000000000005" cx="188.63779527558813" cy="263.7664041994758" r="5.354330708661414" fill="#823655" stroke="black" stroke-width="0.0022411764705882365"/><circle data-type="circle" data-label="" data-x="1.4260228567910733" data-y="-10.050000000000004" cx="200.24904371255514" cy="185.68241469816348" r="5.354330708661414" fill="#823655" stroke="black" stroke-width="0.0022411764705882365"/><text data-type="text" data-label="A64 DDR strobe routing" data-x="1.82" data-y="-10.1" x="376.03937007874276" y="207.99212598425038" fill="black" font-size="16.509186351706028" font-family="sans-serif" text-anchor="start" dominant-baseline="central">A64 DDR strobe routing</text><text data-type="text" data-label="DQ13 copper on inner3" data-x="1.82" data-y="-10.18" x="376.03937007874276" y="243.68766404199323" fill="#844600" font-size="12.939632545931751" font-family="sans-serif" text-anchor="start" dominant-baseline="central">DQ13 copper on inner3</text><text data-type="text" data-label="Via centers overlapping DQ13" data-x="1.82" data-y="-10.25" x="376.03937007874276" y="274.92125984251834" fill="black" font-size="12.939632545931751" font-family="sans-serif" text-anchor="start" dominant-baseline="central">Via centers overlapping DQ13</text><text data-type="text" data-label="2 planned layer changes in cell" data-x="1.82" data-y="-10.32" x="376.03937007874276" y="306.15485564304345" fill="#823655" font-size="12.939632545931751" font-family="sans-serif" text-anchor="start" dominant-baseline="central">2 planned layer changes in cell</text><g id="crosshair" style="display: none"><line id="crosshair-h" y1="0" y2="420" stroke="#666" stroke-width="0.5"/><line id="crosshair-v" x1="0" x2="800" stroke="#666" stroke-width="0.5"/><text id="coordinates" font-family="monospace" font-size="12" fill="#666"></text></g><script><![CDATA[
+              document.currentScript.parentElement.addEventListener('mousemove', (e) => {
+                const svg = e.currentTarget;
+                const rect = svg.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const crosshair = svg.getElementById('crosshair');
+                const h = svg.getElementById('crosshair-h');
+                const v = svg.getElementById('crosshair-v');
+                const coords = svg.getElementById('coordinates');
+                
+                crosshair.style.display = 'block';
+                h.setAttribute('x1', '0');
+                h.setAttribute('x2', '800');
+                h.setAttribute('y1', y);
+                h.setAttribute('y2', y);
+                v.setAttribute('x1', x);
+                v.setAttribute('x2', x);
+                v.setAttribute('y1', '0');
+                v.setAttribute('y2', '420');
+
+                // Calculate real coordinates using inverse transformation
+                const matrix = {"a":446.1942257217845,"c":0,"e":-436.03412073490506,"b":0,"d":-446.1942257217845,"f":-4298.569553805773};
+                // Manually invert and apply the affine transform
+                // Since we only use translate and scale, we can directly compute:
+                // x' = (x - tx) / sx
+                // y' = (y - ty) / sy
+                const sx = matrix.a;
+                const sy = matrix.d;
+                const tx = matrix.e; 
+                const ty = matrix.f;
+                const realPoint = {
+                  x: (x - tx) / sx,
+                  y: (y - ty) / sy // Flip y back since we used negative scale
+                }
+                
+                coords.textContent = `(${realPoint.x.toFixed(2)}, ${realPoint.y.toFixed(2)})`;
+                coords.setAttribute('x', (x + 5).toString());
+                coords.setAttribute('y', (y - 5).toString());
+              });
+              document.currentScript.parentElement.addEventListener('mouseleave', () => {
+                document.currentScript.parentElement.getElementById('crosshair').style.display = 'none';
+              });
+            ]]></script></svg>
