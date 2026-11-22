@@ -45,8 +45,6 @@ export function widenClearInteriorSegments({
       !route.vias.some((via) => via.x === point.x && via.y === point.y)
     )
   })
-  // A constant-width export uses the outgoing point, while fixed-copper
-  // checks use the wider end of each segment. Both adjoining wires must fit.
   const boardEdgeClearance =
     nominalWidth / 2 + (board?.minBoardEdgeClearance ?? 0)
   const clearSegments = points.slice(0, -1).map((start, index) => {
@@ -61,8 +59,14 @@ export function widenClearInteriorSegments({
       hasClearance(start, end)
     )
   })
+  // Core moves an outgoing width to the opposite endpoint when reversing a
+  // route. A check using the wider endpoint can then extend that width onto
+  // the preceding or following wire, depending on the routing direction.
   const widenAtPoint = clearSegments.map(
-    (isClear, index) => isClear && clearSegments[index - 1] === true,
+    (isClear, index) =>
+      isClear &&
+      clearSegments[index - 1] === true &&
+      clearSegments[index + 1] === true,
   )
   if (!widenAtPoint.includes(true)) return route
 
