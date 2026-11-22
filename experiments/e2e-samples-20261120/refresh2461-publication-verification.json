@@ -1,0 +1,58 @@
+[
+  {
+    "package": "tscircuit",
+    "version": "0.0.3280",
+    "gitHead": "53afdb6a7b4ce4087e02892a5ba85e2e13aab05c",
+    "tarballSha256": "26550d08bbcef254812b5d1be76bcfca4734e660c7bf7433ce1ae1091d54e079",
+    "proof": []
+  },
+  {
+    "package": "@tscircuit/core",
+    "version": "0.0.2461",
+    "gitHead": "ce2683b98de40a7d4eaa4dc055ae105096c744d8",
+    "tarballSha256": "58a6f0e9d6a4370c7337d6372070d723c44de83a5d2ddcb8eb87f726cca80ce5",
+    "proof": [
+      {
+        "file": "package/dist/index.js",
+        "sha256": "546f3d23da916df0bff453ee303135979f3cf66f1d041b95c129ad039a855fb5",
+        "tokens": {
+          "getPlaneViaReuseAlternative": true,
+          "routeRemainingPlaneBuses": true,
+          "getExistingPlaneVias": true
+        }
+      }
+    ]
+  },
+  {
+    "package": "@tscircuit/fanout-solver",
+    "version": "0.0.104",
+    "gitHead": "cc83042185d3fff6a58c6c0e49cd646c909b67b4",
+    "tarballSha256": "072625a81e951465d4595f042cbd85b2f13e4f0c8954e8477b76bdae8db57058",
+    "proof": [
+      {
+        "file": "lib/fanout-solver.ts",
+        "sha256": "f6b0ab97d8a325c14af6a4c02b182419b2c20d26682a391ed480f7779c7bf82f"
+      },
+      {
+        "file": "lib/route-bus/route-plane-terminated-bus.ts",
+        "sha256": "9d7e217adb1c40c677e840224caf95e1b362523debaa355579f8ef57ee380885"
+      },
+      {
+        "file": "lib/route-bus/route-analytic-boundary-alternatives.ts",
+        "sha256": "3534047f85164d8327323fbe90a8af84d3f70b42d00bd12f5611b5bb7aa3bb58"
+      },
+      {
+        "file": "lib/route-bus/plan-mutual-clearance.ts",
+        "sha256": "ae1d92ad216af322faed91ddd3f37d01353532c9a2ac9aea520b760e34992e2d"
+      },
+      {
+        "file": "lib/route-bus/plan-copper.ts",
+        "sha256": "cf90ab51337e2f9f65f0304e4e8acedd0f0dbf664b2389cab1e761d5166cde7b"
+      },
+      {
+        "file": "lib/route-bus/plan-static-clearance.ts",
+        "sha256": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35"
+      }
+    ]
+  }
+]

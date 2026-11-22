@@ -1,0 +1,54 @@
+name: Publish audited compact-boundary full-circuit analysis
+on:
+  push:
+    branches: [analysis/publish-compact-boundary-2461]
+permissions:
+  contents: write
+  actions: read
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: harness
+      - name: Require successful independent audit and exact-head checks
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          test "$(gh api repos/tscircuit/tscircuit-autorouter/actions/jobs/137389015423 --jq .conclusion)" = success
+          for spec in tscircuit/tscircuit-autorouter:45081325490 tscircuit/fanout-solver:45078894060 tscircuit/fanout-solver:45081283722; do
+            repo=${spec%:*}
+            run=${spec##*:}
+            for attempt in $(seq 1 100); do
+              status=$(gh api repos/$repo/actions/runs/$run --jq .status)
+              if [ "$status" = completed ]; then break; fi
+              sleep 15
+            done
+            test "$(gh api repos/$repo/actions/runs/$run --jq .conclusion)" = success
+          done
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45081031013
+          name: compact-boundary-completion-audit
+          path: audited-results
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45070654984
+          pattern: full-circuit-interception-*
+          path: captures-published
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45080675519
+          pattern: full-circuit-interception-*
+          path: captures-after
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/checkout@v4
+        with:
+          ref: analysis/e2e-full-circuit-interception-results-20261120
+          path: report
+      - name: Publish actual all-ten PCB outputs, failure geometry and measured comparisons
+        run: python3 harness/experiments/e2e-samples-20261120/publish-compact-boundary2461.py
