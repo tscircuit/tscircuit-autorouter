@@ -1,0 +1,73 @@
+{
+  "nodeWithPortPoints": {
+    "capacityMeshNodeId": "through-via-terminal-window",
+    "center": {
+      "x": 0,
+      "y": 0
+    },
+    "width": 23.49999999999997,
+    "height": 15.600000000000023,
+    "portPoints": [
+      {
+        "portPointId": "port_0",
+        "x": -5.874999999999993,
+        "y": -2.4249999999999936,
+        "z": 3,
+        "connectionName": "neighbor",
+        "rootConnectionName": "neighbor",
+        "nextPortPointId": "port_1"
+      },
+      {
+        "portPointId": "port_1",
+        "x": 5.874999999999993,
+        "y": 0.0,
+        "z": 3,
+        "connectionName": "neighbor",
+        "rootConnectionName": "neighbor",
+        "prevPortPointId": "port_0"
+      },
+      {
+        "x": -5.874999999999993,
+        "y": -2.8538330743327442,
+        "z": 0,
+        "portPointId": "port_2",
+        "nextPortPointId": "port_3",
+        "connectionName": "layer_transition",
+        "rootConnectionName": "layer_transition"
+      },
+      {
+        "x": -5.874999999999993,
+        "y": -2.9770296170639057,
+        "z": 2,
+        "portPointId": "port_3",
+        "prevPortPointId": "port_2",
+        "connectionName": "layer_transition",
+        "rootConnectionName": "layer_transition"
+      }
+    ],
+    "availableZ": [
+      0,
+      1,
+      2,
+      3
+    ]
+  },
+  "cellSizeMm": 0.1,
+  "viaDiameter": 0.9,
+  "stepMultiplier": 1,
+  "traceThickness": 0.22,
+  "traceMargin": 0.22,
+  "viaMinDistFromBorder": 0.45,
+  "showPenaltyMap": false,
+  "showUsedCellMap": false,
+  "effort": 1,
+  "hyperParameters": {
+    "shuffleSeed": 3,
+    "ripCost": 10,
+    "ripTracePenalty": 0.5,
+    "ripViaPenalty": 0.75,
+    "viaBaseCost": 0.1,
+    "greedyMultiplier": 1.5
+  },
+  "viaMinDistFromPort": 0.78
+}
