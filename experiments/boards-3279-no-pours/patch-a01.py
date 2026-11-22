@@ -54,6 +54,9 @@ for path in sorted((package / 'dist').glob('**/*.js')):
     field = 'viaMinDistFromPort:this.constructorParams.preservePhysicalGeometry&&this.constructorParams.allowBlindAndBuriedVias===false?((this.constructorParams.viaDiameter??.3)+(this.constructorParams.traceWidth??.15))/2+' + margin[1] + ':undefined,'
     config_at = portfolio.start(1)
     patched = patched[:config_at] + field + patched[config_at:]
+    physical_model = re.compile(r'layerCount:([\w$]+)\.layerCount,useGrowShrinkHighDensityIntraNodeSolver:')
+    assert len(physical_model.findall(patched)) == 1, path
+    patched = physical_model.sub(lambda model: f'layerCount:{model[1]}.layerCount,allowBlindAndBuriedVias:{model[1]}.allowBlindAndBuriedVias,useGrowShrinkHighDensityIntraNodeSolver:', patched)
     output = outer[:worker.start(1)] + json.dumps(patched) + outer[worker.end(1):] if worker else patched
     path.write_text(output)
     provenance.append({'file': str(path.relative_to(package)), 'before': hashlib.sha256(outer.encode()).hexdigest(), 'after': hashlib.sha256(output.encode()).hexdigest(), 'a01Classes': 1, 'embeddedWorker': bool(worker)})
