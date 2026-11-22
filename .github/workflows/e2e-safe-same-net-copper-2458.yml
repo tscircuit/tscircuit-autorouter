@@ -1,0 +1,156 @@
+name: Compare same-net trace sharing with independent via clearance
+on:
+  push:
+    branches: [analysis/e2e-safe-same-net-copper-2458]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  completion:
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        sample: [icepi-original, imx6-original, imx6-spaced, butterstick-original]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Install exact latest native packages
+        run: |
+          mkdir -p core/replay
+          cat > core/package.json <<'JSON'
+          {"name":"native-completion-diagnosis","private":true,"type":"module","dependencies":{"@tscircuit/fanout-solver":"0.0.103","@tscircuit/capacity-autorouter":"0.0.1152","graphics-debug":"0.0.99"}}
+          JSON
+          cd core
+          bun install --ignore-scripts --backend copyfile
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45006486986
+          name: full-circuit-interception-${{ matrix.sample }}
+          path: captures
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Compare original rules, plane-only sharing and global sharing
+        env:
+          SAMPLE: ${{ matrix.sample }}
+        run: |
+          cp core/node_modules/@tscircuit/fanout-solver/lib/route-bus/plan-mutual-clearance.ts core/replay/original-mutual.txt
+          cp core/node_modules/@tscircuit/fanout-solver/lib/route-bus/route-plane-terminated-bus.ts core/replay/original-plane.txt
+          cp core/node_modules/@tscircuit/fanout-solver/lib/prepare-buses.ts core/replay/original-prepare.txt
+          cp core/node_modules/@tscircuit/fanout-solver/lib/route-bus/plan-static-clearance.ts core/replay/original-static.txt
+          cat > core/replay/run.ts <<'TS'
+          import { readFileSync, writeFileSync } from "node:fs"
+          import { gunzipSync, gzipSync } from "node:zlib"
+          const mode=process.argv[2]
+          const root="../node_modules/@tscircuit/fanout-solver/"
+          const original=readFileSync("original-prepare.txt","utf8")
+          let prepared=original
+          if(mode==="safe_merges_local_direction") {
+           const start=prepared.indexOf("function resolveBusDirection(")
+           const head=prepared.slice(0,start)
+           let tail=prepared.slice(start)
+           const marker="const target = connection.exitTargetPoint ?? connection.targetPoint"
+           if(!tail.includes(marker))throw Error("Boundary direction marker changed")
+           tail=tail.replace(marker,"const target = connection.targetPoint")
+           prepared=head+tail
+          }
+          if(mode==="local_edge") {
+           prepared=prepared.replace('}): { direction: FanoutDirection; preferredExit?: FanoutBorderTarget } {','}): { direction: FanoutDirection; preferredExit?: FanoutBorderTarget; exitEdge?: FanoutEdge } {')
+           const marker="if (directions.length === 1) return { direction: directions[0]! }"
+           if(!prepared.includes(marker))throw Error("Unique-edge marker changed")
+           prepared=prepared.replace(marker,'if (directions.length === 1) { const direction=directions[0]!; const exitEdge=({left:"left",right:"right",up:"top",down:"bottom"} as const)[direction]; return {direction,preferredExit:exitEdge,exitEdge} }')
+           const old="...(busSpec.exitEdge ? { exitEdge: busSpec.exitEdge } : {}),"
+           if(!prepared.includes(old))throw Error("Exit-edge construction marker changed")
+           prepared=prepared.replace(old,'...((busSpec.exitEdge ?? resolvedExit.exitEdge) ? {exitEdge:busSpec.exitEdge ?? resolvedExit.exitEdge} : {}),')
+          }
+          writeFileSync(root+"lib/prepare-buses.ts",prepared)
+          
+          const originalStatic=readFileSync("original-static.txt","utf8")
+          const originalMutual=readFileSync("original-mutual.txt","utf8")
+          let staticSource=originalStatic,mutualSource=originalMutual
+          if(mode!=="before") {
+           const a=staticSource.indexOf("  for (const via of getPlanVias(plan))")
+           const b=staticSource.indexOf("  for (const traceCopper of",a)
+           let vias=staticSource.slice(a,b)
+           const marker="        allowSameNetMerges &&\n        obstacleSharesElectricalNet"
+           if(!vias.includes(marker))throw Error("Via pad clearance marker changed")
+           vias=vias.replace(marker,"        allowSameNetMerges &&\n        allowsViaInPad(srj) &&\n        obstacleSharesElectricalNet")
+           staticSource=staticSource.slice(0,a)+vias+staticSource.slice(b)
+           const a2=mutualSource.indexOf("      allowSameNetMerges &&")
+           const b2=mutualSource.indexOf("      continue\n    }",a2)
+           if(a2<0||b2<0)throw Error("Mutual net marker changed")
+           const strict=String.raw`      for (const via of planVias) for (const otherVia of getPlanVias(otherPlan)) {
+                  if(via.spanLayers.some(layer=>otherVia.spanLayers.includes(layer)) && distance(via.center,otherVia.center)<(via.diameter+otherVia.diameter)/2+clearance-1e-9) {
+                    if(otherPlan.busId!==plan.busId)blockingBusCounts?.set(otherPlan.busId,(blockingBusCounts.get(otherPlan.busId)??0)+1)
+                    return false
+                  }
+                }
+          `
+           mutualSource=mutualSource.slice(0,b2)+strict+mutualSource.slice(b2)
+          }
+          writeFileSync(root+"lib/route-bus/plan-static-clearance.ts",staticSource)
+          writeFileSync(root+"lib/route-bus/plan-mutual-clearance.ts",mutualSource)
+          
+          const {FanoutSolver}=await import(root+"lib/fanout-solver")
+          const {validateRoutedCopperDrc}=await import(root+"lib/validate-routed-copper-drc")
+          const {distance,distancePointToObstacle}=await import(root+"lib/geometry")
+          const {getPlanVias}=await import(root+"lib/route-bus/plan-copper")
+          const sample=process.env.SAMPLE!
+          const folder="../../captures/"+sample
+          const report=JSON.parse(readFileSync(folder+"/report.json","utf8"))
+          const entry=report.solvers.find(s=>s.name==="FanoutSolver")
+          const args=JSON.parse(gunzipSync(readFileSync(folder+"/solver-"+entry.id+"-input.json.gz")).toString())
+          const [input,originalOptions]=args
+          const options=mode==="before"?originalOptions:{...originalOptions,allowSameNetMerges:true}
+          const solver=new FanoutSolver(input,options)
+          const wide=Reflect.get(solver,"preparedBuses").filter(b=>b.connections.length>1).map(b=>({bus:b.busId,count:b.connections.length,direction:b.direction,edge:b.exitEdge}))
+          const start=performance.now()
+          while(!solver.solved&&!solver.failed&&performance.now()-start<600000)solver.step()
+          const best=Reflect.get(solver,"bestAttempt")
+          if(!best)throw Error("No native attempt captured")
+          const drc=validateRoutedCopperDrc({inputSrj:input,routedSrj:best.outputSrj,clearance:solver.config.clearance,allowBlindAndBuriedVias:solver.config.allowBlindAndBuriedVias})
+          const vias=best.plans.flatMap(p=>getPlanVias(p))
+          let viaPadOverlaps=0,holePairs=0
+          for(const via of vias)for(const pad of input.obstacles)if(!pad.isCopperPour&&pad.layers.some(l=>via.spanLayers.includes(l))&&distancePointToObstacle(via.center,pad)<via.diameter/2-1e-9)viaPadOverlaps++
+          for(let i=0;i<vias.length;i++)for(let j=i+1;j<vias.length;j++)if(vias[i].spanLayers.some(l=>vias[j].spanLayers.includes(l))&&distance(vias[i].center,vias[j].center)<(vias[i].holeDiameter+vias[j].holeDiameter)/2+(input.minPlatedHoleDrillEdgeToDrillEdgeClearance??0)-1e-9)holePairs++
+          const summary={sample,mode,elapsedMs:performance.now()-start,requested:input.connections.length,escapes:best.plans.length,planes:best.plans.filter(p=>p.termination.type==="plane").length,vias:vias.length,viaPadOverlaps,holePairs,drcValid:drc.valid,issues:drc.issues,solved:solver.solved,failed:solver.failed,assignments:solver.attempts.length,wide,prepareHash:new Bun.CryptoHasher("sha256").update(prepared).digest("hex")}
+          writeFileSync(mode+".json",JSON.stringify({summary,plans:best.plans,output:best.outputSrj,attempts:solver.attempts}))
+          console.log("COMPLETION_RESULT",JSON.stringify(summary))
+          TS
+          cd core/replay
+          bun run.ts before
+          bun run.ts safe_merges
+          bun run.ts safe_merges_local_direction
+          python3 - <<'PY'
+          import json
+          rows=[json.load(open(mode+'.json'))['summary'] for mode in ['before','safe_merges','safe_merges_local_direction']]
+          assert all(row['drcValid'] for row in rows)
+          print('COMPLETION_COMPARISON',json.dumps(rows))
+          baseline=set(p['connectionName'] for p in json.load(open('before.json'))['plans'])
+          for mode in ['safe_merges','safe_merges_local_direction']:
+              current=set(p['connectionName'] for p in json.load(open(mode+'.json'))['plans'])
+              print('COMPLETION_DELTA',json.dumps({'mode':mode,'gained':sorted(current-baseline),'lost':sorted(baseline-current)}))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: completion-${{ matrix.sample }}
+          path: core/replay/*.json*
+      - name: Export native constructor input and rejection geometry
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import base64,zipfile,io
+          from pathlib import Path
+          stream=io.BytesIO()
+          with zipfile.ZipFile(stream,'w',zipfile.ZIP_DEFLATED) as z:
+              for name in ['input.json.gz','rejections.json.gz']:
+                  p=Path('core/replay')/name
+                  if p.exists():z.writestr(name,p.read_bytes())
+          print('COMPLETION_INPUT_BEGIN')
+          s=base64.b64encode(stream.getvalue()).decode()
+          for i in range(0,len(s),8000):print(s[i:i+8000])
+          print('COMPLETION_INPUT_END')
+          PY
