@@ -1,0 +1,66 @@
+name: Diagnose native fanout source candidate gaps on Core 2461
+on:
+  push:
+    branches: [analysis/e2e-fanout-candidates-2461]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  native:
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        sample: [butterstick-original, butterstick-spaced, glider-original, glider-spaced, h616-original, h616-spaced, icepi-original, icepi-spaced, imx6-original, imx6-spaced]
+        mode: [dedicated, source-tracks, adjacent-sites]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Install exact native fanout and autorouter
+        run: |
+          mkdir -p replay
+          cat > replay/package.json <<'JSON'
+          {"name":"native-2461-probe","private":true,"type":"module","dependencies":{"@tscircuit/fanout-solver":"0.0.104","@tscircuit/capacity-autorouter":"0.0.1156","graphics-debug":"0.0.99"}}
+          JSON
+          cd replay
+          bun install --ignore-scripts --backend copyfile
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: 3ff957ff75d6d5eb7c3035623fbf10fdd7fda3a3
+          path: dedicated-source
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: 478f76a452c9cd27a06c70bb66d9d9f1b94109a6
+          path: source-tracks
+      - name: Wait for original full-circuit capture
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh run watch 45070654984 --repo tscircuit/tscircuit-autorouter --exit-status --interval 30
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45070654984
+          name: full-circuit-interception-${{ matrix.sample }}
+          path: captures
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Probe existing source candidates with dedicated vias
+        env:
+          SAMPLE: ${{ matrix.sample }}
+          MODE: ${{ matrix.mode }}
+        run: |
+          cp -R dedicated-source/lib/. replay/node_modules/@tscircuit/fanout-solver/lib/
+          cp experiments/e2e-samples-20261120/probe2461.ts replay/run.ts
+          cp experiments/e2e-samples-20261120/patch-adjacent-sites2461.py replay/patch.py
+          if [ "$MODE" = source-tracks ]; then cp source-tracks/lib/route-bus/route-analytic-boundary-alternatives.ts replay/node_modules/@tscircuit/fanout-solver/lib/route-bus/; fi
+          cd replay
+          if [ "$MODE" = adjacent-sites ]; then python3 patch.py; fi
+          bun run.ts
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: native-${{ matrix.sample }}-${{ matrix.mode }}
+          path: replay/results
