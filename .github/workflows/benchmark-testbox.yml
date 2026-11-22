@@ -22,15 +22,15 @@ jobs:
           bun install --frozen-lockfile
           mkdir -p ../../../board-benchmark-results
           cp bun.lock ../../../board-benchmark-results/bun.lock
-      - name: Preserve hard constraints during graph completion
-        run: bun experiments/boards-3278-no-pours/apply-hard-constraints.mjs experiments/boards-3278-no-pours/runtime experiments/boards-3278-no-pours/runtime/node_modules/@tscircuit/capacity-autorouter experiments/boards-3278-no-pours/fix-provenance.json
+      - name: Protect immutable copper during greedy completion
+        run: bun experiments/boards-3278-no-pours/apply-fixed-copper-constraints.mjs experiments/boards-3278-no-pours/runtime experiments/boards-3278-no-pours/runtime/node_modules/@tscircuit/capacity-autorouter experiments/boards-3278-no-pours/fixed-copper-provenance.json
       - name: Run all 19 TSX boards with default routing
         env:
-          BOARD_VARIANT: fix
-          BOARD_FIX_PROVENANCE: experiments/boards-3278-no-pours/fix-provenance.json
+          BOARD_VARIANT: fixed-copper
+          BOARD_FIX_PROVENANCE: experiments/boards-3278-no-pours/fixed-copper-provenance.json
         run: python3 experiments/boards-3278-no-pours/run.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: boards-tscircuit-3278-no-pours-fix
+          name: boards-tscircuit-3278-no-pours-fixed-copper
           path: board-benchmark-results/
