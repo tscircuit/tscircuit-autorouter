@@ -1,7 +1,7 @@
-name: Test existing winding routing for blocked same-layer signal escapes
+name: Test correct ownership of source pads in winding clearance
 on:
   push:
-    branches: [analysis/e2e-source-layer-winding-2461]
+    branches: [analysis/e2e-winding-own-pad-2461]
 permissions:
   contents: read
   actions: read
@@ -13,7 +13,7 @@ jobs:
       fail-fast: false
       matrix:
         sample: [butterstick-original, butterstick-spaced, glider-original, glider-spaced, h616-original, h616-spaced, icepi-original, icepi-spaced, imx6-original, imx6-spaced]
-        mode: [source-layer-winding]
+        mode: [own-pad, source-winding-own-pad]
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
@@ -56,10 +56,12 @@ jobs:
           cp experiments/e2e-samples-20261120/probe2461.ts replay/run.ts
           cp experiments/e2e-samples-20261120/patch-adjacent-sites2461.py replay/patch.py
           cp experiments/e2e-samples-20261120/patch-source-layer-winding2461.py replay/heading-patch.py
+          cp experiments/e2e-samples-20261120/patch-winding-own-pad2461.py replay/own-pad.py
           if [ "$MODE" = source-tracks ]; then cp source-tracks/lib/route-bus/route-analytic-boundary-alternatives.ts replay/node_modules/@tscircuit/fanout-solver/lib/route-bus/; fi
           cd replay
           if [ "$MODE" = adjacent-sites ]; then python3 patch.py; fi
-          python3 heading-patch.py
+          if [ "$MODE" = source-winding-own-pad ]; then python3 heading-patch.py; fi
+          python3 own-pad.py
           timeout 660s bun run.ts
       - uses: actions/upload-artifact@v4
         if: always()
