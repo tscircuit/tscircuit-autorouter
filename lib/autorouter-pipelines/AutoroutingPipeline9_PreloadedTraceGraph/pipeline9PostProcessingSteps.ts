@@ -154,7 +154,8 @@ export const pipeline9PostProcessingSteps = [
             defaultViaDiameter: pipeline.viaDiameter,
             layerCount: pipeline.srj.layerCount,
             minTraceToPadEdgeClearance: pipeline.srj.minTraceToPadEdgeClearance,
-            minTraceToHoleEdgeClearance: pipeline.srj.minTraceToHoleEdgeClearance,
+            minTraceToHoleEdgeClearance:
+              pipeline.srj.minTraceToHoleEdgeClearance,
             minBoardEdgeClearance: pipeline.srj.minBoardEdgeClearance,
             otherHdRoutes,
             enableCrossingViaReduction: true,
