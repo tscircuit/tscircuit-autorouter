@@ -5,16 +5,16 @@ import type { HighDensityRoute } from "lib/types/high-density-types"
 
 test("interior widening respects the copper margin at a board cutout", (): void => {
   const board: SimpleRouteJson = {
-    bounds: { minX: -1, maxX: 11, minY: -1, maxY: 2 },
+    bounds: { minX: -6, maxX: 15, minY: -1, maxY: 2 },
     outline: [
-      { x: -1, y: -1 },
-      { x: 11, y: -1 },
-      { x: 11, y: 2 },
+      { x: -6, y: -1 },
+      { x: 15, y: -1 },
+      { x: 15, y: 2 },
       { x: 7, y: 2 },
       { x: 7, y: 0.15 },
       { x: 4, y: 0.15 },
       { x: 4, y: 2 },
-      { x: -1, y: 2 },
+      { x: -6, y: 2 },
     ],
     minBoardEdgeClearance: 0.08,
     connections: [],
@@ -27,7 +27,11 @@ test("interior widening respects the copper margin at a board cutout", (): void 
     traceThickness: 0.1,
     viaDiameter: 0.3,
     vias: [],
-    route: Array.from({ length: 11 }, (_, x) => ({ x, y: 0, z: 0 })),
+    route: Array.from({ length: 20 }, (_, index) => ({
+      x: index - 5,
+      y: 0,
+      z: 0,
+    })),
   }
   const refined = widenClearInteriorSegments({
     board,
@@ -39,5 +43,9 @@ test("interior widening respects the copper margin at a board cutout", (): void 
   for (const point of nearCutout) {
     expect(point.traceThickness ?? refined.traceThickness).toBe(0.1)
   }
-  expect(refined.route.some((point) => point.traceThickness === 0.22)).toBe(true)
+  for (const x of [-2, 11]) {
+    expect(refined.route.find((point) => point.x === x)?.traceThickness).toBe(
+      0.22,
+    )
+  }
 })

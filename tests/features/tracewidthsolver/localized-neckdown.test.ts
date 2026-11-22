@@ -75,6 +75,18 @@ test("nominal-width copper fits on both sides of an interior neckdown", (): void
       )
       expect(segment!.width).toBe(0.1)
     }
+    // Reversing a constant-width route moves each outgoing width to its
+    // opposite endpoint. The wider-end check on the 4–5 mm neckdown also
+    // sees the wire immediately before it in the original routing direction.
+    const beforeNeckdownX = route.route[0]!.x === 0 ? 3 : 6
+    expect(
+      exportedRoute.find(
+        (point) =>
+          point.route_type === "wire" &&
+          point.layer === "top" &&
+          point.x === beforeNeckdownX,
+      ),
+    ).toMatchObject({ width: 0.1 })
     for (const point of exportedRoute) {
       if (point.route_type === "wire" && [0, 10, 19].includes(point.x)) {
         expect(point.width).toBe(0.1)
