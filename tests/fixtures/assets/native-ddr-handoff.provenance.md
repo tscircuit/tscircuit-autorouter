@@ -12,3 +12,7 @@ The two `*-native-ddr-handoff.srj.json.gz` fixtures come from rendering the DDR 
 ## Earlier i.MX6 clearance regressions
 
 The 498-component board used by the repair regression has 1,926 pad and hole obstacles. Its 17 fixed data-byte traces come directly from that checkpoint’s Circuit JSON. The force-improvement fixture retains the five incoming routes in cell `cmn_459` and the single 0.4 mm through via `checkpoint_via_23`. At this stage the router uses the via’s circular footprint. The unguarded force candidate reduces the copper gap from 0.0512 mm to 0.0040 mm. [Original clearance regression](https://github.com/tscircuit/tscircuit-autorouter/pull/3952)
+
+## iCEPi DDR gap crossings
+
+`icepi-native-ddr-gap-ports.srj.json.gz` captures the remaining phase after both eight-net byte phases in `tscircuit@0.0.3261`, Core `0.0.2439` and capacity-autorouter `0.0.1142`. Core supplies 445 SMT pads, 16 fixed traces and 34 remaining nets. The two byte-phase connection lists provide the names for the full-board connectivity snapshot. [Native TSX and board source](https://github.com/ShiboSoftwareDev/core-ddr-benchmark/tree/24dc44c166d4258c3538f8b1f66953f1b6f58690/circuits)

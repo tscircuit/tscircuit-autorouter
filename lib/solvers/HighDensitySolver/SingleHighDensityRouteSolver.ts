@@ -806,7 +806,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     return (node.z * this.gridHeight + yIndex) * this.gridWidth + xIndex
   }
 
-  getNeighbors(node: Node) {
+  getNeighbors(node: Node): Node[] {
     const neighbors: Node[] = []
     let sharedPlanarObstacleQuery: PlanarObstacleQuery | undefined
     let queriedPlanarNeighbors = false
@@ -887,7 +887,8 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       }
     }
 
-    // Add via neighbors for all other layers (a via can connect any layer to any other layer)
+    // A through-via uses the same XY clearance on every destination layer.
+    let viaIsClear: boolean | undefined
     for (const newZ of this.availableZ) {
       if (newZ === node.z) continue
 
@@ -901,19 +902,19 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
         parent: node,
       }
 
-      if (
-        !this.exploredNodes.has(this.getNodeKey(viaNeighbor)) &&
-        !this.isNodeTooCloseToEdge(viaNeighbor, true) &&
-        !this.isNodeTooCloseToObstacle(
-          viaNeighbor,
-          this.viaDiameter / 2 + this.obstacleMargin / 2,
-          true,
-        )
-      ) {
-        this.setNodeCosts(viaNeighbor)
-
-        neighbors.push(viaNeighbor)
+      if (this.exploredNodes.has(this.getNodeKey(viaNeighbor))) continue
+      if (viaIsClear === undefined) {
+        viaIsClear =
+          !this.isNodeTooCloseToEdge(viaNeighbor, true) &&
+          !this.isNodeTooCloseToObstacle(
+            viaNeighbor,
+            this.viaDiameter / 2 + this.obstacleMargin / 2,
+            true,
+          )
       }
+      if (!viaIsClear) break
+      this.setNodeCosts(viaNeighbor)
+      neighbors.push(viaNeighbor)
     }
 
     return neighbors
