@@ -1,7 +1,7 @@
-name: Diagnose native fanout source candidate gaps on Core 2461
+name: Honor explicit track-candidate priorities before nearby grid alternatives
 on:
   push:
-    branches: [analysis/e2e-fanout-candidates-2461]
+    branches: [analysis/e2e-preferred-track-priority-2461]
 permissions:
   contents: read
   actions: read
@@ -13,7 +13,7 @@ jobs:
       fail-fast: false
       matrix:
         sample: [butterstick-original, butterstick-spaced, glider-original, glider-spaced, h616-original, h616-spaced, icepi-original, icepi-spaced, imx6-original, imx6-spaced]
-        mode: [dedicated, source-tracks, adjacent-sites]
+        mode: [preferred-priority, source-preference-priority]
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
@@ -55,10 +55,14 @@ jobs:
           cp -R dedicated-source/lib/. replay/node_modules/@tscircuit/fanout-solver/lib/
           cp experiments/e2e-samples-20261120/probe2461.ts replay/run.ts
           cp experiments/e2e-samples-20261120/patch-adjacent-sites2461.py replay/patch.py
-          if [ "$MODE" = source-tracks ]; then cp source-tracks/lib/route-bus/route-analytic-boundary-alternatives.ts replay/node_modules/@tscircuit/fanout-solver/lib/route-bus/; fi
+          cp experiments/e2e-samples-20261120/patch-source-track-preference2461.py replay/heading-patch.py
+          cp experiments/e2e-samples-20261120/patch-preferred-priority2461.py replay/priority-patch.py
+          cp source-tracks/lib/route-bus/route-analytic-boundary-alternatives.ts replay/node_modules/@tscircuit/fanout-solver/lib/route-bus/
           cd replay
           if [ "$MODE" = adjacent-sites ]; then python3 patch.py; fi
-          bun run.ts
+          if [ "$MODE" = source-preference-priority ]; then python3 heading-patch.py; fi
+          python3 priority-patch.py
+          timeout 660s bun run.ts
       - uses: actions/upload-artifact@v4
         if: always()
         with:
