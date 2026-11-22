@@ -1,0 +1,326 @@
+{
+  "sourceBase": "c5a37f9ce2381233366048de693c4f74e754c108",
+  "sourceFix": "2a7f5271ecca991c77832d4152f17bc9b1afa92e",
+  "inputSha256": "47ec3e0ece43d6d3c22646a9b03e5f16b9781bd6d0d0fa3206b0df104cb460e5",
+  "before": {
+    "solved": true,
+    "error": null,
+    "routeCount": 75,
+    "impossibleSingleLayerCrossings": 26,
+    "regionsWithImpossibleCrossings": 22,
+    "stats": {
+      "initialAssignmentCount": 374,
+      "initiallyRoutedRouteCount": 26,
+      "neverSuccessfullyRoutedRouteCount": 0,
+      "acceptedGreedyFinalRouteOnTimeout": true,
+      "greedyFinalRouteIter": 0,
+      "finalRoutingStrategy": "greedy",
+      "greedyFinalRouteRemainingRouteCount": 25,
+      "greedyFinalRouteMaxIterations": 50000,
+      "maxRegionCost": 131.64800000000048,
+      "totalRegionCost": 1141.5389443565196,
+      "bestMaxRegionCost": 131.64800000000048,
+      "bestTotalRegionCost": 1141.5389443565196
+    },
+    "targetPath": [
+      {
+        "regionId": 3487,
+        "fromPortId": 34918,
+        "toPortId": 34970
+      },
+      {
+        "regionId": 6617,
+        "fromPortId": 45486,
+        "toPortId": 34918
+      },
+      {
+        "regionId": 9938,
+        "fromPortId": 54909,
+        "toPortId": 45486
+      },
+      {
+        "regionId": 11838,
+        "fromPortId": 118626,
+        "toPortId": 59905
+      },
+      {
+        "regionId": 11850,
+        "fromPortId": 59965,
+        "toPortId": 59996
+      },
+      {
+        "regionId": 11855,
+        "fromPortId": 60071,
+        "toPortId": 59965
+      },
+      {
+        "regionId": 11998,
+        "fromPortId": 60429,
+        "toPortId": 60438
+      },
+      {
+        "regionId": 12000,
+        "fromPortId": 60442,
+        "toPortId": 60429
+      },
+      {
+        "regionId": 12031,
+        "fromPortId": 60504,
+        "toPortId": 54909
+      },
+      {
+        "regionId": 12037,
+        "fromPortId": 60516,
+        "toPortId": 60504
+      },
+      {
+        "regionId": 12042,
+        "fromPortId": 60526,
+        "toPortId": 60516
+      },
+      {
+        "regionId": 12048,
+        "fromPortId": 60538,
+        "toPortId": 60526
+      },
+      {
+        "regionId": 12053,
+        "fromPortId": 60548,
+        "toPortId": 60538
+      },
+      {
+        "regionId": 12059,
+        "fromPortId": 60563,
+        "toPortId": 60548
+      },
+      {
+        "regionId": 12065,
+        "fromPortId": 60577,
+        "toPortId": 60563
+      },
+      {
+        "regionId": 12071,
+        "fromPortId": 60589,
+        "toPortId": 60577
+      },
+      {
+        "regionId": 12077,
+        "fromPortId": 60601,
+        "toPortId": 60589
+      },
+      {
+        "regionId": 12083,
+        "fromPortId": 60613,
+        "toPortId": 60601
+      },
+      {
+        "regionId": 12089,
+        "fromPortId": 60625,
+        "toPortId": 60613
+      },
+      {
+        "regionId": 12090,
+        "fromPortId": 59905,
+        "toPortId": 60625
+      },
+      {
+        "regionId": 12143,
+        "fromPortId": 34970,
+        "toPortId": 60071
+      },
+      {
+        "regionId": 12372,
+        "fromPortId": 61384,
+        "toPortId": 61385
+      },
+      {
+        "regionId": 12377,
+        "fromPortId": 61394,
+        "toPortId": 61384
+      },
+      {
+        "regionId": 12384,
+        "fromPortId": 60438,
+        "toPortId": 61394
+      },
+      {
+        "regionId": 12386,
+        "fromPortId": 61413,
+        "toPortId": 60442
+      },
+      {
+        "regionId": 12518,
+        "fromPortId": 61385,
+        "toPortId": 61808
+      },
+      {
+        "regionId": 12519,
+        "fromPortId": 61808,
+        "toPortId": 61821
+      },
+      {
+        "regionId": 12532,
+        "fromPortId": 61849,
+        "toPortId": 61413
+      },
+      {
+        "regionId": 12538,
+        "fromPortId": 61868,
+        "toPortId": 61849
+      },
+      {
+        "regionId": 12945,
+        "fromPortId": 62997,
+        "toPortId": 61868
+      },
+      {
+        "regionId": 12986,
+        "fromPortId": 61821,
+        "toPortId": 118627
+      },
+      {
+        "regionId": 13049,
+        "fromPortId": 59996,
+        "toPortId": 62997
+      }
+    ]
+  },
+  "after": {
+    "solved": true,
+    "error": null,
+    "routeCount": 75,
+    "impossibleSingleLayerCrossings": 0,
+    "regionsWithImpossibleCrossings": 0,
+    "stats": {
+      "initialAssignmentCount": 374,
+      "initiallyRoutedRouteCount": 26,
+      "neverSuccessfullyRoutedRouteCount": 0,
+      "acceptedGreedyFinalRouteOnTimeout": true,
+      "greedyFinalRouteIter": 0,
+      "finalRoutingStrategy": "greedy",
+      "greedyFinalRouteRemainingRouteCount": 25,
+      "greedyFinalRouteMaxIterations": 50000,
+      "maxRegionCost": 118.58000000000001,
+      "totalRegionCost": 855.5145500789909,
+      "bestMaxRegionCost": 118.58000000000001,
+      "bestTotalRegionCost": 855.5145500789909
+    },
+    "targetPath": [
+      {
+        "regionId": 3487,
+        "fromPortId": 34918,
+        "toPortId": 34972
+      },
+      {
+        "regionId": 6617,
+        "fromPortId": 45486,
+        "toPortId": 34918
+      },
+      {
+        "regionId": 9938,
+        "fromPortId": 54909,
+        "toPortId": 45486
+      },
+      {
+        "regionId": 11838,
+        "fromPortId": 118626,
+        "toPortId": 59905
+      },
+      {
+        "regionId": 11850,
+        "fromPortId": 59994,
+        "toPortId": 59996
+      },
+      {
+        "regionId": 12031,
+        "fromPortId": 60504,
+        "toPortId": 54909
+      },
+      {
+        "regionId": 12037,
+        "fromPortId": 60516,
+        "toPortId": 60504
+      },
+      {
+        "regionId": 12042,
+        "fromPortId": 60526,
+        "toPortId": 60516
+      },
+      {
+        "regionId": 12048,
+        "fromPortId": 60538,
+        "toPortId": 60526
+      },
+      {
+        "regionId": 12053,
+        "fromPortId": 60548,
+        "toPortId": 60538
+      },
+      {
+        "regionId": 12059,
+        "fromPortId": 60563,
+        "toPortId": 60548
+      },
+      {
+        "regionId": 12065,
+        "fromPortId": 60577,
+        "toPortId": 60563
+      },
+      {
+        "regionId": 12071,
+        "fromPortId": 60589,
+        "toPortId": 60577
+      },
+      {
+        "regionId": 12077,
+        "fromPortId": 60601,
+        "toPortId": 60589
+      },
+      {
+        "regionId": 12083,
+        "fromPortId": 60613,
+        "toPortId": 60601
+      },
+      {
+        "regionId": 12089,
+        "fromPortId": 60625,
+        "toPortId": 60613
+      },
+      {
+        "regionId": 12090,
+        "fromPortId": 59905,
+        "toPortId": 60625
+      },
+      {
+        "regionId": 12143,
+        "fromPortId": 34972,
+        "toPortId": 60866
+      },
+      {
+        "regionId": 12671,
+        "fromPortId": 60866,
+        "toPortId": 59994
+      },
+      {
+        "regionId": 12986,
+        "fromPortId": 63050,
+        "toPortId": 118627
+      },
+      {
+        "regionId": 13046,
+        "fromPortId": 63839,
+        "toPortId": 63050
+      },
+      {
+        "regionId": 13049,
+        "fromPortId": 59996,
+        "toPortId": 63849
+      },
+      {
+        "regionId": 13174,
+        "fromPortId": 63849,
+        "toPortId": 63839
+      }
+    ]
+  }
+}
