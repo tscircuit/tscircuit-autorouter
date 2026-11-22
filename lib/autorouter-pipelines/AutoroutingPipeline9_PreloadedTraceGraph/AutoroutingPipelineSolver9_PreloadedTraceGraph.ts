@@ -1,4 +1,3 @@
-import type { Pipeline9CopperClearanceRepairSolver } from "./Pipeline9CopperClearanceRepairSolver"
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import type { Pipeline9EffortCleanupSolver } from "./Pipeline9EffortCleanupSolver"
 import type { RectDiffPipeline } from "@tscircuit/rectdiff"
@@ -119,7 +118,6 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   traceSimplificationSolver?: TraceSimplificationSolver
   mutatedPreloadedTraceSimplificationSolver?: TraceSimplificationSolver
   lengthMatchingPostProcessingSolver?: LengthMatchingPostProcessingSolver
-  copperClearanceRepairSolver?: Pipeline9CopperClearanceRepairSolver
   powerTraceExpansionSolver?: PowerTraceExpansionSolver
   availableSegmentPointSolver?: AvailableSegmentPointSolver
   portPointPathingSolver?: TinyHypergraphPortPointPathingSolver
@@ -546,12 +544,6 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   }
 
   getNewTracesBeforePowerExpansion(): SimplifiedPcbTraces {
-    return this.copperClearanceRepairSolver?.solved
-      ? this.copperClearanceRepairSolver.getOutput()
-      : this.getNewTracesAfterLengthMatching()
-  }
-
-  getNewTracesAfterLengthMatching(): SimplifiedPcbTraces {
     if (!this.highDensityRouteSolver) {
       throw new Error("Cannot get new traces before high-density routing")
     }

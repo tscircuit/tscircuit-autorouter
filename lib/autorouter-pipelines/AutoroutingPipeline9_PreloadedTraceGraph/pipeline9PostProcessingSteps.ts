@@ -1,4 +1,3 @@
-import { Pipeline9CopperClearanceRepairSolver } from "./Pipeline9CopperClearanceRepairSolver"
 import { getDifferentialPairsForPostProcessing } from "lib/utils/getDifferentialPairsForPostProcessing"
 import { Pipeline9EffortCleanupSolver } from "./Pipeline9EffortCleanupSolver"
 import { createPipeline9AutoroutingDrcEvaluator } from "./createPipeline9AutoroutingDrcEvaluator"
@@ -155,6 +154,7 @@ export const pipeline9PostProcessingSteps = [
             defaultViaDiameter: pipeline.viaDiameter,
             layerCount: pipeline.srj.layerCount,
             minTraceToPadEdgeClearance: pipeline.srj.minTraceToPadEdgeClearance,
+            minTraceToHoleEdgeClearance: pipeline.srj.minTraceToHoleEdgeClearance,
             minBoardEdgeClearance: pipeline.srj.minBoardEdgeClearance,
             otherHdRoutes,
             enableCrossingViaReduction: true,
@@ -239,16 +239,6 @@ export const pipeline9PostProcessingSteps = [
         },
       ]
     },
-  }),
-  definePipeline9Step({
-    solverName: "copperClearanceRepairSolver",
-    solverClass: Pipeline9CopperClearanceRepairSolver,
-    getConstructorParams: (pipeline) => [
-      { ...pipeline.originalSrj, traces: pipeline.getUpdatedPreloadedTraces() },
-      pipeline.srjWithPointPairs!,
-      pipeline.getNewTracesAfterLengthMatching(),
-      pipeline.pipeline9JointDrcRepairSolver!.stats.regionalB01RepairRemainingDrcIssueCount ?? 0,
-    ],
   }),
   definePipeline9Step({
     solverName: "powerTraceExpansionSolver",

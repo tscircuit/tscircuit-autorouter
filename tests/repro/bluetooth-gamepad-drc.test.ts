@@ -1,4 +1,4 @@
-import { expect, test } from "bun:test"
+import { beforeAll, expect, test } from "bun:test"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { getBugReportSnapshotSvg } from "lib/testing/getBugReportSnapshotSvg"
@@ -46,15 +46,18 @@ function checkClock(
   expect(distances.get(key(crystal)) ?? Infinity).toBeLessThanOrEqual(10)
 }
 
-test("copper DRC and crystal routing on the four-layer Bluetooth gamepad", async (): Promise<void> => {
-  const input = structuredClone(capturedInput) as SimpleRouteJson
-  const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(input, {
-    cacheProvider: null,
-  })
+const input = structuredClone(capturedInput) as SimpleRouteJson
+const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(input, {
+  cacheProvider: null,
+})
+
+beforeAll(() => {
   solver.solve()
   expect(solver.solved).toBe(true)
   expect(solver.failed).toBe(false)
+})
 
+test("copper DRC on the four-layer Bluetooth gamepad", async (): Promise<void> => {
   const snapshotInput = {
     inputSrj: input,
     srjWithPointPairs: solver.srjWithPointPairs!,
@@ -66,19 +69,22 @@ test("copper DRC and crystal routing on the four-layer Bluetooth gamepad", async
       includeTraceContinuity: false,
     },
   }
-  for (const clock of ["source_net_19", "source_net_20"]) {
-    const terminals = input.connections.find((c) => c.name === clock)!.pointsToConnect
-    const routes = snapshotInput.routedTraces.filter((trace) => trace.connection_name === clock)
-    checkClock(routes, terminals[0]!, terminals[1]!, terminals[2]!)
-  }
   const { errors, locationAwareErrors } = evaluateRelaxedDrc(snapshotInput)
   expect(locationAwareErrors).toHaveLength(errors.length)
   const contacts = errors.filter((error) =>
     error.message.includes("accidental contact"),
   )
   expect(contacts).toHaveLength(0)
-  expect(errors.length).toMatchInlineSnapshot(`0`)
   await expect(
     getBugReportSnapshotSvg(snapshotInput, { showErrorLocations: true }),
   ).toMatchSvgSnapshot(import.meta.path)
+  expect(errors).toHaveLength(0)
+})
+
+test("the MCU-to-crystal routes meet the board's 10 mm limit", () => {
+  for (const clock of ["source_net_19", "source_net_20"]) {
+    const terminals = input.connections.find((c) => c.name === clock)!.pointsToConnect
+    const routes = solver.getOutputSimplifiedPcbTraces().filter((trace) => trace.connection_name === clock)
+    checkClock(routes, terminals[0]!, terminals[1]!, terminals[2]!)
+  }
 })
