@@ -1,7 +1,7 @@
-name: Diagnose native fanout source candidate gaps on Core 2461
+name: Test analytic bus backtracking on native full-circuit inputs
 on:
   push:
-    branches: [analysis/e2e-fanout-candidates-2461]
+    branches: [analysis/e2e-fanout-backtracking-2461]
 permissions:
   contents: read
   actions: read
@@ -13,7 +13,7 @@ jobs:
       fail-fast: false
       matrix:
         sample: [butterstick-original, butterstick-spaced, glider-original, glider-spaced, h616-original, h616-spaced, icepi-original, icepi-spaced, imx6-original, imx6-spaced]
-        mode: [dedicated, source-tracks, adjacent-sites]
+        mode: [backtracking]
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
@@ -58,7 +58,14 @@ jobs:
           if [ "$MODE" = source-tracks ]; then cp source-tracks/lib/route-bus/route-analytic-boundary-alternatives.ts replay/node_modules/@tscircuit/fanout-solver/lib/route-bus/; fi
           cd replay
           if [ "$MODE" = adjacent-sites ]; then python3 patch.py; fi
-          bun run.ts
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path("node_modules/@tscircuit/fanout-solver/lib/route-bus/route-analytic-boundary-alternatives.ts")
+          s=p.read_text();marker="    if (maxAlternatives === 1) return\n"
+          assert s.count(marker)==1
+          p.write_text(s.replace(marker,""))
+          PY
+          timeout 660s bun run.ts
       - uses: actions/upload-artifact@v4
         if: always()
         with:
