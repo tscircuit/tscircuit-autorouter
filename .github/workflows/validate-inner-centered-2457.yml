@@ -12,7 +12,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: tscircuit/fanout-solver
-          ref: 7e77a91b4878788495984fcdff6a0829d82508d9
+          ref: 6a1d7c4560a337f8397b3cc1283841157a625084
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
