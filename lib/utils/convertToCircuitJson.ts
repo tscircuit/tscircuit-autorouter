@@ -763,6 +763,10 @@ export function createPcbPadElements(
   const addedPlatedHoleIds = new Map<string, Set<string>>()
   const portPositionMap = getPcbPortPositionMap(srj)
   const declaredPcbPortIds = getSrjDeclaredPcbPortIds(srj)
+  const connectionReferences = srj.connections.map((connection) => ({
+    connection,
+    references: getSrjDeclaredConnectionReferences(connection),
+  }))
 
   for (const [obstacleIndex, obstacle] of srj.obstacles.entries()) {
     if (obstacle.isNonPlatedHole) {
@@ -835,12 +839,10 @@ export function createPcbPadElements(
     // Legacy SRJs may identify pad ownership only by the connection name.
     // Require both electrical ownership and the terminal's physical center.
     if (candidatePortIds.length === 0) {
-      for (const connection of srj.connections) {
+      for (const { connection, references } of connectionReferences) {
         if (
           !obstacle.netIsAssignable &&
-          !getSrjDeclaredConnectionReferences(connection).some((id) =>
-            connectedTo.includes(id),
-          )
+          !references.some((id) => connectedTo.includes(id))
         )
           continue
         for (const point of connection.pointsToConnect) {
