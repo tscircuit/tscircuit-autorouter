@@ -1,5 +1,5 @@
 from pathlib import Path
-import hashlib, json, re, sys
+import hashlib, json, re, subprocess, sys
 
 runtime = Path(sys.argv[1])
 package = runtime / 'node_modules/@tscircuit/capacity-autorouter'
@@ -15,7 +15,12 @@ return this.nodeWithPortPoints.portPoints.some(port=>(port.rootConnectionName??p
 }'''
 provenance = []
 for path in sorted((package / 'dist').glob('**/*.js')):
-    source = path.read_text()
+    outer = path.read_text()
+    worker = re.search(r'''workerSource:('(?:\\.|[^'\\])*'|"(?:\\.|[^"\\])*")''', outer)
+    source = outer
+    if worker:
+        decoded = subprocess.run(['node', '-e', 'const fs=require("node:fs"),vm=require("node:vm");process.stdout.write(JSON.stringify(vm.runInNewContext(fs.readFileSync(0,"utf8"))))'], input=worker[1], text=True, capture_output=True, check=True)
+        source = json.loads(decoded.stdout)
     marker = 'getSolverName(){return"HighDensitySolverA01"}'
     if marker not in source:
         continue
@@ -37,17 +42,21 @@ for path in sorted((package / 'dist').glob('**/*.js')):
     assert constructor, path
     constructor_at = start + constructor.end()
     patched = patched[:constructor_at] + f',this.viaMinDistFromPort={constructor[1]}.viaMinDistFromPort' + patched[constructor_at:]
-    alias = re.search(r'([\w$]+)=class extends [\w$]+\{$', source[max(0, start - 150):start])
+    params = patched.index('viaDiameter:this.viaDiameter,', start)
+    params_at = params + len('viaDiameter:this.viaDiameter,')
+    patched = patched[:params_at] + 'viaMinDistFromPort:this.viaMinDistFromPort,' + patched[params_at:]
+    alias = re.search(r'(?:([\w$]+)=class|class ([\w$]+)) extends [\w$]+\{$', source[max(0, start - 150):start])
     assert alias, path
-    portfolio = re.search(r'new ' + re.escape(alias[1]) + r'\(\{nodeWithPortPoints:this.nodeWithPortPoints,([^}]+)', patched)
+    portfolio = re.search(r'new ' + re.escape(alias[1] or alias[2]) + r'\(\{nodeWithPortPoints:this.nodeWithPortPoints,([^}]+)', patched)
     assert portfolio, path
     margin = re.search(r'traceMargin:([\w$]+),', portfolio[1])
     assert margin, path
     field = 'viaMinDistFromPort:this.constructorParams.preservePhysicalGeometry&&this.constructorParams.allowBlindAndBuriedVias===false?((this.constructorParams.viaDiameter??.3)+(this.constructorParams.traceWidth??.15))/2+' + margin[1] + ':undefined,'
     config_at = portfolio.start(1)
     patched = patched[:config_at] + field + patched[config_at:]
-    path.write_text(patched)
-    provenance.append({'file': str(path.relative_to(package)), 'before': hashlib.sha256(source.encode()).hexdigest(), 'after': hashlib.sha256(patched.encode()).hexdigest(), 'a01Classes': 1})
+    output = outer[:worker.start(1)] + json.dumps(patched) + outer[worker.end(1):] if worker else patched
+    path.write_text(output)
+    provenance.append({'file': str(path.relative_to(package)), 'before': hashlib.sha256(outer.encode()).hexdigest(), 'after': hashlib.sha256(output.encode()).hexdigest(), 'a01Classes': 1, 'embeddedWorker': bool(worker)})
 assert any(row['file'] == 'dist/index.js' for row in provenance)
 report = {'sourceRepo': 'tscircuit/high-density-a01', 'sourceRepro': '429bb0b', 'sourceFix': '20d30e6', 'change': 'A01 supplied through-via port clearance, enabled only for physical regional repairs with blind/buried vias disabled. Original grid, order, costs and budgets retained.', 'bundles': provenance}
 Path(sys.argv[2]).write_text(json.dumps(report, indent=2) + '\n')
