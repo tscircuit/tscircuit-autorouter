@@ -720,17 +720,23 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       >()
       for (const point of this.nodeWithPortPoints.portPoints) {
         if (point.allowedZLayers) {
-          allowedZLayersByConnectionName.set(point.connectionName, point.allowedZLayers)
+          allowedZLayersByConnectionName.set(
+            point.connectionName,
+            point.allowedZLayers,
+          )
         }
       }
       if (allowedZLayersByConnectionName.size > 0) {
         const copperSegmentValidator = staticSegmentValidator
         staticSegmentValidator = (segment): boolean => {
-          const layers = allowedZLayersByConnectionName.get(segment.connectionName)
+          const layers = allowedZLayersByConnectionName.get(
+            segment.connectionName,
+          )
           if (
             layers &&
             segment.start.z === segment.end.z &&
-            (segment.start.x !== segment.end.x || segment.start.y !== segment.end.y) &&
+            (segment.start.x !== segment.end.x ||
+              segment.start.y !== segment.end.y) &&
             !layers.includes(segment.start.z)
           ) {
             return false

@@ -25,5 +25,7 @@ test("final native copper keeps its signal layers while through vias may cross i
       { route_type: "wire", x: 1, y: 0, width: 0.1, layer: "inner1" },
     ],
   }
-  expect(() => assertPreloadedTracesStayOnAllowedLayers({ ...input, traces: [forbidden] })).toThrow("forbidden signal layer")
+  expect(() =>
+    assertPreloadedTracesStayOnAllowedLayers({ ...input, traces: [forbidden] }),
+  ).toThrow("forbidden signal layer")
 })

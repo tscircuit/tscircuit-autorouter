@@ -792,7 +792,10 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       HighDensityRoute["connectionName"],
       ReadonlySet<number>
     >()
-    for (const [connectionName, section] of fallbackProblem.fixedRouteSectionsByConnectionName) {
+    for (const [
+      connectionName,
+      section,
+    ] of fallbackProblem.fixedRouteSectionsByConnectionName) {
       const masks = section.sourceRoutes.flatMap((route) => {
         if (route.allowedZLayers) return [route.allowedZLayers]
         return []
@@ -807,11 +810,13 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       captureSearchDebug: this.params.captureSearchDebug,
       nodeWithPortPoints: {
         ...fallbackProblem.nodeWithPortPoints,
-        portPoints: fallbackProblem.nodeWithPortPoints.portPoints.map((point) => {
-          const layers = allowedLayersByConnection.get(point.connectionName)
-          if (!layers) return point
-          return { ...point, allowedZLayers: [...layers] }
-        }),
+        portPoints: fallbackProblem.nodeWithPortPoints.portPoints.map(
+          (point) => {
+            const layers = allowedLayersByConnection.get(point.connectionName)
+            if (!layers) return point
+            return { ...point, allowedZLayers: [...layers] }
+          },
+        ),
       },
       allowedLayersByConnection,
       colorMap: this.colorMap,

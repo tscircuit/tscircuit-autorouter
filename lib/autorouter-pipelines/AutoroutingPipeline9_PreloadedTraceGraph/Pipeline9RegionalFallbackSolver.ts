@@ -21,7 +21,10 @@ import {
 
 type Pipeline9RegionalFallbackSolverParams = {
   nodeWithPortPoints: NodeWithPortPoints
-  allowedLayersByConnection?: ReadonlyMap<HighDensityRoute["connectionName"], ReadonlySet<number>>
+  allowedLayersByConnection?: ReadonlyMap<
+    HighDensityRoute["connectionName"],
+    ReadonlySet<number>
+  >
   colorMap: Record<string, string>
   connMap: ConnectivityMap
   viaDiameter: number
