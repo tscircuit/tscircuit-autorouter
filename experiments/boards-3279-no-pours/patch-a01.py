@@ -37,7 +37,9 @@ for path in sorted((package / 'dist').glob('**/*.js')):
     assert constructor, path
     constructor_at = start + constructor.end()
     patched = patched[:constructor_at] + f',this.viaMinDistFromPort={constructor[1]}.viaMinDistFromPort' + patched[constructor_at:]
-    portfolio = re.search(r'HIGH_DENSITY_A01\)\{return new [\w$]+\(\{nodeWithPortPoints:this.nodeWithPortPoints,([^}]+)', patched)
+    alias = re.search(r'([\w$]+)=class extends [\w$]+\{$', source[max(0, start - 150):start])
+    assert alias, path
+    portfolio = re.search(r'new ' + re.escape(alias[1]) + r'\(\{nodeWithPortPoints:this.nodeWithPortPoints,([^}]+)', patched)
     assert portfolio, path
     margin = re.search(r'traceMargin:([\w$]+),', portfolio[1])
     assert margin, path
