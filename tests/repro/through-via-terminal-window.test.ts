@@ -7,9 +7,11 @@ import type { NodeWithPortPoints } from "lib/types/high-density-types"
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 import { applyToPoint, compose, scale, translate } from "transformation-matrix"
+import adjacentInput from "../fixtures/through-via-terminal-adjacent-traces.json"
 import input from "../fixtures/through-via-terminal-window.json"
 
 const nodeWithPortPoints: NodeWithPortPoints = input.nodeWithPortPoints
+const adjacentTraces: SimplifiedPcbTrace[] = adjacentInput
 
 test("the complete captured region exposes through vias covering foreign terminals", async (): Promise<void> => {
   // All 52 terminals from the observed regional candidate, without reduction.
@@ -40,6 +42,8 @@ test("the complete captured region exposes through vias covering foreign termina
     allowBlindAndBuriedVias: false,
     minTraceWidth: input.traceThickness / 2,
     minViaDiameter: input.viaDiameter / 2,
+    // Actual neighboring-cell copper, already in board-world millimetres.
+    traces: adjacentTraces,
     bounds: { minX: -11.4, maxX: -3.8, minY: -11.3, maxY: -5.8 },
     obstacles: [],
     connections: [
@@ -74,8 +78,22 @@ test("the complete captured region exposes through vias covering foreign termina
     routedTraces: traces,
     drcOptions: { includeTraceContinuity: false },
   }
+  const continuity = evaluateRelaxedDrc({
+    ...snapshot,
+    drcOptions: { includeTraceContinuity: true },
+  })
+  // The pictured layer-change via joins the longer routes above and below.
+  // Only this net's two outer terminals remain cut from the surrounding board.
+  expect(
+    continuity.errors.filter(
+      (error) =>
+        error.type === "pcb_trace_error" &&
+        error.source_trace_id === adjacentTraces[0].connection_name &&
+        error.pcb_trace_error_id?.startsWith("disconnected_endpoint_"),
+    ),
+  ).toHaveLength(2)
   const { errors } = evaluateRelaxedDrc(snapshot)
-  expect(errors).toHaveLength(14)
+  expect(errors).toHaveLength(15)
   await expect(
     getBugReportSnapshotSvg(snapshot, { bounds: srj.bounds }),
   ).toMatchSvgSnapshot(import.meta.path)
