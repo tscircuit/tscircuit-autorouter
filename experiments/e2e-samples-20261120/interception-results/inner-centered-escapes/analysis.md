@@ -47,7 +47,7 @@ The runner preserves fanout → DDR bus lanes → remaining routing. Read-only h
 - Each full-circuit run reaches one fanout solve. All ten stop there; neither DDR bus lanes nor the remaining autorouter runs. The recent downstream autorouter changes cannot account for these observed stops.
 - Eight first fanouts exhaust 256 assignments; the other two reach the original time budget.
 - Rejected accepted-plan copper dominates the larger regions. Spaced i.MX6 additionally has many pad/via rejections. These counts are rejected candidates, not counts of impossible nets.
-- For iCE/Pi and i.MX6, adjacent diagonal via sites are too close to pads. The pad field has unoccupied positions reachable by the existing centered source-path generator, but the outward-edge check excludes them for interior pads. The focused native pin115 repro changes from no route to a legal one-via plane escape.
+- For iCE/Pi and i.MX6, adjacent diagonal via sites are too close to pads. The pad field has unoccupied positions reachable by the existing centered source-path generator, but the outward-edge check excludes them for interior pads. With the original 0.5 mm pitch, 0.24 mm BGA pads, 0.45 mm through vias and 0.1 mm clearance, nearby diagonal sites cannot clear pads. The focused native pin115 repro changes from no route to a legal one-via plane escape through the interior gap.
 - With all buses present, pin115 can still lose its channel to other accepted copper. The selected patch improves candidate completeness; it does not solve the remaining reservation conflicts or prove that all remaining requests are impossible.
 
 ## Experiments and rejected alternatives
@@ -69,12 +69,15 @@ The next completion work should address shared copper and route reservations whi
 
 - Published tscircuit 0.0.3276; Core 0.0.2457 at e5ac8f88dbf11259f3d602d962d3b11bcfa3bbba; fanout 0.0.102 at main 60eeca2d3b841fe504534c4674525beae1c74f8e; autorouter 0.0.1152; bus lanes 0.0.65; winding 08d8da9d8dbb037eba332e7bfd685063f8805ed4.
 - Original ZIP SHA-256: 1991ad1891a953dcd660818aaceb73f7aa42dbf704e677e635753b9159f7a6b7. Source and geometry, including fixed DDR placement in spaced variants, are unchanged.
-- All ten fanout constructor inputs, including rules, obstacles, buses and options, are deeply equal before/after.
+- All twenty full-circuit captures preserve the expected component counts, pad counts and net membership. All ten fanout constructor inputs, including rules, obstacles, buses and options, are deeply equal before/after.
 - All twenty partial outputs pass native copper DRC, independent physical via/pad overlap checks and bus atomicity checks. All ten full-board PCB SVGs are byte-identical because no incomplete fanout is committed.
 - The benchmark changes only the condition in route-plane-terminated-bus.ts. The final source differs from that benchmark patch only in the renamed boolean, updated comment and removed unused import; normalizing those yields the exact tested source.
+- Final fix c8f000f689da38e29dac8b853f69ac175deec4cf passes all eight official macOS regression shards and their aggregate check. Repro #368 also passes all eight shards, formatting and type checks. Exact source and test code passed the separate type/format run; later commits only update reviewed SVGs. The changed dataset31 case retains all 135 connections, 135 vias and passing native copper DRC.
 - Original 600-second budget and 256-assignment cap remain unchanged. Benchmarks use Blacksmith; source checks use Ubuntu and official snapshot regression tests use the repository macOS shards.
 
-[Baseline run](https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44992201437) · [Patched full-circuit run](https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44994334149) · [Independent audit](https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44995280418) · [Rejected merge experiment](https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44995254417) · [Source type/format validation](https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44994901846).
+[Baseline run](https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44992201437) · [Patched full-circuit run](https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44994334149) · [Independent audit](https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44995280418) · [Rejected merge experiment](https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44995254417) · [Source type/format validation](https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44996047670).
+
+[Final macOS regression suite](https://github.com/tscircuit/fanout-solver/actions/runs/44996945922) · [Native dataset31 snapshot verification](https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44996806745).
 
 Each artifact includes its original full-board pcb.svg, circuit JSON, stage SVGs, inputs, solver states and interception data:
 
