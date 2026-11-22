@@ -1,0 +1,34 @@
+{
+  "boards": 19,
+  "copperPours": false,
+  "fullyRoutedBefore": 0,
+  "fullyRoutedAfter": 0,
+  "settledBefore": 16,
+  "settledAfter": 16,
+  "identicalEmittedCopper": 16,
+  "identicalFullOutputs": 16,
+  "commonInputFiles": 187,
+  "changedCommonInputs": [],
+  "possibleRegressions": [],
+  "blockingStagesAfter": {
+    "bus lanes": 2,
+    "fanout": 6,
+    "highDensityRouteSolver": 7,
+    "portPointPathingSolver": 4
+  },
+  "interpretation": "Captured-stage progress is not whole-board completion. Failed phases do not publish partial traces. Timings are contended observations, with no speedup claim. All available pairs of Circuit JSON outputs are compared; unmatched deadline outputs and budget classifications are reported separately.",
+  "circuitOutputsBefore": 17,
+  "circuitOutputsAfter": 16,
+  "deadlineOutputsBefore": [
+    "imx6-local"
+  ],
+  "deadlineOutputsAfter": [],
+  "inconclusiveSamples": [
+    "butterstick-local",
+    "butterstick-spaced",
+    "imx6-local"
+  ],
+  "outputAvailableOnlyBefore": [
+    "imx6-local"
+  ]
+}

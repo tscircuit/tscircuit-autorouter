@@ -1,0 +1,524 @@
+[
+  {
+    "file": "fix/h616-local/end-1.srj.json.gz",
+    "traces": 8,
+    "obstacles": 760,
+    "unattributedObstacles": [
+      {
+        "componentId": "pcb_component_74",
+        "obstacleId": "pcb_hole_0",
+        "isNonPlatedHole": true,
+        "type": "rect",
+        "shape": "circle",
+        "layers": [
+          "top",
+          "inner1",
+          "inner2",
+          "bottom"
+        ],
+        "center": {
+          "x": 5.049999999999997,
+          "y": -30.730000000000008
+        },
+        "width": 0.6,
+        "height": 0.6,
+        "connectedTo": []
+      },
+      {
+        "componentId": "pcb_component_74",
+        "obstacleId": "pcb_hole_1",
+        "isNonPlatedHole": true,
+        "type": "rect",
+        "shape": "circle",
+        "layers": [
+          "top",
+          "inner1",
+          "inner2",
+          "bottom"
+        ],
+        "center": {
+          "x": 10.829999999999998,
+          "y": -30.730000000000008
+        },
+        "width": 0.6,
+        "height": 0.6,
+        "connectedTo": []
+      },
+      {
+        "componentId": "pcb_component_75",
+        "obstacleId": "pcb_hole_2",
+        "isNonPlatedHole": true,
+        "type": "rect",
+        "shape": "circle",
+        "layers": [
+          "top",
+          "inner1",
+          "inner2",
+          "bottom"
+        ],
+        "center": {
+          "x": -7.4500000000000055,
+          "y": -3.4800000000000044
+        },
+        "width": 0.6,
+        "height": 0.6,
+        "connectedTo": []
+      },
+      {
+        "componentId": "pcb_component_75",
+        "obstacleId": "pcb_hole_3",
+        "isNonPlatedHole": true,
+        "type": "rect",
+        "shape": "circle",
+        "layers": [
+          "top",
+          "inner1",
+          "inner2",
+          "bottom"
+        ],
+        "center": {
+          "x": -7.4500000000000055,
+          "y": -9.260000000000005
+        },
+        "width": 0.6,
+        "height": 0.6,
+        "connectedTo": []
+      }
+    ]
+  },
+  {
+    "file": "fix/h616-local/end-2.srj.json.gz",
+    "traces": 16,
+    "obstacles": 760,
+    "unattributedObstacles": [
+      {
+        "componentId": "pcb_component_74",
+        "obstacleId": "pcb_hole_0",
+        "isNonPlatedHole": true,
+        "type": "rect",
+        "shape": "circle",
+        "layers": [
+          "top",
+          "inner1",
+          "inner2",
+          "bottom"
+        ],
+        "center": {
+          "x": 5.049999999999997,
+          "y": -30.730000000000008
+        },
+        "width": 0.6,
+        "height": 0.6,
+        "connectedTo": []
+      },
+      {
+        "componentId": "pcb_component_74",
+        "obstacleId": "pcb_hole_1",
+        "isNonPlatedHole": true,
+        "type": "rect",
+        "shape": "circle",
+        "layers": [
+          "top",
+          "inner1",
+          "inner2",
+          "bottom"
+        ],
+        "center": {
+          "x": 10.829999999999998,
+          "y": -30.730000000000008
+        },
+        "width": 0.6,
+        "height": 0.6,
+        "connectedTo": []
+      },
+      {
+        "componentId": "pcb_component_75",
+        "obstacleId": "pcb_hole_2",
+        "isNonPlatedHole": true,
+        "type": "rect",
+        "shape": "circle",
+        "layers": [
+          "top",
+          "inner1",
+          "inner2",
+          "bottom"
+        ],
+        "center": {
+          "x": -7.4500000000000055,
+          "y": -3.4800000000000044
+        },
+        "width": 0.6,
+        "height": 0.6,
+        "connectedTo": []
+      },
+      {
+        "componentId": "pcb_component_75",
+        "obstacleId": "pcb_hole_3",
+        "isNonPlatedHole": true,
+        "type": "rect",
+        "shape": "circle",
+        "layers": [
+          "top",
+          "inner1",
+          "inner2",
+          "bottom"
+        ],
+        "center": {
+          "x": -7.4500000000000055,
+          "y": -9.260000000000005
+        },
+        "width": 0.6,
+        "height": 0.6,
+        "connectedTo": []
+      }
+    ]
+  },
+  {
+    "file": "fix/h616-local/error-3.srj.json.gz",
+    "traces": 16,
+    "obstacles": 760,
+    "unattributedObstacles": [
+      {
+        "componentId": "pcb_component_74",
+        "obstacleId": "pcb_hole_0",
+        "isNonPlatedHole": true,
+        "type": "rect",
+        "shape": "circle",
+        "layers": [
+          "top",
+          "inner1",
+          "inner2",
+          "bottom"
+        ],
+        "center": {
+          "x": 5.049999999999997,
+          "y": -30.730000000000008
+        },
+        "width": 0.6,
+        "height": 0.6,
+        "connectedTo": []
+      },
+      {
+        "componentId": "pcb_component_74",
+        "obstacleId": "pcb_hole_1",
+        "isNonPlatedHole": true,
+        "type": "rect",
+        "shape": "circle",
+        "layers": [
+          "top",
+          "inner1",
+          "inner2",
+          "bottom"
+        ],
+        "center": {
+          "x": 10.829999999999998,
+          "y": -30.730000000000008
+        },
+        "width": 0.6,
+        "height": 0.6,
+        "connectedTo": []
+      },
+      {
+        "componentId": "pcb_component_75",
+        "obstacleId": "pcb_hole_2",
+        "isNonPlatedHole": true,
+        "type": "rect",
+        "shape": "circle",
+        "layers": [
+          "top",
+          "inner1",
+          "inner2",
+          "bottom"
+        ],
+        "center": {
+          "x": -7.4500000000000055,
+          "y": -3.4800000000000044
+        },
+        "width": 0.6,
+        "height": 0.6,
+        "connectedTo": []
+      },
+      {
+        "componentId": "pcb_component_75",
+        "obstacleId": "pcb_hole_3",
+        "isNonPlatedHole": true,
+        "type": "rect",
+        "shape": "circle",
+        "layers": [
+          "top",
+          "inner1",
+          "inner2",
+          "bottom"
+        ],
+        "center": {
+          "x": -7.4500000000000055,
+          "y": -9.260000000000005
+        },
+        "width": 0.6,
+        "height": 0.6,
+        "connectedTo": []
+      }
+    ]
+  },
+  {
+    "file": "fix/h616-local/start-1.srj.json.gz",
+    "traces": 0,
+    "obstacles": 760,
+    "unattributedObstacles": [
+      {
+        "componentId": "pcb_component_74",
+        "obstacleId": "pcb_hole_0",
+        "isNonPlatedHole": true,
+        "type": "rect",
+        "shape": "circle",
+        "layers": [
+          "top",
+          "inner1",
+          "inner2",
+          "bottom"
+        ],
+        "center": {
+          "x": 5.049999999999997,
+          "y": -30.730000000000008
+        },
+        "width": 0.6,
+        "height": 0.6,
+        "connectedTo": []
+      },
+      {
+        "componentId": "pcb_component_74",
+        "obstacleId": "pcb_hole_1",
+        "isNonPlatedHole": true,
+        "type": "rect",
+        "shape": "circle",
+        "layers": [
+          "top",
+          "inner1",
+          "inner2",
+          "bottom"
+        ],
+        "center": {
+          "x": 10.829999999999998,
+          "y": -30.730000000000008
+        },
+        "width": 0.6,
+        "height": 0.6,
+        "connectedTo": []
+      },
+      {
+        "componentId": "pcb_component_75",
+        "obstacleId": "pcb_hole_2",
+        "isNonPlatedHole": true,
+        "type": "rect",
+        "shape": "circle",
+        "layers": [
+          "top",
+          "inner1",
+          "inner2",
+          "bottom"
+        ],
+        "center": {
+          "x": -7.4500000000000055,
+          "y": -3.4800000000000044
+        },
+        "width": 0.6,
+        "height": 0.6,
+        "connectedTo": []
+      },
+      {
+        "componentId": "pcb_component_75",
+        "obstacleId": "pcb_hole_3",
+        "isNonPlatedHole": true,
+        "type": "rect",
+        "shape": "circle",
+        "layers": [
+          "top",
+          "inner1",
+          "inner2",
+          "bottom"
+        ],
+        "center": {
+          "x": -7.4500000000000055,
+          "y": -9.260000000000005
+        },
+        "width": 0.6,
+        "height": 0.6,
+        "connectedTo": []
+      }
+    ]
+  },
+  {
+    "file": "fix/h616-local/start-2.srj.json.gz",
+    "traces": 8,
+    "obstacles": 760,
+    "unattributedObstacles": [
+      {
+        "componentId": "pcb_component_74",
+        "obstacleId": "pcb_hole_0",
+        "isNonPlatedHole": true,
+        "type": "rect",
+        "shape": "circle",
+        "layers": [
+          "top",
+          "inner1",
+          "inner2",
+          "bottom"
+        ],
+        "center": {
+          "x": 5.049999999999997,
+          "y": -30.730000000000008
+        },
+        "width": 0.6,
+        "height": 0.6,
+        "connectedTo": []
+      },
+      {
+        "componentId": "pcb_component_74",
+        "obstacleId": "pcb_hole_1",
+        "isNonPlatedHole": true,
+        "type": "rect",
+        "shape": "circle",
+        "layers": [
+          "top",
+          "inner1",
+          "inner2",
+          "bottom"
+        ],
+        "center": {
+          "x": 10.829999999999998,
+          "y": -30.730000000000008
+        },
+        "width": 0.6,
+        "height": 0.6,
+        "connectedTo": []
+      },
+      {
+        "componentId": "pcb_component_75",
+        "obstacleId": "pcb_hole_2",
+        "isNonPlatedHole": true,
+        "type": "rect",
+        "shape": "circle",
+        "layers": [
+          "top",
+          "inner1",
+          "inner2",
+          "bottom"
+        ],
+        "center": {
+          "x": -7.4500000000000055,
+          "y": -3.4800000000000044
+        },
+        "width": 0.6,
+        "height": 0.6,
+        "connectedTo": []
+      },
+      {
+        "componentId": "pcb_component_75",
+        "obstacleId": "pcb_hole_3",
+        "isNonPlatedHole": true,
+        "type": "rect",
+        "shape": "circle",
+        "layers": [
+          "top",
+          "inner1",
+          "inner2",
+          "bottom"
+        ],
+        "center": {
+          "x": -7.4500000000000055,
+          "y": -9.260000000000005
+        },
+        "width": 0.6,
+        "height": 0.6,
+        "connectedTo": []
+      }
+    ]
+  },
+  {
+    "file": "fix/h616-local/start-3.srj.json.gz",
+    "traces": 16,
+    "obstacles": 760,
+    "unattributedObstacles": [
+      {
+        "componentId": "pcb_component_74",
+        "obstacleId": "pcb_hole_0",
+        "isNonPlatedHole": true,
+        "type": "rect",
+        "shape": "circle",
+        "layers": [
+          "top",
+          "inner1",
+          "inner2",
+          "bottom"
+        ],
+        "center": {
+          "x": 5.049999999999997,
+          "y": -30.730000000000008
+        },
+        "width": 0.6,
+        "height": 0.6,
+        "connectedTo": []
+      },
+      {
+        "componentId": "pcb_component_74",
+        "obstacleId": "pcb_hole_1",
+        "isNonPlatedHole": true,
+        "type": "rect",
+        "shape": "circle",
+        "layers": [
+          "top",
+          "inner1",
+          "inner2",
+          "bottom"
+        ],
+        "center": {
+          "x": 10.829999999999998,
+          "y": -30.730000000000008
+        },
+        "width": 0.6,
+        "height": 0.6,
+        "connectedTo": []
+      },
+      {
+        "componentId": "pcb_component_75",
+        "obstacleId": "pcb_hole_2",
+        "isNonPlatedHole": true,
+        "type": "rect",
+        "shape": "circle",
+        "layers": [
+          "top",
+          "inner1",
+          "inner2",
+          "bottom"
+        ],
+        "center": {
+          "x": -7.4500000000000055,
+          "y": -3.4800000000000044
+        },
+        "width": 0.6,
+        "height": 0.6,
+        "connectedTo": []
+      },
+      {
+        "componentId": "pcb_component_75",
+        "obstacleId": "pcb_hole_3",
+        "isNonPlatedHole": true,
+        "type": "rect",
+        "shape": "circle",
+        "layers": [
+          "top",
+          "inner1",
+          "inner2",
+          "bottom"
+        ],
+        "center": {
+          "x": -7.4500000000000055,
+          "y": -9.260000000000005
+        },
+        "width": 0.6,
+        "height": 0.6,
+        "connectedTo": []
+      }
+    ]
+  }
+]

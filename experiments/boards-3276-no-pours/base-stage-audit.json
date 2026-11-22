@@ -1,0 +1,50 @@
+[
+  {
+    "file": "base/glider-local/stage-1-highDensityRouteSolver.json.gz",
+    "immutablePreloads": 110
+  },
+  {
+    "file": "base/glider-local/stage-2-highDensityRouteSolver.json.gz",
+    "immutablePreloads": 110
+  },
+  {
+    "file": "base/glider-spaced/stage-1-highDensityRouteSolver.json.gz",
+    "immutablePreloads": 113
+  },
+  {
+    "file": "base/icepi-local/stage-1-highDensityRouteSolver.json.gz",
+    "immutablePreloads": 104
+  },
+  {
+    "file": "base/icepi-spaced/stage-1-highDensityRouteSolver.json.gz",
+    "immutablePreloads": 107
+  },
+  {
+    "file": "base/icepi-spaced/stage-2-highDensityRouteSolver.json.gz",
+    "immutablePreloads": 107
+  },
+  {
+    "file": "base/imx6-local/stage-1-highDensityRouteSolver.json.gz",
+    "immutablePreloads": 134
+  },
+  {
+    "file": "base/imx6-spaced/stage-1-highDensityRouteSolver.json.gz",
+    "immutablePreloads": 123
+  },
+  {
+    "file": "base/orangecrab-local/stage-1-highDensityRouteSolver.json.gz",
+    "immutablePreloads": 109
+  },
+  {
+    "file": "base/orangecrab-local/stage-2-highDensityRouteSolver.json.gz",
+    "immutablePreloads": 109
+  },
+  {
+    "file": "base/orangecrab-spaced/stage-1-highDensityRouteSolver.json.gz",
+    "immutablePreloads": 109
+  },
+  {
+    "file": "base/orangecrab-spaced/stage-2-highDensityRouteSolver.json.gz",
+    "immutablePreloads": 109
+  }
+]

@@ -1,0 +1,20 @@
+Board,Blocking stage,Outcome before / after,Traces before / after,Vias before / after,Emitted copper
+butterstick-local,bus lanes,600s budget / 600s budget,? / ?,? / ?,No comparable output
+butterstick-native,fanout,Routing errors / Routing errors,0 / 0,0 / 0,Identical
+butterstick-spaced,bus lanes,600s budget / 600s budget,? / ?,? / ?,No comparable output
+glider-local,highDensityRouteSolver,Routing errors / Routing errors,53 / 53,97 / 97,Identical
+glider-native,fanout,Routing errors / Routing errors,0 / 0,0 / 0,Identical
+glider-spaced,portPointPathingSolver,Routing errors / Routing errors,53 / 53,92 / 92,Identical
+h616-default-order-local,portPointPathingSolver,Routing errors / Routing errors,16 / 16,32 / 32,Identical
+h616-local,portPointPathingSolver,Routing errors / Routing errors,16 / 16,32 / 32,Identical
+h616-native,fanout,Routing errors / Routing errors,0 / 0,0 / 0,Identical
+h616-spaced,portPointPathingSolver,Routing errors / Routing errors,16 / 16,32 / 32,Identical
+icepi-local,highDensityRouteSolver,Routing errors / Routing errors,16 / 16,30 / 30,Identical
+icepi-native,fanout,Routing errors / Routing errors,0 / 0,0 / 0,Identical
+icepi-spaced,highDensityRouteSolver,Routing errors / Routing errors,52 / 52,98 / 98,Identical
+imx6-local,highDensityRouteSolver,600s budget / 600s budget,17 / ?,30 / ?,No comparable output
+imx6-native,fanout,Routing errors / Routing errors,0 / 0,0 / 0,Identical
+imx6-spaced,highDensityRouteSolver,Routing errors / Routing errors,17 / 17,30 / 30,Identical
+orangecrab-local,highDensityRouteSolver,Routing errors / Routing errors,52 / 52,97 / 97,Identical
+orangecrab-native,fanout,Routing errors / Routing errors,0 / 0,0 / 0,Identical
+orangecrab-spaced,highDensityRouteSolver,Routing errors / Routing errors,52 / 52,103 / 103,Identical

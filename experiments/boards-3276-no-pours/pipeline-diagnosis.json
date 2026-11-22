@@ -1,0 +1,107 @@
+{
+  "release": "0.0.3276",
+  "matrix": {
+    "boards": 19,
+    "copperPours": false,
+    "fullyRoutedBefore": 0,
+    "fullyRoutedAfter": 0,
+    "settledBefore": 16,
+    "settledAfter": 16,
+    "identicalEmittedCopper": 16,
+    "identicalFullOutputs": 16,
+    "commonInputFiles": 187,
+    "changedCommonInputs": [],
+    "possibleRegressions": [],
+    "blockingStagesAfter": {
+      "bus lanes": 2,
+      "fanout": 6,
+      "highDensityRouteSolver": 7,
+      "portPointPathingSolver": 4
+    },
+    "interpretation": "Captured-stage progress is not whole-board completion. Failed phases do not publish partial traces. Timings are contended observations, with no speedup claim. All available pairs of Circuit JSON outputs are compared; unmatched deadline outputs and budget classifications are reported separately.",
+    "circuitOutputsBefore": 17,
+    "circuitOutputsAfter": 16,
+    "deadlineOutputsBefore": [
+      "imx6-local"
+    ],
+    "deadlineOutputsAfter": [],
+    "inconclusiveSamples": [
+      "butterstick-local",
+      "butterstick-spaced",
+      "imx6-local"
+    ],
+    "outputAvailableOnlyBefore": [
+      "imx6-local"
+    ]
+  },
+  "upstreamProgress": [
+    {
+      "sample": "glider-spaced",
+      "beforeTraces": 16,
+      "latestTraces": 53,
+      "beforeVias": 30,
+      "latestVias": 92,
+      "nextBlocker": "Remaining-signal graph pathing, after both byte buses now finish."
+    },
+    {
+      "sample": "glider-local",
+      "beforeVias": 100,
+      "latestVias": 97
+    },
+    {
+      "sample": "orangecrab-spaced",
+      "beforeVias": 106,
+      "latestVias": 103
+    }
+  ],
+  "blockers": [
+    {
+      "stage": "high-density routing",
+      "samples": 7,
+      "observed": "No-path/max-via/grid candidate exhaustion, immutable copper conflicts and overlapping regional terminals remain. Includes one600s run."
+    },
+    {
+      "stage": "fanout",
+      "samples": 6,
+      "observed": "Native layouts still fail escape assignment. Five standard assignments retain their previous best counts; one winding attempt has a measured perimeter demand17.43mm vs14.64mm available. This is a geometric capacity constraint, not proof that more search would solve it."
+    },
+    {
+      "stage": "tiny graph pathing",
+      "samples": 4,
+      "observed": "Joint assignments still exhaust iterations. H616 captured inputs match earlier runs; current greedy finishers leave8+ pending routes on a retry. Another sample now reaches this stage after more bus routing completes."
+    },
+    {
+      "stage": "bus lanes",
+      "samples": 2,
+      "observed": "Both exceed600seconds while bus/carrier work is active; no finished Circuit JSON exists for either."
+    }
+  ],
+  "confirmedFix": {
+    "component": "A01 getOutput",
+    "rootCause": "The exporter replaces a terminal-adjacent grid point even when it is a via landing. For a same-cell inter-layer route, both landing points disappear while the via stays at the grid center.",
+    "change": "Keep only the grid points that would otherwise move a via; attach the requested terminal coordinates as stubs. Same treatment already exists in A03.",
+    "productionNetLines": 17,
+    "syntheticBefore": "Solver reports solved but exported route contains no landing on either via layer.",
+    "syntheticAfter": "Both via layers are represented at the exact via coordinate; both terminals retain their requested positions.",
+    "selectionReason": "A small, unambiguous correctness defect that can reject otherwise solved candidates. Repairing exported geometry avoids introducing another routing strategy or changing budgets.",
+    "currentWholeBoardBenefit": "None measured:16 completed outputs remain byte-identical;0/19fully routed before and after.",
+    "archivedReplay": {
+      "provenance": "Earlier no-pour other_signals constructor input, replayed through the latest released autorouter0.0.1152 and the exact source-equivalent patch. This is not the current full-board input.",
+      "inputSha256": "abe7cc9ba363a74189ea256e455c2d415d3ef6481dc1ac60c5ab81634fd6731e",
+      "currentInputSha256": "33b695e64ca4553a252e164dac2c8e6156fb49dbbc222ee859cdedc4d071ce2d",
+      "sameAsCurrentInput": false,
+      "solvedRegionsBefore": 360,
+      "solvedRegionsAfter": 403,
+      "totalRegions": 2734,
+      "fragmentsBefore": 605,
+      "fragmentsAfter": 652,
+      "nextFailure": "Later candidate validation/no-path exhaustion. The whole phase still fails."
+    }
+  },
+  "regressionLimits": [
+    "All16settled full Circuit JSON outputs are identical and187common captured inputs match.",
+    "Both sides hit the same three600second budgets. A baseline error-containing output appeared at the deadline for imx6-local; the patched run did not emit that file before the cutoff. This boundary observation cannot establish a runtime regression or runtime equivalence.",
+    "No routing-completion or speedup claim is made from contended timings.",
+    "The archived phase gain is reported separately because its input differs from the current release board run."
+  ]
+}

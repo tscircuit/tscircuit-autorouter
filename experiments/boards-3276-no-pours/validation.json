@@ -1,0 +1,111 @@
+{
+  "sourceRepro": "6b5cfcf4ceab9128913ee094ebd8910e830025b4",
+  "sourceFix": "83b51de6ffeaeb35c210f66a52f1fd59f8afdb94",
+  "localTests": {
+    "tests": 16,
+    "files": 7,
+    "assertions": 363376,
+    "result": "pass",
+    "covers": [
+      "Both layer directions",
+      "Existing A03 landing behavior",
+      "A01 heap/search/rip equivalence",
+      "Via occupancy cache equivalence",
+      "Geometry validation"
+    ]
+  },
+  "sourceTypecheck": "pass, all lib source plus focused test with exact declared dependency versions",
+  "build": "pass, ESM and declarations",
+  "localVersions": {
+    "graphics-debug": "0.0.86",
+    "@tscircuit/solver-utils": "0.0.16",
+    "bun-match-svg": "0.0.15",
+    "bun": "1.4.3"
+  },
+  "ci": {
+    "148": {
+      "headRefOid": "6b5cfcf4ceab9128913ee094ebd8910e830025b4",
+      "statusCheckRollup": [
+        {
+          "__typename": "CheckRun",
+          "completedAt": "2026-11-22T06:26:32Z",
+          "conclusion": "SUCCESS",
+          "detailsUrl": "https://github.com/tscircuit/high-density-a01/actions/runs/44993686967/job/137120042633",
+          "name": "test",
+          "startedAt": "2026-11-22T06:25:54Z",
+          "status": "COMPLETED",
+          "workflowName": "Bun Test"
+        },
+        {
+          "__typename": "CheckRun",
+          "completedAt": "2026-11-22T06:26:07Z",
+          "conclusion": "SUCCESS",
+          "detailsUrl": "https://github.com/tscircuit/high-density-a01/actions/runs/44993686970/job/137120042679",
+          "name": "format-check",
+          "startedAt": "2026-11-22T06:25:54Z",
+          "status": "COMPLETED",
+          "workflowName": "Format Check"
+        },
+        {
+          "__typename": "CheckRun",
+          "completedAt": "2026-11-22T06:26:11Z",
+          "conclusion": "SUCCESS",
+          "detailsUrl": "https://github.com/tscircuit/high-density-a01/actions/runs/44993687006/job/137120042586",
+          "name": "type-check",
+          "startedAt": "2026-11-22T06:25:54Z",
+          "status": "COMPLETED",
+          "workflowName": "Type Check"
+        },
+        {
+          "__typename": "StatusContext",
+          "context": "Vercel",
+          "startedAt": "2026-11-22T06:25:13Z",
+          "state": "SUCCESS",
+          "targetUrl": "https://vercel.com/tscircuit/high-density-a01/Bo7eLC35jk6dXm29neh3czwSg1o8"
+        },
+        {
+          "__typename": "CheckRun",
+          "completedAt": "2026-11-22T06:25:54Z",
+          "conclusion": "SUCCESS",
+          "detailsUrl": "https://vercel.com/github",
+          "name": "Vercel Preview Comments",
+          "startedAt": "2026-11-22T06:25:54Z",
+          "status": "COMPLETED",
+          "workflowName": ""
+        }
+      ]
+    },
+    "149": {
+      "headRefOid": "83b51de6ffeaeb35c210f66a52f1fd59f8afdb94",
+      "statusCheckRollup": [
+        {
+          "__typename": "CheckRun",
+          "completedAt": "2026-11-22T06:27:17Z",
+          "conclusion": "SUCCESS",
+          "detailsUrl": "https://github.com/tscircuit/high-density-a01/actions/runs/44993735764/job/137120199371",
+          "name": "test",
+          "startedAt": "2026-11-22T06:26:38Z",
+          "status": "COMPLETED",
+          "workflowName": "Bun Test"
+        },
+        {
+          "__typename": "StatusContext",
+          "context": "Vercel",
+          "startedAt": "2026-11-22T06:25:19Z",
+          "state": "SUCCESS",
+          "targetUrl": "https://vercel.com/tscircuit/high-density-a01/CmHNFJhzDsHSm1n5TaBr5SpAbmao"
+        },
+        {
+          "__typename": "CheckRun",
+          "completedAt": "2026-11-22T06:26:37Z",
+          "conclusion": "SUCCESS",
+          "detailsUrl": "https://vercel.com/github",
+          "name": "Vercel Preview Comments",
+          "startedAt": "2026-11-22T06:26:37Z",
+          "status": "COMPLETED",
+          "workflowName": ""
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "tscircuit": "0.0.3276",
+  "core": "0.0.2457",
+  "autorouter": "0.0.1152",
+  "fanout": "0.0.102",
+  "pours": false,
+  "planeSpecialHandling": false,
+  "baseline": {
+    "run": 44992178146,
+    "commit": "d8f9a56f7a7d285e19b9c94806bcb64dc488ec18",
+    "artifact": 14742159542,
+    "sha256": "0e46d6fb2d68bada40ec5cef3466c70760d7ce9a6f8a0bbf4e22bd3d7a1ba934"
+  },
+  "fix": {
+    "run": 44993033416,
+    "commit": "ec671c26add0ece0db476ed0e94e7ab1838378e5",
+    "artifact": 14743370807,
+    "sha256": "d9d310998eba776367fdb8f978f201997475f3a0cae9352bec04e3b779df7a8c"
+  },
+  "sourceRepository": "tscircuit/high-density-a01",
+  "sourceBase": "4ae21d7a15c9fbfb30378c10f948aa168d7c9cb7",
+  "reproPr": 148,
+  "reproCommit": "6b5cfcf4ceab9128913ee094ebd8910e830025b4",
+  "fixPr": 149,
+  "fixCommit": "83b51de6ffeaeb35c210f66a52f1fd59f8afdb94",
+  "sourcePatchSha256": "6ed6dd456e5d9882f113ff636d3f42abdce867838e11416ba76716c297135ab8",
+  "runner": "Blacksmith32vCPU ARM Ubuntu24.04, Bun1.4.3;19 workers;600second wall budget. Frozen identical source archive and lockfile.",
+  "patchedConsumers": "Exact source-equivalent endpoint guards applied to main, Bun-worker and Node-worker bundles. File hashes and unique patch-site checks are recorded.",
+  "publicRepro": "Only a self-contained synthetic test and SVG; no original circuit, data, name or license file.",
+  "consumerIntegration": "The released autorouter pins A01/A13 to4ae21d7. The source fix is proposed in A01#149; the paired run uses its exact source-equivalent bundle patch. Update the consumer Git pins after that fix is merged."
+}

@@ -1,0 +1,27 @@
+{
+  "sourcePatchSha256": "6ed6dd456e5d9882f113ff636d3f42abdce867838e11416ba76716c297135ab8",
+  "modules": [
+    {
+      "module": "dist/index.js",
+      "beforeSnippet": "via-landings-before.js",
+      "afterSnippet": "via-landings-after.js",
+      "beforeSha256": "bf96208aa94a0f88cfd0b6081ce791460b504b65892280d0cddbcdb596050790",
+      "afterSha256": "f989ed1e5c8353fcc7a2dd639ccbee36b294791bedc5fb9f00130ef7f3be0252"
+    },
+    {
+      "module": "dist/runtime/bun.js",
+      "beforeSnippet": "via-landings-worker-before.js",
+      "afterSnippet": "via-landings-worker-after.js",
+      "beforeSha256": "15b8b13fca6bcb5a5e7bcce6e98bed81c1b4bac2eb523a26c68391dd258db9ac",
+      "afterSha256": "3c4d8cd3082a3790e611a0128f1033fe6ac53cafd6b7d2306dfe3804c1b32533"
+    },
+    {
+      "module": "dist/runtime/node.js",
+      "beforeSnippet": "via-landings-worker-before.js",
+      "afterSnippet": "via-landings-worker-after.js",
+      "beforeSha256": "53c059fea4a990e4d7b3262d87871d4f47d078c7e04b0d97e73efdc1bf15a888",
+      "afterSha256": "979eae2d32e3c04efce3f10299646808bd60452311b657e9cfa697bec67387a2"
+    }
+  ],
+  "scope": "Preserve terminal-adjacent grid via landings when restoring off-grid endpoints. Apply the identical source change to the main bundle and both worker bundles; no search, budget, or clearance changes."
+}

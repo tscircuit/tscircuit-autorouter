@@ -1,0 +1,173 @@
+[
+  {
+    "board": "butterstick-local",
+    "previousStop": "600-second render budget",
+    "latestStop": "600-second render budget",
+    "previousTraces": null,
+    "latestTraces": null,
+    "previousVias": null,
+    "latestVias": null
+  },
+  {
+    "board": "butterstick-native",
+    "previousStop": "settled",
+    "latestStop": "settled",
+    "previousTraces": 0,
+    "latestTraces": 0,
+    "previousVias": 0,
+    "latestVias": 0
+  },
+  {
+    "board": "butterstick-spaced",
+    "previousStop": "600-second render budget",
+    "latestStop": "600-second render budget",
+    "previousTraces": null,
+    "latestTraces": null,
+    "previousVias": null,
+    "latestVias": null
+  },
+  {
+    "board": "glider-local",
+    "previousStop": "settled",
+    "latestStop": "settled",
+    "previousTraces": 53,
+    "latestTraces": 53,
+    "previousVias": 100,
+    "latestVias": 97
+  },
+  {
+    "board": "glider-native",
+    "previousStop": "settled",
+    "latestStop": "settled",
+    "previousTraces": 0,
+    "latestTraces": 0,
+    "previousVias": 0,
+    "latestVias": 0
+  },
+  {
+    "board": "glider-spaced",
+    "previousStop": "settled",
+    "latestStop": "settled",
+    "previousTraces": 16,
+    "latestTraces": 53,
+    "previousVias": 30,
+    "latestVias": 92
+  },
+  {
+    "board": "h616-default-order-local",
+    "previousStop": "settled",
+    "latestStop": "settled",
+    "previousTraces": 16,
+    "latestTraces": 16,
+    "previousVias": 32,
+    "latestVias": 32
+  },
+  {
+    "board": "h616-local",
+    "previousStop": "settled",
+    "latestStop": "settled",
+    "previousTraces": 16,
+    "latestTraces": 16,
+    "previousVias": 32,
+    "latestVias": 32
+  },
+  {
+    "board": "h616-native",
+    "previousStop": "settled",
+    "latestStop": "settled",
+    "previousTraces": 0,
+    "latestTraces": 0,
+    "previousVias": 0,
+    "latestVias": 0
+  },
+  {
+    "board": "h616-spaced",
+    "previousStop": "settled",
+    "latestStop": "settled",
+    "previousTraces": 16,
+    "latestTraces": 16,
+    "previousVias": 32,
+    "latestVias": 32
+  },
+  {
+    "board": "icepi-local",
+    "previousStop": "settled",
+    "latestStop": "settled",
+    "previousTraces": 16,
+    "latestTraces": 16,
+    "previousVias": 30,
+    "latestVias": 30
+  },
+  {
+    "board": "icepi-native",
+    "previousStop": "settled",
+    "latestStop": "settled",
+    "previousTraces": 0,
+    "latestTraces": 0,
+    "previousVias": 0,
+    "latestVias": 0
+  },
+  {
+    "board": "icepi-spaced",
+    "previousStop": "settled",
+    "latestStop": "settled",
+    "previousTraces": 52,
+    "latestTraces": 52,
+    "previousVias": 98,
+    "latestVias": 98
+  },
+  {
+    "board": "imx6-local",
+    "previousStop": "600-second render budget",
+    "latestStop": "600-second render budget",
+    "previousTraces": null,
+    "latestTraces": 17,
+    "previousVias": null,
+    "latestVias": 30
+  },
+  {
+    "board": "imx6-native",
+    "previousStop": "settled",
+    "latestStop": "settled",
+    "previousTraces": 0,
+    "latestTraces": 0,
+    "previousVias": 0,
+    "latestVias": 0
+  },
+  {
+    "board": "imx6-spaced",
+    "previousStop": "settled",
+    "latestStop": "settled",
+    "previousTraces": 17,
+    "latestTraces": 17,
+    "previousVias": 30,
+    "latestVias": 30
+  },
+  {
+    "board": "orangecrab-local",
+    "previousStop": "settled",
+    "latestStop": "settled",
+    "previousTraces": 52,
+    "latestTraces": 52,
+    "previousVias": 93,
+    "latestVias": 97
+  },
+  {
+    "board": "orangecrab-native",
+    "previousStop": "settled",
+    "latestStop": "settled",
+    "previousTraces": 0,
+    "latestTraces": 0,
+    "previousVias": 0,
+    "latestVias": 0
+  },
+  {
+    "board": "orangecrab-spaced",
+    "previousStop": "settled",
+    "latestStop": "settled",
+    "previousTraces": 52,
+    "latestTraces": 52,
+    "previousVias": 106,
+    "latestVias": 103
+  }
+]
