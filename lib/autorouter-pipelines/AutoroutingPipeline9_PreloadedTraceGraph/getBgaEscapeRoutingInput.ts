@@ -1,10 +1,15 @@
-import type { BgaEscapeRoutingSolverInput } from "lib/solvers/BgaEscapeRoutingSolver/BgaEscapeRoutingSolver"
-import { getBgaSignalLayers } from "lib/solvers/BgaEscapeRoutingSolver/getBgaSignalLayers"
-import { cellsPerBallPitch } from "lib/solvers/BgaEscapeRoutingSolver/BgaRoutingGrid"
+import {
+  cellsPerBallPitch,
+  type BgaEscapeRoutingSolverInput,
+  type BgaTrace,
+} from "@tscircuit/high-density-phase-solver"
 import { BgaGrid } from "lib/solvers/BgaTopologyGeneratorSolver/bga-grid"
 import type { DetectedComponent } from "lib/solvers/ComponentDetectionSolver/ComponentDetectionSolver"
 import { getBgaLikeObstacleSubset } from "lib/solvers/ComponentDetectionSolver/detectors/bga/BgaComponentDetector"
 import type { SimpleRouteConnection, SimpleRouteJson } from "lib/types"
+import { getViaDimensions } from "lib/utils/getViaDimensions"
+import { getViaToPadClearance } from "lib/utils/getViaToPadClearance"
+import { getBgaSignalLayers } from "./getBgaSignalLayers"
 
 export type BgaEscapeBoard = {
   inputSrj: SimpleRouteJson
@@ -31,7 +36,9 @@ function hasSurfacePadConnections(srj: SimpleRouteJson): boolean {
 }
 
 /** This strategy searches rectangular boards for uncoupled signals with fixed copper. */
-function supportsBgaEscapeRouting(srj: SimpleRouteJson): boolean {
+function supportsBgaEscapeRouting(
+  srj: SimpleRouteJson,
+): srj is SimpleRouteJson & { traces: BgaTrace[] } {
   const traces = srj.traces
   if (!traces?.length) return false
   return (
@@ -116,7 +123,20 @@ export function getBgaEscapeRoutingInput({
     })
     if (narrowChannel) {
       return {
-        inputSrj,
+        board: {
+          bounds: inputSrj.bounds,
+          layerCount: inputSrj.layerCount,
+          minTraceWidth: inputSrj.minTraceWidth,
+          minBoardEdgeClearance: inputSrj.minBoardEdgeClearance,
+          minViaHoleEdgeToViaHoleEdgeClearance:
+            inputSrj.minViaHoleEdgeToViaHoleEdgeClearance,
+          traceClearance: clearance,
+          viaToPadClearance: getViaToPadClearance(inputSrj) ?? clearance,
+          via: getViaDimensions(inputSrj),
+          obstacles: inputSrj.obstacles,
+          connections: inputSrj.connections,
+          fixedTraces: inputSrj.traces,
+        },
         pointPairs,
         signalLayers,
         bga: { center: balls[0]!.center, pitch },

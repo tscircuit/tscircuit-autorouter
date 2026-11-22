@@ -1,7 +1,4 @@
-import {
-  BgaEscapeRoutingSolver,
-  type BgaEscapeRoutingSolverInput,
-} from "lib/solvers/BgaEscapeRoutingSolver/BgaEscapeRoutingSolver"
+import { BgaEscapeRoutingSolver } from "@tscircuit/high-density-phase-solver"
 import {
   getBgaEscapeRoutingInput,
   type BgaEscapeBoard,
@@ -49,7 +46,7 @@ import {
 } from "./pipeline9TerminalRoutes"
 
 type BgaEscapeAttempt = {
-  input: BgaEscapeRoutingSolverInput
+  board: BgaEscapeBoard
   solver: BgaEscapeRoutingSolver
   regionalError: string
 }
@@ -1204,7 +1201,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   }
 
   private stepBgaEscapeRouting(attempt: BgaEscapeAttempt): void {
-    const { input, solver, regionalError } = attempt
+    const { board, solver, regionalError } = attempt
     this.activeSubSolver = solver
     solver.step()
     if (!solver.solved && !solver.failed) return
@@ -1212,7 +1209,8 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     this.activeSubSolver = null
     if (solver.solved) {
       const routes = getBgaEscapeHdRoutes({
-        ...input,
+        inputSrj: board.inputSrj,
+        pointPairs: board.pointPairs,
         traces: solver.getOutput(),
       })
       if (routes) {
@@ -1239,9 +1237,9 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
         ].join("; ")
         const board = this.params.bgaEscapeBoard
         const input = board && getBgaEscapeRoutingInput(board)
-        if (input) {
+        if (board && input) {
           this.bgaEscapeAttempt = {
-            input,
+            board,
             solver: new BgaEscapeRoutingSolver(input),
             regionalError,
           }

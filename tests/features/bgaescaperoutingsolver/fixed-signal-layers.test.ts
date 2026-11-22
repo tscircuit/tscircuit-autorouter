@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { getBgaSignalLayers } from "lib/solvers/BgaEscapeRoutingSolver/getBgaSignalLayers"
+import { getBgaSignalLayers } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/getBgaSignalLayers"
 import type { SimpleRouteJson } from "lib/types"
 
 test("uses surface terminals and fixed wire segments to identify signal layers", () => {

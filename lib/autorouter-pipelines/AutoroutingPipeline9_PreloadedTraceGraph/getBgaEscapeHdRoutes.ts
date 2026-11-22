@@ -1,4 +1,4 @@
-import type { BgaEscapeRoutingSolverInput } from "lib/solvers/BgaEscapeRoutingSolver/BgaEscapeRoutingSolver"
+import type { BgaEscapeBoard } from "./getBgaEscapeRoutingInput"
 import type { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
 import type { SimplifiedPcbTrace } from "lib/types"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
@@ -9,7 +9,7 @@ export function getBgaEscapeHdRoutes({
   inputSrj,
   pointPairs,
   traces,
-}: BgaEscapeRoutingSolverInput & {
+}: Pick<BgaEscapeBoard, "inputSrj" | "pointPairs"> & {
   traces: SimplifiedPcbTrace[]
 }): HighDensityIntraNodeRoute[] | undefined {
   const { padDiameter } = getViaDimensions(inputSrj)
