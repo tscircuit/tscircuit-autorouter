@@ -1,0 +1,26 @@
+name: Audit captured full-circuit geometry and original net membership
+on:
+  push:
+    branches: [analysis/e2e-geometry-audit-2461]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45070654984
+          pattern: full-circuit-interception-*
+          path: captures
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Prove enclosed-pad failures using original geometry and source nets
+        run: python3 experiments/e2e-samples-20261120/audit-geometry2461.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: full-circuit-geometry-audit
+          path: geometry-audit
