@@ -1,0 +1,35 @@
+name: Regenerate reviewed dataset31 routing snapshots on native macOS
+on:
+  push:
+    branches: [analysis/native-centered-snapshots-2457]
+permissions:
+  contents: read
+jobs:
+  snapshots:
+    runs-on: macos-15
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: 6a1d7c4560a337f8397b3cc1283841157a625084
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: bun install --frozen-lockfile
+      - name: Recheck related raw dataset31 variants and update native SVGs
+        run: BUN_UPDATE_SNAPSHOTS=1 bun test tests/dataset31-*.test.ts --timeout 9999999
+      - name: Export changed native snapshots only
+        if: always()
+        run: |
+          mkdir reviewed-snapshots
+          git diff --name-only -- tests/__snapshots__/ > reviewed-snapshots/changed.txt
+          while IFS= read -r path; do
+            cp "$path" reviewed-snapshots/
+          done < reviewed-snapshots/changed.txt
+          git diff --stat -- tests/__snapshots__/
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: native-centered-dataset31-snapshots
+          path: reviewed-snapshots
