@@ -10,7 +10,10 @@ type XY = { x: number; y: number }
 // The clock limits live on the source board. Measure the PCB centerlines
 // across trace boundaries, including a shared trunk and its crystal arm.
 function checkClock(
-  traces: SimplifiedPcbTrace[], mcu: XY, crystal: XY, capacitor: XY,
+  traces: SimplifiedPcbTrace[],
+  mcu: XY,
+  crystal: XY,
+  capacitor: XY,
 ): void {
   const key = (p: XY): string => `${p.x.toFixed(6)},${p.y.toFixed(6)}`
   const edges = new Map<string, { to: string; length: number }[]>()
@@ -18,12 +21,18 @@ function checkClock(
     let previous: XY | undefined
     for (const point of trace.route) {
       if (point.route_type !== "wire" || point.layer !== "top") {
-        throw new Error("Crystal wiring must stay on the top layer without vias")
+        throw new Error(
+          "Crystal wiring must stay on the top layer without vias",
+        )
       }
       if (previous) {
-        const a = key(previous), b = key(point)
+        const a = key(previous),
+          b = key(point)
         const length = Math.hypot(previous.x - point.x, previous.y - point.y)
-        for (const [from, to] of [[a, b], [b, a]] as const) {
+        for (const [from, to] of [
+          [a, b],
+          [b, a],
+        ] as const) {
           if (!edges.has(from)) edges.set(from, [])
           edges.get(from)!.push({ to, length })
         }
@@ -83,8 +92,12 @@ test("copper DRC on the four-layer Bluetooth gamepad", async (): Promise<void> =
 
 test("the MCU-to-crystal routes meet the board's 10 mm limit", () => {
   for (const clock of ["source_net_19", "source_net_20"]) {
-    const terminals = input.connections.find((c) => c.name === clock)!.pointsToConnect
-    const routes = solver.getOutputSimplifiedPcbTraces().filter((trace) => trace.connection_name === clock)
+    const terminals = input.connections.find(
+      (c) => c.name === clock,
+    )!.pointsToConnect
+    const routes = solver
+      .getOutputSimplifiedPcbTraces()
+      .filter((trace) => trace.connection_name === clock)
     checkClock(routes, terminals[0]!, terminals[1]!, terminals[2]!)
   }
 })
