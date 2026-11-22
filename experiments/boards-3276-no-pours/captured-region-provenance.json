@@ -1,0 +1,51 @@
+{
+  "request": "Include a focused anonymous reproduction of the actual failing circuit, alongside the minimal synthetic case.",
+  "reproPr": 148,
+  "fixPr": 149,
+  "sourceRepo": "tscircuit/high-density-a01",
+  "reproCommit": "d0067519a4ab41a68478aad40e9ecb2452f62a03",
+  "fixCommit": "7bdf5a94f5f346b63cf0b27b9f28303e4a4b6652",
+  "test": "tests/a01/captured-terminal-via-landings.test.ts",
+  "snapshot": "tests/a01/__snapshots__/captured-terminal-via-landings.snap.svg",
+  "capturedThroughReleasedAutorouter": "0.0.1152",
+  "releasedModuleSha256": "bf96208aa94a0f88cfd0b6081ce791460b504b65892280d0cddbcdb596050790",
+  "sourcePhaseInputSha256": "abe7cc9ba363a74189ea256e455c2d415d3ef6481dc1ac60c5ab81634fd6731e",
+  "sourcePhaseScope": "Earlier archived circuit phase, not the current0.0.3276 board constructor input.",
+  "captureMethod": "Capture the A01 constructor geometry at the failing two-cell inter-layer export. Retain all five connection pairs, six available layers, grid, copper dimensions and search parameters.",
+  "minimization": "Translate center to local origin, round insignificant float noise, anonymize identities, and remove board-external collision validation. The output defect still reproduces.",
+  "retained": {
+    "connections": 5,
+    "ports": 10,
+    "layers": 6,
+    "regionWidth": 3.432,
+    "regionHeight": 3.432,
+    "cellSizeMm": 0.1,
+    "viaDiameter": 0.56,
+    "traceThickness": 0.1778,
+    "traceMargin": 0.178,
+    "viaMinDistFromBorder": 0.28
+  },
+  "reducedBefore": {
+    "iterations": 56,
+    "missingViaLandingLayers": [
+      0,
+      5
+    ]
+  },
+  "reducedAfter": {
+    "iterations": 56,
+    "preservedViaLandingLayers": [
+      0,
+      5
+    ]
+  },
+  "productionChange": "None in this follow-up; solver byte-identical to prior fix.",
+  "validation": {
+    "tests": 17,
+    "assertions": 363385,
+    "files": 8,
+    "result": "pass",
+    "sourceTypecheck": "pass"
+  },
+  "publicReproContents": "Two focused tests and their ordinary SVGs; no full board, original circuit name, or license file."
+}
