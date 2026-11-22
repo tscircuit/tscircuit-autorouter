@@ -1,0 +1,106 @@
+<svg width="640" height="640" viewBox="0 0 640 640" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="white"/><g><polyline data-points="-4.552671975403974,2.457218826475228 -3.4218661305798204,1.3264129816510737" data-type="line" data-label="source_net_23_mst1
+rootConnectionName: source_net_23
+Direct Input Connection" points="196.91597012021035,321.7720508649607 252.53018635009008,377.3862670948405" fill="none" stroke="rgba(255, 0, 0, 0.5)" stroke-linejoin="round" stroke-width="1px"/></g><g><polyline data-points="-1.6999999999999997,-0.8000000000000003 2.7,3.6" data-type="line" data-label="source_net_40_fixed_0_3
+rootConnectionName: source_net_40
+Obstacle Route" points="337.2133667061871,481.96548544328823 553.6099767268255,265.56887542264985" fill="none" stroke="rgba(255, 128, 0, 0.25)" stroke-linejoin="round" stroke-width="5.901725727835591"/></g><g><polyline data-points="-6,-3.1999999999999993 1.0999999999999996,3.9000000000000004" data-type="line" data-label="source_net_28_fixed_1_2
+rootConnectionName: source_net_28
+Obstacle Route" points="125.73486145874506,600 474.9203003556842,250.8145611030609" fill="none" stroke="rgba(255, 128, 0, 0.25)" stroke-linejoin="round" stroke-width="5.901725727835591"/></g><g><polyline data-points="-3.6829999999999945,-1.9829999999999943 1.9000000000000004,3.6" data-type="line" data-label="source_net_36_fixed_2_4
+rootConnectionName: source_net_36
+Obstacle Route" points="239.68734905370422,540.1466649102005 514.2651385412548,265.56887542264985" fill="none" stroke="rgba(255, 128, 0, 0.25)" stroke-linejoin="round" stroke-width="5.901725727835591"/></g><g><polyline data-points="-6.800000000000001,-0.7999999999999998 -2.019999999999995,3.9800000000000058" data-type="line" data-label="source_net_38_fixed_3_2
+rootConnectionName: source_net_38
+Obstacle Route" points="86.39002327317445,481.96548544328823 321.4754314319591,246.88007728450356" fill="none" stroke="rgba(255, 128, 0, 0.25)" stroke-linejoin="round" stroke-width="5.901725727835591"/></g><g><polyline data-points="-2.019999999999995,3.9800000000000058 3.0800000000000063,3.9800000000000058" data-type="line" data-label="source_net_38_fixed_3_3
+rootConnectionName: source_net_38
+Obstacle Route" points="321.4754314319591,246.88007728450356 572.2987748649718,246.88007728450356" fill="none" stroke="rgba(255, 128, 0, 0.25)" stroke-linejoin="round" stroke-width="5.901725727835591"/></g><g><polyline data-points="-5.199999999999999,0 2.4000000000000012,7.6000000000000005" data-type="line" data-label="source_net_41_fixed_4_2
+rootConnectionName: source_net_41
+Obstacle Route" points="165.07969964431572,442.6206472577176 538.8556624072365,68.84468449479681" fill="none" stroke="rgba(255, 128, 0, 0.25)" stroke-linejoin="round" stroke-width="5.901725727835591"/></g><g><polyline data-points="-5.199999999999999,-1.5999999999999996 -0.0835000000000008,3.516499999999999" data-type="line" data-label="source_net_37_fixed_5_2
+rootConnectionName: source_net_37
+Obstacle Route" points="165.07969964431572,521.3103236288588 416.71453036490567,269.6754929082689" fill="none" stroke="rgba(255, 128, 0, 0.25)" stroke-linejoin="round" stroke-width="5.901725727835591"/></g><g><polyline data-points="-5.067500000000001,-0.3809999999999931 3.5,8.186500000000008" data-type="line" data-label="source_net_39_fixed_6_4
+rootConnectionName: source_net_39
+Obstacle Route" points="171.5961884688008,461.3586264435953 592.954814912396,40" fill="none" stroke="rgba(255, 128, 0, 0.25)" stroke-linejoin="round" stroke-width="5.901725727835591"/></g><g><polyline data-points="-6.358000000000002,-0.6580000000000021 1.9000000000000004,7.6000000000000005" data-type="line" data-label="source_net_29_fixed_7_4
+rootConnectionName: source_net_29
+Obstacle Route" points="108.12804637070212,474.98177666534957 514.2651385412548,68.84468449479681" fill="none" stroke="rgba(255, 128, 0, 0.25)" stroke-linejoin="round" stroke-width="5.901725727835591"/></g><g><polyline data-points="-6.799999999999999,0.8000000000000003 -3.999999999999999,3.6" data-type="line" data-label="source_net_43_fixed_16_2
+rootConnectionName: source_net_43
+Obstacle Route" points="86.3900232731745,403.275809072147 224.09695692267167,265.56887542264985" fill="none" stroke="rgba(255, 128, 0, 0.25)" stroke-linejoin="round" stroke-width="5.901725727835591"/></g><g><polyline data-points="-3.999999999999999,3.6 -0.5,3.6" data-type="line" data-label="source_net_43_fixed_16_3
+rootConnectionName: source_net_43
+Obstacle Route" points="224.09695692267167,265.56887542264985 396.230623984543,265.56887542264985" fill="none" stroke="rgba(255, 128, 0, 0.25)" stroke-linejoin="round" stroke-width="5.901725727835591"/></g><g><polyline data-points="-6.669499999999999,-0.3809999999999949 -2.0999999999999996,4.188500000000005" data-type="line" data-label="source_net_35_fixed_17_6
+rootConnectionName: source_net_35
+Obstacle Route" points="92.8081500021957,461.35862644359537 317.54094761340184,236.62582883238926" fill="none" stroke="rgba(255, 128, 0, 0.25)" stroke-linejoin="round" stroke-width="5.901725727835591"/></g><g><polyline data-points="-2.0999999999999996,4.188500000000005 -2.1,4.4" data-type="line" data-label="source_net_35_fixed_17_7
+rootConnectionName: source_net_35
+Obstacle Route" points="317.54094761340184,236.62582883238926 317.5409476134018,226.22403723707924" fill="none" stroke="rgba(255, 128, 0, 0.25)" stroke-linejoin="round" stroke-width="5.901725727835591"/></g><g><polyline data-points="-2.1,4.4 -2.1,4.4" data-type="line" data-label="source_net_35_fixed_17_8
+rootConnectionName: source_net_35
+Obstacle Route" points="317.5409476134018,226.22403723707924 317.5409476134018,226.22403723707924" fill="none" stroke="rgba(255, 128, 0, 0.25)" stroke-linejoin="round" stroke-width="4.9181047731963264e-8"/></g><g><polyline data-points="-2.1,4.4 -1.6999999999999886,3.9999999999999947" data-type="line" data-label="source_net_35_fixed_17_9
+rootConnectionName: source_net_35
+Obstacle Route" points="317.5409476134018,226.22403723707924 337.2133667061877,245.89645632986483" fill="none" stroke="rgba(255, 0, 0, 0.75)" stroke-linejoin="round" stroke-width="5.901725727835591"/></g><g><polyline data-points="-4.525499999999994,-0.4254999999999942 -1.2999999999999998,2.8" data-type="line" data-label="source_net_33_fixed_18_10
+rootConnectionName: source_net_33
+Obstacle Route" points="198.2523163395252,463.5471830676677 356.8857857989724,304.9137136082205" fill="none" stroke="rgba(255, 128, 0, 0.25)" stroke-linejoin="round" stroke-width="5.901725727835591"/></g><g><polyline data-points="-1.2999999999999998,2.8 -1.2999999999999998,2.8" data-type="line" data-label="source_net_33_fixed_18_11
+rootConnectionName: source_net_33
+Obstacle Route" points="356.8857857989724,304.9137136082205 356.8857857989724,304.9137136082205" fill="none" stroke="rgba(255, 128, 0, 0.25)" stroke-linejoin="round" stroke-width="4.9181047731963264e-8"/></g><g><polyline data-points="-1.2999999999999998,2.8 -1.6999999999999886,3.199999999999995" data-type="line" data-label="source_net_33_fixed_18_12
+rootConnectionName: source_net_33
+Obstacle Route" points="356.8857857989724,304.9137136082205 337.2133667061877,285.24129451543547" fill="none" stroke="rgba(255, 0, 0, 0.75)" stroke-linejoin="round" stroke-width="5.901725727835591"/></g><g><polyline data-points="-6.3580000000000005,1.7420000000000004 -1.2999999999999998,6.800000000000001" data-type="line" data-label="source_net_32_fixed_19_4
+rootConnectionName: source_net_32
+Obstacle Route" points="108.12804637070224,356.9472621086376 356.8857857989724,108.18952268036742" fill="none" stroke="rgba(255, 128, 0, 0.25)" stroke-linejoin="round" stroke-width="5.901725727835591"/></g><g><polyline data-points="-5.999999999999998,1.3000000000000016 0.30000000000000027,7.6000000000000005" data-type="line" data-label="source_net_42_fixed_20_3
+rootConnectionName: source_net_42
+Obstacle Route" points="125.73486145874517,378.6852852061653 435.57546217011367,68.84468449479681" fill="none" stroke="rgba(255, 128, 0, 0.25)" stroke-linejoin="round" stroke-width="5.901725727835591"/></g><g><polyline data-points="-7.6,1.0025000000000084 -1.3740000000000023,7.228500000000006" data-type="line" data-label="source_net_30_fixed_21_3
+rootConnectionName: source_net_30
+Obstacle Route" points="47.0451850876039,393.316646906424 353.246388266807,87.1154437272209" fill="none" stroke="rgba(255, 128, 0, 0.25)" stroke-linejoin="round" stroke-width="5.901725727835591"/></g><g><polyline data-points="-7.203500000000001,1.6964999999999995 -1.2999999999999998,7.6000000000000005" data-type="line" data-label="source_net_34_fixed_22_4
+rootConnectionName: source_net_34
+Obstacle Route" points="66.54547051332725,359.18499978044196 356.8857857989724,68.84468449479681" fill="none" stroke="rgba(255, 128, 0, 0.25)" stroke-linejoin="round" stroke-width="5.901725727835591"/></g><g><polyline data-points="-3.6809999999999947,-0.3809999999999949 0.30000000000000027,3.6" data-type="line" data-label="source_net_31_fixed_23_5
+rootConnectionName: source_net_31
+Obstacle Route" points="239.78571114916815,461.35862644359537 435.57546217011367,265.56887542264985" fill="none" stroke="rgba(255, 128, 0, 0.25)" stroke-linejoin="round" stroke-width="5.901725727835591"/></g><g><polyline data-points="-6.457656745952403,1.1489100000000008 -0.9510899999999998,6.655476745952404" data-type="line" data-label="source_net_30_fixed_25_2
+rootConnectionName: source_net_30
+Obstacle Route" points="103.22682319120497,386.11604970798766 374.04554516313175,115.29732773606094" fill="none" stroke="rgba(255, 128, 0, 0.25)" stroke-linejoin="round" stroke-width="5.901725727835591"/></g><g><polyline data-points="-5.999999999999999,0.9934332540475981 -2.244523254047597,4.74891" data-type="line" data-label="source_net_42_fixed_28_1
+rootConnectionName: source_net_42
+Obstacle Route" points="125.73486145874512,393.7625589718831 310.43314255770827,209.06427787291994" fill="none" stroke="rgba(255, 128, 0, 0.25)" stroke-linejoin="round" stroke-width="5.901725727835591"/></g><g><polyline data-points="2.2489100000000004,3.346716627023798 -1.2999999999999998,-0.20219337297620044" data-type="line" data-label="source_net_32_fixed_29_7
+rootConnectionName: source_net_32
+Obstacle Route" points="531.4248979054141,278.0256170787051 356.8857857989724,452.5647291851468" fill="none" stroke="rgba(255, 128, 0, 0.25)" stroke-linejoin="round" stroke-width="5.901725727835591"/></g><g><polyline data-points="-4.552671975403974,2.457218826475228 -4.55,2.4625000000000004 -4.5249999999999995,2.4375000000000004 -4.499999999999999,2.4125000000000005 -4.474999999999999,2.3875000000000006 -4.449999999999998,2.3625000000000007 -4.424999999999998,2.337500000000001 -4.399999999999998,2.312500000000001 -4.374999999999997,2.312500000000001 -4.349999999999997,2.287500000000001 -4.324999999999997,2.262500000000001 -4.299999999999996,2.237500000000001 -4.274999999999996,2.2125000000000012 -4.249999999999996,2.1875000000000013 -4.224999999999995,2.1625000000000014 -4.199999999999995,2.1375000000000015 -4.1749999999999945,2.1125000000000016 -4.149999999999994,2.0875000000000017 -4.124999999999994,2.0625000000000018 -4.099999999999993,2.037500000000002 -4.074999999999993,2.012500000000002 -4.049999999999993,1.987500000000002 -4.024999999999992,1.9625000000000021 -3.9999999999999925,1.9375000000000022 -3.9749999999999925,1.9125000000000023 -3.9499999999999926,1.8875000000000024 -3.9249999999999927,1.8625000000000025 -3.899999999999993,1.8375000000000026 -3.874999999999993,1.8125000000000027 -3.849999999999993,1.7875000000000028 -3.824999999999993,1.7625000000000028 -3.799999999999993,1.737500000000003 -3.7749999999999932,1.712500000000003 -3.7499999999999933,1.687500000000003 -3.7249999999999934,1.6625000000000032 -3.6999999999999935,1.6375000000000033 -3.6749999999999936,1.6125000000000034 -3.6499999999999937,1.5875000000000035 -3.624999999999994,1.5625000000000036 -3.599999999999994,1.5375000000000036 -3.574999999999994,1.5125000000000037 -3.549999999999994,1.4875000000000038 -3.524999999999994,1.462500000000004 -3.4999999999999942,1.437500000000004 -3.4749999999999943,1.412500000000004 -3.4749999999999943,1.3875000000000042 -3.4749999999999943,1.3625000000000043 -3.4499999999999944,1.3375000000000044 -3.4218661305798204,1.3264129816510737" data-type="line" data-label="source_net_23_mst1
+rootConnectionName: source_net_23
+Solved Route" points="196.91597012021035,321.7720508649607 197.04738067009183,321.5123172177581 198.27690686339093,322.7418434110572 199.50643305669,323.97136960435625 200.73595924998912,325.20089579765533 201.96548544328823,326.4304219909544 203.1950116365873,327.6599481842535 204.42453782988642,328.8894743775525 205.65406402318553,328.8894743775525 206.8835902164846,330.1190005708516 208.11311640978371,331.3485267641507 209.34264260308282,332.57805295744976 210.5721687963819,333.80757915074884 211.801694989681,335.0371053440479 213.03122118298012,336.266631537347 214.2607473762792,337.4961577306461 215.4902735695783,338.72568392394516 216.71979976287741,339.95521011724423 217.9493259561765,341.1847363105433 219.1788521494756,342.4142625038424 220.4083783427747,343.6437886971415 221.6379045360738,344.87331489044055 222.8674307293729,346.10284108373963 224.09695692267198,347.3323672770387 225.32648311597106,348.56189347033774 226.55600930927014,349.7914196636368 227.78553550256922,351.0209458569359 229.0150616958683,352.250472050235 230.24458788916738,353.47999824353406 231.47411408246646,354.70952443683314 232.7036402757655,355.9390506301322 233.9331664690646,357.1685768234313 235.16269266236367,358.3981030167304 236.39221885566275,359.62762921002945 237.62174504896183,360.85715540332853 238.8512712422609,362.0866815966276 240.08079743556,363.3162077899267 241.31032362885907,364.5457339832258 242.53984982215815,365.77526017652485 243.76937601545723,367.00478636982393 244.9989022087563,368.234312563123 246.22842840205536,369.4638387564221 247.45795459535444,370.6933649497212 248.68748078865352,371.92289114302025 249.9170069819526,373.15241733631933 249.9170069819526,374.3819435296184 249.9170069819526,375.6114697229175 251.14653317525168,376.84099591621657 252.53018635009008,377.3862670948405" fill="none" stroke="green" stroke-linejoin="round" stroke-width="4.37711324814473"/></g><g><rect data-type="rect" data-label="Next (z=4)" data-x="-3.4449999999999945" data-y="1.3425000000000042" x="250.8391516269269" y="376.04180389057217" width="1.1065735739691718" height="1.1065735739691718" fill="rgba(0, 255, 0, 0.8)" stroke="black" stroke-width="0.020333035714285727"/></g><circle data-type="circle" data-label="" data-x="-2.1" data-y="4.4" cx="317.5409476134018" cy="226.22403723707924" r="9.836209546392652" fill="rgba(255, 0, 0, 0.5)" stroke="black" stroke-width="0.020333035714285727"/><circle data-type="circle" data-label="" data-x="-1.2999999999999998" data-y="2.8" cx="356.8857857989724" cy="304.9137136082205" r="9.836209546392652" fill="rgba(255, 0, 0, 0.5)" stroke="black" stroke-width="0.020333035714285727"/><g><circle data-type="point" data-label="source_net_23_mst1
+rootConnectionName: source_net_23
+Input A
+z: 4" data-x="-4.552671975403974" data-y="2.457218826475228" cx="196.91597012021035" cy="321.7720508649607" r="3" fill="orange"/></g><g><circle data-type="point" data-label="source_net_23_mst1
+rootConnectionName: source_net_23
+Input B
+z: 4" data-x="-3.4218661305798204" data-y="1.3264129816510737" cx="252.53018635009008" cy="377.3862670948405" r="3" fill="orange"/></g><g id="crosshair" style="display: none"><line id="crosshair-h" y1="0" y2="640" stroke="#666" stroke-width="0.5"/><line id="crosshair-v" x1="0" x2="640" stroke="#666" stroke-width="0.5"/><text id="coordinates" font-family="monospace" font-size="12" fill="#666"></text></g><script><![CDATA[
+              document.currentScript.parentElement.addEventListener('mousemove', (e) => {
+                const svg = e.currentTarget;
+                const rect = svg.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const crosshair = svg.getElementById('crosshair');
+                const h = svg.getElementById('crosshair-h');
+                const v = svg.getElementById('crosshair-v');
+                const coords = svg.getElementById('coordinates');
+                
+                crosshair.style.display = 'block';
+                h.setAttribute('x1', '0');
+                h.setAttribute('x2', '640');
+                h.setAttribute('y1', y);
+                h.setAttribute('y2', y);
+                v.setAttribute('x1', x);
+                v.setAttribute('x2', x);
+                v.setAttribute('y1', '0');
+                v.setAttribute('y2', '640');
+
+                // Calculate real coordinates using inverse transformation
+                const matrix = {"a":49.18104773196326,"c":0,"e":420.82114785052465,"b":0,"d":-49.18104773196326,"f":442.6206472577176};
+                // Manually invert and apply the affine transform
+                // Since we only use translate and scale, we can directly compute:
+                // x' = (x - tx) / sx
+                // y' = (y - ty) / sy
+                const sx = matrix.a;
+                const sy = matrix.d;
+                const tx = matrix.e; 
+                const ty = matrix.f;
+                const realPoint = {
+                  x: (x - tx) / sx,
+                  y: (y - ty) / sy // Flip y back since we used negative scale
+                }
+                
+                coords.textContent = `(${realPoint.x.toFixed(2)}, ${realPoint.y.toFixed(2)})`;
+                coords.setAttribute('x', (x + 5).toString());
+                coords.setAttribute('y', (y - 5).toString());
+              });
+              document.currentScript.parentElement.addEventListener('mouseleave', () => {
+                document.currentScript.parentElement.getElementById('crosshair').style.display = 'none';
+              });
+            ]]></script><g data-testid="via-clearance-checks"><rect x="12" y="12" width="500" height="44" rx="6" fill="white" stroke="#166534"/><text x="24" y="40" font-family="Arial, sans-serif" font-size="20" fill="#166534">Via-clearance checks: 1616</text></g></svg>

@@ -80,7 +80,7 @@ test("regional routing preserves debug selection without changing routes or sear
         if (solver.activeFallbackSolver) {
           sawRegionalSolver = true
           const regional = solver.activeFallbackSolver.highDensitySolver
-          expect(regional.captureSearchDebug).toBe(captureSearchDebug ?? true)
+          expect(regional.captureSearchDebug).toBe(captureSearchDebug ?? false)
           maximumRegionalHistory = Math.max(
             maximumRegionalHistory,
             countSearchHistory(regional),
@@ -90,7 +90,7 @@ test("regional routing preserves debug selection without changing routes or sear
       expect(sawRegionalSolver).toBeTrue()
       expect(solver.solved).toBeTrue()
       expect(solver.failed).toBeFalse()
-      if (captureSearchDebug === false) {
+      if (captureSearchDebug !== true) {
         expect(maximumRegionalHistory).toBe(0)
       } else {
         expect(maximumRegionalHistory).toBeGreaterThan(0)
