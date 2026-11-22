@@ -1,0 +1,110 @@
+[
+  {
+    "board": "glider-local",
+    "removedTypes": {
+      "pcb_autorouting_error": 1
+    },
+    "addedTypes": {
+      "pcb_autorouting_error": 1
+    },
+    "removed": [
+      {
+        "type": "pcb_autorouting_error",
+        "pcb_autorouting_error_id": "pcb_autorouting_error_0",
+        "pcb_error_id": "pcb_autorouter_error_subcircuit_subcircuit_source_group_0",
+        "error_type": "pcb_autorouting_error",
+        "message": "Pipeline9 primary high-density routing failed: B01 failed: No path found for source_net_184; regional fallback failed: Failed to solve 1 nodes, new-cmn_78-651. err0: GrowShrinkHighDensityIntraNodeSolver failed after resizing to 256x. Last error: Unrelated route terminals overlap at the requested trace width. (capacity-autorouter@0.0.1148)"
+      }
+    ],
+    "added": [
+      {
+        "type": "pcb_autorouting_error",
+        "pcb_autorouting_error_id": "pcb_autorouting_error_0",
+        "pcb_error_id": "pcb_autorouter_error_subcircuit_subcircuit_source_group_0",
+        "error_type": "pcb_autorouting_error",
+        "message": "Pipeline9 primary high-density routing failed: B01 failed: No path found for source_net_185; regional fallback failed: Failed to solve 1 nodes, cmn_116. err0: GrowShrinkHighDensityIntraNodeSolver failed after resizing to 8x. Last error: All solvers failed in hyper solver. Example failures: ViaPossibilitiesSolver2 failed with: Exceeded max via count of 5, ViaPossibilitiesSolver2 failed with: Exceeded max via count of 5, SingleHighDensityRouteSolver ran out of iterations (MAX_ITERATIONS=10000), SingleHighDensityRouteSolver ran out of iterations (MAX_ITERATIONS=10000), SingleHighDensityRouteSolver ran out of iterations (MAX_ITERATIONS=10000). (capacity-autorouter@0.0.1148)"
+      }
+    ]
+  },
+  {
+    "board": "icepi-spaced",
+    "removedTypes": {
+      "pcb_autorouting_error": 1
+    },
+    "addedTypes": {
+      "pcb_autorouting_error": 1
+    },
+    "removed": [
+      {
+        "type": "pcb_autorouting_error",
+        "pcb_autorouting_error_id": "pcb_autorouting_error_0",
+        "pcb_error_id": "pcb_autorouter_error_subcircuit_subcircuit_source_group_0",
+        "error_type": "pcb_autorouting_error",
+        "message": "Pipeline9 primary high-density routing failed: B01 failed: No path found for source_net_34_mst0; regional fallback failed: Failed to solve 1 nodes, topology_merge_12872. err0: GrowShrinkHighDensityIntraNodeSolver failed after resizing to 32x. Last error: Unrelated route terminals overlap at the requested trace width. (capacity-autorouter@0.0.1148)"
+      }
+    ],
+    "added": [
+      {
+        "type": "pcb_autorouting_error",
+        "pcb_autorouting_error_id": "pcb_autorouting_error_0",
+        "pcb_error_id": "pcb_autorouter_error_subcircuit_subcircuit_source_group_0",
+        "error_type": "pcb_autorouting_error",
+        "message": "Pipeline9 primary high-density routing failed: B01 failed: No path found for source_net_34_mst7; regional fallback failed: Failed to solve 1 nodes, topology_merge_5713. err0: GrowShrinkHighDensityIntraNodeSolver failed after resizing to 8x. Last error: All solvers failed in hyper solver. Example failures: ViaPossibilitiesSolver2 failed with: Exceeded max via count of 5, ViaPossibilitiesSolver2 failed with: Exceeded max via count of 5, SingleHighDensityRouteSolver ran out of iterations (MAX_ITERATIONS=10000), SingleHighDensityRouteSolver ran out of iterations (MAX_ITERATIONS=10000), SingleHighDensityRouteSolver ran out of iterations (MAX_ITERATIONS=10000). (capacity-autorouter@0.0.1148)"
+      }
+    ]
+  },
+  {
+    "board": "orangecrab-local",
+    "removedTypes": {
+      "pcb_autorouting_error": 1
+    },
+    "addedTypes": {
+      "pcb_autorouting_error": 1
+    },
+    "removed": [
+      {
+        "type": "pcb_autorouting_error",
+        "pcb_autorouting_error_id": "pcb_autorouting_error_0",
+        "pcb_error_id": "pcb_autorouter_error_subcircuit_subcircuit_source_group_0",
+        "error_type": "pcb_autorouting_error",
+        "message": "Pipeline9 primary high-density routing failed: B01 failed: No path found for source_net_138_mst1; regional fallback failed: Failed to solve 1 nodes, cmn_266. err0: GrowShrinkHighDensityIntraNodeSolver failed after resizing to 32x. Last error: Unrelated route terminals overlap at the requested trace width. (capacity-autorouter@0.0.1148)"
+      }
+    ],
+    "added": [
+      {
+        "type": "pcb_autorouting_error",
+        "pcb_autorouting_error_id": "pcb_autorouting_error_0",
+        "pcb_error_id": "pcb_autorouter_error_subcircuit_subcircuit_source_group_0",
+        "error_type": "pcb_autorouting_error",
+        "message": "Pipeline9 route \"source_net_46_fixed_34_0\" changes layers from z=0 to z=5 without an explicit via (capacity-autorouter@0.0.1148)"
+      }
+    ]
+  },
+  {
+    "board": "orangecrab-spaced",
+    "removedTypes": {
+      "pcb_autorouting_error": 1
+    },
+    "addedTypes": {
+      "pcb_autorouting_error": 1
+    },
+    "removed": [
+      {
+        "type": "pcb_autorouting_error",
+        "pcb_autorouting_error_id": "pcb_autorouting_error_0",
+        "pcb_error_id": "pcb_autorouter_error_subcircuit_subcircuit_source_group_0",
+        "error_type": "pcb_autorouting_error",
+        "message": "Pipeline9 primary high-density routing failed: B01 failed: No path found for source_net_64_mst12; regional fallback failed: Failed to solve 1 nodes, topology_merge_13629. err0: GrowShrinkHighDensityIntraNodeSolver failed after resizing to 8x. Last error: Unrelated route terminals overlap at the requested trace width. (capacity-autorouter@0.0.1148)"
+      }
+    ],
+    "added": [
+      {
+        "type": "pcb_autorouting_error",
+        "pcb_autorouting_error_id": "pcb_autorouting_error_0",
+        "pcb_error_id": "pcb_autorouter_error_subcircuit_subcircuit_source_group_0",
+        "error_type": "pcb_autorouting_error",
+        "message": "Pipeline9 primary high-density routing failed: B01 failed: No path found for source_net_151; regional fallback failed: Failed to solve 1 nodes, topology_merge_12666. err0: GrowShrinkHighDensityIntraNodeSolver failed after resizing to 32x. Last error: Unrelated route terminals overlap at the requested trace width. (capacity-autorouter@0.0.1148)"
+      }
+    ]
+  }
+]

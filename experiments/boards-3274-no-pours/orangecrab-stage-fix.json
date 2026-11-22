@@ -1,0 +1,27 @@
+{
+  "directRegionalError": "Error: Pipeline9 route \"source_net_46_fixed_34_0\" changes layers from z=0 to z=5 without an explicit via",
+  "variant": "head",
+  "inputSha256": "abe7cc9ba363a74189ea256e455c2d415d3ef6481dc1ac60c5ab81634fd6731e",
+  "seconds": 14.559939097,
+  "solved": false,
+  "error": "Pipeline9HighDensitySolver error: Error: Pipeline9 route \"source_net_46_fixed_34_0\" changes layers from z=0 to z=5 without an explicit via",
+  "iterations": 113223,
+  "routedFragments": 605,
+  "stats": {
+    "nodeCount": 2734,
+    "solvedNodeCount": 360,
+    "fixedObstacleCount": 833,
+    "fixedObstacleUses": 6169,
+    "boardObstacleUses": 207,
+    "fallbackNodeCount": 72,
+    "regularNodeCount": 177,
+    "b01NodeCount": 184,
+    "reroutedFixedRouteCount": 109,
+    "reroutedFixedRouteSectionCount": 81,
+    "promotedFallbackAttemptCount": 6,
+    "promotedFixedRouteCount": 7,
+    "regionalPreloadedViaCandidateRejectionCount": 72,
+    "regionalForceImproveCandidateRejectionCount": 0,
+    "regionalRepairCandidateRejectionCount": 0
+  }
+}

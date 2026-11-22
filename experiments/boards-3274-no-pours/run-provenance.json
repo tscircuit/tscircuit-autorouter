@@ -1,0 +1,63 @@
+{
+  "tscircuit": "0.0.3274",
+  "core": "0.0.2455",
+  "autorouter": "0.0.1148",
+  "fanout": "0.0.101",
+  "busLanes": "0.0.65",
+  "sourceAutorouterMain": "880feeb5d1f3dd7547fc41275c3bd56cdcb13a5f",
+  "sourceRepro": "a82fb39cd6ca35675e8b0bb48eb900d0e70d5e07",
+  "sourceFix": "71477d34424319a0943e6ca99989314a7d40b209",
+  "benchmarkRun": 44963441708,
+  "benchmarkSource": "bb461e9941e331d3f654176fb248062df060440a",
+  "pours": false,
+  "note": "Use dependencies actually pinned by the latest tscircuit release. Autorouter 0.0.1149 is available separately and is the PR source base, but tscircuit 0.0.3274 still pins 0.0.1148. The regional repair source method and frozen source patch are unchanged.",
+  "upstreamChanges": [
+    {
+      "component": "core",
+      "change": "Resolve explicit tscircuit and tscircuit_beta autorouter presets; update fanout and bus lanes",
+      "prs": [
+        5788,
+        5789,
+        5790
+      ]
+    },
+    {
+      "component": "fanout",
+      "change": "Skip exact via clearance checks for distant pads and vias",
+      "prs": [
+        360,
+        361
+      ]
+    },
+    {
+      "component": "bus lanes",
+      "change": "Cache clear/blocked visibility prefixes; correct pad rotations in debug graphics",
+      "prs": [
+        231,
+        232,
+        234
+      ]
+    },
+    {
+      "component": "autorouter main only",
+      "change": "Cache via occupancy within a B01 search",
+      "prs": [
+        4071,
+        4076
+      ]
+    }
+  ],
+  "baselineArtifact": 14729929603,
+  "baselineArtifactSha256": "2aff4976d78261762ddcb52647c477edb87dfc67e1d81165d39c44cbda33e708",
+  "fixArtifact": 14730980775,
+  "fixArtifactSha256": "ad3872204349a5f90bac13b8a7d60a32adcde16b7a2f7e765d09d89b6c815842",
+  "sourcePatchSha256": "abe8eaf9c661ac0d3e1148b3333bfe0319276643f2ebfe7c6ef8e24aa3e7fe64",
+  "runner": "Blacksmith32vCPU ARM Ubuntu24.04, Bun1.4.3, 19 workers,600seconds per board. Independent base/fix jobs use identical frozen dependencies.",
+  "replayInstructions": [
+    "Unpack boards.zip into this experiment directory/runtime and install its frozen lockfile.",
+    "Copy replay-hd-stage.ts into runtime so imports resolve to the released runtime modules.",
+    "From runtime: bun replay-hd-stage.ts base ../glider-hd-input.json.gz ../glider-stage-base.json",
+    "From runtime: bun replay-hd-stage.ts head ../glider-hd-input.json.gz ../glider-stage-fix.json",
+    "Use orangecrab-hd-input.json.gz the same way to replay the actual OrangeCrab phase."
+  ]
+}

@@ -1,0 +1,173 @@
+{
+  "scope": {
+    "originalTsxBoards": 19,
+    "tscircuit": "0.0.3274",
+    "copperPours": false,
+    "planeNetSpecialHandling": false
+  },
+  "baseline": {
+    "completedWithRoutingErrors": 16,
+    "timeouts": 3,
+    "fullyRouted": 0,
+    "blockingStages": {
+      "bus lanes": 2,
+      "fanout": 6,
+      "tiny graph pathing": 3,
+      "high-density routing": 8
+    }
+  },
+  "verifiedRootCause": {
+    "stage": "Pipeline9 regional high-density repair",
+    "chain": [
+      "Movable preloaded traces remain native traces and can be rerouted by the graph/repair pipeline.",
+      "Regional repair cuts a movable trace at the active cell boundary, making the cut positions fixed endpoints of that repair.",
+      "On Glider, source_net_321 was cut 0.00394356046 mm from an unrelated source_net_184 crossing while both use 0.11 mm copper.",
+      "With immutable preloaded copper present, physical geometry is preserved, so later growth cannot separate those fixed endpoints.",
+      "The existing clearance expansion previously handled missing promoted sections, but did not handle these colliding cut endpoints."
+    ],
+    "fix": "Detect overlapping newly cut endpoints only in the existing immutable-preload mode, then reuse the existing clearance-envelope expansion. No new routing strategy, dependency, public API or search budget.",
+    "beforeEndpointDistanceMm": 0.00394356046,
+    "afterEndpointDistanceMm": 0.3350232106423408,
+    "traceWidthMm": 0.11,
+    "selectedRealRepairBefore": "failed",
+    "selectedRealRepairAfter": "solved",
+    "regressionCoverage": [
+      "The repaired route is checked against all unrelated preloaded copper sections; immutable preloaded routes stay identical.",
+      "Immutable preloaded routes are identical before and after the selected repair.",
+      "Original Game Boy DRC/snapshot limits pass after restricting the fix to immutable-preload mode.",
+      "USB shield/data, T113, H616 via validation, tangent-copper and regional splicing regression tests pass without changing their expected snapshots."
+    ]
+  },
+  "remainingBlockers": [
+    {
+      "stage": "fanout",
+      "boards": 6,
+      "observed": "All six native layouts finish fanout with incomplete best assignments. Best counts: Butterstick79/91, Glider83/95, H616123/174, iCEPi13/32, iMX6 8/32, OrangeCrab139/273. These failures precede detailed routing.",
+      "nextInvestigation": "Separate physically infeasible escape geometry from missing legal candidates. No fanout search limit or geometry rule was changed."
+    },
+    {
+      "stage": "tiny graph pathing",
+      "boards": 3,
+      "observed": "The H616 variants finish both byte buses, then exhaust pathing in the remaining-signal phase. Every new route has been routed at least once, but the solver cannot commit a joint solution; the four final greedy attempts retain two or three pending routes.",
+      "nextInvestigation": "Inspect the ownership/congestion cycle around the remaining routes within the existing solver. Raising budgets alone has not been justified."
+    },
+    {
+      "stage": "high-density routing",
+      "boards": 8,
+      "observed": "The cut-terminal geometry fix advances the Glider, OrangeCrab and iCEPi phases but later routing blockers remain. The actual OrangeCrab-local phase now reaches region topology_merge_13257, where an unchanged regional solver emits a candidate whose explicit via is away from both endpoints. The existing materializer rejects it before acceptance. No invalid copper reaches the final Circuit JSON.",
+      "nextInvestigation": "Make the graph-to-physical-routing handoff respect terminal spacing and via feasibility; inspect the next failing connection rather than accepting invalid copper.",
+      "independentReproduction": "Replaying that captured region directly through the unchanged regional solver produces the same missing-via exception without invoking the changed trace-cut method. Captured candidate and region: orangecrab-later-candidate.json and orangecrab-later-region.json.gz."
+    },
+    {
+      "stage": "bus lanes",
+      "boards": 2,
+      "observed": "Butterstick local/spaced spend their budget in bus-lane/carrier attempts. No final Circuit JSON exists for these runs.",
+      "nextInvestigation": "Inspect the failing carrier and multi-terminal bus attempts against the captured constructor inputs."
+    }
+  ],
+  "limits": [
+    "Solving the selected region and advancing a captured stage is not full-board routing completion.",
+    "Failed phases do not publish their partial detailed routes into the final Circuit JSON.",
+    "All-board timings are contended observations and are not used as speedup claims.",
+    "Timeout runs have no complete output whose copper can be compared."
+  ],
+  "selectionReason": "Regional high-density repair blocks eight board variants. This reproducible geometry defect affects Glider and an existing OrangeCrab regression, and can be corrected inside the existing expansion logic without changing routing strategies or budgets. It removes one concrete blocker rather than claiming to solve every failure in this stage.",
+  "finalMatrix": {
+    "boards": 19,
+    "copperPours": false,
+    "fullyRoutedBefore": 0,
+    "fullyRoutedAfter": 0,
+    "settledBefore": 16,
+    "settledAfter": 16,
+    "identicalEmittedCopper": 16,
+    "identicalFullOutputs": 12,
+    "commonInputFiles": 184,
+    "changedCommonInputs": [],
+    "possibleRegressions": [],
+    "blockingStagesAfter": {
+      "bus lanes": 2,
+      "fanout": 6,
+      "highDensityRouteSolver": 8,
+      "portPointPathingSolver": 3
+    },
+    "interpretation": "Captured-stage progress is not whole-board completion. Failed phases do not publish partial traces. Timings are contended observations, with no speedup claim. Timeout outputs cannot be compared.",
+    "onlyFullOutputDifferences": "Four pcb_autorouting_error messages change. All other Circuit JSON elements are identical on the 16 settled renders."
+  },
+  "stageReplays": [
+    {
+      "circuit": "Glider-local",
+      "inputSha256": "7692fe5a0e1dceff5943a634188a2d2ac285922035d255dc23b2c76a89dff066",
+      "totalRegions": 3013,
+      "solvedBefore": 1360,
+      "solvedAfter": 1365,
+      "fragmentsBefore": 2957,
+      "fragmentsAfter": 2964,
+      "source": "Actual 0.0.3274 other_signals constructor input; identical to the earlier no-pour input",
+      "wholeStageSolved": false
+    },
+    {
+      "circuit": "OrangeCrab-local",
+      "inputSha256": "abe7cc9ba363a74189ea256e455c2d415d3ef6481dc1ac60c5ab81634fd6731e",
+      "totalRegions": 2734,
+      "solvedBefore": 82,
+      "solvedAfter": 360,
+      "fragmentsBefore": 160,
+      "fragmentsAfter": 605,
+      "source": "Actual 0.0.3274 other_signals constructor input; identical to the earlier no-pour input. This is distinct from the older existing OrangeCrab test fixture.",
+      "wholeStageSolved": false
+    }
+  ],
+  "releaseChange": "Compared with 0.0.3273, OrangeCrab-native now settles with incomplete fanout (139/273) instead of reaching 600 seconds. The 15 previously settled copper outputs remain identical; their only full-output changes are source_project_metadata version fields.",
+  "h616GraphInputEquivalence": [
+    {
+      "file": "h616-local/graph-1-3-input.json.gz",
+      "sameInput": true
+    },
+    {
+      "file": "h616-local/graph-1-2-input.json.gz",
+      "sameInput": true
+    },
+    {
+      "file": "h616-local/graph-1-1-input.json.gz",
+      "sameInput": true
+    }
+  ],
+  "preloadAudit": [
+    {
+      "file": "base/h616-local/end-1.srj.json.gz",
+      "traces": 8,
+      "obstacles": 760,
+      "unattributedObstacleCount": 4
+    },
+    {
+      "file": "base/h616-local/end-2.srj.json.gz",
+      "traces": 16,
+      "obstacles": 760,
+      "unattributedObstacleCount": 4
+    },
+    {
+      "file": "base/h616-local/error-3.srj.json.gz",
+      "traces": 16,
+      "obstacles": 760,
+      "unattributedObstacleCount": 4
+    },
+    {
+      "file": "base/h616-local/start-1.srj.json.gz",
+      "traces": 0,
+      "obstacles": 760,
+      "unattributedObstacleCount": 4
+    },
+    {
+      "file": "base/h616-local/start-2.srj.json.gz",
+      "traces": 8,
+      "obstacles": 760,
+      "unattributedObstacleCount": 4
+    },
+    {
+      "file": "base/h616-local/start-3.srj.json.gz",
+      "traces": 16,
+      "obstacles": 760,
+      "unattributedObstacleCount": 4
+    }
+  ]
+}

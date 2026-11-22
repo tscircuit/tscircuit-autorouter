@@ -1,0 +1,54 @@
+{
+  "route": {
+    "connectionName": "source_net_46_fixed_34_0",
+    "rootConnectionName": "connectivity_net132",
+    "regionId": "topology_merge_13257",
+    "traceThickness": 0.0889,
+    "viaDiameter": 0.28,
+    "route": [
+      {
+        "x": 16.968999999999998,
+        "y": 3.4618478260869567,
+        "z": 0,
+        "portPointId": "pipeline9_fallback:source_net_46_fixed_34_0:start",
+        "nextPortPointId": "pipeline9_fallback:source_net_46_fixed_34_0:end",
+        "connectionName": "source_net_46_fixed_34_0",
+        "rootConnectionName": "connectivity_net132"
+      },
+      {
+        "x": 16.968999999999998,
+        "y": 3.461835051546392,
+        "z": 5,
+        "portPointId": "pipeline9_fallback:source_net_46_fixed_34_0:end",
+        "prevPortPointId": "pipeline9_fallback:source_net_46_fixed_34_0:start",
+        "connectionName": "source_net_46_fixed_34_0",
+        "rootConnectionName": "connectivity_net132"
+      }
+    ],
+    "vias": [
+      {
+        "x": 16.982,
+        "y": 3.463999999999983
+      }
+    ]
+  },
+  "start": {
+    "x": 16.968999999999998,
+    "y": 3.4618478260869567,
+    "z": 0,
+    "portPointId": "pipeline9_fallback:source_net_46_fixed_34_0:start",
+    "nextPortPointId": "pipeline9_fallback:source_net_46_fixed_34_0:end",
+    "connectionName": "source_net_46_fixed_34_0",
+    "rootConnectionName": "connectivity_net132"
+  },
+  "end": {
+    "x": 16.968999999999998,
+    "y": 3.461835051546392,
+    "z": 5,
+    "portPointId": "pipeline9_fallback:source_net_46_fixed_34_0:end",
+    "prevPortPointId": "pipeline9_fallback:source_net_46_fixed_34_0:start",
+    "connectionName": "source_net_46_fixed_34_0",
+    "rootConnectionName": "connectivity_net132"
+  },
+  "stack": "Error\n    at <anonymous> (/workspace/work/rerun-3273-no-pours/replay-layer-transition.ts:6:253)\n    at zi (/workspace/work/rerun-3273/node_modules/@tscircuit/capacity-autorouter/dist/index.js:1:201473)\n    at <anonymous> (/workspace/work/rerun-3273/node_modules/@tscircuit/capacity-autorouter/dist/index.js:1:2850111)\n    at map (native:1:11)\n    at validateCandidateWithCleanup (/workspace/work/rerun-3273/node_modules/@tscircuit/capacity-autorouter/dist/index.js:1:2909694)\n    at _step (/workspace/work/rerun-3273/node_modules/@tscircuit/capacity-autorouter/dist/index.js:1:433411)\n    at _step (/workspace/work/rerun-3273/node_modules/@tscircuit/capacity-autorouter/dist/index.js:1:1268047)\n    at step (/workspace/work/rerun-3273/node_modules/@tscircuit/capacity-autorouter/dist/index.js:1:173761)\n    at _step (/workspace/work/rerun-3273/node_modules/@tscircuit/capacity-autorouter/dist/index.js:1:1281520)\n    at step (/workspace/work/rerun-3273/node_modules/@tscircuit/capacity-autorouter/dist/index.js:1:173761)"
+}

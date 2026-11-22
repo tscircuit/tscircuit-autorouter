@@ -1,0 +1,26 @@
+{
+  "variant": "head",
+  "inputSha256": "7692fe5a0e1dceff5943a634188a2d2ac285922035d255dc23b2c76a89dff066",
+  "seconds": 109.196543236,
+  "solved": false,
+  "error": "Pipeline9 primary high-density routing failed: B01 failed: No path found for source_net_185; regional fallback failed: Failed to solve 1 nodes, cmn_116. err0: GrowShrinkHighDensityIntraNodeSolver failed after resizing to 8x. Last error: All solvers failed in hyper solver. Example failures: ViaPossibilitiesSolver2 failed with: Exceeded max via count of 5, ViaPossibilitiesSolver2 failed with: Exceeded max via count of 5, SingleHighDensityRouteSolver ran out of iterations (MAX_ITERATIONS=10000), SingleHighDensityRouteSolver ran out of iterations (MAX_ITERATIONS=10000), SingleHighDensityRouteSolver ran out of iterations (MAX_ITERATIONS=10000).",
+  "iterations": 332479,
+  "routedFragments": 2964,
+  "stats": {
+    "nodeCount": 3013,
+    "solvedNodeCount": 1365,
+    "fixedObstacleCount": 1018,
+    "fixedObstacleUses": 550,
+    "boardObstacleUses": 19,
+    "fallbackNodeCount": 6,
+    "regularNodeCount": 1358,
+    "b01NodeCount": 8,
+    "reroutedFixedRouteCount": 4,
+    "reroutedFixedRouteSectionCount": 4,
+    "promotedFallbackAttemptCount": 0,
+    "promotedFixedRouteCount": 0,
+    "regionalPreloadedViaCandidateRejectionCount": 42,
+    "regionalForceImproveCandidateRejectionCount": 0,
+    "regionalRepairCandidateRejectionCount": 0
+  }
+}

@@ -1,0 +1,20 @@
+Board,Blocking stage,Outcome before / after,Traces before / after,Vias before / after,Emitted copper
+butterstick-local,Bus lanes,600s timeout / 600s timeout,Unknown,Unknown,No completed output
+butterstick-native,Fanout,Routing errors / routing errors,0 / 0,0 / 0,Identical
+butterstick-spaced,Bus lanes,600s timeout / 600s timeout,Unknown,Unknown,No completed output
+glider-local,High-density routing,Routing errors / routing errors,53 / 53,100 / 100,Identical
+glider-native,Fanout,Routing errors / routing errors,0 / 0,0 / 0,Identical
+glider-spaced,High-density routing,Routing errors / routing errors,16 / 16,30 / 30,Identical
+h616-default-order-local,Tiny graph pathing,Routing errors / routing errors,16 / 16,32 / 32,Identical
+h616-local,Tiny graph pathing,Routing errors / routing errors,16 / 16,32 / 32,Identical
+h616-native,Fanout,Routing errors / routing errors,0 / 0,0 / 0,Identical
+h616-spaced,Tiny graph pathing,Routing errors / routing errors,16 / 16,32 / 32,Identical
+icepi-local,High-density routing,Routing errors / routing errors,16 / 16,30 / 30,Identical
+icepi-native,Fanout,Routing errors / routing errors,0 / 0,0 / 0,Identical
+icepi-spaced,High-density routing,Routing errors / routing errors,52 / 52,98 / 98,Identical
+imx6-local,High-density routing,600s timeout / 600s timeout,Unknown,Unknown,No completed output
+imx6-native,Fanout,Routing errors / routing errors,0 / 0,0 / 0,Identical
+imx6-spaced,High-density routing,Routing errors / routing errors,17 / 17,30 / 30,Identical
+orangecrab-local,High-density routing,Routing errors / routing errors,52 / 52,93 / 93,Identical
+orangecrab-native,Fanout,600s timeout / 600s timeout,Unknown,Unknown,No completed output
+orangecrab-spaced,High-density routing,Routing errors / routing errors,52 / 52,106 / 106,Identical

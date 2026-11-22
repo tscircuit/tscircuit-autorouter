@@ -1,0 +1,79 @@
+{
+  "sourceBase": "880feeb5d1f3dd7547fc41275c3bd56cdcb13a5f",
+  "sourceFix": "71477d34424319a0943e6ca99989314a7d40b209",
+  "sourcePatchSha256": "abe8eaf9c661ac0d3e1148b3333bfe0319276643f2ebfe7c6ef8e24aa3e7fe64",
+  "local": [
+    {
+      "check": "TypeScript --noEmit",
+      "result": "pass",
+      "log": "glider-1149-typecheck.log.gz"
+    },
+    {
+      "check": "ESM and declaration build",
+      "result": "pass",
+      "log": "glider-1149-build.log.gz"
+    },
+    {
+      "check": "Game Boy original DRC and original SVG expectations",
+      "result": "pass",
+      "assertions": 12,
+      "log": "glider-1149-gameboy-snapshots.log.gz"
+    },
+    {
+      "check": "Actual Glider repair and OrangeCrab formerly blocked connection",
+      "result": "pass",
+      "assertions": 1030,
+      "log": "glider-1149-final-tests.log.gz",
+      "note": "These two cases pass. That preliminary combined invocation also reports a missing sparse Game Boy fixture import; the fixture was restored and the isolated Game Boy case then passed, as logged separately."
+    }
+  ],
+  "ci": {
+    "fixRun": 44963494048,
+    "reproRun": 44963494240,
+    "result": "fix passed; repro finishing",
+    "repro": {
+      "passedTestShards": 8,
+      "pendingTestShards": 1,
+      "failedTestShards": 0
+    },
+    "fix": {
+      "passedTestShards": 9,
+      "pendingTestShards": 0,
+      "failedTestShards": 0
+    }
+  },
+  "boardRuns": {
+    "run": 44963441708,
+    "result": "success",
+    "boardsPerVariant": 19,
+    "baseArtifact": 14729929603,
+    "fixArtifact": 14730980775,
+    "fullyRouted": 0,
+    "sameEmittedCopperOutputs": 16,
+    "sameTimeouts": 3,
+    "commonCapturedInputs": 184,
+    "changedCommonCapturedInputs": 0
+  },
+  "stageReplays": {
+    "glider": {
+      "before": 1360,
+      "after": 1365,
+      "totalRegions": 3013,
+      "wholeStageSolved": false
+    },
+    "orangecrabActualCurrentInput": {
+      "before": 82,
+      "after": 360,
+      "totalRegions": 2734,
+      "wholeStageSolved": false,
+      "nextFailure": "Invalid layer-transition candidate also reproduced in the unchanged regional solver directly."
+    }
+  },
+  "constraints": [
+    "No new routing strategy, public API, dependency or search budget.",
+    "Immutable preloaded routes remain identical in the selected repair; new routed copper is checked against unrelated preloaded copper.",
+    "No complete-board improvement or speedup claim.",
+    "Copper from timed-out runs cannot be compared.",
+    "Partially routed failed stages do not publish their traces into the final Circuit JSON."
+  ]
+}

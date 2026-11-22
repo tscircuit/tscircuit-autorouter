@@ -1,0 +1,26 @@
+{
+  "variant": "base",
+  "inputSha256": "abe7cc9ba363a74189ea256e455c2d415d3ef6481dc1ac60c5ab81634fd6731e",
+  "seconds": 0.832248866,
+  "solved": false,
+  "error": "Pipeline9 primary high-density routing failed: B01 failed: No path found for source_net_138_mst1; regional fallback failed: Failed to solve 1 nodes, cmn_266. err0: GrowShrinkHighDensityIntraNodeSolver failed after resizing to 32x. Last error: Unrelated route terminals overlap at the requested trace width.",
+  "iterations": 1160,
+  "routedFragments": 160,
+  "stats": {
+    "nodeCount": 2734,
+    "solvedNodeCount": 82,
+    "fixedObstacleCount": 833,
+    "fixedObstacleUses": 33,
+    "boardObstacleUses": 16,
+    "fallbackNodeCount": 2,
+    "regularNodeCount": 75,
+    "b01NodeCount": 8,
+    "reroutedFixedRouteCount": 6,
+    "reroutedFixedRouteSectionCount": 1,
+    "promotedFallbackAttemptCount": 0,
+    "promotedFixedRouteCount": 0,
+    "regionalPreloadedViaCandidateRejectionCount": 0,
+    "regionalForceImproveCandidateRejectionCount": 0,
+    "regionalRepairCandidateRejectionCount": 0
+  }
+}

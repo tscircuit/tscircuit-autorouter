@@ -1,0 +1,120 @@
+{
+  "scope": {
+    "originalTsxBoards": 19,
+    "tscircuit": "0.0.3273",
+    "copperPours": false,
+    "planeNetSpecialHandling": false
+  },
+  "baseline": {
+    "completedWithRoutingErrors": 15,
+    "timeouts": 4,
+    "fullyRouted": 0,
+    "blockingStages": {
+      "bus lanes": 2,
+      "fanout": 6,
+      "tiny graph pathing": 3,
+      "high-density routing": 8
+    }
+  },
+  "verifiedRootCause": {
+    "stage": "Pipeline9 regional high-density repair",
+    "chain": [
+      "Movable preloaded traces remain native traces and can be rerouted by the graph/repair pipeline.",
+      "Regional repair cuts a movable trace at the active cell boundary, making the cut positions fixed endpoints of that repair.",
+      "On Glider, source_net_321 was cut 0.00394356046 mm from an unrelated source_net_184 crossing while both use 0.11 mm copper.",
+      "With immutable preloaded copper present, physical geometry is preserved, so later growth cannot separate those fixed endpoints.",
+      "The existing clearance expansion previously handled missing promoted sections, but did not handle these colliding cut endpoints."
+    ],
+    "fix": "Detect overlapping newly cut endpoints only in the existing immutable-preload mode, then reuse the existing clearance-envelope expansion. No new routing strategy, dependency, public API or search budget.",
+    "beforeEndpointDistanceMm": 0.00394356046,
+    "afterEndpointDistanceMm": 0.3350232106423408,
+    "traceWidthMm": 0.11,
+    "selectedRealRepairBefore": "failed",
+    "selectedRealRepairAfter": "solved",
+    "regressionCoverage": [
+      "The repaired route is checked against all unrelated preloaded copper sections; immutable preloaded routes stay identical.",
+      "Immutable preloaded routes are identical before and after the selected repair.",
+      "Original Game Boy DRC/snapshot limits pass after restricting the fix to immutable-preload mode.",
+      "USB shield/data, T113, H616 via validation, tangent-copper and regional splicing regression tests pass without changing their expected snapshots."
+    ]
+  },
+  "remainingBlockers": [
+    {
+      "stage": "fanout",
+      "boards": 6,
+      "observed": "Five native layouts finish with incomplete best fanout assignments; OrangeCrab-native hits the 600-second budget. These failures precede detailed routing.",
+      "nextInvestigation": "Separate physically infeasible escape geometry from missing legal candidates. No fanout search limit or geometry rule was changed."
+    },
+    {
+      "stage": "tiny graph pathing",
+      "boards": 3,
+      "observed": "The H616 variants finish both byte buses, then exhaust pathing in the remaining-signal phase. Every new route has been routed at least once, but the solver cannot commit a joint solution; the four final greedy attempts retain two or three pending routes.",
+      "nextInvestigation": "Inspect the ownership/congestion cycle around the remaining routes within the existing solver. Raising budgets alone has not been justified."
+    },
+    {
+      "stage": "high-density routing",
+      "boards": 8,
+      "observed": "The regional cut bug is one deterministic blocker. Other failures still include impossible assigned terminal geometry, no-path/grid candidates and rejected via candidates.",
+      "nextInvestigation": "Make the graph-to-physical-routing handoff respect terminal spacing and via feasibility; inspect the next failing connection rather than accepting invalid copper."
+    },
+    {
+      "stage": "bus lanes",
+      "boards": 2,
+      "observed": "Butterstick local/spaced spend their budget in bus-lane/carrier attempts. No final Circuit JSON exists for these runs.",
+      "nextInvestigation": "Inspect the failing carrier and multi-terminal bus attempts against the captured constructor inputs."
+    }
+  ],
+  "limits": [
+    "Solving the selected region and advancing a captured stage is not full-board routing completion.",
+    "Failed phases do not publish their partial detailed routes into the final Circuit JSON.",
+    "All-board timings are contended observations and are not used as speedup claims.",
+    "Timeout runs have no complete output whose copper can be compared."
+  ],
+  "selectionReason": "Regional high-density repair blocks eight board variants. This reproducible geometry defect affects Glider and an existing OrangeCrab regression, and can be corrected inside the existing expansion logic without changing routing strategies or budgets. It removes one concrete blocker rather than claiming to solve every failure in this stage.",
+  "finalMatrix": {
+    "boards": 19,
+    "copperPours": false,
+    "fullyRoutedBefore": 0,
+    "fullyRoutedAfter": 0,
+    "settledBefore": 15,
+    "settledAfter": 15,
+    "identicalEmittedCopper": 15,
+    "identicalFullOutputs": 11,
+    "commonInputFiles": 137,
+    "changedCommonInputs": [],
+    "possibleRegressions": [],
+    "blockingStagesAfter": {
+      "bus lanes": 2,
+      "fanout": 6,
+      "highDensityRouteSolver": 8,
+      "portPointPathingSolver": 3
+    },
+    "afterArtifactSha256": "2813033438f9b2d7d308256c375622da7e6e1e7d6cd68e1b59de3ae541be1016",
+    "interpretation": "A local regional repair improvement is not whole-board completion. Full-matrix wall times are contended observations; no speedup claim is made.",
+    "onlyFullOutputDifferences": "Four pcb_autorouting_error messages change; all other Circuit JSON elements are identical on the 15 settled renders."
+  },
+  "stageReplays": [
+    {
+      "circuit": "Glider-local",
+      "inputSha256": "7692fe5a0e1dceff5943a634188a2d2ac285922035d255dc23b2c76a89dff066",
+      "totalRegions": 3013,
+      "solvedBefore": 1360,
+      "solvedAfter": 1365,
+      "fragmentsBefore": 2957,
+      "fragmentsAfter": 2964,
+      "source": "Original no-pour board run; other_signals high-density constructor input",
+      "wholeStageSolved": false
+    },
+    {
+      "circuit": "OrangeCrab-local",
+      "inputSha256": "8863b56e8fc0804aa8bf1806cc3f777ad010a8a2a32502b140909b2f697e0e8a",
+      "totalRegions": 2643,
+      "solvedBefore": 65,
+      "solvedAfter": 463,
+      "fragmentsBefore": 125,
+      "fragmentsAfter": 802,
+      "source": "Existing captured OrangeCrab regression fixture, replayed with released autorouter 0.0.1148",
+      "wholeStageSolved": false
+    }
+  ]
+}

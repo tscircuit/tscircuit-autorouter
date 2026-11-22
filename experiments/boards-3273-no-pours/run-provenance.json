@@ -1,0 +1,48 @@
+{
+  "baseline": {
+    "run": 44957123465,
+    "commit": "2cf78a0cb033ac05ec311e52f8043f39f30ad289",
+    "artifact": 14727907724,
+    "sha256": "15d60d459c7f374692908c639c3113b8dd986b0e1b507c3b78f638b6bc73a8bd"
+  },
+  "final": {
+    "run": 44961997539,
+    "commit": "3066afb17a98777a178fee75c9c2d9053a710f8d",
+    "artifact": 14730585593,
+    "sha256": "2813033438f9b2d7d308256c375622da7e6e1e7d6cd68e1b59de3ae541be1016"
+  },
+  "sourceMain": "82287990",
+  "reproPr": 4072,
+  "reproCommit": "de41f3bc2429642d1ada8f59d30b665284fe15a7",
+  "fixPr": 4073,
+  "fixCommit": "f3e8dc322426683e21d4f7b7d3d147b4448e1652",
+  "sourcePatchSha256": "abe8eaf9c661ac0d3e1148b3333bfe0319276643f2ebfe7c6ef8e24aa3e7fe64",
+  "tscircuit": "0.0.3273",
+  "autorouter": "0.0.1148",
+  "copperPours": false,
+  "routingBudgetSeconds": 600,
+  "runner": "Blacksmith 32 vCPU ARM Ubuntu 24.04; Bun 1.4.3",
+  "validation": "Local typecheck, build and focused checks pass. Seven full CI shards passed; two were cancelled by rebase onto autorouter 0.0.1149. Current rebased CI is recorded with the 0.0.3274 board rerun.",
+  "stageReplay": "The same real Glider other_signals HD input was replayed through the released autorouter before/after the exact module patch. Input SHA identical. Wall times are local diagnostic observations and not speedup evidence.",
+  "allBoardResult": {
+    "boards": 19,
+    "copperPours": false,
+    "fullyRoutedBefore": 0,
+    "fullyRoutedAfter": 0,
+    "settledBefore": 15,
+    "settledAfter": 15,
+    "identicalEmittedCopper": 15,
+    "identicalFullOutputs": 11,
+    "commonInputFiles": 137,
+    "changedCommonInputs": [],
+    "possibleRegressions": [],
+    "blockingStagesAfter": {
+      "bus lanes": 2,
+      "fanout": 6,
+      "highDensityRouteSolver": 8,
+      "portPointPathingSolver": 3
+    },
+    "afterArtifactSha256": "2813033438f9b2d7d308256c375622da7e6e1e7d6cd68e1b59de3ae541be1016",
+    "interpretation": "A local regional repair improvement is not whole-board completion. Full-matrix wall times are contended observations; no speedup claim is made."
+  }
+}

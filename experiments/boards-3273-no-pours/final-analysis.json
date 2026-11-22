@@ -1,0 +1,21 @@
+{
+  "boards": 19,
+  "copperPours": false,
+  "fullyRoutedBefore": 0,
+  "fullyRoutedAfter": 0,
+  "settledBefore": 15,
+  "settledAfter": 15,
+  "identicalEmittedCopper": 15,
+  "identicalFullOutputs": 11,
+  "commonInputFiles": 137,
+  "changedCommonInputs": [],
+  "possibleRegressions": [],
+  "blockingStagesAfter": {
+    "bus lanes": 2,
+    "fanout": 6,
+    "highDensityRouteSolver": 8,
+    "portPointPathingSolver": 3
+  },
+  "afterArtifactSha256": "2813033438f9b2d7d308256c375622da7e6e1e7d6cd68e1b59de3ae541be1016",
+  "interpretation": "A local regional repair improvement is not whole-board completion. Full-matrix wall times are contended observations; no speedup claim is made."
+}

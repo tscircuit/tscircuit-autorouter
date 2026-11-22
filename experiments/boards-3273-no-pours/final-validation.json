@@ -1,0 +1,72 @@
+{
+  "sourceCommit": "f3e8dc322426683e21d4f7b7d3d147b4448e1652",
+  "reproCommit": "de41f3bc2429642d1ada8f59d30b665284fe15a7",
+  "typecheck": {
+    "result": "pass",
+    "log": "glider-final-typecheck.log.gz"
+  },
+  "build": {
+    "result": "pass",
+    "outputs": [
+      "ESM",
+      "DTS"
+    ],
+    "log": "glider-final-build.log.gz"
+  },
+  "focusedChecks": [
+    {
+      "result": "pass",
+      "tests": 2,
+      "assertions": 1035,
+      "coverage": "Glider actual repair, preloaded-copper clearance, immutable copper, original Game Boy DRC and snapshots",
+      "log": "glider-immutable-gate-tests.log.gz"
+    },
+    {
+      "result": "pass",
+      "tests": 1,
+      "assertions": 7,
+      "coverage": "OrangeCrab formerly blocked connection accepted; original missing-via exception check",
+      "log": "orangecrab-final-assertions.log.gz"
+    },
+    {
+      "result": "pass",
+      "tests": 6,
+      "assertions": 2666,
+      "coverage": "USB, H616, ECP5 tangent copper, SOT-23 and regional splicing",
+      "log": "glider-overlap-regression-tests.log.gz"
+    },
+    {
+      "result": "pass",
+      "tests": 1,
+      "assertions": 174,
+      "coverage": "T113 boot fanout, original snapshots and zero DRC",
+      "log": "glider-overlap-t113-only.log.gz"
+    },
+    {
+      "result": "pass",
+      "tests": 17,
+      "assertions": 312,
+      "coverage": "Related routing and shared-connection repair unit tests",
+      "log": "glider-routing-unit-tests.log.gz"
+    }
+  ],
+  "ci": {
+    "run": 44962185938,
+    "result": "superseded by rebase",
+    "passedShards": 7,
+    "cancelledShards": 2,
+    "note": "Rebasing onto autorouter 0.0.1149 cancelled the last two older-revision shards. Current rebased PR CI validates all nine again."
+  },
+  "benchmark": {
+    "run": 44961997539,
+    "result": "pass",
+    "artifact": 14730585593,
+    "scope": "19 original TSX entrypoints; no pours; same 600-second budget; same released dependencies with exact source patch."
+  },
+  "limits": [
+    "No fully routed board before or after.",
+    "Partial detailed routes from failed phases are not emitted into the final Circuit JSON.",
+    "No performance claim from contended all-board timings.",
+    "The four timed-out boards have no completed copper output to compare."
+  ]
+}

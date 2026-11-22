@@ -1,0 +1,20 @@
+{
+  "boards": 19,
+  "copperPours": false,
+  "fullyRoutedBefore": 0,
+  "fullyRoutedAfter": 0,
+  "settledBefore": 16,
+  "settledAfter": 16,
+  "identicalEmittedCopper": 16,
+  "identicalFullOutputs": 12,
+  "commonInputFiles": 184,
+  "changedCommonInputs": [],
+  "possibleRegressions": [],
+  "blockingStagesAfter": {
+    "bus lanes": 2,
+    "fanout": 6,
+    "highDensityRouteSolver": 8,
+    "portPointPathingSolver": 3
+  },
+  "interpretation": "Captured-stage progress is not whole-board completion. Failed phases do not publish partial traces. Timings are contended observations, with no speedup claim. Timeout outputs cannot be compared."
+}

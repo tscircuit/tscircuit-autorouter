@@ -1,0 +1,50 @@
+[
+  {
+    "board": "butterstick-native",
+    "requests": 91,
+    "best": 79,
+    "solved": false,
+    "failed": true,
+    "error": "FanoutSolver: best layer assignment routed 79/91 connections"
+  },
+  {
+    "board": "glider-native",
+    "requests": 95,
+    "best": 83,
+    "solved": false,
+    "failed": true,
+    "error": "FanoutSolver: best layer assignment routed 83/95 connections"
+  },
+  {
+    "board": "h616-native",
+    "requests": 174,
+    "best": 123,
+    "solved": false,
+    "failed": true,
+    "error": "FanoutSolver: best layer assignment routed 123/174 connections"
+  },
+  {
+    "board": "icepi-native",
+    "requests": 32,
+    "best": 13,
+    "solved": false,
+    "failed": true,
+    "error": "FanoutSolver: best layer assignment routed 13/32 connections"
+  },
+  {
+    "board": "imx6-native",
+    "requests": 32,
+    "best": 8,
+    "solved": false,
+    "failed": true,
+    "error": "FanoutSolver: best layer assignment routed 8/32 connections"
+  },
+  {
+    "board": "orangecrab-native",
+    "requests": 273,
+    "best": 139,
+    "solved": false,
+    "failed": true,
+    "error": "FanoutSolver: best layer assignment routed 139/273 connections"
+  }
+]

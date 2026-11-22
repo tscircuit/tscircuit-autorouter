@@ -1,0 +1,26 @@
+{
+  "tscircuit": {
+    "version": "0.0.3274",
+    "entrySha256": "cfd669f2d96ac77eb054aab53ff34a80120bcd3db72b87f969b3d8b8d2af78a3"
+  },
+  "@tscircuit/core": {
+    "version": "0.0.2455",
+    "entrySha256": "9cd74b0f656446fd9ec114ebe3e9e9c6c0e816dab732a82fc9c39098dc714756"
+  },
+  "@tscircuit/fanout-solver": {
+    "version": "0.0.101",
+    "entrySha256": "ee06af452060e90d70c49f00a37cf516638f7649817fc4e94decb39da4d07cf9"
+  },
+  "@tscircuit/capacity-autorouter": {
+    "version": "0.0.1148",
+    "entrySha256": "9fc6ec3667c7e5544cce6833d24d06af9ec23d6bd11965484d7c5112be53d952"
+  },
+  "circuit-json-to-connectivity-map": {
+    "version": "0.0.36",
+    "entrySha256": "e662de4ccfd38f09d91f3c7b2fe9296c20ceac8d6b67f548abc7c2e02b52043f"
+  },
+  "@tscircuit/copper-pour-solver": {
+    "version": "0.0.74",
+    "entrySha256": "314328664648c09a0502b4e5dd60a835a14b10c63be66c3e4654fa5da6a51157"
+  }
+}
