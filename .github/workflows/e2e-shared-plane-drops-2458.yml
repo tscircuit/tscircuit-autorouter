@@ -42,7 +42,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: tscircuit/fanout-solver
-          ref: 181f1b5fc7e90c91698cbb5ce9b531c28c62abb7
+          ref: c19eb7f80f2ddd7b9c21a07d87b8a6ae4c7b9f88
           path: fanout-patch
       - name: Apply exact fanout source patch
         run: |
@@ -90,7 +90,7 @@ jobs:
           assert revisions['fanoutAnalyticSourceSha256']=='3534047f85164d8327323fbe90a8af84d3f70b42d00bd12f5611b5bb7aa3bb58'
           mutual=Path('core/node_modules/@tscircuit/fanout-solver/lib/route-bus/plan-mutual-clearance.ts').read_bytes()
           revisions['fanoutMutualSourceSha256']=hashlib.sha256(mutual).hexdigest()
-          assert revisions['fanoutMutualSourceSha256']=='4870f33ab3f40784e36e3f90e9f5c1e2fdeff5d571e50a5189d1b0032b91b5ca'
+          assert revisions['fanoutMutualSourceSha256']=='84be79daaaffa59155385a6bfff17634c6827b33293ffb3956543ae593d04a87'
           copper=Path('core/node_modules/@tscircuit/fanout-solver/lib/route-bus/plan-copper.ts').read_bytes()
           revisions['fanoutCopperSourceSha256']=hashlib.sha256(copper).hexdigest()
           assert revisions['fanoutCopperSourceSha256']=='cf90ab51337e2f9f65f0304e4e8acedd0f0dbf664b2389cab1e761d5166cde7b'
@@ -98,7 +98,7 @@ jobs:
           revisions['fanoutStaticSourceSha256']=hashlib.sha256(static).hexdigest()
           assert revisions['fanoutStaticSourceSha256']=='fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35'
           revisions['corePatchApplied']=False
-          revisions['fanoutPatchCommit']='181f1b5fc7e90c91698cbb5ce9b531c28c62abb7'
+          revisions['fanoutPatchCommit']='c19eb7f80f2ddd7b9c21a07d87b8a6ae4c7b9f88'
           (runtime/'revisions.json').write_text(json.dumps(revisions,indent=2)+'\n')
           print(json.dumps(revisions))
           PYSAMPLES
@@ -143,7 +143,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: tscircuit/fanout-solver
-          ref: 181f1b5fc7e90c91698cbb5ce9b531c28c62abb7
+          ref: c19eb7f80f2ddd7b9c21a07d87b8a6ae4c7b9f88
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.4.3
