@@ -1,0 +1,19 @@
+name: Check compact boundary fix source
+on:
+  push:
+    branches: [analysis/check-compact-boundary-2461]
+permissions:
+  contents: read
+jobs:
+  source-checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: cc11dd564f515e93d6043a224b3bed348adbea1a
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - run: bun run typecheck
+      - run: bun run format:check
