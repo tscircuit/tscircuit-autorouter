@@ -340,7 +340,16 @@ export class ExpandUnconnectedEdgesToMesh extends BaseSolver {
     candidateNode: CapacityMeshNode,
     expandedNodes: CapacityMeshNode[],
   ): boolean {
-    for (const meshNode of this.inputProblem.meshNodes) {
+    const candidateNodeBounds: Bounds = getBoundFromCenteredRect(candidateNode)
+    const nearbyMeshNodeIds: number[] = this.meshIndex.search(
+      candidateNodeBounds.minX,
+      candidateNodeBounds.minY,
+      candidateNodeBounds.maxX,
+      candidateNodeBounds.maxY,
+    )
+    for (const meshNodeId of nearbyMeshNodeIds) {
+      const meshNode: CapacityMeshNode =
+        this.inputProblem.meshNodes[meshNodeId]!
       if (this.getSharedOverlapArea(candidateNode, meshNode) > 0) {
         return true
       }
