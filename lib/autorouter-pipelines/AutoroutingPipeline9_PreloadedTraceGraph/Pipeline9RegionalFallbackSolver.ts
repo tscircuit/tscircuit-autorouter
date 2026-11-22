@@ -164,7 +164,7 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
       repairCandidateRejectionCount: 0,
     }
     this.highDensitySolver = new HighDensitySolver({
-      captureSearchDebug: params.captureSearchDebug,
+      captureSearchDebug: params.captureSearchDebug ?? false,
       nodePortPoints: [params.nodeWithPortPoints],
       colorMap: params.colorMap,
       connMap: params.connMap,
