@@ -1,4 +1,4 @@
-import { getBoundsFromPoints } from "@tscircuit/math-utils"
+import { getBoundsFromPoints, isPointInsideBounds } from "@tscircuit/math-utils"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { type GraphicsObject, getSvgFromGraphicsObject } from "graphics-debug"
 import {
@@ -142,13 +142,14 @@ export function getDdrLocalWidthSnapshots(
   const name = board === "glider" ? "Glider" : "OrangeCrab"
   const { connectionNominalTraceWidthMap } = solver
   const trace = drawTraceWidths(selected, connectionNominalTraceWidthMap)
-  const circles = selected.flatMap((route) =>
+  const vias = selected.flatMap((route) =>
     route.vias.map((center) => ({
       center,
       radius: route.viaDiameter / 2,
       fill: "#64748b",
     })),
   )
+  const rootConnectionName = selected[0]!.rootConnectionName ?? connectionName
   return {
     boardSvg: renderWidthDrawing({
       drawing: drawTraceWidths(routes, connectionNominalTraceWidthMap),
@@ -158,9 +159,20 @@ export function getDdrLocalWidthSnapshots(
     }),
     traceSvg: renderWidthDrawing({
       drawing: trace,
-      background: { circles },
+      background: {
+        circles: [
+          ...(capture.background.circles ?? []).filter(({ center }) =>
+            isPointInsideBounds(center, bounds),
+          ),
+          ...vias,
+        ],
+        rects: (capture.background.rects ?? []).filter(
+          ({ center, fill }) =>
+            fill !== "none" && isPointInsideBounds(center, bounds),
+        ),
+      },
       bounds,
-      title: `${name} · ${capture.names[connectionName]}`,
+      title: `${name} · ${capture.names[rootConnectionName]}`,
     }),
     traceNominalMm: trace.nominalMm,
     traceLengthMm: trace.totalMm,
