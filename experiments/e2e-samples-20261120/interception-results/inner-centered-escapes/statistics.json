@@ -1,0 +1,708 @@
+[
+  {
+    "sample": "butterstick-original",
+    "requested": 91,
+    "before": 62,
+    "after": 62,
+    "planes": [
+      17,
+      17
+    ],
+    "vias": [
+      42,
+      42
+    ],
+    "assignments": [
+      256,
+      256
+    ],
+    "gained": [],
+    "lost": [],
+    "inputsEqual": true,
+    "pcbSvgEqual": true,
+    "nativeDrc": [
+      true,
+      true
+    ],
+    "physicalViaInPad": [
+      0,
+      0
+    ],
+    "fanoutSolved": [
+      false,
+      false
+    ],
+    "fullCircuitStatus": [
+      "failed",
+      "failed"
+    ],
+    "sameCompletedOutput": false,
+    "wireLengthMm": [
+      186.63664138693875,
+      188.1002122368372
+    ],
+    "rejectionCounts": [
+      {
+        "accepted-plan-copper": 2838486,
+        "pad-via": 11170,
+        "pad-trace": 21197,
+        "outside-boundary": 9885
+      },
+      {
+        "accepted-plan-copper": 2914807,
+        "pad-via": 12006,
+        "pad-trace": 29378,
+        "outside-boundary": 11206
+      }
+    ],
+    "windingFailures": [
+      [],
+      []
+    ],
+    "commonCompletedAssignments": 256,
+    "sameAssignmentPrefix": false,
+    "bestEscapesAtCommonWork": [
+      62,
+      62
+    ]
+  },
+  {
+    "sample": "butterstick-spaced",
+    "requested": 91,
+    "before": 78,
+    "after": 78,
+    "planes": [
+      0,
+      0
+    ],
+    "vias": [
+      49,
+      49
+    ],
+    "assignments": [
+      256,
+      256
+    ],
+    "gained": [],
+    "lost": [],
+    "inputsEqual": true,
+    "pcbSvgEqual": true,
+    "nativeDrc": [
+      true,
+      true
+    ],
+    "physicalViaInPad": [
+      0,
+      0
+    ],
+    "fanoutSolved": [
+      false,
+      false
+    ],
+    "fullCircuitStatus": [
+      "failed",
+      "failed"
+    ],
+    "sameCompletedOutput": true,
+    "wireLengthMm": [
+      322.2656462746671,
+      322.2656462746671
+    ],
+    "rejectionCounts": [
+      {
+        "accepted-plan-copper": 3098813,
+        "pad-via": 10056,
+        "pad-trace": 18659,
+        "outside-boundary": 12372
+      },
+      {
+        "accepted-plan-copper": 3098813,
+        "pad-via": 10056,
+        "pad-trace": 18659,
+        "outside-boundary": 12372
+      }
+    ],
+    "windingFailures": [
+      [],
+      []
+    ],
+    "commonCompletedAssignments": 256,
+    "sameAssignmentPrefix": true,
+    "bestEscapesAtCommonWork": [
+      78,
+      78
+    ]
+  },
+  {
+    "sample": "glider-original",
+    "requested": 95,
+    "before": 86,
+    "after": 86,
+    "planes": [
+      35,
+      35
+    ],
+    "vias": [
+      58,
+      58
+    ],
+    "assignments": [
+      256,
+      256
+    ],
+    "gained": [],
+    "lost": [],
+    "inputsEqual": true,
+    "pcbSvgEqual": true,
+    "nativeDrc": [
+      true,
+      true
+    ],
+    "physicalViaInPad": [
+      0,
+      0
+    ],
+    "fanoutSolved": [
+      false,
+      false
+    ],
+    "fullCircuitStatus": [
+      "failed",
+      "failed"
+    ],
+    "sameCompletedOutput": false,
+    "wireLengthMm": [
+      214.70710600482218,
+      218.10247685472063
+    ],
+    "rejectionCounts": [
+      {
+        "accepted-plan-copper": 6669799,
+        "pad-trace": 23379,
+        "outside-boundary": 9537,
+        "pad-via": 1901
+      },
+      {
+        "accepted-plan-copper": 7292386,
+        "pad-trace": 33085,
+        "outside-boundary": 11155,
+        "pad-via": 2415
+      }
+    ],
+    "windingFailures": [
+      [],
+      []
+    ],
+    "commonCompletedAssignments": 256,
+    "sameAssignmentPrefix": false,
+    "bestEscapesAtCommonWork": [
+      86,
+      86
+    ]
+  },
+  {
+    "sample": "glider-spaced",
+    "requested": 211,
+    "before": 137,
+    "after": 135,
+    "planes": [
+      0,
+      0
+    ],
+    "vias": [
+      69,
+      67
+    ],
+    "assignments": [
+      37,
+      34
+    ],
+    "gained": [
+      "breakout:pcb_breakout_point_158",
+      "breakout:pcb_breakout_point_51",
+      "breakout:pcb_breakout_point_63",
+      "breakout:pcb_breakout_point_66",
+      "breakout:pcb_breakout_point_76",
+      "breakout:pcb_breakout_point_95",
+      "breakout:pcb_breakout_point_96"
+    ],
+    "lost": [
+      "breakout:pcb_breakout_point_125",
+      "breakout:pcb_breakout_point_129",
+      "breakout:pcb_breakout_point_14",
+      "breakout:pcb_breakout_point_178",
+      "breakout:pcb_breakout_point_22",
+      "breakout:pcb_breakout_point_30",
+      "breakout:pcb_breakout_point_74",
+      "breakout:pcb_breakout_point_78",
+      "breakout:pcb_breakout_point_99"
+    ],
+    "inputsEqual": true,
+    "pcbSvgEqual": true,
+    "nativeDrc": [
+      true,
+      true
+    ],
+    "physicalViaInPad": [
+      0,
+      0
+    ],
+    "fanoutSolved": [
+      false,
+      false
+    ],
+    "fullCircuitStatus": [
+      "failed",
+      "failed"
+    ],
+    "sameCompletedOutput": false,
+    "wireLengthMm": [
+      543.629893455855,
+      514.6065252981268
+    ],
+    "rejectionCounts": [
+      {
+        "accepted-plan-copper": 3024234,
+        "pad-trace": 93990,
+        "pad-via": 14078,
+        "outside-boundary": 28696
+      },
+      {
+        "accepted-plan-copper": 2723171,
+        "pad-trace": 93990,
+        "pad-via": 14078,
+        "outside-boundary": 28696
+      }
+    ],
+    "windingFailures": [
+      [],
+      []
+    ],
+    "commonCompletedAssignments": 34,
+    "sameAssignmentPrefix": true,
+    "bestEscapesAtCommonWork": [
+      135,
+      135
+    ]
+  },
+  {
+    "sample": "h616-original",
+    "requested": 174,
+    "before": 109,
+    "after": 109,
+    "planes": [
+      50,
+      50
+    ],
+    "vias": [
+      74,
+      74
+    ],
+    "assignments": [
+      256,
+      256
+    ],
+    "gained": [],
+    "lost": [],
+    "inputsEqual": true,
+    "pcbSvgEqual": true,
+    "nativeDrc": [
+      true,
+      true
+    ],
+    "physicalViaInPad": [
+      0,
+      0
+    ],
+    "fanoutSolved": [
+      false,
+      false
+    ],
+    "fullCircuitStatus": [
+      "failed",
+      "failed"
+    ],
+    "sameCompletedOutput": true,
+    "wireLengthMm": [
+      245.23847770323485,
+      245.23847770323485
+    ],
+    "rejectionCounts": [
+      {
+        "accepted-plan-copper": 5030398,
+        "pad-trace": 77169,
+        "pad-via": 15825,
+        "outside-boundary": 15632
+      },
+      {
+        "accepted-plan-copper": 5366221,
+        "pad-trace": 95322,
+        "pad-via": 20818,
+        "outside-boundary": 16187
+      }
+    ],
+    "windingFailures": [
+      [],
+      []
+    ],
+    "commonCompletedAssignments": 256,
+    "sameAssignmentPrefix": false,
+    "bestEscapesAtCommonWork": [
+      109,
+      109
+    ]
+  },
+  {
+    "sample": "h616-spaced",
+    "requested": 174,
+    "before": 111,
+    "after": 111,
+    "planes": [
+      0,
+      0
+    ],
+    "vias": [
+      72,
+      72
+    ],
+    "assignments": [
+      196,
+      194
+    ],
+    "gained": [],
+    "lost": [],
+    "inputsEqual": true,
+    "pcbSvgEqual": true,
+    "nativeDrc": [
+      true,
+      true
+    ],
+    "physicalViaInPad": [
+      0,
+      0
+    ],
+    "fanoutSolved": [
+      false,
+      false
+    ],
+    "fullCircuitStatus": [
+      "failed",
+      "failed"
+    ],
+    "sameCompletedOutput": true,
+    "wireLengthMm": [
+      505.0707288036109,
+      505.0707288036109
+    ],
+    "rejectionCounts": [
+      {
+        "accepted-plan-copper": 7487437,
+        "pad-trace": 59395,
+        "pad-via": 20555,
+        "outside-boundary": 19955
+      },
+      {
+        "accepted-plan-copper": 7386458,
+        "pad-trace": 59395,
+        "pad-via": 20555,
+        "outside-boundary": 19955
+      }
+    ],
+    "windingFailures": [
+      [],
+      []
+    ],
+    "commonCompletedAssignments": 194,
+    "sameAssignmentPrefix": true,
+    "bestEscapesAtCommonWork": [
+      111,
+      111
+    ]
+  },
+  {
+    "sample": "icepi-original",
+    "requested": 32,
+    "before": 14,
+    "after": 19,
+    "planes": [
+      6,
+      11
+    ],
+    "vias": [
+      6,
+      11
+    ],
+    "assignments": [
+      256,
+      256
+    ],
+    "gained": [
+      "source_trace_0",
+      "source_trace_14",
+      "source_trace_2",
+      "source_trace_8",
+      "source_trace_9"
+    ],
+    "lost": [],
+    "inputsEqual": true,
+    "pcbSvgEqual": true,
+    "nativeDrc": [
+      true,
+      true
+    ],
+    "physicalViaInPad": [
+      0,
+      0
+    ],
+    "fanoutSolved": [
+      false,
+      false
+    ],
+    "fullCircuitStatus": [
+      "failed",
+      "failed"
+    ],
+    "sameCompletedOutput": false,
+    "wireLengthMm": [
+      18.267514421272203,
+      25.345941546018388
+    ],
+    "rejectionCounts": [
+      {
+        "accepted-plan-copper": 64722,
+        "pad-trace": 14261,
+        "outside-boundary": 2155,
+        "pad-via": 1606
+      },
+      {
+        "accepted-plan-copper": 93531,
+        "pad-trace": 19318,
+        "outside-boundary": 2371,
+        "pad-via": 1821
+      }
+    ],
+    "windingFailures": [
+      [],
+      []
+    ],
+    "commonCompletedAssignments": 256,
+    "sameAssignmentPrefix": false,
+    "bestEscapesAtCommonWork": [
+      14,
+      19
+    ]
+  },
+  {
+    "sample": "icepi-spaced",
+    "requested": 92,
+    "before": 77,
+    "after": 77,
+    "planes": [
+      0,
+      0
+    ],
+    "vias": [
+      37,
+      37
+    ],
+    "assignments": [
+      256,
+      256
+    ],
+    "gained": [],
+    "lost": [],
+    "inputsEqual": true,
+    "pcbSvgEqual": true,
+    "nativeDrc": [
+      true,
+      true
+    ],
+    "physicalViaInPad": [
+      0,
+      0
+    ],
+    "fanoutSolved": [
+      false,
+      false
+    ],
+    "fullCircuitStatus": [
+      "failed",
+      "failed"
+    ],
+    "sameCompletedOutput": true,
+    "wireLengthMm": [
+      276.3291117988401,
+      276.3291117988401
+    ],
+    "rejectionCounts": [
+      {
+        "accepted-plan-copper": 3724194,
+        "outside-boundary": 13197,
+        "pad-via": 7271,
+        "pad-trace": 18846
+      },
+      {
+        "accepted-plan-copper": 3724194,
+        "outside-boundary": 13197,
+        "pad-via": 7271,
+        "pad-trace": 18846
+      }
+    ],
+    "windingFailures": [
+      [
+        "WindingBreakoutSolver error: WindingBreakoutInfeasibleError: WindingBreakoutSolver: declared breakout edges need 17.43mm but expose only 14.64mm"
+      ],
+      [
+        "WindingBreakoutSolver error: WindingBreakoutInfeasibleError: WindingBreakoutSolver: declared breakout edges need 17.43mm but expose only 14.64mm"
+      ]
+    ],
+    "commonCompletedAssignments": 256,
+    "sameAssignmentPrefix": true,
+    "bestEscapesAtCommonWork": [
+      77,
+      77
+    ]
+  },
+  {
+    "sample": "imx6-original",
+    "requested": 32,
+    "before": 9,
+    "after": 16,
+    "planes": [
+      6,
+      13
+    ],
+    "vias": [
+      7,
+      14
+    ],
+    "assignments": [
+      256,
+      256
+    ],
+    "gained": [
+      "source_trace_14",
+      "source_trace_18",
+      "source_trace_19",
+      "source_trace_2",
+      "source_trace_4",
+      "source_trace_5",
+      "source_trace_9"
+    ],
+    "lost": [],
+    "inputsEqual": true,
+    "pcbSvgEqual": true,
+    "nativeDrc": [
+      true,
+      true
+    ],
+    "physicalViaInPad": [
+      0,
+      0
+    ],
+    "fanoutSolved": [
+      false,
+      false
+    ],
+    "fullCircuitStatus": [
+      "failed",
+      "failed"
+    ],
+    "sameCompletedOutput": false,
+    "wireLengthMm": [
+      9.107640687119284,
+      18.160941546018393
+    ],
+    "rejectionCounts": [
+      {
+        "accepted-plan-copper": 41398,
+        "pad-trace": 17946,
+        "outside-boundary": 3991,
+        "pad-via": 1740
+      },
+      {
+        "accepted-plan-copper": 57876,
+        "pad-trace": 22527,
+        "outside-boundary": 4208,
+        "pad-via": 2008
+      }
+    ],
+    "windingFailures": [
+      [],
+      []
+    ],
+    "commonCompletedAssignments": 256,
+    "sameAssignmentPrefix": false,
+    "bestEscapesAtCommonWork": [
+      9,
+      16
+    ]
+  },
+  {
+    "sample": "imx6-spaced",
+    "requested": 32,
+    "before": 7,
+    "after": 7,
+    "planes": [
+      0,
+      0
+    ],
+    "vias": [
+      4,
+      4
+    ],
+    "assignments": [
+      256,
+      256
+    ],
+    "gained": [],
+    "lost": [],
+    "inputsEqual": true,
+    "pcbSvgEqual": true,
+    "nativeDrc": [
+      true,
+      true
+    ],
+    "physicalViaInPad": [
+      0,
+      0
+    ],
+    "fanoutSolved": [
+      false,
+      false
+    ],
+    "fullCircuitStatus": [
+      "failed",
+      "failed"
+    ],
+    "sameCompletedOutput": true,
+    "wireLengthMm": [
+      6.974236723501456,
+      6.974236723501456
+    ],
+    "rejectionCounts": [
+      {
+        "accepted-plan-copper": 5118,
+        "pad-via": 13409,
+        "outside-boundary": 8618,
+        "pad-trace": 6424
+      },
+      {
+        "accepted-plan-copper": 5118,
+        "pad-via": 13409,
+        "outside-boundary": 8618,
+        "pad-trace": 6424
+      }
+    ],
+    "windingFailures": [
+      [],
+      []
+    ],
+    "commonCompletedAssignments": 256,
+    "sameAssignmentPrefix": true,
+    "bestEscapesAtCommonWork": [
+      7,
+      7
+    ]
+  }
+]

@@ -1,0 +1,470 @@
+[
+  {
+    "sample": "icepi-original",
+    "rows": [
+      {
+        "physicalViaInPadCount": 0,
+        "physicalViaInPad": [],
+        "sample": "icepi-original",
+        "mode": "before",
+        "elapsedMs": 3730.963527,
+        "requested": 32,
+        "escapes": 14,
+        "planes": 6,
+        "vias": 6,
+        "drcValid": true,
+        "issues": [],
+        "solved": false,
+        "failed": true,
+        "assignments": 256,
+        "planeHash": "e19c12955b49578fa6d18ecc96b7a027c3b7513f1cfec82469bcc49164651c65",
+        "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6"
+      },
+      {
+        "physicalViaInPadCount": 0,
+        "physicalViaInPad": [],
+        "sample": "icepi-original",
+        "mode": "centered",
+        "elapsedMs": 4434.177463,
+        "requested": 32,
+        "escapes": 19,
+        "planes": 11,
+        "vias": 11,
+        "drcValid": true,
+        "issues": [],
+        "solved": false,
+        "failed": true,
+        "assignments": 256,
+        "planeHash": "a9130efb5a897ad74883e7e96ea65256695d808f63dc9ebf01d5245f4e651fc2",
+        "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6"
+      },
+      {
+        "physicalViaInPadCount": 15,
+        "physicalViaInPad": [
+          {
+            "connection": "source_trace_12",
+            "via": {
+              "x": 1.7399999999987603,
+              "y": 18.579999999999984
+            },
+            "pad": {
+              "x": 1.5399999999987597,
+              "y": 18.789999999999992
+            }
+          },
+          {
+            "connection": "source_trace_13",
+            "via": {
+              "x": 1.7399999999987592,
+              "y": 18.275999999999986
+            },
+            "pad": {
+              "x": 1.5399999999987597,
+              "y": 18.789999999999992
+            }
+          },
+          {
+            "connection": "source_trace_11",
+            "via": {
+              "x": 1.7399999999987599,
+              "y": 18.579999999999984
+            },
+            "pad": {
+              "x": 1.5399999999987597,
+              "y": 18.789999999999992
+            }
+          },
+          {
+            "connection": "source_trace_14",
+            "via": {
+              "x": 2.239999999998759,
+              "y": 12.829999999999984
+            },
+            "pad": {
+              "x": 2.059999999998762,
+              "y": 12.659999999999982
+            }
+          }
+        ],
+        "sample": "icepi-original",
+        "mode": "centered_global",
+        "elapsedMs": 3224.199706,
+        "requested": 32,
+        "escapes": 26,
+        "planes": 19,
+        "vias": 20,
+        "drcValid": true,
+        "issues": [],
+        "solved": false,
+        "failed": true,
+        "assignments": 256,
+        "planeHash": "a9130efb5a897ad74883e7e96ea65256695d808f63dc9ebf01d5245f4e651fc2",
+        "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6"
+      },
+      {
+        "mode": "centered",
+        "gained": [
+          "source_trace_0",
+          "source_trace_14",
+          "source_trace_2",
+          "source_trace_8",
+          "source_trace_9"
+        ],
+        "lost": []
+      },
+      {
+        "mode": "centered_global",
+        "gained": [
+          "breakout:pcb_breakout_point_2",
+          "source_trace_0",
+          "source_trace_1",
+          "source_trace_11",
+          "source_trace_12",
+          "source_trace_13",
+          "source_trace_14",
+          "source_trace_19",
+          "source_trace_2",
+          "source_trace_4",
+          "source_trace_5",
+          "source_trace_6",
+          "source_trace_8",
+          "source_trace_9"
+        ],
+        "lost": [
+          "breakout:pcb_breakout_point_10",
+          "breakout:pcb_breakout_point_3"
+        ]
+      }
+    ]
+  },
+  {
+    "sample": "imx6-original",
+    "rows": [
+      {
+        "physicalViaInPadCount": 0,
+        "physicalViaInPad": [],
+        "sample": "imx6-original",
+        "mode": "before",
+        "elapsedMs": 4488.0970259999995,
+        "requested": 32,
+        "escapes": 9,
+        "planes": 6,
+        "vias": 7,
+        "drcValid": true,
+        "issues": [],
+        "solved": false,
+        "failed": true,
+        "assignments": 256,
+        "planeHash": "e19c12955b49578fa6d18ecc96b7a027c3b7513f1cfec82469bcc49164651c65",
+        "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6"
+      },
+      {
+        "physicalViaInPadCount": 0,
+        "physicalViaInPad": [],
+        "sample": "imx6-original",
+        "mode": "centered",
+        "elapsedMs": 5339.550497,
+        "requested": 32,
+        "escapes": 16,
+        "planes": 13,
+        "vias": 14,
+        "drcValid": true,
+        "issues": [],
+        "solved": false,
+        "failed": true,
+        "assignments": 256,
+        "planeHash": "a9130efb5a897ad74883e7e96ea65256695d808f63dc9ebf01d5245f4e651fc2",
+        "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6"
+      },
+      {
+        "physicalViaInPadCount": 10,
+        "physicalViaInPad": [
+          {
+            "connection": "source_trace_6",
+            "via": {
+              "x": 11.500010388624133,
+              "y": -14.500010388624133
+            },
+            "pad": {
+              "x": 11.825010388624133,
+              "y": -14.750010388624133
+            }
+          },
+          {
+            "connection": "source_trace_7",
+            "via": {
+              "x": 12.000010388624133,
+              "y": -14.500010388624133
+            },
+            "pad": {
+              "x": 11.825010388624133,
+              "y": -14.750010388624133
+            }
+          },
+          {
+            "connection": "source_trace_9",
+            "via": {
+              "x": 12.000010388624133,
+              "y": -13.500010388624133
+            },
+            "pad": {
+              "x": 11.725010388624122,
+              "y": -13.100010388624128
+            }
+          },
+          {
+            "connection": "source_trace_15",
+            "via": {
+              "x": 11.500010388624133,
+              "y": -13.500010388624133
+            },
+            "pad": {
+              "x": 11.725010388624122,
+              "y": -13.100010388624128
+            }
+          }
+        ],
+        "sample": "imx6-original",
+        "mode": "centered_global",
+        "elapsedMs": 4957.9604340000005,
+        "requested": 32,
+        "escapes": 21,
+        "planes": 18,
+        "vias": 19,
+        "drcValid": true,
+        "issues": [],
+        "solved": false,
+        "failed": true,
+        "assignments": 256,
+        "planeHash": "a9130efb5a897ad74883e7e96ea65256695d808f63dc9ebf01d5245f4e651fc2",
+        "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6"
+      },
+      {
+        "mode": "centered",
+        "gained": [
+          "source_trace_14",
+          "source_trace_18",
+          "source_trace_19",
+          "source_trace_2",
+          "source_trace_4",
+          "source_trace_5",
+          "source_trace_9"
+        ],
+        "lost": []
+      },
+      {
+        "mode": "centered_global",
+        "gained": [
+          "breakout:pcb_breakout_point_5",
+          "source_trace_0",
+          "source_trace_1",
+          "source_trace_13",
+          "source_trace_18",
+          "source_trace_19",
+          "source_trace_2",
+          "source_trace_4",
+          "source_trace_5",
+          "source_trace_6",
+          "source_trace_7",
+          "source_trace_8",
+          "source_trace_9"
+        ],
+        "lost": [
+          "breakout:pcb_breakout_point_0"
+        ]
+      }
+    ]
+  },
+  {
+    "sample": "imx6-spaced",
+    "rows": [
+      {
+        "physicalViaInPadCount": 0,
+        "physicalViaInPad": [],
+        "sample": "imx6-spaced",
+        "mode": "before",
+        "elapsedMs": 7608.731207,
+        "requested": 32,
+        "escapes": 7,
+        "planes": 0,
+        "vias": 4,
+        "drcValid": true,
+        "issues": [],
+        "solved": false,
+        "failed": true,
+        "assignments": 256,
+        "planeHash": "e19c12955b49578fa6d18ecc96b7a027c3b7513f1cfec82469bcc49164651c65",
+        "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6"
+      },
+      {
+        "physicalViaInPadCount": 0,
+        "physicalViaInPad": [],
+        "sample": "imx6-spaced",
+        "mode": "centered",
+        "elapsedMs": 7591.213441,
+        "requested": 32,
+        "escapes": 7,
+        "planes": 0,
+        "vias": 4,
+        "drcValid": true,
+        "issues": [],
+        "solved": false,
+        "failed": true,
+        "assignments": 256,
+        "planeHash": "a9130efb5a897ad74883e7e96ea65256695d808f63dc9ebf01d5245f4e651fc2",
+        "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6"
+      },
+      {
+        "physicalViaInPadCount": 0,
+        "physicalViaInPad": [],
+        "sample": "imx6-spaced",
+        "mode": "centered_global",
+        "elapsedMs": 8224.239561,
+        "requested": 32,
+        "escapes": 11,
+        "planes": 0,
+        "vias": 5,
+        "drcValid": true,
+        "issues": [],
+        "solved": false,
+        "failed": true,
+        "assignments": 256,
+        "planeHash": "a9130efb5a897ad74883e7e96ea65256695d808f63dc9ebf01d5245f4e651fc2",
+        "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6"
+      },
+      {
+        "mode": "centered",
+        "gained": [],
+        "lost": []
+      },
+      {
+        "mode": "centered_global",
+        "gained": [
+          "breakout:pcb_breakout_point_0",
+          "breakout:pcb_breakout_point_10",
+          "breakout:pcb_breakout_point_3",
+          "breakout:pcb_breakout_point_8"
+        ],
+        "lost": []
+      }
+    ]
+  },
+  {
+    "sample": "butterstick-original",
+    "rows": [
+      {
+        "physicalViaInPadCount": 0,
+        "physicalViaInPad": [],
+        "sample": "butterstick-original",
+        "mode": "before",
+        "elapsedMs": 48909.992736,
+        "requested": 91,
+        "escapes": 62,
+        "planes": 17,
+        "vias": 42,
+        "drcValid": true,
+        "issues": [],
+        "solved": false,
+        "failed": true,
+        "assignments": 256,
+        "planeHash": "e19c12955b49578fa6d18ecc96b7a027c3b7513f1cfec82469bcc49164651c65",
+        "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6"
+      },
+      {
+        "physicalViaInPadCount": 0,
+        "physicalViaInPad": [],
+        "sample": "butterstick-original",
+        "mode": "centered",
+        "elapsedMs": 51279.627696,
+        "requested": 91,
+        "escapes": 62,
+        "planes": 17,
+        "vias": 42,
+        "drcValid": true,
+        "issues": [],
+        "solved": false,
+        "failed": true,
+        "assignments": 256,
+        "planeHash": "a9130efb5a897ad74883e7e96ea65256695d808f63dc9ebf01d5245f4e651fc2",
+        "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6"
+      },
+      {
+        "physicalViaInPadCount": 8,
+        "physicalViaInPad": [
+          {
+            "connection": "breakout:pcb_breakout_point_26",
+            "via": {
+              "x": 3.9000000000005226,
+              "y": 1.9100999999999373
+            },
+            "pad": {
+              "x": 3.815000000000523,
+              "y": 2.199999999999932
+            }
+          },
+          {
+            "connection": "breakout:pcb_breakout_point_52",
+            "via": {
+              "x": 7.500000000000522,
+              "y": 7.599999999999938
+            },
+            "pad": {
+              "x": 7.740000000000506,
+              "y": 7.749999999999929
+            }
+          },
+          {
+            "connection": "source_trace_13",
+            "via": {
+              "x": -1.2999999999994767,
+              "y": 1.9999999999999383
+            },
+            "pad": {
+              "x": -1.2999999999994998,
+              "y": 1.9149999999999348
+            }
+          },
+          {
+            "connection": "source_trace_3",
+            "via": {
+              "x": 1.1000000000005237,
+              "y": 2.7999999999999368
+            },
+            "pad": {
+              "x": 1.1850000000005,
+              "y": 2.449999999999932
+            }
+          }
+        ],
+        "sample": "butterstick-original",
+        "mode": "centered_global",
+        "elapsedMs": 49976.150956,
+        "requested": 91,
+        "escapes": 65,
+        "planes": 20,
+        "vias": 52,
+        "drcValid": true,
+        "issues": [],
+        "solved": false,
+        "failed": true,
+        "assignments": 256,
+        "planeHash": "a9130efb5a897ad74883e7e96ea65256695d808f63dc9ebf01d5245f4e651fc2",
+        "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6"
+      },
+      {
+        "mode": "centered",
+        "gained": [],
+        "lost": []
+      },
+      {
+        "mode": "centered_global",
+        "gained": [
+          "source_trace_14",
+          "source_trace_15",
+          "source_trace_19"
+        ],
+        "lost": []
+      }
+    ]
+  }
+]

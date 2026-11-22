@@ -1,0 +1,52 @@
+[
+  {
+    "sample": "imx6-spaced",
+    "id": 14743825349,
+    "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44994334149/artifacts/14743825349"
+  },
+  {
+    "sample": "glider-spaced",
+    "id": 14743801729,
+    "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44994334149/artifacts/14743801729"
+  },
+  {
+    "sample": "icepi-original",
+    "id": 14743705794,
+    "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44994334149/artifacts/14743705794"
+  },
+  {
+    "sample": "butterstick-spaced",
+    "id": 14743252913,
+    "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44994334149/artifacts/14743252913"
+  },
+  {
+    "sample": "imx6-original",
+    "id": 14743201440,
+    "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44994334149/artifacts/14743201440"
+  },
+  {
+    "sample": "h616-original",
+    "id": 14743113779,
+    "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44994334149/artifacts/14743113779"
+  },
+  {
+    "sample": "butterstick-original",
+    "id": 14743086883,
+    "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44994334149/artifacts/14743086883"
+  },
+  {
+    "sample": "icepi-spaced",
+    "id": 14742754505,
+    "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44994334149/artifacts/14742754505"
+  },
+  {
+    "sample": "glider-original",
+    "id": 14742734904,
+    "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44994334149/artifacts/14742734904"
+  },
+  {
+    "sample": "h616-spaced",
+    "id": 14742688638,
+    "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44994334149/artifacts/14742688638"
+  }
+]
