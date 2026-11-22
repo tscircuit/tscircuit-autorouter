@@ -202,7 +202,7 @@ export class HighDensitySolver extends BaseSolver {
         : 1)
     this.nodePfById =
       nodePfById instanceof Map
-        ? new Map(nodePfById)
+        ? nodePfById
         : new Map(Object.entries(nodePfById ?? {}))
     this.nodeSolveMetadataById = new Map()
     this.stats = {
