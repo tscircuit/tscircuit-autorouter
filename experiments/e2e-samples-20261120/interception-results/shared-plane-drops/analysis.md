@@ -2,7 +2,7 @@
 
 The latest published Node stack includes fanout #369. This round fixes a separate search rejection: power/ground drops on the same electrical net were treated as unrelated copper, even though their declared plane already connects them.
 
-The final change adds safe plane drops to the best failed assignment after normal assignment search. Existing copper and original assignment decisions remain intact. It reuses `routeBus`, its source escape paths and via candidates; there is no new routing solver, search budget or generic same-net merge option.
+The final change adds safe plane drops to the best failed assignment after normal assignment search. The recovery pass retains the accepted copper in the selected assignment and leaves original assignment-search decisions unchanged. It reuses `routeBus`, its source escape paths and via candidates; there is no new routing solver, search budget or generic same-net merge option.
 
 At common completed assignment prefixes, partial first-region escapes improve **700 → 719 (+2.7%)** out of 1024 requests. Raw best results are **702 → 719 (+2.4%)**, with **430 → 447** vias in the partial fanouts. Completed full boards remain **0/10 → 0/10**. The ordinary assignment histories are identical over every common completed prefix.
 
@@ -21,7 +21,9 @@ These counts measure pad-to-plane or pad-to-breakout escapes, not newly connecte
 | imx6-original | 32 | 16 → 19 | 14 → 17 | 256 → 256 | 16 → 19 | [before](imx6-original-before.svg) · [after](imx6-original-after.svg) |
 | imx6-spaced | 32 | 7 → 7 | 4 → 4 | 256 → 256 | 7 → 7 | [before](imx6-spaced-before.svg) · [after](imx6-spaced-after.svg) |
 
-Original/spaced budget differences are reported separately from routing gains. `statistics.json` retains the full per-case comparisons, route identities and hashes.
+All eight cases that complete 256 assignments retain every original route, including identical route geometry. The five improved original regions add 19 plane drops and 19 vias.
+
+At the unchanged 600-second budget, Glider spaced completes 36→35 assignments. Its raw best changes 137→135 escapes, with nine before-only and seven after-only requests because a different assignment is selected; at the common 35-assignment prefix, both reach 135. H616 spaced completes 193→192 assignments and stays at 111 escapes. Neither timed first region contains plane terminations. These runs show no matched-work benefit on those cases and a small decrease in completed work; the paired runs do not separate added bookkeeping cost from runner variance. No deadline was extended. `statistics.json` retains the full comparisons, route identities and hashes.
 
 | Full-board PCB | Before | After |
 |---|---|---|
