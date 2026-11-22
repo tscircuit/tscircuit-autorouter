@@ -17,8 +17,8 @@ test("keeps existing widths and contacts around typed copper", (): void => {
   }
   route.route[11]!.insideJumperPad = true
   route.route[14]!.pcb_port_id = "middle"
-  const params = { route, nominalWidth: 0.2, hasClearance: () => true }
-  const refined = widenClearInteriorSegments(params)
+  const widening = { route, nominalWidth: 0.2, hasClearance: () => true }
+  const refined = widenClearInteriorSegments(widening)
   expect(refined).not.toBe(route)
   for (const index of [0, 3, 7, 8, 11, 14, 19]) {
     expect(refined.route[index]).toEqual({
@@ -33,7 +33,7 @@ test("keeps existing widths and contacts around typed copper", (): void => {
         index === 2 ? { ...point, traceThickness: width } : point,
       ),
     }
-    expect(widenClearInteriorSegments({ ...params, route: tapered })).toBe(
+    expect(widenClearInteriorSegments({ ...widening, route: tapered })).toBe(
       tapered,
     )
   }
