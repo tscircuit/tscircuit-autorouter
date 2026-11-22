@@ -1,0 +1,100 @@
+name: Audit compact boundary full-circuit captures
+on:
+  push:
+    branches: [analysis/audit-compact-boundary-2461]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  source-checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: dfb74ab4d204623334ebad02ee397b1203ce499c
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - run: bun run typecheck
+      - run: bun run format:check
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: 74e5f75e9f181cb5c94621445cb03bdc956710e2
+          path: fanout-source
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Install exact native validation packages
+        run: |
+          mkdir core
+          cat > core/package.json <<'JSON'
+          {"name":"native-capture-audit","private":true,"type":"module","dependencies":{"@tscircuit/fanout-solver":"0.0.104","@tscircuit/capacity-autorouter":"0.0.1156","graphics-debug":"0.0.99","circuit-json-to-connectivity-map":"0.0.23"}}
+          JSON
+          (cd core && bun install --ignore-scripts)
+          python3 - <<'PYOVERLAY'
+          import shutil
+          from pathlib import Path
+          for name in ['lib/fanout-solver.ts','lib/route-bus/types.ts','lib/route-bus/route-analytic-boundary-alternatives.ts','lib/visualize-fanout-region.ts']:
+              shutil.copyfile(Path('fanout-source')/name,Path('core/node_modules/@tscircuit/fanout-solver')/name)
+          PYOVERLAY
+      - name: Wait for the unchanged-budget all-ten Core run
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          for attempt in $(seq 1 80); do
+            status=$(gh api repos/tscircuit/tscircuit-autorouter/actions/runs/45080675519 --jq .status)
+            if [ "$status" = completed ]; then break; fi
+            sleep 15
+          done
+          test "$(gh api repos/tscircuit/tscircuit-autorouter/actions/runs/45080675519 --jq .conclusion)" = success
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45070654984
+          pattern: full-circuit-interception-*
+          path: published
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45074125683
+          pattern: full-circuit-interception-*
+          path: stacked
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45080675519
+          pattern: full-circuit-interception-*
+          path: after
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Audit copper, original source nets, geometry, endpoints and atomic buses
+        run: |
+          bun experiments/e2e-samples-20261120/audit-compact-boundary2461.ts published
+          bun experiments/e2e-samples-20261120/audit-compact-boundary2461.ts stacked
+          ln -s published captures
+          python3 experiments/e2e-samples-20261120/audit-geometry2461.py
+          cp -R geometry-audit audited-results/
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: compact-boundary-completion-audit
+          path: audited-results
+      - name: Export audited statistics
+        if: always()
+        run: |
+          python3 - <<'PYEXPORT'
+          import base64,io,zipfile
+          from pathlib import Path
+          stream=io.BytesIO()
+          with zipfile.ZipFile(stream,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=9) as z:
+              for p in Path('audited-results').rglob('*.json'):z.writestr(str(p.relative_to('audited-results')),p.read_bytes())
+          print('AUDIT_EVIDENCE_BEGIN')
+          encoded=base64.b64encode(stream.getvalue()).decode()
+          for offset in range(0,len(encoded),8000):print(encoded[offset:offset+8000])
+          print('AUDIT_EVIDENCE_END')
+          PYEXPORT
