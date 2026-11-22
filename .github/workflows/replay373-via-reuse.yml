@@ -1,0 +1,139 @@
+name: Compare PR373 owned vias with shared-via candidates on full-circuit captures
+on:
+  push:
+    branches: [analysis/replay373-via-reuse]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  replay:
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        sample: [butterstick-original, butterstick-spaced, glider-original, glider-spaced, h616-original, h616-spaced, icepi-original, icepi-spaced, imx6-original, imx6-spaced]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: c19eb7f80f2ddd7b9c21a07d87b8a6ae4c7b9f88
+          path: before-source
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: ee0c50148fb4a8073022bda1c63e1a6902d4b8e7
+          path: after-source
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Install exact native validation packages
+        run: |
+          mkdir -p core/replay
+          cat > core/package.json <<'JSON'
+          {"name":"reuse-plane-via-replay","private":true,"type":"module","dependencies":{"@tscircuit/fanout-solver":"0.0.103","@tscircuit/capacity-autorouter":"0.0.1152","graphics-debug":"0.0.99","circuit-json-to-connectivity-map":"0.0.23"}}
+          JSON
+          cd core
+          bun install --ignore-scripts --backend copyfile
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45006486986
+          name: full-circuit-interception-${{ matrix.sample }}
+          path: captures
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Compare the same native inputs and original best assignment
+        env:
+          SAMPLE: ${{ matrix.sample }}
+        run: |
+          cat > core/replay/run.ts <<'TS'
+          import assert from "node:assert/strict"
+          import { readFileSync, writeFileSync } from "node:fs"
+          import { gunzipSync } from "node:zlib"
+          import { isDeepStrictEqual } from "node:util"
+          const mode=process.argv[2],sample=process.env.SAMPLE!
+          const root="../node_modules/@tscircuit/fanout-solver/lib/"
+          const {FanoutSolver}=await import(root+"fanout-solver")
+          const {routeRemainingPlaneBuses}=await import(root+"route-remaining-plane-buses")
+          const {buildOutputSimpleRouteJson}=await import(root+"build-output")
+          const {getPlanVias}=await import(root+"route-bus/plan-copper")
+          const {distance,distancePointToObstacle}=await import(root+"geometry")
+          const {connectionsShareElectricalNet}=await import(root+"net-identity")
+          const {validateRoutedCopperDrc}=await import(root+"validate-routed-copper-drc")
+          const {validateFanoutSolution}=await import(root+"validate-fanout-solution")
+          const {validateOriginalEndpointConnectivity}=await import(root+"validate-original-endpoint-connectivity")
+          const {getFullConnectivityMapFromCircuitJson}=await import("../node_modules/circuit-json-to-connectivity-map")
+          const folder="../../captures/"+sample
+          const json=(name:string)=>JSON.parse(name.endsWith('.gz')?gunzipSync(readFileSync(name)).toString():readFileSync(name,'utf8'))
+          const report=json(folder+'/report.json'),entry=report.solvers.find(s=>s.name==='FanoutSolver')
+          const [input,options]=json(folder+'/solver-'+entry.id+'-input.json.gz')
+          const inputBefore=JSON.stringify([input,options])
+          const state=json(folder+'/solver-'+entry.id+'-state.json.gz')
+          const solver=new FanoutSolver(input,options)
+          assert.equal(solver.config.allowSameNetMerges,false)
+          assert.equal(solver.config.allowBlindAndBuriedVias,false)
+          const started=performance.now()
+          const result=routeRemainingPlaneBuses({...solver.config,srj:Reflect.get(solver,'routingSrj'),buses:solver.preparedBuses,attempt:state.bestAttempt,staticClearanceCache:new Map()})
+          let plans=result.plans
+          if(plans.length===input.connections.length){plans=Reflect.get(solver,'normalizeCompletePlanCorners').call(solver,plans);assert(plans,'Full normalization failed')}
+          const output=buildOutputSimpleRouteJson({inputSrj:input,plans,layerNames:solver.config.layerNames})
+          const drc=validateRoutedCopperDrc({inputSrj:input,routedSrj:output,clearance:solver.config.clearance,allowBlindAndBuriedVias:false})
+          const structure=validateFanoutSolution({inputSrj:input,outputSrj:output,plans,preparedBuses:solver.preparedBuses,sharedBoundary:options.sharedBoundary,clearance:solver.config.clearance,allowBlindAndBuriedVias:false})
+          const structuralIssues=structure.issues.filter(i=>i.code!=='missing-plan')
+          const planeNames=new Set(plans.filter(p=>p.termination.type==='plane').map(p=>p.connectionName))
+          const planeConnectivity=validateOriginalEndpointConnectivity({inputSrj:{...input,connections:input.connections.filter(c=>planeNames.has(c.name))},routedSrj:output})
+          const vias=plans.flatMap(getPlanVias)
+          let physicalPadOverlaps=0,padClearanceViolations=0,drillViolations=0
+          for(const via of vias)for(const pad of input.obstacles){
+           if(pad.isCopperPour||!pad.layers.some(l=>via.spanLayers.includes(l)))continue
+           const gap=distancePointToObstacle(via.center,pad)-via.diameter/2
+           if(gap < -1e-9)physicalPadOverlaps++
+           if(gap < solver.config.clearance-1e-9)padClearanceViolations++
+          }
+          const drillGap=Math.max(input.minViaHoleEdgeToViaHoleEdgeClearance??0,input.minPlatedHoleDrillEdgeToDrillEdgeClearance??0)
+          for(let i=0;i<vias.length;i++)for(let j=i+1;j<vias.length;j++)if(vias[i].spanLayers.some(l=>vias[j].spanLayers.includes(l))&&distance(vias[i].center,vias[j].center)<(vias[i].holeDiameter+vias[j].holeDiameter)/2+drillGap-1e-9)drillViolations++
+          const circuit=json(folder+'/circuit.json.gz'),connectivity=getFullConnectivityMapFromCircuitJson(circuit)
+          const pcbPorts=new Map(circuit.filter(e=>e.type==='pcb_port').map(e=>[e.pcb_port_id,e]))
+          const sourcePort=p=>pcbPorts.get(p.sourcePoint.pcb_port_id??p.sourcePoint.pointId)?.source_port_id
+          let aliasMismatches=0,unknownSourcePorts=0,unanchoredReuse=0
+          for(const plan of plans){const id=sourcePort(plan);if(!id||!connectivity.getNetConnectedToId(id))unknownSourcePorts++}
+          for(let i=0;i<plans.length;i++)for(let j=i+1;j<plans.length;j++)if(connectionsShareElectricalNet(input,plans[i].connectionName,plans[j].connectionName)&&!connectivity.areIdsConnected(sourcePort(plans[i]),sourcePort(plans[j])))aliasMismatches++
+          for(const plan of plans.filter(p=>p.termination.type==='plane'&&!p.via)){
+           const owner=plans.some(other=>other!==plan&&other.termination.type==='plane'&&other.termination.layer===plan.termination.layer&&connectivity.areIdsConnected(sourcePort(plan),sourcePort(other))&&getPlanVias(other).some(v=>distance(v.center,plan.exitPoint)<1e-6&&v.spanLayers.includes(plan.sourceLayer)&&(v.fromLayer===plan.termination.layer||v.toLayer===plan.termination.layer)))
+           if(!owner)unanchoredReuse++
+          }
+          for(const bus of solver.preparedBuses){
+           const group=plans.filter(p=>p.busId===bus.busId)
+           assert(group.length===0||group.length===bus.connections.length,sample+' partial bus')
+           for(const property of ['targetLayer','direction'])assert(new Set(group.map(p=>p[property])).size<=1,sample+' split bus '+property)
+           assert(new Set(group.map(p=>Boolean(p.via))).size<=1,sample+' mixed primary vias')
+          }
+          const retainedOriginalPlans=state.bestAttempt.plans.filter(p=>plans.some(q=>q.connectionName===p.connectionName&&isDeepStrictEqual(p,q))).length
+          const summary={sample,mode,requested:input.connections.length,escapes:plans.length,planes:planeNames.size,vias:vias.length,serializedVias:drc.checkedViaCount,length:plans.reduce((s,p)=>s+p.length,0),elapsedMs:performance.now()-started,originalAssignments:state.attempts.length,retainedOriginalPlans,originalPlans:state.bestAttempt.plans.length,drc:drc.valid,structuralIssues,planeConnectivity,physicalPadOverlaps,padClearanceViolations,drillViolations,aliasMismatches,unknownSourcePorts,unanchoredReuse,inputUnchanged:JSON.stringify([input,options])===inputBefore}
+          writeFileSync(mode+'.json',JSON.stringify({summary,plans,output}))
+          console.log('REUSE_RESULT',JSON.stringify(summary))
+          assert(drc.valid)
+          assert.equal(structuralIssues.length,0)
+          assert(planeConnectivity.valid)
+          for(const n of [physicalPadOverlaps,padClearanceViolations,drillViolations,aliasMismatches,unknownSourcePorts,unanchoredReuse])assert.equal(n,0)
+          assert.equal(retainedOriginalPlans,state.bestAttempt.plans.length)
+          assert.equal(vias.length,drc.checkedViaCount)
+          assert(summary.inputUnchanged)
+          TS
+          cp -R before-source/lib/. core/node_modules/@tscircuit/fanout-solver/lib/
+          (cd core/replay && bun run.ts before)
+          cp -R after-source/lib/. core/node_modules/@tscircuit/fanout-solver/lib/
+          (cd core/replay && bun run.ts after)
+          python3 - <<'PY'
+          import json
+          a=json.load(open('core/replay/before.json'));b=json.load(open('core/replay/after.json'))
+          before={p['connectionName']:p for p in a['plans']};after={p['connectionName']:p for p in b['plans']}
+          gained=sorted(after.keys()-before.keys());lost=sorted(before.keys()-after.keys())
+          longer=[{'connection':n,'before':before[n]['length'],'after':after[n]['length']} for n in before.keys()&after.keys() if after[n]['length']>before[n]['length']+1e-6]
+          print('REUSE_COMPARISON',json.dumps({'sample':b['summary']['sample'],'before':a['summary']['escapes'],'after':b['summary']['escapes'],'vias':[a['summary']['vias'],b['summary']['vias']],'length':[a['summary']['length'],b['summary']['length']],'gained':gained,'lost':lost,'longer':longer}))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: reuse-${{ matrix.sample }}
+          path: core/replay/*.json
