@@ -1,0 +1,3522 @@
+[
+  {
+    "file": "base/butterstick-local/bus-1-input.json.gz",
+    "bytes": 892796
+  },
+  {
+    "file": "base/butterstick-local/bus-2-input.json.gz",
+    "bytes": 892670
+  },
+  {
+    "file": "base/butterstick-local/bus-4-input.json.gz",
+    "bytes": 894809
+  },
+  {
+    "file": "base/butterstick-local/bus-3-input.json.gz",
+    "bytes": 893817
+  },
+  {
+    "file": "base/butterstick-local/bus-5-input.json.gz",
+    "bytes": 894676
+  },
+  {
+    "file": "base/butterstick-local/events.jsonl",
+    "bytes": 37037
+  },
+  {
+    "file": "base/butterstick-local/end-1.srj.json.gz",
+    "bytes": 895333
+  },
+  {
+    "file": "base/butterstick-local/result.json",
+    "bytes": 131
+  },
+  {
+    "file": "base/butterstick-local/run.log",
+    "bytes": 246
+  },
+  {
+    "file": "base/butterstick-local/start-1.srj.json.gz",
+    "bytes": 893428
+  },
+  {
+    "file": "base/butterstick-local/start-2.srj.json.gz",
+    "bytes": 895381
+  },
+  {
+    "file": "base/butterstick-native/circuit.json.gz",
+    "bytes": 229736
+  },
+  {
+    "file": "base/butterstick-native/error-1.srj.json.gz",
+    "bytes": 1284775
+  },
+  {
+    "file": "base/butterstick-native/events.jsonl",
+    "bytes": 7019
+  },
+  {
+    "file": "base/butterstick-native/fanout-1-input.json.gz",
+    "bytes": 1284930
+  },
+  {
+    "file": "base/butterstick-native/fanout-1-best.json.gz",
+    "bytes": 1377417
+  },
+  {
+    "file": "base/butterstick-native/fanout-checkpoint.json.gz",
+    "bytes": 1377376
+  },
+  {
+    "file": "base/butterstick-native/run.log",
+    "bytes": 1286
+  },
+  {
+    "file": "base/butterstick-native/start-1.srj.json.gz",
+    "bytes": 1284775
+  },
+  {
+    "file": "base/butterstick-native/result.json",
+    "bytes": 391
+  },
+  {
+    "file": "base/butterstick-spaced/bus-1-input.json.gz",
+    "bytes": 890980
+  },
+  {
+    "file": "base/butterstick-spaced/bus-2-input.json.gz",
+    "bytes": 890840
+  },
+  {
+    "file": "base/butterstick-spaced/bus-4-input.json.gz",
+    "bytes": 893068
+  },
+  {
+    "file": "base/butterstick-spaced/bus-3-input.json.gz",
+    "bytes": 892022
+  },
+  {
+    "file": "base/butterstick-spaced/bus-5-input.json.gz",
+    "bytes": 892956
+  },
+  {
+    "file": "base/butterstick-spaced/end-1.srj.json.gz",
+    "bytes": 892697
+  },
+  {
+    "file": "base/butterstick-spaced/events.jsonl",
+    "bytes": 31222
+  },
+  {
+    "file": "base/butterstick-spaced/result.json",
+    "bytes": 132
+  },
+  {
+    "file": "base/butterstick-spaced/run.log",
+    "bytes": 246
+  },
+  {
+    "file": "base/butterstick-spaced/start-1.srj.json.gz",
+    "bytes": 890677
+  },
+  {
+    "file": "base/butterstick-spaced/start-2.srj.json.gz",
+    "bytes": 892757
+  },
+  {
+    "file": "base/glider-local/bus-1-input.json.gz",
+    "bytes": 974826
+  },
+  {
+    "file": "base/glider-local/bus-2-input.json.gz",
+    "bytes": 975613
+  },
+  {
+    "file": "base/glider-local/circuit.json.gz",
+    "bytes": 203294
+  },
+  {
+    "file": "base/glider-local/density-1795368753344.json.gz",
+    "bytes": 3966
+  },
+  {
+    "file": "base/glider-local/density-1795368753611.json.gz",
+    "bytes": 4749
+  },
+  {
+    "file": "base/glider-local/density-1795368753891.json.gz",
+    "bytes": 5654
+  },
+  {
+    "file": "base/glider-local/density-1795368754535.json.gz",
+    "bytes": 11072
+  },
+  {
+    "file": "base/glider-local/density-1795368755468.json.gz",
+    "bytes": 8893
+  },
+  {
+    "file": "base/glider-local/density-1795368755771.json.gz",
+    "bytes": 10567
+  },
+  {
+    "file": "base/glider-local/density-1795368756059.json.gz",
+    "bytes": 13717
+  },
+  {
+    "file": "base/glider-local/density-1795368756316.json.gz",
+    "bytes": 4713
+  },
+  {
+    "file": "base/glider-local/density-1795368756578.json.gz",
+    "bytes": 6112
+  },
+  {
+    "file": "base/glider-local/density-1795368757463.json.gz",
+    "bytes": 12741
+  },
+  {
+    "file": "base/glider-local/density-1795368758022.json.gz",
+    "bytes": 7539
+  },
+  {
+    "file": "base/glider-local/density-1795368758282.json.gz",
+    "bytes": 9632
+  },
+  {
+    "file": "base/glider-local/density-1795368758554.json.gz",
+    "bytes": 11736
+  },
+  {
+    "file": "base/glider-local/density-1795368758840.json.gz",
+    "bytes": 13753
+  },
+  {
+    "file": "base/glider-local/density-1795368760288.json.gz",
+    "bytes": 11052
+  },
+  {
+    "file": "base/glider-local/density-1795368760585.json.gz",
+    "bytes": 13835
+  },
+  {
+    "file": "base/glider-local/density-1795368762150.json.gz",
+    "bytes": 13626
+  },
+  {
+    "file": "base/glider-local/density-1795368762430.json.gz",
+    "bytes": 3007
+  },
+  {
+    "file": "base/glider-local/density-1795368762710.json.gz",
+    "bytes": 4388
+  },
+  {
+    "file": "base/glider-local/density-1795368762990.json.gz",
+    "bytes": 4687
+  },
+  {
+    "file": "base/glider-local/density-1795368763885.json.gz",
+    "bytes": 2847
+  },
+  {
+    "file": "base/glider-local/density-1795368764156.json.gz",
+    "bytes": 4247
+  },
+  {
+    "file": "base/glider-local/density-1795368960418.json.gz",
+    "bytes": 2195
+  },
+  {
+    "file": "base/glider-local/end-1.srj.json.gz",
+    "bytes": 975499
+  },
+  {
+    "file": "base/glider-local/end-2.srj.json.gz",
+    "bytes": 976151
+  },
+  {
+    "file": "base/glider-local/end-3.srj.json.gz",
+    "bytes": 990682
+  },
+  {
+    "file": "base/glider-local/error-4.srj.json.gz",
+    "bytes": 1000701
+  },
+  {
+    "file": "base/glider-local/events.jsonl",
+    "bytes": 28854
+  },
+  {
+    "file": "base/glider-local/graph-1-1-input.json.gz",
+    "bytes": 1692802
+  },
+  {
+    "file": "base/glider-local/graph-2-1-input.json.gz",
+    "bytes": 1968236
+  },
+  {
+    "file": "base/glider-local/result.json",
+    "bytes": 351
+  },
+  {
+    "file": "base/glider-local/stage-1-highDensityRouteSolver.json.gz",
+    "bytes": 1119567
+  },
+  {
+    "file": "base/glider-local/stage-1-uniformPortDistributionSolver.json.gz",
+    "bytes": 3214283
+  },
+  {
+    "file": "base/glider-local/run.log",
+    "bytes": 1399
+  },
+  {
+    "file": "base/glider-local/stage-2-highDensityRouteSolver.json.gz",
+    "bytes": 1405830
+  },
+  {
+    "file": "base/glider-local/stage-2-uniformPortDistributionSolver.json.gz",
+    "bytes": 3480342
+  },
+  {
+    "file": "base/glider-local/start-1.srj.json.gz",
+    "bytes": 974752
+  },
+  {
+    "file": "base/glider-local/start-2.srj.json.gz",
+    "bytes": 975537
+  },
+  {
+    "file": "base/glider-local/start-3.srj.json.gz",
+    "bytes": 976874
+  },
+  {
+    "file": "base/glider-local/start-4.srj.json.gz",
+    "bytes": 1000701
+  },
+  {
+    "file": "base/glider-native/circuit.json.gz",
+    "bytes": 238946
+  },
+  {
+    "file": "base/glider-native/error-1.srj.json.gz",
+    "bytes": 1094325
+  },
+  {
+    "file": "base/glider-native/events.jsonl",
+    "bytes": 6586
+  },
+  {
+    "file": "base/glider-native/fanout-1-best.json.gz",
+    "bytes": 1191265
+  },
+  {
+    "file": "base/glider-native/fanout-1-input.json.gz",
+    "bytes": 1094521
+  },
+  {
+    "file": "base/glider-native/fanout-checkpoint.json.gz",
+    "bytes": 1191512
+  },
+  {
+    "file": "base/glider-native/result.json",
+    "bytes": 386
+  },
+  {
+    "file": "base/glider-native/run.log",
+    "bytes": 1281
+  },
+  {
+    "file": "base/glider-native/start-1.srj.json.gz",
+    "bytes": 1094325
+  },
+  {
+    "file": "base/glider-spaced/bus-1-input.json.gz",
+    "bytes": 971364
+  },
+  {
+    "file": "base/glider-spaced/bus-2-input.json.gz",
+    "bytes": 972181
+  },
+  {
+    "file": "base/glider-spaced/circuit.json.gz",
+    "bytes": 199898
+  },
+  {
+    "file": "base/glider-spaced/density-1795368760266.json.gz",
+    "bytes": 3366
+  },
+  {
+    "file": "base/glider-spaced/density-1795368760653.json.gz",
+    "bytes": 4882
+  },
+  {
+    "file": "base/glider-spaced/density-1795368761068.json.gz",
+    "bytes": 6792
+  },
+  {
+    "file": "base/glider-spaced/density-1795368761453.json.gz",
+    "bytes": 7644
+  },
+  {
+    "file": "base/glider-spaced/density-1795368761851.json.gz",
+    "bytes": 10750
+  },
+  {
+    "file": "base/glider-spaced/density-1795368774054.json.gz",
+    "bytes": 4900
+  },
+  {
+    "file": "base/glider-spaced/density-1795368773673.json.gz",
+    "bytes": 3628
+  },
+  {
+    "file": "base/glider-spaced/density-1795368774493.json.gz",
+    "bytes": 6789
+  },
+  {
+    "file": "base/glider-spaced/density-1795368774901.json.gz",
+    "bytes": 7680
+  },
+  {
+    "file": "base/glider-spaced/density-1795368784339.json.gz",
+    "bytes": 3561
+  },
+  {
+    "file": "base/glider-spaced/density-1795368775293.json.gz",
+    "bytes": 10744
+  },
+  {
+    "file": "base/glider-spaced/density-1795368784773.json.gz",
+    "bytes": 4885
+  },
+  {
+    "file": "base/glider-spaced/density-1795368785147.json.gz",
+    "bytes": 6731
+  },
+  {
+    "file": "base/glider-spaced/density-1795368785559.json.gz",
+    "bytes": 8509
+  },
+  {
+    "file": "base/glider-spaced/density-1795368785947.json.gz",
+    "bytes": 11011
+  },
+  {
+    "file": "base/glider-spaced/density-1795368786482.json.gz",
+    "bytes": 5225
+  },
+  {
+    "file": "base/glider-spaced/density-1795368787305.json.gz",
+    "bytes": 8414
+  },
+  {
+    "file": "base/glider-spaced/density-1795368787731.json.gz",
+    "bytes": 10211
+  },
+  {
+    "file": "base/glider-spaced/density-1795368786919.json.gz",
+    "bytes": 6570
+  },
+  {
+    "file": "base/glider-spaced/density-1795368788153.json.gz",
+    "bytes": 12704
+  },
+  {
+    "file": "base/glider-spaced/density-1795368788585.json.gz",
+    "bytes": 7940
+  },
+  {
+    "file": "base/glider-spaced/density-1795368788954.json.gz",
+    "bytes": 8026
+  },
+  {
+    "file": "base/glider-spaced/density-1795368789371.json.gz",
+    "bytes": 11642
+  },
+  {
+    "file": "base/glider-spaced/density-1795368789754.json.gz",
+    "bytes": 12134
+  },
+  {
+    "file": "base/glider-spaced/density-1795368790135.json.gz",
+    "bytes": 14745
+  },
+  {
+    "file": "base/glider-spaced/density-1795368790491.json.gz",
+    "bytes": 7747
+  },
+  {
+    "file": "base/glider-spaced/density-1795368790809.json.gz",
+    "bytes": 8846
+  },
+  {
+    "file": "base/glider-spaced/density-1795368791133.json.gz",
+    "bytes": 9321
+  },
+  {
+    "file": "base/glider-spaced/density-1795368791490.json.gz",
+    "bytes": 10117
+  },
+  {
+    "file": "base/glider-spaced/density-1795368791821.json.gz",
+    "bytes": 12919
+  },
+  {
+    "file": "base/glider-spaced/density-1795368803370.json.gz",
+    "bytes": 4535
+  },
+  {
+    "file": "base/glider-spaced/density-1795368803833.json.gz",
+    "bytes": 6311
+  },
+  {
+    "file": "base/glider-spaced/density-1795368804262.json.gz",
+    "bytes": 9155
+  },
+  {
+    "file": "base/glider-spaced/density-1795368804663.json.gz",
+    "bytes": 10089
+  },
+  {
+    "file": "base/glider-spaced/density-1795368805070.json.gz",
+    "bytes": 14816
+  },
+  {
+    "file": "base/glider-spaced/density-1795368815242.json.gz",
+    "bytes": 2205
+  },
+  {
+    "file": "base/glider-spaced/density-1795368816560.json.gz",
+    "bytes": 3808
+  },
+  {
+    "file": "base/glider-spaced/density-1795368816988.json.gz",
+    "bytes": 4996
+  },
+  {
+    "file": "base/glider-spaced/density-1795368817380.json.gz",
+    "bytes": 2214
+  },
+  {
+    "file": "base/glider-spaced/density-1795368818551.json.gz",
+    "bytes": 3808
+  },
+  {
+    "file": "base/glider-spaced/density-1795368818946.json.gz",
+    "bytes": 4996
+  },
+  {
+    "file": "base/glider-spaced/density-1795368821481.json.gz",
+    "bytes": 5811
+  },
+  {
+    "file": "base/glider-spaced/density-1795368821892.json.gz",
+    "bytes": 7795
+  },
+  {
+    "file": "base/glider-spaced/density-1795368822258.json.gz",
+    "bytes": 8794
+  },
+  {
+    "file": "base/glider-spaced/density-1795368822673.json.gz",
+    "bytes": 10449
+  },
+  {
+    "file": "base/glider-spaced/density-1795368823041.json.gz",
+    "bytes": 15756
+  },
+  {
+    "file": "base/glider-spaced/density-1795368837635.json.gz",
+    "bytes": 7243
+  },
+  {
+    "file": "base/glider-spaced/density-1795368837966.json.gz",
+    "bytes": 7721
+  },
+  {
+    "file": "base/glider-spaced/density-1795368838359.json.gz",
+    "bytes": 9515
+  },
+  {
+    "file": "base/glider-spaced/density-1795368838704.json.gz",
+    "bytes": 10408
+  },
+  {
+    "file": "base/glider-spaced/density-1795368839126.json.gz",
+    "bytes": 15747
+  },
+  {
+    "file": "base/glider-spaced/density-1795368854633.json.gz",
+    "bytes": 7169
+  },
+  {
+    "file": "base/glider-spaced/density-1795368855033.json.gz",
+    "bytes": 8453
+  },
+  {
+    "file": "base/glider-spaced/density-1795368855376.json.gz",
+    "bytes": 9477
+  },
+  {
+    "file": "base/glider-spaced/density-1795368855770.json.gz",
+    "bytes": 11693
+  },
+  {
+    "file": "base/glider-spaced/density-1795368857863.json.gz",
+    "bytes": 4780
+  },
+  {
+    "file": "base/glider-spaced/density-1795368856160.json.gz",
+    "bytes": 15920
+  },
+  {
+    "file": "base/glider-spaced/density-1795368858253.json.gz",
+    "bytes": 5384
+  },
+  {
+    "file": "base/glider-spaced/density-1795368862190.json.gz",
+    "bytes": 4743
+  },
+  {
+    "file": "base/glider-spaced/density-1795368862585.json.gz",
+    "bytes": 5390
+  },
+  {
+    "file": "base/glider-spaced/density-1795368866206.json.gz",
+    "bytes": 4522
+  },
+  {
+    "file": "base/glider-spaced/density-1795368866588.json.gz",
+    "bytes": 5332
+  },
+  {
+    "file": "base/glider-spaced/density-1795368867093.json.gz",
+    "bytes": 10591
+  },
+  {
+    "file": "base/glider-spaced/density-1795368867769.json.gz",
+    "bytes": 14740
+  },
+  {
+    "file": "base/glider-spaced/density-1795368867436.json.gz",
+    "bytes": 13382
+  },
+  {
+    "file": "base/glider-spaced/density-1795368868125.json.gz",
+    "bytes": 16189
+  },
+  {
+    "file": "base/glider-spaced/density-1795368868469.json.gz",
+    "bytes": 18163
+  },
+  {
+    "file": "base/glider-spaced/density-1795368868850.json.gz",
+    "bytes": 10445
+  },
+  {
+    "file": "base/glider-spaced/density-1795368869241.json.gz",
+    "bytes": 13260
+  },
+  {
+    "file": "base/glider-spaced/density-1795368869627.json.gz",
+    "bytes": 14616
+  },
+  {
+    "file": "base/glider-spaced/density-1795368870014.json.gz",
+    "bytes": 16066
+  },
+  {
+    "file": "base/glider-spaced/density-1795368870425.json.gz",
+    "bytes": 18033
+  },
+  {
+    "file": "base/glider-spaced/density-1795368870769.json.gz",
+    "bytes": 10592
+  },
+  {
+    "file": "base/glider-spaced/density-1795368871096.json.gz",
+    "bytes": 13404
+  },
+  {
+    "file": "base/glider-spaced/density-1795368871438.json.gz",
+    "bytes": 14720
+  },
+  {
+    "file": "base/glider-spaced/density-1795368871776.json.gz",
+    "bytes": 16898
+  },
+  {
+    "file": "base/glider-spaced/density-1795368872118.json.gz",
+    "bytes": 18264
+  },
+  {
+    "file": "base/glider-spaced/density-1795368872505.json.gz",
+    "bytes": 10447
+  },
+  {
+    "file": "base/glider-spaced/density-1795368872885.json.gz",
+    "bytes": 13276
+  },
+  {
+    "file": "base/glider-spaced/density-1795368873267.json.gz",
+    "bytes": 14594
+  },
+  {
+    "file": "base/glider-spaced/density-1795368873665.json.gz",
+    "bytes": 16759
+  },
+  {
+    "file": "base/glider-spaced/density-1795368874071.json.gz",
+    "bytes": 18130
+  },
+  {
+    "file": "base/glider-spaced/density-1795368874403.json.gz",
+    "bytes": 11085
+  },
+  {
+    "file": "base/glider-spaced/density-1795368874742.json.gz",
+    "bytes": 12429
+  },
+  {
+    "file": "base/glider-spaced/density-1795368875076.json.gz",
+    "bytes": 15986
+  },
+  {
+    "file": "base/glider-spaced/density-1795368875427.json.gz",
+    "bytes": 16817
+  },
+  {
+    "file": "base/glider-spaced/density-1795368875783.json.gz",
+    "bytes": 18175
+  },
+  {
+    "file": "base/glider-spaced/density-1795368876123.json.gz",
+    "bytes": 11091
+  },
+  {
+    "file": "base/glider-spaced/density-1795368876453.json.gz",
+    "bytes": 12410
+  },
+  {
+    "file": "base/glider-spaced/density-1795368876811.json.gz",
+    "bytes": 15359
+  },
+  {
+    "file": "base/glider-spaced/density-1795368877151.json.gz",
+    "bytes": 16114
+  },
+  {
+    "file": "base/glider-spaced/density-1795368877500.json.gz",
+    "bytes": 18074
+  },
+  {
+    "file": "base/glider-spaced/density-1795368878272.json.gz",
+    "bytes": 7417
+  },
+  {
+    "file": "base/glider-spaced/density-1795368878608.json.gz",
+    "bytes": 11911
+  },
+  {
+    "file": "base/glider-spaced/density-1795368879353.json.gz",
+    "bytes": 17175
+  },
+  {
+    "file": "base/glider-spaced/density-1795368879000.json.gz",
+    "bytes": 12065
+  },
+  {
+    "file": "base/glider-spaced/density-1795368879738.json.gz",
+    "bytes": 7562
+  },
+  {
+    "file": "base/glider-spaced/density-1795368880145.json.gz",
+    "bytes": 7695
+  },
+  {
+    "file": "base/glider-spaced/density-1795368880928.json.gz",
+    "bytes": 12383
+  },
+  {
+    "file": "base/glider-spaced/density-1795368880535.json.gz",
+    "bytes": 12221
+  },
+  {
+    "file": "base/glider-spaced/density-1795368881328.json.gz",
+    "bytes": 17503
+  },
+  {
+    "file": "base/glider-spaced/density-1795368881659.json.gz",
+    "bytes": 10033
+  },
+  {
+    "file": "base/glider-spaced/density-1795368882380.json.gz",
+    "bytes": 12987
+  },
+  {
+    "file": "base/glider-spaced/density-1795368882010.json.gz",
+    "bytes": 11637
+  },
+  {
+    "file": "base/glider-spaced/density-1795368882724.json.gz",
+    "bytes": 16180
+  },
+  {
+    "file": "base/glider-spaced/density-1795368883112.json.gz",
+    "bytes": 16903
+  },
+  {
+    "file": "base/glider-spaced/density-1795368883914.json.gz",
+    "bytes": 11933
+  },
+  {
+    "file": "base/glider-spaced/density-1795368883514.json.gz",
+    "bytes": 10297
+  },
+  {
+    "file": "base/glider-spaced/density-1795368884325.json.gz",
+    "bytes": 13285
+  },
+  {
+    "file": "base/glider-spaced/density-1795368884781.json.gz",
+    "bytes": 16494
+  },
+  {
+    "file": "base/glider-spaced/density-1795368885561.json.gz",
+    "bytes": 10024
+  },
+  {
+    "file": "base/glider-spaced/density-1795368885220.json.gz",
+    "bytes": 17220
+  },
+  {
+    "file": "base/glider-spaced/density-1795368885927.json.gz",
+    "bytes": 11612
+  },
+  {
+    "file": "base/glider-spaced/density-1795368886288.json.gz",
+    "bytes": 13004
+  },
+  {
+    "file": "base/glider-spaced/density-1795368887016.json.gz",
+    "bytes": 16834
+  },
+  {
+    "file": "base/glider-spaced/density-1795368886634.json.gz",
+    "bytes": 15988
+  },
+  {
+    "file": "base/glider-spaced/density-1795368887414.json.gz",
+    "bytes": 10294
+  },
+  {
+    "file": "base/glider-spaced/density-1795368887808.json.gz",
+    "bytes": 11909
+  },
+  {
+    "file": "base/glider-spaced/density-1795368888629.json.gz",
+    "bytes": 16302
+  },
+  {
+    "file": "base/glider-spaced/density-1795368888224.json.gz",
+    "bytes": 13303
+  },
+  {
+    "file": "base/glider-spaced/density-1795368889068.json.gz",
+    "bytes": 17149
+  },
+  {
+    "file": "base/glider-spaced/density-1795368889411.json.gz",
+    "bytes": 10748
+  },
+  {
+    "file": "base/glider-spaced/density-1795368889749.json.gz",
+    "bytes": 11998
+  },
+  {
+    "file": "base/glider-spaced/density-1795368890111.json.gz",
+    "bytes": 13956
+  },
+  {
+    "file": "base/glider-spaced/density-1795368890488.json.gz",
+    "bytes": 15665
+  },
+  {
+    "file": "base/glider-spaced/density-1795368890867.json.gz",
+    "bytes": 16956
+  },
+  {
+    "file": "base/glider-spaced/density-1795368895574.json.gz",
+    "bytes": 8059
+  },
+  {
+    "file": "base/glider-spaced/density-1795368895224.json.gz",
+    "bytes": 6182
+  },
+  {
+    "file": "base/glider-spaced/density-1795368896303.json.gz",
+    "bytes": 11622
+  },
+  {
+    "file": "base/glider-spaced/density-1795368896636.json.gz",
+    "bytes": 15451
+  },
+  {
+    "file": "base/glider-spaced/end-1.srj.json.gz",
+    "bytes": 972325
+  },
+  {
+    "file": "base/glider-spaced/density-1795368896956.json.gz",
+    "bytes": 6396
+  },
+  {
+    "file": "base/glider-spaced/end-2.srj.json.gz",
+    "bytes": 973011
+  },
+  {
+    "file": "base/glider-spaced/error-4.srj.json.gz",
+    "bytes": 995051
+  },
+  {
+    "file": "base/glider-spaced/events.jsonl",
+    "bytes": 48797
+  },
+  {
+    "file": "base/glider-spaced/end-3.srj.json.gz",
+    "bytes": 984966
+  },
+  {
+    "file": "base/glider-spaced/graph-1-1-input.json.gz",
+    "bytes": 1854095
+  },
+  {
+    "file": "base/glider-spaced/graph-2-1-input.json.gz",
+    "bytes": 2132814
+  },
+  {
+    "file": "base/glider-spaced/result.json",
+    "bytes": 352
+  },
+  {
+    "file": "base/glider-spaced/run.log",
+    "bytes": 777
+  },
+  {
+    "file": "base/glider-spaced/stage-1-highDensityRouteSolver.json.gz",
+    "bytes": 1118843
+  },
+  {
+    "file": "base/glider-spaced/stage-1-uniformPortDistributionSolver.json.gz",
+    "bytes": 3402883
+  },
+  {
+    "file": "base/glider-spaced/start-1.srj.json.gz",
+    "bytes": 971531
+  },
+  {
+    "file": "base/glider-spaced/start-2.srj.json.gz",
+    "bytes": 972351
+  },
+  {
+    "file": "base/glider-spaced/start-3.srj.json.gz",
+    "bytes": 973731
+  },
+  {
+    "file": "base/glider-spaced/start-4.srj.json.gz",
+    "bytes": 995051
+  },
+  {
+    "file": "base/h616-default-order-local/bus-1-input.json.gz",
+    "bytes": 157011
+  },
+  {
+    "file": "base/h616-default-order-local/bus-2-input.json.gz",
+    "bytes": 157876
+  },
+  {
+    "file": "base/h616-default-order-local/circuit.json.gz",
+    "bytes": 80366
+  },
+  {
+    "file": "base/h616-default-order-local/end-1.srj.json.gz",
+    "bytes": 157788
+  },
+  {
+    "file": "base/h616-default-order-local/error-3.srj.json.gz",
+    "bytes": 159397
+  },
+  {
+    "file": "base/h616-default-order-local/end-2.srj.json.gz",
+    "bytes": 158548
+  },
+  {
+    "file": "base/h616-default-order-local/events.jsonl",
+    "bytes": 14184
+  },
+  {
+    "file": "base/h616-default-order-local/graph-1-1-input.json.gz",
+    "bytes": 966304
+  },
+  {
+    "file": "base/h616-default-order-local/result.json",
+    "bytes": 360
+  },
+  {
+    "file": "base/h616-default-order-local/run.log",
+    "bytes": 788
+  },
+  {
+    "file": "base/h616-default-order-local/start-1.srj.json.gz",
+    "bytes": 156955
+  },
+  {
+    "file": "base/h616-default-order-local/start-2.srj.json.gz",
+    "bytes": 157821
+  },
+  {
+    "file": "base/h616-default-order-local/start-3.srj.json.gz",
+    "bytes": 159397
+  },
+  {
+    "file": "base/h616-local/bus-1-input.json.gz",
+    "bytes": 157011
+  },
+  {
+    "file": "base/h616-local/bus-2-input.json.gz",
+    "bytes": 157876
+  },
+  {
+    "file": "base/h616-local/circuit.json.gz",
+    "bytes": 80366
+  },
+  {
+    "file": "base/h616-local/end-1.srj.json.gz",
+    "bytes": 157788
+  },
+  {
+    "file": "base/h616-local/end-2.srj.json.gz",
+    "bytes": 158548
+  },
+  {
+    "file": "base/h616-local/error-3.srj.json.gz",
+    "bytes": 159672
+  },
+  {
+    "file": "base/h616-local/events.jsonl",
+    "bytes": 16290
+  },
+  {
+    "file": "base/h616-local/graph-1-1-input.json.gz",
+    "bytes": 971666
+  },
+  {
+    "file": "base/h616-local/graph-1-2-input.json.gz",
+    "bytes": 971684
+  },
+  {
+    "file": "base/h616-local/graph-1-3-input.json.gz",
+    "bytes": 971044
+  },
+  {
+    "file": "base/h616-local/result.json",
+    "bytes": 346
+  },
+  {
+    "file": "base/h616-local/run.log",
+    "bytes": 774
+  },
+  {
+    "file": "base/h616-local/start-1.srj.json.gz",
+    "bytes": 156955
+  },
+  {
+    "file": "base/h616-local/start-2.srj.json.gz",
+    "bytes": 157821
+  },
+  {
+    "file": "base/h616-local/start-3.srj.json.gz",
+    "bytes": 159672
+  },
+  {
+    "file": "base/h616-native/circuit.json.gz",
+    "bytes": 110121
+  },
+  {
+    "file": "base/h616-native/error-1.srj.json.gz",
+    "bytes": 229492
+  },
+  {
+    "file": "base/h616-native/events.jsonl",
+    "bytes": 13758
+  },
+  {
+    "file": "base/h616-native/fanout-1-best.json.gz",
+    "bytes": 315526
+  },
+  {
+    "file": "base/h616-native/fanout-1-input.json.gz",
+    "bytes": 229639
+  },
+  {
+    "file": "base/h616-native/fanout-checkpoint.json.gz",
+    "bytes": 315526
+  },
+  {
+    "file": "base/h616-native/result.json",
+    "bytes": 383
+  },
+  {
+    "file": "base/h616-native/run.log",
+    "bytes": 1281
+  },
+  {
+    "file": "base/h616-native/start-1.srj.json.gz",
+    "bytes": 229492
+  },
+  {
+    "file": "base/h616-spaced/bus-1-input.json.gz",
+    "bytes": 156770
+  },
+  {
+    "file": "base/h616-spaced/bus-2-input.json.gz",
+    "bytes": 157674
+  },
+  {
+    "file": "base/h616-spaced/circuit.json.gz",
+    "bytes": 80528
+  },
+  {
+    "file": "base/h616-spaced/end-1.srj.json.gz",
+    "bytes": 157588
+  },
+  {
+    "file": "base/h616-spaced/end-2.srj.json.gz",
+    "bytes": 158374
+  },
+  {
+    "file": "base/h616-spaced/error-3.srj.json.gz",
+    "bytes": 159215
+  },
+  {
+    "file": "base/h616-spaced/events.jsonl",
+    "bytes": 14173
+  },
+  {
+    "file": "base/h616-spaced/graph-1-1-input.json.gz",
+    "bytes": 1074840
+  },
+  {
+    "file": "base/h616-spaced/result.json",
+    "bytes": 345
+  },
+  {
+    "file": "base/h616-spaced/run.log",
+    "bytes": 775
+  },
+  {
+    "file": "base/h616-spaced/start-1.srj.json.gz",
+    "bytes": 156717
+  },
+  {
+    "file": "base/h616-spaced/start-2.srj.json.gz",
+    "bytes": 157621
+  },
+  {
+    "file": "base/h616-spaced/start-3.srj.json.gz",
+    "bytes": 159215
+  },
+  {
+    "file": "base/icepi-local/bus-1-input.json.gz",
+    "bytes": 588922
+  },
+  {
+    "file": "base/icepi-local/bus-2-input.json.gz",
+    "bytes": 589732
+  },
+  {
+    "file": "base/icepi-local/circuit.json.gz",
+    "bytes": 156105
+  },
+  {
+    "file": "base/icepi-local/density-1795368782838.json.gz",
+    "bytes": 2460
+  },
+  {
+    "file": "base/icepi-local/end-1.srj.json.gz",
+    "bytes": 587015
+  },
+  {
+    "file": "base/icepi-local/end-2.srj.json.gz",
+    "bytes": 587714
+  },
+  {
+    "file": "base/icepi-local/error-3.srj.json.gz",
+    "bytes": 588486
+  },
+  {
+    "file": "base/icepi-local/events.jsonl",
+    "bytes": 20008
+  },
+  {
+    "file": "base/icepi-local/graph-1-1-input.json.gz",
+    "bytes": 1788184
+  },
+  {
+    "file": "base/icepi-local/graph-1-2-input.json.gz",
+    "bytes": 1788890
+  },
+  {
+    "file": "base/icepi-local/graph-1-3-input.json.gz",
+    "bytes": 1788908
+  },
+  {
+    "file": "base/icepi-local/result.json",
+    "bytes": 350
+  },
+  {
+    "file": "base/icepi-local/run.log",
+    "bytes": 1400
+  },
+  {
+    "file": "base/icepi-local/stage-1-uniformPortDistributionSolver.json.gz",
+    "bytes": 2979408
+  },
+  {
+    "file": "base/icepi-local/stage-1-highDensityRouteSolver.json.gz",
+    "bytes": 730452
+  },
+  {
+    "file": "base/icepi-local/start-1.srj.json.gz",
+    "bytes": 586243
+  },
+  {
+    "file": "base/icepi-local/start-2.srj.json.gz",
+    "bytes": 587055
+  },
+  {
+    "file": "base/icepi-local/start-3.srj.json.gz",
+    "bytes": 588486
+  },
+  {
+    "file": "base/icepi-native/error-1.srj.json.gz",
+    "bytes": 715879
+  },
+  {
+    "file": "base/icepi-native/circuit.json.gz",
+    "bytes": 207441
+  },
+  {
+    "file": "base/icepi-native/events.jsonl",
+    "bytes": 4368
+  },
+  {
+    "file": "base/icepi-native/fanout-1-input.json.gz",
+    "bytes": 715734
+  },
+  {
+    "file": "base/icepi-native/fanout-1-best.json.gz",
+    "bytes": 728900
+  },
+  {
+    "file": "base/icepi-native/result.json",
+    "bytes": 384
+  },
+  {
+    "file": "base/icepi-native/run.log",
+    "bytes": 1280
+  },
+  {
+    "file": "base/icepi-native/start-1.srj.json.gz",
+    "bytes": 715879
+  },
+  {
+    "file": "base/icepi-spaced/bus-2-input.json.gz",
+    "bytes": 584353
+  },
+  {
+    "file": "base/icepi-spaced/bus-1-input.json.gz",
+    "bytes": 583530
+  },
+  {
+    "file": "base/icepi-spaced/circuit.json.gz",
+    "bytes": 170442
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368824112.json.gz",
+    "bytes": 11269
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368824381.json.gz",
+    "bytes": 16701
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368824642.json.gz",
+    "bytes": 17450
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368824902.json.gz",
+    "bytes": 19943
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368825208.json.gz",
+    "bytes": 21140
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368825455.json.gz",
+    "bytes": 11265
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368825701.json.gz",
+    "bytes": 16696
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368825947.json.gz",
+    "bytes": 17443
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368826472.json.gz",
+    "bytes": 20626
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368826218.json.gz",
+    "bytes": 19937
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368826735.json.gz",
+    "bytes": 4910
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368827011.json.gz",
+    "bytes": 6153
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368827540.json.gz",
+    "bytes": 9100
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368827285.json.gz",
+    "bytes": 7895
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368827816.json.gz",
+    "bytes": 12959
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368836330.json.gz",
+    "bytes": 7004
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368836579.json.gz",
+    "bytes": 10448
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368836888.json.gz",
+    "bytes": 13016
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368837150.json.gz",
+    "bytes": 18062
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368837415.json.gz",
+    "bytes": 21099
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368837929.json.gz",
+    "bytes": 16221
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368837682.json.gz",
+    "bytes": 9697
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368838183.json.gz",
+    "bytes": 16827
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368838436.json.gz",
+    "bytes": 19936
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368838991.json.gz",
+    "bytes": 7796
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368839239.json.gz",
+    "bytes": 9638
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368838706.json.gz",
+    "bytes": 20556
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368839492.json.gz",
+    "bytes": 13901
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368839747.json.gz",
+    "bytes": 16836
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368840052.json.gz",
+    "bytes": 20124
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368840291.json.gz",
+    "bytes": 6551
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368840531.json.gz",
+    "bytes": 10453
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368840776.json.gz",
+    "bytes": 12624
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368841058.json.gz",
+    "bytes": 17069
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368841320.json.gz",
+    "bytes": 21116
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368841563.json.gz",
+    "bytes": 7570
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368841781.json.gz",
+    "bytes": 2096
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368841996.json.gz",
+    "bytes": 3317
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368842212.json.gz",
+    "bytes": 3497
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368842464.json.gz",
+    "bytes": 4934
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368842911.json.gz",
+    "bytes": 2130
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368842692.json.gz",
+    "bytes": 6767
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368843134.json.gz",
+    "bytes": 3361
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368843357.json.gz",
+    "bytes": 3529
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368843647.json.gz",
+    "bytes": 4948
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368844127.json.gz",
+    "bytes": 13990
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368844345.json.gz",
+    "bytes": 16636
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368844555.json.gz",
+    "bytes": 17859
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368845038.json.gz",
+    "bytes": 20866
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368844777.json.gz",
+    "bytes": 20447
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368845263.json.gz",
+    "bytes": 13925
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368845532.json.gz",
+    "bytes": 16548
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368845769.json.gz",
+    "bytes": 17774
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368846015.json.gz",
+    "bytes": 20385
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368846289.json.gz",
+    "bytes": 20802
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368846490.json.gz",
+    "bytes": 14656
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368846696.json.gz",
+    "bytes": 16311
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368846910.json.gz",
+    "bytes": 16557
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368847155.json.gz",
+    "bytes": 17217
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368847373.json.gz",
+    "bytes": 19306
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368847831.json.gz",
+    "bytes": 16226
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368848071.json.gz",
+    "bytes": 16477
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368847596.json.gz",
+    "bytes": 14574
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368848308.json.gz",
+    "bytes": 17142
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368848588.json.gz",
+    "bytes": 19243
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368848819.json.gz",
+    "bytes": 11131
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368849051.json.gz",
+    "bytes": 17153
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368849286.json.gz",
+    "bytes": 19328
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368849772.json.gz",
+    "bytes": 21234
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368849526.json.gz",
+    "bytes": 20727
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368850052.json.gz",
+    "bytes": 10872
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368850519.json.gz",
+    "bytes": 19030
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368850759.json.gz",
+    "bytes": 20438
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368850285.json.gz",
+    "bytes": 16890
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368850997.json.gz",
+    "bytes": 20959
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368851260.json.gz",
+    "bytes": 15629
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368851501.json.gz",
+    "bytes": 16460
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368851738.json.gz",
+    "bytes": 17090
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368851978.json.gz",
+    "bytes": 18385
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368852494.json.gz",
+    "bytes": 15648
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368852221.json.gz",
+    "bytes": 20781
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368852725.json.gz",
+    "bytes": 16484
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368852964.json.gz",
+    "bytes": 17100
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368853200.json.gz",
+    "bytes": 18387
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368853443.json.gz",
+    "bytes": 20766
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368853803.json.gz",
+    "bytes": 18237
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368854090.json.gz",
+    "bytes": 15532
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368854334.json.gz",
+    "bytes": 16370
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368854874.json.gz",
+    "bytes": 17894
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368854582.json.gz",
+    "bytes": 17092
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368855116.json.gz",
+    "bytes": 20670
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368855581.json.gz",
+    "bytes": 16391
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368855343.json.gz",
+    "bytes": 15549
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368855824.json.gz",
+    "bytes": 17099
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368856113.json.gz",
+    "bytes": 17899
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368856361.json.gz",
+    "bytes": 20661
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368856576.json.gz",
+    "bytes": 11356
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368856794.json.gz",
+    "bytes": 14561
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368857003.json.gz",
+    "bytes": 14774
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368857245.json.gz",
+    "bytes": 17388
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368857460.json.gz",
+    "bytes": 21459
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368857686.json.gz",
+    "bytes": 11958
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368857934.json.gz",
+    "bytes": 15162
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368858158.json.gz",
+    "bytes": 15376
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368858435.json.gz",
+    "bytes": 17994
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368858688.json.gz",
+    "bytes": 22076
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368859018.json.gz",
+    "bytes": 18980
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368859219.json.gz",
+    "bytes": 10821
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368859463.json.gz",
+    "bytes": 12356
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368859678.json.gz",
+    "bytes": 14101
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368859889.json.gz",
+    "bytes": 14614
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368860105.json.gz",
+    "bytes": 17058
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368860394.json.gz",
+    "bytes": 11437
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368860682.json.gz",
+    "bytes": 12962
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368860953.json.gz",
+    "bytes": 14670
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368861517.json.gz",
+    "bytes": 17633
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368861253.json.gz",
+    "bytes": 15179
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368861717.json.gz",
+    "bytes": 10814
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368862164.json.gz",
+    "bytes": 14138
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368862378.json.gz",
+    "bytes": 15709
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368861952.json.gz",
+    "bytes": 12620
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368862586.json.gz",
+    "bytes": 17131
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368862824.json.gz",
+    "bytes": 11433
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368863336.json.gz",
+    "bytes": 14705
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368863078.json.gz",
+    "bytes": 13213
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368863598.json.gz",
+    "bytes": 16289
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368863870.json.gz",
+    "bytes": 17714
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368864531.json.gz",
+    "bytes": 15613
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368864062.json.gz",
+    "bytes": 11516
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368864747.json.gz",
+    "bytes": 19241
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368864957.json.gz",
+    "bytes": 22976
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368865175.json.gz",
+    "bytes": 12047
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368865399.json.gz",
+    "bytes": 14757
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368865636.json.gz",
+    "bytes": 16131
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368865877.json.gz",
+    "bytes": 19777
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368866117.json.gz",
+    "bytes": 23403
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368866315.json.gz",
+    "bytes": 10614
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368866520.json.gz",
+    "bytes": 13363
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368866740.json.gz",
+    "bytes": 15992
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368866950.json.gz",
+    "bytes": 20806
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368867179.json.gz",
+    "bytes": 23168
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368867368.json.gz",
+    "bytes": 11519
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368867822.json.gz",
+    "bytes": 14601
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368868041.json.gz",
+    "bytes": 19246
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368868247.json.gz",
+    "bytes": 22978
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368868459.json.gz",
+    "bytes": 12050
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368868676.json.gz",
+    "bytes": 14667
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368868895.json.gz",
+    "bytes": 15117
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368869128.json.gz",
+    "bytes": 19778
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368869360.json.gz",
+    "bytes": 23410
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368869555.json.gz",
+    "bytes": 11743
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368869763.json.gz",
+    "bytes": 13195
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368869962.json.gz",
+    "bytes": 13902
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368870169.json.gz",
+    "bytes": 14156
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368870369.json.gz",
+    "bytes": 17572
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368870596.json.gz",
+    "bytes": 12281
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368870838.json.gz",
+    "bytes": 13737
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368871058.json.gz",
+    "bytes": 14441
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368871304.json.gz",
+    "bytes": 14698
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368871532.json.gz",
+    "bytes": 18101
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368871725.json.gz",
+    "bytes": 11743
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368871933.json.gz",
+    "bytes": 13195
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368872129.json.gz",
+    "bytes": 13902
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368872338.json.gz",
+    "bytes": 14156
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368872537.json.gz",
+    "bytes": 17572
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368872760.json.gz",
+    "bytes": 12281
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368872993.json.gz",
+    "bytes": 13737
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368873214.json.gz",
+    "bytes": 14441
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368873459.json.gz",
+    "bytes": 14698
+  },
+  {
+    "file": "base/icepi-spaced/density-1795368873689.json.gz",
+    "bytes": 18101
+  },
+  {
+    "file": "base/icepi-spaced/density-1795369026042.json.gz",
+    "bytes": 8389
+  },
+  {
+    "file": "base/icepi-spaced/end-1.srj.json.gz",
+    "bytes": 584271
+  },
+  {
+    "file": "base/icepi-spaced/end-2.srj.json.gz",
+    "bytes": 585054
+  },
+  {
+    "file": "base/icepi-spaced/end-3.srj.json.gz",
+    "bytes": 599423
+  },
+  {
+    "file": "base/icepi-spaced/error-4.srj.json.gz",
+    "bytes": 605737
+  },
+  {
+    "file": "base/icepi-spaced/events.jsonl",
+    "bytes": 72471
+  },
+  {
+    "file": "base/icepi-spaced/graph-1-1-input.json.gz",
+    "bytes": 1889805
+  },
+  {
+    "file": "base/icepi-spaced/graph-1-2-input.json.gz",
+    "bytes": 1890686
+  },
+  {
+    "file": "base/icepi-spaced/graph-2-1-input.json.gz",
+    "bytes": 2147863
+  },
+  {
+    "file": "base/icepi-spaced/result.json",
+    "bytes": 351
+  },
+  {
+    "file": "base/icepi-spaced/run.log",
+    "bytes": 2159
+  },
+  {
+    "file": "base/icepi-spaced/stage-1-highDensityRouteSolver.json.gz",
+    "bytes": 713127
+  },
+  {
+    "file": "base/icepi-spaced/stage-1-uniformPortDistributionSolver.json.gz",
+    "bytes": 3089904
+  },
+  {
+    "file": "base/icepi-spaced/stage-2-highDensityRouteSolver.json.gz",
+    "bytes": 951553
+  },
+  {
+    "file": "base/icepi-spaced/stage-2-uniformPortDistributionSolver.json.gz",
+    "bytes": 3312900
+  },
+  {
+    "file": "base/icepi-spaced/start-1.srj.json.gz",
+    "bytes": 583487
+  },
+  {
+    "file": "base/icepi-spaced/start-2.srj.json.gz",
+    "bytes": 584310
+  },
+  {
+    "file": "base/icepi-spaced/start-3.srj.json.gz",
+    "bytes": 585828
+  },
+  {
+    "file": "base/imx6-local/bus-1-input.json.gz",
+    "bytes": 1006393
+  },
+  {
+    "file": "base/icepi-spaced/start-4.srj.json.gz",
+    "bytes": 605737
+  },
+  {
+    "file": "base/imx6-local/bus-2-input.json.gz",
+    "bytes": 1007316
+  },
+  {
+    "file": "base/imx6-local/bus-3-input.json.gz",
+    "bytes": 1007293
+  },
+  {
+    "file": "base/imx6-local/density-1795369224681.json.gz",
+    "bytes": 1415
+  },
+  {
+    "file": "base/imx6-local/bus-4-input.json.gz",
+    "bytes": 1008046
+  },
+  {
+    "file": "base/imx6-local/end-1.srj.json.gz",
+    "bytes": 1005433
+  },
+  {
+    "file": "base/imx6-local/end-2.srj.json.gz",
+    "bytes": 1006543
+  },
+  {
+    "file": "base/imx6-local/events.jsonl",
+    "bytes": 33625
+  },
+  {
+    "file": "base/imx6-local/error-3.srj.json.gz",
+    "bytes": 1007510
+  },
+  {
+    "file": "base/imx6-local/graph-1-1-input.json.gz",
+    "bytes": 2358129
+  },
+  {
+    "file": "base/imx6-local/graph-1-2-input.json.gz",
+    "bytes": 2358705
+  },
+  {
+    "file": "base/imx6-local/run.log",
+    "bytes": 1276
+  },
+  {
+    "file": "base/imx6-local/result.json",
+    "bytes": 124
+  },
+  {
+    "file": "base/imx6-local/stage-1-uniformPortDistributionSolver.json.gz",
+    "bytes": 4125318
+  },
+  {
+    "file": "base/imx6-local/stage-1-highDensityRouteSolver.json.gz",
+    "bytes": 1156407
+  },
+  {
+    "file": "base/imx6-local/start-1.srj.json.gz",
+    "bytes": 1004566
+  },
+  {
+    "file": "base/imx6-local/start-2.srj.json.gz",
+    "bytes": 1005487
+  },
+  {
+    "file": "base/imx6-local/start-3.srj.json.gz",
+    "bytes": 1007510
+  },
+  {
+    "file": "base/imx6-native/error-1.srj.json.gz",
+    "bytes": 1360593
+  },
+  {
+    "file": "base/imx6-native/circuit.json.gz",
+    "bytes": 288103
+  },
+  {
+    "file": "base/imx6-native/events.jsonl",
+    "bytes": 4721
+  },
+  {
+    "file": "base/imx6-native/fanout-1-best.json.gz",
+    "bytes": 1378805
+  },
+  {
+    "file": "base/imx6-native/fanout-1-input.json.gz",
+    "bytes": 1360780
+  },
+  {
+    "file": "base/imx6-native/result.json",
+    "bytes": 383
+  },
+  {
+    "file": "base/imx6-native/fanout-checkpoint.json.gz",
+    "bytes": 1378805
+  },
+  {
+    "file": "base/imx6-native/run.log",
+    "bytes": 1278
+  },
+  {
+    "file": "base/imx6-native/start-1.srj.json.gz",
+    "bytes": 1360593
+  },
+  {
+    "file": "base/imx6-spaced/bus-1-input.json.gz",
+    "bytes": 1005729
+  },
+  {
+    "file": "base/imx6-spaced/bus-2-input.json.gz",
+    "bytes": 1006682
+  },
+  {
+    "file": "base/imx6-spaced/bus-3-input.json.gz",
+    "bytes": 1006661
+  },
+  {
+    "file": "base/imx6-spaced/circuit.json.gz",
+    "bytes": 213964
+  },
+  {
+    "file": "base/imx6-spaced/bus-4-input.json.gz",
+    "bytes": 1007352
+  },
+  {
+    "file": "base/imx6-spaced/density-1795369182304.json.gz",
+    "bytes": 853
+  },
+  {
+    "file": "base/imx6-spaced/end-1.srj.json.gz",
+    "bytes": 1005834
+  },
+  {
+    "file": "base/imx6-spaced/error-3.srj.json.gz",
+    "bytes": 1007797
+  },
+  {
+    "file": "base/imx6-spaced/end-2.srj.json.gz",
+    "bytes": 1006827
+  },
+  {
+    "file": "base/imx6-spaced/events.jsonl",
+    "bytes": 32156
+  },
+  {
+    "file": "base/imx6-spaced/graph-1-1-input.json.gz",
+    "bytes": 2678029
+  },
+  {
+    "file": "base/imx6-spaced/graph-1-2-input.json.gz",
+    "bytes": 2678044
+  },
+  {
+    "file": "base/imx6-spaced/graph-1-3-input.json.gz",
+    "bytes": 2679560
+  },
+  {
+    "file": "base/imx6-spaced/graph-1-4-input.json.gz",
+    "bytes": 2679575
+  },
+  {
+    "file": "base/imx6-spaced/result.json",
+    "bytes": 350
+  },
+  {
+    "file": "base/imx6-spaced/run.log",
+    "bytes": 1523
+  },
+  {
+    "file": "base/imx6-spaced/stage-1-highDensityRouteSolver.json.gz",
+    "bytes": 1157975
+  },
+  {
+    "file": "base/imx6-spaced/stage-1-uniformPortDistributionSolver.json.gz",
+    "bytes": 4520626
+  },
+  {
+    "file": "base/imx6-spaced/start-1.srj.json.gz",
+    "bytes": 1004936
+  },
+  {
+    "file": "base/imx6-spaced/start-2.srj.json.gz",
+    "bytes": 1005890
+  },
+  {
+    "file": "base/imx6-spaced/start-3.srj.json.gz",
+    "bytes": 1007797
+  },
+  {
+    "file": "base/orangecrab-local/bus-1-input.json.gz",
+    "bytes": 367667
+  },
+  {
+    "file": "base/orangecrab-local/bus-2-input.json.gz",
+    "bytes": 368501
+  },
+  {
+    "file": "base/orangecrab-local/circuit.json.gz",
+    "bytes": 113421
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368722363.json.gz",
+    "bytes": 8206
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368722695.json.gz",
+    "bytes": 12122
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368723089.json.gz",
+    "bytes": 8194
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368723442.json.gz",
+    "bytes": 12096
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368723548.json.gz",
+    "bytes": 5087
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368723658.json.gz",
+    "bytes": 7317
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368723798.json.gz",
+    "bytes": 9109
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368723945.json.gz",
+    "bytes": 10527
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368724127.json.gz",
+    "bytes": 12505
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368724252.json.gz",
+    "bytes": 5092
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368724504.json.gz",
+    "bytes": 7999
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368724366.json.gz",
+    "bytes": 5425
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368724654.json.gz",
+    "bytes": 9486
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368724840.json.gz",
+    "bytes": 11649
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368725191.json.gz",
+    "bytes": 6014
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368725090.json.gz",
+    "bytes": 8774
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368725345.json.gz",
+    "bytes": 7517
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368725480.json.gz",
+    "bytes": 9230
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368725822.json.gz",
+    "bytes": 11445
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368725650.json.gz",
+    "bytes": 10147
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368725914.json.gz",
+    "bytes": 6213
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368726042.json.gz",
+    "bytes": 7741
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368726356.json.gz",
+    "bytes": 10360
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368726208.json.gz",
+    "bytes": 9436
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368726603.json.gz",
+    "bytes": 11651
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368726721.json.gz",
+    "bytes": 6004
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368726848.json.gz",
+    "bytes": 7502
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368726997.json.gz",
+    "bytes": 8645
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368727145.json.gz",
+    "bytes": 10089
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368727339.json.gz",
+    "bytes": 11451
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368727592.json.gz",
+    "bytes": 7727
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368727452.json.gz",
+    "bytes": 6201
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368727724.json.gz",
+    "bytes": 8852
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368727879.json.gz",
+    "bytes": 10297
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368728047.json.gz",
+    "bytes": 11649
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368728255.json.gz",
+    "bytes": 6266
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368728343.json.gz",
+    "bytes": 5319
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368728462.json.gz",
+    "bytes": 7667
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368728719.json.gz",
+    "bytes": 8798
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368728575.json.gz",
+    "bytes": 8331
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368728883.json.gz",
+    "bytes": 11156
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368728983.json.gz",
+    "bytes": 5344
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368729095.json.gz",
+    "bytes": 7708
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368729221.json.gz",
+    "bytes": 8378
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368729361.json.gz",
+    "bytes": 8847
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368729545.json.gz",
+    "bytes": 11184
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368729636.json.gz",
+    "bytes": 5347
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368729773.json.gz",
+    "bytes": 7713
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368729891.json.gz",
+    "bytes": 8380
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368730031.json.gz",
+    "bytes": 8852
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368730209.json.gz",
+    "bytes": 11191
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368730328.json.gz",
+    "bytes": 4490
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368730447.json.gz",
+    "bytes": 6108
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368730584.json.gz",
+    "bytes": 7897
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368730751.json.gz",
+    "bytes": 9342
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368730943.json.gz",
+    "bytes": 11040
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368731305.json.gz",
+    "bytes": 8203
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368731453.json.gz",
+    "bytes": 10165
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368731616.json.gz",
+    "bytes": 12466
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368731727.json.gz",
+    "bytes": 5039
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368731836.json.gz",
+    "bytes": 6899
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368731980.json.gz",
+    "bytes": 8708
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368732131.json.gz",
+    "bytes": 10523
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368732315.json.gz",
+    "bytes": 12802
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368732553.json.gz",
+    "bytes": 6964
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368732676.json.gz",
+    "bytes": 8765
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368732774.json.gz",
+    "bytes": 10582
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368732951.json.gz",
+    "bytes": 12860
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368733168.json.gz",
+    "bytes": 6964
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368733301.json.gz",
+    "bytes": 8765
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368733405.json.gz",
+    "bytes": 10582
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368733591.json.gz",
+    "bytes": 12860
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368733692.json.gz",
+    "bytes": 5081
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368734114.json.gz",
+    "bytes": 10569
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368734614.json.gz",
+    "bytes": 8000
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368734753.json.gz",
+    "bytes": 10552
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368735100.json.gz",
+    "bytes": 5811
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368735265.json.gz",
+    "bytes": 6662
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368735460.json.gz",
+    "bytes": 7853
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368735621.json.gz",
+    "bytes": 9055
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368735742.json.gz",
+    "bytes": 4229
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368735858.json.gz",
+    "bytes": 5078
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368736034.json.gz",
+    "bytes": 5903
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368736192.json.gz",
+    "bytes": 7316
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368736375.json.gz",
+    "bytes": 8585
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368736484.json.gz",
+    "bytes": 4439
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368736596.json.gz",
+    "bytes": 5268
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368736741.json.gz",
+    "bytes": 6094
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368736896.json.gz",
+    "bytes": 7489
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368737068.json.gz",
+    "bytes": 8772
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368737792.json.gz",
+    "bytes": 5331
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368737902.json.gz",
+    "bytes": 7032
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368738724.json.gz",
+    "bytes": 8452
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368738352.json.gz",
+    "bytes": 13049
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368738870.json.gz",
+    "bytes": 10414
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368739045.json.gz",
+    "bytes": 12719
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368739409.json.gz",
+    "bytes": 8456
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368739741.json.gz",
+    "bytes": 12376
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368740114.json.gz",
+    "bytes": 8448
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368740461.json.gz",
+    "bytes": 12351
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368740823.json.gz",
+    "bytes": 9363
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368740553.json.gz",
+    "bytes": 5365
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368740973.json.gz",
+    "bytes": 10787
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368741195.json.gz",
+    "bytes": 5362
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368741444.json.gz",
+    "bytes": 8264
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368741327.json.gz",
+    "bytes": 5701
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368741592.json.gz",
+    "bytes": 9748
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368741779.json.gz",
+    "bytes": 11921
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368742166.json.gz",
+    "bytes": 5871
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368742033.json.gz",
+    "bytes": 9030
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368742297.json.gz",
+    "bytes": 7735
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368742435.json.gz",
+    "bytes": 9441
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368742764.json.gz",
+    "bytes": 11706
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368742582.json.gz",
+    "bytes": 10413
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368742869.json.gz",
+    "bytes": 6069
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368743009.json.gz",
+    "bytes": 7952
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368743146.json.gz",
+    "bytes": 9651
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368743306.json.gz",
+    "bytes": 10630
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368743479.json.gz",
+    "bytes": 11918
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368743583.json.gz",
+    "bytes": 5861
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368743853.json.gz",
+    "bytes": 8863
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368743701.json.gz",
+    "bytes": 7721
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368744001.json.gz",
+    "bytes": 10352
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368744195.json.gz",
+    "bytes": 11703
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368744435.json.gz",
+    "bytes": 7939
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368744299.json.gz",
+    "bytes": 6056
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368744574.json.gz",
+    "bytes": 9077
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368744727.json.gz",
+    "bytes": 10561
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368744902.json.gz",
+    "bytes": 11915
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368745120.json.gz",
+    "bytes": 6337
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368745200.json.gz",
+    "bytes": 5381
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368745324.json.gz",
+    "bytes": 7957
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368745598.json.gz",
+    "bytes": 9084
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368745453.json.gz",
+    "bytes": 8607
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368745775.json.gz",
+    "bytes": 11435
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368745871.json.gz",
+    "bytes": 5414
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368804159.json.gz",
+    "bytes": 978
+  },
+  {
+    "file": "base/orangecrab-local/density-1795368745989.json.gz",
+    "bytes": 7985
+  },
+  {
+    "file": "base/orangecrab-local/end-1.srj.json.gz",
+    "bytes": 368424
+  },
+  {
+    "file": "base/orangecrab-local/end-2.srj.json.gz",
+    "bytes": 369124
+  },
+  {
+    "file": "base/orangecrab-local/end-3.srj.json.gz",
+    "bytes": 378560
+  },
+  {
+    "file": "base/orangecrab-local/error-4.srj.json.gz",
+    "bytes": 381673
+  },
+  {
+    "file": "base/orangecrab-local/events.jsonl",
+    "bytes": 50848
+  },
+  {
+    "file": "base/orangecrab-local/graph-1-1-input.json.gz",
+    "bytes": 1402428
+  },
+  {
+    "file": "base/orangecrab-local/graph-2-1-input.json.gz",
+    "bytes": 1653861
+  },
+  {
+    "file": "base/orangecrab-local/graph-2-2-input.json.gz",
+    "bytes": 1653937
+  },
+  {
+    "file": "base/orangecrab-local/result.json",
+    "bytes": 353
+  },
+  {
+    "file": "base/orangecrab-local/run.log",
+    "bytes": 869
+  },
+  {
+    "file": "base/orangecrab-local/stage-1-highDensityRouteSolver.json.gz",
+    "bytes": 463933
+  },
+  {
+    "file": "base/orangecrab-local/stage-1-uniformPortDistributionSolver.json.gz",
+    "bytes": 2309925
+  },
+  {
+    "file": "base/orangecrab-local/stage-2-highDensityRouteSolver.json.gz",
+    "bytes": 709551
+  },
+  {
+    "file": "base/orangecrab-local/start-1.srj.json.gz",
+    "bytes": 367621
+  },
+  {
+    "file": "base/orangecrab-local/start-2.srj.json.gz",
+    "bytes": 368455
+  },
+  {
+    "file": "base/orangecrab-local/stage-2-uniformPortDistributionSolver.json.gz",
+    "bytes": 2533308
+  },
+  {
+    "file": "base/orangecrab-local/start-3.srj.json.gz",
+    "bytes": 369757
+  },
+  {
+    "file": "base/orangecrab-native/circuit.json.gz",
+    "bytes": 137133
+  },
+  {
+    "file": "base/orangecrab-local/start-4.srj.json.gz",
+    "bytes": 381673
+  },
+  {
+    "file": "base/orangecrab-native/error-1.srj.json.gz",
+    "bytes": 468994
+  },
+  {
+    "file": "base/orangecrab-native/events.jsonl",
+    "bytes": 22887
+  },
+  {
+    "file": "base/orangecrab-native/fanout-1-best.json.gz",
+    "bytes": 584478
+  },
+  {
+    "file": "base/orangecrab-native/fanout-1-input.json.gz",
+    "bytes": 469181
+  },
+  {
+    "file": "base/orangecrab-native/fanout-checkpoint.json.gz",
+    "bytes": 584478
+  },
+  {
+    "file": "base/orangecrab-native/result.json",
+    "bytes": 389
+  },
+  {
+    "file": "base/orangecrab-native/run.log",
+    "bytes": 1287
+  },
+  {
+    "file": "base/orangecrab-spaced/bus-1-input.json.gz",
+    "bytes": 366169
+  },
+  {
+    "file": "base/orangecrab-spaced/bus-2-input.json.gz",
+    "bytes": 367032
+  },
+  {
+    "file": "base/orangecrab-native/start-1.srj.json.gz",
+    "bytes": 468994
+  },
+  {
+    "file": "base/orangecrab-spaced/circuit.json.gz",
+    "bytes": 113802
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368711261.json.gz",
+    "bytes": 2994
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368711449.json.gz",
+    "bytes": 8790
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368711329.json.gz",
+    "bytes": 6953
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368711550.json.gz",
+    "bytes": 9778
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368711715.json.gz",
+    "bytes": 10541
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368711753.json.gz",
+    "bytes": 3253
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368711794.json.gz",
+    "bytes": 5602
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368711838.json.gz",
+    "bytes": 8382
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368711884.json.gz",
+    "bytes": 8934
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368711945.json.gz",
+    "bytes": 9972
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368714482.json.gz",
+    "bytes": 3253
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368714524.json.gz",
+    "bytes": 5602
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368714570.json.gz",
+    "bytes": 8382
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368714632.json.gz",
+    "bytes": 8934
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368714686.json.gz",
+    "bytes": 9972
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368715968.json.gz",
+    "bytes": 5641
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368716041.json.gz",
+    "bytes": 7340
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368716110.json.gz",
+    "bytes": 8398
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368716356.json.gz",
+    "bytes": 12624
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368716199.json.gz",
+    "bytes": 10493
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368716834.json.gz",
+    "bytes": 6011
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368716881.json.gz",
+    "bytes": 2967
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368716982.json.gz",
+    "bytes": 9044
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368716939.json.gz",
+    "bytes": 7199
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368717032.json.gz",
+    "bytes": 9979
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368717084.json.gz",
+    "bytes": 10768
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368717131.json.gz",
+    "bytes": 3000
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368717190.json.gz",
+    "bytes": 7240
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368717290.json.gz",
+    "bytes": 9091
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368717574.json.gz",
+    "bytes": 10809
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368717392.json.gz",
+    "bytes": 10025
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368717621.json.gz",
+    "bytes": 2967
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368717665.json.gz",
+    "bytes": 7199
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368717708.json.gz",
+    "bytes": 9044
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368717755.json.gz",
+    "bytes": 9979
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368717845.json.gz",
+    "bytes": 10768
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368717886.json.gz",
+    "bytes": 3000
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368717943.json.gz",
+    "bytes": 7240
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368718036.json.gz",
+    "bytes": 9091
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368718144.json.gz",
+    "bytes": 10025
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368718302.json.gz",
+    "bytes": 10809
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368718345.json.gz",
+    "bytes": 4492
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368718402.json.gz",
+    "bytes": 7099
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368718491.json.gz",
+    "bytes": 9234
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368718648.json.gz",
+    "bytes": 10138
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368718796.json.gz",
+    "bytes": 10962
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368718864.json.gz",
+    "bytes": 5152
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368718971.json.gz",
+    "bytes": 6523
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368719021.json.gz",
+    "bytes": 7479
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368719071.json.gz",
+    "bytes": 9220
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368719291.json.gz",
+    "bytes": 5350
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368719234.json.gz",
+    "bytes": 9822
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368719365.json.gz",
+    "bytes": 6157
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368719505.json.gz",
+    "bytes": 9343
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368719458.json.gz",
+    "bytes": 7873
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368719552.json.gz",
+    "bytes": 10080
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368719597.json.gz",
+    "bytes": 4054
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368719678.json.gz",
+    "bytes": 6079
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368719749.json.gz",
+    "bytes": 7498
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368719827.json.gz",
+    "bytes": 9610
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368719980.json.gz",
+    "bytes": 13142
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368720034.json.gz",
+    "bytes": 4101
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368720187.json.gz",
+    "bytes": 7508
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368720296.json.gz",
+    "bytes": 9631
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368720416.json.gz",
+    "bytes": 3899
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368720469.json.gz",
+    "bytes": 5929
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368720532.json.gz",
+    "bytes": 8315
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368720614.json.gz",
+    "bytes": 9623
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368720814.json.gz",
+    "bytes": 13935
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368720851.json.gz",
+    "bytes": 6044
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368720889.json.gz",
+    "bytes": 7067
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368720980.json.gz",
+    "bytes": 9068
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368721089.json.gz",
+    "bytes": 10590
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368721282.json.gz",
+    "bytes": 12401
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368721335.json.gz",
+    "bytes": 3892
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368721475.json.gz",
+    "bytes": 6846
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368721574.json.gz",
+    "bytes": 9646
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368721841.json.gz",
+    "bytes": 7394
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368722032.json.gz",
+    "bytes": 5505
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368722067.json.gz",
+    "bytes": 6048
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368722104.json.gz",
+    "bytes": 7337
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368722146.json.gz",
+    "bytes": 8344
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368722193.json.gz",
+    "bytes": 10553
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368722275.json.gz",
+    "bytes": 5601
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368722234.json.gz",
+    "bytes": 2458
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368722322.json.gz",
+    "bytes": 8319
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368722380.json.gz",
+    "bytes": 9780
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368722443.json.gz",
+    "bytes": 10441
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368725997.json.gz",
+    "bytes": 4767
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368726262.json.gz",
+    "bytes": 7704
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368726390.json.gz",
+    "bytes": 9841
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368726435.json.gz",
+    "bytes": 4916
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368726506.json.gz",
+    "bytes": 5979
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368726553.json.gz",
+    "bytes": 6908
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368726600.json.gz",
+    "bytes": 7862
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368726729.json.gz",
+    "bytes": 9990
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368726770.json.gz",
+    "bytes": 2994
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368726834.json.gz",
+    "bytes": 7620
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368727018.json.gz",
+    "bytes": 9443
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368727128.json.gz",
+    "bytes": 10419
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368727300.json.gz",
+    "bytes": 11183
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368727338.json.gz",
+    "bytes": 3253
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368727380.json.gz",
+    "bytes": 6777
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368727434.json.gz",
+    "bytes": 9041
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368727489.json.gz",
+    "bytes": 9583
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368727557.json.gz",
+    "bytes": 10616
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368728829.json.gz",
+    "bytes": 3253
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368728871.json.gz",
+    "bytes": 6777
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368728918.json.gz",
+    "bytes": 9041
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368728978.json.gz",
+    "bytes": 9583
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368729116.json.gz",
+    "bytes": 10616
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368730346.json.gz",
+    "bytes": 5894
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368730419.json.gz",
+    "bytes": 8009
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368730491.json.gz",
+    "bytes": 9064
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368730599.json.gz",
+    "bytes": 11133
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368730949.json.gz",
+    "bytes": 6166
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368730759.json.gz",
+    "bytes": 13275
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368730991.json.gz",
+    "bytes": 2967
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368731033.json.gz",
+    "bytes": 7590
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368731154.json.gz",
+    "bytes": 9430
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368731211.json.gz",
+    "bytes": 10351
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368731279.json.gz",
+    "bytes": 11143
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368731321.json.gz",
+    "bytes": 3000
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368731367.json.gz",
+    "bytes": 7623
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368731464.json.gz",
+    "bytes": 9471
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368731577.json.gz",
+    "bytes": 10396
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368731745.json.gz",
+    "bytes": 11184
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368731785.json.gz",
+    "bytes": 2967
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368731827.json.gz",
+    "bytes": 7590
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368731876.json.gz",
+    "bytes": 9430
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368731930.json.gz",
+    "bytes": 10351
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368731990.json.gz",
+    "bytes": 11143
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368732039.json.gz",
+    "bytes": 3000
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368732084.json.gz",
+    "bytes": 7623
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368732248.json.gz",
+    "bytes": 9471
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368732356.json.gz",
+    "bytes": 10396
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368732566.json.gz",
+    "bytes": 4651
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368732514.json.gz",
+    "bytes": 11184
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368732628.json.gz",
+    "bytes": 7511
+  },
+  {
+    "file": "base/orangecrab-spaced/density-1795368888916.json.gz",
+    "bytes": 1557
+  },
+  {
+    "file": "base/orangecrab-spaced/end-1.srj.json.gz",
+    "bytes": 367036
+  },
+  {
+    "file": "base/orangecrab-spaced/end-2.srj.json.gz",
+    "bytes": 367784
+  },
+  {
+    "file": "base/orangecrab-spaced/end-3.srj.json.gz",
+    "bytes": 378210
+  },
+  {
+    "file": "base/orangecrab-spaced/error-4.srj.json.gz",
+    "bytes": 381441
+  },
+  {
+    "file": "base/orangecrab-spaced/events.jsonl",
+    "bytes": 53780
+  },
+  {
+    "file": "base/orangecrab-spaced/graph-1-1-input.json.gz",
+    "bytes": 1892171
+  },
+  {
+    "file": "base/orangecrab-spaced/graph-2-1-input.json.gz",
+    "bytes": 2159654
+  },
+  {
+    "file": "base/orangecrab-spaced/graph-2-2-input.json.gz",
+    "bytes": 2162124
+  },
+  {
+    "file": "base/orangecrab-spaced/result.json",
+    "bytes": 391
+  },
+  {
+    "file": "base/orangecrab-spaced/run.log",
+    "bytes": 1076
+  },
+  {
+    "file": "base/orangecrab-spaced/stage-1-highDensityRouteSolver.json.gz",
+    "bytes": 458543
+  },
+  {
+    "file": "base/orangecrab-spaced/stage-1-uniformPortDistributionSolver.json.gz",
+    "bytes": 2918207
+  },
+  {
+    "file": "base/orangecrab-spaced/stage-2-highDensityRouteSolver.json.gz",
+    "bytes": 591863
+  },
+  {
+    "file": "base/orangecrab-spaced/stage-2-uniformPortDistributionSolver.json.gz",
+    "bytes": 3044312
+  },
+  {
+    "file": "base/orangecrab-spaced/start-1.srj.json.gz",
+    "bytes": 366213
+  },
+  {
+    "file": "base/orangecrab-spaced/start-2.srj.json.gz",
+    "bytes": 367075
+  },
+  {
+    "file": "base/orangecrab-spaced/start-3.srj.json.gz",
+    "bytes": 368463
+  },
+  {
+    "file": "base/orangecrab-spaced/start-4.srj.json.gz",
+    "bytes": 381441
+  },
+  {
+    "file": "bun.lock",
+    "bytes": 68721
+  },
+  {
+    "file": "matrix.json",
+    "bytes": 6842
+  },
+  {
+    "file": "runtime-versions.json",
+    "bytes": 893
+  }
+]

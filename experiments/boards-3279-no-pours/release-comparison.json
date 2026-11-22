@@ -1,0 +1,161 @@
+{
+  "settled": 16,
+  "complete": 0,
+  "blockingStages": {
+    "bus": 2,
+    "fanout": 6,
+    "highDensityRouteSolver": 7,
+    "portPointPathingSolver": 4
+  },
+  "rows": [
+    {
+      "board": "butterstick-local",
+      "stop": "600-second render budget",
+      "stage": "bus",
+      "traces": null,
+      "vias": null
+    },
+    {
+      "board": "butterstick-native",
+      "stop": "settled",
+      "stage": "fanout",
+      "traces": 0,
+      "vias": 0,
+      "sameCopper": true
+    },
+    {
+      "board": "butterstick-spaced",
+      "stop": "600-second render budget",
+      "stage": "bus",
+      "traces": null,
+      "vias": null
+    },
+    {
+      "board": "glider-local",
+      "stop": "settled",
+      "stage": "highDensityRouteSolver",
+      "traces": 53,
+      "vias": 97,
+      "sameCopper": true
+    },
+    {
+      "board": "glider-native",
+      "stop": "settled",
+      "stage": "fanout",
+      "traces": 0,
+      "vias": 0,
+      "sameCopper": true
+    },
+    {
+      "board": "glider-spaced",
+      "stop": "settled",
+      "stage": "portPointPathingSolver",
+      "traces": 53,
+      "vias": 92,
+      "sameCopper": true
+    },
+    {
+      "board": "h616-default-order-local",
+      "stop": "settled",
+      "stage": "portPointPathingSolver",
+      "traces": 16,
+      "vias": 32,
+      "sameCopper": true
+    },
+    {
+      "board": "h616-local",
+      "stop": "settled",
+      "stage": "portPointPathingSolver",
+      "traces": 16,
+      "vias": 32,
+      "sameCopper": true
+    },
+    {
+      "board": "h616-native",
+      "stop": "settled",
+      "stage": "fanout",
+      "traces": 0,
+      "vias": 0,
+      "sameCopper": true
+    },
+    {
+      "board": "h616-spaced",
+      "stop": "settled",
+      "stage": "portPointPathingSolver",
+      "traces": 16,
+      "vias": 32,
+      "sameCopper": true
+    },
+    {
+      "board": "icepi-local",
+      "stop": "settled",
+      "stage": "highDensityRouteSolver",
+      "traces": 16,
+      "vias": 30,
+      "sameCopper": true
+    },
+    {
+      "board": "icepi-native",
+      "stop": "settled",
+      "stage": "fanout",
+      "traces": 0,
+      "vias": 0,
+      "sameCopper": true
+    },
+    {
+      "board": "icepi-spaced",
+      "stop": "settled",
+      "stage": "highDensityRouteSolver",
+      "traces": 52,
+      "vias": 98,
+      "sameCopper": true
+    },
+    {
+      "board": "imx6-local",
+      "stop": "600-second render budget",
+      "stage": "highDensityRouteSolver",
+      "traces": null,
+      "vias": null
+    },
+    {
+      "board": "imx6-native",
+      "stop": "settled",
+      "stage": "fanout",
+      "traces": 0,
+      "vias": 0,
+      "sameCopper": true
+    },
+    {
+      "board": "imx6-spaced",
+      "stop": "settled",
+      "stage": "highDensityRouteSolver",
+      "traces": 17,
+      "vias": 30,
+      "sameCopper": true
+    },
+    {
+      "board": "orangecrab-local",
+      "stop": "settled",
+      "stage": "highDensityRouteSolver",
+      "traces": 52,
+      "vias": 97,
+      "sameCopper": true
+    },
+    {
+      "board": "orangecrab-native",
+      "stop": "settled",
+      "stage": "fanout",
+      "traces": 0,
+      "vias": 0,
+      "sameCopper": true
+    },
+    {
+      "board": "orangecrab-spaced",
+      "stop": "settled",
+      "stage": "highDensityRouteSolver",
+      "traces": 52,
+      "vias": 103,
+      "sameCopper": true
+    }
+  ]
+}
