@@ -14,20 +14,20 @@ jobs:
           bun-version: 1.4.3
       - name: Unpack boards with copper pours disabled
         run: |
-          mkdir -p experiments/boards-3276-no-pours/runtime
-          unzip -q experiments/boards-3276-no-pours/boards.zip -d experiments/boards-3276-no-pours/runtime
-      - name: Install latest released tscircuit from frozen lockfile
-        working-directory: experiments/boards-3276-no-pours/runtime
-        run: bun install --frozen-lockfile
-      - name: Preserve off-grid terminal via landings
-        run: python3 experiments/boards-3276-no-pours/apply-via-landings.py
+          mkdir -p experiments/boards-3278-no-pours/runtime
+          unzip -q experiments/boards-3278-no-pours/boards.zip -d experiments/boards-3278-no-pours/runtime
+      - name: Install latest released tscircuit and capture its lockfile
+        working-directory: experiments/boards-3278-no-pours/runtime
+        run: |
+          bun install
+          mkdir -p ../../../board-benchmark-results
+          cp bun.lock ../../../board-benchmark-results/bun.lock
       - name: Run all 19 TSX boards with default routing
         env:
-          BOARD_VARIANT: fix
-          BOARD_FIX_PROVENANCE: experiments/boards-3276-no-pours/via-landings-provenance.json
-        run: python3 experiments/boards-3276-no-pours/run.py
+          BOARD_VARIANT: base
+        run: python3 experiments/boards-3278-no-pours/run.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: boards-tscircuit-3276-no-pours-fix
+          name: boards-tscircuit-3278-no-pours-base
           path: board-benchmark-results/

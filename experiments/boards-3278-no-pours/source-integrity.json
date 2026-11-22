@@ -1,0 +1,28 @@
+{
+  "sourceArchiveSha256": "72f35526244385d1da05ab9635f30a26d0366146e1269128480c59b958df1386",
+  "boardsAndHarnessSha256": {
+    "boards/butterstick-local.tsx": "cfa2c72a67c40b12684b8cf6ca51d45fecd13c81a3710c8096bfe0673d05373f",
+    "boards/butterstick-native.tsx": "f7143140d0f748fb317a20bb12fd4d5b92a8c0aa67def404dd44d87985812fda",
+    "boards/butterstick-spaced.tsx": "a7f24067fdf1545f3599b233ead047474057b51e9731244d0b8f2c2beb5cebc5",
+    "boards/glider-local.tsx": "9b6f27c6fbf39177b7d7bd3338db1f691c078d90cd6cf2348d9054b7bdce4f14",
+    "boards/glider-native.tsx": "bc7547be3bc2e6aea4aad141432c6eeee3db8cd819743e64481f4befd6613221",
+    "boards/glider-spaced.tsx": "513a73aec8086082f88ec22b4efe31d63f19c8ad0df3995d323ead1f699588c4",
+    "boards/h616-default-order-local.tsx": "802c0fda49966dfa5090319684d61f20a61ee99bb1799caaf25e8790e8ac70be",
+    "boards/h616-local.tsx": "eaaba471892683d53dab8fe3798b93f7a9d5ffeb82fd6ad9a21f22d107bac0ae",
+    "boards/h616-native.tsx": "b3d69851858bb4ba0ce1994c6a5c911e1f5f71b4d7cfefbee965506fa2ac5ca0",
+    "boards/h616-spaced.tsx": "55028af169db98ca900466cacd4c74a1b9472d9ef69d5afcd7d8d203b84e9831",
+    "boards/icepi-local.tsx": "e21416b995f74116caa673eb9474e22486a9feb48d1fa5be05da6081fd52dd03",
+    "boards/icepi-native.tsx": "335e03579aa720e3eb814d7f1316531e3a6d64e7a40e68b25e72b425fdbcc60f",
+    "boards/icepi-spaced.tsx": "e380e3d7e9b6c99b8dfc9e0a07897cffa176049efbd972b0c3e226f4360b688e",
+    "boards/imx6-local.tsx": "2c8106ffd25446d22247a638f2273027bcfaf6e7dc5bd69458cdc0b3fd0bb864",
+    "boards/imx6-native.tsx": "ec70ebc400fa205089257d893299d604ab2709d035c63c70a82d1fc5a049cb2b",
+    "boards/imx6-spaced.tsx": "3eb72e2bb77914e532853b1a55f56036ad7090a20255d718b559e4f86250b755",
+    "boards/orangecrab-local.tsx": "678b9e3393756b16586468130a3150b3c08ab656f1ffdac4c8613d67194ea6af",
+    "boards/orangecrab-native.tsx": "e71fd89117bace59e4b5c3cf8b9e490eb0554a71fa7bfb77bb2a02f04fb9d0ea",
+    "boards/orangecrab-spaced.tsx": "2b98137e6769581651ff3f26c17e8af90f204332f06c955fb7b8bd5f6f980c71",
+    "observer.ts": "8302169a504176fcbe3640864e90057f2609e7c2344a02919a8b5197b035f28e",
+    "render.tsx": "a2e8990ff04293e29abb60e074f2d546f11c6d3b0bdb58f2b7c76fd06b609d2e"
+  },
+  "copperPours": false,
+  "planeSpecialHandling": false
+}
