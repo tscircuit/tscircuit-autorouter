@@ -9,7 +9,7 @@ import { getSvgFromGraphicsObject } from "graphics-debug"
 // Real OrangeCrab-local other_signals input captured from the original TSX on
 // tscircuit 0.0.3257 / core 0.0.2436 / capacity-autorouter 0.0.1139.
 // Includes 52 native traces (16 fixed), without trace-to-rectangle conversion.
-test("OrangeCrab exposes A01's missing terminal via", async (): Promise<void> => {
+test("OrangeCrab passes overlapping cut terminals without a missing-via exception", async (): Promise<void> => {
   const fixture = readFileSync(
     new URL(
       "../fixtures/orangecrab-local-native-copper.srj.json.gz",
@@ -24,8 +24,14 @@ test("OrangeCrab exposes A01's missing terminal via", async (): Promise<void> =>
   })
   expect(() => solver.solve()).not.toThrow()
   expect(solver.failed).toBeTrue()
-  expect(solver.error).toContain("Unrelated route terminals overlap")
+  expect(solver.error).not.toContain("Unrelated route terminals overlap")
   expect(solver.error).not.toContain("without an explicit via")
+  expect(solver.highDensityRouteSolver!.routes).toContainEqual(
+    expect.objectContaining({
+      regionId: "cmn_266",
+      connectionName: "source_net_138_mst1",
+    }),
+  )
   await expect(
     getSvgFromGraphicsObject(convertSrjToGraphicsObject(input), {
       backgroundColor: "white",
