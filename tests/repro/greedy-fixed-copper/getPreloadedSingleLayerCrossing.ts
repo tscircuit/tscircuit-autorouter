@@ -1,4 +1,7 @@
-import type { TinyHyperGraphProblem, TinyHyperGraphTopology } from "tiny-hypergraph/lib/core"
+import type {
+  TinyHyperGraphProblem,
+  TinyHyperGraphTopology,
+} from "tiny-hypergraph/lib/core"
 import captured from "./captured-graph.json"
 
 // Reduced from a Pipeline9 graph capture. Coordinates, port angles, layer masks,
