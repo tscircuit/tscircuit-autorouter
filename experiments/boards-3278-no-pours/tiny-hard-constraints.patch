@@ -1,0 +1,45 @@
+diff --git a/lib/core.ts b/lib/core.ts
+index e41e411..470209c 100644
+--- a/lib/core.ts
++++ b/lib/core.ts
+@@ -920,6 +920,7 @@ export class TinyHyperGraphSolver extends BaseSolver {
+         if (assignedNetId !== -1 && assignedNetId !== state.currentRouteNetId) {
+           continue
+         }
++        if (!Number.isFinite(this.computeG(currentCandidate, neighborPortId))) continue
+         this.onPathFound(currentCandidate)
+         return
+       }
+@@ -1073,6 +1074,7 @@ export class TinyHyperGraphSolver extends BaseSolver {
+         if (assignedNetId !== -1 && assignedNetId !== state.currentRouteNetId) {
+           continue
+         }
++        if (!Number.isFinite(this.computeG(currentCandidate, neighborPortId))) continue
+         this.onPathFound(currentCandidate)
+         return
+       }
+@@ -2266,8 +2268,10 @@ export class TinyHyperGraphSolver extends BaseSolver {
+ class GreedyFinalRouteSolver extends TinyHyperGraphSolver {
+   override computeG(
+     currentCandidate: Candidate,
+-    _neighborPortId: PortId,
++    neighborPortId: PortId,
+   ): number {
+-    return currentCandidate.g
++    return Number.isFinite(super.computeG(currentCandidate, neighborPortId))
++      ? currentCandidate.g
++      : Number.POSITIVE_INFINITY
+   }
+ }
+diff --git a/lib/prepared/DenseRoutingWorkspace.ts b/lib/prepared/DenseRoutingWorkspace.ts
+index a935f8c..81b980d 100644
+--- a/lib/prepared/DenseRoutingWorkspace.ts
++++ b/lib/prepared/DenseRoutingWorkspace.ts
+@@ -183,6 +183,7 @@ export class DenseRoutingWorkspace {
+       previous = at
+       const port = neighbors[at]!
+       if (port === state.goalPortId) {
++        if (!Number.isFinite(solver.computeG(c, port))) continue
+         solver.onPathFound(c)
+         return
+       }

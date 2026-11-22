@@ -1,0 +1,20 @@
+board,stage,stop,beforeTraces,traces,beforeVias,vias,sameCircuit
+butterstick-local,bus lanes,600-second render budget,,,,,
+butterstick-native,fanout,settled,0,0,0,0,False
+butterstick-spaced,bus lanes,600-second render budget,,,,,
+glider-local,highDensityRouteSolver,settled,53,53,97,97,False
+glider-native,fanout,settled,0,0,0,0,False
+glider-spaced,portPointPathingSolver,settled,53,53,92,92,False
+h616-default-order-local,portPointPathingSolver,settled,16,16,32,32,False
+h616-local,portPointPathingSolver,settled,16,16,32,32,False
+h616-native,fanout,settled,0,0,0,0,False
+h616-spaced,portPointPathingSolver,settled,16,16,32,32,False
+icepi-local,highDensityRouteSolver,settled,16,16,30,30,False
+icepi-native,fanout,settled,0,0,0,0,False
+icepi-spaced,highDensityRouteSolver,settled,52,52,98,98,False
+imx6-local,highDensityRouteSolver,settled,,17,,30,
+imx6-native,fanout,settled,0,0,0,0,False
+imx6-spaced,highDensityRouteSolver,settled,17,17,30,30,False
+orangecrab-local,highDensityRouteSolver,settled,52,52,97,97,False
+orangecrab-native,fanout,settled,0,0,0,0,False
+orangecrab-spaced,highDensityRouteSolver,settled,52,52,103,103,False

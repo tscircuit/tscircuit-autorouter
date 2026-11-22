@@ -1,0 +1,295 @@
+[
+  {
+    "board": "butterstick-local",
+    "variant": "base",
+    "exit": -15,
+    "seconds": 600.098,
+    "stop": "600-second render budget"
+  },
+  {
+    "board": "butterstick-native",
+    "variant": "base",
+    "exit": 0,
+    "seconds": 213.534,
+    "stop": "settled",
+    "elements": 14603,
+    "traces": 0,
+    "vias": 0,
+    "pours": 0,
+    "circuitSha256": "00e8d59e3522e94e6a7c22fb1950f44ca8d847cb7d85d459ab4a9ab22841baea",
+    "errors": {
+      "pcb_autorouting_error": 1,
+      "pcb_port_not_connected_error": 2086,
+      "pcb_trace_missing_error": 554
+    }
+  },
+  {
+    "board": "butterstick-spaced",
+    "variant": "base",
+    "exit": -15,
+    "seconds": 600.234,
+    "stop": "600-second render budget"
+  },
+  {
+    "board": "glider-local",
+    "variant": "base",
+    "exit": 0,
+    "seconds": 355.494,
+    "stop": "settled",
+    "elements": 13256,
+    "traces": 53,
+    "vias": 97,
+    "pours": 0,
+    "circuitSha256": "2d8194cce22337ff1fd50c1c4d2ce2b59837ae7b052fdcdcebb7b7f254ebed75",
+    "errors": {
+      "pcb_autorouting_error": 1,
+      "pcb_port_not_connected_error": 1465
+    }
+  },
+  {
+    "board": "glider-native",
+    "variant": "base",
+    "exit": 0,
+    "seconds": 160.25,
+    "stop": "settled",
+    "elements": 15258,
+    "traces": 0,
+    "vias": 0,
+    "pours": 0,
+    "circuitSha256": "cff51ab0282017a67f3ae57a4407f11623a70202a9579d0585da2be5aa78a42a",
+    "errors": {
+      "pcb_autorouting_error": 1,
+      "pcb_port_not_connected_error": 1976,
+      "pcb_trace_missing_error": 306
+    }
+  },
+  {
+    "board": "glider-spaced",
+    "variant": "base",
+    "exit": 0,
+    "seconds": 355.391,
+    "stop": "settled",
+    "elements": 13275,
+    "traces": 53,
+    "vias": 92,
+    "pours": 0,
+    "circuitSha256": "ea16acb056c3aa09ac0f5cceff10385b754cd14201d1350d7d13dc91e0b502a3",
+    "errors": {
+      "pcb_autorouting_error": 1,
+      "pcb_port_not_connected_error": 1465
+    }
+  },
+  {
+    "board": "h616-default-order-local",
+    "variant": "base",
+    "exit": 0,
+    "seconds": 31.81,
+    "stop": "settled",
+    "elements": 5317,
+    "traces": 16,
+    "vias": 32,
+    "pours": 0,
+    "circuitSha256": "9df0e730840cdf630463c1962f4d99ea52f640804ccb156324da949df3f4fa47",
+    "errors": {
+      "pcb_autorouting_error": 1,
+      "pcb_port_not_connected_error": 562
+    }
+  },
+  {
+    "board": "h616-local",
+    "variant": "base",
+    "exit": 0,
+    "seconds": 52.299,
+    "stop": "settled",
+    "elements": 5317,
+    "traces": 16,
+    "vias": 32,
+    "pours": 0,
+    "circuitSha256": "9df0e730840cdf630463c1962f4d99ea52f640804ccb156324da949df3f4fa47",
+    "errors": {
+      "pcb_autorouting_error": 1,
+      "pcb_port_not_connected_error": 562
+    }
+  },
+  {
+    "board": "h616-native",
+    "variant": "base",
+    "exit": 0,
+    "seconds": 331.31,
+    "stop": "settled",
+    "elements": 6946,
+    "traces": 0,
+    "vias": 0,
+    "pours": 0,
+    "circuitSha256": "5f5153ec5442f66ea9a70382719a65212a66520728ae60d4b596a5d8f5a3c30b",
+    "errors": {
+      "pcb_autorouting_error": 1,
+      "pcb_port_not_connected_error": 1007,
+      "pcb_trace_missing_error": 270
+    }
+  },
+  {
+    "board": "h616-spaced",
+    "variant": "base",
+    "exit": 0,
+    "seconds": 30.103,
+    "stop": "settled",
+    "elements": 5317,
+    "traces": 16,
+    "vias": 32,
+    "pours": 0,
+    "circuitSha256": "73733dc707588e57b9cd8f81bcd91918dc3f728caea7009099e60b29f9171d52",
+    "errors": {
+      "pcb_autorouting_error": 1,
+      "pcb_port_not_connected_error": 562
+    }
+  },
+  {
+    "board": "icepi-local",
+    "variant": "base",
+    "exit": 0,
+    "seconds": 171.681,
+    "stop": "settled",
+    "elements": 10375,
+    "traces": 16,
+    "vias": 30,
+    "pours": 0,
+    "circuitSha256": "fb33fe2c14fba5270a52c6e29b06caf42c6df39d5bd49b0ed57346ed9d4d34e2",
+    "errors": {
+      "pcb_autorouting_error": 1,
+      "pcb_port_not_connected_error": 1116
+    }
+  },
+  {
+    "board": "icepi-native",
+    "variant": "base",
+    "exit": 0,
+    "seconds": 65.279,
+    "stop": "settled",
+    "elements": 12814,
+    "traces": 0,
+    "vias": 0,
+    "pours": 0,
+    "circuitSha256": "a2c8095481f3a8f817c57c2a62a0b0cbfb54e2f9424ca164e8898ea14c490590",
+    "errors": {
+      "pcb_autorouting_error": 2,
+      "pcb_port_not_connected_error": 1780,
+      "pcb_trace_missing_error": 396
+    }
+  },
+  {
+    "board": "icepi-spaced",
+    "variant": "base",
+    "exit": 0,
+    "seconds": 402.979,
+    "stop": "settled",
+    "elements": 10421,
+    "traces": 52,
+    "vias": 98,
+    "pours": 0,
+    "circuitSha256": "5b3e157dcebabcda16370246cb84a4b82141c2cb6790d6921f9c1d39dbecbcf8",
+    "errors": {
+      "pcb_autorouting_error": 1,
+      "pcb_port_not_connected_error": 1046
+    }
+  },
+  {
+    "board": "imx6-local",
+    "variant": "base",
+    "exit": 0,
+    "seconds": 588.242,
+    "stop": "settled",
+    "elements": 15108,
+    "traces": 17,
+    "vias": 30,
+    "pours": 0,
+    "circuitSha256": "91a5653f15c88963bbd2f91d0a3015e82a94f7add4e85595a30743a2d386ff61",
+    "errors": {
+      "pcb_autorouting_error": 1,
+      "pcb_port_not_connected_error": 1642
+    }
+  },
+  {
+    "board": "imx6-native",
+    "variant": "base",
+    "exit": 0,
+    "seconds": 93.551,
+    "stop": "settled",
+    "elements": 18578,
+    "traces": 0,
+    "vias": 0,
+    "pours": 0,
+    "circuitSha256": "15f8aec8213013cf4c4a541da4fc30b9d5c7524f048a4d5a8aaa5b23c43b19e8",
+    "errors": {
+      "pcb_autorouting_error": 1,
+      "pcb_port_not_connected_error": 2253,
+      "pcb_trace_missing_error": 394
+    }
+  },
+  {
+    "board": "imx6-spaced",
+    "variant": "base",
+    "exit": 0,
+    "seconds": 499.065,
+    "stop": "settled",
+    "elements": 15110,
+    "traces": 17,
+    "vias": 30,
+    "pours": 0,
+    "circuitSha256": "e2ddec5aadf032d76c5ab6d8dbe39e79ca38284ad8544e23e309a74c99f81854",
+    "errors": {
+      "pcb_autorouting_error": 1,
+      "pcb_port_not_connected_error": 1642
+    }
+  },
+  {
+    "board": "orangecrab-local",
+    "variant": "base",
+    "exit": 0,
+    "seconds": 177.338,
+    "stop": "settled",
+    "elements": 6402,
+    "traces": 52,
+    "vias": 97,
+    "pours": 0,
+    "circuitSha256": "2f4f35a1de45fbd3acc2d02001fb604f19bfcfec3efb2bdc945f970f04b1da5b",
+    "errors": {
+      "pcb_autorouting_error": 1,
+      "pcb_port_not_connected_error": 658
+    }
+  },
+  {
+    "board": "orangecrab-native",
+    "variant": "base",
+    "exit": 0,
+    "seconds": 534.583,
+    "stop": "settled",
+    "elements": 7776,
+    "traces": 0,
+    "vias": 0,
+    "pours": 0,
+    "circuitSha256": "58365ea2aefa9bdd9e640f17d097bc261b41f872f7a7318605d707ecd5b92c6d",
+    "errors": {
+      "pcb_autorouting_error": 1,
+      "pcb_port_not_connected_error": 1142,
+      "pcb_trace_missing_error": 364
+    }
+  },
+  {
+    "board": "orangecrab-spaced",
+    "variant": "base",
+    "exit": 0,
+    "seconds": 252.602,
+    "stop": "settled",
+    "elements": 6411,
+    "traces": 52,
+    "vias": 103,
+    "pours": 0,
+    "circuitSha256": "d00c0810882a42d13fc20828b7a355c743157f8fcfa00bc91bbf44b7e0c2e3cb",
+    "errors": {
+      "pcb_autorouting_error": 1,
+      "pcb_port_not_connected_error": 658,
+      "pcb_pad_pad_clearance_error": 1
+    }
+  }
+]

@@ -1,0 +1,166 @@
+{
+  "outputs": [
+    {
+      "board": "butterstick-native",
+      "sameCopper": true,
+      "changedElementTypes": {
+        "source_project_metadata": 1
+      }
+    },
+    {
+      "board": "glider-local",
+      "sameCopper": true,
+      "changedElementTypes": {
+        "source_project_metadata": 1,
+        "pcb_autorouting_error": 1
+      }
+    },
+    {
+      "board": "glider-native",
+      "sameCopper": true,
+      "changedElementTypes": {
+        "source_project_metadata": 1
+      }
+    },
+    {
+      "board": "glider-spaced",
+      "sameCopper": true,
+      "changedElementTypes": {
+        "source_project_metadata": 1,
+        "pcb_autorouting_error": 1
+      }
+    },
+    {
+      "board": "h616-default-order-local",
+      "sameCopper": true,
+      "changedElementTypes": {
+        "source_project_metadata": 1,
+        "pcb_autorouting_error": 1
+      }
+    },
+    {
+      "board": "h616-local",
+      "sameCopper": true,
+      "changedElementTypes": {
+        "source_project_metadata": 1,
+        "pcb_autorouting_error": 1
+      }
+    },
+    {
+      "board": "h616-native",
+      "sameCopper": true,
+      "changedElementTypes": {
+        "source_project_metadata": 1
+      }
+    },
+    {
+      "board": "h616-spaced",
+      "sameCopper": true,
+      "changedElementTypes": {
+        "source_project_metadata": 1,
+        "pcb_autorouting_error": 1
+      }
+    },
+    {
+      "board": "icepi-local",
+      "sameCopper": true,
+      "changedElementTypes": {
+        "source_project_metadata": 1,
+        "pcb_autorouting_error": 1
+      }
+    },
+    {
+      "board": "icepi-native",
+      "sameCopper": true,
+      "changedElementTypes": {
+        "source_project_metadata": 1
+      }
+    },
+    {
+      "board": "icepi-spaced",
+      "sameCopper": true,
+      "changedElementTypes": {
+        "source_project_metadata": 1,
+        "pcb_autorouting_error": 1
+      }
+    },
+    {
+      "board": "imx6-native",
+      "sameCopper": true,
+      "changedElementTypes": {
+        "source_project_metadata": 1
+      }
+    },
+    {
+      "board": "imx6-spaced",
+      "sameCopper": true,
+      "changedElementTypes": {
+        "source_project_metadata": 1,
+        "pcb_autorouting_error": 1
+      }
+    },
+    {
+      "board": "orangecrab-local",
+      "sameCopper": true,
+      "changedElementTypes": {
+        "source_project_metadata": 1,
+        "pcb_autorouting_error": 1
+      }
+    },
+    {
+      "board": "orangecrab-native",
+      "sameCopper": true,
+      "changedElementTypes": {
+        "source_project_metadata": 1
+      }
+    },
+    {
+      "board": "orangecrab-spaced",
+      "sameCopper": true,
+      "changedElementTypes": {
+        "source_project_metadata": 1,
+        "pcb_autorouting_error": 1
+      }
+    }
+  ],
+  "commonInputs": 187,
+  "changedInputs": [],
+  "fanout": [
+    [
+      "butterstick-native",
+      91,
+      79,
+      122.95
+    ],
+    [
+      "glider-native",
+      95,
+      83,
+      110.26
+    ],
+    [
+      "h616-native",
+      174,
+      123,
+      319.92
+    ],
+    [
+      "icepi-native",
+      32,
+      13,
+      11.15
+    ],
+    [
+      "imx6-native",
+      32,
+      8,
+      9.12
+    ],
+    [
+      "orangecrab-native",
+      273,
+      139,
+      509.25
+    ]
+  ]
+}
