@@ -1,0 +1,67 @@
+name: Audit shared-plane native full-circuit captures
+on:
+  push:
+    branches: [analysis/audit-shared-plane-2458]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Install exact native validation packages
+        run: |
+          mkdir core
+          cat > core/package.json <<'JSON'
+          {"name":"native-capture-audit","private":true,"type":"module","dependencies":{"@tscircuit/fanout-solver":"0.0.103","@tscircuit/capacity-autorouter":"0.0.1152","graphics-debug":"0.0.99","circuit-json-to-connectivity-map":"0.0.23"}}
+          JSON
+          cd core
+          bun install --ignore-scripts
+      - name: Wait for the exact after run to finish
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          for attempt in $(seq 1 60); do
+            status=$(gh api repos/tscircuit/tscircuit-autorouter/actions/runs/45011756344 --jq .status)
+            if [ "$status" = completed ]; then break; fi
+            sleep 15
+          done
+          test "$(gh api repos/tscircuit/tscircuit-autorouter/actions/runs/45011756344 --jq .conclusion)" = success
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45006486986
+          pattern: full-circuit-interception-*
+          path: before
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45011756344
+          pattern: full-circuit-interception-*
+          path: after
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Audit unchanged inputs, physical vias, bus atomicity and native copper
+        run: bun experiments/e2e-samples-20261120/audit-shared-plane2458.ts
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: shared-plane-completion-audit
+          path: audited-results
+      - name: Export reviewed SVGs and statistics
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import io,base64,zipfile
+          from pathlib import Path
+          out=io.BytesIO()
+          with zipfile.ZipFile(out,'w',zipfile.ZIP_DEFLATED) as z:
+              for p in Path('audited-results').glob('*.json'):z.writestr(p.name,p.read_bytes())
+          print('AUDIT_EVIDENCE_BEGIN')
+          s=base64.b64encode(out.getvalue()).decode()
+          for i in range(0,len(s),8000):print(s[i:i+8000])
+          print('AUDIT_EVIDENCE_END')
+          PY
