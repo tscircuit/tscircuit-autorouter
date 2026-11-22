@@ -1,0 +1,1 @@
+if(r.length>0){const first=r[0];if(r.length>1&&first.z!==r[1].z&&(first.x!==s.startPoint.x||first.y!==s.startPoint.y)){r.unshift({...s.startPoint})}else{r[0]={...s.startPoint}}if(r.length>1){const last=r.at(-1);if(last.z!==r[r.length-2].z&&(last.x!==s.endPoint.x||last.y!==s.endPoint.y)){r.push({...s.endPoint})}else{r[r.length-1]={...s.endPoint}}}}t.push(

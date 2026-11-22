@@ -1,0 +1,1 @@
+if(r.length>0){if(r[0]={...s.startPoint},r.length>1)r[r.length-1]={...s.endPoint}}t.push(

@@ -19,12 +19,15 @@ jobs:
       - name: Install latest released tscircuit from frozen lockfile
         working-directory: experiments/boards-3276-no-pours/runtime
         run: bun install --frozen-lockfile
+      - name: Preserve off-grid terminal via landings
+        run: python3 experiments/boards-3276-no-pours/apply-via-landings.py
       - name: Run all 19 TSX boards with default routing
         env:
-          BOARD_VARIANT: base
+          BOARD_VARIANT: fix
+          BOARD_FIX_PROVENANCE: experiments/boards-3276-no-pours/via-landings-provenance.json
         run: python3 experiments/boards-3276-no-pours/run.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: boards-tscircuit-3276-no-pours-base
+          name: boards-tscircuit-3276-no-pours-fix
           path: board-benchmark-results/

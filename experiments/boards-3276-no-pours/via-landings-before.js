@@ -1,0 +1,1 @@
+o.length>0&&(o[0]={...r.startPoint},o.length>1&&(o[o.length-1]={...r.endPoint})),t.push(
