@@ -1,0 +1,11 @@
+{
+  "board": "Allwinner A13 SBC DDR",
+  "source": "https://github.com/vd-rd/sbc_allwinner_a13/blob/8973c32c64349515da64e268cc03ea8c0789ca2a/hardware/module.kicad_pcb",
+  "circuit": "https://github.com/ShiboSoftwareDev/core-ddr-benchmark/blob/24dc44c166d4258c3538f8b1f66953f1b6f58690/circuits/native-ddr-board.tsx",
+  "capture": "Unmodified remaining-phase input from the A13 TSX on tscircuit 0.0.3280 after all four data-byte phases preserved the remaining RAM pad exits. The capture includes 378 physical pad obstacles, 32 fixed data traces and 64 remaining nets.",
+  "inputSha256": "cbace13db8bd20ae0e003d00820f6a47baff470bc085b8152871257001e729f5",
+  "signalLayers": [
+    "top",
+    "bottom"
+  ]
+}
