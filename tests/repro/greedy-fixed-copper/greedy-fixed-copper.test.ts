@@ -17,7 +17,7 @@ test("replays Pipeline9 greedy finishing beside preloaded copper", async () => {
       (sum, cache) => sum + cache.existingSameLayerIntersections,
       0,
     ),
-  ).toBe(1)
+  ).toBe(0)
   for (const segment of problem.initialAssignments!) {
     expect(solver.state.regionSegments[segment.regionId]).toContainEqual([
       segment.routeId,
