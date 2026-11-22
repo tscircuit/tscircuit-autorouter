@@ -51,22 +51,29 @@ for path in sorted((package / 'dist').glob('**/*.js')):
     assert portfolio, path
     margin = re.search(r'traceMargin:([\w$]+),', portfolio[1])
     assert margin, path
-    field = 'viaMinDistFromPort:this.constructorParams.preservePhysicalGeometry&&this.constructorParams.allowBlindAndBuriedVias===false?((this.constructorParams.viaDiameter??.3)+(this.constructorParams.traceWidth??.15))/2+' + margin[1] + ':undefined,'
+    field = 'viaMinDistFromPort:this.constructorParams.protectFixedPortsFromVias?((this.constructorParams.viaDiameter??.3)+(this.constructorParams.traceWidth??.15))/2+' + margin[1] + ':undefined,'
     config_at = portfolio.start(1)
     patched = patched[:config_at] + field + patched[config_at:]
-    physical_model = re.compile(r'layerCount:([\w$]+)\.layerCount,useGrowShrinkHighDensityIntraNodeSolver:')
-    assert len(physical_model.findall(patched)) == 1, path
-    patched = physical_model.sub(lambda model: f'layerCount:{model[1]}.layerCount,allowBlindAndBuriedVias:{model[1]}.allowBlindAndBuriedVias,useGrowShrinkHighDensityIntraNodeSolver:', patched)
-    repair = re.search(r'solverName:"highDensityRepairSolver",solverClass:[\w$]+,getConstructorParams:([\w$]+)=>\[\{', patched)
-    assert repair or worker, path
-    if repair:
-        config_at = repair.end()
-        field = f'fixedHdRoutes:{repair[1]}.highDensityRouteSolver.getUpdatedFixedHdRoutes().filter(route=>route.isFixed===true),'
-        patched = patched[:config_at] + field + patched[config_at:]
+    hd_start = patched.index('getSolverName(){return"HighDensitySolver"}')
+    hd_ctor = patched.index('constructor({', hd_start) + len('constructor({')
+    binding = '__protectFixedPortsFromVias'
+    assert binding not in patched
+    patched = patched[:hd_ctor] + f'protectFixedPortsFromVias:{binding}=false,' + patched[hd_ctor:]
+    hd_assign = re.search(r'this\.preservePhysicalGeometry=([\w$]+)', patched[hd_ctor:])
+    assert hd_assign, path
+    assign_at = hd_ctor + hd_assign.end()
+    patched = patched[:assign_at] + f',this.protectFixedPortsFromVias={binding}' + patched[assign_at:]
+    hd_params = patched.index('preservePhysicalGeometry:this.preservePhysicalGeometry,', hd_ctor)
+    assert 'nodeWithPortPoints:' in patched[hd_params - 120:hd_params], path
+    params_at = hd_params + len('preservePhysicalGeometry:this.preservePhysicalGeometry,')
+    patched = patched[:params_at] + 'protectFixedPortsFromVias:this.protectFixedPortsFromVias,' + patched[params_at:]
+    regional = re.compile(r'layerCount:([\w$]+)\.layerCount,useGrowShrinkHighDensityIntraNodeSolver:')
+    assert len(regional.findall(patched)) == 1, path
+    patched = regional.sub(lambda m: f'protectFixedPortsFromVias:{m[1]}.preservePhysicalGeometry===true&&{m[1]}.allowBlindAndBuriedVias!==true&&Boolean({m[1]}.movablePreloadedConnectionNames?.size),'+m[0], patched)
     output = outer[:worker.start(1)] + json.dumps(patched) + outer[worker.end(1):] if worker else patched
     path.write_text(output)
-    provenance.append({'file': str(path.relative_to(package)), 'before': hashlib.sha256(outer.encode()).hexdigest(), 'after': hashlib.sha256(output.encode()).hexdigest(), 'a01Classes': 1, 'embeddedWorker': bool(worker), 'fixedRepairContext': bool(repair)})
+    provenance.append({'file': str(path.relative_to(package)), 'before': hashlib.sha256(outer.encode()).hexdigest(), 'after': hashlib.sha256(output.encode()).hexdigest(), 'a01Classes': 1, 'embeddedWorker': bool(worker), 'explicitPreloadScope': True})
 assert any(row['file'] == 'dist/index.js' for row in provenance)
-report = {'sourceRepo': 'tscircuit/high-density-a01', 'sourceRepro': '429bb0b', 'sourceFix': 'ef5f73daea12db0cfcb12e7ad61ebd54bde3549e', 'change': 'Reserve through-via clearance around foreign ports for physical regional repairs. Forward the board via model and immutable preloaded routes to the existing final repair adapter. Original grid, order, costs and budgets retained.', 'bundles': provenance}
+report = {'sourceRepo': 'tscircuit/high-density-a01', 'sourceRepro': '429bb0b', 'sourceFix': 'ef5f73daea12db0cfcb12e7ad61ebd54bde3549e', 'change': 'Reserve through-via clearance around foreign ports only in physical regional repairs with movable preloaded copper. Existing board-model propagation and final repair behavior remain unchanged. Original grid, order, costs and budgets retained.', 'bundles': provenance}
 Path(sys.argv[2]).write_text(json.dumps(report, indent=2) + '\n')
 print(json.dumps(report, indent=2))

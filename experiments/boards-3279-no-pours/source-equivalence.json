@@ -1,0 +1,17 @@
+{
+  "source": "a32e89447c0a1427af4c44dd9d8d4b452d2c6fdf",
+  "release": "0.0.1154 plus patch-a01.py",
+  "constructorInputsAndRoutedGeometryEqual": true,
+  "candidateModes": [
+    false,
+    true
+  ],
+  "regionalActivation": [
+    true,
+    false,
+    false,
+    false
+  ],
+  "sourceOutputSha256": "24d1171e723213f79a6762c431561c3931855cfb7cc5f1a983e01ec67ce14ca5",
+  "releaseOutputSha256": "24d1171e723213f79a6762c431561c3931855cfb7cc5f1a983e01ec67ce14ca5"
+}

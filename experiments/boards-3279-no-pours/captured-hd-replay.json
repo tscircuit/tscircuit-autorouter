@@ -1,0 +1,26 @@
+{
+  "mode": "preload-scope",
+  "seconds": 98.18407036900001,
+  "solved": false,
+  "error": "Pipeline9 primary high-density routing failed: B01 failed: No path found for source_net_3_mst7; regional fallback failed: Failed to solve 1 nodes, topology_merge_6579. err0: GrowShrinkHighDensityIntraNodeSolver failed after resizing to 8x. Last error: All solvers failed in hyper solver. Example failures: Candidate solution rejected by validator, Candidate solution rejected by validator, CachedIntraNodeRouteSolver ran out of iterations (MAX_ITERATIONS=5196.152422706632), CachedIntraNodeRouteSolver ran out of iterations (MAX_ITERATIONS=5196.152422706632), CachedIntraNodeRouteSolver ran out of iterations (MAX_ITERATIONS=5196.152422706632).",
+  "routes": 3605,
+  "iterations": 278385,
+  "rejected": 0,
+  "stats": {
+    "nodeCount": 3130,
+    "solvedNodeCount": 1684,
+    "fixedObstacleCount": 1013,
+    "fixedObstacleUses": 2580,
+    "boardObstacleUses": 67,
+    "fallbackNodeCount": 27,
+    "regularNodeCount": 1638,
+    "b01NodeCount": 47,
+    "reroutedFixedRouteCount": 50,
+    "reroutedFixedRouteSectionCount": 30,
+    "promotedFallbackAttemptCount": 2,
+    "promotedFixedRouteCount": 2,
+    "regionalPreloadedViaCandidateRejectionCount": 48,
+    "regionalForceImproveCandidateRejectionCount": 0,
+    "regionalRepairCandidateRejectionCount": 0
+  }
+}

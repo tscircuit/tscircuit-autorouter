@@ -6,11 +6,13 @@ The latest baseline still completes **0/19** boards. Sixteen emit partial result
 
 ## Selected fix
 
-A regional repair uses A01 after B01 fails. A01 protected the target cell of a layer transition, but did not reserve the via copper radius around unrelated fixed terminals on every layer. A new via connecting signal layers 0–2 could therefore cover a layer-3 boundary terminal. The repair accepted this candidate; a later B01 cell then correctly failed because its terminal was obstructed.
+A regional repair uses A01 after B01 fails. A01 protects the target cell of a layer transition, but did not reserve the via copper radius around unrelated fixed terminals on every layer. A replacement via connecting signal layers 0–2 could cover a layer-3 boundary terminal. The repair accepted this candidate; a later B01 cell then failed because its terminal was obstructed.
 
-The source change adds an explicit minimum through-via center distance from foreign ports to the existing search. The regional adapter now forwards its existing through-via setting to the portfolio. The autorouter supplies its actual copper radius and clearance only for physical regional repairs with blind/buried vias disabled. Existing callers retain their previous routing behavior. No search strategy, sampling limit, random tie breaker, or extra routing budget is added.
+The source change adds an optional physical via-to-port distance to the existing search (26 production lines). The consumer enables it explicitly only when a physical regional repair reconstructs movable preloaded copper (16 production lines). These replacements become preloaded copper for subsequent cells. Ordinary routing and regions containing only immutable native preloads retain their existing selection. No search strategy, sampling limit, tie breaker, extra budget, board-model propagation, or final-repair change is added.
 
-A broad initial guard changed legacy A01 routing tests. It was narrowed to the explicit physical rule before the final candidate. Full source Bun CI and source/autorouter builds pass. The full autorouter CI and final paired board run are recorded below when complete.
+Broader activation was rejected: it changed DDR routing and introduced copper contacts. An endpoint-layer exclusion was also rejected because it stopped the original circuit earlier. Passing extra fixed-route context to global repair and changing the deferred contact guard did not pass both DDR regression samples, so neither is included. The final explicit scope retains the 207-cell gain and restores both native DDR samples to their original DRC-clean snapshots.
+
+Source Bun CI and source/consumer builds pass. The final consumer's nine Bun CI shards and frozen-lock 19-board comparison are running; their outcomes will be recorded below.
 
 ## Real reproduction
 
@@ -24,7 +26,7 @@ Two connection pairs are retained from an actual captured regional candidate. Co
 
 | Before | After |
 | --- | --- |
-| ![Before](https://raw.githubusercontent.com/tscircuit/tscircuit-autorouter/cc95f4c1/tests/repro/__snapshots__/through-via-terminal-window.snap.svg) | ![After](https://raw.githubusercontent.com/tscircuit/tscircuit-autorouter/2bce4d1a/tests/repro/__snapshots__/through-via-terminal-window.snap.svg) |
+| ![Before](https://raw.githubusercontent.com/tscircuit/tscircuit-autorouter/cc95f4c1/tests/repro/__snapshots__/through-via-terminal-window.snap.svg) | ![After](https://raw.githubusercontent.com/tscircuit/tscircuit-autorouter/a32e89447c0a1427af4c44dd9d8d4b452d2c6fdf/tests/repro/__snapshots__/through-via-terminal-window.snap.svg) |
 
 ## PR stack
 
@@ -37,11 +39,11 @@ The source repro starts from the A01 commit already pinned by the latest autorou
 
 ## Paired board methodology
 
-Blacksmith 32-vCPU ARM Ubuntu 24.04, Bun 1.4.3, 19 concurrent TSX renders, 600 seconds per board. The candidate installs the baseline's exact frozen lockfile. Only the A01 physical rule and its portfolio call are patched into the release entry and the decoded/re-serialized Bun and Node worker sources. Per-bundle before/after hashes and source commits are captured. All three bundles and an embedded worker passed local parser checks. Earlier broad or failed preflight runs are superseded and are not used for the final comparison.
+Blacksmith 32-vCPU ARM Ubuntu 24.04, Bun 1.4.3, 19 concurrent TSX renders, 600 seconds per board. The candidate installs the baseline's exact frozen lockfile. The source-equivalent change is applied to the release entry and the decoded/re-serialized Bun and Node worker sources. Per-bundle hashes and source commits are captured. All three bundles pass parser checks. A separate source/release comparison verifies equal constructor inputs and complete route geometry with the rule both disabled and enabled, plus four regional activation cases (`source-equivalence.json`). Earlier candidate runs are superseded and are not final regression evidence.
 
 ## Captured detailed-routing replay
 
-The complete production change, including forwarding the board's through-via setting, was replayed against the same captured detailed-routing constructor input. The old failure at the fourth-layer boundary terminal disappears. Another independently constrained region still prevents completion.
+The explicitly scoped production change was replayed against the same captured detailed-routing constructor input. The old failure at the fourth-layer boundary terminal disappears. Another independently constrained region still prevents completion.
 
 | Captured detailed-routing input | Before | After |
 | --- | ---: | ---: |

@@ -26,10 +26,10 @@ jobs:
         run: python3 experiments/boards-3279-no-pours/patch-a01.py experiments/boards-3279-no-pours/runtime board-benchmark-results/fix-provenance.json
       - name: Run all 19 TSX boards with default routing
         env:
-          BOARD_VARIANT: through-via-fixed-copper
+          BOARD_VARIANT: preloaded-port-fix
         run: python3 experiments/boards-3279-no-pours/run.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: boards-tscircuit-3279-no-pours-through-via-fixed-copper
+          name: boards-tscircuit-3279-no-pours-preloaded-port-fix
           path: board-benchmark-results/
