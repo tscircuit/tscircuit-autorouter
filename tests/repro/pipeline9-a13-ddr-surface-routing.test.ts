@@ -33,9 +33,9 @@ test("routes the remaining A13 DDR nets after the four data bytes", async (): Pr
   expect(new Set(routedTraces.map((trace) => trace.connection_name))).toEqual(
     new Set(pointPairs.map((pair) => pair.name)),
   )
-  const fixedTraces = solver.getOutputSimpleRouteJson().traces?.filter(
-    (trace) => trace.isFixed,
-  )
+  const fixedTraces = solver
+    .getOutputSimpleRouteJson()
+    .traces?.filter((trace) => trace.isFixed)
   expect(fixedTraces).toEqual(input.traces)
   const wireLayers = new Set(
     routedTraces.flatMap((trace) =>

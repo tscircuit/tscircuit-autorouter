@@ -5,16 +5,18 @@ import type { Obstacle, SimpleRouteJson } from "lib/types"
 test("keeps an inner signal route when the two surface layers have no path", () => {
   const surfaceLayers = ["top", "bottom"]
   const balls: Obstacle[] = [-2.8, -2, -1.2].flatMap((x) =>
-    [-0.8, 0, 0.8].map((y): Obstacle => ({
-      componentId: "U1",
-      type: "rect",
-      shape: "circle",
-      center: { x, y },
-      width: 0.4,
-      height: 0.4,
-      layers: ["top"],
-      connectedTo: x === -1.2 && y === 0 ? ["A", "signal"] : [],
-    })),
+    [-0.8, 0, 0.8].map(
+      (y): Obstacle => ({
+        componentId: "U1",
+        type: "rect",
+        shape: "circle",
+        center: { x, y },
+        width: 0.4,
+        height: 0.4,
+        layers: ["top"],
+        connectedTo: x === -1.2 && y === 0 ? ["A", "signal"] : [],
+      }),
+    ),
   )
   // Two long pads separate the left and right halves of each surface.
   const guards: Obstacle[] = surfaceLayers.map((layer) => ({
