@@ -31,7 +31,7 @@ test("copper DRC on the four-layer Bluetooth gamepad", async (): Promise<void> =
     error.message.includes("accidental contact"),
   )
   expect(contacts).toHaveLength(0)
-  expect(errors.length).toMatchInlineSnapshot(`7`)
+  expect(errors.length).toMatchInlineSnapshot(`0`)
   await expect(
     getBugReportSnapshotSvg(snapshotInput, { showErrorLocations: true }),
   ).toMatchSvgSnapshot(import.meta.path)

@@ -1,3 +1,4 @@
+import { repairPipeline9CopperClearance } from "./repairPipeline9CopperClearance"
 import { getDifferentialPairsForPostProcessing } from "lib/utils/getDifferentialPairsForPostProcessing"
 import { Pipeline9EffortCleanupSolver } from "./Pipeline9EffortCleanupSolver"
 import { createPipeline9AutoroutingDrcEvaluator } from "./createPipeline9AutoroutingDrcEvaluator"
@@ -247,11 +248,22 @@ export const pipeline9PostProcessingSteps = [
       const onlyConnectionNames =
         configuredOptions.onlyConnectionNames ??
         getPowerTraceExpansionConnectionNames(pipeline.originalSrj)
+      const routedTraces = pipeline.getNewTracesBeforePowerExpansion()
+      // A clean joint repair needs no further clearance search.
+      const remaining = pipeline.pipeline9JointDrcRepairSolver?.stats.regionalB01RepairRemainingDrcIssueCount
+      const preloads = pipeline.getUpdatedPreloadedTraces()
+      const newlyRoutedTraces = typeof remaining === "number" && remaining > 0
+        ? repairPipeline9CopperClearance(
+            { ...pipeline.originalSrj, traces: preloads },
+            pipeline.srjWithPointPairs!,
+            routedTraces,
+          )
+        : routedTraces
       return [
         preparePipeline7PowerTraceExpansionInput({
           originalSrj: pipeline.originalSrj,
-          newlyRoutedTraces: pipeline.getNewTracesBeforePowerExpansion(),
-          currentPreloadedTraces: pipeline.getUpdatedPreloadedTraces(),
+          newlyRoutedTraces,
+          currentPreloadedTraces: preloads,
           expandedConnectionNames: onlyConnectionNames,
           resolveConnectedTraceAliases: true,
         }),
