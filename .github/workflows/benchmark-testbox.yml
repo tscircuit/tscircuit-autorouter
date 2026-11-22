@@ -14,23 +14,20 @@ jobs:
           bun-version: 1.4.3
       - name: Unpack boards with copper pours disabled
         run: |
-          mkdir -p experiments/boards-3278-no-pours/runtime
-          unzip -q experiments/boards-3278-no-pours/boards.zip -d experiments/boards-3278-no-pours/runtime
-      - name: Install latest released tscircuit from the frozen baseline lockfile
-        working-directory: experiments/boards-3278-no-pours/runtime
+          mkdir -p experiments/boards-3279-no-pours/runtime
+          unzip -q experiments/boards-3279-no-pours/boards.zip -d experiments/boards-3279-no-pours/runtime
+      - name: Install latest tscircuit and record the baseline lockfile
+        working-directory: experiments/boards-3279-no-pours/runtime
         run: |
-          bun install --frozen-lockfile
+          bun install
           mkdir -p ../../../board-benchmark-results
           cp bun.lock ../../../board-benchmark-results/bun.lock
-      - name: Protect immutable copper during greedy completion
-        run: bun experiments/boards-3278-no-pours/apply-fixed-copper-constraints.mjs experiments/boards-3278-no-pours/runtime experiments/boards-3278-no-pours/runtime/node_modules/@tscircuit/capacity-autorouter experiments/boards-3278-no-pours/fixed-copper-provenance.json
       - name: Run all 19 TSX boards with default routing
         env:
-          BOARD_VARIANT: fixed-copper
-          BOARD_FIX_PROVENANCE: experiments/boards-3278-no-pours/fixed-copper-provenance.json
-        run: python3 experiments/boards-3278-no-pours/run.py
+          BOARD_VARIANT: base
+        run: python3 experiments/boards-3279-no-pours/run.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: boards-tscircuit-3278-no-pours-fixed-copper
+          name: boards-tscircuit-3279-no-pours-base
           path: board-benchmark-results/
