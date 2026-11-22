@@ -1,0 +1,29 @@
+{
+  "sourceRepo": "tscircuit/high-density-a01",
+  "sourceRepro": "429bb0b",
+  "sourceFix": "20d30e6",
+  "change": "A01 supplied through-via port clearance, enabled only for physical regional repairs with blind/buried vias disabled. Original grid, order, costs and budgets retained.",
+  "bundles": [
+    {
+      "file": "dist/index.js",
+      "before": "85d09bea9a30fdfcc1cf30a29514993a9c8ef9efcb09813c8d9e43518bfdf48f",
+      "after": "78b6eed58a0f4b89008e9756acba9b10c37fc8127616c381f12f974a5ae84a09",
+      "a01Classes": 1,
+      "embeddedWorker": false
+    },
+    {
+      "file": "dist/runtime/bun.js",
+      "before": "50eb8454c4717c6bb49cc7cb71173e9fa836747b4110c157638bfefb620c3d0a",
+      "after": "27e737b38e954b2115951770570708b0ed697312ab9968058c1304c1fe0ee008",
+      "a01Classes": 1,
+      "embeddedWorker": true
+    },
+    {
+      "file": "dist/runtime/node.js",
+      "before": "a8a37e74555dcf9d0c567c058712893788833b98849645271de08b8eb64c1522",
+      "after": "6ffad8fc339056cb70b1b7360ffb553dea08080ab91e300e1db19513cbf422cb",
+      "a01Classes": 1,
+      "embeddedWorker": true
+    }
+  ]
+}
