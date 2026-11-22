@@ -9,7 +9,7 @@ import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-p
 import type { SimpleRouteJson } from "lib/types"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
 
-test("routes STMP157 DDR with fixed data copper", async (): Promise<void> => {
+test("routes STM32MP157 DDR signals around the four completed data bytes", async (): Promise<void> => {
   const input: SimpleRouteJson = JSON.parse(
     gunzipSync(
       Uint8Array.from(
@@ -22,39 +22,24 @@ test("routes STMP157 DDR with fixed data copper", async (): Promise<void> => {
       ),
     ).toString("utf8"),
   )
-  const reference: SimpleRouteJson = JSON.parse(
-    gunzipSync(
-      Uint8Array.from(
-        readFileSync(
-          new URL(
-            "../fixtures/assets/stmp157-native-ddr-via-space/physical-reference.srj.json.gz",
-            import.meta.url,
-          ),
-        ),
-      ),
-    ).toString("utf8"),
-  )
+  expect(input.obstacles).toHaveLength(710)
+  expect(input.traces?.filter((trace) => trace.isFixed)).toHaveLength(32)
+
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(input, {
     cacheProvider: null,
   })
   solver.solve()
 
-  // On failure, only the previously completed data copper is publishable.
-  let output = reference
-  let status = "Remaining DDR routing failed"
-  if (solver.solved) {
-    output = {
-      ...reference,
-      traces: [...reference.traces!, ...solver.getOutputSimplifiedPcbTraces()],
-    }
-    status = "Remaining DDR routing completed"
-  }
+  const output = solver.solved ? solver.getOutputSimpleRouteJson() : input
   const graphics = convertSrjToGraphicsObject(output)
   graphics.points = []
+  const status = solver.solved
+    ? "All 40 remaining nets routed"
+    : "Remaining routing failed"
   await expect(
     getSvgFromGraphicsObject(
       stackGraphicsHorizontally([graphics], {
-        titles: [`STMP157 native DDR | ${status}`],
+        titles: [`STM32MP157 DDR | 32 fixed data nets | ${status}`],
       }),
       { backgroundColor: "white" },
     ),
