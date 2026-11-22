@@ -14,6 +14,12 @@
       "detailsUrl": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44963494040/job/137027269559"
     },
     {
+      "name": "effort-comparison",
+      "status": "COMPLETED",
+      "conclusion": "SKIPPED",
+      "detailsUrl": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44965146131/job/137032359936"
+    },
+    {
       "name": "test (1)",
       "status": "COMPLETED",
       "conclusion": "SUCCESS",
@@ -80,6 +86,12 @@
       "detailsUrl": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44963494040/job/137027234297"
     },
     {
+      "name": "Run benchmark",
+      "status": "COMPLETED",
+      "conclusion": "SKIPPED",
+      "detailsUrl": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44965146131/job/137032359543"
+    },
+    {
       "name": "Same machine benchmark",
       "status": "COMPLETED",
       "conclusion": "SKIPPED",
@@ -92,6 +104,12 @@
       "detailsUrl": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44963494040/job/137027234999"
     },
     {
+      "name": "Same machine benchmark",
+      "status": "COMPLETED",
+      "conclusion": "SKIPPED",
+      "detailsUrl": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44965146131/job/137032359149"
+    },
+    {
       "name": "Build benchmark history dashboard",
       "status": "COMPLETED",
       "conclusion": "SKIPPED",
@@ -102,6 +120,12 @@
       "status": "COMPLETED",
       "conclusion": "SKIPPED",
       "detailsUrl": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44963494040/job/137027261029"
+    },
+    {
+      "name": "Build benchmark history dashboard",
+      "status": "COMPLETED",
+      "conclusion": "SKIPPED",
+      "detailsUrl": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44965146131/job/137032360302"
     }
   ]
 }

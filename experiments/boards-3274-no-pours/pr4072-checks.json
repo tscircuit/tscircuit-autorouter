@@ -8,6 +8,12 @@
       "detailsUrl": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44963494178/job/137027267912"
     },
     {
+      "name": "effort-comparison",
+      "status": "COMPLETED",
+      "conclusion": "SKIPPED",
+      "detailsUrl": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44965009100/job/137031968684"
+    },
+    {
       "name": "build",
       "status": "COMPLETED",
       "conclusion": "SUCCESS",
@@ -93,8 +99,8 @@
     },
     {
       "name": "test (9)",
-      "status": "IN_PROGRESS",
-      "conclusion": "",
+      "status": "COMPLETED",
+      "conclusion": "SUCCESS",
       "detailsUrl": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44963494240/job/137027234051"
     },
     {
@@ -104,16 +110,34 @@
       "detailsUrl": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44963494178/job/137027235079"
     },
     {
+      "name": "Run benchmark",
+      "status": "COMPLETED",
+      "conclusion": "SKIPPED",
+      "detailsUrl": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44965009100/job/137031932755"
+    },
+    {
       "name": "Same machine benchmark",
       "status": "COMPLETED",
       "conclusion": "SKIPPED",
       "detailsUrl": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44963494178/job/137027258904"
     },
     {
+      "name": "Same machine benchmark",
+      "status": "COMPLETED",
+      "conclusion": "SKIPPED",
+      "detailsUrl": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44965009100/job/137031974172"
+    },
+    {
       "name": "Build benchmark history dashboard",
       "status": "COMPLETED",
       "conclusion": "SKIPPED",
       "detailsUrl": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44963494178/job/137027235800"
+    },
+    {
+      "name": "Build benchmark history dashboard",
+      "status": "COMPLETED",
+      "conclusion": "SKIPPED",
+      "detailsUrl": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/44965009100/job/137031933386"
     }
   ]
 }

@@ -30,10 +30,10 @@
   "ci": {
     "fixRun": 44963494048,
     "reproRun": 44963494240,
-    "result": "fix passed; repro finishing",
+    "result": "success",
     "repro": {
-      "passedTestShards": 8,
-      "pendingTestShards": 1,
+      "passedTestShards": 9,
+      "pendingTestShards": 0,
       "failedTestShards": 0
     },
     "fix": {
