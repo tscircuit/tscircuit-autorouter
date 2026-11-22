@@ -209,7 +209,7 @@ export class EscapeViaLocationSolver extends BaseSolver {
     )
 
     return {
-      isPlannedVia: true,
+      representsFutureVia: true,
       obstacleId: `escape-via-obstacle:${escapeVia.pointId}`,
       type: "rect",
       layers,

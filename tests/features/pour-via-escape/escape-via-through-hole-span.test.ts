@@ -64,7 +64,7 @@ test("through-hole escape vias reserve and clear every physical layer", (): void
       .obstacles.find(
         (entry) => entry.obstacleId === `escape-via-obstacle:${via.pointId}`,
       )!
-    expect(obstacle.isPlannedVia).toBe(true)
+    expect(obstacle.representsFutureVia).toBe(true)
     if (allowBlindAndBuriedVias) {
       expect(obstacle.layers).toEqual(["top", "inner1"])
       expect(obstacle.__zLayers).toEqual([0, 1])
