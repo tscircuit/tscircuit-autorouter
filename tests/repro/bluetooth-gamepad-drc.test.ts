@@ -7,8 +7,8 @@ import capturedInput from "./assets/bluetooth-gamepad.srj.json"
 
 type XY = { x: number; y: number }
 
-// The clock limits live on the source board. Measure the PCB centerlines
-// across trace boundaries, including a shared trunk and its crystal arm.
+// Measure the PCB centerlines across trace boundaries, including a shared
+// trunk and its crystal arm.
 function checkClock(
   traces: SimplifiedPcbTrace[],
   mcu: XY,
@@ -26,8 +26,8 @@ function checkClock(
         )
       }
       if (previous) {
-        const a = key(previous),
-          b = key(point)
+        const a = key(previous)
+        const b = key(point)
         const length = Math.hypot(previous.x - point.x, previous.y - point.y)
         for (const [from, to] of [
           [a, b],
@@ -92,9 +92,18 @@ test("copper DRC on the four-layer Bluetooth gamepad", async (): Promise<void> =
 
 test("the MCU-to-crystal routes meet the board's 10 mm limit", () => {
   for (const clock of ["source_net_19", "source_net_20"]) {
-    const terminals = input.connections.find(
-      (c) => c.name === clock,
-    )!.pointsToConnect
+    const connection = input.connections.find((c) => c.name === clock)!
+    const terminals = connection.pointsToConnect
+    expect(connection.traceConstraints).toHaveLength(terminals.length)
+    for (const point of terminals) {
+      expect(connection.traceConstraints).toContainEqual(
+        expect.objectContaining({
+          pointIds: [point.pointId],
+          maxLength: 10,
+          maxViaCount: 0,
+        }),
+      )
+    }
     const routes = solver
       .getOutputSimplifiedPcbTraces()
       .filter((trace) => trace.connection_name === clock)
