@@ -27,7 +27,7 @@ test("the captured terminal window clears a through via on the fourth copper lay
     minTraceWidth: input.traceThickness / 2,
     minViaDiameter: input.viaDiameter / 2,
     minTraceToPadEdgeClearance: input.traceMargin / 2,
-    bounds: { minX: -6, maxX: 6, minY: -2, maxY: 1 },
+    bounds: { minX: -3.5, maxX: 3.5, minY: -2.25, maxY: 0.5 },
     obstacles: [],
     connections: ["layer_transition", "neighbor"].map((name) => ({
       name,
@@ -47,5 +47,5 @@ test("the captured terminal window clears a through via on the fourth copper lay
   const snapshot = { inputSrj: srj, srjWithPointPairs: srj, routedTraces: traces, drcOptions: { includeTraceContinuity: false } }
   const { errors } = evaluateRelaxedDrc(snapshot)
   expect(errors).toHaveLength(1)
-  await expect(getBugReportSnapshotSvg(snapshot)).toMatchSvgSnapshot(import.meta.path)
+  await expect(getBugReportSnapshotSvg(snapshot, { bounds: srj.bounds })).toMatchSvgSnapshot(import.meta.path)
 })
