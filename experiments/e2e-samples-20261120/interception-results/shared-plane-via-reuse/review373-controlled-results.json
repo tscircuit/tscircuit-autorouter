@@ -1,0 +1,826 @@
+{
+  "runId": 45022398643,
+  "rows": [
+    {
+      "before": {
+        "sample": "h616-spaced",
+        "mode": "before",
+        "requested": 174,
+        "escapes": 111,
+        "planes": 0,
+        "vias": 72,
+        "serializedVias": 72,
+        "length": 505.0707288036109,
+        "elapsedMs": 888.042942,
+        "originalAssignments": 193,
+        "retainedOriginalPlans": 111,
+        "originalPlans": 111,
+        "drc": true,
+        "structuralIssues": [],
+        "planeConnectivity": {
+          "valid": true,
+          "checkedConnectionCount": 0,
+          "connectedConnectionCount": 0,
+          "checkedEndpointCount": 0,
+          "connectedEndpointCount": 0,
+          "issues": []
+        },
+        "physicalPadOverlaps": 0,
+        "padClearanceViolations": 0,
+        "drillViolations": 0,
+        "aliasMismatches": 0,
+        "unknownSourcePorts": 0,
+        "unanchoredReuse": 0,
+        "inputUnchanged": true
+      },
+      "after": {
+        "sample": "h616-spaced",
+        "mode": "after",
+        "requested": 174,
+        "escapes": 111,
+        "planes": 0,
+        "vias": 72,
+        "serializedVias": 72,
+        "length": 505.0707288036109,
+        "elapsedMs": 878.660374,
+        "originalAssignments": 193,
+        "retainedOriginalPlans": 111,
+        "originalPlans": 111,
+        "drc": true,
+        "structuralIssues": [],
+        "planeConnectivity": {
+          "valid": true,
+          "checkedConnectionCount": 0,
+          "connectedConnectionCount": 0,
+          "checkedEndpointCount": 0,
+          "connectedEndpointCount": 0,
+          "issues": []
+        },
+        "physicalPadOverlaps": 0,
+        "padClearanceViolations": 0,
+        "drillViolations": 0,
+        "aliasMismatches": 0,
+        "unknownSourcePorts": 0,
+        "unanchoredReuse": 0,
+        "inputUnchanged": true
+      },
+      "comparison": {
+        "sample": "h616-spaced",
+        "before": 111,
+        "after": 111,
+        "vias": [
+          72,
+          72
+        ],
+        "length": [
+          505.0707288036109,
+          505.0707288036109
+        ],
+        "gained": [],
+        "lost": [],
+        "longer": []
+      }
+    },
+    {
+      "before": {
+        "sample": "h616-original",
+        "mode": "before",
+        "requested": 174,
+        "escapes": 119,
+        "planes": 60,
+        "vias": 84,
+        "serializedVias": 84,
+        "length": 272.4024091479854,
+        "elapsedMs": 2943.3085810000002,
+        "originalAssignments": 256,
+        "retainedOriginalPlans": 109,
+        "originalPlans": 109,
+        "drc": true,
+        "structuralIssues": [],
+        "planeConnectivity": {
+          "valid": true,
+          "checkedConnectionCount": 60,
+          "connectedConnectionCount": 60,
+          "checkedEndpointCount": 60,
+          "connectedEndpointCount": 60,
+          "issues": []
+        },
+        "physicalPadOverlaps": 0,
+        "padClearanceViolations": 0,
+        "drillViolations": 0,
+        "aliasMismatches": 0,
+        "unknownSourcePorts": 0,
+        "unanchoredReuse": 0,
+        "inputUnchanged": true
+      },
+      "after": {
+        "sample": "h616-original",
+        "mode": "after",
+        "requested": 174,
+        "escapes": 119,
+        "planes": 60,
+        "vias": 74,
+        "serializedVias": 74,
+        "length": 253.0846717809473,
+        "elapsedMs": 2560.182339,
+        "originalAssignments": 256,
+        "retainedOriginalPlans": 109,
+        "originalPlans": 109,
+        "drc": true,
+        "structuralIssues": [],
+        "planeConnectivity": {
+          "valid": true,
+          "checkedConnectionCount": 60,
+          "connectedConnectionCount": 60,
+          "checkedEndpointCount": 60,
+          "connectedEndpointCount": 60,
+          "issues": []
+        },
+        "physicalPadOverlaps": 0,
+        "padClearanceViolations": 0,
+        "drillViolations": 0,
+        "aliasMismatches": 0,
+        "unknownSourcePorts": 0,
+        "unanchoredReuse": 0,
+        "inputUnchanged": true
+      },
+      "comparison": {
+        "sample": "h616-original",
+        "before": 119,
+        "after": 119,
+        "vias": [
+          84,
+          74
+        ],
+        "length": [
+          272.4024091479854,
+          253.0846717809473
+        ],
+        "gained": [],
+        "lost": [],
+        "longer": []
+      }
+    },
+    {
+      "before": {
+        "sample": "butterstick-spaced",
+        "mode": "before",
+        "requested": 91,
+        "escapes": 78,
+        "planes": 0,
+        "vias": 49,
+        "serializedVias": 49,
+        "length": 322.2656462746671,
+        "elapsedMs": 2175.9060719999998,
+        "originalAssignments": 256,
+        "retainedOriginalPlans": 78,
+        "originalPlans": 78,
+        "drc": true,
+        "structuralIssues": [],
+        "planeConnectivity": {
+          "valid": true,
+          "checkedConnectionCount": 0,
+          "connectedConnectionCount": 0,
+          "checkedEndpointCount": 0,
+          "connectedEndpointCount": 0,
+          "issues": []
+        },
+        "physicalPadOverlaps": 0,
+        "padClearanceViolations": 0,
+        "drillViolations": 0,
+        "aliasMismatches": 0,
+        "unknownSourcePorts": 0,
+        "unanchoredReuse": 0,
+        "inputUnchanged": true
+      },
+      "after": {
+        "sample": "butterstick-spaced",
+        "mode": "after",
+        "requested": 91,
+        "escapes": 78,
+        "planes": 0,
+        "vias": 49,
+        "serializedVias": 49,
+        "length": 322.2656462746671,
+        "elapsedMs": 2068.4401159999998,
+        "originalAssignments": 256,
+        "retainedOriginalPlans": 78,
+        "originalPlans": 78,
+        "drc": true,
+        "structuralIssues": [],
+        "planeConnectivity": {
+          "valid": true,
+          "checkedConnectionCount": 0,
+          "connectedConnectionCount": 0,
+          "checkedEndpointCount": 0,
+          "connectedEndpointCount": 0,
+          "issues": []
+        },
+        "physicalPadOverlaps": 0,
+        "padClearanceViolations": 0,
+        "drillViolations": 0,
+        "aliasMismatches": 0,
+        "unknownSourcePorts": 0,
+        "unanchoredReuse": 0,
+        "inputUnchanged": true
+      },
+      "comparison": {
+        "sample": "butterstick-spaced",
+        "before": 78,
+        "after": 78,
+        "vias": [
+          49,
+          49
+        ],
+        "length": [
+          322.2656462746671,
+          322.2656462746671
+        ],
+        "gained": [],
+        "lost": [],
+        "longer": []
+      }
+    },
+    {
+      "before": {
+        "sample": "glider-original",
+        "mode": "before",
+        "requested": 95,
+        "escapes": 87,
+        "planes": 36,
+        "vias": 59,
+        "serializedVias": 59,
+        "length": 219.46816227966985,
+        "elapsedMs": 5573.869903999999,
+        "originalAssignments": 256,
+        "retainedOriginalPlans": 86,
+        "originalPlans": 86,
+        "drc": true,
+        "structuralIssues": [],
+        "planeConnectivity": {
+          "valid": true,
+          "checkedConnectionCount": 36,
+          "connectedConnectionCount": 36,
+          "checkedEndpointCount": 36,
+          "connectedEndpointCount": 36,
+          "issues": []
+        },
+        "physicalPadOverlaps": 0,
+        "padClearanceViolations": 0,
+        "drillViolations": 0,
+        "aliasMismatches": 0,
+        "unknownSourcePorts": 0,
+        "unanchoredReuse": 0,
+        "inputUnchanged": true
+      },
+      "after": {
+        "sample": "glider-original",
+        "mode": "after",
+        "requested": 95,
+        "escapes": 89,
+        "planes": 38,
+        "vias": 58,
+        "serializedVias": 58,
+        "length": 220.9698477046191,
+        "elapsedMs": 5515.755939000001,
+        "originalAssignments": 256,
+        "retainedOriginalPlans": 86,
+        "originalPlans": 86,
+        "drc": true,
+        "structuralIssues": [],
+        "planeConnectivity": {
+          "valid": true,
+          "checkedConnectionCount": 38,
+          "connectedConnectionCount": 38,
+          "checkedEndpointCount": 38,
+          "connectedEndpointCount": 38,
+          "issues": []
+        },
+        "physicalPadOverlaps": 0,
+        "padClearanceViolations": 0,
+        "drillViolations": 0,
+        "aliasMismatches": 0,
+        "unknownSourcePorts": 0,
+        "unanchoredReuse": 0,
+        "inputUnchanged": true
+      },
+      "comparison": {
+        "sample": "glider-original",
+        "before": 87,
+        "after": 89,
+        "vias": [
+          59,
+          58
+        ],
+        "length": [
+          219.46816227966985,
+          220.9698477046191
+        ],
+        "gained": [
+          "source_trace_22",
+          "source_trace_30"
+        ],
+        "lost": [],
+        "longer": []
+      }
+    },
+    {
+      "before": {
+        "sample": "icepi-original",
+        "mode": "before",
+        "requested": 32,
+        "escapes": 23,
+        "planes": 15,
+        "vias": 15,
+        "serializedVias": 15,
+        "length": 33.51223663640861,
+        "elapsedMs": 1479.057854,
+        "originalAssignments": 256,
+        "retainedOriginalPlans": 19,
+        "originalPlans": 19,
+        "drc": true,
+        "structuralIssues": [],
+        "planeConnectivity": {
+          "valid": true,
+          "checkedConnectionCount": 15,
+          "connectedConnectionCount": 15,
+          "checkedEndpointCount": 15,
+          "connectedEndpointCount": 15,
+          "issues": []
+        },
+        "physicalPadOverlaps": 0,
+        "padClearanceViolations": 0,
+        "drillViolations": 0,
+        "aliasMismatches": 0,
+        "unknownSourcePorts": 0,
+        "unanchoredReuse": 0,
+        "inputUnchanged": true
+      },
+      "after": {
+        "sample": "icepi-original",
+        "mode": "after",
+        "requested": 32,
+        "escapes": 23,
+        "planes": 15,
+        "vias": 11,
+        "serializedVias": 11,
+        "length": 29.863708498984753,
+        "elapsedMs": 1532.617784,
+        "originalAssignments": 256,
+        "retainedOriginalPlans": 19,
+        "originalPlans": 19,
+        "drc": true,
+        "structuralIssues": [],
+        "planeConnectivity": {
+          "valid": true,
+          "checkedConnectionCount": 15,
+          "connectedConnectionCount": 15,
+          "checkedEndpointCount": 15,
+          "connectedEndpointCount": 15,
+          "issues": []
+        },
+        "physicalPadOverlaps": 0,
+        "padClearanceViolations": 0,
+        "drillViolations": 0,
+        "aliasMismatches": 0,
+        "unknownSourcePorts": 0,
+        "unanchoredReuse": 0,
+        "inputUnchanged": true
+      },
+      "comparison": {
+        "sample": "icepi-original",
+        "before": 23,
+        "after": 23,
+        "vias": [
+          15,
+          11
+        ],
+        "length": [
+          33.51223663640861,
+          29.863708498984753
+        ],
+        "gained": [],
+        "lost": [],
+        "longer": []
+      }
+    },
+    {
+      "before": {
+        "sample": "butterstick-original",
+        "mode": "before",
+        "requested": 91,
+        "escapes": 63,
+        "planes": 18,
+        "vias": 43,
+        "serializedVias": 43,
+        "length": 189.63158308673567,
+        "elapsedMs": 5213.940381,
+        "originalAssignments": 256,
+        "retainedOriginalPlans": 62,
+        "originalPlans": 62,
+        "drc": true,
+        "structuralIssues": [],
+        "planeConnectivity": {
+          "valid": true,
+          "checkedConnectionCount": 18,
+          "connectedConnectionCount": 18,
+          "checkedEndpointCount": 18,
+          "connectedEndpointCount": 18,
+          "issues": []
+        },
+        "physicalPadOverlaps": 0,
+        "padClearanceViolations": 0,
+        "drillViolations": 0,
+        "aliasMismatches": 0,
+        "unknownSourcePorts": 0,
+        "unanchoredReuse": 0,
+        "inputUnchanged": true
+      },
+      "after": {
+        "sample": "butterstick-original",
+        "mode": "after",
+        "requested": 91,
+        "escapes": 64,
+        "planes": 19,
+        "vias": 42,
+        "serializedVias": 42,
+        "length": 189.63158308673567,
+        "elapsedMs": 5292.83665,
+        "originalAssignments": 256,
+        "retainedOriginalPlans": 62,
+        "originalPlans": 62,
+        "drc": true,
+        "structuralIssues": [],
+        "planeConnectivity": {
+          "valid": true,
+          "checkedConnectionCount": 19,
+          "connectedConnectionCount": 19,
+          "checkedEndpointCount": 19,
+          "connectedEndpointCount": 19,
+          "issues": []
+        },
+        "physicalPadOverlaps": 0,
+        "padClearanceViolations": 0,
+        "drillViolations": 0,
+        "aliasMismatches": 0,
+        "unknownSourcePorts": 0,
+        "unanchoredReuse": 0,
+        "inputUnchanged": true
+      },
+      "comparison": {
+        "sample": "butterstick-original",
+        "before": 63,
+        "after": 64,
+        "vias": [
+          43,
+          42
+        ],
+        "length": [
+          189.63158308673567,
+          189.63158308673567
+        ],
+        "gained": [
+          "source_trace_15"
+        ],
+        "lost": [],
+        "longer": []
+      }
+    },
+    {
+      "before": {
+        "sample": "imx6-original",
+        "mode": "before",
+        "requested": 32,
+        "escapes": 19,
+        "planes": 16,
+        "vias": 17,
+        "serializedVias": 17,
+        "length": 21.42870849898476,
+        "elapsedMs": 2708.173099,
+        "originalAssignments": 256,
+        "retainedOriginalPlans": 16,
+        "originalPlans": 16,
+        "drc": true,
+        "structuralIssues": [],
+        "planeConnectivity": {
+          "valid": true,
+          "checkedConnectionCount": 16,
+          "connectedConnectionCount": 16,
+          "checkedEndpointCount": 16,
+          "connectedEndpointCount": 16,
+          "issues": []
+        },
+        "physicalPadOverlaps": 0,
+        "padClearanceViolations": 0,
+        "drillViolations": 0,
+        "aliasMismatches": 0,
+        "unknownSourcePorts": 0,
+        "unanchoredReuse": 0,
+        "inputUnchanged": true
+      },
+      "after": {
+        "sample": "imx6-original",
+        "mode": "after",
+        "requested": 32,
+        "escapes": 20,
+        "planes": 17,
+        "vias": 15,
+        "serializedVias": 15,
+        "length": 21.97160171779821,
+        "elapsedMs": 2763.9205,
+        "originalAssignments": 256,
+        "retainedOriginalPlans": 16,
+        "originalPlans": 16,
+        "drc": true,
+        "structuralIssues": [],
+        "planeConnectivity": {
+          "valid": true,
+          "checkedConnectionCount": 17,
+          "connectedConnectionCount": 17,
+          "checkedEndpointCount": 17,
+          "connectedEndpointCount": 17,
+          "issues": []
+        },
+        "physicalPadOverlaps": 0,
+        "padClearanceViolations": 0,
+        "drillViolations": 0,
+        "aliasMismatches": 0,
+        "unknownSourcePorts": 0,
+        "unanchoredReuse": 0,
+        "inputUnchanged": true
+      },
+      "comparison": {
+        "sample": "imx6-original",
+        "before": 19,
+        "after": 20,
+        "vias": [
+          17,
+          15
+        ],
+        "length": [
+          21.42870849898476,
+          21.97160171779821
+        ],
+        "gained": [
+          "source_trace_1"
+        ],
+        "lost": [],
+        "longer": []
+      }
+    },
+    {
+      "before": {
+        "sample": "imx6-spaced",
+        "mode": "before",
+        "requested": 32,
+        "escapes": 7,
+        "planes": 0,
+        "vias": 4,
+        "serializedVias": 4,
+        "length": 6.974236723501456,
+        "elapsedMs": 637.260198,
+        "originalAssignments": 256,
+        "retainedOriginalPlans": 7,
+        "originalPlans": 7,
+        "drc": true,
+        "structuralIssues": [],
+        "planeConnectivity": {
+          "valid": true,
+          "checkedConnectionCount": 0,
+          "connectedConnectionCount": 0,
+          "checkedEndpointCount": 0,
+          "connectedEndpointCount": 0,
+          "issues": []
+        },
+        "physicalPadOverlaps": 0,
+        "padClearanceViolations": 0,
+        "drillViolations": 0,
+        "aliasMismatches": 0,
+        "unknownSourcePorts": 0,
+        "unanchoredReuse": 0,
+        "inputUnchanged": true
+      },
+      "after": {
+        "sample": "imx6-spaced",
+        "mode": "after",
+        "requested": 32,
+        "escapes": 7,
+        "planes": 0,
+        "vias": 4,
+        "serializedVias": 4,
+        "length": 6.974236723501456,
+        "elapsedMs": 659.0218950000001,
+        "originalAssignments": 256,
+        "retainedOriginalPlans": 7,
+        "originalPlans": 7,
+        "drc": true,
+        "structuralIssues": [],
+        "planeConnectivity": {
+          "valid": true,
+          "checkedConnectionCount": 0,
+          "connectedConnectionCount": 0,
+          "checkedEndpointCount": 0,
+          "connectedEndpointCount": 0,
+          "issues": []
+        },
+        "physicalPadOverlaps": 0,
+        "padClearanceViolations": 0,
+        "drillViolations": 0,
+        "aliasMismatches": 0,
+        "unknownSourcePorts": 0,
+        "unanchoredReuse": 0,
+        "inputUnchanged": true
+      },
+      "comparison": {
+        "sample": "imx6-spaced",
+        "before": 7,
+        "after": 7,
+        "vias": [
+          4,
+          4
+        ],
+        "length": [
+          6.974236723501456,
+          6.974236723501456
+        ],
+        "gained": [],
+        "lost": [],
+        "longer": []
+      }
+    },
+    {
+      "before": {
+        "sample": "icepi-spaced",
+        "mode": "before",
+        "requested": 92,
+        "escapes": 77,
+        "planes": 0,
+        "vias": 37,
+        "serializedVias": 37,
+        "length": 276.3291117988401,
+        "elapsedMs": 2112.898337,
+        "originalAssignments": 256,
+        "retainedOriginalPlans": 77,
+        "originalPlans": 77,
+        "drc": true,
+        "structuralIssues": [],
+        "planeConnectivity": {
+          "valid": true,
+          "checkedConnectionCount": 0,
+          "connectedConnectionCount": 0,
+          "checkedEndpointCount": 0,
+          "connectedEndpointCount": 0,
+          "issues": []
+        },
+        "physicalPadOverlaps": 0,
+        "padClearanceViolations": 0,
+        "drillViolations": 0,
+        "aliasMismatches": 0,
+        "unknownSourcePorts": 0,
+        "unanchoredReuse": 0,
+        "inputUnchanged": true
+      },
+      "after": {
+        "sample": "icepi-spaced",
+        "mode": "after",
+        "requested": 92,
+        "escapes": 77,
+        "planes": 0,
+        "vias": 37,
+        "serializedVias": 37,
+        "length": 276.3291117988401,
+        "elapsedMs": 2062.330493,
+        "originalAssignments": 256,
+        "retainedOriginalPlans": 77,
+        "originalPlans": 77,
+        "drc": true,
+        "structuralIssues": [],
+        "planeConnectivity": {
+          "valid": true,
+          "checkedConnectionCount": 0,
+          "connectedConnectionCount": 0,
+          "checkedEndpointCount": 0,
+          "connectedEndpointCount": 0,
+          "issues": []
+        },
+        "physicalPadOverlaps": 0,
+        "padClearanceViolations": 0,
+        "drillViolations": 0,
+        "aliasMismatches": 0,
+        "unknownSourcePorts": 0,
+        "unanchoredReuse": 0,
+        "inputUnchanged": true
+      },
+      "comparison": {
+        "sample": "icepi-spaced",
+        "before": 77,
+        "after": 77,
+        "vias": [
+          37,
+          37
+        ],
+        "length": [
+          276.3291117988401,
+          276.3291117988401
+        ],
+        "gained": [],
+        "lost": [],
+        "longer": []
+      }
+    },
+    {
+      "before": {
+        "sample": "glider-spaced",
+        "mode": "before",
+        "requested": 211,
+        "escapes": 137,
+        "planes": 0,
+        "vias": 69,
+        "serializedVias": 69,
+        "length": 543.629893455855,
+        "elapsedMs": 5278.8259020000005,
+        "originalAssignments": 36,
+        "retainedOriginalPlans": 137,
+        "originalPlans": 137,
+        "drc": true,
+        "structuralIssues": [],
+        "planeConnectivity": {
+          "valid": true,
+          "checkedConnectionCount": 0,
+          "connectedConnectionCount": 0,
+          "checkedEndpointCount": 0,
+          "connectedEndpointCount": 0,
+          "issues": []
+        },
+        "physicalPadOverlaps": 0,
+        "padClearanceViolations": 0,
+        "drillViolations": 0,
+        "aliasMismatches": 0,
+        "unknownSourcePorts": 0,
+        "unanchoredReuse": 0,
+        "inputUnchanged": true
+      },
+      "after": {
+        "sample": "glider-spaced",
+        "mode": "after",
+        "requested": 211,
+        "escapes": 137,
+        "planes": 0,
+        "vias": 69,
+        "serializedVias": 69,
+        "length": 543.629893455855,
+        "elapsedMs": 5707.251209,
+        "originalAssignments": 36,
+        "retainedOriginalPlans": 137,
+        "originalPlans": 137,
+        "drc": true,
+        "structuralIssues": [],
+        "planeConnectivity": {
+          "valid": true,
+          "checkedConnectionCount": 0,
+          "connectedConnectionCount": 0,
+          "checkedEndpointCount": 0,
+          "connectedEndpointCount": 0,
+          "issues": []
+        },
+        "physicalPadOverlaps": 0,
+        "padClearanceViolations": 0,
+        "drillViolations": 0,
+        "aliasMismatches": 0,
+        "unknownSourcePorts": 0,
+        "unanchoredReuse": 0,
+        "inputUnchanged": true
+      },
+      "comparison": {
+        "sample": "glider-spaced",
+        "before": 137,
+        "after": 137,
+        "vias": [
+          69,
+          69
+        ],
+        "length": [
+          543.629893455855,
+          543.629893455855
+        ],
+        "gained": [],
+        "lost": [],
+        "longer": []
+      }
+    }
+  ],
+  "totals": {
+    "escapes": [
+      721,
+      725
+    ],
+    "vias": [
+      449,
+      431
+    ],
+    "length": [
+      2390.712716706259,
+      2369.79102984556
+    ]
+  }
+}

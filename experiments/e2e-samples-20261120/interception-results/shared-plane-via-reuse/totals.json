@@ -1,0 +1,26 @@
+{
+  "requested": 1024,
+  "rawBefore": 702,
+  "rawAfter": 723,
+  "matchedBefore": 700,
+  "matchedAfter": 723,
+  "matchedImprovementPercent": 3.2857142857142856,
+  "partialViasBefore": 430,
+  "partialViasAfter": 429,
+  "fullBoardsBefore": 0,
+  "fullBoardsAfter": 0,
+  "controlled": {
+    "escapes": [
+      721,
+      725
+    ],
+    "vias": [
+      449,
+      431
+    ],
+    "length": [
+      2390.712716706259,
+      2369.79102984556
+    ]
+  }
+}
