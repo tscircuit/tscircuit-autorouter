@@ -17,6 +17,8 @@ jobs:
         sample: ["butterstick-original", "butterstick-spaced", "glider-original", "glider-spaced", "h616-original", "h616-spaced", "icepi-original", "icepi-spaced", "imx6-original", "imx6-spaced"]
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: 6e04803dd1d642822782a79bf3743cc8b844a186
       - uses: actions/checkout@v4
         with:
           repository: tscircuit/core
@@ -42,7 +44,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: tscircuit/fanout-solver
-          ref: ee0c50148fb4a8073022bda1c63e1a6902d4b8e7
+          ref: 02d798e4357a39804f9744b059baabc3e94b4612
           path: fanout-patch
       - name: Apply exact fanout source patch
         run: |
@@ -50,7 +52,10 @@ jobs:
           import shutil
           from pathlib import Path
           files=['lib/fanout-solver.ts','lib/route-remaining-plane-buses.ts','lib/route-bus/types.ts','lib/route-bus/plan-clearance.ts','lib/route-bus/plan-mutual-clearance.ts','lib/route-bus/route-plane-terminated-bus.ts','lib/route-bus/route-bus-alternatives-steps.ts','lib/route-bus/get-existing-plane-vias.ts','lib/route-bus/get-plane-via-reuse-alternative.ts']
-          for name in files:shutil.copyfile(Path('fanout-patch')/name,Path('core/node_modules/@tscircuit/fanout-solver')/name)
+          for name in files:
+              source=Path('fanout-patch')/name;target=Path('core/node_modules/@tscircuit/fanout-solver')/name
+              shutil.copyfile(source,target)
+              assert source.read_bytes()==target.read_bytes()
           PYPATCH
       - name: Prepare exact uploaded sources and record dependency revisions
         run: |
@@ -98,7 +103,7 @@ jobs:
           revisions['fanoutStaticSourceSha256']=hashlib.sha256(static).hexdigest()
           assert revisions['fanoutStaticSourceSha256']=='fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35'
           revisions['corePatchApplied']=False
-          revisions['fanoutPatchCommit']='ee0c50148fb4a8073022bda1c63e1a6902d4b8e7'
+          revisions['fanoutPatchCommit']='02d798e4357a39804f9744b059baabc3e94b4612'
           (runtime/'revisions.json').write_text(json.dumps(revisions,indent=2)+'\n')
           print(json.dumps(revisions))
           PYSAMPLES
@@ -143,7 +148,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: tscircuit/fanout-solver
-          ref: ee0c50148fb4a8073022bda1c63e1a6902d4b8e7
+          ref: 02d798e4357a39804f9744b059baabc3e94b4612
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.4.3
