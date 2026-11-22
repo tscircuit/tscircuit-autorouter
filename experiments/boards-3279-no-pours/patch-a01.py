@@ -11,8 +11,7 @@ const y=this.gridOrigin.y+(row+0.5)*this.cellSizeMm;
 const center={x:transform.a*x+transform.b*y+transform.c,y:transform.d*x+transform.e*y+transform.f};
 const requiredDistance=this.viaMinDistFromPort;
 const root=this.connIdToRootNet[activeConn];
-const startZ=this.layerToZ.get(this.activeConnSeg.startZ),endZ=this.layerToZ.get(this.activeConnSeg.endZ);
-return this.nodeWithPortPoints.portPoints.some(port=>port.z!==startZ&&port.z!==endZ&&(port.rootConnectionName??port.connectionName.replace(/_mst\\d+$/,""))!==root&&(port.x-center.x)**2+(port.y-center.y)**2<requiredDistance**2)
+return this.nodeWithPortPoints.portPoints.some(port=>(port.rootConnectionName??port.connectionName.replace(/_mst\\d+$/,""))!==root&&(port.x-center.x)**2+(port.y-center.y)**2<requiredDistance**2)
 }'''
 provenance = []
 for path in sorted((package / 'dist').glob('**/*.js')):
@@ -58,10 +57,16 @@ for path in sorted((package / 'dist').glob('**/*.js')):
     physical_model = re.compile(r'layerCount:([\w$]+)\.layerCount,useGrowShrinkHighDensityIntraNodeSolver:')
     assert len(physical_model.findall(patched)) == 1, path
     patched = physical_model.sub(lambda model: f'layerCount:{model[1]}.layerCount,allowBlindAndBuriedVias:{model[1]}.allowBlindAndBuriedVias,useGrowShrinkHighDensityIntraNodeSolver:', patched)
+    repair = re.search(r'solverName:"highDensityRepairSolver",solverClass:[\w$]+,getConstructorParams:([\w$]+)=>\[\{', patched)
+    assert repair or worker, path
+    if repair:
+        config_at = repair.end()
+        field = f'fixedHdRoutes:{repair[1]}.highDensityRouteSolver.getUpdatedFixedHdRoutes().filter(route=>route.isFixed===true),'
+        patched = patched[:config_at] + field + patched[config_at:]
     output = outer[:worker.start(1)] + json.dumps(patched) + outer[worker.end(1):] if worker else patched
     path.write_text(output)
-    provenance.append({'file': str(path.relative_to(package)), 'before': hashlib.sha256(outer.encode()).hexdigest(), 'after': hashlib.sha256(output.encode()).hexdigest(), 'a01Classes': 1, 'embeddedWorker': bool(worker)})
+    provenance.append({'file': str(path.relative_to(package)), 'before': hashlib.sha256(outer.encode()).hexdigest(), 'after': hashlib.sha256(output.encode()).hexdigest(), 'a01Classes': 1, 'embeddedWorker': bool(worker), 'fixedRepairContext': bool(repair)})
 assert any(row['file'] == 'dist/index.js' for row in provenance)
-report = {'sourceRepo': 'tscircuit/high-density-a01', 'sourceRepro': '429bb0b', 'sourceFix': '5e7fd27', 'change': 'Reserve through-via clearance around foreign ports outside the connection endpoint layers. Physical regional through-via repairs only. Original grid, order, costs and budgets retained.', 'bundles': provenance}
+report = {'sourceRepo': 'tscircuit/high-density-a01', 'sourceRepro': '429bb0b', 'sourceFix': 'ef5f73daea12db0cfcb12e7ad61ebd54bde3549e', 'change': 'Reserve through-via clearance around foreign ports for physical regional repairs. Forward the board via model and immutable preloaded routes to the existing final repair adapter. Original grid, order, costs and budgets retained.', 'bundles': provenance}
 Path(sys.argv[2]).write_text(json.dumps(report, indent=2) + '\n')
 print(json.dumps(report, indent=2))

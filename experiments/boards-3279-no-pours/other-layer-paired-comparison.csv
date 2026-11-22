@@ -1,0 +1,20 @@
+board,beforeStage,afterStage,beforeStop,afterStop,beforeTraces,afterTraces,beforeVias,afterVias,sameCopper,sameErrorCounts,beforeSeconds,afterSeconds
+butterstick-local,bus,bus,600-second render budget,600-second render budget,,,,,,True,600.077,600.184
+butterstick-native,fanout,fanout,settled,settled,0,0,0,0,True,True,199.747,215.55
+butterstick-spaced,bus,bus,600-second render budget,600-second render budget,,,,,,True,600.204,600.302
+glider-local,highDensityRouteSolver,highDensityRouteSolver,settled,settled,53,53,97,97,True,True,353.636,343.947
+glider-native,fanout,fanout,settled,settled,0,0,0,0,True,True,165.657,167.575
+glider-spaced,portPointPathingSolver,portPointPathingSolver,settled,settled,53,53,92,92,True,True,357.242,368.751
+h616-default-order-local,portPointPathingSolver,portPointPathingSolver,settled,settled,16,16,32,32,True,True,31.321,32.46
+h616-local,portPointPathingSolver,portPointPathingSolver,settled,settled,16,16,32,32,True,True,53.601,56.984
+h616-native,fanout,fanout,settled,settled,0,0,0,0,True,True,335.344,341.84
+h616-spaced,portPointPathingSolver,portPointPathingSolver,settled,settled,16,16,32,32,True,True,30.7,32.435
+icepi-local,highDensityRouteSolver,highDensityRouteSolver,settled,settled,16,16,30,30,True,True,167.714,179.507
+icepi-native,fanout,fanout,settled,settled,0,0,0,0,True,True,74.857,68.282
+icepi-spaced,highDensityRouteSolver,highDensityRouteSolver,settled,settled,52,52,98,98,False,False,393.158,543.928
+imx6-local,highDensityRouteSolver,highDensityRouteSolver,600-second render budget,600-second render budget,,,,,,True,600.907,600.462
+imx6-native,fanout,fanout,settled,settled,0,0,0,0,True,True,94.052,100.519
+imx6-spaced,highDensityRouteSolver,highDensityRouteSolver,settled,settled,17,17,30,30,True,True,553.415,525.786
+orangecrab-local,highDensityRouteSolver,highDensityRouteSolver,settled,settled,52,52,97,97,False,True,178.584,165.957
+orangecrab-native,fanout,fanout,settled,settled,0,0,0,0,True,True,558.826,550.436
+orangecrab-spaced,highDensityRouteSolver,highDensityRouteSolver,settled,settled,52,52,103,103,True,True,252.8,261.14

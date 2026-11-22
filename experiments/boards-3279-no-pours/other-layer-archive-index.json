@@ -1,0 +1,2826 @@
+[
+  {
+    "file": "bun.lock",
+    "bytes": 68721
+  },
+  {
+    "file": "matrix.json",
+    "bytes": 7242
+  },
+  {
+    "file": "other-layer-fix/butterstick-local/bus-1-input.json.gz",
+    "bytes": 892796
+  },
+  {
+    "file": "fix-provenance.json",
+    "bytes": 1125
+  },
+  {
+    "file": "other-layer-fix/butterstick-local/bus-2-input.json.gz",
+    "bytes": 892670
+  },
+  {
+    "file": "other-layer-fix/butterstick-local/bus-3-input.json.gz",
+    "bytes": 893817
+  },
+  {
+    "file": "other-layer-fix/butterstick-local/bus-4-input.json.gz",
+    "bytes": 894809
+  },
+  {
+    "file": "other-layer-fix/butterstick-local/bus-5-input.json.gz",
+    "bytes": 894676
+  },
+  {
+    "file": "other-layer-fix/butterstick-local/end-1.srj.json.gz",
+    "bytes": 895333
+  },
+  {
+    "file": "other-layer-fix/butterstick-local/events.jsonl",
+    "bytes": 37827
+  },
+  {
+    "file": "other-layer-fix/butterstick-local/result.json",
+    "bytes": 142
+  },
+  {
+    "file": "other-layer-fix/butterstick-local/run.log",
+    "bytes": 246
+  },
+  {
+    "file": "other-layer-fix/butterstick-local/start-1.srj.json.gz",
+    "bytes": 893428
+  },
+  {
+    "file": "other-layer-fix/butterstick-local/start-2.srj.json.gz",
+    "bytes": 895381
+  },
+  {
+    "file": "other-layer-fix/butterstick-native/error-1.srj.json.gz",
+    "bytes": 1284775
+  },
+  {
+    "file": "other-layer-fix/butterstick-native/fanout-1-best.json.gz",
+    "bytes": 1377417
+  },
+  {
+    "file": "other-layer-fix/butterstick-native/events.jsonl",
+    "bytes": 7037
+  },
+  {
+    "file": "other-layer-fix/butterstick-native/circuit.json.gz",
+    "bytes": 229736
+  },
+  {
+    "file": "other-layer-fix/butterstick-native/fanout-1-input.json.gz",
+    "bytes": 1284930
+  },
+  {
+    "file": "other-layer-fix/butterstick-native/run.log",
+    "bytes": 1286
+  },
+  {
+    "file": "other-layer-fix/butterstick-native/fanout-checkpoint.json.gz",
+    "bytes": 1377376
+  },
+  {
+    "file": "other-layer-fix/butterstick-native/result.json",
+    "bytes": 401
+  },
+  {
+    "file": "other-layer-fix/butterstick-native/start-1.srj.json.gz",
+    "bytes": 1284775
+  },
+  {
+    "file": "other-layer-fix/butterstick-spaced/bus-1-input.json.gz",
+    "bytes": 890980
+  },
+  {
+    "file": "other-layer-fix/butterstick-spaced/bus-2-input.json.gz",
+    "bytes": 890840
+  },
+  {
+    "file": "other-layer-fix/butterstick-spaced/bus-3-input.json.gz",
+    "bytes": 892022
+  },
+  {
+    "file": "other-layer-fix/butterstick-spaced/bus-4-input.json.gz",
+    "bytes": 893068
+  },
+  {
+    "file": "other-layer-fix/butterstick-spaced/bus-5-input.json.gz",
+    "bytes": 892956
+  },
+  {
+    "file": "other-layer-fix/butterstick-spaced/result.json",
+    "bytes": 143
+  },
+  {
+    "file": "other-layer-fix/butterstick-spaced/end-1.srj.json.gz",
+    "bytes": 892697
+  },
+  {
+    "file": "other-layer-fix/butterstick-spaced/events.jsonl",
+    "bytes": 31227
+  },
+  {
+    "file": "other-layer-fix/butterstick-spaced/run.log",
+    "bytes": 246
+  },
+  {
+    "file": "other-layer-fix/butterstick-spaced/start-1.srj.json.gz",
+    "bytes": 890677
+  },
+  {
+    "file": "other-layer-fix/butterstick-spaced/start-2.srj.json.gz",
+    "bytes": 892757
+  },
+  {
+    "file": "other-layer-fix/glider-local/bus-1-input.json.gz",
+    "bytes": 974826
+  },
+  {
+    "file": "other-layer-fix/glider-local/bus-2-input.json.gz",
+    "bytes": 975613
+  },
+  {
+    "file": "other-layer-fix/glider-local/circuit.json.gz",
+    "bytes": 203294
+  },
+  {
+    "file": "other-layer-fix/glider-local/density-1795373918834.json.gz",
+    "bytes": 3966
+  },
+  {
+    "file": "other-layer-fix/glider-local/density-1795373919118.json.gz",
+    "bytes": 4749
+  },
+  {
+    "file": "other-layer-fix/glider-local/density-1795373919428.json.gz",
+    "bytes": 5654
+  },
+  {
+    "file": "other-layer-fix/glider-local/density-1795373920101.json.gz",
+    "bytes": 11072
+  },
+  {
+    "file": "other-layer-fix/glider-local/density-1795373921005.json.gz",
+    "bytes": 8893
+  },
+  {
+    "file": "other-layer-fix/glider-local/density-1795373921299.json.gz",
+    "bytes": 10567
+  },
+  {
+    "file": "other-layer-fix/glider-local/density-1795373921849.json.gz",
+    "bytes": 4713
+  },
+  {
+    "file": "other-layer-fix/glider-local/density-1795373921591.json.gz",
+    "bytes": 13717
+  },
+  {
+    "file": "other-layer-fix/glider-local/density-1795373922120.json.gz",
+    "bytes": 6112
+  },
+  {
+    "file": "other-layer-fix/glider-local/density-1795373923574.json.gz",
+    "bytes": 7539
+  },
+  {
+    "file": "other-layer-fix/glider-local/density-1795373923845.json.gz",
+    "bytes": 9632
+  },
+  {
+    "file": "other-layer-fix/glider-local/density-1795373922995.json.gz",
+    "bytes": 12741
+  },
+  {
+    "file": "other-layer-fix/glider-local/density-1795373924125.json.gz",
+    "bytes": 11736
+  },
+  {
+    "file": "other-layer-fix/glider-local/density-1795373924420.json.gz",
+    "bytes": 13753
+  },
+  {
+    "file": "other-layer-fix/glider-local/density-1795373925885.json.gz",
+    "bytes": 11052
+  },
+  {
+    "file": "other-layer-fix/glider-local/density-1795373926190.json.gz",
+    "bytes": 13835
+  },
+  {
+    "file": "other-layer-fix/glider-local/density-1795373927702.json.gz",
+    "bytes": 13626
+  },
+  {
+    "file": "other-layer-fix/glider-local/density-1795373927961.json.gz",
+    "bytes": 3007
+  },
+  {
+    "file": "other-layer-fix/glider-local/density-1795373928575.json.gz",
+    "bytes": 4687
+  },
+  {
+    "file": "other-layer-fix/glider-local/density-1795373928297.json.gz",
+    "bytes": 4388
+  },
+  {
+    "file": "other-layer-fix/glider-local/density-1795373929488.json.gz",
+    "bytes": 2847
+  },
+  {
+    "file": "other-layer-fix/glider-local/density-1795373929760.json.gz",
+    "bytes": 4247
+  },
+  {
+    "file": "other-layer-fix/glider-local/end-1.srj.json.gz",
+    "bytes": 975499
+  },
+  {
+    "file": "other-layer-fix/glider-local/density-1795374110045.json.gz",
+    "bytes": 2300
+  },
+  {
+    "file": "other-layer-fix/glider-local/end-2.srj.json.gz",
+    "bytes": 976151
+  },
+  {
+    "file": "other-layer-fix/glider-local/end-3.srj.json.gz",
+    "bytes": 990682
+  },
+  {
+    "file": "other-layer-fix/glider-local/events.jsonl",
+    "bytes": 28056
+  },
+  {
+    "file": "other-layer-fix/glider-local/error-4.srj.json.gz",
+    "bytes": 1000701
+  },
+  {
+    "file": "other-layer-fix/glider-local/graph-1-1-input.json.gz",
+    "bytes": 1692802
+  },
+  {
+    "file": "other-layer-fix/glider-local/graph-2-1-input.json.gz",
+    "bytes": 1968236
+  },
+  {
+    "file": "other-layer-fix/glider-local/result.json",
+    "bytes": 362
+  },
+  {
+    "file": "other-layer-fix/glider-local/run.log",
+    "bytes": 1399
+  },
+  {
+    "file": "other-layer-fix/glider-local/stage-1-highDensityRouteSolver.json.gz",
+    "bytes": 1119567
+  },
+  {
+    "file": "other-layer-fix/glider-local/stage-1-uniformPortDistributionSolver.json.gz",
+    "bytes": 3214283
+  },
+  {
+    "file": "other-layer-fix/glider-local/stage-2-uniformPortDistributionSolver.json.gz",
+    "bytes": 3480342
+  },
+  {
+    "file": "other-layer-fix/glider-local/stage-2-highDensityRouteSolver.json.gz",
+    "bytes": 1405830
+  },
+  {
+    "file": "other-layer-fix/glider-local/start-1.srj.json.gz",
+    "bytes": 974752
+  },
+  {
+    "file": "other-layer-fix/glider-local/start-2.srj.json.gz",
+    "bytes": 975537
+  },
+  {
+    "file": "other-layer-fix/glider-local/start-4.srj.json.gz",
+    "bytes": 1000701
+  },
+  {
+    "file": "other-layer-fix/glider-local/start-3.srj.json.gz",
+    "bytes": 976874
+  },
+  {
+    "file": "other-layer-fix/glider-native/circuit.json.gz",
+    "bytes": 238946
+  },
+  {
+    "file": "other-layer-fix/glider-native/error-1.srj.json.gz",
+    "bytes": 1094325
+  },
+  {
+    "file": "other-layer-fix/glider-native/events.jsonl",
+    "bytes": 6583
+  },
+  {
+    "file": "other-layer-fix/glider-native/fanout-1-best.json.gz",
+    "bytes": 1191265
+  },
+  {
+    "file": "other-layer-fix/glider-native/fanout-1-input.json.gz",
+    "bytes": 1094521
+  },
+  {
+    "file": "other-layer-fix/glider-native/fanout-checkpoint.json.gz",
+    "bytes": 1191512
+  },
+  {
+    "file": "other-layer-fix/glider-native/result.json",
+    "bytes": 397
+  },
+  {
+    "file": "other-layer-fix/glider-native/run.log",
+    "bytes": 1281
+  },
+  {
+    "file": "other-layer-fix/glider-native/start-1.srj.json.gz",
+    "bytes": 1094325
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/bus-1-input.json.gz",
+    "bytes": 971364
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/circuit.json.gz",
+    "bytes": 199898
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/bus-2-input.json.gz",
+    "bytes": 972181
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795373928533.json.gz",
+    "bytes": 3366
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795373928928.json.gz",
+    "bytes": 4882
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795373929708.json.gz",
+    "bytes": 7644
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795373929327.json.gz",
+    "bytes": 6792
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795373930095.json.gz",
+    "bytes": 10750
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795373942524.json.gz",
+    "bytes": 3628
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795373943017.json.gz",
+    "bytes": 4900
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795373943420.json.gz",
+    "bytes": 6789
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795373943862.json.gz",
+    "bytes": 7680
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795373944281.json.gz",
+    "bytes": 10744
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795373954318.json.gz",
+    "bytes": 4885
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795373953947.json.gz",
+    "bytes": 3561
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795373954726.json.gz",
+    "bytes": 6731
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795373955100.json.gz",
+    "bytes": 8509
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795373955478.json.gz",
+    "bytes": 11011
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795373956054.json.gz",
+    "bytes": 5225
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795373956425.json.gz",
+    "bytes": 6570
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795373956795.json.gz",
+    "bytes": 8414
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795373957218.json.gz",
+    "bytes": 10211
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795373957603.json.gz",
+    "bytes": 12704
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795373958027.json.gz",
+    "bytes": 7940
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795373958458.json.gz",
+    "bytes": 8026
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795373958829.json.gz",
+    "bytes": 11642
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795373959202.json.gz",
+    "bytes": 12134
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795373959623.json.gz",
+    "bytes": 14745
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795373959935.json.gz",
+    "bytes": 7747
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795373960245.json.gz",
+    "bytes": 8846
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795373960933.json.gz",
+    "bytes": 10117
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795373960559.json.gz",
+    "bytes": 9321
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795373961265.json.gz",
+    "bytes": 12919
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795373972563.json.gz",
+    "bytes": 4535
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795373972950.json.gz",
+    "bytes": 6311
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795373973735.json.gz",
+    "bytes": 10089
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795373973329.json.gz",
+    "bytes": 9155
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795373974121.json.gz",
+    "bytes": 14816
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795373984658.json.gz",
+    "bytes": 2205
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795373985994.json.gz",
+    "bytes": 3808
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795373986372.json.gz",
+    "bytes": 4996
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795373986838.json.gz",
+    "bytes": 2214
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795373988093.json.gz",
+    "bytes": 3808
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795373988503.json.gz",
+    "bytes": 4996
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795373991117.json.gz",
+    "bytes": 5811
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795373991455.json.gz",
+    "bytes": 7795
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795373991811.json.gz",
+    "bytes": 8794
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795373992193.json.gz",
+    "bytes": 10449
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795373992600.json.gz",
+    "bytes": 15756
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374008034.json.gz",
+    "bytes": 7243
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374008367.json.gz",
+    "bytes": 7721
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374008725.json.gz",
+    "bytes": 9515
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374009068.json.gz",
+    "bytes": 10408
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374009439.json.gz",
+    "bytes": 15747
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374025574.json.gz",
+    "bytes": 7169
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374025920.json.gz",
+    "bytes": 8453
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374026254.json.gz",
+    "bytes": 9477
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374026644.json.gz",
+    "bytes": 11693
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374027002.json.gz",
+    "bytes": 15920
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374028679.json.gz",
+    "bytes": 4780
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374029073.json.gz",
+    "bytes": 5384
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374033019.json.gz",
+    "bytes": 4743
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374033394.json.gz",
+    "bytes": 5390
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374036931.json.gz",
+    "bytes": 4522
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374037319.json.gz",
+    "bytes": 5332
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374037812.json.gz",
+    "bytes": 10591
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374038145.json.gz",
+    "bytes": 13382
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374038493.json.gz",
+    "bytes": 14740
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374038835.json.gz",
+    "bytes": 16189
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374039175.json.gz",
+    "bytes": 18163
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374039560.json.gz",
+    "bytes": 10445
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374039934.json.gz",
+    "bytes": 13260
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374040312.json.gz",
+    "bytes": 14616
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374040705.json.gz",
+    "bytes": 16066
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374041102.json.gz",
+    "bytes": 18033
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374041428.json.gz",
+    "bytes": 10592
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374041772.json.gz",
+    "bytes": 13404
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374042110.json.gz",
+    "bytes": 14720
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374042437.json.gz",
+    "bytes": 16898
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374042793.json.gz",
+    "bytes": 18264
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374043174.json.gz",
+    "bytes": 10447
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374043544.json.gz",
+    "bytes": 13276
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374043940.json.gz",
+    "bytes": 14594
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374044341.json.gz",
+    "bytes": 16759
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374044728.json.gz",
+    "bytes": 18130
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374045064.json.gz",
+    "bytes": 11085
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374045391.json.gz",
+    "bytes": 12429
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374045731.json.gz",
+    "bytes": 15986
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374046083.json.gz",
+    "bytes": 16817
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374046419.json.gz",
+    "bytes": 18175
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374046743.json.gz",
+    "bytes": 11091
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374047085.json.gz",
+    "bytes": 12410
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374047423.json.gz",
+    "bytes": 15359
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374047755.json.gz",
+    "bytes": 16114
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374048118.json.gz",
+    "bytes": 18074
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374048789.json.gz",
+    "bytes": 7417
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374049109.json.gz",
+    "bytes": 11911
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374049512.json.gz",
+    "bytes": 12065
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374049848.json.gz",
+    "bytes": 17175
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374050230.json.gz",
+    "bytes": 7562
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374050616.json.gz",
+    "bytes": 7695
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374050988.json.gz",
+    "bytes": 12221
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374051384.json.gz",
+    "bytes": 12383
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374051768.json.gz",
+    "bytes": 17503
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374052103.json.gz",
+    "bytes": 10033
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374052460.json.gz",
+    "bytes": 11637
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374052808.json.gz",
+    "bytes": 12987
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374053157.json.gz",
+    "bytes": 16180
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374053560.json.gz",
+    "bytes": 16903
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374054357.json.gz",
+    "bytes": 11933
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374053948.json.gz",
+    "bytes": 10297
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374054788.json.gz",
+    "bytes": 13285
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374055218.json.gz",
+    "bytes": 16494
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374055642.json.gz",
+    "bytes": 17220
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374055978.json.gz",
+    "bytes": 10024
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374056332.json.gz",
+    "bytes": 11612
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374056705.json.gz",
+    "bytes": 13004
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374057056.json.gz",
+    "bytes": 15988
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374057426.json.gz",
+    "bytes": 16834
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374057805.json.gz",
+    "bytes": 10294
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374058223.json.gz",
+    "bytes": 11909
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374058626.json.gz",
+    "bytes": 13303
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374059042.json.gz",
+    "bytes": 16302
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374059474.json.gz",
+    "bytes": 17149
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374059813.json.gz",
+    "bytes": 10748
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374060164.json.gz",
+    "bytes": 11998
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374060537.json.gz",
+    "bytes": 13956
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374060902.json.gz",
+    "bytes": 15665
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374061272.json.gz",
+    "bytes": 16956
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374065487.json.gz",
+    "bytes": 6182
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374065830.json.gz",
+    "bytes": 8059
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374066532.json.gz",
+    "bytes": 11622
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374066855.json.gz",
+    "bytes": 15451
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/density-1795374067192.json.gz",
+    "bytes": 6396
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/end-1.srj.json.gz",
+    "bytes": 972325
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/end-2.srj.json.gz",
+    "bytes": 973011
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/end-3.srj.json.gz",
+    "bytes": 984966
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/error-4.srj.json.gz",
+    "bytes": 995051
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/events.jsonl",
+    "bytes": 48753
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/graph-1-1-input.json.gz",
+    "bytes": 1854095
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/graph-2-1-input.json.gz",
+    "bytes": 2132814
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/result.json",
+    "bytes": 363
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/run.log",
+    "bytes": 777
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/stage-1-highDensityRouteSolver.json.gz",
+    "bytes": 1118843
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/stage-1-uniformPortDistributionSolver.json.gz",
+    "bytes": 3402883
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/start-1.srj.json.gz",
+    "bytes": 971531
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/start-3.srj.json.gz",
+    "bytes": 973731
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/start-2.srj.json.gz",
+    "bytes": 972351
+  },
+  {
+    "file": "other-layer-fix/glider-spaced/start-4.srj.json.gz",
+    "bytes": 995051
+  },
+  {
+    "file": "other-layer-fix/h616-default-order-local/bus-1-input.json.gz",
+    "bytes": 157011
+  },
+  {
+    "file": "other-layer-fix/h616-default-order-local/circuit.json.gz",
+    "bytes": 80366
+  },
+  {
+    "file": "other-layer-fix/h616-default-order-local/bus-2-input.json.gz",
+    "bytes": 157876
+  },
+  {
+    "file": "other-layer-fix/h616-default-order-local/end-1.srj.json.gz",
+    "bytes": 157788
+  },
+  {
+    "file": "other-layer-fix/h616-default-order-local/end-2.srj.json.gz",
+    "bytes": 158548
+  },
+  {
+    "file": "other-layer-fix/h616-default-order-local/events.jsonl",
+    "bytes": 14208
+  },
+  {
+    "file": "other-layer-fix/h616-default-order-local/error-3.srj.json.gz",
+    "bytes": 159397
+  },
+  {
+    "file": "other-layer-fix/h616-default-order-local/graph-1-1-input.json.gz",
+    "bytes": 966304
+  },
+  {
+    "file": "other-layer-fix/h616-default-order-local/result.json",
+    "bytes": 370
+  },
+  {
+    "file": "other-layer-fix/h616-default-order-local/start-1.srj.json.gz",
+    "bytes": 156955
+  },
+  {
+    "file": "other-layer-fix/h616-default-order-local/run.log",
+    "bytes": 788
+  },
+  {
+    "file": "other-layer-fix/h616-default-order-local/start-2.srj.json.gz",
+    "bytes": 157821
+  },
+  {
+    "file": "other-layer-fix/h616-default-order-local/start-3.srj.json.gz",
+    "bytes": 159397
+  },
+  {
+    "file": "other-layer-fix/h616-local/bus-1-input.json.gz",
+    "bytes": 157011
+  },
+  {
+    "file": "other-layer-fix/h616-local/bus-2-input.json.gz",
+    "bytes": 157876
+  },
+  {
+    "file": "other-layer-fix/h616-local/circuit.json.gz",
+    "bytes": 80366
+  },
+  {
+    "file": "other-layer-fix/h616-local/end-1.srj.json.gz",
+    "bytes": 157788
+  },
+  {
+    "file": "other-layer-fix/h616-local/end-2.srj.json.gz",
+    "bytes": 158548
+  },
+  {
+    "file": "other-layer-fix/h616-local/error-3.srj.json.gz",
+    "bytes": 159672
+  },
+  {
+    "file": "other-layer-fix/h616-local/events.jsonl",
+    "bytes": 16288
+  },
+  {
+    "file": "other-layer-fix/h616-local/graph-1-1-input.json.gz",
+    "bytes": 971666
+  },
+  {
+    "file": "other-layer-fix/h616-local/graph-1-2-input.json.gz",
+    "bytes": 971684
+  },
+  {
+    "file": "other-layer-fix/h616-local/graph-1-3-input.json.gz",
+    "bytes": 971044
+  },
+  {
+    "file": "other-layer-fix/h616-local/result.json",
+    "bytes": 357
+  },
+  {
+    "file": "other-layer-fix/h616-local/run.log",
+    "bytes": 774
+  },
+  {
+    "file": "other-layer-fix/h616-local/start-1.srj.json.gz",
+    "bytes": 156955
+  },
+  {
+    "file": "other-layer-fix/h616-local/start-2.srj.json.gz",
+    "bytes": 157821
+  },
+  {
+    "file": "other-layer-fix/h616-local/start-3.srj.json.gz",
+    "bytes": 159672
+  },
+  {
+    "file": "other-layer-fix/h616-native/circuit.json.gz",
+    "bytes": 110121
+  },
+  {
+    "file": "other-layer-fix/h616-native/error-1.srj.json.gz",
+    "bytes": 229492
+  },
+  {
+    "file": "other-layer-fix/h616-native/fanout-1-best.json.gz",
+    "bytes": 315526
+  },
+  {
+    "file": "other-layer-fix/h616-native/events.jsonl",
+    "bytes": 13734
+  },
+  {
+    "file": "other-layer-fix/h616-native/fanout-1-input.json.gz",
+    "bytes": 229639
+  },
+  {
+    "file": "other-layer-fix/h616-native/fanout-checkpoint.json.gz",
+    "bytes": 315526
+  },
+  {
+    "file": "other-layer-fix/h616-native/run.log",
+    "bytes": 1281
+  },
+  {
+    "file": "other-layer-fix/h616-native/result.json",
+    "bytes": 393
+  },
+  {
+    "file": "other-layer-fix/h616-native/start-1.srj.json.gz",
+    "bytes": 229492
+  },
+  {
+    "file": "other-layer-fix/h616-spaced/bus-1-input.json.gz",
+    "bytes": 156770
+  },
+  {
+    "file": "other-layer-fix/h616-spaced/bus-2-input.json.gz",
+    "bytes": 157674
+  },
+  {
+    "file": "other-layer-fix/h616-spaced/circuit.json.gz",
+    "bytes": 80528
+  },
+  {
+    "file": "other-layer-fix/h616-spaced/end-1.srj.json.gz",
+    "bytes": 157588
+  },
+  {
+    "file": "other-layer-fix/h616-spaced/end-2.srj.json.gz",
+    "bytes": 158374
+  },
+  {
+    "file": "other-layer-fix/h616-spaced/events.jsonl",
+    "bytes": 14148
+  },
+  {
+    "file": "other-layer-fix/h616-spaced/error-3.srj.json.gz",
+    "bytes": 159215
+  },
+  {
+    "file": "other-layer-fix/h616-spaced/graph-1-1-input.json.gz",
+    "bytes": 1074840
+  },
+  {
+    "file": "other-layer-fix/h616-spaced/result.json",
+    "bytes": 358
+  },
+  {
+    "file": "other-layer-fix/h616-spaced/run.log",
+    "bytes": 775
+  },
+  {
+    "file": "other-layer-fix/h616-spaced/start-1.srj.json.gz",
+    "bytes": 156717
+  },
+  {
+    "file": "other-layer-fix/h616-spaced/start-2.srj.json.gz",
+    "bytes": 157621
+  },
+  {
+    "file": "other-layer-fix/h616-spaced/start-3.srj.json.gz",
+    "bytes": 159215
+  },
+  {
+    "file": "other-layer-fix/icepi-local/bus-1-input.json.gz",
+    "bytes": 588922
+  },
+  {
+    "file": "other-layer-fix/icepi-local/bus-2-input.json.gz",
+    "bytes": 589732
+  },
+  {
+    "file": "other-layer-fix/icepi-local/circuit.json.gz",
+    "bytes": 156105
+  },
+  {
+    "file": "other-layer-fix/icepi-local/end-1.srj.json.gz",
+    "bytes": 587015
+  },
+  {
+    "file": "other-layer-fix/icepi-local/density-1795373954431.json.gz",
+    "bytes": 2460
+  },
+  {
+    "file": "other-layer-fix/icepi-local/end-2.srj.json.gz",
+    "bytes": 587714
+  },
+  {
+    "file": "other-layer-fix/icepi-local/error-3.srj.json.gz",
+    "bytes": 588486
+  },
+  {
+    "file": "other-layer-fix/icepi-local/graph-1-1-input.json.gz",
+    "bytes": 1788184
+  },
+  {
+    "file": "other-layer-fix/icepi-local/events.jsonl",
+    "bytes": 20024
+  },
+  {
+    "file": "other-layer-fix/icepi-local/graph-1-2-input.json.gz",
+    "bytes": 1788890
+  },
+  {
+    "file": "other-layer-fix/icepi-local/graph-1-3-input.json.gz",
+    "bytes": 1788908
+  },
+  {
+    "file": "other-layer-fix/icepi-local/result.json",
+    "bytes": 361
+  },
+  {
+    "file": "other-layer-fix/icepi-local/run.log",
+    "bytes": 1400
+  },
+  {
+    "file": "other-layer-fix/icepi-local/stage-1-highDensityRouteSolver.json.gz",
+    "bytes": 730452
+  },
+  {
+    "file": "other-layer-fix/icepi-local/stage-1-uniformPortDistributionSolver.json.gz",
+    "bytes": 2979408
+  },
+  {
+    "file": "other-layer-fix/icepi-local/start-1.srj.json.gz",
+    "bytes": 586243
+  },
+  {
+    "file": "other-layer-fix/icepi-local/start-2.srj.json.gz",
+    "bytes": 587055
+  },
+  {
+    "file": "other-layer-fix/icepi-local/start-3.srj.json.gz",
+    "bytes": 588486
+  },
+  {
+    "file": "other-layer-fix/icepi-native/error-1.srj.json.gz",
+    "bytes": 715879
+  },
+  {
+    "file": "other-layer-fix/icepi-native/circuit.json.gz",
+    "bytes": 207441
+  },
+  {
+    "file": "other-layer-fix/icepi-native/events.jsonl",
+    "bytes": 4370
+  },
+  {
+    "file": "other-layer-fix/icepi-native/fanout-1-best.json.gz",
+    "bytes": 728900
+  },
+  {
+    "file": "other-layer-fix/icepi-native/result.json",
+    "bytes": 395
+  },
+  {
+    "file": "other-layer-fix/icepi-native/fanout-1-input.json.gz",
+    "bytes": 715734
+  },
+  {
+    "file": "other-layer-fix/icepi-native/run.log",
+    "bytes": 1280
+  },
+  {
+    "file": "other-layer-fix/icepi-native/start-1.srj.json.gz",
+    "bytes": 715879
+  },
+  {
+    "file": "other-layer-fix/icepi-spaced/bus-1-input.json.gz",
+    "bytes": 583530
+  },
+  {
+    "file": "other-layer-fix/icepi-spaced/bus-2-input.json.gz",
+    "bytes": 584353
+  },
+  {
+    "file": "other-layer-fix/icepi-spaced/circuit.json.gz",
+    "bytes": 174789
+  },
+  {
+    "file": "other-layer-fix/icepi-spaced/density-1795374336811.json.gz",
+    "bytes": 15673
+  },
+  {
+    "file": "other-layer-fix/icepi-spaced/end-1.srj.json.gz",
+    "bytes": 584271
+  },
+  {
+    "file": "other-layer-fix/icepi-spaced/end-2.srj.json.gz",
+    "bytes": 585054
+  },
+  {
+    "file": "other-layer-fix/icepi-spaced/end-3.srj.json.gz",
+    "bytes": 601830
+  },
+  {
+    "file": "other-layer-fix/icepi-spaced/error-4.srj.json.gz",
+    "bytes": 608113
+  },
+  {
+    "file": "other-layer-fix/icepi-spaced/events.jsonl",
+    "bytes": 33445
+  },
+  {
+    "file": "other-layer-fix/icepi-spaced/graph-1-1-input.json.gz",
+    "bytes": 1889805
+  },
+  {
+    "file": "other-layer-fix/icepi-spaced/graph-1-2-input.json.gz",
+    "bytes": 1890686
+  },
+  {
+    "file": "other-layer-fix/icepi-spaced/graph-2-1-input.json.gz",
+    "bytes": 2136279
+  },
+  {
+    "file": "other-layer-fix/icepi-spaced/result.json",
+    "bytes": 542
+  },
+  {
+    "file": "other-layer-fix/icepi-spaced/run.log",
+    "bytes": 1057335
+  },
+  {
+    "file": "other-layer-fix/icepi-spaced/stage-1-highDensityRouteSolver.json.gz",
+    "bytes": 713127
+  },
+  {
+    "file": "other-layer-fix/icepi-spaced/stage-1-uniformPortDistributionSolver.json.gz",
+    "bytes": 3089904
+  },
+  {
+    "file": "other-layer-fix/icepi-spaced/stage-2-highDensityRouteSolver.json.gz",
+    "bytes": 944358
+  },
+  {
+    "file": "other-layer-fix/icepi-spaced/stage-2-uniformPortDistributionSolver.json.gz",
+    "bytes": 3299055
+  },
+  {
+    "file": "other-layer-fix/icepi-spaced/start-1.srj.json.gz",
+    "bytes": 583487
+  },
+  {
+    "file": "other-layer-fix/icepi-spaced/start-2.srj.json.gz",
+    "bytes": 584310
+  },
+  {
+    "file": "other-layer-fix/icepi-spaced/start-3.srj.json.gz",
+    "bytes": 585828
+  },
+  {
+    "file": "other-layer-fix/icepi-spaced/start-4.srj.json.gz",
+    "bytes": 608113
+  },
+  {
+    "file": "other-layer-fix/imx6-local/bus-1-input.json.gz",
+    "bytes": 1006393
+  },
+  {
+    "file": "other-layer-fix/imx6-local/bus-2-input.json.gz",
+    "bytes": 1007316
+  },
+  {
+    "file": "other-layer-fix/imx6-local/bus-3-input.json.gz",
+    "bytes": 1007293
+  },
+  {
+    "file": "other-layer-fix/imx6-local/bus-4-input.json.gz",
+    "bytes": 1008046
+  },
+  {
+    "file": "other-layer-fix/imx6-local/end-1.srj.json.gz",
+    "bytes": 1005433
+  },
+  {
+    "file": "other-layer-fix/imx6-local/end-2.srj.json.gz",
+    "bytes": 1006543
+  },
+  {
+    "file": "other-layer-fix/imx6-local/graph-1-1-input.json.gz",
+    "bytes": 2358129
+  },
+  {
+    "file": "other-layer-fix/imx6-local/events.jsonl",
+    "bytes": 29172
+  },
+  {
+    "file": "other-layer-fix/imx6-local/graph-1-2-input.json.gz",
+    "bytes": 2358705
+  },
+  {
+    "file": "other-layer-fix/imx6-local/result.json",
+    "bytes": 135
+  },
+  {
+    "file": "other-layer-fix/imx6-local/run.log",
+    "bytes": 246
+  },
+  {
+    "file": "other-layer-fix/imx6-local/stage-1-highDensityRouteSolver.json.gz",
+    "bytes": 1156407
+  },
+  {
+    "file": "other-layer-fix/imx6-local/stage-1-uniformPortDistributionSolver.json.gz",
+    "bytes": 4125318
+  },
+  {
+    "file": "other-layer-fix/imx6-local/start-2.srj.json.gz",
+    "bytes": 1005487
+  },
+  {
+    "file": "other-layer-fix/imx6-local/start-1.srj.json.gz",
+    "bytes": 1004566
+  },
+  {
+    "file": "other-layer-fix/imx6-local/start-3.srj.json.gz",
+    "bytes": 1007510
+  },
+  {
+    "file": "other-layer-fix/imx6-native/error-1.srj.json.gz",
+    "bytes": 1360593
+  },
+  {
+    "file": "other-layer-fix/imx6-native/circuit.json.gz",
+    "bytes": 288103
+  },
+  {
+    "file": "other-layer-fix/imx6-native/events.jsonl",
+    "bytes": 4710
+  },
+  {
+    "file": "other-layer-fix/imx6-native/fanout-1-best.json.gz",
+    "bytes": 1378805
+  },
+  {
+    "file": "other-layer-fix/imx6-native/fanout-checkpoint.json.gz",
+    "bytes": 1378805
+  },
+  {
+    "file": "other-layer-fix/imx6-native/fanout-1-input.json.gz",
+    "bytes": 1360780
+  },
+  {
+    "file": "other-layer-fix/imx6-native/result.json",
+    "bytes": 395
+  },
+  {
+    "file": "other-layer-fix/imx6-native/run.log",
+    "bytes": 1278
+  },
+  {
+    "file": "other-layer-fix/imx6-spaced/bus-1-input.json.gz",
+    "bytes": 1005729
+  },
+  {
+    "file": "other-layer-fix/imx6-native/start-1.srj.json.gz",
+    "bytes": 1360593
+  },
+  {
+    "file": "other-layer-fix/imx6-spaced/bus-2-input.json.gz",
+    "bytes": 1006682
+  },
+  {
+    "file": "other-layer-fix/imx6-spaced/bus-3-input.json.gz",
+    "bytes": 1006661
+  },
+  {
+    "file": "other-layer-fix/imx6-spaced/circuit.json.gz",
+    "bytes": 213964
+  },
+  {
+    "file": "other-layer-fix/imx6-spaced/bus-4-input.json.gz",
+    "bytes": 1007352
+  },
+  {
+    "file": "other-layer-fix/imx6-spaced/density-1795374314663.json.gz",
+    "bytes": 853
+  },
+  {
+    "file": "other-layer-fix/imx6-spaced/end-1.srj.json.gz",
+    "bytes": 1005834
+  },
+  {
+    "file": "other-layer-fix/imx6-spaced/end-2.srj.json.gz",
+    "bytes": 1006827
+  },
+  {
+    "file": "other-layer-fix/imx6-spaced/error-3.srj.json.gz",
+    "bytes": 1007797
+  },
+  {
+    "file": "other-layer-fix/imx6-spaced/events.jsonl",
+    "bytes": 31362
+  },
+  {
+    "file": "other-layer-fix/imx6-spaced/graph-1-1-input.json.gz",
+    "bytes": 2678029
+  },
+  {
+    "file": "other-layer-fix/imx6-spaced/graph-1-3-input.json.gz",
+    "bytes": 2679560
+  },
+  {
+    "file": "other-layer-fix/imx6-spaced/graph-1-2-input.json.gz",
+    "bytes": 2678044
+  },
+  {
+    "file": "other-layer-fix/imx6-spaced/graph-1-4-input.json.gz",
+    "bytes": 2679575
+  },
+  {
+    "file": "other-layer-fix/imx6-spaced/result.json",
+    "bytes": 361
+  },
+  {
+    "file": "other-layer-fix/imx6-spaced/stage-1-highDensityRouteSolver.json.gz",
+    "bytes": 1157975
+  },
+  {
+    "file": "other-layer-fix/imx6-spaced/run.log",
+    "bytes": 1523
+  },
+  {
+    "file": "other-layer-fix/imx6-spaced/stage-1-uniformPortDistributionSolver.json.gz",
+    "bytes": 4520626
+  },
+  {
+    "file": "other-layer-fix/imx6-spaced/start-1.srj.json.gz",
+    "bytes": 1004936
+  },
+  {
+    "file": "other-layer-fix/imx6-spaced/start-3.srj.json.gz",
+    "bytes": 1007797
+  },
+  {
+    "file": "other-layer-fix/imx6-spaced/start-2.srj.json.gz",
+    "bytes": 1005890
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/bus-1-input.json.gz",
+    "bytes": 367667
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/bus-2-input.json.gz",
+    "bytes": 368501
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/circuit.json.gz",
+    "bytes": 114048
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373883481.json.gz",
+    "bytes": 8068
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373883722.json.gz",
+    "bytes": 11949
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373884471.json.gz",
+    "bytes": 11923
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373884147.json.gz",
+    "bytes": 8056
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373884584.json.gz",
+    "bytes": 5061
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373884728.json.gz",
+    "bytes": 7157
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373884871.json.gz",
+    "bytes": 8500
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373885028.json.gz",
+    "bytes": 10358
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373885257.json.gz",
+    "bytes": 12329
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373885349.json.gz",
+    "bytes": 5017
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373885448.json.gz",
+    "bytes": 5348
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373885582.json.gz",
+    "bytes": 7464
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373885805.json.gz",
+    "bytes": 8946
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373885974.json.gz",
+    "bytes": 11461
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373886222.json.gz",
+    "bytes": 8609
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373886477.json.gz",
+    "bytes": 7509
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373886346.json.gz",
+    "bytes": 5992
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373886623.json.gz",
+    "bytes": 9182
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373886772.json.gz",
+    "bytes": 10107
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373887042.json.gz",
+    "bytes": 6172
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373886947.json.gz",
+    "bytes": 11401
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373887306.json.gz",
+    "bytes": 9382
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373887173.json.gz",
+    "bytes": 7705
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373887483.json.gz",
+    "bytes": 10316
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373887669.json.gz",
+    "bytes": 11606
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373887783.json.gz",
+    "bytes": 5982
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373887937.json.gz",
+    "bytes": 7497
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373888078.json.gz",
+    "bytes": 8626
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373888248.json.gz",
+    "bytes": 10045
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373888410.json.gz",
+    "bytes": 11402
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373888539.json.gz",
+    "bytes": 6160
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373888661.json.gz",
+    "bytes": 7697
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373888808.json.gz",
+    "bytes": 8830
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373888962.json.gz",
+    "bytes": 10253
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373889136.json.gz",
+    "bytes": 11608
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373889413.json.gz",
+    "bytes": 6077
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373889663.json.gz",
+    "bytes": 4820
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373889796.json.gz",
+    "bytes": 6886
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373890108.json.gz",
+    "bytes": 9746
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373890215.json.gz",
+    "bytes": 4262
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373890334.json.gz",
+    "bytes": 4779
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373890488.json.gz",
+    "bytes": 6866
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373890829.json.gz",
+    "bytes": 9710
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373890630.json.gz",
+    "bytes": 9002
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373891019.json.gz",
+    "bytes": 6197
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373891095.json.gz",
+    "bytes": 4828
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373891192.json.gz",
+    "bytes": 7521
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373891307.json.gz",
+    "bytes": 8105
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373891432.json.gz",
+    "bytes": 8581
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373891568.json.gz",
+    "bytes": 10977
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373891658.json.gz",
+    "bytes": 4862
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373891787.json.gz",
+    "bytes": 7558
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373891911.json.gz",
+    "bytes": 8147
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373892053.json.gz",
+    "bytes": 8626
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373892206.json.gz",
+    "bytes": 11003
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373892305.json.gz",
+    "bytes": 4865
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373892421.json.gz",
+    "bytes": 7560
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373892534.json.gz",
+    "bytes": 8150
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373892682.json.gz",
+    "bytes": 8631
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373892819.json.gz",
+    "bytes": 11006
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373892936.json.gz",
+    "bytes": 4376
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373893062.json.gz",
+    "bytes": 5961
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373893193.json.gz",
+    "bytes": 7721
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373893344.json.gz",
+    "bytes": 9164
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373893545.json.gz",
+    "bytes": 10839
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373893905.json.gz",
+    "bytes": 8063
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373894058.json.gz",
+    "bytes": 9628
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373894228.json.gz",
+    "bytes": 12282
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373894331.json.gz",
+    "bytes": 5012
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373894577.json.gz",
+    "bytes": 8472
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373894728.json.gz",
+    "bytes": 10356
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373894441.json.gz",
+    "bytes": 6764
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373894928.json.gz",
+    "bytes": 12626
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373895171.json.gz",
+    "bytes": 6794
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373895391.json.gz",
+    "bytes": 10382
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373895295.json.gz",
+    "bytes": 8498
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373895571.json.gz",
+    "bytes": 12654
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373895798.json.gz",
+    "bytes": 6794
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373895937.json.gz",
+    "bytes": 8498
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373896039.json.gz",
+    "bytes": 10382
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373896237.json.gz",
+    "bytes": 12654
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373896338.json.gz",
+    "bytes": 5052
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373897257.json.gz",
+    "bytes": 7921
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373896741.json.gz",
+    "bytes": 10395
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373897401.json.gz",
+    "bytes": 10375
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373897899.json.gz",
+    "bytes": 6657
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373898076.json.gz",
+    "bytes": 7836
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373897762.json.gz",
+    "bytes": 5811
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373898248.json.gz",
+    "bytes": 9017
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373898503.json.gz",
+    "bytes": 5078
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373898649.json.gz",
+    "bytes": 5903
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373898376.json.gz",
+    "bytes": 4229
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373898793.json.gz",
+    "bytes": 7270
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373898955.json.gz",
+    "bytes": 8547
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373899071.json.gz",
+    "bytes": 4439
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373899191.json.gz",
+    "bytes": 5268
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373899340.json.gz",
+    "bytes": 6094
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373899506.json.gz",
+    "bytes": 7450
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373899686.json.gz",
+    "bytes": 8739
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373900395.json.gz",
+    "bytes": 5300
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373900954.json.gz",
+    "bytes": 12891
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373900519.json.gz",
+    "bytes": 6975
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373901317.json.gz",
+    "bytes": 8331
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373901461.json.gz",
+    "bytes": 9902
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373902013.json.gz",
+    "bytes": 8339
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373901662.json.gz",
+    "bytes": 12555
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373902323.json.gz",
+    "bytes": 12223
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373902697.json.gz",
+    "bytes": 8324
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373903140.json.gz",
+    "bytes": 5335
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373903047.json.gz",
+    "bytes": 12195
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373903400.json.gz",
+    "bytes": 8773
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373903551.json.gz",
+    "bytes": 10632
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373903897.json.gz",
+    "bytes": 5622
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373903786.json.gz",
+    "bytes": 5290
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373904012.json.gz",
+    "bytes": 7724
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373904154.json.gz",
+    "bytes": 9208
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373904336.json.gz",
+    "bytes": 11740
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373904582.json.gz",
+    "bytes": 8876
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373904683.json.gz",
+    "bytes": 5853
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373904816.json.gz",
+    "bytes": 7724
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373904945.json.gz",
+    "bytes": 9398
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373905112.json.gz",
+    "bytes": 10367
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373905280.json.gz",
+    "bytes": 11661
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373905371.json.gz",
+    "bytes": 6032
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373905495.json.gz",
+    "bytes": 7918
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373905638.json.gz",
+    "bytes": 9598
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373905789.json.gz",
+    "bytes": 10576
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373905976.json.gz",
+    "bytes": 11865
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373906092.json.gz",
+    "bytes": 5846
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373906212.json.gz",
+    "bytes": 7715
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373906342.json.gz",
+    "bytes": 8844
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373906493.json.gz",
+    "bytes": 10305
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373906657.json.gz",
+    "bytes": 11661
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373906766.json.gz",
+    "bytes": 6019
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373906911.json.gz",
+    "bytes": 7907
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/density-1795373950852.json.gz",
+    "bytes": 1203
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/end-1.srj.json.gz",
+    "bytes": 368424
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/end-2.srj.json.gz",
+    "bytes": 369124
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/end-3.srj.json.gz",
+    "bytes": 378565
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/error-4.srj.json.gz",
+    "bytes": 381677
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/events.jsonl",
+    "bytes": 52431
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/graph-1-1-input.json.gz",
+    "bytes": 1402428
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/graph-2-1-input.json.gz",
+    "bytes": 1654800
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/result.json",
+    "bytes": 364
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/run.log",
+    "bytes": 1397
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/stage-1-highDensityRouteSolver.json.gz",
+    "bytes": 463933
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/stage-1-uniformPortDistributionSolver.json.gz",
+    "bytes": 2309925
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/stage-2-highDensityRouteSolver.json.gz",
+    "bytes": 709245
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/stage-2-uniformPortDistributionSolver.json.gz",
+    "bytes": 2552232
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/start-1.srj.json.gz",
+    "bytes": 367621
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/start-2.srj.json.gz",
+    "bytes": 368455
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/start-4.srj.json.gz",
+    "bytes": 381677
+  },
+  {
+    "file": "other-layer-fix/orangecrab-local/start-3.srj.json.gz",
+    "bytes": 369757
+  },
+  {
+    "file": "other-layer-fix/orangecrab-native/circuit.json.gz",
+    "bytes": 137133
+  },
+  {
+    "file": "other-layer-fix/orangecrab-native/error-1.srj.json.gz",
+    "bytes": 468994
+  },
+  {
+    "file": "other-layer-fix/orangecrab-native/events.jsonl",
+    "bytes": 22785
+  },
+  {
+    "file": "other-layer-fix/orangecrab-native/fanout-1-best.json.gz",
+    "bytes": 584478
+  },
+  {
+    "file": "other-layer-fix/orangecrab-native/fanout-1-input.json.gz",
+    "bytes": 469181
+  },
+  {
+    "file": "other-layer-fix/orangecrab-native/result.json",
+    "bytes": 400
+  },
+  {
+    "file": "other-layer-fix/orangecrab-native/fanout-checkpoint.json.gz",
+    "bytes": 584478
+  },
+  {
+    "file": "other-layer-fix/orangecrab-native/run.log",
+    "bytes": 1287
+  },
+  {
+    "file": "other-layer-fix/orangecrab-native/start-1.srj.json.gz",
+    "bytes": 468994
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/bus-1-input.json.gz",
+    "bytes": 366169
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/bus-2-input.json.gz",
+    "bytes": 367032
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/circuit.json.gz",
+    "bytes": 113802
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373873578.json.gz",
+    "bytes": 2994
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373873760.json.gz",
+    "bytes": 8790
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373873648.json.gz",
+    "bytes": 6953
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373873868.json.gz",
+    "bytes": 9778
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373874043.json.gz",
+    "bytes": 10541
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373874126.json.gz",
+    "bytes": 5602
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373874083.json.gz",
+    "bytes": 3253
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373874171.json.gz",
+    "bytes": 8382
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373874220.json.gz",
+    "bytes": 8934
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373876790.json.gz",
+    "bytes": 3253
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373876831.json.gz",
+    "bytes": 5602
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373874282.json.gz",
+    "bytes": 9972
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373876886.json.gz",
+    "bytes": 8382
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373876936.json.gz",
+    "bytes": 8934
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373876992.json.gz",
+    "bytes": 9972
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373878307.json.gz",
+    "bytes": 5641
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373878372.json.gz",
+    "bytes": 7340
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373878447.json.gz",
+    "bytes": 8398
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373878548.json.gz",
+    "bytes": 10493
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373878700.json.gz",
+    "bytes": 12624
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373879244.json.gz",
+    "bytes": 6011
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373879283.json.gz",
+    "bytes": 2967
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373879331.json.gz",
+    "bytes": 7199
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373879376.json.gz",
+    "bytes": 9044
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373879499.json.gz",
+    "bytes": 10768
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373879432.json.gz",
+    "bytes": 9979
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373879559.json.gz",
+    "bytes": 3000
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373879620.json.gz",
+    "bytes": 7240
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373879724.json.gz",
+    "bytes": 9091
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373879831.json.gz",
+    "bytes": 10025
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373880027.json.gz",
+    "bytes": 10809
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373880067.json.gz",
+    "bytes": 2967
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373880110.json.gz",
+    "bytes": 7199
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373880181.json.gz",
+    "bytes": 9044
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373880234.json.gz",
+    "bytes": 9979
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373880336.json.gz",
+    "bytes": 3000
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373880296.json.gz",
+    "bytes": 10768
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373880393.json.gz",
+    "bytes": 7240
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373880527.json.gz",
+    "bytes": 9091
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373880786.json.gz",
+    "bytes": 10809
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373880638.json.gz",
+    "bytes": 10025
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373880828.json.gz",
+    "bytes": 4492
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373880893.json.gz",
+    "bytes": 7099
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373881028.json.gz",
+    "bytes": 9234
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373881136.json.gz",
+    "bytes": 10138
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373881289.json.gz",
+    "bytes": 10962
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373881352.json.gz",
+    "bytes": 5152
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373881438.json.gz",
+    "bytes": 6523
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373881494.json.gz",
+    "bytes": 7479
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373881540.json.gz",
+    "bytes": 9220
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373881686.json.gz",
+    "bytes": 9822
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373881747.json.gz",
+    "bytes": 5350
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373881823.json.gz",
+    "bytes": 6157
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373881917.json.gz",
+    "bytes": 7873
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373882042.json.gz",
+    "bytes": 10080
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373882086.json.gz",
+    "bytes": 4054
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373881964.json.gz",
+    "bytes": 9343
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373882136.json.gz",
+    "bytes": 6079
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373882204.json.gz",
+    "bytes": 7498
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373882433.json.gz",
+    "bytes": 13142
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373882313.json.gz",
+    "bytes": 9610
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373882487.json.gz",
+    "bytes": 4101
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373882639.json.gz",
+    "bytes": 7508
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373882884.json.gz",
+    "bytes": 3899
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373882761.json.gz",
+    "bytes": 9631
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373882946.json.gz",
+    "bytes": 5929
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373883020.json.gz",
+    "bytes": 8315
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373883289.json.gz",
+    "bytes": 13935
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373883161.json.gz",
+    "bytes": 9623
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373883332.json.gz",
+    "bytes": 6044
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373883374.json.gz",
+    "bytes": 7067
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373883476.json.gz",
+    "bytes": 9068
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373883588.json.gz",
+    "bytes": 10590
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373883739.json.gz",
+    "bytes": 12401
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373883797.json.gz",
+    "bytes": 3892
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373884074.json.gz",
+    "bytes": 9646
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373883985.json.gz",
+    "bytes": 6846
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373884339.json.gz",
+    "bytes": 7394
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373884529.json.gz",
+    "bytes": 5505
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373884611.json.gz",
+    "bytes": 7337
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373884570.json.gz",
+    "bytes": 6048
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373884656.json.gz",
+    "bytes": 8344
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373884705.json.gz",
+    "bytes": 10553
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373884796.json.gz",
+    "bytes": 5601
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373884742.json.gz",
+    "bytes": 2458
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373884843.json.gz",
+    "bytes": 8319
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373884963.json.gz",
+    "bytes": 10441
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373884897.json.gz",
+    "bytes": 9780
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373888658.json.gz",
+    "bytes": 4767
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373888944.json.gz",
+    "bytes": 7704
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373889083.json.gz",
+    "bytes": 9841
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373889127.json.gz",
+    "bytes": 4916
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373889196.json.gz",
+    "bytes": 5979
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373889244.json.gz",
+    "bytes": 6908
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373889480.json.gz",
+    "bytes": 9990
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373889523.json.gz",
+    "bytes": 2994
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373889294.json.gz",
+    "bytes": 7862
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373889586.json.gz",
+    "bytes": 7620
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373889690.json.gz",
+    "bytes": 9443
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373890012.json.gz",
+    "bytes": 11183
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373889796.json.gz",
+    "bytes": 10419
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373890051.json.gz",
+    "bytes": 3253
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373890093.json.gz",
+    "bytes": 6777
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373890144.json.gz",
+    "bytes": 9041
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373890197.json.gz",
+    "bytes": 9583
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373890261.json.gz",
+    "bytes": 10616
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373891621.json.gz",
+    "bytes": 6777
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373891573.json.gz",
+    "bytes": 3253
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373891672.json.gz",
+    "bytes": 9041
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373891732.json.gz",
+    "bytes": 9583
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373891800.json.gz",
+    "bytes": 10616
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373893174.json.gz",
+    "bytes": 5894
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373893248.json.gz",
+    "bytes": 8009
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373893331.json.gz",
+    "bytes": 9064
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373893431.json.gz",
+    "bytes": 11133
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373893775.json.gz",
+    "bytes": 6166
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373893651.json.gz",
+    "bytes": 13275
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373893818.json.gz",
+    "bytes": 2967
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373893861.json.gz",
+    "bytes": 7590
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373893911.json.gz",
+    "bytes": 9430
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373893968.json.gz",
+    "bytes": 10351
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373894029.json.gz",
+    "bytes": 11143
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373894075.json.gz",
+    "bytes": 3000
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373894124.json.gz",
+    "bytes": 7623
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373894224.json.gz",
+    "bytes": 9471
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373894342.json.gz",
+    "bytes": 10396
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373894494.json.gz",
+    "bytes": 11184
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373894535.json.gz",
+    "bytes": 2967
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373894687.json.gz",
+    "bytes": 7590
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373894741.json.gz",
+    "bytes": 9430
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373894868.json.gz",
+    "bytes": 11143
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373894800.json.gz",
+    "bytes": 10351
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373894910.json.gz",
+    "bytes": 3000
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373894957.json.gz",
+    "bytes": 7623
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373895175.json.gz",
+    "bytes": 10396
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373895052.json.gz",
+    "bytes": 9471
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373895329.json.gz",
+    "bytes": 11184
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373895375.json.gz",
+    "bytes": 4651
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795373895437.json.gz",
+    "bytes": 7511
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/density-1795374057318.json.gz",
+    "bytes": 1557
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/end-1.srj.json.gz",
+    "bytes": 367036
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/end-2.srj.json.gz",
+    "bytes": 367784
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/error-4.srj.json.gz",
+    "bytes": 381441
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/end-3.srj.json.gz",
+    "bytes": 378210
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/events.jsonl",
+    "bytes": 53819
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/graph-1-1-input.json.gz",
+    "bytes": 1892171
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/graph-2-2-input.json.gz",
+    "bytes": 2162124
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/graph-2-1-input.json.gz",
+    "bytes": 2159654
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/result.json",
+    "bytes": 403
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/run.log",
+    "bytes": 1076
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/stage-1-uniformPortDistributionSolver.json.gz",
+    "bytes": 2918207
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/stage-1-highDensityRouteSolver.json.gz",
+    "bytes": 458543
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/stage-2-highDensityRouteSolver.json.gz",
+    "bytes": 591863
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/stage-2-uniformPortDistributionSolver.json.gz",
+    "bytes": 3044312
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/start-2.srj.json.gz",
+    "bytes": 367075
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/start-1.srj.json.gz",
+    "bytes": 366213
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/start-3.srj.json.gz",
+    "bytes": 368463
+  },
+  {
+    "file": "other-layer-fix/orangecrab-spaced/start-4.srj.json.gz",
+    "bytes": 381441
+  },
+  {
+    "file": "runtime-versions.json",
+    "bytes": 893
+  }
+]

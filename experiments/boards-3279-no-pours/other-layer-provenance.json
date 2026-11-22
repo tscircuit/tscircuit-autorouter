@@ -1,0 +1,29 @@
+{
+  "sourceRepo": "tscircuit/high-density-a01",
+  "sourceRepro": "429bb0b",
+  "sourceFix": "5e7fd27",
+  "change": "Reserve through-via clearance around foreign ports outside the connection endpoint layers. Physical regional through-via repairs only. Original grid, order, costs and budgets retained.",
+  "bundles": [
+    {
+      "file": "dist/index.js",
+      "before": "85d09bea9a30fdfcc1cf30a29514993a9c8ef9efcb09813c8d9e43518bfdf48f",
+      "after": "c0b475033a5b7df9012e860986f0b4007b87358016928db7d22aa71666c86d09",
+      "a01Classes": 1,
+      "embeddedWorker": false
+    },
+    {
+      "file": "dist/runtime/bun.js",
+      "before": "50eb8454c4717c6bb49cc7cb71173e9fa836747b4110c157638bfefb620c3d0a",
+      "after": "6eacd05b7d4a734c4f0aea787207d3cdd5840fa465d535d63c5675cc73fbb047",
+      "a01Classes": 1,
+      "embeddedWorker": true
+    },
+    {
+      "file": "dist/runtime/node.js",
+      "before": "a8a37e74555dcf9d0c567c058712893788833b98849645271de08b8eb64c1522",
+      "after": "86b26cb64fb1960620a37e88a8f3728b2711555b1950a70c3ad030521aa88c1a",
+      "a01Classes": 1,
+      "embeddedWorker": true
+    }
+  ]
+}
