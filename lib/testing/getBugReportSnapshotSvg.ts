@@ -14,9 +14,12 @@ import {
  */
 export const getBugReportSnapshotSvg = (
   input: EvaluateRelaxedDrcInput,
-  options: { bounds?: EvaluateRelaxedDrcInput["inputSrj"]["bounds"] } = {},
+  options: {
+    bounds?: EvaluateRelaxedDrcInput["inputSrj"]["bounds"]
+    showErrorLocations?: boolean
+  } = {},
 ): string => {
-  const { errors } = evaluateRelaxedDrc(input)
+  const { errors, locationAwareErrors } = evaluateRelaxedDrc(input)
   const graphics = convertSrjToGraphicsObject({
     ...input.inputSrj,
     traces: combinePreloadedAndRoutedTraces(
@@ -25,7 +28,12 @@ export const getBugReportSnapshotSvg = (
     ),
   })
   // Connection debug dots obscure fine-pitch pads and escape traces.
-  graphics.points = []
+  graphics.points = options.showErrorLocations
+    ? locationAwareErrors.map(({ center, message }) => ({
+        ...center,
+        label: message,
+      }))
+    : []
   // An explicit frame keeps before/after cutouts at the same scale.
   if (options.bounds) {
     const { minX, minY, maxX, maxY } = options.bounds
@@ -41,6 +49,13 @@ export const getBugReportSnapshotSvg = (
     backgroundColor: "white",
   })
   const color = errors.length === 0 ? "#166534" : "#b91c1c"
-  const overlay = `<g data-testid="relaxed-drc-summary"><rect x="12" y="12" width="300" height="44" rx="6" fill="white" stroke="${color}"/><text x="24" y="40" font-family="Arial, sans-serif" font-size="20" font-weight="600" fill="${color}">Relaxed DRC errors: ${errors.length}</text></g>`
-  return svg.replace("</svg>", `${overlay}</svg>`)
+  const markerLegend = options.showErrorLocations
+    ? '<circle cx="24" cy="77" r="4" fill="white" stroke="#5b21b6" stroke-width="2"/><text x="36" y="82" font-family="Arial, sans-serif" font-size="15" fill="#351568">DRC location</text>'
+    : ""
+  const overlay = `<g data-testid="relaxed-drc-summary"><rect x="12" y="12" width="300" height="44" rx="6" fill="white" stroke="${color}"/><text x="24" y="40" font-family="Arial, sans-serif" font-size="20" font-weight="600" fill="${color}">Relaxed DRC errors: ${errors.length}</text>${markerLegend}</g>`
+  // Draw the markers above the copper, keeping their centers visible.
+  const markerStyle = options.showErrorLocations
+    ? '<style>circle[data-type="point"]{r:4px;fill:white;fill-opacity:0.35;stroke:#5b21b6;stroke-width:2}</style>'
+    : ""
+  return svg.replace("</svg>", `${markerStyle}${overlay}</svg>`)
 }
