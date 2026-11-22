@@ -6,6 +6,7 @@ import {
   stackGraphicsHorizontally,
 } from "graphics-debug"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
+import { createPipeline9AutoroutingDrcEvaluator } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/createPipeline9AutoroutingDrcEvaluator"
 import type { SimpleRouteJson } from "lib/types"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
 
@@ -30,12 +31,30 @@ test("routes STM32MP157 DDR signals around the four completed data bytes", async
   })
   solver.solve()
 
-  const output = solver.solved ? solver.getOutputSimpleRouteJson() : input
+  expect(solver.solved, solver.error ?? "").toBe(true)
+  const routes = solver.getOutputSimplifiedPcbTraces()
+  expect(new Set(routes.map((trace) => trace.connection_name))).toEqual(
+    new Set(input.connections.map((connection) => connection.name)),
+  )
+  expect(routes).toHaveLength(solver.srjWithPointPairs!.connections.length)
+  const checkCopper = createPipeline9AutoroutingDrcEvaluator({
+    inputSrj: input,
+    srjWithPointPairs: solver.srjWithPointPairs!,
+    includeBoardClearance: true,
+    clearanceTolerance: 1e-9,
+    drcOptions: {
+      traceClearance: input.minTraceToPadEdgeClearance,
+      viaToPadClearance: input.minViaEdgeToPadEdgeClearance,
+      viaClearance: input.minViaHoleEdgeToViaHoleEdgeClearance,
+      holeClearance: input.minTraceToHoleEdgeClearance,
+    },
+  })
+  expect(checkCopper(routes).errors).toEqual([])
+  const output = solver.getOutputSimpleRouteJson()
+  expect(output.traces?.filter((trace) => trace.isFixed)).toEqual(input.traces)
   const graphics = convertSrjToGraphicsObject(output)
   graphics.points = []
-  const status = solver.solved
-    ? "All 40 remaining nets routed"
-    : "Remaining routing failed"
+  const status = `All ${input.connections.length} remaining nets routed`
   await expect(
     getSvgFromGraphicsObject(
       stackGraphicsHorizontally([graphics], {

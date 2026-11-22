@@ -1,3 +1,12 @@
+import {
+  BgaEscapeRoutingSolver,
+  type BgaEscapeRoutingSolverInput,
+} from "lib/solvers/BgaEscapeRoutingSolver/BgaEscapeRoutingSolver"
+import {
+  getBgaEscapeRoutingInput,
+  type BgaEscapeBoard,
+} from "./getBgaEscapeRoutingInput"
+import { getBgaEscapeHdRoutes } from "./getBgaEscapeHdRoutes"
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import { Pipeline9HighDensityBatchSolver } from "./Pipeline9HighDensityBatchSolver"
 import {
@@ -39,8 +48,15 @@ import {
   preparePreloadedTerminalRoutes,
 } from "./pipeline9TerminalRoutes"
 
+type BgaEscapeAttempt = {
+  input: BgaEscapeRoutingSolverInput
+  solver: BgaEscapeRoutingSolver
+  regionalError: string
+}
+
 export type Pipeline9HighDensitySolverParams = {
   nodePortPoints: NodeWithPortPoints[]
+  bgaEscapeBoard?: BgaEscapeBoard
   fixedHdRoutes: PreloadedHighDensityRoute[]
   connMap: ConnectivityMap
   colorMap?: Record<string, string>
@@ -406,6 +422,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   activeFallbackReason: string | null = null
   activeNode: NodeWithPortPoints | null = null
 
+  private bgaEscapeAttempt?: BgaEscapeAttempt
   private asyncRunning = false
 
   constructor(private readonly params: Pipeline9HighDensitySolverParams) {
@@ -613,6 +630,10 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     while (!this.solved && !this.failed && this.iterations < stopAtIteration) {
       this.step()
     }
+  }
+
+  get completedBoardRoutes(): HighDensityIntraNodeRoute[] | undefined {
+    if (this.solved && this.bgaEscapeAttempt?.solver.solved) return this.routes
   }
 
   getUpdatedFixedHdRoutes(): PreloadedHighDensityRoute[] {
@@ -1157,6 +1178,10 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   }
 
   override _step(): void {
+    if (this.bgaEscapeAttempt) {
+      this.stepBgaEscapeRouting(this.bgaEscapeAttempt)
+      return
+    }
     this.stepNodeRouting()
     this.activeSubSolver =
       this.activeFallbackSolver ??
@@ -1178,16 +1203,52 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     )
   }
 
+  private stepBgaEscapeRouting(attempt: BgaEscapeAttempt): void {
+    const { input, solver, regionalError } = attempt
+    this.activeSubSolver = solver
+    solver.step()
+    if (!solver.solved && !solver.failed) return
+
+    this.activeSubSolver = null
+    if (solver.solved) {
+      const routes = getBgaEscapeHdRoutes({
+        ...input,
+        traces: solver.getOutput(),
+      })
+      if (routes) {
+        // This plan covers the original point pairs across node boundaries.
+        this.routes.splice(0, this.routes.length, ...routes)
+        this.unsolvedNodePortPoints.length = 0
+        this.stats.bgaEscapeRoutedPointPairs = routes.length
+        this.solved = true
+        return
+      }
+    }
+    this.failed = true
+    this.error = `${regionalError}. BGA escape routing: ${solver.error ?? "candidate violates board clearance"}`
+  }
+
   private stepNodeRouting(): void {
     if (this.activeFallbackSolver) {
       this.activeFallbackSolver.step()
       if (this.activeFallbackSolver.failed) {
         this.recordRegionalCandidateRejections()
-        this.error = [
+        const regionalError = [
           `Pipeline9 primary high-density routing failed: ${this.activeFallbackReason ?? "unknown error"}`,
           `regional fallback failed: ${this.activeFallbackSolver.error ?? "unknown error"}`,
         ].join("; ")
-        this.failed = true
+        const board = this.params.bgaEscapeBoard
+        const input = board && getBgaEscapeRoutingInput(board)
+        if (input) {
+          this.bgaEscapeAttempt = {
+            input,
+            solver: new BgaEscapeRoutingSolver(input),
+            regionalError,
+          }
+        } else {
+          this.error = regionalError
+          this.failed = true
+        }
         this.activeFallbackSolver = null
         this.activeFallbackFixedRouteSections.clear()
         this.activeFallbackFixedObstacleRoutes = []
@@ -1311,6 +1372,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
 
   override visualize(): GraphicsObject {
     return (
+      this.bgaEscapeAttempt?.solver.visualize() ??
       this.activeFallbackSolver?.visualize() ??
       this.activeRegularSolver?.visualize() ??
       this.activeB01Solver?.visualize() ?? {
