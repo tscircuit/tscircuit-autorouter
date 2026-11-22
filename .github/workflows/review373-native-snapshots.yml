@@ -1,0 +1,33 @@
+name: Generate native snapshots for reviewed plane via reuse
+on:
+  push:
+    branches: [analysis/review373-native-snapshots]
+permissions:
+  contents: read
+jobs:
+  snapshots:
+    runs-on: macos-15
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: 02d798e4357a39804f9744b059baabc3e94b4612
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: bun install --frozen-lockfile
+      - name: Update affected native assertions and snapshots
+        run: |
+          python3 - <<'PYUPDATE'
+          from pathlib import Path
+          p=Path('tests/butterstick-native-fanout.test.ts');p.write_text(p.read_text().replace('toHaveLength(63)','toHaveLength(64)').replace('{ valid: true, issues: [] }','{ valid: true, checkedViaCount: 42, issues: [] }'))
+          PYUPDATE
+          BUN_UPDATE_SNAPSHOTS=1 bun test tests/butterstick-native-fanout.test.ts tests/repro-unused-fanout-output-conversion.test.ts
+      - uses: actions/upload-artifact@v4
+        with:
+          name: reviewed-native-via-reuse-snapshots
+          path: |
+            tests/butterstick-native-fanout.test.ts
+            tests/__snapshots__/butterstick-native-fanout.snap.svg
+            tests/__snapshots__/repro-unused-fanout-output-conversion.snap.svg
