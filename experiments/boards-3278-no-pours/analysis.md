@@ -15,7 +15,7 @@ The first candidate was too broad and caused real autorouter CI regressions. It 
 
 The greedy finishing pass intentionally allows logical crossings of movable routes so downstream unraveling can resolve them. The original broad change forwarded every infinite cost from ordinary routing, suppressing these candidates and causing search exhaustion in previously working circuits. Restricting the greedy check to immutable copper preserves that recovery behavior. The existing crossing predicate is shared by moving it to the base class; no new search strategy, heuristic, or budget is introduced. Final-goal guards remain.
 
-The six fixed-copper crossings are verified with the existing crossing predicate, which excludes shared-angle boundary aliases. The previous 26-to-zero count mixed movable-route intersections and aliases with immutable copper conflicts and is not used as the corrected improvement claim. The replay and crossing pairs are in `fixed-copper-graph-replay.json`.
+The six fixed-copper crossings are verified with the existing crossing predicate, which excludes shared-angle boundary aliases. The previous 26-to-zero count included movable-route intersections and is not used as the corrected fixed-copper improvement claim. The replay and crossing pairs are in `fixed-copper-graph-replay.json`.
 
 The actual captured fragment keeps 18 regions and 19 ports from the observed before/after paths, retains fixed copper, seals the cut boundary, renames IDs, and translates the coordinate origin. Its native graph SVG changes from crossing the immutable wire to taking the real available detour.
 

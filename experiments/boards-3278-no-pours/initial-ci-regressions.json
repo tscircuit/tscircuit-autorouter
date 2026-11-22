@@ -18,6 +18,8 @@
     "nativeFixedTraceRouting": "pass; actualPCB SVG changed, inspected, both relaxedDRC0",
     "fullBoardDdrClearance": "pass; existingSVG unchanged"
   },
-  "freshCi": 45025863693,
-  "freshBenchmark": 45025676977
+  "freshCi": 45027269618,
+  "freshBenchmark": 45025676977,
+  "integrationHead": "40b0e1a696cd73f3abcbf92c753a24e81271ee75",
+  "snapshotAudit": "pinned-dependency-snapshot-audit.json"
 }

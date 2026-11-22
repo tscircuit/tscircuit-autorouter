@@ -1,0 +1,30 @@
+{
+  "dependencies": [
+    {
+      "package": "@tscircuit/high-density-a01",
+      "expectedCommit": "e9a3642aae9d45aadb197cd1386dec2142529217",
+      "files": 28,
+      "mismatches": []
+    },
+    {
+      "package": "@tscircuit/high-density-a13",
+      "expectedCommit": "4ae21d7a15c9fbfb30378c10f948aa168d7c9cb7",
+      "files": 28,
+      "mismatches": []
+    },
+    {
+      "package": "@tscircuit/high-density-b01",
+      "expectedCommit": "a224564f52635bb5dc8d120d43ef71f9437c7393",
+      "files": 22,
+      "mismatches": []
+    }
+  ],
+  "pcbSnapshot": {
+    "sha256": "d86a215674e4863478284e381cb7a87863a9540355efd66c3035738cea6d4abd",
+    "byteIdenticalToCiArtifact": 14756480609,
+    "generationCommand": "BUN_UPDATE_SNAPSHOTS=1 bun test tests/repro/pipeline9-h616-native-fixed-trace-force.test.ts --timeout 9999999",
+    "relaxedDrcErrors": 0
+  },
+  "integrationHead": "40b0e1a696cd73f3abcbf92c753a24e81271ee75",
+  "ciRun": 45027269618
+}
