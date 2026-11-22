@@ -1,0 +1,127 @@
+name: Check existing same-net API and independent via manufacturing constraints
+on:
+  push:
+    branches: [analysis/e2e-same-net-policy-2457]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  completion:
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        sample: [icepi-original, imx6-original, imx6-spaced, butterstick-original]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Install exact latest native packages
+        run: |
+          mkdir -p core/replay
+          cat > core/package.json <<'JSON'
+          {"name":"native-completion-diagnosis","private":true,"type":"module","dependencies":{"@tscircuit/fanout-solver":"0.0.102","@tscircuit/capacity-autorouter":"0.0.1152","graphics-debug":"0.0.99"}}
+          JSON
+          cd core
+          bun install --ignore-scripts
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 44992201437
+          name: full-circuit-interception-${{ matrix.sample }}
+          path: captures
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Compare original rules, plane-only sharing and global sharing
+        env:
+          SAMPLE: ${{ matrix.sample }}
+        run: |
+          cp core/node_modules/@tscircuit/fanout-solver/lib/route-bus/plan-mutual-clearance.ts core/replay/original-mutual.txt
+          cp core/node_modules/@tscircuit/fanout-solver/lib/route-bus/route-plane-terminated-bus.ts core/replay/original-plane.txt
+          cat > core/replay/run.ts <<'TS'
+          import { readFileSync, writeFileSync } from "node:fs"
+          import { gunzipSync, gzipSync } from "node:zlib"
+          const mode = process.argv[2]
+          const root = "../node_modules/@tscircuit/fanout-solver/lib/route-bus/"
+          const original = readFileSync("original-mutual.txt", "utf8")
+          const originalPlane = readFileSync("original-plane.txt", "utf8")
+          let plane = originalPlane
+          let mutual = original
+          if (mode === "plane_pairs" || mode === "combined") {
+            const before = "      allowSameNetMerges &&\n      connectionsShareElectricalNet("
+            if (mutual.split(before).length !== 2) throw new Error("Clearance marker changed")
+            mutual = mutual.replace(before, '      (allowSameNetMerges ||\n        (plan.termination.type === "plane" && otherPlan.termination.type === "plane")) &&\n      connectionsShareElectricalNet(')
+          }
+          if (mode.startsWith("centered")) {
+            const marker = "!pairChannelFitsVia && busIsOnOutwardComponentEdge(directionalBus)"
+            if (plane.split(marker).length !== 2) throw new Error("Centered candidate marker changed")
+            plane = plane.replace(marker, "!pairChannelFitsVia")
+          }
+          writeFileSync(root + "route-plane-terminated-bus.ts", plane)
+          writeFileSync(root + "plan-mutual-clearance.ts", mutual)
+          const { FanoutSolver } = await import("../node_modules/@tscircuit/fanout-solver/lib/fanout-solver")
+          const { validateRoutedCopperDrc } = await import("../node_modules/@tscircuit/fanout-solver/lib/validate-routed-copper-drc")
+          const sample = process.env.SAMPLE!
+          const folder = "../../captures/" + sample
+          const report = JSON.parse(readFileSync(folder + "/report.json", "utf8"))
+          const record = report.solvers.find((entry: {name:string}) => entry.name === "FanoutSolver")
+          const args = JSON.parse(gunzipSync(readFileSync(folder + "/solver-" + record.id + "-input.json.gz")).toString())
+          const [input, originalOptions] = args
+          const options = mode === "centered_global" ? {...originalOptions, allowSameNetMerges:true} : originalOptions
+          const solver = new FanoutSolver(input, options)
+          const start = performance.now()
+          solver.solve()
+          const best = Reflect.get(solver, "bestAttempt")
+          const output = best.outputSrj
+          const elapsedMs = performance.now() - start
+          const drc = validateRoutedCopperDrc({inputSrj:input, routedSrj:output, clearance:solver.config.clearance, allowBlindAndBuriedVias:solver.config.allowBlindAndBuriedVias})
+          const { distancePointToObstacle } = await import("../node_modules/@tscircuit/fanout-solver/lib/geometry")
+          const { getPlanVias } = await import("../node_modules/@tscircuit/fanout-solver/lib/route-bus/plan-copper")
+          const physicalViaInPad=[]
+          for(const p of best.plans)for(const via of getPlanVias(p))for(const pad of input.obstacles) {
+           if(!pad.isCopperPour && pad.layers.some(layer=>via.spanLayers.includes(layer)) && distancePointToObstacle(via.center,pad)<via.diameter/2-1e-9)physicalViaInPad.push({connection:p.connectionName,via:via.center,pad:pad.center})
+          }
+          const summary = {physicalViaInPadCount:physicalViaInPad.length,physicalViaInPad:physicalViaInPad.slice(0,4),sample,mode,elapsedMs,requested:input.connections.length,escapes:best.plans.length,planes:best.plans.filter(p=>p.termination.type==="plane").length,vias:drc.checkedViaCount,drcValid:drc.valid,issues:drc.issues,solved:solver.solved,failed:solver.failed,assignments:solver.attempts.length,planeHash:new Bun.CryptoHasher("sha256").update(plane).digest("hex"),mutualHash:new Bun.CryptoHasher("sha256").update(mutual).digest("hex")}
+          writeFileSync(mode+".json",JSON.stringify({summary,plans:best.plans,output,attempts:solver.attempts}))
+          console.log("COMPLETION_RESULT",JSON.stringify(summary))
+          if(mode==="before") {
+           writeFileSync("input.json.gz",gzipSync(JSON.stringify(args)))
+           writeFileSync("rejections.json.gz",readFileSync(folder+"/fanout-rejection-examples.json.gz"))
+          }
+          
+          TS
+          cd core/replay
+          bun run.ts before
+          bun run.ts centered
+          bun run.ts centered_global
+          python3 - <<'PY'
+          import json
+          rows=[json.load(open(mode+'.json'))['summary'] for mode in ['before','centered','centered_global']]
+          assert all(row['drcValid'] for row in rows)
+          print('COMPLETION_COMPARISON',json.dumps(rows))
+          baseline=set(p['connectionName'] for p in json.load(open('before.json'))['plans'])
+          for mode in ['centered','centered_global']:
+              current=set(p['connectionName'] for p in json.load(open(mode+'.json'))['plans'])
+              print('COMPLETION_DELTA',json.dumps({'mode':mode,'gained':sorted(current-baseline),'lost':sorted(baseline-current)}))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: completion-${{ matrix.sample }}
+          path: core/replay/*.json*
+      - name: Export native constructor input and rejection geometry
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import base64,zipfile,io
+          from pathlib import Path
+          stream=io.BytesIO()
+          with zipfile.ZipFile(stream,'w',zipfile.ZIP_DEFLATED) as z:
+              for name in ['input.json.gz','rejections.json.gz']:
+                  p=Path('core/replay')/name
+                  if p.exists():z.writestr(name,p.read_bytes())
+          print('COMPLETION_INPUT_BEGIN')
+          s=base64.b64encode(stream.getvalue()).decode()
+          for i in range(0,len(s),8000):print(s[i:i+8000])
+          print('COMPLETION_INPUT_END')
+          PY
