@@ -17,8 +17,8 @@ jobs:
         with:
           bun-version: latest
       - run: bun install --frozen-lockfile
-      - name: Recheck related raw dataset31 variants and update native SVGs
-        run: BUN_UPDATE_SNAPSHOTS=1 bun test tests/dataset31-*.test.ts --timeout 9999999
+      - name: Regenerate the reviewed bottom-left native SVG
+        run: BUN_UPDATE_SNAPSHOTS=1 bun test tests/dataset31-bottom-left-offset.test.ts --timeout 9999999
       - name: Export changed native snapshots only
         if: always()
         run: |
