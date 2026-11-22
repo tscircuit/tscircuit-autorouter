@@ -1,0 +1,42 @@
+{
+  "sample": "imx6-original",
+  "controlledReplayRun": 45022398643,
+  "physicalViasBefore": 17,
+  "physicalViasAfter": 15,
+  "priorRecoveryRequests": [
+    "source_trace_13",
+    "source_trace_0",
+    "source_trace_8"
+  ],
+  "reusedInsteadOfDrilling": [
+    "source_trace_13",
+    "source_trace_0"
+  ],
+  "retainedEarlierVia": "source_trace_8",
+  "newlyReachedRequest": "source_trace_1",
+  "newlyReachedRequestUsesOriginalVia": "source_trace_2",
+  "newRequestExitPoint": {
+    "x": 13.500010388624133,
+    "y": -15.750010388624133
+  },
+  "originalOwnerVia": {
+    "center": {
+      "x": 13.500010388624133,
+      "y": -15.750010388624133
+    },
+    "diameter": 0.4,
+    "holeDiameter": 0.2,
+    "fromLayer": "top",
+    "toLayer": "inner2",
+    "spanLayers": [
+      "top",
+      "inner1",
+      "inner2",
+      "inner3",
+      "inner4",
+      "bottom"
+    ]
+  },
+  "retainedEarlierViaUnchanged": true,
+  "newRequestAddsNoPhysicalVia": true
+}

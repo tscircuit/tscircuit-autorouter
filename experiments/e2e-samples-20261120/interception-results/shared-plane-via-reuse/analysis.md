@@ -16,7 +16,7 @@ The focused native example now completes **3/3 requests using 2 vias**. The comp
 | Lost escapes / longer existing routes | — | 0 / 0 |
 | Completed full boards | 0/10 | 0/10 |
 
-All 19 extra vias introduced by the earlier recovery patch are replaced by reuse of existing vias. Four more requests escape; one of those new i.MX6 requests needs a new via, giving a net reduction of 18 vias. Relative to the captured published baseline, the complete revised recovery is **702 → 725 escapes (+3.3%)** with **430 → 431 vias**.
+The revised pass removes **18 of the earlier recovery’s 19 additional vias**. All four newly reached requests use existing vias. One earlier i.MX6 drop keeps its own via; the newly reached i.MX6 pad shares a different, original via. The [emitted-via ownership check](imx6-via-ownership-proof.json) records the exact request and owner IDs. Relative to the captured published baseline, the complete revised recovery is **702 → 725 escapes (+3.3%)** with **430 → 431 vias**.
 
 | Circuit | Escapes, previous PR → reuse | Vias | Wire, mm |
 |---|---:|---:|---:|
