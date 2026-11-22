@@ -3,6 +3,7 @@ import type { CircuitJsonMetadata } from "./srj-types"
 export type PortPoint = {
   connectionName: string
   rootConnectionName?: string
+  allowedZLayers?: readonly number[]
   portPointId?: string
   pcb_port_id?: string
   x: number
@@ -38,6 +39,7 @@ export type NodeWithPortPoints = {
  */
 export type HighDensityIntraNodeRoute = {
   connectionName: string
+  allowedZLayers?: readonly number[]
   rootConnectionName?: string
   /** Terminal identities in route order, kept inert until terminal locking. */
   startPcbPortId?: string

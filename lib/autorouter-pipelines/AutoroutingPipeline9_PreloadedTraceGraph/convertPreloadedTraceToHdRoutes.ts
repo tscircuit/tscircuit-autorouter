@@ -38,6 +38,9 @@ export const convertPreloadedTraceToHdRoutes = (
       connectionName: `${trace.connection_name}_fixed_${traceIndex}_${routes.length}`,
       rootConnectionName,
       isFixed: trace.isFixed,
+      allowedZLayers: trace.allowedLayers?.map((layer) =>
+        mapLayerNameToZ(layer, layerCount),
+      ),
       preloadedTraceIndex: traceIndex,
       preloadedRouteIndex: routes.length,
       preloadedRoutePositionStart: routePositionStart,

@@ -788,9 +788,32 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       )
       regionalCopperRoutes = [...regionalCopperRoutes, ...routedCopperRoutes]
     }
+    const allowedLayersByConnection = new Map<
+      HighDensityRoute["connectionName"],
+      ReadonlySet<number>
+    >()
+    for (const [connectionName, section] of fallbackProblem.fixedRouteSectionsByConnectionName) {
+      const masks = section.sourceRoutes.flatMap((route) => {
+        if (route.allowedZLayers) return [route.allowedZLayers]
+        return []
+      })
+      if (masks.length === 0) continue
+      const allowedLayers = masks[0]!.filter((z) =>
+        masks.every((mask) => mask.includes(z)),
+      )
+      allowedLayersByConnection.set(connectionName, new Set(allowedLayers))
+    }
     this.activeFallbackSolver = new Pipeline9RegionalFallbackSolver({
       captureSearchDebug: this.params.captureSearchDebug,
-      nodeWithPortPoints: fallbackProblem.nodeWithPortPoints,
+      nodeWithPortPoints: {
+        ...fallbackProblem.nodeWithPortPoints,
+        portPoints: fallbackProblem.nodeWithPortPoints.portPoints.map((point) => {
+          const layers = allowedLayersByConnection.get(point.connectionName)
+          if (!layers) return point
+          return { ...point, allowedZLayers: [...layers] }
+        }),
+      },
+      allowedLayersByConnection,
       colorMap: this.colorMap,
       connMap: this.connMap,
       viaDiameter: this.viaDiameter,

@@ -1163,12 +1163,12 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         )
       : undefined
     let graphForTiny = serializedGraph
-    // Extra logical crossings cannot increase space beside immutable copper.
-    // Keep the physical boundary capacity instead of crowding fixed ports.
+    // Extra logical crossings cannot create space beside existing copper.
+    // Editable preloads still occupy their physical boundary ports.
     const hasFixedCopperReservations = serializedGraph.ports.some((port) =>
       Boolean(asTinyPortMetadata(port.d)._preloadedCopperNetIds?.length),
     )
-    if (!hasFixedCopperReservations) {
+    if (!hasFixedCopperReservations && !hasPreloadedTraceOccupancy) {
       const duplicateCongestedPortSolver = new DuplicateCongestedPortSolver(
         serializedGraph,
         {

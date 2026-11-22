@@ -714,6 +714,30 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
             this.constructorParams.allowBlindAndBuriedVias,
         })
       }
+      const allowedZLayersByConnectionName = new Map<
+        HighDensityIntraNodeRoute["connectionName"],
+        readonly number[]
+      >()
+      for (const point of this.nodeWithPortPoints.portPoints) {
+        if (point.allowedZLayers) {
+          allowedZLayersByConnectionName.set(point.connectionName, point.allowedZLayers)
+        }
+      }
+      if (allowedZLayersByConnectionName.size > 0) {
+        const copperSegmentValidator = staticSegmentValidator
+        staticSegmentValidator = (segment): boolean => {
+          const layers = allowedZLayersByConnectionName.get(segment.connectionName)
+          if (
+            layers &&
+            segment.start.z === segment.end.z &&
+            (segment.start.x !== segment.end.x || segment.start.y !== segment.end.y) &&
+            !layers.includes(segment.start.z)
+          ) {
+            return false
+          }
+          return copperSegmentValidator?.(segment) ?? true
+        }
+      }
       const solver = new HighDensityA03Solver({
         nodeWithPortPoints: this.nodeWithPortPoints,
         highResolutionCellSize: 0.1,

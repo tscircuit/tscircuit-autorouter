@@ -21,6 +21,7 @@ import {
 
 type Pipeline9RegionalFallbackSolverParams = {
   nodeWithPortPoints: NodeWithPortPoints
+  allowedLayersByConnection?: ReadonlyMap<HighDensityRoute["connectionName"], ReadonlySet<number>>
   colorMap: Record<string, string>
   connMap: ConnectivityMap
   viaDiameter: number
@@ -194,6 +195,22 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
 
   private validateCandidateRoutes(routes: HighDensityRoute[]): boolean {
     for (const route of routes) {
+      const layers = this.params.allowedLayersByConnection?.get(
+        route.connectionName,
+      )
+      if (layers) {
+        for (let index = 1; index < route.route.length; index++) {
+          const from = route.route[index - 1]!
+          const to = route.route[index]!
+          if (
+            from.z === to.z &&
+            (from.x !== to.x || from.y !== to.y) &&
+            !layers.has(from.z)
+          ) {
+            return false
+          }
+        }
+      }
       for (const fixedRoute of this.params.immutableHdRoutes ?? []) {
         if (
           arePipeline9RoutesOnSameNet(
