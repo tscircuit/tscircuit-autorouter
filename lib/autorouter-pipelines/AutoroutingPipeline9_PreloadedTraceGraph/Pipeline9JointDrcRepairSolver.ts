@@ -1,3 +1,4 @@
+import { isExistingMultilayerObstacle } from "lib/utils/isExistingMultilayerObstacle"
 import { RELAXED_DRC_OPTIONS } from "lib/utils/drcPresets"
 import type { AnyCircuitElement } from "circuit-json"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
@@ -1263,7 +1264,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     >()
     const multilayerObstacles = params.obstacles.filter(
       (obstacle) =>
-        (obstacle.__zLayers?.length ?? obstacle.layers?.length ?? 0) > 1,
+        isExistingMultilayerObstacle(obstacle),
     )
     const connectedObstaclesByConnectionName = new Map<
       string,

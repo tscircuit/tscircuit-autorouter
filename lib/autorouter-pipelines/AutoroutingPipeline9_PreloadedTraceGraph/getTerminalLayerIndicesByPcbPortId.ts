@@ -37,6 +37,7 @@ export const getTerminalLayerIndicesByPcbPortId = (
       // the terminal spans. Coincident same-net single-layer pads do not.
       for (const obstacle of obstaclesByCenter.get(getCenterKey(point)) ?? []) {
         if (
+          obstacle.isPlannedVia ||
           obstacle.layers.length <= 1 ||
           !obstacle.connectedTo.includes(point.pcb_port_id)
         ) {

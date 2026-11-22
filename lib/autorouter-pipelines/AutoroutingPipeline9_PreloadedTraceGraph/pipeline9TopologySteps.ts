@@ -77,15 +77,8 @@ export const pipeline9TopologySteps = [
       },
     ],
     onSolved: (pipeline) => {
-      const solver = pipeline.escapeViaLocationSolver!
-      pipeline.srjWithEscapeViaLocations = solver.getOutputSimpleRouteJson()
-      const reservations = solver.getEscapeViaRoutingObstacles()
-      if (reservations.length > 0) {
-        pipeline.srj = {
-          ...pipeline.srj,
-          obstacles: [...pipeline.srj.obstacles, ...reservations],
-        }
-      }
+      pipeline.srj = pipeline.escapeViaLocationSolver!.getOutputSimpleRouteJson()
+      pipeline.srjWithEscapeViaLocations = pipeline.srj
     },
   }),
   definePipeline9Step({

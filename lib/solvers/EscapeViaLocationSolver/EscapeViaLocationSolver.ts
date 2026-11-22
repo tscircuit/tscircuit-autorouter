@@ -209,6 +209,7 @@ export class EscapeViaLocationSolver extends BaseSolver {
     )
 
     return {
+      isPlannedVia: true,
       obstacleId: `escape-via-obstacle:${escapeVia.pointId}`,
       type: "rect",
       layers,
@@ -1159,22 +1160,6 @@ export class EscapeViaLocationSolver extends BaseSolver {
 
   getOutputSimpleRouteJson(): SimpleRouteJson {
     return structuredClone(this.outputSrj)
-  }
-
-  getEscapeViaRoutingObstacles(): Obstacle[] {
-    const viaObstacles = this.outputSrj.obstacles.slice(
-      this.ogSrj.obstacles.length,
-    )
-    // Reserve the full span, but keep the layers separate: the terminal via
-    // still needs a drill. A multilayer obstacle represents an existing barrel.
-    return viaObstacles.flatMap((via) =>
-      via.layers.map((layer) => ({
-        ...via,
-        obstacleId: `${via.obstacleId}:${layer}`,
-        layers: [layer],
-        __zLayers: [mapLayerNameToZ(layer, this.ogSrj.layerCount)],
-      })),
-    )
   }
 
   getEscapeViaMetadataByPointId(): Map<string, EscapeViaMetadata> {
