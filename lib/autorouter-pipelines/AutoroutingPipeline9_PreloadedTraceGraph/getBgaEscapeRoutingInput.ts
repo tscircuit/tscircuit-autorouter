@@ -1,6 +1,6 @@
 import {
   cellsPerBallPitch,
-  type BgaEscapeRoutingSolverInput,
+  type BgaRoutingSolverInput,
   type BgaTrace,
 } from "@tscircuit/high-density-phase-solver"
 import { BgaGrid } from "lib/solvers/BgaTopologyGeneratorSolver/bga-grid"
@@ -69,7 +69,7 @@ export function getBgaEscapeRoutingInput({
   inputSrj,
   pointPairs,
   components,
-}: BgaEscapeBoard): BgaEscapeRoutingSolverInput | undefined {
+}: BgaEscapeBoard): BgaRoutingSolverInput | undefined {
   const clearance = inputSrj.minTraceToPadEdgeClearance
   if (clearance === undefined || !supportsBgaEscapeRouting(inputSrj)) return
   const expectedPairs = inputSrj.connections.reduce(

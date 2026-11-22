@@ -1,9 +1,11 @@
-import type {
-  BgaEscapeRoutingSolver,
-  BgaSurfaceRoutingSolver,
+import {
+  createBgaRoutingSolver,
+  type BgaRoutingSolver,
 } from "@tscircuit/high-density-phase-solver"
-import type { BgaEscapeBoard } from "./getBgaEscapeRoutingInput"
-import { createBgaRoutingSolver } from "./createBgaRoutingSolver"
+import {
+  getBgaEscapeRoutingInput,
+  type BgaEscapeBoard,
+} from "./getBgaEscapeRoutingInput"
 import { getBgaEscapeHdRoutes } from "./getBgaEscapeHdRoutes"
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import { Pipeline9HighDensityBatchSolver } from "./Pipeline9HighDensityBatchSolver"
@@ -46,9 +48,9 @@ import {
   preparePreloadedTerminalRoutes,
 } from "./pipeline9TerminalRoutes"
 
-type BgaEscapeAttempt = {
+type BgaRoutingAttempt = {
   board: BgaEscapeBoard
-  solver: BgaEscapeRoutingSolver | BgaSurfaceRoutingSolver
+  solver: BgaRoutingSolver
   regionalError?: string
 }
 
@@ -420,7 +422,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   activeFallbackReason: string | null = null
   activeNode: NodeWithPortPoints | null = null
 
-  private bgaEscapeAttempt?: BgaEscapeAttempt
+  private bgaRoutingAttempt?: BgaRoutingAttempt
   private surfaceRoutingError?: string
   private asyncRunning = false
 
@@ -447,11 +449,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     this.enableRegionalFallback = params.enableRegionalFallback ?? true
     this.maxB01Rips = params.maxB01Rips
     this.unsolvedNodePortPoints = [...params.nodePortPoints]
-    const board = params.bgaEscapeBoard
-    if (board) {
-      const solver = createBgaRoutingSolver(board, params.nodePortPoints)
-      if (solver) this.bgaEscapeAttempt = { board, solver }
-    }
+    this.tryStartBgaRouting()
     this.MAX_ITERATIONS = 100e6 * this.effort
     this.stats = {
       nodeCount: params.nodePortPoints.length,
@@ -637,7 +635,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   }
 
   get completedBoardRoutes(): HighDensityIntraNodeRoute[] | undefined {
-    if (this.solved && this.bgaEscapeAttempt?.solver.solved) return this.routes
+    if (this.solved && this.bgaRoutingAttempt?.solver.solved) return this.routes
   }
 
   getUpdatedFixedHdRoutes(): PreloadedHighDensityRoute[] {
@@ -1182,8 +1180,8 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   }
 
   override _step(): void {
-    if (this.bgaEscapeAttempt) {
-      this.stepBgaEscapeRouting(this.bgaEscapeAttempt)
+    if (this.bgaRoutingAttempt) {
+      this.stepBgaRouting(this.bgaRoutingAttempt)
       return
     }
     this.stepNodeRouting()
@@ -1207,7 +1205,27 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     )
   }
 
-  private stepBgaEscapeRouting(attempt: BgaEscapeAttempt): void {
+  private tryStartBgaRouting(regionalError?: string): boolean {
+    const board = this.params.bgaEscapeBoard
+    if (!board) return false
+    const input = getBgaEscapeRoutingInput(board)
+    if (!input) return false
+    const bottomLayer = input.board.layerCount - 1
+    const regionalPlan =
+      regionalError === undefined
+        ? {
+            usesInnerLayer: this.params.nodePortPoints.some(({ portPoints }) =>
+              portPoints.some(({ z }) => z > 0 && z < bottomLayer),
+            ),
+          }
+        : undefined
+    const solver = createBgaRoutingSolver(input, regionalPlan)
+    if (!solver) return false
+    this.bgaRoutingAttempt = { board, solver, regionalError }
+    return true
+  }
+
+  private stepBgaRouting(attempt: BgaRoutingAttempt): void {
     const { board, solver, regionalError } = attempt
     this.activeSubSolver = solver
     solver.step()
@@ -1235,7 +1253,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       // regional route may still reach the requested ports on another layer.
       this.surfaceRoutingError = failure
       this.stats.surfaceRoutingError = failure
-      this.bgaEscapeAttempt = undefined
+      this.bgaRoutingAttempt = undefined
       return
     }
     this.failed = true
@@ -1251,12 +1269,10 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
           `Pipeline9 primary high-density routing failed: ${this.activeFallbackReason ?? "unknown error"}`,
           `regional fallback failed: ${this.activeFallbackSolver.error ?? "unknown error"}`,
         ].join("; ")
-        const board = this.params.bgaEscapeBoard
-        const solver =
-          !this.surfaceRoutingError && board && createBgaRoutingSolver(board)
-        if (board && solver) {
-          this.bgaEscapeAttempt = { board, solver, regionalError }
-        } else {
+        if (
+          this.surfaceRoutingError ||
+          !this.tryStartBgaRouting(regionalError)
+        ) {
           this.error = this.surfaceRoutingError
             ? `${regionalError}. ${this.surfaceRoutingError}`
             : regionalError
@@ -1385,7 +1401,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
 
   override visualize(): GraphicsObject {
     return (
-      this.bgaEscapeAttempt?.solver.visualize() ??
+      this.bgaRoutingAttempt?.solver.visualize() ??
       this.activeFallbackSolver?.visualize() ??
       this.activeRegularSolver?.visualize() ??
       this.activeB01Solver?.visualize() ?? {
