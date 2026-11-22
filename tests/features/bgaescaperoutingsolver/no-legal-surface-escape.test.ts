@@ -32,6 +32,7 @@ test("requires a real via site for every terminal before publishing routes", () 
   const solver = new BgaEscapeRoutingSolver({
     inputSrj,
     pointPairs: inputSrj.connections,
+    signalLayers: [0, 1, 2, 3],
     bga: { center: { x: 0, y: 0 }, pitch: 0.8 },
   })
   solver.solve()

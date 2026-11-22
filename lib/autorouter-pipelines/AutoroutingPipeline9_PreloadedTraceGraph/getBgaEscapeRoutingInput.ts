@@ -1,4 +1,5 @@
 import type { BgaEscapeRoutingSolverInput } from "lib/solvers/BgaEscapeRoutingSolver/BgaEscapeRoutingSolver"
+import { getBgaSignalLayers } from "lib/solvers/BgaEscapeRoutingSolver/getBgaSignalLayers"
 import { cellsPerBallPitch } from "lib/solvers/BgaEscapeRoutingSolver/BgaRoutingGrid"
 import { BgaGrid } from "lib/solvers/BgaTopologyGeneratorSolver/bga-grid"
 import type { DetectedComponent } from "lib/solvers/ComponentDetectionSolver/ComponentDetectionSolver"
@@ -22,7 +23,8 @@ function hasSurfacePadConnections(srj: SimpleRouteJson): boolean {
         connection.pointsToConnect.every(
           (point) =>
             point.pcb_port_id &&
-            (point.layer === "top" || point.layer === "bottom"),
+            (point.layer === "top" || point.layer === "bottom") &&
+            !point.terminalVia,
         ),
     )
   )
@@ -77,6 +79,8 @@ export function getBgaEscapeRoutingInput({
   )
     return
 
+  const signalLayers = getBgaSignalLayers(inputSrj)
+  if (!signalLayers.some((z) => z > 0 && z < inputSrj.layerCount - 1)) return
   const bgaIds = new Set(
     components
       .filter((component) => component.componentKind === "bga")
@@ -111,7 +115,12 @@ export function getBgaEscapeRoutingInput({
       return freeWidth >= width && freeWidth - width < pitch / cellsPerBallPitch
     })
     if (narrowChannel) {
-      return { inputSrj, pointPairs, bga: { center: balls[0]!.center, pitch } }
+      return {
+        inputSrj,
+        pointPairs,
+        signalLayers,
+        bga: { center: balls[0]!.center, pitch },
+      }
     }
   }
 }

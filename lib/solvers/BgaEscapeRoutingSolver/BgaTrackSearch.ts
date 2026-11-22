@@ -13,7 +13,6 @@ type GridStep = {
   distance: number
   x: number
   y: number
-  z: number
 }
 type SearchCandidate = { cell: number; f: number }
 
@@ -28,7 +27,6 @@ export class BgaTrackSearch {
   private readonly viaCost: number
   private endColumn = 0
   private endRow = 0
-  private endLayer = 0
   path?: number[]
   active = false
   failure?: "no_path" | "frontier_limit"
@@ -53,14 +51,13 @@ export class BgaTrackSearch {
     this.wires = this.copper.wires.get(endpoints.width)!
     this.endColumn = endpoints.end % grid.columns
     this.endRow = Math.floor(endpoints.end / grid.columns) % grid.rows
-    this.endLayer = Math.floor(endpoints.end / grid.layerSize)
     this.path = undefined
     this.failure = undefined
     this.active = true
   }
 
   private enqueue(from: number, move: GridStep): void {
-    const { cell, distance, x, y, z } = move
+    const { cell, distance, x, y } = move
     const owner = this.wires[cell]
     if (this.visited[cell] || (owner !== 0 && owner !== this.endpoints.owner))
       return
@@ -72,9 +69,8 @@ export class BgaTrackSearch {
     const dy = Math.abs(y - this.endRow)
     const planarDistance =
       Math.max(dx, dy) + (Math.SQRT2 - 1) * Math.min(dx, dy)
-    const remaining = planarDistance + (z === this.endLayer ? 0 : this.viaCost)
     // Weighted octile A* favors progress across open routing layers.
-    this.frontier.enqueue({ cell, f: cost + 1.125 * remaining })
+    this.frontier.enqueue({ cell, f: cost + 1.125 * planarDistance })
   }
 
   /** Yield between batches so a long A* search can be cancelled or visualized. */
@@ -112,7 +108,6 @@ export class BgaTrackSearch {
           distance: dx && dy ? Math.SQRT2 : 1,
           x: col,
           y: row,
-          z,
         })
       }
       // Terminal vias are reserved on every layer. Each end of this branch
@@ -121,14 +116,13 @@ export class BgaTrackSearch {
       const terminalVia =
         site === start % grid.layerSize || site === end % grid.layerSize
       if (!terminalVia && !this.copper.canPlaceVia(site, owner)) continue
-      for (let layer = 0; layer < grid.layerCount; layer++) {
+      for (const layer of grid.signalLayers) {
         if (layer === z) continue
         this.enqueue(cell, {
           cell: layer * grid.layerSize + site,
-          distance: this.viaCost,
+          distance: terminalVia ? 0 : this.viaCost,
           x,
           y,
-          z: layer,
         })
       }
     }

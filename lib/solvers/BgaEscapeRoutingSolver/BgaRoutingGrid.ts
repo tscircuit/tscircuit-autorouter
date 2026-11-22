@@ -6,6 +6,7 @@ export type BgaGridAnchor = { center: Point; pitch: number }
 export type BgaEscapeRoutingInput = {
   inputSrj: SimpleRouteJson
   bga: BgaGridAnchor
+  signalLayers: number[]
 }
 
 // An even subdivision represents both ball centers and the centerline between rows.
@@ -28,11 +29,20 @@ export class BgaRoutingGrid {
   readonly columns: number
   readonly rows: number
   readonly layerCount: number
+  readonly signalLayers: number[]
+  readonly innerSignalLayers: number[]
   readonly layerSize: number
   readonly cellCount: number
   readonly widthByConnectionName = new Map<string, number>()
 
-  constructor({ inputSrj, bga }: BgaEscapeRoutingInput) {
+  constructor({ inputSrj, bga, signalLayers }: BgaEscapeRoutingInput) {
+    this.signalLayers = signalLayers
+    this.innerSignalLayers = signalLayers.filter(
+      (z) => z > 0 && z < inputSrj.layerCount - 1,
+    )
+    if (!this.innerSignalLayers.length) {
+      throw new Error("BGA escape routing requires an inner signal layer")
+    }
     this.step = bga.pitch / cellsPerBallPitch
     const terminalBounds = {
       minX: Infinity,

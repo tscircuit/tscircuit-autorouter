@@ -21,6 +21,7 @@ test("bounds the grid allocation across routing layers and trace widths", () => 
   const solver = new BgaEscapeRoutingSolver({
     inputSrj,
     pointPairs: inputSrj.connections,
+    signalLayers: [0, 2, 4, 5, 7],
     bga: { center: { x: 0, y: 0 }, pitch: 0.4 },
   })
   solver.solve()

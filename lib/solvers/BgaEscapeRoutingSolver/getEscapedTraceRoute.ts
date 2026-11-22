@@ -59,7 +59,9 @@ export function getReservedEscapeRoute(
   copper: BgaRoutingCopper,
 ): Route {
   const { point, path, width, viaSite } = terminal
-  const targetLayer = point.layer === "top" ? 1 : copper.grid.layerCount - 2
+  const { innerSignalLayers } = copper.grid
+  const targetLayer =
+    point.layer === "top" ? innerSignalLayers[0]! : innerSignalLayers.at(-1)!
   const viaCell = targetLayer * copper.grid.layerSize + viaSite
   const route = getWireAndViaRoute([...path, viaCell], { width, copper })
   route.unshift({

@@ -33,7 +33,11 @@ test("a fixed inner-layer wire blocks a through drill while leaving the surface 
       },
     ],
   }
-  const grid = new BgaRoutingGrid({ inputSrj, bga: { center, pitch: 0.8 } })
+  const grid = new BgaRoutingGrid({
+    inputSrj,
+    signalLayers: [0, 1, 2, 3],
+    bga: { center, pitch: 0.8 },
+  })
   const copper = new BgaRoutingCopper(grid, inputSrj)
   const wireMask = copper.wires.get(0.12)!
 

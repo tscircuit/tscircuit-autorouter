@@ -31,6 +31,7 @@ test("keeps a trace-width channel between two BGA balls on the physical pitch gr
   }
   const grid = new BgaRoutingGrid({
     inputSrj,
+    signalLayers: [0, 1, 2, 3],
     bga: { center: ball, pitch: 0.8 },
   })
   const copper = new BgaRoutingCopper(grid, inputSrj)

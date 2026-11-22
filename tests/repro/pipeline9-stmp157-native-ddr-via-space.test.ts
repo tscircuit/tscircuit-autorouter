@@ -37,6 +37,16 @@ test("routes STM32MP157 DDR signals around the four completed data bytes", async
     new Set(input.connections.map((connection) => connection.name)),
   )
   expect(routes).toHaveLength(solver.srjWithPointPairs!.connections.length)
+  // The source stack uses inner1, inner3 and inner6 for power and ground planes.
+  const signalLayers = new Set(["top", "inner2", "inner4", "inner5", "bottom"])
+  const routedWireLayers = new Set(
+    routes.flatMap((trace) =>
+      trace.route.flatMap((point) =>
+        point.route_type === "wire" ? [point.layer] : [],
+      ),
+    ),
+  )
+  expect(routedWireLayers).toEqual(signalLayers)
   const checkCopper = createPipeline9AutoroutingDrcEvaluator({
     inputSrj: input,
     srjWithPointPairs: solver.srjWithPointPairs!,

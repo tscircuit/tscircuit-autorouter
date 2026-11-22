@@ -143,12 +143,13 @@ export class BgaEscapeRoutingSolver extends BaseSolver {
     const pair = this.pairs[this.pairIndex]!
     const { grid } = this.copper
     if (!this.search.active) {
-      const startLayer =
-        pair.start.point.layer === "top" ? 1 : grid.layerCount - 2
-      const endLayer = pair.end.point.layer === "top" ? 1 : grid.layerCount - 2
+      // Spread the starts of successive nets over the proven inner signal layers.
+      // Both reserved through-vias can reach every one of these layers.
+      const layer =
+        grid.innerSignalLayers[this.netIndex % grid.innerSignalLayers.length]!
       this.search.start({
-        start: startLayer * grid.layerSize + pair.start.viaSite,
-        end: endLayer * grid.layerSize + pair.end.viaSite,
+        start: layer * grid.layerSize + pair.start.viaSite,
+        end: layer * grid.layerSize + pair.end.viaSite,
         owner: pair.start.owner,
         width: pair.start.width,
       })
