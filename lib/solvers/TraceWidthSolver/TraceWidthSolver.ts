@@ -540,21 +540,22 @@ export class TraceWidthSolver extends BaseSolver {
       if (this.connMap?.areIdsConnected(rootConnectionName, otherRoot)) continue
       let clearance = Infinity
       for (let index = 0; index < route.route.length - 1; index++) {
-        const a = route.route[index]!
-        const b = route.route[index + 1]!
-        if (a.z !== b.z || a.z !== start.z) continue
-        if (a.insideJumperPad && b.insideJumperPad) continue
-        if (a.toNextSegmentType === "through_obstacle") continue
+        const otherStart = route.route[index]!
+        const otherEnd = route.route[index + 1]!
+        if (otherStart.z !== otherEnd.z || otherStart.z !== start.z) continue
+        if (otherStart.insideJumperPad && otherEnd.insideJumperPad) continue
+        if (otherStart.toNextSegmentType === "through_obstacle") continue
+        const outgoingWidth = otherStart.traceThickness ?? route.traceThickness
+        const segmentWidth = this.refiningWidths
+          ? Math.max(
+              outgoingWidth,
+              otherEnd.traceThickness ?? route.traceThickness,
+            )
+          : outgoingWidth
         clearance = Math.min(
           clearance,
-          segmentToSegmentMinDistance(start, end, a, b) -
-            (this.refiningWidths
-              ? Math.max(
-                  a.traceThickness ?? route.traceThickness,
-                  b.traceThickness ?? route.traceThickness,
-                )
-              : (a.traceThickness ?? route.traceThickness)) /
-              2,
+          segmentToSegmentMinDistance(start, end, otherStart, otherEnd) -
+            segmentWidth / 2,
         )
       }
       // The spatial index returns owning routes for both traces and vias.
