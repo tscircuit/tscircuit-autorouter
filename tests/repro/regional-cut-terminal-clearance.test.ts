@@ -3,11 +3,12 @@ import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { getSvgFromGraphicsObject } from "graphics-debug"
 import type { PreloadedHighDensityRoute } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/convertPreloadedTraceToHdRoutes"
 import { Pipeline9HighDensitySolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver"
+import { doPipeline9RoutesHaveCopperConflict } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9FixedRouteCopper"
 import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
 
-test("regional trace cuts overlap an unrelated fixed terminal", async (): Promise<void> => {
+test("regional trace cuts stay clear of unrelated fixed terminals", async (): Promise<void> => {
   const fixedHdRoutes: PreloadedHighDensityRoute[] = [
     {
       connectionName: "preload",
@@ -63,9 +64,21 @@ test("regional trace cuts overlap an unrelated fixed terminal", async (): Promis
 
   solver.solve()
 
-  expect(solver.failed).toBeTrue()
-  expect(solver.error).toContain("Unrelated route terminals overlap")
+  expect(solver.solved).toBeTrue()
+  expect(solver.failed).toBeFalse()
+  expect(solver.error).toBeNull()
+  expect(solver.routes).toHaveLength(1)
   expect(solver.getUpdatedFixedHdRoutes()).toContainEqual(fixedHdRoutes[1])
+  for (const fixed of solver.getUpdatedFixedHdRoutes()) {
+    expect(
+      doPipeline9RoutesHaveCopperConflict({
+        left: solver.routes[0]!,
+        right: fixed,
+        clearance: 0.05,
+        layerCount: 2,
+      }),
+    ).toBeFalse()
+  }
 
   const traces: SimplifiedPcbTrace[] = [
     ...solver.getUpdatedFixedHdRoutes(),

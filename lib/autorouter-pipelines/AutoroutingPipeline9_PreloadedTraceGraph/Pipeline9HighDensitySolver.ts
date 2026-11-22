@@ -695,15 +695,35 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       availableZ: Array.from({ length: this.layerCount }, (_, z) => z),
     }
     const fixedHdRoutes = this.getUpdatedFixedHdRoutes()
+    const hasImmutablePreload = this.fixedHdRoutes.some(
+      (route) => route.isFixed === true,
+    )
     let fallbackProblem = createRegionalFallbackProblem(
       regionalNode,
       fixedHdRoutes,
       promotedFixedRouteConnectionNames,
     )
+    const hasOverlappingCut =
+      hasImmutablePreload &&
+      fallbackProblem.nodeWithPortPoints.portPoints
+        .slice(normalizedNode.portPoints.length)
+        .some((cut) =>
+          normalizedNode.portPoints.some(
+            (port) =>
+              cut.z === port.z &&
+              !arePipeline9RoutesOnSameNet(
+                { left: cut, right: port },
+                this.connMap,
+              ) &&
+              Math.hypot(cut.x - port.x, cut.y - port.y) <
+                this.traceWidth - 1e-6,
+          ),
+        )
     // Conflict checks include the copper clearance envelope. A promoted
     // centerline that only touches the node needs that same envelope to
     // produce a movable section instead of an isolated zero-length slice.
     if (
+      hasOverlappingCut ||
       [...promotedFixedRouteConnectionNames].some(
         (connectionName) =>
           ![
@@ -750,9 +770,6 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     this.activeFallbackFixedObstacleRoutes = fallbackProblem.fixedObstacleRoutes
     this.activeFallbackPromotedFixedRouteConnectionNames = new Set(
       promotedFixedRouteConnectionNames,
-    )
-    const hasImmutablePreload = this.fixedHdRoutes.some(
-      (route) => route.isFixed === true,
     )
     let regionalCopperRoutes: HighDensityRoute[] =
       this.activeFallbackFixedObstacleRoutes
