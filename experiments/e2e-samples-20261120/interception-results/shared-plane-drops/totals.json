@@ -1,0 +1,12 @@
+{
+  "requested": 1024,
+  "rawBefore": 702,
+  "rawAfter": 719,
+  "matchedBefore": 700,
+  "matchedAfter": 719,
+  "matchedImprovementPercent": 2.7142857142857144,
+  "partialViasBefore": 430,
+  "partialViasAfter": 447,
+  "fullBoardsBefore": 0,
+  "fullBoardsAfter": 0
+}
