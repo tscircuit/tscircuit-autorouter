@@ -49,6 +49,15 @@ test("nominal-width copper fits on both sides of an interior neckdown", (): void
       layerCount: 2,
     })
     const exportedRoute = convertHdRouteToSimplifiedRoute(refined!, 2)
+    const lines = solver.visualize().lines!
+    const signalLines = lines.filter((line) =>
+      line.label?.startsWith("signal (w="),
+    )
+    expect(signalLines.length).toBeGreaterThan(0)
+    for (const line of signalLines) {
+      const expectedColor = line.strokeWidth === 0.22 ? "green" : "orange"
+      expect(line.strokeColor).toBe(expectedColor)
+    }
     expect([route, fixed]).toEqual(original)
     expect(refined!.vias).toEqual(signal.vias)
     expect(

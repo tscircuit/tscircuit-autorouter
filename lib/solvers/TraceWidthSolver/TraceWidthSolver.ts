@@ -926,6 +926,16 @@ export class TraceWidthSolver extends BaseSolver {
     this.hasInsufficientClearance = false
   }
 
+  private getTraceWidthColor(
+    width: number,
+    nominalWidth: number | undefined,
+  ): string {
+    if (nominalWidth === undefined) return "gray"
+    if (width >= nominalWidth) return "green"
+    if (width > this.minTraceWidth) return "yellow"
+    return "orange"
+  }
+
   visualize(): GraphicsObject {
     const scheduleStr = this.TRACE_WIDTH_SCHEDULE.map((w) => w.toFixed(2)).join(
       ", ",
@@ -988,13 +998,7 @@ export class TraceWidthSolver extends BaseSolver {
     for (const route of this.processedRoutes) {
       if (route.route.length === 0) continue
 
-      const isNominalWidth = route.traceThickness === this.nominalTraceWidth
-      const isMidWidth = route.traceThickness === this.TRACE_WIDTH_SCHEDULE[1]
-      const strokeColor = isNominalWidth
-        ? "green"
-        : isMidWidth
-          ? "yellow"
-          : "orange"
+      const nominalWidth = this.getNominalTraceWidthForRoute(route)
 
       for (let i = 0; i < route.route.length - 1; i++) {
         const current = route.route[i]!
@@ -1006,16 +1010,15 @@ export class TraceWidthSolver extends BaseSolver {
         }
 
         if (current.z === next.z) {
+          const width = current.traceThickness ?? route.traceThickness
           visualization.lines.push({
             points: [
               { x: current.x, y: current.y },
               { x: next.x, y: next.y },
             ],
-            strokeColor,
-            strokeWidth: current.traceThickness ?? route.traceThickness,
-            label: `${route.connectionName} (w=${(
-              current.traceThickness ?? route.traceThickness
-            ).toFixed(2)})`,
+            strokeColor: this.getTraceWidthColor(width, nominalWidth),
+            strokeWidth: width,
+            label: `${route.connectionName} (w=${width.toFixed(2)})`,
           })
         }
       }
@@ -1032,7 +1035,7 @@ export class TraceWidthSolver extends BaseSolver {
       // Draw jumpers
       if (route.jumpers && route.jumpers.length > 0) {
         const jumperGraphics = getJumpersGraphics(route.jumpers, {
-          color: strokeColor,
+          color: this.getTraceWidthColor(route.traceThickness, nominalWidth),
           label: route.connectionName,
         })
         visualization.rects.push(...(jumperGraphics.rects ?? []))
