@@ -1,4 +1,5 @@
 import { BaseSolver } from "@tscircuit/solver-utils"
+import Flatbush from "flatbush"
 import type { GraphicsObject } from "graphics-debug"
 import type { CapacityMeshNode } from "lib/types"
 import { createRectFromCapacityNode } from "lib/utils/createRectFromCapacityNode"
@@ -10,7 +11,6 @@ import {
 } from "./topology-merging-output"
 import {
   compactTopologyMergingRegions,
-  doesBoundsContainPoint,
   getCanonicalCoordinates,
   getHorizontalMergeBucketKey,
   getLayerTopologiesForCoveredNodes,
@@ -66,6 +66,7 @@ export class TopologyMergingSolver extends BaseSolver {
   private readonly overruledTargetSourceKeys = new Set<string>()
   private outputNodes: CapacityMeshNode[] = []
   private currentXIndex = 0
+  private boundsIndex: Flatbush | undefined
 
   constructor(public readonly inputProblem: TopologyMergingSolverParams) {
     super()
@@ -206,6 +207,7 @@ export class TopologyMergingSolver extends BaseSolver {
     // Completed solvers stay attached to the pipeline. Keep the validated
     // output, original constructor input and stats; release temporary indexes.
     this.preparedNodes.length = 0
+    this.boundsIndex = undefined
     this.preparedNodeBySourceKey.clear()
     this.xCoordinates.length = 0
     this.atomicRegions.length = 0
@@ -221,10 +223,11 @@ export class TopologyMergingSolver extends BaseSolver {
     if (maxX - minX <= TOPOLOGY_MERGING_EPSILON) return
 
     const x = (minX + maxX) / 2
-    const nodesInXSlab = this.preparedNodes.filter(
-      ({ bounds }) =>
-        x >= bounds.minX - TOPOLOGY_MERGING_EPSILON &&
-        x <= bounds.maxX + TOPOLOGY_MERGING_EPSILON,
+    const nodesInXSlab = this.getPreparedNodesIntersecting(
+      x,
+      -Infinity,
+      x,
+      Infinity,
     )
     const yCoordinates = getCanonicalCoordinates(
       nodesInXSlab.flatMap(({ bounds }) => [bounds.minY, bounds.maxY]),
@@ -244,8 +247,11 @@ export class TopologyMergingSolver extends BaseSolver {
       if (maxY - minY <= TOPOLOGY_MERGING_EPSILON) continue
 
       const point = { x, y: (minY + maxY) / 2 }
-      const coveringNodes = nodesInXSlab.filter(({ bounds }) =>
-        doesBoundsContainPoint(bounds, point),
+      const coveringNodes = this.getPreparedNodesIntersecting(
+        point.x,
+        point.y,
+        point.x,
+        point.y,
       )
       if (coveringNodes.length === 0) continue
 
@@ -309,6 +315,33 @@ export class TopologyMergingSolver extends BaseSolver {
     }
     this.horizontalRegionByBucket = nextHorizontalRegionByBucket
     this.layerTopologiesBySources = nextLayerTopologiesBySources
+  }
+
+  private getPreparedNodesIntersecting(
+    minX: number,
+    minY: number,
+    maxX: number,
+    maxY: number,
+  ): PreparedTopologyMergingNode[] {
+    this.boundsIndex ??= this.createBoundsIndex()
+    return this.boundsIndex
+      .search(minX, minY, maxX, maxY)
+      .sort((a, b) => a - b)
+      .map((nodeIndex) => this.preparedNodes[nodeIndex]!)
+  }
+
+  private createBoundsIndex(): Flatbush {
+    const boundsIndex = new Flatbush(this.preparedNodes.length)
+    for (const { bounds } of this.preparedNodes) {
+      boundsIndex.add(
+        bounds.minX - TOPOLOGY_MERGING_EPSILON,
+        bounds.minY - TOPOLOGY_MERGING_EPSILON,
+        bounds.maxX + TOPOLOGY_MERGING_EPSILON,
+        bounds.maxY + TOPOLOGY_MERGING_EPSILON,
+      )
+    }
+    boundsIndex.finish()
+    return boundsIndex
   }
 
   private getCachedHorizontalBucketKey(
