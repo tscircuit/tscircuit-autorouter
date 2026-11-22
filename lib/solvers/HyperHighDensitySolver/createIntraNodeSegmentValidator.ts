@@ -1,3 +1,4 @@
+import type { ConnectionName } from "lib/types/srj-types"
 import type { StaticSegmentValidator } from "@tscircuit/high-density-a01"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { FlatbushIndex } from "lib/data-structures/FlatbushIndex"
@@ -9,6 +10,7 @@ import {
 import type { HighDensityRoute } from "lib/types/high-density-types"
 
 type IntraNodeCopperInput = {
+  allowedZLayersByConnectionName?: ReadonlyMap<ConnectionName, readonly number[]>
   fixedHdRoutes: HighDensityRoute[]
   connMap: ConnectivityMap
   layerCount: number
@@ -18,6 +20,24 @@ type IntraNodeCopperInput = {
 
 type IntraNodeCopperContext = Omit<IntraNodeCopperInput, "fixedHdRoutes"> & {
   index: FlatbushIndex<HighDensityRoute>
+}
+
+function isIntraNodeSegmentOnAllowedLayer(
+  segment: Parameters<StaticSegmentValidator>[0],
+  { allowedZLayersByConnectionName }: Pick<
+    IntraNodeCopperInput,
+    "allowedZLayersByConnectionName"
+  >,
+): boolean {
+  const allowedZLayers = allowedZLayersByConnectionName?.get(
+    segment.connectionName,
+  )
+  if (!allowedZLayers) return true
+  if (segment.start.z !== segment.end.z) return true
+  if (segment.start.x === segment.end.x && segment.start.y === segment.end.y) {
+    return true
+  }
+  return allowedZLayers.includes(segment.start.z)
 }
 
 function isIntraNodeSegmentClear(
@@ -92,7 +112,9 @@ export function createIntraNodeSegmentValidator(
       })),
     ]
   })
-  if (copper.length === 0) return (): boolean => true
+  if (copper.length === 0) {
+    return (segment): boolean => isIntraNodeSegmentOnAllowedLayer(segment, input)
+  }
   const index = new FlatbushIndex<HighDensityRoute>(copper.length)
   for (const primitive of copper) {
     index.insert(
@@ -105,5 +127,10 @@ export function createIntraNodeSegmentValidator(
   }
   index.finish()
   const context: IntraNodeCopperContext = { ...input, index }
-  return (segment): boolean => isIntraNodeSegmentClear(segment, context)
+  if (!input.allowedZLayersByConnectionName?.size) {
+    return (segment): boolean => isIntraNodeSegmentClear(segment, context)
+  }
+  return (segment): boolean =>
+    isIntraNodeSegmentOnAllowedLayer(segment, input) &&
+    isIntraNodeSegmentClear(segment, context)
 }

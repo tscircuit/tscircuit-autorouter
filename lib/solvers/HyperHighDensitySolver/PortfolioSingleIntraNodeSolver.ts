@@ -1,3 +1,4 @@
+import type { ConnectionName } from "lib/types/srj-types"
 import { createIntraNodeSegmentValidator } from "./createIntraNodeSegmentValidator"
 import {
   HighDensitySolverA01,
@@ -702,20 +703,8 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       if (preservePhysicalGeometry) {
         traceThickness = this.constructorParams.traceWidth ?? 0.15
       }
-      let staticSegmentValidator: StaticSegmentValidator | undefined
-      const fixedHdRoutes = this.constructorParams.fixedHdRoutes
-      if (preservePhysicalGeometry && fixedHdRoutes?.length) {
-        staticSegmentValidator = createIntraNodeSegmentValidator({
-          fixedHdRoutes,
-          connMap: this.connMap ?? new ConnectivityMap({}),
-          layerCount: this.constructorParams.layerCount ?? 2,
-          clearance: this.constructorParams.obstacleMargin ?? 0.1,
-          allowBlindAndBuriedVias:
-            this.constructorParams.allowBlindAndBuriedVias,
-        })
-      }
       const allowedZLayersByConnectionName = new Map<
-        HighDensityIntraNodeRoute["connectionName"],
+        ConnectionName,
         readonly number[]
       >()
       for (const point of this.nodeWithPortPoints.portPoints) {
@@ -726,23 +715,21 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
           )
         }
       }
-      if (allowedZLayersByConnectionName.size > 0) {
-        const copperSegmentValidator = staticSegmentValidator
-        staticSegmentValidator = (segment): boolean => {
-          const layers = allowedZLayersByConnectionName.get(
-            segment.connectionName,
-          )
-          if (
-            layers &&
-            segment.start.z === segment.end.z &&
-            (segment.start.x !== segment.end.x ||
-              segment.start.y !== segment.end.y) &&
-            !layers.includes(segment.start.z)
-          ) {
-            return false
-          }
-          return copperSegmentValidator?.(segment) ?? true
-        }
+      let fixedHdRoutes: HighDensityIntraNodeRoute[] = []
+      if (preservePhysicalGeometry) {
+        fixedHdRoutes = this.constructorParams.fixedHdRoutes ?? []
+      }
+      let staticSegmentValidator: StaticSegmentValidator | undefined
+      if (fixedHdRoutes.length > 0 || allowedZLayersByConnectionName.size > 0) {
+        staticSegmentValidator = createIntraNodeSegmentValidator({
+          fixedHdRoutes,
+          allowedZLayersByConnectionName,
+          connMap: this.connMap ?? new ConnectivityMap({}),
+          layerCount: this.constructorParams.layerCount ?? 2,
+          clearance: this.constructorParams.obstacleMargin ?? 0.1,
+          allowBlindAndBuriedVias:
+            this.constructorParams.allowBlindAndBuriedVias,
+        })
       }
       const solver = new HighDensityA03Solver({
         nodeWithPortPoints: this.nodeWithPortPoints,

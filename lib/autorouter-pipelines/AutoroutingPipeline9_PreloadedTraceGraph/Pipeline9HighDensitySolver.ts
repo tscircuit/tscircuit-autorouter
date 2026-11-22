@@ -1,3 +1,4 @@
+import type { ConnectionName } from "lib/types/srj-types"
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import { Pipeline9HighDensityBatchSolver } from "./Pipeline9HighDensityBatchSolver"
 import {
@@ -788,8 +789,8 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       )
       regionalCopperRoutes = [...regionalCopperRoutes, ...routedCopperRoutes]
     }
-    const allowedLayersByConnection = new Map<
-      HighDensityRoute["connectionName"],
+    const allowedZLayersByConnectionName = new Map<
+      ConnectionName,
       ReadonlySet<number>
     >()
     for (const [
@@ -804,7 +805,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       const allowedLayers = masks[0]!.filter((z) =>
         masks.every((mask) => mask.includes(z)),
       )
-      allowedLayersByConnection.set(connectionName, new Set(allowedLayers))
+      allowedZLayersByConnectionName.set(connectionName, new Set(allowedLayers))
     }
     this.activeFallbackSolver = new Pipeline9RegionalFallbackSolver({
       captureSearchDebug: this.params.captureSearchDebug,
@@ -812,13 +813,13 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
         ...fallbackProblem.nodeWithPortPoints,
         portPoints: fallbackProblem.nodeWithPortPoints.portPoints.map(
           (point) => {
-            const layers = allowedLayersByConnection.get(point.connectionName)
+            const layers = allowedZLayersByConnectionName.get(point.connectionName)
             if (!layers) return point
             return { ...point, allowedZLayers: [...layers] }
           },
         ),
       },
-      allowedLayersByConnection,
+      allowedZLayersByConnectionName,
       colorMap: this.colorMap,
       connMap: this.connMap,
       viaDiameter: this.viaDiameter,

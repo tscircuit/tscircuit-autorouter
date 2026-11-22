@@ -1,3 +1,4 @@
+import type { ConnectionName, TraceId } from "lib/types/srj-types"
 import type { SimplifiedPcbTrace } from "lib/types"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 
@@ -10,8 +11,9 @@ export const assertPreloadedTracesStayOnAllowedLayers = ({
   preloadedTraces: SimplifiedPcbTrace[]
   layerCount: number
 }): void => {
-  const allowedLayersByTraceId = new Map<
-    SimplifiedPcbTrace["pcb_trace_id"],
+  const allowedZLayersByTraceId = new Map<TraceId, ReadonlySet<number>>()
+  const allowedZLayersByConnectionName = new Map<
+    ConnectionName,
     ReadonlySet<number>
   >()
   for (const trace of preloadedTraces) {
@@ -19,15 +21,15 @@ export const assertPreloadedTracesStayOnAllowedLayers = ({
     const layers = new Set(
       trace.allowedLayers.map((layer) => mapLayerNameToZ(layer, layerCount)),
     )
-    allowedLayersByTraceId.set(trace.pcb_trace_id, layers)
-    allowedLayersByTraceId.set(trace.connection_name, layers)
+    allowedZLayersByTraceId.set(trace.pcb_trace_id, layers)
+    allowedZLayersByConnectionName.set(trace.connection_name, layers)
   }
-  if (allowedLayersByTraceId.size === 0) return
+  if (allowedZLayersByTraceId.size === 0) return
 
   for (const trace of traces) {
     const layers =
-      allowedLayersByTraceId.get(trace.pcb_trace_id) ??
-      allowedLayersByTraceId.get(trace.connection_name)
+      allowedZLayersByTraceId.get(trace.pcb_trace_id) ??
+      allowedZLayersByConnectionName.get(trace.connection_name)
     if (!layers) continue
     for (let index = 1; index < trace.route.length; index++) {
       const from = trace.route[index - 1]!

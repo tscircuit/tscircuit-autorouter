@@ -1,3 +1,4 @@
+import type { ConnectionName } from "lib/types/srj-types"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
 import { RegionalForceImproveSolver } from "high-density-repair01"
@@ -21,8 +22,8 @@ import {
 
 type Pipeline9RegionalFallbackSolverParams = {
   nodeWithPortPoints: NodeWithPortPoints
-  allowedLayersByConnection?: ReadonlyMap<
-    HighDensityRoute["connectionName"],
+  allowedZLayersByConnectionName?: ReadonlyMap<
+    ConnectionName,
     ReadonlySet<number>
   >
   colorMap: Record<string, string>
@@ -198,7 +199,7 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
 
   private validateCandidateRoutes(routes: HighDensityRoute[]): boolean {
     for (const route of routes) {
-      const layers = this.params.allowedLayersByConnection?.get(
+      const layers = this.params.allowedZLayersByConnectionName?.get(
         route.connectionName,
       )
       if (layers) {

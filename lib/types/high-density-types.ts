@@ -1,7 +1,7 @@
-import type { CircuitJsonMetadata } from "./srj-types"
+import type { CircuitJsonMetadata, ConnectionName } from "./srj-types"
 
 export type PortPoint = {
-  connectionName: string
+  connectionName: ConnectionName
   rootConnectionName?: string
   allowedZLayers?: readonly number[]
   portPointId?: string
@@ -38,7 +38,7 @@ export type NodeWithPortPoints = {
  * z must be an integer
  */
 export type HighDensityIntraNodeRoute = {
-  connectionName: string
+  connectionName: ConnectionName
   allowedZLayers?: readonly number[]
   rootConnectionName?: string
   /** Terminal identities in route order, kept inert until terminal locking. */
@@ -95,7 +95,7 @@ export type Jumper = {
  * An intra-node route that uses jumpers instead of vias for single-layer PCBs.
  */
 export type HighDensityIntraNodeRouteWithJumpers = {
-  connectionName: string
+  connectionName: ConnectionName
   rootConnectionName?: string
   regionId?: string
   traceThickness: number
