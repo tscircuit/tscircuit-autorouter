@@ -25,7 +25,8 @@ for (const trace of solver.getOutputSimplifiedPcbTraces()) {
   if (vias)
     violations.push(`${net} (${trace.pcb_trace_id}): ${vias} vias, maximum 0`)
   if (net === "FXN") {
-    let length = 0
+    // The board length check includes 1.6 mm of travel per via.
+    let length = vias * 1.6
     for (let i = 1; i < trace.route.length; i++) {
       const a = trace.route[i - 1]
       const b = trace.route[i]
