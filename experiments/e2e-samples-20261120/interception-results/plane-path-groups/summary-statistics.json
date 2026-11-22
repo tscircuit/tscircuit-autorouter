@@ -1,0 +1,3979 @@
+{
+  "summary": {
+    "tscircuit": "0.0.3274",
+    "core": "0.0.2455",
+    "coreCommit": "9dc51c42bb57ad599e0dd7474adefffdc3c5c283",
+    "fanout": "0.0.101",
+    "capacityAutorouter": "0.0.1148",
+    "busLanes": "0.0.65",
+    "archiveSha256": "1991ad1891a953dcd660818aaceb73f7aa42dbf704e677e635753b9159f7a6b7",
+    "productionModule": "lib/route-bus/route-plane-terminated-bus.ts",
+    "productionModuleSha256": "e19c12955b49578fa6d18ecc96b7a027c3b7513f1cfec82469bcc49164651c65",
+    "fixCommit": "53435e70f6b3add531ceb8f501dbb2e1b13db3e0",
+    "reproCommit": "12a86287aeaabc9f6c6b53d10652f4d31314df0b",
+    "measuredSourceCommit": "0d52936a9e1fef1d3ccda70c7ded962f9f904807",
+    "baselineRun": 44960044216,
+    "afterRun": 44962319783,
+    "verificationRun": 44962381625,
+    "auditRun": 44962437808,
+    "largePrefixVerificationRun": 44963374179,
+    "nativeFixRun": 44963121751,
+    "nativeReproRun": 44962191243,
+    "pairedComparisons": 8,
+    "pairedSearchBeforeMs": 74768.15457525,
+    "pairedSearchAfterMs": 66062.7721025,
+    "pairedSearchReductionPercent": 11.643168835989536,
+    "focusedSourcePathGroups": [
+      3,
+      1
+    ],
+    "focusedVias": [
+      1,
+      1
+    ],
+    "coldStaticCacheLookups": [
+      424,
+      427
+    ],
+    "physicalPartialsChecked": 20,
+    "nativeDrcFindings": 0,
+    "independentViaInPadFindings": 0,
+    "completeBoards": [
+      0,
+      0
+    ],
+    "partialEscapeTotals": [
+      688,
+      688
+    ],
+    "diagnosticViaTotals": [
+      416,
+      416
+    ],
+    "alreadyConnectedInputNets": [
+      19,
+      19
+    ],
+    "completedSearchOutputsCompared": 8,
+    "wholeBoardSvgsIdentical": true,
+    "allConstructorInputsIdentical": true,
+    "allPadGeometryIdentical": true,
+    "allCompletedAssignmentPrefixesIdentical": true,
+    "windingCalls": [
+      88,
+      88
+    ],
+    "windingSolved": [
+      87,
+      87
+    ],
+    "baselineRejectionEvents": {
+      "accepted-plan-copper": 31606764,
+      "pad-via": 97611,
+      "pad-trace": 351266,
+      "outside-boundary": 124038
+    },
+    "nativeFixStatus": "passed",
+    "nativeReproStatus": "passed",
+    "interpretation": "Partial fanout escape connections are not completed board nets or committed PCB routes."
+  },
+  "performance": [
+    {
+      "sample": "butterstick-original",
+      "beforeMs": 57281.814365750004,
+      "afterMs": 50261.1503985,
+      "reductionPercent": 12.25635752810198,
+      "comparisons": 2
+    },
+    {
+      "sample": "icepi-original",
+      "beforeMs": 4371.662957749999,
+      "afterMs": 3669.673681,
+      "reductionPercent": 16.057717247061,
+      "comparisons": 2
+    },
+    {
+      "sample": "imx6-original",
+      "beforeMs": 5517.04885675,
+      "afterMs": 4447.881019,
+      "reductionPercent": 19.379343295861762,
+      "comparisons": 2
+    },
+    {
+      "sample": "imx6-spaced",
+      "beforeMs": 7597.628395,
+      "afterMs": 7684.067004,
+      "reductionPercent": -1.1377051430534024,
+      "comparisons": 2
+    }
+  ],
+  "largePrefixPerformance": [
+    {
+      "sample": "h616-spaced",
+      "completedAssignments": 16,
+      "beforeMs": 8476.6785005,
+      "afterMs": 8359.223778,
+      "reductionPercent": 1.3856220038671152
+    },
+    {
+      "sample": "glider-spaced",
+      "completedAssignments": 16,
+      "beforeMs": 25650.805754,
+      "afterMs": 25212.460102999998,
+      "reductionPercent": 1.7088962241727956
+    }
+  ],
+  "rows": [
+    {
+      "sample": "butterstick-original",
+      "samePreviousInput": true,
+      "sameInputs": true,
+      "sameHistory": true,
+      "comparedAssignments": 256,
+      "samePadGeometry": true,
+      "identicalCompletedOutput": true,
+      "identicalPcbSvg": true,
+      "captures": [
+        {
+          "mode": "before",
+          "reportStatus": "failed",
+          "solved": false,
+          "failed": true,
+          "partialEscapes": 62,
+          "requested": 91,
+          "assignments": 256,
+          "vias": 42,
+          "nativeDrc": {
+            "valid": true,
+            "checkedTraceCount": 62,
+            "checkedSegmentCount": 191,
+            "checkedViaCount": 42,
+            "issues": []
+          },
+          "independentViaInPadFindings": 0,
+          "windingCalls": 10,
+          "windingSolved": 10,
+          "committedTraces": 0,
+          "committedVias": 0,
+          "assessment": {
+            "sample": "butterstick-original",
+            "requestedNets": 317,
+            "connectedNets": 9,
+            "groups": {
+              "board": {
+                "requested": 262,
+                "connected": 9
+              },
+              "ddr_remaining": {
+                "requested": 39,
+                "connected": 0
+              },
+              "byte0": {
+                "requested": 8,
+                "connected": 0
+              },
+              "byte1": {
+                "requested": 8,
+                "connected": 0
+              }
+            },
+            "membershipErrors": [],
+            "components": 350,
+            "expectedComponents": 350,
+            "pads": 1623,
+            "expectedPads": 1623,
+            "traces": 0,
+            "vias": 0,
+            "wireLengthMm": 0,
+            "copperPours": 59,
+            "drc": {
+              "overlap": 0,
+              "padTrace": 0,
+              "viaTrace": 0,
+              "viaPad": 0,
+              "viaSpacing": 0,
+              "continuity": 0,
+              "viaInPad": 0,
+              "holeTrace": 0,
+              "width": 0
+            }
+          }
+        },
+        {
+          "mode": "after",
+          "reportStatus": "failed",
+          "solved": false,
+          "failed": true,
+          "partialEscapes": 62,
+          "requested": 91,
+          "assignments": 256,
+          "vias": 42,
+          "nativeDrc": {
+            "valid": true,
+            "checkedTraceCount": 62,
+            "checkedSegmentCount": 191,
+            "checkedViaCount": 42,
+            "issues": []
+          },
+          "independentViaInPadFindings": 0,
+          "windingCalls": 10,
+          "windingSolved": 10,
+          "committedTraces": 0,
+          "committedVias": 0,
+          "assessment": {
+            "sample": "butterstick-original",
+            "requestedNets": 317,
+            "connectedNets": 9,
+            "groups": {
+              "board": {
+                "requested": 262,
+                "connected": 9
+              },
+              "ddr_remaining": {
+                "requested": 39,
+                "connected": 0
+              },
+              "byte0": {
+                "requested": 8,
+                "connected": 0
+              },
+              "byte1": {
+                "requested": 8,
+                "connected": 0
+              }
+            },
+            "membershipErrors": [],
+            "components": 350,
+            "expectedComponents": 350,
+            "pads": 1623,
+            "expectedPads": 1623,
+            "traces": 0,
+            "vias": 0,
+            "wireLengthMm": 0,
+            "copperPours": 59,
+            "drc": {
+              "overlap": 0,
+              "padTrace": 0,
+              "viaTrace": 0,
+              "viaPad": 0,
+              "viaSpacing": 0,
+              "continuity": 0,
+              "viaInPad": 0,
+              "holeTrace": 0,
+              "width": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "sample": "butterstick-spaced",
+      "samePreviousInput": null,
+      "sameInputs": true,
+      "sameHistory": true,
+      "comparedAssignments": 256,
+      "samePadGeometry": true,
+      "identicalCompletedOutput": true,
+      "identicalPcbSvg": true,
+      "captures": [
+        {
+          "mode": "before",
+          "reportStatus": "failed",
+          "solved": false,
+          "failed": true,
+          "partialEscapes": 78,
+          "requested": 91,
+          "assignments": 256,
+          "vias": 49,
+          "nativeDrc": {
+            "valid": true,
+            "checkedTraceCount": 78,
+            "checkedSegmentCount": 320,
+            "checkedViaCount": 49,
+            "issues": []
+          },
+          "independentViaInPadFindings": 0,
+          "windingCalls": 11,
+          "windingSolved": 11,
+          "committedTraces": 0,
+          "committedVias": 0,
+          "assessment": {
+            "sample": "butterstick-spaced",
+            "requestedNets": 317,
+            "connectedNets": 0,
+            "groups": {
+              "power": {
+                "requested": 12,
+                "connected": 0
+              },
+              "other_signals": {
+                "requested": 250,
+                "connected": 0
+              },
+              "remaining": {
+                "requested": 39,
+                "connected": 0
+              },
+              "byte1": {
+                "requested": 8,
+                "connected": 0
+              },
+              "byte0": {
+                "requested": 8,
+                "connected": 0
+              }
+            },
+            "membershipErrors": [],
+            "components": 350,
+            "expectedComponents": 350,
+            "pads": 1623,
+            "expectedPads": 1623,
+            "traces": 0,
+            "vias": 0,
+            "wireLengthMm": 0,
+            "copperPours": 0,
+            "drc": {
+              "overlap": 0,
+              "padTrace": 0,
+              "viaTrace": 0,
+              "viaPad": 0,
+              "viaSpacing": 0,
+              "continuity": 0,
+              "viaInPad": 0,
+              "holeTrace": 0,
+              "width": 0
+            }
+          }
+        },
+        {
+          "mode": "after",
+          "reportStatus": "failed",
+          "solved": false,
+          "failed": true,
+          "partialEscapes": 78,
+          "requested": 91,
+          "assignments": 256,
+          "vias": 49,
+          "nativeDrc": {
+            "valid": true,
+            "checkedTraceCount": 78,
+            "checkedSegmentCount": 320,
+            "checkedViaCount": 49,
+            "issues": []
+          },
+          "independentViaInPadFindings": 0,
+          "windingCalls": 11,
+          "windingSolved": 11,
+          "committedTraces": 0,
+          "committedVias": 0,
+          "assessment": {
+            "sample": "butterstick-spaced",
+            "requestedNets": 317,
+            "connectedNets": 0,
+            "groups": {
+              "power": {
+                "requested": 12,
+                "connected": 0
+              },
+              "other_signals": {
+                "requested": 250,
+                "connected": 0
+              },
+              "remaining": {
+                "requested": 39,
+                "connected": 0
+              },
+              "byte1": {
+                "requested": 8,
+                "connected": 0
+              },
+              "byte0": {
+                "requested": 8,
+                "connected": 0
+              }
+            },
+            "membershipErrors": [],
+            "components": 350,
+            "expectedComponents": 350,
+            "pads": 1623,
+            "expectedPads": 1623,
+            "traces": 0,
+            "vias": 0,
+            "wireLengthMm": 0,
+            "copperPours": 0,
+            "drc": {
+              "overlap": 0,
+              "padTrace": 0,
+              "viaTrace": 0,
+              "viaPad": 0,
+              "viaSpacing": 0,
+              "continuity": 0,
+              "viaInPad": 0,
+              "holeTrace": 0,
+              "width": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "sample": "glider-original",
+      "samePreviousInput": null,
+      "sameInputs": true,
+      "sameHistory": true,
+      "comparedAssignments": 256,
+      "samePadGeometry": true,
+      "identicalCompletedOutput": true,
+      "identicalPcbSvg": true,
+      "captures": [
+        {
+          "mode": "before",
+          "reportStatus": "failed",
+          "solved": false,
+          "failed": true,
+          "partialEscapes": 86,
+          "requested": 95,
+          "assignments": 256,
+          "vias": 58,
+          "nativeDrc": {
+            "valid": true,
+            "checkedTraceCount": 86,
+            "checkedSegmentCount": 237,
+            "checkedViaCount": 58,
+            "issues": []
+          },
+          "independentViaInPadFindings": 0,
+          "windingCalls": 7,
+          "windingSolved": 7,
+          "committedTraces": 0,
+          "committedVias": 0,
+          "assessment": {
+            "sample": "glider-original",
+            "requestedNets": 356,
+            "connectedNets": 0,
+            "groups": {
+              "board": {
+                "requested": 307,
+                "connected": 0
+              },
+              "ddr_remaining": {
+                "requested": 33,
+                "connected": 0
+              },
+              "byte0": {
+                "requested": 8,
+                "connected": 0
+              },
+              "byte1": {
+                "requested": 8,
+                "connected": 0
+              }
+            },
+            "membershipErrors": [],
+            "components": 379,
+            "expectedComponents": 379,
+            "pads": 1700,
+            "expectedPads": 1700,
+            "traces": 0,
+            "vias": 0,
+            "wireLengthMm": 0,
+            "copperPours": 6,
+            "drc": {
+              "overlap": 0,
+              "padTrace": 0,
+              "viaTrace": 0,
+              "viaPad": 0,
+              "viaSpacing": 0,
+              "continuity": 0,
+              "viaInPad": 0,
+              "holeTrace": 0,
+              "width": 0
+            }
+          }
+        },
+        {
+          "mode": "after",
+          "reportStatus": "failed",
+          "solved": false,
+          "failed": true,
+          "partialEscapes": 86,
+          "requested": 95,
+          "assignments": 256,
+          "vias": 58,
+          "nativeDrc": {
+            "valid": true,
+            "checkedTraceCount": 86,
+            "checkedSegmentCount": 237,
+            "checkedViaCount": 58,
+            "issues": []
+          },
+          "independentViaInPadFindings": 0,
+          "windingCalls": 7,
+          "windingSolved": 7,
+          "committedTraces": 0,
+          "committedVias": 0,
+          "assessment": {
+            "sample": "glider-original",
+            "requestedNets": 356,
+            "connectedNets": 0,
+            "groups": {
+              "board": {
+                "requested": 307,
+                "connected": 0
+              },
+              "ddr_remaining": {
+                "requested": 33,
+                "connected": 0
+              },
+              "byte0": {
+                "requested": 8,
+                "connected": 0
+              },
+              "byte1": {
+                "requested": 8,
+                "connected": 0
+              }
+            },
+            "membershipErrors": [],
+            "components": 379,
+            "expectedComponents": 379,
+            "pads": 1700,
+            "expectedPads": 1700,
+            "traces": 0,
+            "vias": 0,
+            "wireLengthMm": 0,
+            "copperPours": 6,
+            "drc": {
+              "overlap": 0,
+              "padTrace": 0,
+              "viaTrace": 0,
+              "viaPad": 0,
+              "viaSpacing": 0,
+              "continuity": 0,
+              "viaInPad": 0,
+              "holeTrace": 0,
+              "width": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "sample": "glider-spaced",
+      "samePreviousInput": null,
+      "sameInputs": true,
+      "sameHistory": true,
+      "comparedAssignments": 34,
+      "samePadGeometry": true,
+      "identicalCompletedOutput": null,
+      "identicalPcbSvg": true,
+      "captures": [
+        {
+          "mode": "before",
+          "reportStatus": "failed",
+          "solved": false,
+          "failed": false,
+          "partialEscapes": 135,
+          "requested": 211,
+          "assignments": 34,
+          "vias": 67,
+          "nativeDrc": {
+            "valid": true,
+            "checkedTraceCount": 135,
+            "checkedSegmentCount": 515,
+            "checkedViaCount": 67,
+            "issues": []
+          },
+          "independentViaInPadFindings": 0,
+          "windingCalls": 8,
+          "windingSolved": 8,
+          "committedTraces": 0,
+          "committedVias": 0,
+          "assessment": {
+            "sample": "glider-spaced",
+            "requestedNets": 356,
+            "connectedNets": 0,
+            "groups": {
+              "other_signals": {
+                "requested": 283,
+                "connected": 0
+              },
+              "power": {
+                "requested": 24,
+                "connected": 0
+              },
+              "remaining": {
+                "requested": 33,
+                "connected": 0
+              },
+              "byte0": {
+                "requested": 8,
+                "connected": 0
+              },
+              "byte1": {
+                "requested": 8,
+                "connected": 0
+              }
+            },
+            "membershipErrors": [],
+            "components": 379,
+            "expectedComponents": 379,
+            "pads": 1700,
+            "expectedPads": 1700,
+            "traces": 0,
+            "vias": 0,
+            "wireLengthMm": 0,
+            "copperPours": 0,
+            "drc": {
+              "overlap": 0,
+              "padTrace": 0,
+              "viaTrace": 0,
+              "viaPad": 0,
+              "viaSpacing": 0,
+              "continuity": 0,
+              "viaInPad": 0,
+              "holeTrace": 0,
+              "width": 0
+            }
+          }
+        },
+        {
+          "mode": "after",
+          "reportStatus": "failed",
+          "solved": false,
+          "failed": false,
+          "partialEscapes": 135,
+          "requested": 211,
+          "assignments": 34,
+          "vias": 67,
+          "nativeDrc": {
+            "valid": true,
+            "checkedTraceCount": 135,
+            "checkedSegmentCount": 515,
+            "checkedViaCount": 67,
+            "issues": []
+          },
+          "independentViaInPadFindings": 0,
+          "windingCalls": 8,
+          "windingSolved": 8,
+          "committedTraces": 0,
+          "committedVias": 0,
+          "assessment": {
+            "sample": "glider-spaced",
+            "requestedNets": 356,
+            "connectedNets": 0,
+            "groups": {
+              "other_signals": {
+                "requested": 283,
+                "connected": 0
+              },
+              "power": {
+                "requested": 24,
+                "connected": 0
+              },
+              "remaining": {
+                "requested": 33,
+                "connected": 0
+              },
+              "byte0": {
+                "requested": 8,
+                "connected": 0
+              },
+              "byte1": {
+                "requested": 8,
+                "connected": 0
+              }
+            },
+            "membershipErrors": [],
+            "components": 379,
+            "expectedComponents": 379,
+            "pads": 1700,
+            "expectedPads": 1700,
+            "traces": 0,
+            "vias": 0,
+            "wireLengthMm": 0,
+            "copperPours": 0,
+            "drc": {
+              "overlap": 0,
+              "padTrace": 0,
+              "viaTrace": 0,
+              "viaPad": 0,
+              "viaSpacing": 0,
+              "continuity": 0,
+              "viaInPad": 0,
+              "holeTrace": 0,
+              "width": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "sample": "h616-original",
+      "samePreviousInput": null,
+      "sameInputs": true,
+      "sameHistory": true,
+      "comparedAssignments": 256,
+      "samePadGeometry": true,
+      "identicalCompletedOutput": true,
+      "identicalPcbSvg": true,
+      "captures": [
+        {
+          "mode": "before",
+          "reportStatus": "failed",
+          "solved": false,
+          "failed": true,
+          "partialEscapes": 109,
+          "requested": 174,
+          "assignments": 256,
+          "vias": 74,
+          "nativeDrc": {
+            "valid": true,
+            "checkedTraceCount": 109,
+            "checkedSegmentCount": 274,
+            "checkedViaCount": 74,
+            "issues": []
+          },
+          "independentViaInPadFindings": 0,
+          "windingCalls": 6,
+          "windingSolved": 6,
+          "committedTraces": 0,
+          "committedVias": 0,
+          "assessment": {
+            "sample": "h616-original",
+            "requestedNets": 121,
+            "connectedNets": 0,
+            "groups": {
+              "board": {
+                "requested": 68,
+                "connected": 0
+              },
+              "byte0": {
+                "requested": 8,
+                "connected": 0
+              },
+              "byte1": {
+                "requested": 8,
+                "connected": 0
+              },
+              "ddr_remaining": {
+                "requested": 37,
+                "connected": 0
+              }
+            },
+            "membershipErrors": [],
+            "components": 125,
+            "expectedComponents": 125,
+            "pads": 760,
+            "expectedPads": 760,
+            "traces": 0,
+            "vias": 0,
+            "wireLengthMm": 0,
+            "copperPours": 231,
+            "drc": {
+              "overlap": 0,
+              "padTrace": 0,
+              "viaTrace": 0,
+              "viaPad": 0,
+              "viaSpacing": 0,
+              "continuity": 0,
+              "viaInPad": 0,
+              "holeTrace": 0,
+              "width": 0
+            }
+          }
+        },
+        {
+          "mode": "after",
+          "reportStatus": "failed",
+          "solved": false,
+          "failed": true,
+          "partialEscapes": 109,
+          "requested": 174,
+          "assignments": 256,
+          "vias": 74,
+          "nativeDrc": {
+            "valid": true,
+            "checkedTraceCount": 109,
+            "checkedSegmentCount": 274,
+            "checkedViaCount": 74,
+            "issues": []
+          },
+          "independentViaInPadFindings": 0,
+          "windingCalls": 6,
+          "windingSolved": 6,
+          "committedTraces": 0,
+          "committedVias": 0,
+          "assessment": {
+            "sample": "h616-original",
+            "requestedNets": 121,
+            "connectedNets": 0,
+            "groups": {
+              "board": {
+                "requested": 68,
+                "connected": 0
+              },
+              "byte0": {
+                "requested": 8,
+                "connected": 0
+              },
+              "byte1": {
+                "requested": 8,
+                "connected": 0
+              },
+              "ddr_remaining": {
+                "requested": 37,
+                "connected": 0
+              }
+            },
+            "membershipErrors": [],
+            "components": 125,
+            "expectedComponents": 125,
+            "pads": 760,
+            "expectedPads": 760,
+            "traces": 0,
+            "vias": 0,
+            "wireLengthMm": 0,
+            "copperPours": 231,
+            "drc": {
+              "overlap": 0,
+              "padTrace": 0,
+              "viaTrace": 0,
+              "viaPad": 0,
+              "viaSpacing": 0,
+              "continuity": 0,
+              "viaInPad": 0,
+              "holeTrace": 0,
+              "width": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "sample": "h616-spaced",
+      "samePreviousInput": null,
+      "sameInputs": true,
+      "sameHistory": true,
+      "comparedAssignments": 189,
+      "samePadGeometry": true,
+      "identicalCompletedOutput": null,
+      "identicalPcbSvg": true,
+      "captures": [
+        {
+          "mode": "before",
+          "reportStatus": "failed",
+          "solved": false,
+          "failed": false,
+          "partialEscapes": 111,
+          "requested": 174,
+          "assignments": 194,
+          "vias": 72,
+          "nativeDrc": {
+            "valid": true,
+            "checkedTraceCount": 111,
+            "checkedSegmentCount": 472,
+            "checkedViaCount": 72,
+            "issues": []
+          },
+          "independentViaInPadFindings": 0,
+          "windingCalls": 8,
+          "windingSolved": 8,
+          "committedTraces": 0,
+          "committedVias": 0,
+          "assessment": {
+            "sample": "h616-spaced",
+            "requestedNets": 121,
+            "connectedNets": 0,
+            "groups": {
+              "power": {
+                "requested": 12,
+                "connected": 0
+              },
+              "other_signals": {
+                "requested": 56,
+                "connected": 0
+              },
+              "remaining": {
+                "requested": 37,
+                "connected": 0
+              },
+              "byte1": {
+                "requested": 8,
+                "connected": 0
+              },
+              "byte0": {
+                "requested": 8,
+                "connected": 0
+              }
+            },
+            "membershipErrors": [],
+            "components": 125,
+            "expectedComponents": 125,
+            "pads": 760,
+            "expectedPads": 760,
+            "traces": 0,
+            "vias": 0,
+            "wireLengthMm": 0,
+            "copperPours": 0,
+            "drc": {
+              "overlap": 0,
+              "padTrace": 0,
+              "viaTrace": 0,
+              "viaPad": 0,
+              "viaSpacing": 0,
+              "continuity": 0,
+              "viaInPad": 0,
+              "holeTrace": 0,
+              "width": 0
+            }
+          }
+        },
+        {
+          "mode": "after",
+          "reportStatus": "failed",
+          "solved": false,
+          "failed": false,
+          "partialEscapes": 111,
+          "requested": 174,
+          "assignments": 189,
+          "vias": 72,
+          "nativeDrc": {
+            "valid": true,
+            "checkedTraceCount": 111,
+            "checkedSegmentCount": 472,
+            "checkedViaCount": 72,
+            "issues": []
+          },
+          "independentViaInPadFindings": 0,
+          "windingCalls": 8,
+          "windingSolved": 8,
+          "committedTraces": 0,
+          "committedVias": 0,
+          "assessment": {
+            "sample": "h616-spaced",
+            "requestedNets": 121,
+            "connectedNets": 0,
+            "groups": {
+              "power": {
+                "requested": 12,
+                "connected": 0
+              },
+              "other_signals": {
+                "requested": 56,
+                "connected": 0
+              },
+              "remaining": {
+                "requested": 37,
+                "connected": 0
+              },
+              "byte1": {
+                "requested": 8,
+                "connected": 0
+              },
+              "byte0": {
+                "requested": 8,
+                "connected": 0
+              }
+            },
+            "membershipErrors": [],
+            "components": 125,
+            "expectedComponents": 125,
+            "pads": 760,
+            "expectedPads": 760,
+            "traces": 0,
+            "vias": 0,
+            "wireLengthMm": 0,
+            "copperPours": 0,
+            "drc": {
+              "overlap": 0,
+              "padTrace": 0,
+              "viaTrace": 0,
+              "viaPad": 0,
+              "viaSpacing": 0,
+              "continuity": 0,
+              "viaInPad": 0,
+              "holeTrace": 0,
+              "width": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "sample": "icepi-original",
+      "samePreviousInput": true,
+      "sameInputs": true,
+      "sameHistory": true,
+      "comparedAssignments": 256,
+      "samePadGeometry": true,
+      "identicalCompletedOutput": true,
+      "identicalPcbSvg": true,
+      "captures": [
+        {
+          "mode": "before",
+          "reportStatus": "failed",
+          "solved": false,
+          "failed": true,
+          "partialEscapes": 14,
+          "requested": 32,
+          "assignments": 256,
+          "vias": 6,
+          "nativeDrc": {
+            "valid": true,
+            "checkedTraceCount": 14,
+            "checkedSegmentCount": 25,
+            "checkedViaCount": 6,
+            "issues": []
+          },
+          "independentViaInPadFindings": 0,
+          "windingCalls": 8,
+          "windingSolved": 8,
+          "committedTraces": 0,
+          "committedVias": 0,
+          "assessment": {
+            "sample": "icepi-original",
+            "requestedNets": 230,
+            "connectedNets": 7,
+            "groups": {
+              "board": {
+                "requested": 180,
+                "connected": 7
+              },
+              "ddr_remaining": {
+                "requested": 34,
+                "connected": 0
+              },
+              "byte0": {
+                "requested": 8,
+                "connected": 0
+              },
+              "byte1": {
+                "requested": 8,
+                "connected": 0
+              }
+            },
+            "membershipErrors": [],
+            "components": 280,
+            "expectedComponents": 280,
+            "pads": 1426,
+            "expectedPads": 1426,
+            "traces": 0,
+            "vias": 0,
+            "wireLengthMm": 0,
+            "copperPours": 194,
+            "drc": {
+              "overlap": 0,
+              "padTrace": 0,
+              "viaTrace": 0,
+              "viaPad": 0,
+              "viaSpacing": 0,
+              "continuity": 0,
+              "viaInPad": 0,
+              "holeTrace": 0,
+              "width": 0
+            }
+          }
+        },
+        {
+          "mode": "after",
+          "reportStatus": "failed",
+          "solved": false,
+          "failed": true,
+          "partialEscapes": 14,
+          "requested": 32,
+          "assignments": 256,
+          "vias": 6,
+          "nativeDrc": {
+            "valid": true,
+            "checkedTraceCount": 14,
+            "checkedSegmentCount": 25,
+            "checkedViaCount": 6,
+            "issues": []
+          },
+          "independentViaInPadFindings": 0,
+          "windingCalls": 8,
+          "windingSolved": 8,
+          "committedTraces": 0,
+          "committedVias": 0,
+          "assessment": {
+            "sample": "icepi-original",
+            "requestedNets": 230,
+            "connectedNets": 7,
+            "groups": {
+              "board": {
+                "requested": 180,
+                "connected": 7
+              },
+              "ddr_remaining": {
+                "requested": 34,
+                "connected": 0
+              },
+              "byte0": {
+                "requested": 8,
+                "connected": 0
+              },
+              "byte1": {
+                "requested": 8,
+                "connected": 0
+              }
+            },
+            "membershipErrors": [],
+            "components": 280,
+            "expectedComponents": 280,
+            "pads": 1426,
+            "expectedPads": 1426,
+            "traces": 0,
+            "vias": 0,
+            "wireLengthMm": 0,
+            "copperPours": 194,
+            "drc": {
+              "overlap": 0,
+              "padTrace": 0,
+              "viaTrace": 0,
+              "viaPad": 0,
+              "viaSpacing": 0,
+              "continuity": 0,
+              "viaInPad": 0,
+              "holeTrace": 0,
+              "width": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "sample": "icepi-spaced",
+      "samePreviousInput": null,
+      "sameInputs": true,
+      "sameHistory": true,
+      "comparedAssignments": 256,
+      "samePadGeometry": true,
+      "identicalCompletedOutput": true,
+      "identicalPcbSvg": true,
+      "captures": [
+        {
+          "mode": "before",
+          "reportStatus": "failed",
+          "solved": false,
+          "failed": true,
+          "partialEscapes": 77,
+          "requested": 92,
+          "assignments": 256,
+          "vias": 37,
+          "nativeDrc": {
+            "valid": true,
+            "checkedTraceCount": 77,
+            "checkedSegmentCount": 293,
+            "checkedViaCount": 37,
+            "issues": []
+          },
+          "independentViaInPadFindings": 0,
+          "windingCalls": 11,
+          "windingSolved": 10,
+          "committedTraces": 0,
+          "committedVias": 0,
+          "assessment": {
+            "sample": "icepi-spaced",
+            "requestedNets": 230,
+            "connectedNets": 0,
+            "groups": {
+              "remaining": {
+                "requested": 34,
+                "connected": 0
+              },
+              "power": {
+                "requested": 14,
+                "connected": 0
+              },
+              "other_signals": {
+                "requested": 166,
+                "connected": 0
+              },
+              "byte1": {
+                "requested": 8,
+                "connected": 0
+              },
+              "byte0": {
+                "requested": 8,
+                "connected": 0
+              }
+            },
+            "membershipErrors": [],
+            "components": 280,
+            "expectedComponents": 280,
+            "pads": 1426,
+            "expectedPads": 1426,
+            "traces": 0,
+            "vias": 0,
+            "wireLengthMm": 0,
+            "copperPours": 0,
+            "drc": {
+              "overlap": 0,
+              "padTrace": 0,
+              "viaTrace": 0,
+              "viaPad": 0,
+              "viaSpacing": 0,
+              "continuity": 0,
+              "viaInPad": 0,
+              "holeTrace": 0,
+              "width": 0
+            }
+          }
+        },
+        {
+          "mode": "after",
+          "reportStatus": "failed",
+          "solved": false,
+          "failed": true,
+          "partialEscapes": 77,
+          "requested": 92,
+          "assignments": 256,
+          "vias": 37,
+          "nativeDrc": {
+            "valid": true,
+            "checkedTraceCount": 77,
+            "checkedSegmentCount": 293,
+            "checkedViaCount": 37,
+            "issues": []
+          },
+          "independentViaInPadFindings": 0,
+          "windingCalls": 11,
+          "windingSolved": 10,
+          "committedTraces": 0,
+          "committedVias": 0,
+          "assessment": {
+            "sample": "icepi-spaced",
+            "requestedNets": 230,
+            "connectedNets": 0,
+            "groups": {
+              "remaining": {
+                "requested": 34,
+                "connected": 0
+              },
+              "power": {
+                "requested": 14,
+                "connected": 0
+              },
+              "other_signals": {
+                "requested": 166,
+                "connected": 0
+              },
+              "byte1": {
+                "requested": 8,
+                "connected": 0
+              },
+              "byte0": {
+                "requested": 8,
+                "connected": 0
+              }
+            },
+            "membershipErrors": [],
+            "components": 280,
+            "expectedComponents": 280,
+            "pads": 1426,
+            "expectedPads": 1426,
+            "traces": 0,
+            "vias": 0,
+            "wireLengthMm": 0,
+            "copperPours": 0,
+            "drc": {
+              "overlap": 0,
+              "padTrace": 0,
+              "viaTrace": 0,
+              "viaPad": 0,
+              "viaSpacing": 0,
+              "continuity": 0,
+              "viaInPad": 0,
+              "holeTrace": 0,
+              "width": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "sample": "imx6-original",
+      "samePreviousInput": true,
+      "sameInputs": true,
+      "sameHistory": true,
+      "comparedAssignments": 256,
+      "samePadGeometry": true,
+      "identicalCompletedOutput": true,
+      "identicalPcbSvg": true,
+      "captures": [
+        {
+          "mode": "before",
+          "reportStatus": "failed",
+          "solved": false,
+          "failed": true,
+          "partialEscapes": 9,
+          "requested": 32,
+          "assignments": 256,
+          "vias": 7,
+          "nativeDrc": {
+            "valid": true,
+            "checkedTraceCount": 9,
+            "checkedSegmentCount": 18,
+            "checkedViaCount": 7,
+            "issues": []
+          },
+          "independentViaInPadFindings": 0,
+          "windingCalls": 8,
+          "windingSolved": 8,
+          "committedTraces": 0,
+          "committedVias": 0,
+          "assessment": {
+            "sample": "imx6-original",
+            "requestedNets": 404,
+            "connectedNets": 3,
+            "groups": {
+              "board": {
+                "requested": 351,
+                "connected": 3
+              },
+              "ddr_remaining": {
+                "requested": 37,
+                "connected": 0
+              },
+              "byte0": {
+                "requested": 8,
+                "connected": 0
+              },
+              "byte1": {
+                "requested": 8,
+                "connected": 0
+              }
+            },
+            "membershipErrors": [],
+            "components": 498,
+            "expectedComponents": 498,
+            "pads": 1904,
+            "expectedPads": 1904,
+            "traces": 0,
+            "vias": 0,
+            "wireLengthMm": 0,
+            "copperPours": 372,
+            "drc": {
+              "overlap": 0,
+              "padTrace": 0,
+              "viaTrace": 0,
+              "viaPad": 0,
+              "viaSpacing": 0,
+              "continuity": 0,
+              "viaInPad": 0,
+              "holeTrace": 0,
+              "width": 0
+            }
+          }
+        },
+        {
+          "mode": "after",
+          "reportStatus": "failed",
+          "solved": false,
+          "failed": true,
+          "partialEscapes": 9,
+          "requested": 32,
+          "assignments": 256,
+          "vias": 7,
+          "nativeDrc": {
+            "valid": true,
+            "checkedTraceCount": 9,
+            "checkedSegmentCount": 18,
+            "checkedViaCount": 7,
+            "issues": []
+          },
+          "independentViaInPadFindings": 0,
+          "windingCalls": 8,
+          "windingSolved": 8,
+          "committedTraces": 0,
+          "committedVias": 0,
+          "assessment": {
+            "sample": "imx6-original",
+            "requestedNets": 404,
+            "connectedNets": 3,
+            "groups": {
+              "board": {
+                "requested": 351,
+                "connected": 3
+              },
+              "ddr_remaining": {
+                "requested": 37,
+                "connected": 0
+              },
+              "byte0": {
+                "requested": 8,
+                "connected": 0
+              },
+              "byte1": {
+                "requested": 8,
+                "connected": 0
+              }
+            },
+            "membershipErrors": [],
+            "components": 498,
+            "expectedComponents": 498,
+            "pads": 1904,
+            "expectedPads": 1904,
+            "traces": 0,
+            "vias": 0,
+            "wireLengthMm": 0,
+            "copperPours": 372,
+            "drc": {
+              "overlap": 0,
+              "padTrace": 0,
+              "viaTrace": 0,
+              "viaPad": 0,
+              "viaSpacing": 0,
+              "continuity": 0,
+              "viaInPad": 0,
+              "holeTrace": 0,
+              "width": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "sample": "imx6-spaced",
+      "samePreviousInput": true,
+      "sameInputs": true,
+      "sameHistory": true,
+      "comparedAssignments": 256,
+      "samePadGeometry": true,
+      "identicalCompletedOutput": true,
+      "identicalPcbSvg": true,
+      "captures": [
+        {
+          "mode": "before",
+          "reportStatus": "failed",
+          "solved": false,
+          "failed": true,
+          "partialEscapes": 7,
+          "requested": 32,
+          "assignments": 256,
+          "vias": 4,
+          "nativeDrc": {
+            "valid": true,
+            "checkedTraceCount": 7,
+            "checkedSegmentCount": 16,
+            "checkedViaCount": 4,
+            "issues": []
+          },
+          "independentViaInPadFindings": 0,
+          "windingCalls": 11,
+          "windingSolved": 11,
+          "committedTraces": 0,
+          "committedVias": 0,
+          "assessment": {
+            "sample": "imx6-spaced",
+            "requestedNets": 404,
+            "connectedNets": 0,
+            "groups": {
+              "power": {
+                "requested": 24,
+                "connected": 0
+              },
+              "other_signals": {
+                "requested": 327,
+                "connected": 0
+              },
+              "remaining": {
+                "requested": 37,
+                "connected": 0
+              },
+              "byte0": {
+                "requested": 8,
+                "connected": 0
+              },
+              "byte1": {
+                "requested": 8,
+                "connected": 0
+              }
+            },
+            "membershipErrors": [],
+            "components": 498,
+            "expectedComponents": 498,
+            "pads": 1904,
+            "expectedPads": 1904,
+            "traces": 0,
+            "vias": 0,
+            "wireLengthMm": 0,
+            "copperPours": 0,
+            "drc": {
+              "overlap": 0,
+              "padTrace": 0,
+              "viaTrace": 0,
+              "viaPad": 0,
+              "viaSpacing": 0,
+              "continuity": 0,
+              "viaInPad": 0,
+              "holeTrace": 0,
+              "width": 0
+            }
+          }
+        },
+        {
+          "mode": "after",
+          "reportStatus": "failed",
+          "solved": false,
+          "failed": true,
+          "partialEscapes": 7,
+          "requested": 32,
+          "assignments": 256,
+          "vias": 4,
+          "nativeDrc": {
+            "valid": true,
+            "checkedTraceCount": 7,
+            "checkedSegmentCount": 16,
+            "checkedViaCount": 4,
+            "issues": []
+          },
+          "independentViaInPadFindings": 0,
+          "windingCalls": 11,
+          "windingSolved": 11,
+          "committedTraces": 0,
+          "committedVias": 0,
+          "assessment": {
+            "sample": "imx6-spaced",
+            "requestedNets": 404,
+            "connectedNets": 0,
+            "groups": {
+              "power": {
+                "requested": 24,
+                "connected": 0
+              },
+              "other_signals": {
+                "requested": 327,
+                "connected": 0
+              },
+              "remaining": {
+                "requested": 37,
+                "connected": 0
+              },
+              "byte0": {
+                "requested": 8,
+                "connected": 0
+              },
+              "byte1": {
+                "requested": 8,
+                "connected": 0
+              }
+            },
+            "membershipErrors": [],
+            "components": 498,
+            "expectedComponents": 498,
+            "pads": 1904,
+            "expectedPads": 1904,
+            "traces": 0,
+            "vias": 0,
+            "wireLengthMm": 0,
+            "copperPours": 0,
+            "drc": {
+              "overlap": 0,
+              "padTrace": 0,
+              "viaTrace": 0,
+              "viaPad": 0,
+              "viaSpacing": 0,
+              "continuity": 0,
+              "viaInPad": 0,
+              "holeTrace": 0,
+              "width": 0
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "baselineInterception": [
+    {
+      "sample": "butterstick-original",
+      "status": "failed",
+      "escapes": 62,
+      "requested": 91,
+      "vias": 42,
+      "assignments": 256,
+      "windingCalls": 10,
+      "windingSolved": 10,
+      "connectedNets": 9,
+      "requestedNets": 317,
+      "rejectionEvents": {
+        "accepted-plan-copper": 2838486,
+        "pad-via": 11170,
+        "pad-trace": 21197,
+        "outside-boundary": 9885
+      }
+    },
+    {
+      "sample": "butterstick-spaced",
+      "status": "failed",
+      "escapes": 78,
+      "requested": 91,
+      "vias": 49,
+      "assignments": 256,
+      "windingCalls": 11,
+      "windingSolved": 11,
+      "connectedNets": 0,
+      "requestedNets": 317,
+      "rejectionEvents": {
+        "accepted-plan-copper": 3098813,
+        "pad-via": 10056,
+        "pad-trace": 18659,
+        "outside-boundary": 12372
+      }
+    },
+    {
+      "sample": "glider-original",
+      "status": "failed",
+      "escapes": 86,
+      "requested": 95,
+      "vias": 58,
+      "assignments": 256,
+      "windingCalls": 7,
+      "windingSolved": 7,
+      "connectedNets": 0,
+      "requestedNets": 356,
+      "rejectionEvents": {
+        "accepted-plan-copper": 6669799,
+        "pad-trace": 23379,
+        "outside-boundary": 9537,
+        "pad-via": 1901
+      }
+    },
+    {
+      "sample": "glider-spaced",
+      "status": "failed",
+      "escapes": 135,
+      "requested": 211,
+      "vias": 67,
+      "assignments": 34,
+      "windingCalls": 8,
+      "windingSolved": 8,
+      "connectedNets": 0,
+      "requestedNets": 356,
+      "rejectionEvents": {
+        "accepted-plan-copper": 2712355,
+        "pad-trace": 93990,
+        "pad-via": 14078,
+        "outside-boundary": 28696
+      }
+    },
+    {
+      "sample": "h616-original",
+      "status": "failed",
+      "escapes": 109,
+      "requested": 174,
+      "vias": 74,
+      "assignments": 256,
+      "windingCalls": 6,
+      "windingSolved": 6,
+      "connectedNets": 0,
+      "requestedNets": 121,
+      "rejectionEvents": {
+        "accepted-plan-copper": 5030398,
+        "pad-trace": 77169,
+        "pad-via": 15825,
+        "outside-boundary": 15632
+      }
+    },
+    {
+      "sample": "h616-spaced",
+      "status": "failed",
+      "escapes": 111,
+      "requested": 174,
+      "vias": 72,
+      "assignments": 194,
+      "windingCalls": 8,
+      "windingSolved": 8,
+      "connectedNets": 0,
+      "requestedNets": 121,
+      "rejectionEvents": {
+        "accepted-plan-copper": 7421481,
+        "pad-trace": 59395,
+        "pad-via": 20555,
+        "outside-boundary": 19955
+      }
+    },
+    {
+      "sample": "icepi-original",
+      "status": "failed",
+      "escapes": 14,
+      "requested": 32,
+      "vias": 6,
+      "assignments": 256,
+      "windingCalls": 8,
+      "windingSolved": 8,
+      "connectedNets": 7,
+      "requestedNets": 230,
+      "rejectionEvents": {
+        "accepted-plan-copper": 64722,
+        "pad-trace": 14261,
+        "outside-boundary": 2155,
+        "pad-via": 1606
+      }
+    },
+    {
+      "sample": "icepi-spaced",
+      "status": "failed",
+      "escapes": 77,
+      "requested": 92,
+      "vias": 37,
+      "assignments": 256,
+      "windingCalls": 11,
+      "windingSolved": 10,
+      "connectedNets": 0,
+      "requestedNets": 230,
+      "rejectionEvents": {
+        "accepted-plan-copper": 3724194,
+        "outside-boundary": 13197,
+        "pad-via": 7271,
+        "pad-trace": 18846
+      }
+    },
+    {
+      "sample": "imx6-original",
+      "status": "failed",
+      "escapes": 9,
+      "requested": 32,
+      "vias": 7,
+      "assignments": 256,
+      "windingCalls": 8,
+      "windingSolved": 8,
+      "connectedNets": 3,
+      "requestedNets": 404,
+      "rejectionEvents": {
+        "accepted-plan-copper": 41398,
+        "pad-trace": 17946,
+        "outside-boundary": 3991,
+        "pad-via": 1740
+      }
+    },
+    {
+      "sample": "imx6-spaced",
+      "status": "failed",
+      "escapes": 7,
+      "requested": 32,
+      "vias": 4,
+      "assignments": 256,
+      "windingCalls": 11,
+      "windingSolved": 11,
+      "connectedNets": 0,
+      "requestedNets": 404,
+      "rejectionEvents": {
+        "accepted-plan-copper": 5118,
+        "pad-via": 13409,
+        "outside-boundary": 8618,
+        "pad-trace": 6424
+      }
+    }
+  ],
+  "experiments": {
+    "initial": [
+      {
+        "name": "refresh29iceFinalLog",
+        "rows": [
+          {
+            "sample": "icepi-original",
+            "mode": "before",
+            "elapsedMs": 4201.59188,
+            "escapes": 14,
+            "vias": 6,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "icepi-original",
+            "mode": "distance_once",
+            "elapsedMs": 4154.066870000001,
+            "escapes": 14,
+            "vias": 6,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "2564b433d9b3208def6535ce4b786608e6fd6e70149a58f9dde67bb98aea4d50",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "icepi-original",
+            "mode": "hoist_endpoint",
+            "elapsedMs": 4161.619609,
+            "escapes": 14,
+            "vias": 6,
+            "assignments": 256,
+            "planeHash": "f26e3506b919970a9a2a776e48f8f4a459e6449d59b5d40e90b449f39e2527f1",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "icepi-original",
+            "mode": "segments_first",
+            "elapsedMs": 3995.055242,
+            "escapes": 14,
+            "vias": 6,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "3f6c23189f39a3711a057648aefd95b9a52300346f66e50c2ab0482cb3333375",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "icepi-original",
+            "mode": "hoist_segments",
+            "elapsedMs": 4076.688752,
+            "escapes": 14,
+            "vias": 6,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "b0faaefad1847e8df892a375abc86184aad675110eb9072f5c4c7aa7b9040b02",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "icepi-original",
+            "mode": "before_repeat",
+            "elapsedMs": 3938.284393,
+            "escapes": 14,
+            "vias": 6,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          }
+        ]
+      },
+      {
+        "name": "refresh29CandidateLog-replay (imx6-spaced)",
+        "rows": [
+          {
+            "sample": "imx6-spaced",
+            "mode": "before",
+            "elapsedMs": 7610.759081,
+            "escapes": 7,
+            "vias": 4,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "imx6-spaced",
+            "mode": "distance_once",
+            "elapsedMs": 7537.943939,
+            "escapes": 7,
+            "vias": 4,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "2564b433d9b3208def6535ce4b786608e6fd6e70149a58f9dde67bb98aea4d50",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "imx6-spaced",
+            "mode": "hoist_endpoint",
+            "elapsedMs": 7076.501909,
+            "escapes": 7,
+            "vias": 4,
+            "assignments": 256,
+            "planeHash": "f26e3506b919970a9a2a776e48f8f4a459e6449d59b5d40e90b449f39e2527f1",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "imx6-spaced",
+            "mode": "segments_first",
+            "elapsedMs": 7226.41201,
+            "escapes": 7,
+            "vias": 4,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "3f6c23189f39a3711a057648aefd95b9a52300346f66e50c2ab0482cb3333375",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "imx6-spaced",
+            "mode": "hoist_segments",
+            "elapsedMs": 7195.729571000001,
+            "escapes": 7,
+            "vias": 4,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "b0faaefad1847e8df892a375abc86184aad675110eb9072f5c4c7aa7b9040b02",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "imx6-spaced",
+            "mode": "before_repeat",
+            "elapsedMs": 7347.452042,
+            "escapes": 7,
+            "vias": 4,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          }
+        ]
+      },
+      {
+        "name": "refresh29CandidateLog-replay (imx6-original)",
+        "rows": [
+          {
+            "sample": "imx6-original",
+            "mode": "before",
+            "elapsedMs": 5372.036919,
+            "escapes": 9,
+            "vias": 7,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "imx6-original",
+            "mode": "distance_once",
+            "elapsedMs": 5265.950500000001,
+            "escapes": 9,
+            "vias": 7,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "2564b433d9b3208def6535ce4b786608e6fd6e70149a58f9dde67bb98aea4d50",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "imx6-original",
+            "mode": "hoist_endpoint",
+            "elapsedMs": 5227.739244,
+            "escapes": 9,
+            "vias": 7,
+            "assignments": 256,
+            "planeHash": "f26e3506b919970a9a2a776e48f8f4a459e6449d59b5d40e90b449f39e2527f1",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "imx6-original",
+            "mode": "segments_first",
+            "elapsedMs": 5412.877686,
+            "escapes": 9,
+            "vias": 7,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "3f6c23189f39a3711a057648aefd95b9a52300346f66e50c2ab0482cb3333375",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "imx6-original",
+            "mode": "hoist_segments",
+            "elapsedMs": 5428.030887999999,
+            "escapes": 9,
+            "vias": 7,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "b0faaefad1847e8df892a375abc86184aad675110eb9072f5c4c7aa7b9040b02",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "imx6-original",
+            "mode": "before_repeat",
+            "elapsedMs": 5905.539758999999,
+            "escapes": 9,
+            "vias": 7,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          }
+        ]
+      },
+      {
+        "name": "refresh29ButterFinalLog",
+        "rows": [
+          {
+            "sample": "butterstick-original",
+            "mode": "before",
+            "elapsedMs": 54197.267418999996,
+            "escapes": 62,
+            "vias": 42,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "butterstick-original",
+            "mode": "distance_once",
+            "elapsedMs": 54523.315353,
+            "escapes": 62,
+            "vias": 42,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "2564b433d9b3208def6535ce4b786608e6fd6e70149a58f9dde67bb98aea4d50",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "butterstick-original",
+            "mode": "hoist_endpoint",
+            "elapsedMs": 52957.768051,
+            "escapes": 62,
+            "vias": 42,
+            "assignments": 256,
+            "planeHash": "f26e3506b919970a9a2a776e48f8f4a459e6449d59b5d40e90b449f39e2527f1",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "butterstick-original",
+            "mode": "segments_first",
+            "elapsedMs": 52131.886465999996,
+            "escapes": 62,
+            "vias": 42,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "3f6c23189f39a3711a057648aefd95b9a52300346f66e50c2ab0482cb3333375",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "butterstick-original",
+            "mode": "hoist_segments",
+            "elapsedMs": 53367.26599,
+            "escapes": 62,
+            "vias": 42,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "b0faaefad1847e8df892a375abc86184aad675110eb9072f5c4c7aa7b9040b02",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "butterstick-original",
+            "mode": "before_repeat",
+            "elapsedMs": 52103.878452,
+            "escapes": 62,
+            "vias": 42,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "butterstick-original",
+            "mode": "profile",
+            "elapsedMs": 57256.175519,
+            "escapes": 62,
+            "vias": 42,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          }
+        ]
+      }
+    ],
+    "lazy": [
+      {
+        "sample": "icepi-original",
+        "rows": [
+          {
+            "sample": "icepi-original",
+            "mode": "before",
+            "elapsedMs": 4242.563987,
+            "escapes": 14,
+            "vias": 6,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "icepi-original",
+            "mode": "lazy_vias",
+            "elapsedMs": 4418.162367,
+            "escapes": 14,
+            "vias": 6,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "3eb4ff285cd2d09a957f06620c95c81ef9433c26e646080b610c8776b0a12f1b",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "icepi-original",
+            "mode": "reuse_blocker",
+            "elapsedMs": 4226.795541,
+            "escapes": 14,
+            "vias": 6,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "c6dc840007df177f396870035a7310b19905dfa3dd458ba4003a44dec6ae8936",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "icepi-original",
+            "mode": "before_repeat",
+            "elapsedMs": 4326.214504,
+            "escapes": 14,
+            "vias": 6,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          }
+        ],
+        "identical": true
+      },
+      {
+        "sample": "imx6-original",
+        "rows": [
+          {
+            "sample": "imx6-original",
+            "mode": "before",
+            "elapsedMs": 5459.73291,
+            "escapes": 9,
+            "vias": 7,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "imx6-original",
+            "mode": "lazy_vias",
+            "elapsedMs": 5543.342973000001,
+            "escapes": 9,
+            "vias": 7,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "3eb4ff285cd2d09a957f06620c95c81ef9433c26e646080b610c8776b0a12f1b",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "imx6-original",
+            "mode": "reuse_blocker",
+            "elapsedMs": 5403.240089,
+            "escapes": 9,
+            "vias": 7,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "c6dc840007df177f396870035a7310b19905dfa3dd458ba4003a44dec6ae8936",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "imx6-original",
+            "mode": "before_repeat",
+            "elapsedMs": 5397.874366,
+            "escapes": 9,
+            "vias": 7,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          }
+        ],
+        "identical": true
+      },
+      {
+        "sample": "imx6-spaced",
+        "rows": [
+          {
+            "sample": "imx6-spaced",
+            "mode": "before",
+            "elapsedMs": 7342.681595999999,
+            "escapes": 7,
+            "vias": 4,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "imx6-spaced",
+            "mode": "lazy_vias",
+            "elapsedMs": 7021.362577,
+            "escapes": 7,
+            "vias": 4,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "3eb4ff285cd2d09a957f06620c95c81ef9433c26e646080b610c8776b0a12f1b",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "imx6-spaced",
+            "mode": "reuse_blocker",
+            "elapsedMs": 7619.884424,
+            "escapes": 7,
+            "vias": 4,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "c6dc840007df177f396870035a7310b19905dfa3dd458ba4003a44dec6ae8936",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "imx6-spaced",
+            "mode": "before_repeat",
+            "elapsedMs": 7218.0822849999995,
+            "escapes": 7,
+            "vias": 4,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          }
+        ],
+        "identical": true
+      },
+      {
+        "sample": "butterstick-original",
+        "rows": [
+          {
+            "sample": "butterstick-original",
+            "mode": "before",
+            "elapsedMs": 54027.00565,
+            "escapes": 62,
+            "vias": 42,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "butterstick-original",
+            "mode": "lazy_vias",
+            "elapsedMs": 54236.911896000005,
+            "escapes": 62,
+            "vias": 42,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "3eb4ff285cd2d09a957f06620c95c81ef9433c26e646080b610c8776b0a12f1b",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "butterstick-original",
+            "mode": "reuse_blocker",
+            "elapsedMs": 52913.543247,
+            "escapes": 62,
+            "vias": 42,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "c6dc840007df177f396870035a7310b19905dfa3dd458ba4003a44dec6ae8936",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "butterstick-original",
+            "mode": "before_repeat",
+            "elapsedMs": 53047.942605000004,
+            "escapes": 62,
+            "vias": 42,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          }
+        ],
+        "identical": true
+      }
+    ],
+    "paths": [
+      {
+        "sample": "icepi-original",
+        "rows": [
+          {
+            "sample": "icepi-original",
+            "mode": "before",
+            "elapsedMs": 4710.39491,
+            "escapes": 14,
+            "vias": 6,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "sourcePathsHash": "0813895a6ffa9cdca57f4c4827e53f63e6d48329707b12ff118a06fb21bac939",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "icepi-original",
+            "mode": "lazy_paths",
+            "elapsedMs": 4619.996212,
+            "escapes": 14,
+            "vias": 6,
+            "assignments": 256,
+            "planeHash": "f7f85afcfc4c248aaa640577aef06267326cb318e12931a84285c2f80234d01e",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "sourcePathsHash": "29aa6bf4f79db591bdb852781bc5bc74d90cb39f38ba97c839d2aa4feb83134f",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "icepi-original",
+            "mode": "before_repeat",
+            "elapsedMs": 4434.234814,
+            "escapes": 14,
+            "vias": 6,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "sourcePathsHash": "0813895a6ffa9cdca57f4c4827e53f63e6d48329707b12ff118a06fb21bac939",
+            "fanoutVersion": "0.0.101"
+          }
+        ],
+        "identical": true
+      },
+      {
+        "sample": "imx6-original",
+        "rows": [
+          {
+            "sample": "imx6-original",
+            "mode": "before",
+            "elapsedMs": 5390.0594980000005,
+            "escapes": 9,
+            "vias": 7,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "sourcePathsHash": "0813895a6ffa9cdca57f4c4827e53f63e6d48329707b12ff118a06fb21bac939",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "imx6-original",
+            "mode": "lazy_paths",
+            "elapsedMs": 5307.172096,
+            "escapes": 9,
+            "vias": 7,
+            "assignments": 256,
+            "planeHash": "f7f85afcfc4c248aaa640577aef06267326cb318e12931a84285c2f80234d01e",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "sourcePathsHash": "29aa6bf4f79db591bdb852781bc5bc74d90cb39f38ba97c839d2aa4feb83134f",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "imx6-original",
+            "mode": "before_repeat",
+            "elapsedMs": 5248.591898999999,
+            "escapes": 9,
+            "vias": 7,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "sourcePathsHash": "0813895a6ffa9cdca57f4c4827e53f63e6d48329707b12ff118a06fb21bac939",
+            "fanoutVersion": "0.0.101"
+          }
+        ],
+        "identical": true
+      },
+      {
+        "sample": "imx6-spaced",
+        "rows": [
+          {
+            "sample": "imx6-spaced",
+            "mode": "before",
+            "elapsedMs": 7624.999418,
+            "escapes": 7,
+            "vias": 4,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "sourcePathsHash": "0813895a6ffa9cdca57f4c4827e53f63e6d48329707b12ff118a06fb21bac939",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "imx6-spaced",
+            "mode": "lazy_paths",
+            "elapsedMs": 7504.129250999999,
+            "escapes": 7,
+            "vias": 4,
+            "assignments": 256,
+            "planeHash": "f7f85afcfc4c248aaa640577aef06267326cb318e12931a84285c2f80234d01e",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "sourcePathsHash": "29aa6bf4f79db591bdb852781bc5bc74d90cb39f38ba97c839d2aa4feb83134f",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "imx6-spaced",
+            "mode": "before_repeat",
+            "elapsedMs": 7681.276138,
+            "escapes": 7,
+            "vias": 4,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "sourcePathsHash": "0813895a6ffa9cdca57f4c4827e53f63e6d48329707b12ff118a06fb21bac939",
+            "fanoutVersion": "0.0.101"
+          }
+        ],
+        "identical": true
+      },
+      {
+        "sample": "butterstick-original",
+        "rows": [
+          {
+            "sample": "butterstick-original",
+            "mode": "before",
+            "elapsedMs": 52914.281396,
+            "escapes": 62,
+            "vias": 42,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "sourcePathsHash": "0813895a6ffa9cdca57f4c4827e53f63e6d48329707b12ff118a06fb21bac939",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "butterstick-original",
+            "mode": "lazy_paths",
+            "elapsedMs": 53325.381612000005,
+            "escapes": 62,
+            "vias": 42,
+            "assignments": 256,
+            "planeHash": "f7f85afcfc4c248aaa640577aef06267326cb318e12931a84285c2f80234d01e",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "sourcePathsHash": "29aa6bf4f79db591bdb852781bc5bc74d90cb39f38ba97c839d2aa4feb83134f",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "butterstick-original",
+            "mode": "before_repeat",
+            "elapsedMs": 52320.547864,
+            "escapes": 62,
+            "vias": 42,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "sourcePathsHash": "0813895a6ffa9cdca57f4c4827e53f63e6d48329707b12ff118a06fb21bac939",
+            "fanoutVersion": "0.0.101"
+          }
+        ],
+        "identical": true
+      }
+    ],
+    "profile": {
+      "total": 51757,
+      "hotspots": [
+        {
+          "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/route-bus/plan-mutual-clearance.ts",
+          "function": "planIsClearOfPlans",
+          "line": 28,
+          "ticks": 13638
+        },
+        {
+          "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/route-bus/plan-static-clearance.ts",
+          "function": "segmentIsClearOfObstacles",
+          "line": 29,
+          "ticks": 7434
+        },
+        {
+          "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/route-bus/route-analytic-boundary-alternatives.ts",
+          "function": "searchConnectionOrder",
+          "line": 67,
+          "ticks": 5526
+        },
+        {
+          "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/route-bus/route-plane-terminated-bus.ts",
+          "function": "routePlaneTerminatedBus",
+          "line": 23,
+          "ticks": 5361
+        },
+        {
+          "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/route-bus/build-plan.ts",
+          "function": "buildPlan",
+          "line": 11,
+          "ticks": 1853
+        },
+        {
+          "file": "",
+          "function": "filter",
+          "line": 1,
+          "ticks": 1669
+        },
+        {
+          "file": "",
+          "function": "hypot",
+          "line": 0,
+          "ticks": 1583
+        },
+        {
+          "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/net-identity.ts",
+          "function": "obstacleSharesElectricalNet",
+          "line": 157,
+          "ticks": 1042
+        },
+        {
+          "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/route-bus/track-candidates.ts",
+          "function": "getTrackCandidates",
+          "line": 35,
+          "ticks": 890
+        },
+        {
+          "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/route-bus/plan-static-clearance.ts",
+          "function": "planIsStaticallyClear",
+          "line": 109,
+          "ticks": 861
+        },
+        {
+          "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/geometry.ts",
+          "function": "distancePointToObstacle",
+          "line": 122,
+          "ticks": 802
+        },
+        {
+          "file": "",
+          "function": "copyDataProperties",
+          "line": 0,
+          "ticks": 581
+        },
+        {
+          "file": "",
+          "function": "sort",
+          "line": 0,
+          "ticks": 475
+        },
+        {
+          "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/fanout-output-ids.ts",
+          "function": "createFanoutOutputIds",
+          "line": 11,
+          "ticks": 469
+        },
+        {
+          "file": "",
+          "function": "from",
+          "line": 1,
+          "ticks": 464
+        },
+        {
+          "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/fanout-solver.ts",
+          "function": "evaluateAssignmentWithStrategySteps",
+          "line": 5643,
+          "ticks": 442
+        },
+        {
+          "file": "",
+          "function": "map",
+          "line": 1,
+          "ticks": 428
+        },
+        {
+          "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/route-bus/source-escape.ts",
+          "function": "chamferOrthogonalPolyline",
+          "line": 114,
+          "ticks": 424
+        },
+        {
+          "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/route-bus/connection-order.ts",
+          "function": "getConnectionRank",
+          "line": 46,
+          "ticks": 343
+        },
+        {
+          "file": "",
+          "function": "flatIntoArray",
+          "line": 1,
+          "ticks": 332
+        },
+        {
+          "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/route-bus/source-escape.ts",
+          "function": "chamferOrthogonalCorners",
+          "line": 20,
+          "ticks": 330
+        },
+        {
+          "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/route-bus/route-plane-terminated-bus.ts",
+          "function": "isClear",
+          "line": 346,
+          "ticks": 298
+        },
+        {
+          "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/route-bus/source-escape.ts",
+          "function": "appendSegment",
+          "line": 97,
+          "ticks": 274
+        },
+        {
+          "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/route-bus/plan-clearance.ts",
+          "function": "planIsClear",
+          "line": 13,
+          "ticks": 265
+        },
+        {
+          "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/route-bus/plan-copper.ts",
+          "function": "getPlanVias",
+          "line": 10,
+          "ticks": 254
+        },
+        {
+          "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/fanout-solver.ts",
+          "function": "",
+          "line": 1967,
+          "ticks": 246
+        },
+        {
+          "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/route-bus/source-escape.ts",
+          "function": "getStraightOr45ConnectorVariants",
+          "line": 70,
+          "ticks": 243
+        },
+        {
+          "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/route-bus/track-candidates.ts",
+          "function": "",
+          "line": 48,
+          "ticks": 241
+        },
+        {
+          "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/route-bus/track-candidates.ts",
+          "function": "",
+          "line": 115,
+          "ticks": 240
+        },
+        {
+          "file": "file:///home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/core/node_modules/@tscircuit/fanout-solver/lib/net-identity.ts",
+          "function": "getKnownNetKeys",
+          "line": 35,
+          "ticks": 236
+        }
+      ]
+    },
+    "pilot": [
+      {
+        "sample": "icepi-original",
+        "rows": [
+          {
+            "sample": "icepi-original",
+            "mode": "before",
+            "elapsedMs": 4166.728384999999,
+            "escapes": 14,
+            "vias": 6,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "icepi-original",
+            "mode": "static_path_group",
+            "elapsedMs": 3484.5073920000004,
+            "escapes": 14,
+            "vias": 6,
+            "assignments": 256,
+            "planeHash": "ea516e21921d0596a8e0345be6aa97ee014e4fb8d75f9b2a6c85d8e5f4a6c21c",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "icepi-original",
+            "mode": "before_repeat",
+            "elapsedMs": 3957.384001,
+            "escapes": 14,
+            "vias": 6,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          }
+        ],
+        "identical": true
+      },
+      {
+        "sample": "imx6-original",
+        "rows": [
+          {
+            "sample": "imx6-original",
+            "mode": "before",
+            "elapsedMs": 5335.891391,
+            "escapes": 9,
+            "vias": 7,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "imx6-original",
+            "mode": "static_path_group",
+            "elapsedMs": 4529.952988999999,
+            "escapes": 9,
+            "vias": 7,
+            "assignments": 256,
+            "planeHash": "ea516e21921d0596a8e0345be6aa97ee014e4fb8d75f9b2a6c85d8e5f4a6c21c",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "imx6-original",
+            "mode": "before_repeat",
+            "elapsedMs": 5175.324463,
+            "escapes": 9,
+            "vias": 7,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          }
+        ],
+        "identical": true
+      },
+      {
+        "sample": "imx6-spaced",
+        "rows": [
+          {
+            "sample": "imx6-spaced",
+            "mode": "before",
+            "elapsedMs": 7266.997684999999,
+            "escapes": 7,
+            "vias": 4,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "imx6-spaced",
+            "mode": "static_path_group",
+            "elapsedMs": 7220.325507,
+            "escapes": 7,
+            "vias": 4,
+            "assignments": 256,
+            "planeHash": "ea516e21921d0596a8e0345be6aa97ee014e4fb8d75f9b2a6c85d8e5f4a6c21c",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "imx6-spaced",
+            "mode": "before_repeat",
+            "elapsedMs": 7130.623623,
+            "escapes": 7,
+            "vias": 4,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          }
+        ],
+        "identical": true
+      },
+      {
+        "sample": "butterstick-original",
+        "rows": [
+          {
+            "sample": "butterstick-original",
+            "mode": "before",
+            "elapsedMs": 50111.318096,
+            "escapes": 62,
+            "vias": 42,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "butterstick-original",
+            "mode": "static_path_group",
+            "elapsedMs": 47048.669393000004,
+            "escapes": 62,
+            "vias": 42,
+            "assignments": 256,
+            "planeHash": "ea516e21921d0596a8e0345be6aa97ee014e4fb8d75f9b2a6c85d8e5f4a6c21c",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "butterstick-original",
+            "mode": "before_repeat",
+            "elapsedMs": 54146.443686,
+            "escapes": 62,
+            "vias": 42,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          }
+        ],
+        "identical": true
+      }
+    ],
+    "finalVerification": [
+      {
+        "name": "replay (imx6-original, 1)",
+        "rows": [
+          {
+            "sample": "imx6-original",
+            "mode": "before",
+            "trial": "1",
+            "elapsedMs": 5449.507653,
+            "escapes": 9,
+            "vias": 7,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "imx6-original",
+            "mode": "fixed_source",
+            "trial": "1",
+            "elapsedMs": 4491.094478,
+            "escapes": 9,
+            "vias": 7,
+            "assignments": 256,
+            "planeHash": "e19c12955b49578fa6d18ecc96b7a027c3b7513f1cfec82469bcc49164651c65",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "imx6-original",
+            "mode": "before_repeat",
+            "trial": "1",
+            "elapsedMs": 5735.572077,
+            "escapes": 9,
+            "vias": 7,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          }
+        ],
+        "identical": true
+      },
+      {
+        "name": "replay (imx6-spaced, 1)",
+        "rows": [
+          {
+            "sample": "imx6-spaced",
+            "mode": "before",
+            "trial": "1",
+            "elapsedMs": 7637.697776999999,
+            "escapes": 7,
+            "vias": 4,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "imx6-spaced",
+            "mode": "fixed_source",
+            "trial": "1",
+            "elapsedMs": 7892.309064,
+            "escapes": 7,
+            "vias": 4,
+            "assignments": 256,
+            "planeHash": "e19c12955b49578fa6d18ecc96b7a027c3b7513f1cfec82469bcc49164651c65",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "imx6-spaced",
+            "mode": "before_repeat",
+            "trial": "1",
+            "elapsedMs": 7813.419647999999,
+            "escapes": 7,
+            "vias": 4,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          }
+        ],
+        "identical": true
+      },
+      {
+        "name": "replay (butterstick-original, 1)",
+        "rows": [
+          {
+            "sample": "butterstick-original",
+            "mode": "before",
+            "trial": "1",
+            "elapsedMs": 54112.006269,
+            "escapes": 62,
+            "vias": 42,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "butterstick-original",
+            "mode": "fixed_source",
+            "trial": "1",
+            "elapsedMs": 48748.674696,
+            "escapes": 62,
+            "vias": 42,
+            "assignments": 256,
+            "planeHash": "e19c12955b49578fa6d18ecc96b7a027c3b7513f1cfec82469bcc49164651c65",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "butterstick-original",
+            "mode": "before_repeat",
+            "trial": "1",
+            "elapsedMs": 54032.016455,
+            "escapes": 62,
+            "vias": 42,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          }
+        ],
+        "identical": true
+      },
+      {
+        "name": "replay (icepi-original, 2)",
+        "rows": [
+          {
+            "sample": "icepi-original",
+            "mode": "before",
+            "trial": "2",
+            "elapsedMs": 4329.653993,
+            "escapes": 14,
+            "vias": 6,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "icepi-original",
+            "mode": "fixed_source",
+            "trial": "2",
+            "elapsedMs": 3657.326505,
+            "escapes": 14,
+            "vias": 6,
+            "assignments": 256,
+            "planeHash": "e19c12955b49578fa6d18ecc96b7a027c3b7513f1cfec82469bcc49164651c65",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "icepi-original",
+            "mode": "before_repeat",
+            "trial": "2",
+            "elapsedMs": 4334.678308,
+            "escapes": 14,
+            "vias": 6,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          }
+        ],
+        "identical": true
+      },
+      {
+        "name": "replay (butterstick-original, 2)",
+        "rows": [
+          {
+            "sample": "butterstick-original",
+            "mode": "before",
+            "trial": "2",
+            "elapsedMs": 55560.491176,
+            "escapes": 62,
+            "vias": 42,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "butterstick-original",
+            "mode": "fixed_source",
+            "trial": "2",
+            "elapsedMs": 51773.626100999994,
+            "escapes": 62,
+            "vias": 42,
+            "assignments": 256,
+            "planeHash": "e19c12955b49578fa6d18ecc96b7a027c3b7513f1cfec82469bcc49164651c65",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "butterstick-original",
+            "mode": "before_repeat",
+            "trial": "2",
+            "elapsedMs": 65422.743563,
+            "escapes": 62,
+            "vias": 42,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          }
+        ],
+        "identical": true
+      },
+      {
+        "name": "replay (imx6-original, 2)",
+        "rows": [
+          {
+            "sample": "imx6-original",
+            "mode": "before",
+            "trial": "2",
+            "elapsedMs": 5334.827845,
+            "escapes": 9,
+            "vias": 7,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "imx6-original",
+            "mode": "fixed_source",
+            "trial": "2",
+            "elapsedMs": 4404.66756,
+            "escapes": 9,
+            "vias": 7,
+            "assignments": 256,
+            "planeHash": "e19c12955b49578fa6d18ecc96b7a027c3b7513f1cfec82469bcc49164651c65",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "imx6-original",
+            "mode": "before_repeat",
+            "trial": "2",
+            "elapsedMs": 5548.2878519999995,
+            "escapes": 9,
+            "vias": 7,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          }
+        ],
+        "identical": true
+      },
+      {
+        "name": "replay (icepi-original, 1)",
+        "rows": [
+          {
+            "sample": "icepi-original",
+            "mode": "before",
+            "trial": "1",
+            "elapsedMs": 4433.512889,
+            "escapes": 14,
+            "vias": 6,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "icepi-original",
+            "mode": "fixed_source",
+            "trial": "1",
+            "elapsedMs": 3682.0208570000004,
+            "escapes": 14,
+            "vias": 6,
+            "assignments": 256,
+            "planeHash": "e19c12955b49578fa6d18ecc96b7a027c3b7513f1cfec82469bcc49164651c65",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "icepi-original",
+            "mode": "before_repeat",
+            "trial": "1",
+            "elapsedMs": 4388.806640999999,
+            "escapes": 14,
+            "vias": 6,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          }
+        ],
+        "identical": true
+      },
+      {
+        "name": "replay (imx6-spaced, 2)",
+        "rows": [
+          {
+            "sample": "imx6-spaced",
+            "mode": "before",
+            "trial": "2",
+            "elapsedMs": 7296.652151,
+            "escapes": 7,
+            "vias": 4,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "imx6-spaced",
+            "mode": "fixed_source",
+            "trial": "2",
+            "elapsedMs": 7475.824944,
+            "escapes": 7,
+            "vias": 4,
+            "assignments": 256,
+            "planeHash": "e19c12955b49578fa6d18ecc96b7a027c3b7513f1cfec82469bcc49164651c65",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "imx6-spaced",
+            "mode": "before_repeat",
+            "trial": "2",
+            "elapsedMs": 7642.744004,
+            "escapes": 7,
+            "vias": 4,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          }
+        ],
+        "identical": true
+      }
+    ],
+    "finalPerformance": [
+      {
+        "sample": "butterstick-original",
+        "beforeMs": 57281.814365750004,
+        "afterMs": 50261.1503985,
+        "reductionPercent": 12.25635752810198,
+        "comparisons": 2
+      },
+      {
+        "sample": "icepi-original",
+        "beforeMs": 4371.662957749999,
+        "afterMs": 3669.673681,
+        "reductionPercent": 16.057717247061,
+        "comparisons": 2
+      },
+      {
+        "sample": "imx6-original",
+        "beforeMs": 5517.04885675,
+        "afterMs": 4447.881019,
+        "reductionPercent": 19.379343295861762,
+        "comparisons": 2
+      },
+      {
+        "sample": "imx6-spaced",
+        "beforeMs": 7597.628395,
+        "afterMs": 7684.067004,
+        "reductionPercent": -1.1377051430534024,
+        "comparisons": 2
+      }
+    ],
+    "comparisonRuns": {
+      "initial": 44960769335,
+      "lazy": 44961161882,
+      "paths": 44961337378,
+      "index": 44961556352,
+      "groupPilot": 44961895151,
+      "finalVerification": 44962381625,
+      "harnessFailures": [
+        44960325274,
+        44960643462
+      ],
+      "repeatedInitial": 44960997350
+    },
+    "index": [
+      {
+        "sample": "icepi-original",
+        "rows": [
+          {
+            "sample": "icepi-original",
+            "mode": "before",
+            "elapsedMs": 4157.14543,
+            "escapes": 14,
+            "vias": 6,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "clearanceSourceHash": "e4e3309bb77468fed66101a3cd57cbbbfebc064c9406319f19af58f687623ade",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "icepi-original",
+            "mode": "search_index",
+            "elapsedMs": 4523.887797,
+            "escapes": 14,
+            "vias": 6,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "clearanceSourceHash": "6eb2927b432976c47c2a4ac86f8e0922846948c776e9326ce57fd9055af4f779",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "icepi-original",
+            "mode": "before_repeat",
+            "elapsedMs": 4084.9368099999997,
+            "escapes": 14,
+            "vias": 6,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "clearanceSourceHash": "e4e3309bb77468fed66101a3cd57cbbbfebc064c9406319f19af58f687623ade",
+            "fanoutVersion": "0.0.101"
+          }
+        ],
+        "identical": true
+      },
+      {
+        "sample": "imx6-original",
+        "rows": [
+          {
+            "sample": "imx6-original",
+            "mode": "before",
+            "elapsedMs": 5373.086944,
+            "escapes": 9,
+            "vias": 7,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "clearanceSourceHash": "e4e3309bb77468fed66101a3cd57cbbbfebc064c9406319f19af58f687623ade",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "imx6-original",
+            "mode": "search_index",
+            "elapsedMs": 5882.571275,
+            "escapes": 9,
+            "vias": 7,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "clearanceSourceHash": "6eb2927b432976c47c2a4ac86f8e0922846948c776e9326ce57fd9055af4f779",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "imx6-original",
+            "mode": "before_repeat",
+            "elapsedMs": 5443.1251919999995,
+            "escapes": 9,
+            "vias": 7,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "clearanceSourceHash": "e4e3309bb77468fed66101a3cd57cbbbfebc064c9406319f19af58f687623ade",
+            "fanoutVersion": "0.0.101"
+          }
+        ],
+        "identical": true
+      },
+      {
+        "sample": "imx6-spaced",
+        "rows": [
+          {
+            "sample": "imx6-spaced",
+            "mode": "before",
+            "elapsedMs": 7585.557994000001,
+            "escapes": 7,
+            "vias": 4,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "clearanceSourceHash": "e4e3309bb77468fed66101a3cd57cbbbfebc064c9406319f19af58f687623ade",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "imx6-spaced",
+            "mode": "search_index",
+            "elapsedMs": 7448.098938,
+            "escapes": 7,
+            "vias": 4,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "clearanceSourceHash": "6eb2927b432976c47c2a4ac86f8e0922846948c776e9326ce57fd9055af4f779",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "imx6-spaced",
+            "mode": "before_repeat",
+            "elapsedMs": 7365.889692999999,
+            "escapes": 7,
+            "vias": 4,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "clearanceSourceHash": "e4e3309bb77468fed66101a3cd57cbbbfebc064c9406319f19af58f687623ade",
+            "fanoutVersion": "0.0.101"
+          }
+        ],
+        "identical": true
+      },
+      {
+        "sample": "butterstick-original",
+        "rows": [
+          {
+            "sample": "butterstick-original",
+            "mode": "before",
+            "elapsedMs": 52170.686683,
+            "escapes": 62,
+            "vias": 42,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "clearanceSourceHash": "e4e3309bb77468fed66101a3cd57cbbbfebc064c9406319f19af58f687623ade",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "butterstick-original",
+            "mode": "search_index",
+            "elapsedMs": 80283.03251,
+            "escapes": 62,
+            "vias": 42,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "clearanceSourceHash": "6eb2927b432976c47c2a4ac86f8e0922846948c776e9326ce57fd9055af4f779",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "butterstick-original",
+            "mode": "before_repeat",
+            "elapsedMs": 51958.200691000005,
+            "escapes": 62,
+            "vias": 42,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "clearanceSourceHash": "e4e3309bb77468fed66101a3cd57cbbbfebc064c9406319f19af58f687623ade",
+            "fanoutVersion": "0.0.101"
+          }
+        ],
+        "identical": true
+      }
+    ],
+    "repeatedInitial": [
+      {
+        "sample": "icepi-original",
+        "rows": [
+          {
+            "sample": "icepi-original",
+            "mode": "before",
+            "elapsedMs": 4074.3983099999996,
+            "escapes": 14,
+            "vias": 6,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "icepi-original",
+            "mode": "distance_once",
+            "elapsedMs": 4068.060722,
+            "escapes": 14,
+            "vias": 6,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "2564b433d9b3208def6535ce4b786608e6fd6e70149a58f9dde67bb98aea4d50",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "icepi-original",
+            "mode": "hoist_endpoint",
+            "elapsedMs": 3982.782175,
+            "escapes": 14,
+            "vias": 6,
+            "assignments": 256,
+            "planeHash": "f26e3506b919970a9a2a776e48f8f4a459e6449d59b5d40e90b449f39e2527f1",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "icepi-original",
+            "mode": "segments_first",
+            "elapsedMs": 4119.8798,
+            "escapes": 14,
+            "vias": 6,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "3f6c23189f39a3711a057648aefd95b9a52300346f66e50c2ab0482cb3333375",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "icepi-original",
+            "mode": "hoist_segments",
+            "elapsedMs": 4200.0118680000005,
+            "escapes": 14,
+            "vias": 6,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "b0faaefad1847e8df892a375abc86184aad675110eb9072f5c4c7aa7b9040b02",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "icepi-original",
+            "mode": "before_repeat",
+            "elapsedMs": 4085.0938549999996,
+            "escapes": 14,
+            "vias": 6,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          }
+        ],
+        "identical": true
+      },
+      {
+        "sample": "imx6-original",
+        "rows": [
+          {
+            "sample": "imx6-original",
+            "mode": "before",
+            "elapsedMs": 5584.206119,
+            "escapes": 9,
+            "vias": 7,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "imx6-original",
+            "mode": "distance_once",
+            "elapsedMs": 5513.91885,
+            "escapes": 9,
+            "vias": 7,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "2564b433d9b3208def6535ce4b786608e6fd6e70149a58f9dde67bb98aea4d50",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "imx6-original",
+            "mode": "hoist_endpoint",
+            "elapsedMs": 5343.546223,
+            "escapes": 9,
+            "vias": 7,
+            "assignments": 256,
+            "planeHash": "f26e3506b919970a9a2a776e48f8f4a459e6449d59b5d40e90b449f39e2527f1",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "imx6-original",
+            "mode": "segments_first",
+            "elapsedMs": 5496.527308000001,
+            "escapes": 9,
+            "vias": 7,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "3f6c23189f39a3711a057648aefd95b9a52300346f66e50c2ab0482cb3333375",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "imx6-original",
+            "mode": "hoist_segments",
+            "elapsedMs": 5362.25904,
+            "escapes": 9,
+            "vias": 7,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "b0faaefad1847e8df892a375abc86184aad675110eb9072f5c4c7aa7b9040b02",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "imx6-original",
+            "mode": "before_repeat",
+            "elapsedMs": 5375.710997,
+            "escapes": 9,
+            "vias": 7,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          }
+        ],
+        "identical": true
+      },
+      {
+        "sample": "imx6-spaced",
+        "rows": [
+          {
+            "sample": "imx6-spaced",
+            "mode": "before",
+            "elapsedMs": 7138.836615,
+            "escapes": 7,
+            "vias": 4,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "imx6-spaced",
+            "mode": "distance_once",
+            "elapsedMs": 7385.5569160000005,
+            "escapes": 7,
+            "vias": 4,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "2564b433d9b3208def6535ce4b786608e6fd6e70149a58f9dde67bb98aea4d50",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "imx6-spaced",
+            "mode": "hoist_endpoint",
+            "elapsedMs": 7109.374234999999,
+            "escapes": 7,
+            "vias": 4,
+            "assignments": 256,
+            "planeHash": "f26e3506b919970a9a2a776e48f8f4a459e6449d59b5d40e90b449f39e2527f1",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "imx6-spaced",
+            "mode": "segments_first",
+            "elapsedMs": 7293.705454,
+            "escapes": 7,
+            "vias": 4,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "3f6c23189f39a3711a057648aefd95b9a52300346f66e50c2ab0482cb3333375",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "imx6-spaced",
+            "mode": "hoist_segments",
+            "elapsedMs": 7233.609737000001,
+            "escapes": 7,
+            "vias": 4,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "b0faaefad1847e8df892a375abc86184aad675110eb9072f5c4c7aa7b9040b02",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "imx6-spaced",
+            "mode": "before_repeat",
+            "elapsedMs": 7429.977257,
+            "escapes": 7,
+            "vias": 4,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          }
+        ],
+        "identical": true
+      },
+      {
+        "sample": "butterstick-original",
+        "rows": [
+          {
+            "sample": "butterstick-original",
+            "mode": "before",
+            "elapsedMs": 53195.691805,
+            "escapes": 62,
+            "vias": 42,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "butterstick-original",
+            "mode": "distance_once",
+            "elapsedMs": 51118.139554999994,
+            "escapes": 62,
+            "vias": 42,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "2564b433d9b3208def6535ce4b786608e6fd6e70149a58f9dde67bb98aea4d50",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "butterstick-original",
+            "mode": "hoist_endpoint",
+            "elapsedMs": 54810.748339000005,
+            "escapes": 62,
+            "vias": 42,
+            "assignments": 256,
+            "planeHash": "f26e3506b919970a9a2a776e48f8f4a459e6449d59b5d40e90b449f39e2527f1",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "butterstick-original",
+            "mode": "segments_first",
+            "elapsedMs": 55953.914961,
+            "escapes": 62,
+            "vias": 42,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "3f6c23189f39a3711a057648aefd95b9a52300346f66e50c2ab0482cb3333375",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "butterstick-original",
+            "mode": "hoist_segments",
+            "elapsedMs": 55282.188969,
+            "escapes": 62,
+            "vias": 42,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "b0faaefad1847e8df892a375abc86184aad675110eb9072f5c4c7aa7b9040b02",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "butterstick-original",
+            "mode": "before_repeat",
+            "elapsedMs": 58227.054144,
+            "escapes": 62,
+            "vias": 42,
+            "assignments": 256,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          }
+        ],
+        "identical": true
+      }
+    ],
+    "largePrefixVerification": [
+      {
+        "name": "replay (h616-spaced, 1)",
+        "rows": [
+          {
+            "sample": "h616-spaced",
+            "mode": "before",
+            "trial": "1",
+            "assignmentPrefix": 16,
+            "elapsedMs": 8593.488806000001,
+            "escapes": 76,
+            "vias": 4,
+            "assignments": 16,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "h616-spaced",
+            "mode": "fixed_source",
+            "trial": "1",
+            "assignmentPrefix": 16,
+            "elapsedMs": 8359.223778,
+            "escapes": 76,
+            "vias": 4,
+            "assignments": 16,
+            "planeHash": "e19c12955b49578fa6d18ecc96b7a027c3b7513f1cfec82469bcc49164651c65",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "h616-spaced",
+            "mode": "before_repeat",
+            "trial": "1",
+            "assignmentPrefix": 16,
+            "elapsedMs": 8359.868195,
+            "escapes": 76,
+            "vias": 4,
+            "assignments": 16,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          }
+        ],
+        "identical": true
+      },
+      {
+        "name": "replay (glider-spaced, 1)",
+        "rows": [
+          {
+            "sample": "glider-spaced",
+            "mode": "before",
+            "trial": "1",
+            "assignmentPrefix": 16,
+            "elapsedMs": 25897.182942,
+            "escapes": 113,
+            "vias": 2,
+            "assignments": 16,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "glider-spaced",
+            "mode": "fixed_source",
+            "trial": "1",
+            "assignmentPrefix": 16,
+            "elapsedMs": 25212.460102999998,
+            "escapes": 113,
+            "vias": 2,
+            "assignments": 16,
+            "planeHash": "e19c12955b49578fa6d18ecc96b7a027c3b7513f1cfec82469bcc49164651c65",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          },
+          {
+            "sample": "glider-spaced",
+            "mode": "before_repeat",
+            "trial": "1",
+            "assignmentPrefix": 16,
+            "elapsedMs": 25404.428566000002,
+            "escapes": 113,
+            "vias": 2,
+            "assignments": 16,
+            "planeHash": "9be0fad28c92398dc2f4c080dff19874164b2c2e5f743c8815abf6a63735f8dc",
+            "endpointHash": "c2c2f05b45131c35806743e06cedb5ea8a4c723d6c35f34514a34c05980ba270",
+            "staticHash": "fed1e87871ba97babfe96d117746ea92cce082e566e82cfcab777aebbe741a35",
+            "mutualHash": "7b3a150c2f329964f61eac3456fe8e4cff8141596479c7bc061fe5e97029c8a6",
+            "fanoutVersion": "0.0.101"
+          }
+        ],
+        "identical": true
+      }
+    ]
+  }
+}
