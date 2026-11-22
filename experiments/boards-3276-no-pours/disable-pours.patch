@@ -1,0 +1,11 @@
+--- a/native/native-full-board.tsx
++++ b/native/native-full-board.tsx
+@@ -58,7 +58,7 @@
+   source,
+   geometryOnly = false,
+   fanout = true,
+-  planes = true,
++  planes = false,
+   algorithmFn,
+ }: {
+   source: FullBoardSource

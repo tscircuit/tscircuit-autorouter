@@ -5,10 +5,6 @@ permissions:
   contents: read
 jobs:
   boards:
-    strategy:
-      fail-fast: false
-      matrix:
-        variant: [base, fix]
     runs-on: blacksmith-32vcpu-ubuntu-2404-arm
     timeout-minutes: 30
     steps:
@@ -18,21 +14,17 @@ jobs:
           bun-version: 1.4.3
       - name: Unpack boards with copper pours disabled
         run: |
-          mkdir -p experiments/boards-3274-no-pours/runtime
-          unzip -q experiments/boards-3274-no-pours/boards.zip -d experiments/boards-3274-no-pours/runtime
+          mkdir -p experiments/boards-3276-no-pours/runtime
+          unzip -q experiments/boards-3276-no-pours/boards.zip -d experiments/boards-3276-no-pours/runtime
       - name: Install latest released tscircuit from frozen lockfile
-        working-directory: experiments/boards-3274-no-pours/runtime
+        working-directory: experiments/boards-3276-no-pours/runtime
         run: bun install --frozen-lockfile
-      - name: Apply clearance padding to regional trace cuts
-        if: matrix.variant == 'fix'
-        run: python3 experiments/boards-3274-no-pours/apply-regional-padding.py
       - name: Run all 19 TSX boards with default routing
         env:
-          BOARD_VARIANT: ${{ matrix.variant }}
-          BOARD_FIX_PROVENANCE: ${{ matrix.variant == 'fix' && 'experiments/boards-3274-no-pours/regional-padding-provenance.json' || '' }}
-        run: python3 experiments/boards-3274-no-pours/run.py
+          BOARD_VARIANT: base
+        run: python3 experiments/boards-3276-no-pours/run.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: boards-tscircuit-3274-no-pours-${{ matrix.variant }}
+          name: boards-tscircuit-3276-no-pours-base
           path: board-benchmark-results/
