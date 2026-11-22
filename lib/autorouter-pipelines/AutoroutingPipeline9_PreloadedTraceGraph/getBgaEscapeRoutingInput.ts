@@ -128,7 +128,6 @@ export function getBgaEscapeRoutingInput({
           layerCount: inputSrj.layerCount,
           minTraceWidth: inputSrj.minTraceWidth,
           minBoardEdgeClearance: inputSrj.minBoardEdgeClearance,
-          minTraceToHoleEdgeClearance: inputSrj.minTraceToHoleEdgeClearance,
           minViaHoleEdgeToViaHoleEdgeClearance:
             inputSrj.minViaHoleEdgeToViaHoleEdgeClearance,
           traceClearance: clearance,
