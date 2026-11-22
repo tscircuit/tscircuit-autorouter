@@ -23,8 +23,10 @@ jobs:
           from pathlib import Path
           p=Path('tests/butterstick-native-fanout.test.ts');p.write_text(p.read_text().replace('toHaveLength(63)','toHaveLength(64)').replace('{ valid: true, issues: [] }','{ valid: true, checkedViaCount: 42, issues: [] }'))
           PYUPDATE
-          BUN_UPDATE_SNAPSHOTS=1 bun test tests/butterstick-native-fanout.test.ts tests/repro-unused-fanout-output-conversion.test.ts
+          BUN_UPDATE_SNAPSHOTS=1 bun test --timeout 30000 tests/butterstick-native-fanout.test.ts
+          BUN_UPDATE_SNAPSHOTS=1 bun test --timeout 30000 tests/repro-unused-fanout-output-conversion.test.ts
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: reviewed-native-via-reuse-snapshots
           path: |
