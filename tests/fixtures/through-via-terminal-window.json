@@ -68,6 +68,5 @@
     "ripViaPenalty": 0.75,
     "viaBaseCost": 0.1,
     "greedyMultiplier": 1.5
-  },
-  "viaMinDistFromPort": 0.78
+  }
 }

@@ -3,9 +3,12 @@ import { HighDensitySolverA01 } from "@tscircuit/high-density-a01"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { getBugReportSnapshotSvg } from "lib/testing/getBugReportSnapshotSvg"
 import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
+import type { NodeWithPortPoints } from "lib/types/high-density-types"
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 import input from "../fixtures/through-via-terminal-window.json"
+
+const nodeWithPortPoints: NodeWithPortPoints = input.nodeWithPortPoints
 
 test("the captured terminal window clears a through via on the fourth copper layer", async (): Promise<void> => {
   const solver = new HighDensitySolverA01(input)
@@ -18,7 +21,11 @@ test("the captured terminal window clears a through via on the fourth copper lay
     ...route,
     traceThickness: route.traceThickness / 2,
     viaDiameter: route.viaDiameter / 2,
-    route: route.route.map((point) => ({ ...point, x: point.x / 2, y: point.y / 2 })),
+    route: route.route.map((point) => ({
+      ...point,
+      x: point.x / 2,
+      y: point.y / 2,
+    })),
     vias: route.vias.map((point) => ({ x: point.x / 2, y: point.y / 2 })),
   }))
   const srj: SimpleRouteJson = {
@@ -31,9 +38,13 @@ test("the captured terminal window clears a through via on the fourth copper lay
     obstacles: [],
     connections: ["layer_transition", "neighbor"].map((name) => ({
       name,
-      pointsToConnect: input.nodeWithPortPoints.portPoints
+      pointsToConnect: nodeWithPortPoints.portPoints
         .filter((port) => port.connectionName === name)
-        .map((port) => ({ x: port.x / 2, y: port.y / 2, layer: mapZToLayerName(port.z, 4) })),
+        .map((port) => ({
+          x: port.x / 2,
+          y: port.y / 2,
+          layer: mapZToLayerName(port.z, 4),
+        })),
     })),
   }
   const traces: SimplifiedPcbTrace[] = physicalRoutes.map((route, index) => ({
@@ -44,8 +55,15 @@ test("the captured terminal window clears a through via on the fourth copper lay
   }))
   // This subcircuit has cut terminals. Check copper DRC without requiring pads
   // at the cut boundary; the production snapshot helper reports the count.
-  const snapshot = { inputSrj: srj, srjWithPointPairs: srj, routedTraces: traces, drcOptions: { includeTraceContinuity: false } }
+  const snapshot = {
+    inputSrj: srj,
+    srjWithPointPairs: srj,
+    routedTraces: traces,
+    drcOptions: { includeTraceContinuity: false },
+  }
   const { errors } = evaluateRelaxedDrc(snapshot)
   expect(errors).toHaveLength(1)
-  await expect(getBugReportSnapshotSvg(snapshot, { bounds: srj.bounds })).toMatchSvgSnapshot(import.meta.path)
+  await expect(
+    getBugReportSnapshotSvg(snapshot, { bounds: srj.bounds }),
+  ).toMatchSvgSnapshot(import.meta.path)
 })
