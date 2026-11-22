@@ -1,0 +1,63 @@
+{
+  "sample": "icepi-original",
+  "requested": 32,
+  "provenImpossibleRequests": 0,
+  "proofs": [],
+  "pitches": [
+    {
+      "pitch": [
+        0.5,
+        0.5
+      ],
+      "requests": 32
+    }
+  ],
+  "traceWidths": {
+    "0.15": 9,
+    "0.1": 23
+  },
+  "constructorInputSha256": "8026aa1a986e5c18a7d5ed2c432c0f18a17cc1d34fa61fdbf14362931db5eb84",
+  "components": 280,
+  "pads": 1426,
+  "membershipErrors": [],
+  "diagnostics": [
+    {
+      "component": "<board#2619 />",
+      "requested": 32,
+      "available": true,
+      "routed": 23,
+      "vias": 11,
+      "drcValid": true,
+      "drcIssues": [],
+      "solved": false,
+      "failed": true,
+      "latestStage": "FanoutSolver",
+      "routedConnections": [
+        "source_trace_16",
+        "source_trace_3",
+        "source_trace_14",
+        "source_trace_2",
+        "source_trace_7",
+        "source_trace_15",
+        "source_trace_17",
+        "source_trace_18",
+        "source_trace_0",
+        "source_trace_8",
+        "source_trace_9",
+        "breakout:pcb_breakout_point_11",
+        "breakout:pcb_breakout_point_3",
+        "breakout:pcb_breakout_point_4",
+        "breakout:pcb_breakout_point_7",
+        "breakout:pcb_breakout_point_10",
+        "breakout:pcb_breakout_point_0",
+        "breakout:pcb_breakout_point_1",
+        "breakout:pcb_breakout_point_6",
+        "source_trace_1",
+        "source_trace_4",
+        "source_trace_6",
+        "source_trace_19"
+      ]
+    }
+  ],
+  "fullCircuitStatus": "failed"
+}

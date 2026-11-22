@@ -1,0 +1,36 @@
+{
+  "Latest published stack": {
+    "before": 723,
+    "after": 768,
+    "rawImprovementPercent": 6.224066390041494,
+    "vias": [
+      429,
+      473
+    ],
+    "wireLengthMm": [
+      2340.7676616878316,
+      2195.6826588193353
+    ],
+    "fullBoards": [
+      0,
+      0
+    ]
+  },
+  "Stacked on source-track candidates (#379)": {
+    "before": 734,
+    "after": 768,
+    "rawImprovementPercent": 4.632152588555858,
+    "vias": [
+      455,
+      473
+    ],
+    "wireLengthMm": [
+      2442.7595050818363,
+      2195.6826588193353
+    ],
+    "fullBoards": [
+      0,
+      0
+    ]
+  }
+}
