@@ -172,13 +172,35 @@ export const arePipeline9RoutesOnSameNet = (
   },
   connMap: ConnectivityMap,
 ): boolean => {
-  const leftNetIds = [left.connectionName, left.rootConnectionName]
-    .filter((id): id is string => typeof id === "string")
-    .map((id) => connMap.getNetConnectedToId(id) ?? id)
-  const rightNetIds = [right.connectionName, right.rootConnectionName]
-    .filter((id): id is string => typeof id === "string")
-    .map((id) => connMap.getNetConnectedToId(id) ?? id)
-  return leftNetIds.some((netId) => rightNetIds.includes(netId))
+  const leftNetId =
+    connMap.getNetConnectedToId(left.connectionName) ?? left.connectionName
+  const rightNetId =
+    connMap.getNetConnectedToId(right.connectionName) ?? right.connectionName
+  if (leftNetId === rightNetId) return true
+
+  let leftRootNetId = leftNetId
+  if (
+    typeof left.rootConnectionName === "string" &&
+    left.rootConnectionName !== left.connectionName
+  ) {
+    leftRootNetId =
+      connMap.getNetConnectedToId(left.rootConnectionName) ??
+      left.rootConnectionName
+  }
+  let rightRootNetId = rightNetId
+  if (
+    typeof right.rootConnectionName === "string" &&
+    right.rootConnectionName !== right.connectionName
+  ) {
+    rightRootNetId =
+      connMap.getNetConnectedToId(right.rootConnectionName) ??
+      right.rootConnectionName
+  }
+  return (
+    leftRootNetId === rightNetId ||
+    leftNetId === rightRootNetId ||
+    leftRootNetId === rightRootNetId
+  )
 }
 
 const boundsOverlap = (
