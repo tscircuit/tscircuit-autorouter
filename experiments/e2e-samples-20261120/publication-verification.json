@@ -1,0 +1,460 @@
+{
+  "@tscircuit/fanout-solver": {
+    "version": "0.0.103",
+    "tarballSha256": "1ccdea2cceaf42d917a50750909f068d4240101d79ed1abdf14df929e16ff30a",
+    "manifest": {
+      "name": "@tscircuit/fanout-solver",
+      "version": "0.0.103",
+      "description": "BGA fanout solver with coordinated bus-layer escapes for SimpleRouteJson",
+      "module": "lib/index.ts",
+      "type": "module",
+      "files": [
+        "lib"
+      ],
+      "workspaces": [
+        "scripts/generate-repro"
+      ],
+      "license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/tscircuit/fanout-solver.git"
+      },
+      "publishConfig": {
+        "access": "public"
+      },
+      "exports": {
+        ".": {
+          "import": "./lib/index.ts",
+          "types": "./lib/index.ts"
+        }
+      },
+      "scripts": {
+        "start": "cosmos",
+        "build:site": "cosmos-export",
+        "build": "bunx tsc --noEmit",
+        "typecheck": "bunx tsc --noEmit && bunx tsc --project tsconfig.lib.json && bunx tsc --project tsconfig.lib.json --noImplicitAny false",
+        "test": "bun test",
+        "benchmark": "bun benchmarks/run-benchmark.ts",
+        "generate:repro04": "bun scripts/generate-repro/generate-repro04.tsx",
+        "generate:dataset31": "bun scripts/generate-repro/generate-dataset31.tsx",
+        "render:dataset": "bun scripts/render-dataset-pngs.ts",
+        "format": "biome format --write .",
+        "format:check": "biome format ."
+      },
+      "dependencies": {
+        "@tscircuit/capacity-autorouter": "0.0.718",
+        "@tscircuit/math-utils": "0.0.39",
+        "@tscircuit/solver-utils": "0.0.19",
+        "graphics-debug": "0.0.99"
+      },
+      "devDependencies": {
+        "@biomejs/biome": "2.5.5",
+        "@tsci/tscircuit.dataset-srj19-bga-passive-overlays": "github:tscircuit/dataset-srj19#c1206f3",
+        "@tsci/tscircuit.dataset-srj29-bga-decoupling": "github:tscircuit/dataset-srj29-bga-decoupling#bfdf7bc",
+        "@tscircuit/alphabet": "0.0.25",
+        "@tscircuit/circuit-json-util": "0.0.106",
+        "@tscircuit/copper-pour-solver": "0.0.51",
+        "@tscircuit/footprinter": "0.0.394",
+        "@tscircuit/infer-cable-insertion-point": "0.0.4",
+        "@tscircuit/miniflex": "0.0.4",
+        "@tscircuit/schematic-trace-solver": "0.0.175",
+        "@tscircuit/soup-util": "0.0.41",
+        "@types/bun": "1.3.14",
+        "@types/react": "19.2.14",
+        "@types/react-dom": "19.2.3",
+        "bun-match-svg": "^0.0.16",
+        "circuit-json": "0.0.479",
+        "circuit-json-to-connectivity-map": "0.0.23",
+        "circuit-to-svg": "0.0.364",
+        "connectivity-map": "1.0.0",
+        "flatbush": "4.5.0",
+        "format-si-unit": "0.0.12",
+        "minicssgrid": "0.0.9",
+        "react": "19.2.8",
+        "react-cosmos": "7.3.0",
+        "react-cosmos-plugin-vite": "7.3.0",
+        "react-dom": "19.2.8",
+        "schematic-symbols": "0.0.231",
+        "spicey": "0.0.14",
+        "vite": "8.1.5"
+      },
+      "peerDependencies": {
+        "typescript": "^5"
+      }
+    },
+    "planeSourceSha256": "35a5f6db841e6f1c61614d6eceaef31c5602e02e4ad4595e80f0118be30e3a43"
+  },
+  "@tscircuit/core": {
+    "version": "0.0.2458",
+    "tarballSha256": "90946bf5db495dde1916b374c3494dfb4459d3c544ea37fa7d775685acd81be3",
+    "manifest": {
+      "name": "@tscircuit/core",
+      "type": "module",
+      "version": "0.0.2458",
+      "types": "dist/index.d.ts",
+      "main": "dist/index.js",
+      "module": "dist/index.js",
+      "exports": {
+        ".": {
+          "import": "./dist/index.js",
+          "types": "./dist/index.d.ts"
+        }
+      },
+      "files": [
+        "dist"
+      ],
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/tscircuit/core"
+      },
+      "scripts": {
+        "check:class-exports": "bun run scripts/check-class-exports.ts",
+        "build": "bun run scripts/build-test-point-rerouter-types.ts && tsup-node",
+        "format": "biome format . --write",
+        "measure-bundle": "howfat -r table .",
+        "pkg-pr-new-release": "bunx pkg-pr-new publish --comment=off --peerDeps",
+        "smoke-test:dist": "bun run scripts/smoke-tests/test-dist-assembly-bom.tsx && bun run scripts/smoke-tests/test-dist-simple-circuit.tsx && bun run scripts/smoke-tests/check-dist-bundled-schematic-solver.ts && bun run scripts/smoke-tests/test-dist-drawing-dimensions.tsx && bun run scripts/smoke-tests/check-dist-bundled-test-point-rerouter.ts && bun run scripts/smoke-tests/check-dist-collision-runtime.ts && bun run scripts/smoke-tests/test-dist-explosion-collisions.tsx && node scripts/smoke-tests/test-dist-node-explosion-collisions.mjs",
+        "build:benchmarking": "bun build --experimental-html ./benchmarking/website/index.html --outdir ./benchmarking-dist",
+        "build:benchmarking:watch": "chokidar \"./{benchmarking,lib}/**/*.{ts,tsx}\" -c 'bun build --experimental-html ./benchmarking/website/index.html --outdir ./benchmarking-dist'",
+        "start:benchmarking": "concurrently \"bun run build:benchmarking:watch\" \"live-server ./benchmarking-dist\"",
+        "generate-test-plan": "bun run scripts/generate-test-plan.ts",
+        "benchmark:ddr": "bun scripts/benchmark-ddr/run.ts"
+      },
+      "devDependencies": {
+        "@tscircuit/cad-collision-checking": "https://jscdn.tscircuit.com/@tscircuit/cad-collision-checking/0.0.6.tgz",
+        "@tscircuit/graphics-debug-3d": "https://jscdn.tscircuit.com/@tscircuit/graphics-debug-3d/0.0.1.tgz",
+        "@biomejs/biome": "^1.8.3",
+        "@resvg/resvg-js": "^2.6.2",
+        "@tsci/tscircuit.ti": "github:tscircuit/ti#57e314be4b2b06bc546d4def7453e619604d1157",
+        "@tscircuit/alphabet": "0.0.25",
+        "@tscircuit/bga-fanout-solver": "github:tscircuit/bga-fanout-solver#247c835cb8d69b65e53891dcf869731079415b39",
+        "@tscircuit/bus-lanes-solver": "https://jscdn.tscircuit.com/@tscircuit/bus-lanes-solver/0.0.65.tgz",
+        "@tscircuit/cableprinter": "^0.0.6",
+        "@tscircuit/capacity-autorouter": "0.0.1152",
+        "@tscircuit/checks": "^0.0.282",
+        "@tscircuit/circuit-json-util": "^0.0.131",
+        "@tscircuit/common": "^0.0.20",
+        "@tscircuit/copper-pour-solver": "^0.0.74",
+        "@tscircuit/create-fdm-enclosure": "0.0.6",
+        "@tscircuit/dogbone-solver": "https://jscdn.tscircuit.com/@tscircuit/dogbone-solver/0.0.4.tgz",
+        "@tscircuit/fanout-solver": "0.0.103",
+        "@tscircuit/flex-utils": "https://jscdn.tscircuit.com/@tscircuit/flex-utils/0.0.8.tgz",
+        "@tscircuit/footprinter": "^0.0.451",
+        "@tscircuit/image-utils": "^0.0.8",
+        "@tscircuit/implicit-copper-pour-solver": "github:tscircuit/implicit-copper-pour-solver#a5cbbda0cd65fd4707c5c1af25779837c25aba92",
+        "@tscircuit/infer-cable-insertion-point": "^0.0.5",
+        "@tscircuit/infgrid-ijump-astar": "^0.0.35",
+        "@tscircuit/jlcpcb-manufacturing-specs": "git+https://github.com/tscircuit/jlcpcb-manufacturing-specs#d2c2e917ace9de22a3a486b313b15b9f459301cc",
+        "@tscircuit/krt-wasm": "^0.1.10",
+        "@tscircuit/log-soup": "^1.0.2",
+        "@tscircuit/matchpack": "^0.0.100",
+        "@tscircuit/math-utils": "0.0.39",
+        "@tscircuit/miniflex": "^0.0.4",
+        "@tscircuit/modelprinter": "^0.0.37",
+        "@tscircuit/ngspice-spice-engine": "^0.0.25",
+        "@tscircuit/props": "^0.0.744",
+        "@tscircuit/schematic-match-adapt": "^0.0.18",
+        "@tscircuit/schematic-trace-solver": "https://jscdn.tscircuit.com/@tscircuit/schematic-trace-solver/0.0.246.tgz",
+        "@tscircuit/solver-utils": "^0.0.16",
+        "@tscircuit/soup-util": "^0.0.41",
+        "@tscircuit/via-stitch-solver": "github:tscircuit/via-stitch-solver#64f2ac7781b795bdc0d74ba411988e60767fa653",
+        "@tscircuit/winding-breakout-point-solver": "github:tscircuit/winding-breakout-point-solver#08d8da9d8dbb037eba332e7bfd685063f8805ed4",
+        "@types/bun": "^1.2.16",
+        "@types/debug": "^4.1.12",
+        "@types/react": "^19.1.8",
+        "@types/react-dom": "^19.1.6",
+        "@types/react-reconciler": "^0.28.9",
+        "bpc-graph": "^0.0.57",
+        "bun-match-svg": "0.0.16",
+        "calculate-elbow": "^0.0.12",
+        "chokidar-cli": "^3.0.0",
+        "circuit-json": "0.0.552",
+        "circuit-json-to-bom-csv": "^0.0.28",
+        "circuit-json-to-bpc": "^0.0.13",
+        "circuit-json-to-connectivity-map": "^0.0.36",
+        "circuit-json-to-spice": "^0.0.50",
+        "circuit-to-svg": "^0.0.460",
+        "concurrently": "^9.1.2",
+        "connectivity-map": "^1.0.1",
+        "debug": "^4.3.6",
+        "flatbush": "^4.5.0",
+        "graphics-debug": "^0.0.99",
+        "howfat": "^0.3.8",
+        "kicad-to-circuit-json": "^0.0.149",
+        "kicadts": "^0.0.53",
+        "live-server": "^1.2.2",
+        "minicssgrid": "^0.0.9",
+        "pkg-pr-new": "^0.0.37",
+        "react": "^19.1.0",
+        "react-dom": "^19.1.0",
+        "schematic-symbols": "^0.0.251",
+        "spicets": "^0.0.6",
+        "spicey": "^0.0.14",
+        "stack-svgs": "^0.0.1",
+        "ts-expect": "^1.3.0",
+        "tsup": "^8.2.4",
+        "@tscircuit/circuit-json-to-drawing": "https://jscdn.tscircuit.com/@tscircuit/circuit-json-to-drawing/0.0.6.tgz",
+        "circuit-json-to-gltf": "^0.0.164",
+        "@tscircuit/jscad": "^0.0.6",
+        "@tscircuit/test-point-rerouter": "github:tscircuit/test-point-rerouter#b0ccfaca75a7e187c55ddb6f2071a1f2084e3167",
+        "@tscircuit/manifold-2d": "^0.0.8",
+        "typescript": "^5.9.3",
+        "@tscircuit/jscad-to-manifold": "https://jscdn.tscircuit.com/@tscircuit/jscad-to-manifold/0.0.1.tgz",
+        "circuit-json-to-3d-png": "^0.0.6",
+        "circuit-json-to-altium": "github:tscircuit/circuit-json-to-altium#1a50d0dd2c0737cf940d92c0315852dc0111dd87",
+        "circuit-json-to-fdm-component-box": "^0.0.2",
+        "circuit-json-to-footprinter": "^0.0.59",
+        "circuit-json-to-gerber": "^0.0.120",
+        "circuit-json-to-kicad": "0.0.272",
+        "circuit-json-to-readable-netlist": "^0.0.15",
+        "circuit-json-to-step": "^0.0.63",
+        "circuit-json-to-tscircuit": "^0.0.50",
+        "dsn-converter": "^0.0.90",
+        "easyeda": "^0.0.389",
+        "circuit-json-to-pnp-csv": "^0.0.20",
+        "@tscircuit/core-ddr-benchmark": "github:ShiboSoftwareDev/core-ddr-benchmark#24dc44c166d4258c3538f8b1f66953f1b6f58690"
+      },
+      "peerDependencies": {
+        "@tscircuit/capacity-autorouter": "*",
+        "@tscircuit/checks": "*",
+        "@tscircuit/circuit-json-util": "*",
+        "@tscircuit/create-fdm-enclosure": "*",
+        "@tscircuit/footprinter": "*",
+        "@tscircuit/infgrid-ijump-astar": "*",
+        "@tscircuit/math-utils": "*",
+        "@tscircuit/modelprinter": "*",
+        "@tscircuit/props": "*",
+        "@tscircuit/schematic-match-adapt": "*",
+        "circuit-json-to-bpc": "*",
+        "bpc-graph": "*",
+        "@tscircuit/matchpack": "*",
+        "circuit-json": "*",
+        "circuit-json-to-connectivity-map": "*",
+        "circuit-json-to-spice": "*",
+        "schematic-symbols": "*",
+        "spicets": "*",
+        "typescript": "^5.0.0",
+        "@tscircuit/cableprinter": "*",
+        "@tscircuit/manifold-2d": "*"
+      },
+      "dependencies": {
+        "@flatten-js/core": "^1.6.2",
+        "@lume/kiwi": "^0.4.3",
+        "calculate-cell-boundaries": "^0.0.25",
+        "calculate-packing": "^0.0.90",
+        "css-select": "5.1.0",
+        "format-si-unit": "^0.0.12",
+        "gl-matrix": "^3.4.4",
+        "nanoid": "^5.0.7",
+        "performance-now": "^2.1.0",
+        "react-reconciler": "^0.32.0",
+        "svg-path-commander": "^2.1.11",
+        "transformation-matrix": "^2.16.1",
+        "zod": "^3.25.67",
+        "jscad-planner": "^0.0.21",
+        "jscad-fiber": "^0.0.93",
+        "poppygl": "0.0.38",
+        "@jscad/modeling": "^2.13.0",
+        "@dagrejs/dagre": "^2.0.4"
+      },
+      "overrides": {
+        "graphics-debug": "$graphics-debug",
+        "@tscircuit/graphics-debug-3d": "https://jscdn.tscircuit.com/@tscircuit/graphics-debug-3d/0.0.1.tgz",
+        "@tscircuit/props": "^0.0.744",
+        "circuit-json": "0.0.552",
+        "@tscircuit/cableprinter": "^0.0.6"
+      },
+      "browser": {
+        "@resvg/resvg-js": false
+      }
+    },
+    "bundleEvidence": [
+      {
+        "file": "package/dist/index.js",
+        "token": "centeredEscape",
+        "snippet": "andidateDirectionPasses = [\n    ...candidateDirections.map((direction) => ({\n      direction,\n      centeredEscape: false\n    })),\n    ...candidateDirections.map((direction) => ({\n      direction,\n      centeredEscape: true\n    }))\n  ];\n  for (const { direction, centeredEscape } of candidateDirectionPasses) {\n    const directionalBus = direction === bus.direction ? bus : { ...bus, direction };\n    const directionalPadSize = isHorizontal(direction"
+      },
+      {
+        "file": "package/dist/index.js",
+        "token": "@tscircuit/fanout-solver",
+        "snippet": "mblyDeviceContainer\" in component && component.isAssemblyDeviceContainer === true;\n\n// node_modules/@tscircuit/fanout-solver/lib/fanout-output-ids.ts\nfunction createFanoutOutputIds(input) {\n  const endpointKey = `${input.connectionName}:source-${input.sourcePointIndex}`;\n  return {\n    boundaryExitPointId: `fanout-exit:${endpointKey}`,\n    planeExitPointId: `fanout-plane:${endpointKey}`,\n    traceId: `fanout:${endpointKey}`,\n    viaObstacleId: `f"
+      },
+      {
+        "file": "package/dist/index.js",
+        "token": "@tscircuit/core",
+        "snippet": "rror(\n        `Unsupported component type \"${type}\". No element with this name is registered in the @tscircuit/core catalogue. Check for typos or see https://docs.tscircuit.com/category/built-in-elements for a list of valid components. To add your own component, see docs/CREATING_NEW_COMPONENTS.md`\n      );\n    }\n    try {\n      const instance = prepare(new target(props), {});\n      return instance;\n    } catch (error) {\n      return createErrorP"
+      }
+    ]
+  },
+  "tscircuit": {
+    "version": "0.0.3277",
+    "tarballSha256": "18034941a4b336cf6d722ed917d2fd24ce98f2db1f6be85a4d9d70563eebe4f2",
+    "manifest": {
+      "name": "tscircuit",
+      "main": "dist/index.js",
+      "types": "dist/index.d.ts",
+      "type": "module",
+      "version": "0.0.3277",
+      "license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/tscircuit/tscircuit"
+      },
+      "files": [
+        "dist",
+        "cli.mjs",
+        "globals.d.ts"
+      ],
+      "scripts": {
+        "build": "tsup-node && bun run copy-runframe-standalone && cp types/static-assets.d.ts dist/static-assets.d.ts && bun run add-global-types-reference",
+        "add-global-types-reference": "echo '/// <reference path=\"../globals.d.ts\" />' | cat - dist/index.d.ts > dist/index.d.ts.tmp && mv dist/index.d.ts.tmp dist/index.d.ts",
+        "test": "bun test",
+        "upgrade-deps": "bun update --latest @tscircuit/core @tscircuit/cli @tscircuit/eval @tscircuit/runframe && bun run copy-core-versions && bun install --ignore-scripts",
+        "copy-runframe-standalone": "bun run copy-eval-webworker && bun run scripts/copy-runframe-standalone.ts",
+        "copy-eval-webworker": "bun run scripts/copy-eval-webworker.ts",
+        "copy-core-versions": "bun run scripts/copy-core-versions.ts && bun install --ignore-scripts"
+      },
+      "exports": {
+        ".": {
+          "types": "./dist/index.d.ts",
+          "default": "./dist/index.js"
+        },
+        "./browser": "./dist/browser.min.js"
+      },
+      "bin": {
+        "tsci": "cli.mjs",
+        "tscircuit": "cli.mjs"
+      },
+      "devDependencies": {
+        "@types/bun": "^1.2.16",
+        "esbuild": "^0.20.2",
+        "esbuild-register": "^3.5.0",
+        "tsup": "^8.2.4",
+        "typescript": "^5.9.3"
+      },
+      "peerDependencies": {
+        "typescript": "^5.0.0"
+      },
+      "dependencies": {
+        "@dagrejs/dagre": "^2.0.4",
+        "@flatten-js/core": "^1.6.2",
+        "@lume/kiwi": "^0.4.3",
+        "@resvg/resvg-js": "^2.6.2",
+        "@rollup/plugin-commonjs": "^29.0.0",
+        "@rollup/plugin-json": "^6.1.0",
+        "@rollup/plugin-node-resolve": "^16.0.3",
+        "@rollup/plugin-typescript": "^12.3.0",
+        "@tscircuit/alphabet": "0.0.25",
+        "@tscircuit/capacity-autorouter": "0.0.1152",
+        "@tscircuit/checks": "^0.0.282",
+        "@tscircuit/circuit-json-util": "^0.0.131",
+        "@tscircuit/cli": "^0.1.2482",
+        "@tscircuit/copper-pour-solver": "^0.0.74",
+        "@tscircuit/core": "^0.0.2458",
+        "@tscircuit/create-fdm-enclosure": "0.0.6",
+        "@tscircuit/eval": "^0.0.1845",
+        "@tscircuit/fanout-solver": "0.0.103",
+        "@tscircuit/footprinter": "^0.0.451",
+        "@tscircuit/image-utils": "^0.0.8",
+        "@tscircuit/infer-cable-insertion-point": "^0.0.5",
+        "@tscircuit/infgrid-ijump-astar": "^0.0.35",
+        "@tscircuit/internal-dynamic-import": "^0.0.11",
+        "@tscircuit/krt-wasm": "^0.1.10",
+        "@tscircuit/manifold-2d": "^0.0.8",
+        "@tscircuit/matchpack": "^0.0.100",
+        "@tscircuit/math-utils": "0.0.39",
+        "@tscircuit/miniflex": "^0.0.4",
+        "@tscircuit/modelprinter": "^0.0.37",
+        "@tscircuit/ngspice-spice-engine": "^0.0.25",
+        "@tscircuit/props": "^0.0.744",
+        "@tscircuit/runframe": "^0.0.3323",
+        "@tscircuit/schematic-match-adapt": "^0.0.18",
+        "@tscircuit/simple-3d-svg": "^0.0.41",
+        "@tscircuit/solver-utils": "^0.0.16",
+        "@tscircuit/soup-util": "^0.0.41",
+        "bpc-graph": "^0.0.57",
+        "calculate-cell-boundaries": "^0.0.25",
+        "calculate-elbow": "^0.0.12",
+        "calculate-packing": "^0.0.90",
+        "circuit-json": "0.0.552",
+        "circuit-json-to-bpc": "^0.0.13",
+        "circuit-json-to-connectivity-map": "^0.0.36",
+        "circuit-json-to-gltf": "^0.0.164",
+        "circuit-json-to-pnp-csv": "^0.0.20",
+        "circuit-json-to-simple-3d": "^0.0.9",
+        "circuit-json-to-spice": "^0.0.50",
+        "circuit-to-svg": "^0.0.460",
+        "comlink": "^4.4.2",
+        "connectivity-map": "^1.0.1",
+        "css-select": "5.1.0",
+        "debug": "^4.3.6",
+        "flatbush": "^4.5.0",
+        "format-si-unit": "^0.0.12",
+        "graphics-debug": "^0.0.99",
+        "gl-matrix": "^3.4.4",
+        "jscad-fiber": "^0.0.93",
+        "jscad-planner": "^0.0.21",
+        "kicad-component-converter": "^0.1.40",
+        "kicad-to-circuit-json": "^0.0.149",
+        "kicadts": "^0.0.53",
+        "minicssgrid": "^0.0.9",
+        "performance-now": "^2.1.0",
+        "poppygl": "0.0.38",
+        "react": "^19.1.0",
+        "react-dom": "^19.1.0",
+        "rollup": "^4.53.2",
+        "rollup-plugin-dts": "^6.2.3",
+        "s-expression": "^3.1.1",
+        "schematic-symbols": "^0.0.251",
+        "spicets": "^0.0.6",
+        "spicey": "^0.0.14",
+        "sucrase": "^3.35.0",
+        "svg-path-commander": "^2.1.11",
+        "transformation-matrix": "^2.16.1",
+        "tslib": "^2.8.1",
+        "zod": "^3.25.67"
+      }
+    },
+    "bundleEvidence": [
+      {
+        "file": "package/dist/browser.min.js",
+        "token": "centeredOutward",
+        "snippet": ".direction,...[\"left\",\"right\",\"up\",\"down\"].filter(w=>w!==g.direction)],y=[...u.map(w=>({direction:w,centeredOutward:!1})),...u.map(w=>({direction:w,centeredOutward:!0}))];for(const{direction:w,centeredOutward:p}of y){const m=w===g.direction?g:{...g,direction:w},G=WE(w)?l.width:l.height,f=pgA(m)/2-G/2>=C/2+Q-1e-9,M=p?!f&&Lme(m)?[0]:[]:f?[0]:[1,-1];for(const k of M)for(const R of I$g(m)){const S=[];let N=!0;for(const F of R){const _=Il(F.sourcePoin"
+      },
+      {
+        "file": "package/dist/browser.min.js",
+        "token": "@tscircuit/core",
+        "snippet": "ile?\"):new Error(`Unsupported component type \"${e}\". No element with this name is registered in the @tscircuit/core catalogue. Check for typos or see https://docs.tscircuit.com/category/built-in-elements for a list of valid components. To add your own component, see docs/CREATING_NEW_COMPONENTS.md`);try{return Ugi(new g(A),{})}catch(t){return _gi({...A,componentType:e},t)}},createTextInstance(e){return{__text:e}},appendInitialChild(e,A){e.add(A)}"
+      },
+      {
+        "file": "package/dist/index.js",
+        "token": "@tscircuit/core",
+        "snippet": "// index.ts\nexport * from \"@tscircuit/core\";\nimport { jscad } from \"@tscircuit/core\";\nexport * from \"@tscircuit/eval\";\nimport { Fragment } from \"react\";\nimport { kicadFootprintStrings } from \"@tscircuit/props\";\nexport {\n  Fragment,\n  jscad,\n  kicadFootprintStrings\n};\n//# sourceMappingURL=data:application/json;base64,ewogICJ2ZXJzaW9uIjogMywKICAic291cmNlcyI6IFsiLi4vaW5kZXgudHM"
+      },
+      {
+        "file": "package/dist/webworker.min.js",
+        "token": "centeredOutward",
+        "snippet": "direction)],candidateDirectionPasses=[...candidateDirections.map(direction4=>({direction:direction4,centeredOutward:!1})),...candidateDirections.map(direction4=>({direction:direction4,centeredOutward:!0}))];for(let{direction:direction4,centeredOutward}of candidateDirectionPasses){let directionalBus=direction4===bus.direction?bus:{...bus,direction:direction4},directionalPadSize=isHorizontal2(direction4)?sourceObstacle.width:sourceObstacle.height,p"
+      },
+      {
+        "file": "package/dist/webworker.min.js",
+        "token": "@tscircuit/fanout-solver",
+        "snippet": "ps://github.com/tscircuit/dataset-srj33-drc-failures.git#f566b62be0f83395d9ab63ddc068f9d645b68b16\",\"@tscircuit/fanout-solver\":\"^0.0.29\",\"@tscircuit/fanout-for-pipeline9-fixtures\":\"npm:@tscircuit/fanout-solver@0.0.66\",\"@tscircuit/fixed-via-hypergraph-solver\":\"https://codeload.github.com/tscircuit/fixed-via-hypergraph-solver/tar.gz/bed37a6201b5dd07c9cc68b828917ecc20d6d049\",\"@tscircuit/hypergraph\":\"^0.0.71\",\"@tscircuit/jumper-topology-generator\":\"^0"
+      },
+      {
+        "file": "package/dist/webworker.min.js",
+        "token": "@tscircuit/core",
+        "snippet": "ents,modifiers,primitives,text,transforms,utils,references,init_chunk_CE5AIPIV=__esm({\"node_modules/@tscircuit/core/dist/chunk-CE5AIPIV.js\"(){\"use strict\";import_modeling=__toESM(require_src(),1);init_esm();import_jscad_planner=__toESM(require_dist(),1),import_insertTjunctions=__toESM(require_insertTjunctions(),1),import_modeling2=__toESM(require_src(),1),import_modeling3=__toESM(require_src(),1),__defProp2=Object.defineProperty,__require2=(x11=>"
+      }
+    ]
+  },
+  "nodeGate": {
+    "verified": true,
+    "tscircuit": "0.0.3277",
+    "resolvedCore": "0.0.2458",
+    "coreBundleSha256": "8081c48f3d6a581bd9b487b806c3fdd1cc28e72ba2ade73d5a9e9f5df59aeef9",
+    "implementedSelector": "for (const { direction, centeredEscape } of candidateDirectionPasses) {\n    const directionalBus = direction === bus.direction ? bus : { ...bus, direction };\n    const directionalPadSize = isHorizontal(direction) ? sourceObstacle.width : sourceObstacle.height;\n    const pairChannelFitsVia = getDirectionalPitch(directionalBus) / 2 - directionalPadSize / 2 >= viaDiameter / 2 + clearance - 1e-9;\n    const viaHandednesses = centeredEscape ? !pairChannelFitsVia ? [0] : [] : pairChannelFitsVia ? [0] : [1, -1];\n    const isFirstRouteSearch = !params.collectAlternative && planeCandidateSkipCount === 0;\n    const originalConnectionOrders = getConnectionOrders(directionalBus);\n    const connectionOrders = bus.connections.length === 1 && isFirstRouteSearch ? [bus.connections] : originalConnectionOrders;\n    const skippedOrderCount = originalConnectionOrders.length - connectionOrders.length;\n    for (const viaHandedness of viaHandednesses) {\n      const initialBlockingBusCounts = skippedOrderCount",
+    "nodeEntry": "tscircuit/dist/index.js re-exports @tscircuit/core; latest published dependency satisfying ^0.0.2458 is0.0.2458",
+    "browserWorkerNote": "Published tscircuit browser/worker bundles contain centeredOutward and no centeredEscape; investigate separately rather than assuming all entry points execute new Core."
+  }
+}
