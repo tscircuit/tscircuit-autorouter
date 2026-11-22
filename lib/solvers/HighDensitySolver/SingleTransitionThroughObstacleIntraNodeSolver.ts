@@ -206,7 +206,7 @@ export class SingleTransitionThroughObstacleIntraNodeSolver extends BaseSolver {
 
     return (
       this.obstacles.find((obstacle) => {
-        if (obstacle.__zLayers.length < 2) {
+        if (obstacle.representsFutureVia || obstacle.__zLayers.length < 2) {
           return false
         }
         if (

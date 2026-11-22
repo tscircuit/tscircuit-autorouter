@@ -1,3 +1,4 @@
+import { isExistingMultilayerObstacle } from "lib/utils/isExistingMultilayerObstacle"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { isObstacleConnectedToRoute } from "lib/solvers/TraceWidthSolver/isObstacleConnectedToRoute"
 import type {
@@ -75,7 +76,7 @@ export const createPipeline7HdRoutesToSimplifiedPcbTracesConverter = ({
 
   const multilayerObstacles = obstacles.filter(
     (obstacle) =>
-      (obstacle.__zLayers?.length ?? obstacle.layers?.length ?? 0) > 1 ||
+      isExistingMultilayerObstacle(obstacle) ||
       Boolean(obstacle.circuitJsonMetadata?.pcb_via_id),
   )
   const connectedObstaclesByConnectionName = new Map<

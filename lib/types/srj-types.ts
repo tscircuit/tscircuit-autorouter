@@ -142,6 +142,8 @@ export interface Obstacle {
   componentId?: string
   /** True when this obstacle replaces one completed fanout source footprint. */
   isFanoutSourceKeepout?: boolean
+  /** Occupies the via span during routing; the router must still emit the drill. */
+  representsFutureVia?: boolean
   /** Non-plated hole geometry. Must have no electrical connections. */
   isNonPlatedHole?: boolean
   shape?: "circle"
