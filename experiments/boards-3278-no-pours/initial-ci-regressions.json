@@ -1,0 +1,23 @@
+{
+  "supersededSource": "2a7f5271ecca991c77832d4152f17bc9b1afa92e",
+  "supersededRun": 45023515950,
+  "failedJobs": [
+    137211383283,
+    137211383345,
+    137211383281,
+    137211383073
+  ],
+  "rootCause": "Broad greedy finite-cost gate prohibited logical crossings of movable routes needed by downstream unraveling. It must only reject crossings with immutable copper.",
+  "correctedSource": "3de30e6d3de543ad16604201085213fc88657207",
+  "regressionTest": "tests/solver/greedy-movable-crossing.test.ts",
+  "localChecks": {
+    "pedometerHighDensity": "pass",
+    "pedometerLowEffort": "pass",
+    "ov9281RegionalRepair": "pass",
+    "preloadedPortDuplication": "pass",
+    "nativeFixedTraceRouting": "pass; actualPCB SVG changed, inspected, both relaxedDRC0",
+    "fullBoardDdrClearance": "pass; existingSVG unchanged"
+  },
+  "freshCi": 45025863693,
+  "freshBenchmark": 45025676977
+}

@@ -1,0 +1,125 @@
+{
+  "sourceBase": "c5a37f9ce2381233366048de693c4f74e754c108",
+  "sourceFix": "3de30e6d3de543ad16604201085213fc88657207",
+  "case": "captured75routegraph",
+  "routes": 75,
+  "before": {
+    "solved": true,
+    "error": null,
+    "fixedCopperCrossings": 6,
+    "crossings": [
+      {
+        "regionId": 6616,
+        "first": [
+          58,
+          34837,
+          45480
+        ],
+        "second": [
+          11,
+          45472,
+          34836
+        ]
+      },
+      {
+        "regionId": 7655,
+        "first": [
+          66,
+          48327,
+          48320
+        ],
+        "second": [
+          15,
+          48324,
+          48328
+        ]
+      },
+      {
+        "regionId": 9053,
+        "first": [
+          66,
+          52673,
+          48327
+        ],
+        "second": [
+          15,
+          52672,
+          48324
+        ]
+      },
+      {
+        "regionId": 9728,
+        "first": [
+          51,
+          54168,
+          54413
+        ],
+        "second": [
+          22,
+          54400,
+          54414
+        ]
+      },
+      {
+        "regionId": 11794,
+        "first": [
+          50,
+          59814,
+          58533
+        ],
+        "second": [
+          19,
+          59800,
+          59812
+        ]
+      },
+      {
+        "regionId": 12538,
+        "first": [
+          53,
+          61867,
+          61864
+        ],
+        "second": [
+          5,
+          61868,
+          61849
+        ]
+      }
+    ],
+    "stats": {
+      "initialAssignmentCount": 374,
+      "initiallyRoutedRouteCount": 26,
+      "neverSuccessfullyRoutedRouteCount": 0,
+      "acceptedGreedyFinalRouteOnTimeout": true,
+      "greedyFinalRouteIter": 0,
+      "finalRoutingStrategy": "greedy",
+      "greedyFinalRouteRemainingRouteCount": 25,
+      "greedyFinalRouteMaxIterations": 50000,
+      "maxRegionCost": 131.64800000000048,
+      "totalRegionCost": 1141.5389443565196,
+      "bestMaxRegionCost": 131.64800000000048,
+      "bestTotalRegionCost": 1141.5389443565196
+    }
+  },
+  "after": {
+    "solved": true,
+    "error": null,
+    "fixedCopperCrossings": 0,
+    "crossings": [],
+    "stats": {
+      "initialAssignmentCount": 374,
+      "initiallyRoutedRouteCount": 26,
+      "neverSuccessfullyRoutedRouteCount": 0,
+      "acceptedGreedyFinalRouteOnTimeout": true,
+      "greedyFinalRouteIter": 0,
+      "finalRoutingStrategy": "greedy",
+      "greedyFinalRouteRemainingRouteCount": 25,
+      "greedyFinalRouteMaxIterations": 50000,
+      "maxRegionCost": 131.64800000000048,
+      "totalRegionCost": 1004.569425211217,
+      "bestMaxRegionCost": 131.64800000000048,
+      "bestTotalRegionCost": 1004.569425211217
+    }
+  }
+}

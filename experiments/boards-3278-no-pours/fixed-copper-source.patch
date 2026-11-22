@@ -1,0 +1,157 @@
+diff --git a/lib/core.ts b/lib/core.ts
+index e41e411..2c86767 100644
+--- a/lib/core.ts
++++ b/lib/core.ts
+@@ -920,6 +920,9 @@ export class TinyHyperGraphSolver extends BaseSolver {
+         if (assignedNetId !== -1 && assignedNetId !== state.currentRouteNetId) {
+           continue
+         }
++        if (!Number.isFinite(this.computeG(currentCandidate, neighborPortId))) {
++          continue
++        }
+         this.onPathFound(currentCandidate)
+         return
+       }
+@@ -1073,6 +1076,9 @@ export class TinyHyperGraphSolver extends BaseSolver {
+         if (assignedNetId !== -1 && assignedNetId !== state.currentRouteNetId) {
+           continue
+         }
++        if (!Number.isFinite(this.computeG(currentCandidate, neighborPortId))) {
++          continue
++        }
+         this.onPathFound(currentCandidate)
+         return
+       }
+@@ -1374,6 +1380,45 @@ export class TinyHyperGraphSolver extends BaseSolver {
+     )
+   }
+ 
++  protected segmentsCrossOnSameLayer(
++    regionId: RegionId,
++    firstFromPortId: PortId,
++    firstToPortId: PortId,
++    secondFromPortId: PortId,
++    secondToPortId: PortId,
++  ): boolean {
++    const first = this.populateSegmentGeometryScratch(
++      regionId,
++      firstFromPortId,
++      firstToPortId,
++    )
++    const firstLesserAngle = first.lesserAngle
++    const firstGreaterAngle = first.greaterAngle
++    const firstLayerMask = first.layerMask
++    const second = this.populateSegmentGeometryScratch(
++      regionId,
++      secondFromPortId,
++      secondToPortId,
++    )
++    if ((firstLayerMask & second.layerMask) === 0) return false
++    if (
++      firstLesserAngle === second.lesserAngle ||
++      firstLesserAngle === second.greaterAngle ||
++      firstGreaterAngle === second.lesserAngle ||
++      firstGreaterAngle === second.greaterAngle
++    ) {
++      return false
++    }
++
++    const secondLesserInsideFirst =
++      firstLesserAngle < second.lesserAngle &&
++      second.lesserAngle < firstGreaterAngle
++    const secondGreaterInsideFirst =
++      firstLesserAngle < second.greaterAngle &&
++      second.greaterAngle < firstGreaterAngle
++    return secondLesserInsideFirst !== secondGreaterInsideFirst
++  }
++
+   isKnownSingleLayerRegion(regionId: RegionId): boolean {
+     const regionAvailableZMask =
+       this.topology.regionAvailableZMask?.[regionId] ?? 0
+@@ -2266,8 +2311,22 @@ export class TinyHyperGraphSolver extends BaseSolver {
+ class GreedyFinalRouteSolver extends TinyHyperGraphSolver {
+   override computeG(
+     currentCandidate: Candidate,
+-    _neighborPortId: PortId,
++    neighborPortId: PortId,
+   ): number {
+-    return currentCandidate.g
++    const regionId = currentCandidate.nextRegionId
++    if (!this.isKnownSingleLayerRegion(regionId)) return currentCandidate.g
++    const crossesFixedCopper = this.state.regionSegments[regionId].some(
++      ([routeId, fromPortId, toPortId]) =>
++        this.problem.routeIsFixed?.[routeId] === 1 &&
++        this.problem.routeNet[routeId] !== this.state.currentRouteNetId &&
++        this.segmentsCrossOnSameLayer(
++          regionId,
++          currentCandidate.portId,
++          neighborPortId,
++          fromPortId,
++          toPortId,
++        ),
++    )
++    return crossesFixedCopper ? Number.POSITIVE_INFINITY : currentCandidate.g
+   }
+ }
+diff --git a/lib/prepared/DenseRoutingWorkspace.ts b/lib/prepared/DenseRoutingWorkspace.ts
+index a935f8c..81b980d 100644
+--- a/lib/prepared/DenseRoutingWorkspace.ts
++++ b/lib/prepared/DenseRoutingWorkspace.ts
+@@ -183,6 +183,7 @@ export class DenseRoutingWorkspace {
+       previous = at
+       const port = neighbors[at]!
+       if (port === state.goalPortId) {
++        if (!Number.isFinite(solver.computeG(c, port))) continue
+         solver.onPathFound(c)
+         return
+       }
+diff --git a/lib/selective-rerip-tiny-hyper-graph-solver.ts b/lib/selective-rerip-tiny-hyper-graph-solver.ts
+index 494f5ff..d4a011a 100644
+--- a/lib/selective-rerip-tiny-hyper-graph-solver.ts
++++ b/lib/selective-rerip-tiny-hyper-graph-solver.ts
+@@ -775,45 +775,6 @@ export class SelectiveReripTinyHyperGraphSolver extends OutsideInPartialRipTinyH
+     return [...owners]
+   }
+ 
+-  private segmentsCrossOnSameLayer(
+-    regionId: RegionId,
+-    firstFromPortId: PortId,
+-    firstToPortId: PortId,
+-    secondFromPortId: PortId,
+-    secondToPortId: PortId,
+-  ): boolean {
+-    const first = this.populateSegmentGeometryScratch(
+-      regionId,
+-      firstFromPortId,
+-      firstToPortId,
+-    )
+-    const firstLesserAngle = first.lesserAngle
+-    const firstGreaterAngle = first.greaterAngle
+-    const firstLayerMask = first.layerMask
+-    const second = this.populateSegmentGeometryScratch(
+-      regionId,
+-      secondFromPortId,
+-      secondToPortId,
+-    )
+-    if ((firstLayerMask & second.layerMask) === 0) return false
+-    if (
+-      firstLesserAngle === second.lesserAngle ||
+-      firstLesserAngle === second.greaterAngle ||
+-      firstGreaterAngle === second.lesserAngle ||
+-      firstGreaterAngle === second.greaterAngle
+-    ) {
+-      return false
+-    }
+-
+-    const secondLesserInsideFirst =
+-      firstLesserAngle < second.lesserAngle &&
+-      second.lesserAngle < firstGreaterAngle
+-    const secondGreaterInsideFirst =
+-      firstLesserAngle < second.greaterAngle &&
+-      second.greaterAngle < firstGreaterAngle
+-    return secondLesserInsideFirst !== secondGreaterInsideFirst
+-  }
+-
+   private rebuildCommittedState(rippedRouteIds: ReadonlySet<RouteId>): void {
+     for (const routeId of rippedRouteIds) {
+       if (this.problem.routeIsFixed?.[routeId] === 1) {
