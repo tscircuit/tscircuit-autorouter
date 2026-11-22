@@ -69,37 +69,63 @@ test("pipeline9 DRC candidate that adds a contact is not better when new contact
     actual_clearance: 0.05,
   }
   const current = [traceAOnPad1, traceAOnTraceB, clearanceError, clearanceError]
+  // The same trace on the same pad at another point. The DRC engine reports
+  // one error per pair of objects, so this is the same short.
+  const traceAOnPad1Elsewhere: Pipeline9DrcError = {
+    ...traceAOnPad1,
+    center: { x: 4, y: 1 },
+    actual_clearance: -0.05,
+  }
   // Each candidate has fewer errors than the current routes.
   const newContact = [traceAOnPad1, traceAOnTraceB, traceAOnPad2]
   const sameContacts = [traceAOnPad1, traceBOnViaOfTraceA, clearanceError]
+  const sameContactsElsewhere = [traceAOnPad1Elsewhere, traceAOnTraceB]
   const clearanceErrorsOnly = [clearanceError, traceANearPad2]
   const withUnidentifiedContact = [traceAOnPad1, unidentifiedContact]
 
-  const rejectNewContacts = { rejectNewContacts: true }
-
   expect(
-    isPipeline9DrcCandidateBetter(newContact, current, rejectNewContacts),
+    isPipeline9DrcCandidateBetter({
+      candidateErrors: newContact,
+      currentErrors: current,
+      rejectNewContacts: true,
+    }),
   ).toBe(false)
   // Without the option, a new contact is counted like any other error.
-  expect(isPipeline9DrcCandidateBetter(newContact, current)).toBe(true)
   expect(
-    isPipeline9DrcCandidateBetter(sameContacts, current, rejectNewContacts),
+    isPipeline9DrcCandidateBetter({
+      candidateErrors: newContact,
+      currentErrors: current,
+    }),
+  ).toBe(true)
+  expect(
+    isPipeline9DrcCandidateBetter({
+      candidateErrors: sameContacts,
+      currentErrors: current,
+      rejectNewContacts: true,
+    }),
+  ).toBe(true)
+  expect(
+    isPipeline9DrcCandidateBetter({
+      candidateErrors: sameContactsElsewhere,
+      currentErrors: current,
+      rejectNewContacts: true,
+    }),
   ).toBe(true)
   // Clearance errors, near-misses included, are only counted.
   expect(
-    isPipeline9DrcCandidateBetter(
-      clearanceErrorsOnly,
-      current,
-      rejectNewContacts,
-    ),
+    isPipeline9DrcCandidateBetter({
+      candidateErrors: clearanceErrorsOnly,
+      currentErrors: current,
+      rejectNewContacts: true,
+    }),
   ).toBe(true)
   // A contact that cannot be identified counts as new.
   expect(
-    isPipeline9DrcCandidateBetter(
-      withUnidentifiedContact,
-      current,
-      rejectNewContacts,
-    ),
+    isPipeline9DrcCandidateBetter({
+      candidateErrors: withUnidentifiedContact,
+      currentErrors: current,
+      rejectNewContacts: true,
+    }),
   ).toBe(false)
   for (const invalidContact of [
     padContactWithoutTrace,
@@ -108,11 +134,11 @@ test("pipeline9 DRC candidate that adds a contact is not better when new contact
     repeatedTracePair,
   ]) {
     expect(
-      isPipeline9DrcCandidateBetter(
-        [traceAOnPad1, invalidContact],
-        current,
-        rejectNewContacts,
-      ),
+      isPipeline9DrcCandidateBetter({
+        candidateErrors: [traceAOnPad1, invalidContact],
+        currentErrors: current,
+        rejectNewContacts: true,
+      }),
     ).toBe(false)
   }
 })

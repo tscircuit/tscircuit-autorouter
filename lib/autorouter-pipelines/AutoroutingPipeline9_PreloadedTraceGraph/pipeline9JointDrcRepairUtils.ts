@@ -137,6 +137,8 @@ export type Pipeline9DrcContact =
 /**
  * The short a trace error reports, keyed by the objects touching whichever
  * side reported it. Undefined when the error is not copper in contact.
+ * The DRC engine reports one error per pair of objects however many points
+ * they touch at, so a second contact point between them is the same short.
  */
 export const getPipeline9DrcContact = (
   error: Pipeline9DrcError,
@@ -204,11 +206,15 @@ export const introducesPipeline9DrcContact = (
  * that were not already touching is never better: use it where no later step
  * can remove the short.
  */
-export const isPipeline9DrcCandidateBetter = (
-  candidateErrors: Pipeline9DrcError[],
-  currentErrors: Pipeline9DrcError[],
-  { rejectNewContacts = false }: { rejectNewContacts?: boolean } = {},
-): boolean => {
+export const isPipeline9DrcCandidateBetter = ({
+  candidateErrors,
+  currentErrors,
+  rejectNewContacts = false,
+}: {
+  candidateErrors: Pipeline9DrcError[]
+  currentErrors: Pipeline9DrcError[]
+  rejectNewContacts?: boolean
+}): boolean => {
   if (
     rejectNewContacts &&
     introducesPipeline9DrcContact(candidateErrors, currentErrors)

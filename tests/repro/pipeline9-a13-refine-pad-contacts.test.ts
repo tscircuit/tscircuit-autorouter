@@ -76,6 +76,45 @@ const renderFrame = (
  * it did not touch before, then keeps the result because it has fewer DRC
  * errors.
  */
+const convertFixtureRoutesToTraces = ({
+  fixture,
+  connMap,
+  hdRoutes,
+}: {
+  fixture: JointRepairFixture
+  connMap: ConnectivityMap
+  hdRoutes: HighDensityRoute[]
+}): SimplifiedPcbTrace[] =>
+  convertPipeline7HdRoutesToSimplifiedPcbTraces({
+    connections: fixture.newConnections,
+    originalConnections: fixture.originalSrj.connections,
+    hdRoutes,
+    layerCount: fixture.layerCount,
+    obstacles: fixture.obstacles,
+    defaultViaHoleDiameter: fixture.defaultViaHoleDiameter,
+    connMap,
+  })
+
+/** The contacts the DRC engine reports, keyed as joint repair compares them. */
+const getContactKeys = ({
+  drcEngine,
+  traces,
+}: {
+  drcEngine: AutoroutingDrcEngine
+  traces: SimplifiedPcbTrace[]
+}): string[] => {
+  const contactKeys: string[] = []
+  const { errors } = drcEngine.evaluate(traces as RepairSimplifiedPcbTraces)
+  for (const error of errors) {
+    const contact = getPipeline9DrcContact(error)
+    if (!contact) continue
+    contactKeys.push(
+      contact.kind === "identified" ? contact.key : "unidentified contact",
+    )
+  }
+  return contactKeys
+}
+
 test("A13 joint repair moves a trace onto pads of other nets", async (): Promise<void> => {
   const fixture = JSON.parse(
     gunzipSync(
@@ -116,16 +155,6 @@ test("A13 joint repair moves a trace onto pads of other nets", async (): Promise
     inputSrj: fixture.originalSrj,
     srjWithPointPairs: fixture.srj,
   })
-  const toTraces = (hdRoutes: HighDensityRoute[]): SimplifiedPcbTrace[] =>
-    convertPipeline7HdRoutesToSimplifiedPcbTraces({
-      connections: fixture.newConnections,
-      originalConnections: fixture.originalSrj.connections,
-      hdRoutes,
-      layerCount: fixture.layerCount,
-      obstacles: fixture.obstacles,
-      defaultViaHoleDiameter: fixture.defaultViaHoleDiameter,
-      connMap,
-    })
   // Contacts as the DRC engine joint repair compares candidates with.
   const drcEngine = new AutoroutingDrcEngine(
     {
@@ -134,24 +163,23 @@ test("A13 joint repair moves a trace onto pads of other nets", async (): Promise
     } as RepairSimpleRouteJson,
     { connMap },
   )
-  const getContactKeys = (traces: SimplifiedPcbTrace[]): string[] => {
-    const contactKeys: string[] = []
-    const { errors } = drcEngine.evaluate(traces as RepairSimplifiedPcbTraces)
-    for (const error of errors) {
-      const contact = getPipeline9DrcContact(error)
-      if (!contact) continue
-      contactKeys.push(
-        contact.kind === "identified" ? contact.key : "unidentified contact",
-      )
-    }
-    return contactKeys
-  }
-  const inputTraces = toTraces(fixture.newHdRoutes)
-  const outputTraces = toTraces(joint.getOutput())
+  const inputTraces = convertFixtureRoutesToTraces({
+    fixture,
+    connMap,
+    hdRoutes: fixture.newHdRoutes,
+  })
+  const outputTraces = convertFixtureRoutesToTraces({
+    fixture,
+    connMap,
+    hdRoutes: joint.getOutput(),
+  })
   const before = evaluate(inputTraces)
   const after = evaluate(outputTraces)
-  const inputContacts = new Set(getContactKeys(inputTraces))
-  const newContacts = getContactKeys(outputTraces).filter(
+  const inputContacts = new Set(
+    getContactKeys({ drcEngine, traces: inputTraces }),
+  )
+  const outputContacts = getContactKeys({ drcEngine, traces: outputTraces })
+  const newContacts = outputContacts.filter(
     (contact) => !inputContacts.has(contact),
   )
 
