@@ -16,12 +16,10 @@
     "vercelBuild": "success"
   },
   "autorouterFix": {
-    "commit": "63aba983458a0e4ac53cdd94983704f551022e55",
-    "run": 45072968679,
+    "commit": "cdd3d16f258fe8af9adebb455e1b8f1fe36a2dac",
+    "run": 45078046121,
     "status": "success",
-    "bunShardsPassed": 9,
-    "focusedTypeCheck": "success",
-    "localBuild": "ESM and DTS pass"
+    "bunShardsPassed": 9
   },
   "originalBoards": {
     "run": 45061903558,
@@ -42,23 +40,23 @@
   "beforeAfterAssets": {
     "allHttpStatus": 200,
     "nativePngsVisuallyInspected": 4,
-    "sameCompleteSolveForBothViews": true,
+    "cutBoundaryAnnotated": true,
     "snapshots": {
       "before/through-via-terminal-window.snap.svg": {
-        "bytes": 353815,
-        "sha256": "f73711eed0221b0701172a9520c6015c78fef060dc35dc4774ed3227da2d166b"
+        "bytes": 354310,
+        "sha256": "3a8776d7e8dce11078092787150fc9faf4b21ef463e6877f79e9889a23d3d813"
       },
       "before/through-via-terminal-window-bottom-detail.snap.svg": {
-        "bytes": 92918,
-        "sha256": "6ff39dbb7210f88edc8b0d8bdf7de007c0157e48d9550d524a136232a15b25e8"
+        "bytes": 93445,
+        "sha256": "9ede5a06ce9e5bf87099e98e6555ba99c738287d12c3d69fb35c7d84424eec8e"
       },
       "after/through-via-terminal-window.snap.svg": {
-        "bytes": 354011,
-        "sha256": "9ec8c5561ffc00c330b0d9140a284d78aa1558dad1f94ec9cd76a8f6041e56ad"
+        "bytes": 354506,
+        "sha256": "e9f3201bca5c57daa29f83a6261611fc64300255a1a3343ac4a93b6f2ae01f4a"
       },
       "after/through-via-terminal-window-bottom-detail.snap.svg": {
-        "bytes": 94017,
-        "sha256": "2ba80747549b1ceb6b57828dd507f833825f7aa6e8b1f270509657f2094d4c49"
+        "bytes": 94544,
+        "sha256": "2bc345c96538b13dc7cda8c5654cf00057ac3fbe74eec8685c857a0c9a824ae5"
       }
     }
   },
@@ -95,8 +93,8 @@
     }
   },
   "autorouterVisualization": {
-    "commit": "d1b156bec928e93283587904e1a34eb749a8179a",
-    "run": 45072955601,
+    "commit": "51dd4abc91aefe0f86bc07d02fe4630894390018",
+    "run": 45077935334,
     "status": "success",
     "bunShardsPassed": 9
   },
@@ -110,5 +108,52 @@
     "commit": "eb772de73d36f2c935af760b8430291b11eac210",
     "run": 45072469007,
     "status": "success"
+  },
+  "beforeCutAnnotations": {
+    "autorouterVisualization": {
+      "commit": "d1b156bec928e93283587904e1a34eb749a8179a",
+      "run": 45072955601,
+      "status": "success",
+      "bunShardsPassed": 9
+    },
+    "autorouterFix": {
+      "commit": "63aba983458a0e4ac53cdd94983704f551022e55",
+      "run": 45072968679,
+      "status": "success",
+      "bunShardsPassed": 9,
+      "focusedTypeCheck": "success",
+      "localBuild": "ESM and DTS pass"
+    },
+    "beforeAfterAssets": {
+      "allHttpStatus": 200,
+      "nativePngsVisuallyInspected": 4,
+      "sameCompleteSolveForBothViews": true,
+      "snapshots": {
+        "before/through-via-terminal-window.snap.svg": {
+          "bytes": 353815,
+          "sha256": "f73711eed0221b0701172a9520c6015c78fef060dc35dc4774ed3227da2d166b"
+        },
+        "before/through-via-terminal-window-bottom-detail.snap.svg": {
+          "bytes": 92918,
+          "sha256": "6ff39dbb7210f88edc8b0d8bdf7de007c0157e48d9550d524a136232a15b25e8"
+        },
+        "after/through-via-terminal-window.snap.svg": {
+          "bytes": 354011,
+          "sha256": "9ec8c5561ffc00c330b0d9140a284d78aa1558dad1f94ec9cd76a8f6041e56ad"
+        },
+        "after/through-via-terminal-window-bottom-detail.snap.svg": {
+          "bytes": 94017,
+          "sha256": "2ba80747549b1ceb6b57828dd507f833825f7aa6e8b1f270509657f2094d4c49"
+        }
+      }
+    }
+  },
+  "cutTerminalAudit": {
+    "file": "cut-terminal-audit.json",
+    "localAssertionsPerMode": 136,
+    "focusedSnapshots": "pass",
+    "focusedTypeCheck": "pass",
+    "nativeGeometryUnchangedByAnnotations": true,
+    "unannotatedViewsByteIdentical": 8
   }
 }

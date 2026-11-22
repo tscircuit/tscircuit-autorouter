@@ -1,0 +1,180 @@
+{
+  "cause": "The captured router region omits neighboring routing and physical pads. Visible open ends are the original mesh cut terminals.",
+  "terminalCount": 52,
+  "routedTerminalPairs": 26,
+  "connectionNames": 16,
+  "originalMeshCell": {
+    "center": {
+      "x": -7.637500000000003,
+      "y": -8.475000000000003
+    },
+    "width": 5.874999999999993,
+    "height": 3.9000000000000057
+  },
+  "physicalCutBounds": {
+    "minX": -10.575,
+    "maxX": -4.700000000000006,
+    "minY": -10.425000000000008,
+    "maxY": -6.525
+  },
+  "maxCoordinateDifferenceFromParentMm": 0,
+  "changedRoutingProductionCode": false,
+  "checks": [
+    {
+      "protectedPorts": false,
+      "routedTerminalPairs": 26,
+      "matchedDistinctInputTerminals": 52,
+      "endpointErrors": 0,
+      "viaTransitions": 13,
+      "badViaTransitions": 0,
+      "continuityErrorsWithoutExternalPads": 52,
+      "allContinuityErrorsAtCapturedCutTerminals": true,
+      "totalDrcIncludingCutEnds": 66,
+      "copperDrcExcludingCutEnds": 14
+    },
+    {
+      "protectedPorts": true,
+      "routedTerminalPairs": 26,
+      "matchedDistinctInputTerminals": 52,
+      "endpointErrors": 0,
+      "viaTransitions": 13,
+      "badViaTransitions": 0,
+      "continuityErrorsWithoutExternalPads": 52,
+      "allContinuityErrorsAtCapturedCutTerminals": true,
+      "totalDrcIncludingCutEnds": 62,
+      "copperDrcExcludingCutEnds": 10
+    }
+  ],
+  "nativeRenderingProof": [
+    {
+      "mode": "before",
+      "view": "whole",
+      "nativeGeometryUnchanged": true,
+      "nativeElementCount": 1323,
+      "cutRegionWorldBounds": {
+        "x": "-10.575",
+        "y": "6.525",
+        "width": "5.874999999999993",
+        "height": "3.9000000000000075"
+      }
+    },
+    {
+      "mode": "before",
+      "view": "-bottom-detail",
+      "nativeGeometryUnchanged": true,
+      "nativeElementCount": 350,
+      "cutRegionWorldBounds": {
+        "x": "-10.575",
+        "y": "6.525",
+        "width": "5.874999999999993",
+        "height": "3.9000000000000075"
+      }
+    },
+    {
+      "mode": "after",
+      "view": "whole",
+      "nativeGeometryUnchanged": true,
+      "nativeElementCount": 1324,
+      "cutRegionWorldBounds": {
+        "x": "-10.575",
+        "y": "6.525",
+        "width": "5.874999999999993",
+        "height": "3.9000000000000075"
+      }
+    },
+    {
+      "mode": "after",
+      "view": "-bottom-detail",
+      "nativeGeometryUnchanged": true,
+      "nativeElementCount": 354,
+      "cutRegionWorldBounds": {
+        "x": "-10.575",
+        "y": "6.525",
+        "width": "5.874999999999993",
+        "height": "3.9000000000000075"
+      }
+    }
+  ],
+  "unannotatedRenderingProof": [
+    {
+      "mode": "before",
+      "options": {},
+      "byteIdenticalWithoutAnnotation": true
+    },
+    {
+      "mode": "before",
+      "options": {
+        "bounds": {
+          "minX": -14.037500000000003,
+          "maxX": -1.2375000000000025,
+          "minY": -12.975000000000003,
+          "maxY": -3.975000000000003
+        }
+      },
+      "byteIdenticalWithoutAnnotation": true
+    },
+    {
+      "mode": "before",
+      "options": {
+        "pcb": {}
+      },
+      "byteIdenticalWithoutAnnotation": true
+    },
+    {
+      "mode": "before",
+      "options": {
+        "bounds": {
+          "minX": -11.15,
+          "maxX": -9.75,
+          "minY": -10.45,
+          "maxY": -9.65
+        },
+        "pcb": {
+          "layer": "bottom",
+          "height": 650
+        }
+      },
+      "byteIdenticalWithoutAnnotation": true
+    },
+    {
+      "mode": "after",
+      "options": {},
+      "byteIdenticalWithoutAnnotation": true
+    },
+    {
+      "mode": "after",
+      "options": {
+        "bounds": {
+          "minX": -14.037500000000003,
+          "maxX": -1.2375000000000025,
+          "minY": -12.975000000000003,
+          "maxY": -3.975000000000003
+        }
+      },
+      "byteIdenticalWithoutAnnotation": true
+    },
+    {
+      "mode": "after",
+      "options": {
+        "pcb": {}
+      },
+      "byteIdenticalWithoutAnnotation": true
+    },
+    {
+      "mode": "after",
+      "options": {
+        "bounds": {
+          "minX": -11.15,
+          "maxX": -9.75,
+          "minY": -10.45,
+          "maxY": -9.65
+        },
+        "pcb": {
+          "layer": "bottom",
+          "height": 650
+        }
+      },
+      "byteIdenticalWithoutAnnotation": true
+    }
+  ]
+}
