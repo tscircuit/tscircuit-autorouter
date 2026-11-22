@@ -1169,7 +1169,8 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       Boolean(asTinyPortMetadata(port.d)._preloadedCopperNetIds?.length),
     )
     const preservePreloadedPortCapacity =
-      hasPreloadedTraceOccupancy && params.preservePreloadedPortCapacity === true
+      hasPreloadedTraceOccupancy &&
+      params.preservePreloadedPortCapacity === true
     if (!hasFixedCopperReservations && !preservePreloadedPortCapacity) {
       const duplicateCongestedPortSolver = new DuplicateCongestedPortSolver(
         serializedGraph,
