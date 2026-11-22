@@ -1,0 +1,32 @@
+{
+  "sourceRepo": "tscircuit/high-density-a01",
+  "sourceRepro": "429bb0b",
+  "sourceFix": "ef5f73daea12db0cfcb12e7ad61ebd54bde3549e",
+  "change": "Reserve through-via clearance around foreign ports only in physical regional repairs with movable preloaded copper. Existing board-model propagation and final repair behavior remain unchanged. Original grid, order, costs and budgets retained.",
+  "bundles": [
+    {
+      "file": "dist/index.js",
+      "before": "85d09bea9a30fdfcc1cf30a29514993a9c8ef9efcb09813c8d9e43518bfdf48f",
+      "after": "6423ab141f66db005ad0c80430c01bfc54b9d56eb2193d8ff4021c848ec3a303",
+      "a01Classes": 1,
+      "embeddedWorker": false,
+      "explicitPreloadScope": true
+    },
+    {
+      "file": "dist/runtime/bun.js",
+      "before": "50eb8454c4717c6bb49cc7cb71173e9fa836747b4110c157638bfefb620c3d0a",
+      "after": "084f05bedb1203032d858b4e782eb61dfbc6e99d2735feaab44f7e6d44b909c9",
+      "a01Classes": 1,
+      "embeddedWorker": true,
+      "explicitPreloadScope": true
+    },
+    {
+      "file": "dist/runtime/node.js",
+      "before": "a8a37e74555dcf9d0c567c058712893788833b98849645271de08b8eb64c1522",
+      "after": "7d60ef546a6db31723551c3921143beac71a6aa49dba3b314feca7ff1269a0be",
+      "a01Classes": 1,
+      "embeddedWorker": true,
+      "explicitPreloadScope": true
+    }
+  ]
+}

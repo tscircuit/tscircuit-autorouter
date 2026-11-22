@@ -1,0 +1,66 @@
+[
+  {
+    "board": "butterstick-native",
+    "sameNonroutingErrorElements": true
+  },
+  {
+    "board": "glider-local",
+    "sameNonroutingErrorElements": true
+  },
+  {
+    "board": "glider-native",
+    "sameNonroutingErrorElements": true
+  },
+  {
+    "board": "glider-spaced",
+    "sameNonroutingErrorElements": true
+  },
+  {
+    "board": "h616-default-order-local",
+    "sameNonroutingErrorElements": true
+  },
+  {
+    "board": "h616-local",
+    "sameNonroutingErrorElements": true
+  },
+  {
+    "board": "h616-native",
+    "sameNonroutingErrorElements": true
+  },
+  {
+    "board": "h616-spaced",
+    "sameNonroutingErrorElements": true
+  },
+  {
+    "board": "icepi-local",
+    "sameNonroutingErrorElements": true
+  },
+  {
+    "board": "icepi-native",
+    "sameNonroutingErrorElements": true
+  },
+  {
+    "board": "icepi-spaced",
+    "sameNonroutingErrorElements": true
+  },
+  {
+    "board": "imx6-native",
+    "sameNonroutingErrorElements": true
+  },
+  {
+    "board": "imx6-spaced",
+    "sameNonroutingErrorElements": true
+  },
+  {
+    "board": "orangecrab-local",
+    "sameNonroutingErrorElements": true
+  },
+  {
+    "board": "orangecrab-native",
+    "sameNonroutingErrorElements": true
+  },
+  {
+    "board": "orangecrab-spaced",
+    "sameNonroutingErrorElements": true
+  }
+]

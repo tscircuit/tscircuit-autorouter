@@ -13,5 +13,10 @@
     false
   ],
   "sourceOutputSha256": "24d1171e723213f79a6762c431561c3931855cfb7cc5f1a983e01ec67ce14ca5",
-  "releaseOutputSha256": "24d1171e723213f79a6762c431561c3931855cfb7cc5f1a983e01ec67ce14ca5"
+  "releaseOutputSha256": "24d1171e723213f79a6762c431561c3931855cfb7cc5f1a983e01ec67ce14ca5",
+  "finalConsumerCommit": "4ef5518bad6c663393be9f9787cbac76b1114de6",
+  "productionFilesUnchangedFromVerifiedCommit": true,
+  "embeddedBunWorkerParsed": true,
+  "embeddedNodeWorkerParsed": true,
+  "directReproMatchesUnprotectedPortfolio": true
 }

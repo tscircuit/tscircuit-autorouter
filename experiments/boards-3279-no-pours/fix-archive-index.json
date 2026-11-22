@@ -1,0 +1,3526 @@
+[
+  {
+    "file": "bun.lock",
+    "bytes": 68721
+  },
+  {
+    "file": "matrix.json",
+    "bytes": 7110
+  },
+  {
+    "file": "preloaded-port-fix/butterstick-local/bus-1-input.json.gz",
+    "bytes": 892796
+  },
+  {
+    "file": "fix-provenance.json",
+    "bytes": 1324
+  },
+  {
+    "file": "preloaded-port-fix/butterstick-local/bus-2-input.json.gz",
+    "bytes": 892670
+  },
+  {
+    "file": "preloaded-port-fix/butterstick-local/bus-3-input.json.gz",
+    "bytes": 893817
+  },
+  {
+    "file": "preloaded-port-fix/butterstick-local/bus-4-input.json.gz",
+    "bytes": 894809
+  },
+  {
+    "file": "preloaded-port-fix/butterstick-local/bus-5-input.json.gz",
+    "bytes": 894676
+  },
+  {
+    "file": "preloaded-port-fix/butterstick-local/end-1.srj.json.gz",
+    "bytes": 895333
+  },
+  {
+    "file": "preloaded-port-fix/butterstick-local/events.jsonl",
+    "bytes": 37878
+  },
+  {
+    "file": "preloaded-port-fix/butterstick-local/result.json",
+    "bytes": 145
+  },
+  {
+    "file": "preloaded-port-fix/butterstick-local/run.log",
+    "bytes": 246
+  },
+  {
+    "file": "preloaded-port-fix/butterstick-local/start-2.srj.json.gz",
+    "bytes": 895381
+  },
+  {
+    "file": "preloaded-port-fix/butterstick-local/start-1.srj.json.gz",
+    "bytes": 893428
+  },
+  {
+    "file": "preloaded-port-fix/butterstick-native/circuit.json.gz",
+    "bytes": 229736
+  },
+  {
+    "file": "preloaded-port-fix/butterstick-native/error-1.srj.json.gz",
+    "bytes": 1284775
+  },
+  {
+    "file": "preloaded-port-fix/butterstick-native/events.jsonl",
+    "bytes": 7042
+  },
+  {
+    "file": "preloaded-port-fix/butterstick-native/fanout-1-best.json.gz",
+    "bytes": 1377417
+  },
+  {
+    "file": "preloaded-port-fix/butterstick-native/fanout-1-input.json.gz",
+    "bytes": 1284930
+  },
+  {
+    "file": "preloaded-port-fix/butterstick-native/fanout-checkpoint.json.gz",
+    "bytes": 1377376
+  },
+  {
+    "file": "preloaded-port-fix/butterstick-native/result.json",
+    "bytes": 405
+  },
+  {
+    "file": "preloaded-port-fix/butterstick-native/run.log",
+    "bytes": 1286
+  },
+  {
+    "file": "preloaded-port-fix/butterstick-native/start-1.srj.json.gz",
+    "bytes": 1284775
+  },
+  {
+    "file": "preloaded-port-fix/butterstick-spaced/bus-1-input.json.gz",
+    "bytes": 890980
+  },
+  {
+    "file": "preloaded-port-fix/butterstick-spaced/bus-3-input.json.gz",
+    "bytes": 892022
+  },
+  {
+    "file": "preloaded-port-fix/butterstick-spaced/bus-2-input.json.gz",
+    "bytes": 890840
+  },
+  {
+    "file": "preloaded-port-fix/butterstick-spaced/bus-5-input.json.gz",
+    "bytes": 892956
+  },
+  {
+    "file": "preloaded-port-fix/butterstick-spaced/bus-4-input.json.gz",
+    "bytes": 893068
+  },
+  {
+    "file": "preloaded-port-fix/butterstick-spaced/end-1.srj.json.gz",
+    "bytes": 892697
+  },
+  {
+    "file": "preloaded-port-fix/butterstick-spaced/events.jsonl",
+    "bytes": 32055
+  },
+  {
+    "file": "preloaded-port-fix/butterstick-spaced/result.json",
+    "bytes": 146
+  },
+  {
+    "file": "preloaded-port-fix/butterstick-spaced/run.log",
+    "bytes": 246
+  },
+  {
+    "file": "preloaded-port-fix/butterstick-spaced/start-1.srj.json.gz",
+    "bytes": 890677
+  },
+  {
+    "file": "preloaded-port-fix/butterstick-spaced/start-2.srj.json.gz",
+    "bytes": 892757
+  },
+  {
+    "file": "preloaded-port-fix/glider-local/bus-1-input.json.gz",
+    "bytes": 974826
+  },
+  {
+    "file": "preloaded-port-fix/glider-local/bus-2-input.json.gz",
+    "bytes": 975613
+  },
+  {
+    "file": "preloaded-port-fix/glider-local/circuit.json.gz",
+    "bytes": 203295
+  },
+  {
+    "file": "preloaded-port-fix/glider-local/density-1795376454937.json.gz",
+    "bytes": 3966
+  },
+  {
+    "file": "preloaded-port-fix/glider-local/density-1795376455214.json.gz",
+    "bytes": 4749
+  },
+  {
+    "file": "preloaded-port-fix/glider-local/density-1795376455511.json.gz",
+    "bytes": 5654
+  },
+  {
+    "file": "preloaded-port-fix/glider-local/density-1795376456139.json.gz",
+    "bytes": 11072
+  },
+  {
+    "file": "preloaded-port-fix/glider-local/density-1795376457009.json.gz",
+    "bytes": 8893
+  },
+  {
+    "file": "preloaded-port-fix/glider-local/density-1795376457580.json.gz",
+    "bytes": 13717
+  },
+  {
+    "file": "preloaded-port-fix/glider-local/density-1795376457289.json.gz",
+    "bytes": 10567
+  },
+  {
+    "file": "preloaded-port-fix/glider-local/density-1795376457841.json.gz",
+    "bytes": 4713
+  },
+  {
+    "file": "preloaded-port-fix/glider-local/density-1795376458116.json.gz",
+    "bytes": 6112
+  },
+  {
+    "file": "preloaded-port-fix/glider-local/density-1795376459004.json.gz",
+    "bytes": 12741
+  },
+  {
+    "file": "preloaded-port-fix/glider-local/density-1795376459558.json.gz",
+    "bytes": 7539
+  },
+  {
+    "file": "preloaded-port-fix/glider-local/density-1795376459819.json.gz",
+    "bytes": 9632
+  },
+  {
+    "file": "preloaded-port-fix/glider-local/density-1795376460093.json.gz",
+    "bytes": 11736
+  },
+  {
+    "file": "preloaded-port-fix/glider-local/density-1795376460387.json.gz",
+    "bytes": 13753
+  },
+  {
+    "file": "preloaded-port-fix/glider-local/density-1795376461822.json.gz",
+    "bytes": 11052
+  },
+  {
+    "file": "preloaded-port-fix/glider-local/density-1795376462128.json.gz",
+    "bytes": 13835
+  },
+  {
+    "file": "preloaded-port-fix/glider-local/density-1795376463644.json.gz",
+    "bytes": 13626
+  },
+  {
+    "file": "preloaded-port-fix/glider-local/density-1795376463917.json.gz",
+    "bytes": 3007
+  },
+  {
+    "file": "preloaded-port-fix/glider-local/density-1795376464180.json.gz",
+    "bytes": 4388
+  },
+  {
+    "file": "preloaded-port-fix/glider-local/density-1795376464457.json.gz",
+    "bytes": 4687
+  },
+  {
+    "file": "preloaded-port-fix/glider-local/density-1795376465335.json.gz",
+    "bytes": 2847
+  },
+  {
+    "file": "preloaded-port-fix/glider-local/density-1795376465597.json.gz",
+    "bytes": 4247
+  },
+  {
+    "file": "preloaded-port-fix/glider-local/density-1795376649908.json.gz",
+    "bytes": 2700
+  },
+  {
+    "file": "preloaded-port-fix/glider-local/end-1.srj.json.gz",
+    "bytes": 975499
+  },
+  {
+    "file": "preloaded-port-fix/glider-local/end-2.srj.json.gz",
+    "bytes": 976151
+  },
+  {
+    "file": "preloaded-port-fix/glider-local/end-3.srj.json.gz",
+    "bytes": 990682
+  },
+  {
+    "file": "preloaded-port-fix/glider-local/error-4.srj.json.gz",
+    "bytes": 1000701
+  },
+  {
+    "file": "preloaded-port-fix/glider-local/events.jsonl",
+    "bytes": 30874
+  },
+  {
+    "file": "preloaded-port-fix/glider-local/graph-1-1-input.json.gz",
+    "bytes": 1692802
+  },
+  {
+    "file": "preloaded-port-fix/glider-local/graph-2-1-input.json.gz",
+    "bytes": 1968236
+  },
+  {
+    "file": "preloaded-port-fix/glider-local/result.json",
+    "bytes": 365
+  },
+  {
+    "file": "preloaded-port-fix/glider-local/run.log",
+    "bytes": 1732
+  },
+  {
+    "file": "preloaded-port-fix/glider-local/stage-1-highDensityRouteSolver.json.gz",
+    "bytes": 1119567
+  },
+  {
+    "file": "preloaded-port-fix/glider-local/stage-1-uniformPortDistributionSolver.json.gz",
+    "bytes": 3214283
+  },
+  {
+    "file": "preloaded-port-fix/glider-local/stage-2-highDensityRouteSolver.json.gz",
+    "bytes": 1405830
+  },
+  {
+    "file": "preloaded-port-fix/glider-local/stage-2-uniformPortDistributionSolver.json.gz",
+    "bytes": 3480342
+  },
+  {
+    "file": "preloaded-port-fix/glider-local/start-1.srj.json.gz",
+    "bytes": 974752
+  },
+  {
+    "file": "preloaded-port-fix/glider-local/start-3.srj.json.gz",
+    "bytes": 976874
+  },
+  {
+    "file": "preloaded-port-fix/glider-local/start-2.srj.json.gz",
+    "bytes": 975537
+  },
+  {
+    "file": "preloaded-port-fix/glider-local/start-4.srj.json.gz",
+    "bytes": 1000701
+  },
+  {
+    "file": "preloaded-port-fix/glider-native/circuit.json.gz",
+    "bytes": 238946
+  },
+  {
+    "file": "preloaded-port-fix/glider-native/error-1.srj.json.gz",
+    "bytes": 1094325
+  },
+  {
+    "file": "preloaded-port-fix/glider-native/events.jsonl",
+    "bytes": 6575
+  },
+  {
+    "file": "preloaded-port-fix/glider-native/fanout-1-best.json.gz",
+    "bytes": 1191265
+  },
+  {
+    "file": "preloaded-port-fix/glider-native/fanout-1-input.json.gz",
+    "bytes": 1094521
+  },
+  {
+    "file": "preloaded-port-fix/glider-native/fanout-checkpoint.json.gz",
+    "bytes": 1191512
+  },
+  {
+    "file": "preloaded-port-fix/glider-native/result.json",
+    "bytes": 400
+  },
+  {
+    "file": "preloaded-port-fix/glider-native/run.log",
+    "bytes": 1281
+  },
+  {
+    "file": "preloaded-port-fix/glider-native/start-1.srj.json.gz",
+    "bytes": 1094325
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/bus-1-input.json.gz",
+    "bytes": 971364
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/bus-2-input.json.gz",
+    "bytes": 972181
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/circuit.json.gz",
+    "bytes": 199898
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376461648.json.gz",
+    "bytes": 3366
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376462049.json.gz",
+    "bytes": 4882
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376462455.json.gz",
+    "bytes": 6792
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376462856.json.gz",
+    "bytes": 7644
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376463254.json.gz",
+    "bytes": 10750
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376475422.json.gz",
+    "bytes": 3628
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376475863.json.gz",
+    "bytes": 4900
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376476250.json.gz",
+    "bytes": 6789
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376476663.json.gz",
+    "bytes": 7680
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376477108.json.gz",
+    "bytes": 10744
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376486650.json.gz",
+    "bytes": 3561
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376487020.json.gz",
+    "bytes": 4885
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376487491.json.gz",
+    "bytes": 6731
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376487881.json.gz",
+    "bytes": 8509
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376488274.json.gz",
+    "bytes": 11011
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376488851.json.gz",
+    "bytes": 5225
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376489234.json.gz",
+    "bytes": 6570
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376489613.json.gz",
+    "bytes": 8414
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376490040.json.gz",
+    "bytes": 10211
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376490434.json.gz",
+    "bytes": 12704
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376490862.json.gz",
+    "bytes": 7940
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376491311.json.gz",
+    "bytes": 8026
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376491696.json.gz",
+    "bytes": 11642
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376492076.json.gz",
+    "bytes": 12134
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376492542.json.gz",
+    "bytes": 14745
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376492860.json.gz",
+    "bytes": 7747
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376493181.json.gz",
+    "bytes": 8846
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376493588.json.gz",
+    "bytes": 9321
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376494247.json.gz",
+    "bytes": 12919
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376493913.json.gz",
+    "bytes": 10117
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376505144.json.gz",
+    "bytes": 4535
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376505519.json.gz",
+    "bytes": 6311
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376506296.json.gz",
+    "bytes": 10089
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376505912.json.gz",
+    "bytes": 9155
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376506683.json.gz",
+    "bytes": 14816
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376516817.json.gz",
+    "bytes": 2205
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376518752.json.gz",
+    "bytes": 4996
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376518279.json.gz",
+    "bytes": 3808
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376519129.json.gz",
+    "bytes": 2214
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376520360.json.gz",
+    "bytes": 3808
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376520745.json.gz",
+    "bytes": 4996
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376523440.json.gz",
+    "bytes": 5811
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376523777.json.gz",
+    "bytes": 7795
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376524174.json.gz",
+    "bytes": 8794
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376524549.json.gz",
+    "bytes": 10449
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376524922.json.gz",
+    "bytes": 15756
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376539567.json.gz",
+    "bytes": 7243
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376540025.json.gz",
+    "bytes": 7721
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376540358.json.gz",
+    "bytes": 9515
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376540688.json.gz",
+    "bytes": 10408
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376541107.json.gz",
+    "bytes": 15747
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376557496.json.gz",
+    "bytes": 8453
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376557068.json.gz",
+    "bytes": 7169
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376557844.json.gz",
+    "bytes": 9477
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376558185.json.gz",
+    "bytes": 11693
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376558628.json.gz",
+    "bytes": 15920
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376560341.json.gz",
+    "bytes": 4780
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376560717.json.gz",
+    "bytes": 5384
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376564842.json.gz",
+    "bytes": 4743
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376565222.json.gz",
+    "bytes": 5390
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376568857.json.gz",
+    "bytes": 4522
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376569228.json.gz",
+    "bytes": 5332
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376569716.json.gz",
+    "bytes": 10591
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376570382.json.gz",
+    "bytes": 14740
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376570052.json.gz",
+    "bytes": 13382
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376570733.json.gz",
+    "bytes": 16189
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376571073.json.gz",
+    "bytes": 18163
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376571450.json.gz",
+    "bytes": 10445
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376571842.json.gz",
+    "bytes": 13260
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376572228.json.gz",
+    "bytes": 14616
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376572617.json.gz",
+    "bytes": 16066
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376573018.json.gz",
+    "bytes": 18033
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376573341.json.gz",
+    "bytes": 10592
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376573662.json.gz",
+    "bytes": 13404
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376574356.json.gz",
+    "bytes": 16898
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376574001.json.gz",
+    "bytes": 14720
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376574699.json.gz",
+    "bytes": 18264
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376575083.json.gz",
+    "bytes": 10447
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376575477.json.gz",
+    "bytes": 13276
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376575857.json.gz",
+    "bytes": 14594
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376576251.json.gz",
+    "bytes": 16759
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376576654.json.gz",
+    "bytes": 18130
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376577299.json.gz",
+    "bytes": 12429
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376576976.json.gz",
+    "bytes": 11085
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376577624.json.gz",
+    "bytes": 15986
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376577969.json.gz",
+    "bytes": 16817
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376578316.json.gz",
+    "bytes": 18175
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376578654.json.gz",
+    "bytes": 11091
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376578988.json.gz",
+    "bytes": 12410
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376579322.json.gz",
+    "bytes": 15359
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376579655.json.gz",
+    "bytes": 16114
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376580032.json.gz",
+    "bytes": 18074
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376580719.json.gz",
+    "bytes": 7417
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376581054.json.gz",
+    "bytes": 11911
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376581465.json.gz",
+    "bytes": 12065
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376581816.json.gz",
+    "bytes": 17175
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376582219.json.gz",
+    "bytes": 7562
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376582618.json.gz",
+    "bytes": 7695
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376582993.json.gz",
+    "bytes": 12221
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376583380.json.gz",
+    "bytes": 12383
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376583775.json.gz",
+    "bytes": 17503
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376584116.json.gz",
+    "bytes": 10033
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376584475.json.gz",
+    "bytes": 11637
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376584834.json.gz",
+    "bytes": 12987
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376585209.json.gz",
+    "bytes": 16180
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376585609.json.gz",
+    "bytes": 16903
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376585987.json.gz",
+    "bytes": 10297
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376586390.json.gz",
+    "bytes": 11933
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376586811.json.gz",
+    "bytes": 13285
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376587232.json.gz",
+    "bytes": 16494
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376587676.json.gz",
+    "bytes": 17220
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376588021.json.gz",
+    "bytes": 10024
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376588359.json.gz",
+    "bytes": 11612
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376588717.json.gz",
+    "bytes": 13004
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376589082.json.gz",
+    "bytes": 15988
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376589455.json.gz",
+    "bytes": 16834
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376589840.json.gz",
+    "bytes": 10294
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376590245.json.gz",
+    "bytes": 11909
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376590644.json.gz",
+    "bytes": 13303
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376591493.json.gz",
+    "bytes": 17149
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376591060.json.gz",
+    "bytes": 16302
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376591827.json.gz",
+    "bytes": 10748
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376592172.json.gz",
+    "bytes": 11998
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376592535.json.gz",
+    "bytes": 13956
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376592889.json.gz",
+    "bytes": 15665
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376593285.json.gz",
+    "bytes": 16956
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376597554.json.gz",
+    "bytes": 6182
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376597907.json.gz",
+    "bytes": 8059
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376598621.json.gz",
+    "bytes": 11622
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376598963.json.gz",
+    "bytes": 15451
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/density-1795376599287.json.gz",
+    "bytes": 6396
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/end-1.srj.json.gz",
+    "bytes": 972325
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/end-2.srj.json.gz",
+    "bytes": 973011
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/end-3.srj.json.gz",
+    "bytes": 984966
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/error-4.srj.json.gz",
+    "bytes": 995051
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/events.jsonl",
+    "bytes": 48664
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/graph-1-1-input.json.gz",
+    "bytes": 1854095
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/graph-2-1-input.json.gz",
+    "bytes": 2132814
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/result.json",
+    "bytes": 365
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/run.log",
+    "bytes": 777
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/stage-1-highDensityRouteSolver.json.gz",
+    "bytes": 1118843
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/stage-1-uniformPortDistributionSolver.json.gz",
+    "bytes": 3402883
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/start-1.srj.json.gz",
+    "bytes": 971531
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/start-2.srj.json.gz",
+    "bytes": 972351
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/start-3.srj.json.gz",
+    "bytes": 973731
+  },
+  {
+    "file": "preloaded-port-fix/glider-spaced/start-4.srj.json.gz",
+    "bytes": 995051
+  },
+  {
+    "file": "preloaded-port-fix/h616-default-order-local/bus-1-input.json.gz",
+    "bytes": 157011
+  },
+  {
+    "file": "preloaded-port-fix/h616-default-order-local/bus-2-input.json.gz",
+    "bytes": 157876
+  },
+  {
+    "file": "preloaded-port-fix/h616-default-order-local/circuit.json.gz",
+    "bytes": 80366
+  },
+  {
+    "file": "preloaded-port-fix/h616-default-order-local/end-1.srj.json.gz",
+    "bytes": 157788
+  },
+  {
+    "file": "preloaded-port-fix/h616-default-order-local/end-2.srj.json.gz",
+    "bytes": 158548
+  },
+  {
+    "file": "preloaded-port-fix/h616-default-order-local/error-3.srj.json.gz",
+    "bytes": 159397
+  },
+  {
+    "file": "preloaded-port-fix/h616-default-order-local/events.jsonl",
+    "bytes": 14165
+  },
+  {
+    "file": "preloaded-port-fix/h616-default-order-local/graph-1-1-input.json.gz",
+    "bytes": 966304
+  },
+  {
+    "file": "preloaded-port-fix/h616-default-order-local/result.json",
+    "bytes": 374
+  },
+  {
+    "file": "preloaded-port-fix/h616-default-order-local/run.log",
+    "bytes": 788
+  },
+  {
+    "file": "preloaded-port-fix/h616-default-order-local/start-1.srj.json.gz",
+    "bytes": 156955
+  },
+  {
+    "file": "preloaded-port-fix/h616-default-order-local/start-2.srj.json.gz",
+    "bytes": 157821
+  },
+  {
+    "file": "preloaded-port-fix/h616-default-order-local/start-3.srj.json.gz",
+    "bytes": 159397
+  },
+  {
+    "file": "preloaded-port-fix/h616-local/bus-1-input.json.gz",
+    "bytes": 157011
+  },
+  {
+    "file": "preloaded-port-fix/h616-local/bus-2-input.json.gz",
+    "bytes": 157876
+  },
+  {
+    "file": "preloaded-port-fix/h616-local/circuit.json.gz",
+    "bytes": 80366
+  },
+  {
+    "file": "preloaded-port-fix/h616-local/end-1.srj.json.gz",
+    "bytes": 157788
+  },
+  {
+    "file": "preloaded-port-fix/h616-local/end-2.srj.json.gz",
+    "bytes": 158548
+  },
+  {
+    "file": "preloaded-port-fix/h616-local/error-3.srj.json.gz",
+    "bytes": 159672
+  },
+  {
+    "file": "preloaded-port-fix/h616-local/events.jsonl",
+    "bytes": 16273
+  },
+  {
+    "file": "preloaded-port-fix/h616-local/graph-1-1-input.json.gz",
+    "bytes": 971666
+  },
+  {
+    "file": "preloaded-port-fix/h616-local/graph-1-2-input.json.gz",
+    "bytes": 971684
+  },
+  {
+    "file": "preloaded-port-fix/h616-local/graph-1-3-input.json.gz",
+    "bytes": 971044
+  },
+  {
+    "file": "preloaded-port-fix/h616-local/result.json",
+    "bytes": 359
+  },
+  {
+    "file": "preloaded-port-fix/h616-local/run.log",
+    "bytes": 774
+  },
+  {
+    "file": "preloaded-port-fix/h616-local/start-1.srj.json.gz",
+    "bytes": 156955
+  },
+  {
+    "file": "preloaded-port-fix/h616-local/start-2.srj.json.gz",
+    "bytes": 157821
+  },
+  {
+    "file": "preloaded-port-fix/h616-local/start-3.srj.json.gz",
+    "bytes": 159672
+  },
+  {
+    "file": "preloaded-port-fix/h616-native/circuit.json.gz",
+    "bytes": 110121
+  },
+  {
+    "file": "preloaded-port-fix/h616-native/error-1.srj.json.gz",
+    "bytes": 229492
+  },
+  {
+    "file": "preloaded-port-fix/h616-native/events.jsonl",
+    "bytes": 13750
+  },
+  {
+    "file": "preloaded-port-fix/h616-native/fanout-1-best.json.gz",
+    "bytes": 315526
+  },
+  {
+    "file": "preloaded-port-fix/h616-native/fanout-1-input.json.gz",
+    "bytes": 229639
+  },
+  {
+    "file": "preloaded-port-fix/h616-native/fanout-checkpoint.json.gz",
+    "bytes": 315526
+  },
+  {
+    "file": "preloaded-port-fix/h616-native/result.json",
+    "bytes": 397
+  },
+  {
+    "file": "preloaded-port-fix/h616-native/run.log",
+    "bytes": 1281
+  },
+  {
+    "file": "preloaded-port-fix/h616-native/start-1.srj.json.gz",
+    "bytes": 229492
+  },
+  {
+    "file": "preloaded-port-fix/h616-spaced/bus-1-input.json.gz",
+    "bytes": 156770
+  },
+  {
+    "file": "preloaded-port-fix/h616-spaced/bus-2-input.json.gz",
+    "bytes": 157674
+  },
+  {
+    "file": "preloaded-port-fix/h616-spaced/circuit.json.gz",
+    "bytes": 80528
+  },
+  {
+    "file": "preloaded-port-fix/h616-spaced/end-1.srj.json.gz",
+    "bytes": 157588
+  },
+  {
+    "file": "preloaded-port-fix/h616-spaced/end-2.srj.json.gz",
+    "bytes": 158374
+  },
+  {
+    "file": "preloaded-port-fix/h616-spaced/error-3.srj.json.gz",
+    "bytes": 159215
+  },
+  {
+    "file": "preloaded-port-fix/h616-spaced/graph-1-1-input.json.gz",
+    "bytes": 1074840
+  },
+  {
+    "file": "preloaded-port-fix/h616-spaced/events.jsonl",
+    "bytes": 14179
+  },
+  {
+    "file": "preloaded-port-fix/h616-spaced/result.json",
+    "bytes": 361
+  },
+  {
+    "file": "preloaded-port-fix/h616-spaced/run.log",
+    "bytes": 775
+  },
+  {
+    "file": "preloaded-port-fix/h616-spaced/start-1.srj.json.gz",
+    "bytes": 156717
+  },
+  {
+    "file": "preloaded-port-fix/h616-spaced/start-2.srj.json.gz",
+    "bytes": 157621
+  },
+  {
+    "file": "preloaded-port-fix/h616-spaced/start-3.srj.json.gz",
+    "bytes": 159215
+  },
+  {
+    "file": "preloaded-port-fix/icepi-local/bus-1-input.json.gz",
+    "bytes": 588922
+  },
+  {
+    "file": "preloaded-port-fix/icepi-local/circuit.json.gz",
+    "bytes": 156105
+  },
+  {
+    "file": "preloaded-port-fix/icepi-local/bus-2-input.json.gz",
+    "bytes": 589732
+  },
+  {
+    "file": "preloaded-port-fix/icepi-local/density-1795376484953.json.gz",
+    "bytes": 2460
+  },
+  {
+    "file": "preloaded-port-fix/icepi-local/end-1.srj.json.gz",
+    "bytes": 587015
+  },
+  {
+    "file": "preloaded-port-fix/icepi-local/error-3.srj.json.gz",
+    "bytes": 588486
+  },
+  {
+    "file": "preloaded-port-fix/icepi-local/end-2.srj.json.gz",
+    "bytes": 587714
+  },
+  {
+    "file": "preloaded-port-fix/icepi-local/events.jsonl",
+    "bytes": 20039
+  },
+  {
+    "file": "preloaded-port-fix/icepi-local/graph-1-1-input.json.gz",
+    "bytes": 1788184
+  },
+  {
+    "file": "preloaded-port-fix/icepi-local/graph-1-3-input.json.gz",
+    "bytes": 1788908
+  },
+  {
+    "file": "preloaded-port-fix/icepi-local/graph-1-2-input.json.gz",
+    "bytes": 1788890
+  },
+  {
+    "file": "preloaded-port-fix/icepi-local/result.json",
+    "bytes": 364
+  },
+  {
+    "file": "preloaded-port-fix/icepi-local/run.log",
+    "bytes": 1400
+  },
+  {
+    "file": "preloaded-port-fix/icepi-local/stage-1-highDensityRouteSolver.json.gz",
+    "bytes": 730452
+  },
+  {
+    "file": "preloaded-port-fix/icepi-local/stage-1-uniformPortDistributionSolver.json.gz",
+    "bytes": 2979408
+  },
+  {
+    "file": "preloaded-port-fix/icepi-local/start-1.srj.json.gz",
+    "bytes": 586243
+  },
+  {
+    "file": "preloaded-port-fix/icepi-local/start-2.srj.json.gz",
+    "bytes": 587055
+  },
+  {
+    "file": "preloaded-port-fix/icepi-local/start-3.srj.json.gz",
+    "bytes": 588486
+  },
+  {
+    "file": "preloaded-port-fix/icepi-native/circuit.json.gz",
+    "bytes": 207441
+  },
+  {
+    "file": "preloaded-port-fix/icepi-native/error-1.srj.json.gz",
+    "bytes": 715879
+  },
+  {
+    "file": "preloaded-port-fix/icepi-native/events.jsonl",
+    "bytes": 4351
+  },
+  {
+    "file": "preloaded-port-fix/icepi-native/fanout-1-best.json.gz",
+    "bytes": 728900
+  },
+  {
+    "file": "preloaded-port-fix/icepi-native/result.json",
+    "bytes": 398
+  },
+  {
+    "file": "preloaded-port-fix/icepi-native/fanout-1-input.json.gz",
+    "bytes": 715734
+  },
+  {
+    "file": "preloaded-port-fix/icepi-native/run.log",
+    "bytes": 1280
+  },
+  {
+    "file": "preloaded-port-fix/icepi-native/start-1.srj.json.gz",
+    "bytes": 715879
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/bus-1-input.json.gz",
+    "bytes": 583530
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/bus-2-input.json.gz",
+    "bytes": 584353
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376524310.json.gz",
+    "bytes": 11269
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/circuit.json.gz",
+    "bytes": 170442
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376524581.json.gz",
+    "bytes": 16701
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376524839.json.gz",
+    "bytes": 17450
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376525126.json.gz",
+    "bytes": 19943
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376525403.json.gz",
+    "bytes": 21140
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376525660.json.gz",
+    "bytes": 11265
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376525906.json.gz",
+    "bytes": 16696
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376526159.json.gz",
+    "bytes": 17443
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376526410.json.gz",
+    "bytes": 19937
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376526684.json.gz",
+    "bytes": 20626
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376526946.json.gz",
+    "bytes": 4910
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376527220.json.gz",
+    "bytes": 6153
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376527481.json.gz",
+    "bytes": 7895
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376528022.json.gz",
+    "bytes": 12959
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376527745.json.gz",
+    "bytes": 9100
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376536480.json.gz",
+    "bytes": 7004
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376536730.json.gz",
+    "bytes": 10448
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376537067.json.gz",
+    "bytes": 13016
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376537340.json.gz",
+    "bytes": 18062
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376537608.json.gz",
+    "bytes": 21099
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376537894.json.gz",
+    "bytes": 9697
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376538150.json.gz",
+    "bytes": 16221
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376538662.json.gz",
+    "bytes": 19936
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376538404.json.gz",
+    "bytes": 16827
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376538963.json.gz",
+    "bytes": 20556
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376539209.json.gz",
+    "bytes": 7796
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376539717.json.gz",
+    "bytes": 13901
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376539455.json.gz",
+    "bytes": 9638
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376540012.json.gz",
+    "bytes": 16836
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376540295.json.gz",
+    "bytes": 20124
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376540538.json.gz",
+    "bytes": 6551
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376540782.json.gz",
+    "bytes": 10453
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376541078.json.gz",
+    "bytes": 12624
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376541348.json.gz",
+    "bytes": 17069
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376541617.json.gz",
+    "bytes": 21116
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376541866.json.gz",
+    "bytes": 7570
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376542091.json.gz",
+    "bytes": 2096
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376542356.json.gz",
+    "bytes": 3317
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376542583.json.gz",
+    "bytes": 3497
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376542819.json.gz",
+    "bytes": 4934
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376543050.json.gz",
+    "bytes": 6767
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376543502.json.gz",
+    "bytes": 3361
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376543274.json.gz",
+    "bytes": 2130
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376543773.json.gz",
+    "bytes": 3529
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376544005.json.gz",
+    "bytes": 4948
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376544493.json.gz",
+    "bytes": 13990
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376544708.json.gz",
+    "bytes": 16636
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376544924.json.gz",
+    "bytes": 17859
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376545203.json.gz",
+    "bytes": 20447
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376545435.json.gz",
+    "bytes": 20866
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376545667.json.gz",
+    "bytes": 13925
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376545905.json.gz",
+    "bytes": 16548
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376546145.json.gz",
+    "bytes": 17774
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376546440.json.gz",
+    "bytes": 20385
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376546699.json.gz",
+    "bytes": 20802
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376546919.json.gz",
+    "bytes": 14656
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376547372.json.gz",
+    "bytes": 16557
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376547143.json.gz",
+    "bytes": 16311
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376547663.json.gz",
+    "bytes": 17217
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376547886.json.gz",
+    "bytes": 19306
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376548360.json.gz",
+    "bytes": 16226
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376548122.json.gz",
+    "bytes": 14574
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376548614.json.gz",
+    "bytes": 16477
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376548907.json.gz",
+    "bytes": 17142
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376549394.json.gz",
+    "bytes": 11131
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376549156.json.gz",
+    "bytes": 19243
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376549624.json.gz",
+    "bytes": 17153
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376549862.json.gz",
+    "bytes": 19328
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376550154.json.gz",
+    "bytes": 20727
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376550404.json.gz",
+    "bytes": 21234
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376550638.json.gz",
+    "bytes": 10872
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376550886.json.gz",
+    "bytes": 16890
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376551132.json.gz",
+    "bytes": 19030
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376551416.json.gz",
+    "bytes": 20438
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376551666.json.gz",
+    "bytes": 20959
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376551901.json.gz",
+    "bytes": 15629
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376552417.json.gz",
+    "bytes": 17090
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376552138.json.gz",
+    "bytes": 16460
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376552663.json.gz",
+    "bytes": 18385
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376552909.json.gz",
+    "bytes": 20781
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376553378.json.gz",
+    "bytes": 16484
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376553138.json.gz",
+    "bytes": 15648
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376553678.json.gz",
+    "bytes": 17100
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376553988.json.gz",
+    "bytes": 18387
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376554643.json.gz",
+    "bytes": 18237
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376554241.json.gz",
+    "bytes": 20766
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376554882.json.gz",
+    "bytes": 15532
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376555390.json.gz",
+    "bytes": 17092
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376555636.json.gz",
+    "bytes": 17894
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376555133.json.gz",
+    "bytes": 16370
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376555895.json.gz",
+    "bytes": 20670
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376556137.json.gz",
+    "bytes": 15549
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376556393.json.gz",
+    "bytes": 16391
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376556635.json.gz",
+    "bytes": 17099
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376556897.json.gz",
+    "bytes": 17899
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376557154.json.gz",
+    "bytes": 20661
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376557378.json.gz",
+    "bytes": 11356
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376557601.json.gz",
+    "bytes": 14561
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376557810.json.gz",
+    "bytes": 14774
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376558251.json.gz",
+    "bytes": 21459
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376558495.json.gz",
+    "bytes": 11958
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376558029.json.gz",
+    "bytes": 17388
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376558739.json.gz",
+    "bytes": 15162
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376558976.json.gz",
+    "bytes": 15376
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376559223.json.gz",
+    "bytes": 17994
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376559481.json.gz",
+    "bytes": 22076
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376559835.json.gz",
+    "bytes": 18980
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376560043.json.gz",
+    "bytes": 10821
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376560254.json.gz",
+    "bytes": 12356
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376560470.json.gz",
+    "bytes": 14101
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376560700.json.gz",
+    "bytes": 14614
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376560926.json.gz",
+    "bytes": 17058
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376561162.json.gz",
+    "bytes": 11437
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376561413.json.gz",
+    "bytes": 12962
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376561672.json.gz",
+    "bytes": 14670
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376561940.json.gz",
+    "bytes": 15179
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376562215.json.gz",
+    "bytes": 17633
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376562419.json.gz",
+    "bytes": 10814
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376562650.json.gz",
+    "bytes": 12620
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376562868.json.gz",
+    "bytes": 14138
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376563084.json.gz",
+    "bytes": 15709
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376563324.json.gz",
+    "bytes": 17131
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376563553.json.gz",
+    "bytes": 11433
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376563804.json.gz",
+    "bytes": 13213
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376564065.json.gz",
+    "bytes": 14705
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376564335.json.gz",
+    "bytes": 16289
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376564606.json.gz",
+    "bytes": 17714
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376564799.json.gz",
+    "bytes": 11516
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376565264.json.gz",
+    "bytes": 15613
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376565482.json.gz",
+    "bytes": 19241
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376565715.json.gz",
+    "bytes": 22976
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376566174.json.gz",
+    "bytes": 14757
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376565946.json.gz",
+    "bytes": 12047
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376566409.json.gz",
+    "bytes": 16131
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376566644.json.gz",
+    "bytes": 19777
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376566890.json.gz",
+    "bytes": 23403
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376567110.json.gz",
+    "bytes": 10614
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376567330.json.gz",
+    "bytes": 13363
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376567545.json.gz",
+    "bytes": 15992
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376567758.json.gz",
+    "bytes": 20806
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376568019.json.gz",
+    "bytes": 23168
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376568226.json.gz",
+    "bytes": 11519
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376568694.json.gz",
+    "bytes": 14601
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376568911.json.gz",
+    "bytes": 19246
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376569141.json.gz",
+    "bytes": 22978
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376569363.json.gz",
+    "bytes": 12050
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376569588.json.gz",
+    "bytes": 14667
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376569828.json.gz",
+    "bytes": 15117
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376570064.json.gz",
+    "bytes": 19778
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376570305.json.gz",
+    "bytes": 23410
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376570523.json.gz",
+    "bytes": 11743
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376570942.json.gz",
+    "bytes": 13902
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376570735.json.gz",
+    "bytes": 13195
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376571149.json.gz",
+    "bytes": 14156
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376571364.json.gz",
+    "bytes": 17572
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376571606.json.gz",
+    "bytes": 12281
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376571856.json.gz",
+    "bytes": 13737
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376572095.json.gz",
+    "bytes": 14441
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376572341.json.gz",
+    "bytes": 14698
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376572590.json.gz",
+    "bytes": 18101
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376572802.json.gz",
+    "bytes": 11743
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376573019.json.gz",
+    "bytes": 13195
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376573432.json.gz",
+    "bytes": 14156
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376573224.json.gz",
+    "bytes": 13902
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376573642.json.gz",
+    "bytes": 17572
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376573875.json.gz",
+    "bytes": 12281
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376574141.json.gz",
+    "bytes": 13737
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376574386.json.gz",
+    "bytes": 14441
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376574639.json.gz",
+    "bytes": 14698
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376574881.json.gz",
+    "bytes": 18101
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/density-1795376732657.json.gz",
+    "bytes": 8933
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/end-1.srj.json.gz",
+    "bytes": 584271
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/end-2.srj.json.gz",
+    "bytes": 585054
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/end-3.srj.json.gz",
+    "bytes": 599423
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/error-4.srj.json.gz",
+    "bytes": 605737
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/events.jsonl",
+    "bytes": 72864
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/graph-1-1-input.json.gz",
+    "bytes": 1889805
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/graph-1-2-input.json.gz",
+    "bytes": 1890686
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/graph-2-1-input.json.gz",
+    "bytes": 2147863
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/result.json",
+    "bytes": 365
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/run.log",
+    "bytes": 2159
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/stage-1-highDensityRouteSolver.json.gz",
+    "bytes": 713127
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/stage-1-uniformPortDistributionSolver.json.gz",
+    "bytes": 3089904
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/stage-2-highDensityRouteSolver.json.gz",
+    "bytes": 951553
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/stage-2-uniformPortDistributionSolver.json.gz",
+    "bytes": 3312900
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/start-1.srj.json.gz",
+    "bytes": 583487
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/start-2.srj.json.gz",
+    "bytes": 584310
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/start-3.srj.json.gz",
+    "bytes": 585828
+  },
+  {
+    "file": "preloaded-port-fix/icepi-spaced/start-4.srj.json.gz",
+    "bytes": 605737
+  },
+  {
+    "file": "preloaded-port-fix/imx6-local/bus-2-input.json.gz",
+    "bytes": 1007316
+  },
+  {
+    "file": "preloaded-port-fix/imx6-local/bus-1-input.json.gz",
+    "bytes": 1006393
+  },
+  {
+    "file": "preloaded-port-fix/imx6-local/bus-3-input.json.gz",
+    "bytes": 1007293
+  },
+  {
+    "file": "preloaded-port-fix/imx6-local/bus-4-input.json.gz",
+    "bytes": 1008046
+  },
+  {
+    "file": "preloaded-port-fix/imx6-local/density-1795376929876.json.gz",
+    "bytes": 1415
+  },
+  {
+    "file": "preloaded-port-fix/imx6-local/end-2.srj.json.gz",
+    "bytes": 1006543
+  },
+  {
+    "file": "preloaded-port-fix/imx6-local/end-1.srj.json.gz",
+    "bytes": 1005433
+  },
+  {
+    "file": "preloaded-port-fix/imx6-local/error-3.srj.json.gz",
+    "bytes": 1007510
+  },
+  {
+    "file": "preloaded-port-fix/imx6-local/events.jsonl",
+    "bytes": 33557
+  },
+  {
+    "file": "preloaded-port-fix/imx6-local/graph-1-1-input.json.gz",
+    "bytes": 2358129
+  },
+  {
+    "file": "preloaded-port-fix/imx6-local/graph-1-2-input.json.gz",
+    "bytes": 2358705
+  },
+  {
+    "file": "preloaded-port-fix/imx6-local/result.json",
+    "bytes": 138
+  },
+  {
+    "file": "preloaded-port-fix/imx6-local/run.log",
+    "bytes": 1276
+  },
+  {
+    "file": "preloaded-port-fix/imx6-local/stage-1-highDensityRouteSolver.json.gz",
+    "bytes": 1156407
+  },
+  {
+    "file": "preloaded-port-fix/imx6-local/stage-1-uniformPortDistributionSolver.json.gz",
+    "bytes": 4125318
+  },
+  {
+    "file": "preloaded-port-fix/imx6-local/start-1.srj.json.gz",
+    "bytes": 1004566
+  },
+  {
+    "file": "preloaded-port-fix/imx6-local/start-2.srj.json.gz",
+    "bytes": 1005487
+  },
+  {
+    "file": "preloaded-port-fix/imx6-local/start-3.srj.json.gz",
+    "bytes": 1007510
+  },
+  {
+    "file": "preloaded-port-fix/imx6-native/circuit.json.gz",
+    "bytes": 288103
+  },
+  {
+    "file": "preloaded-port-fix/imx6-native/error-1.srj.json.gz",
+    "bytes": 1360593
+  },
+  {
+    "file": "preloaded-port-fix/imx6-native/events.jsonl",
+    "bytes": 4710
+  },
+  {
+    "file": "preloaded-port-fix/imx6-native/fanout-1-input.json.gz",
+    "bytes": 1360780
+  },
+  {
+    "file": "preloaded-port-fix/imx6-native/fanout-1-best.json.gz",
+    "bytes": 1378805
+  },
+  {
+    "file": "preloaded-port-fix/imx6-native/fanout-checkpoint.json.gz",
+    "bytes": 1378805
+  },
+  {
+    "file": "preloaded-port-fix/imx6-native/result.json",
+    "bytes": 397
+  },
+  {
+    "file": "preloaded-port-fix/imx6-native/run.log",
+    "bytes": 1278
+  },
+  {
+    "file": "preloaded-port-fix/imx6-native/start-1.srj.json.gz",
+    "bytes": 1360593
+  },
+  {
+    "file": "preloaded-port-fix/imx6-spaced/bus-1-input.json.gz",
+    "bytes": 1005729
+  },
+  {
+    "file": "preloaded-port-fix/imx6-spaced/bus-2-input.json.gz",
+    "bytes": 1006682
+  },
+  {
+    "file": "preloaded-port-fix/imx6-spaced/bus-4-input.json.gz",
+    "bytes": 1007352
+  },
+  {
+    "file": "preloaded-port-fix/imx6-spaced/bus-3-input.json.gz",
+    "bytes": 1006661
+  },
+  {
+    "file": "preloaded-port-fix/imx6-spaced/circuit.json.gz",
+    "bytes": 213964
+  },
+  {
+    "file": "preloaded-port-fix/imx6-spaced/density-1795376842010.json.gz",
+    "bytes": 853
+  },
+  {
+    "file": "preloaded-port-fix/imx6-spaced/end-1.srj.json.gz",
+    "bytes": 1005834
+  },
+  {
+    "file": "preloaded-port-fix/imx6-spaced/end-2.srj.json.gz",
+    "bytes": 1006827
+  },
+  {
+    "file": "preloaded-port-fix/imx6-spaced/error-3.srj.json.gz",
+    "bytes": 1007797
+  },
+  {
+    "file": "preloaded-port-fix/imx6-spaced/events.jsonl",
+    "bytes": 31114
+  },
+  {
+    "file": "preloaded-port-fix/imx6-spaced/graph-1-1-input.json.gz",
+    "bytes": 2678029
+  },
+  {
+    "file": "preloaded-port-fix/imx6-spaced/graph-1-2-input.json.gz",
+    "bytes": 2678044
+  },
+  {
+    "file": "preloaded-port-fix/imx6-spaced/graph-1-3-input.json.gz",
+    "bytes": 2679560
+  },
+  {
+    "file": "preloaded-port-fix/imx6-spaced/graph-1-4-input.json.gz",
+    "bytes": 2679575
+  },
+  {
+    "file": "preloaded-port-fix/imx6-spaced/result.json",
+    "bytes": 364
+  },
+  {
+    "file": "preloaded-port-fix/imx6-spaced/run.log",
+    "bytes": 1523
+  },
+  {
+    "file": "preloaded-port-fix/imx6-spaced/stage-1-highDensityRouteSolver.json.gz",
+    "bytes": 1157975
+  },
+  {
+    "file": "preloaded-port-fix/imx6-spaced/stage-1-uniformPortDistributionSolver.json.gz",
+    "bytes": 4520626
+  },
+  {
+    "file": "preloaded-port-fix/imx6-spaced/start-1.srj.json.gz",
+    "bytes": 1004936
+  },
+  {
+    "file": "preloaded-port-fix/imx6-spaced/start-2.srj.json.gz",
+    "bytes": 1005890
+  },
+  {
+    "file": "preloaded-port-fix/imx6-spaced/start-3.srj.json.gz",
+    "bytes": 1007797
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/bus-1-input.json.gz",
+    "bytes": 367667
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/bus-2-input.json.gz",
+    "bytes": 368501
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/circuit.json.gz",
+    "bytes": 113421
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376421748.json.gz",
+    "bytes": 8206
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376422106.json.gz",
+    "bytes": 12122
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376422504.json.gz",
+    "bytes": 8194
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376422832.json.gz",
+    "bytes": 12096
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376422943.json.gz",
+    "bytes": 5087
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376423056.json.gz",
+    "bytes": 7317
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376423186.json.gz",
+    "bytes": 9109
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376423340.json.gz",
+    "bytes": 10527
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376423528.json.gz",
+    "bytes": 12505
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376423639.json.gz",
+    "bytes": 5092
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376423740.json.gz",
+    "bytes": 5425
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376423886.json.gz",
+    "bytes": 7999
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376424033.json.gz",
+    "bytes": 9486
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376424241.json.gz",
+    "bytes": 11649
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376424489.json.gz",
+    "bytes": 8774
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376424605.json.gz",
+    "bytes": 6014
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376424747.json.gz",
+    "bytes": 7517
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376424884.json.gz",
+    "bytes": 9230
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376425031.json.gz",
+    "bytes": 10147
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376425210.json.gz",
+    "bytes": 11445
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376425303.json.gz",
+    "bytes": 6213
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376425426.json.gz",
+    "bytes": 7741
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376425712.json.gz",
+    "bytes": 10360
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376425564.json.gz",
+    "bytes": 9436
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376425902.json.gz",
+    "bytes": 11651
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376426011.json.gz",
+    "bytes": 6004
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376426152.json.gz",
+    "bytes": 7502
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376426439.json.gz",
+    "bytes": 10089
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376426282.json.gz",
+    "bytes": 8645
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376426608.json.gz",
+    "bytes": 11451
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376426727.json.gz",
+    "bytes": 6201
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376426864.json.gz",
+    "bytes": 7727
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376427017.json.gz",
+    "bytes": 8852
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376427176.json.gz",
+    "bytes": 10297
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376427357.json.gz",
+    "bytes": 11649
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376427558.json.gz",
+    "bytes": 6266
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376427637.json.gz",
+    "bytes": 5319
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376427733.json.gz",
+    "bytes": 7667
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376427844.json.gz",
+    "bytes": 8331
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376427967.json.gz",
+    "bytes": 8798
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376428149.json.gz",
+    "bytes": 11156
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376428240.json.gz",
+    "bytes": 5344
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376428376.json.gz",
+    "bytes": 7708
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376428498.json.gz",
+    "bytes": 8378
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376428632.json.gz",
+    "bytes": 8847
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376428806.json.gz",
+    "bytes": 11184
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376428909.json.gz",
+    "bytes": 5347
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376429020.json.gz",
+    "bytes": 7713
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376429157.json.gz",
+    "bytes": 8380
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376429295.json.gz",
+    "bytes": 8852
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376429462.json.gz",
+    "bytes": 11191
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376429687.json.gz",
+    "bytes": 6108
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376429567.json.gz",
+    "bytes": 4490
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376429815.json.gz",
+    "bytes": 7897
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376429967.json.gz",
+    "bytes": 9342
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376430529.json.gz",
+    "bytes": 8203
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376430157.json.gz",
+    "bytes": 11040
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376430668.json.gz",
+    "bytes": 10165
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376430859.json.gz",
+    "bytes": 12466
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376431091.json.gz",
+    "bytes": 6899
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376430963.json.gz",
+    "bytes": 5039
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376431229.json.gz",
+    "bytes": 8708
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376431388.json.gz",
+    "bytes": 10523
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376431590.json.gz",
+    "bytes": 12802
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376431824.json.gz",
+    "bytes": 6964
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376431949.json.gz",
+    "bytes": 8765
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376432044.json.gz",
+    "bytes": 10582
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376432240.json.gz",
+    "bytes": 12860
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376432462.json.gz",
+    "bytes": 6964
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376432585.json.gz",
+    "bytes": 8765
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376432683.json.gz",
+    "bytes": 10582
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376432888.json.gz",
+    "bytes": 12860
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376433000.json.gz",
+    "bytes": 5081
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376433391.json.gz",
+    "bytes": 10569
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376433883.json.gz",
+    "bytes": 8000
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376434025.json.gz",
+    "bytes": 10552
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376434391.json.gz",
+    "bytes": 5811
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376434514.json.gz",
+    "bytes": 6662
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376434689.json.gz",
+    "bytes": 7853
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376434860.json.gz",
+    "bytes": 9055
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376434983.json.gz",
+    "bytes": 4229
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376435098.json.gz",
+    "bytes": 5078
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376435238.json.gz",
+    "bytes": 5903
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376435380.json.gz",
+    "bytes": 7316
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376435647.json.gz",
+    "bytes": 4439
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376435544.json.gz",
+    "bytes": 8585
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376435772.json.gz",
+    "bytes": 5268
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376435920.json.gz",
+    "bytes": 6094
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376436107.json.gz",
+    "bytes": 7489
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376436348.json.gz",
+    "bytes": 8772
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376437063.json.gz",
+    "bytes": 5331
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376437194.json.gz",
+    "bytes": 7032
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376437621.json.gz",
+    "bytes": 13049
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376438000.json.gz",
+    "bytes": 8452
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376438143.json.gz",
+    "bytes": 10414
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376438327.json.gz",
+    "bytes": 12719
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376438700.json.gz",
+    "bytes": 8456
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376439017.json.gz",
+    "bytes": 12376
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376439406.json.gz",
+    "bytes": 8448
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376439723.json.gz",
+    "bytes": 12351
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376439822.json.gz",
+    "bytes": 5365
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376440068.json.gz",
+    "bytes": 9363
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376440245.json.gz",
+    "bytes": 10787
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376440475.json.gz",
+    "bytes": 5362
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376440593.json.gz",
+    "bytes": 5701
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376440714.json.gz",
+    "bytes": 8264
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376440859.json.gz",
+    "bytes": 9748
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376441045.json.gz",
+    "bytes": 11921
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376441324.json.gz",
+    "bytes": 9030
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376441429.json.gz",
+    "bytes": 5871
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376441568.json.gz",
+    "bytes": 7735
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376441702.json.gz",
+    "bytes": 9441
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376441859.json.gz",
+    "bytes": 10413
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376442029.json.gz",
+    "bytes": 11706
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376442132.json.gz",
+    "bytes": 6069
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376442257.json.gz",
+    "bytes": 7952
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376442583.json.gz",
+    "bytes": 10630
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376442423.json.gz",
+    "bytes": 9651
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376442768.json.gz",
+    "bytes": 11918
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376442876.json.gz",
+    "bytes": 5861
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376443002.json.gz",
+    "bytes": 7721
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376443138.json.gz",
+    "bytes": 8863
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376443323.json.gz",
+    "bytes": 10352
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376443512.json.gz",
+    "bytes": 11703
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376443622.json.gz",
+    "bytes": 6056
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376443759.json.gz",
+    "bytes": 7939
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376443945.json.gz",
+    "bytes": 9077
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376444099.json.gz",
+    "bytes": 10561
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376444273.json.gz",
+    "bytes": 11915
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376444499.json.gz",
+    "bytes": 6337
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376444581.json.gz",
+    "bytes": 5381
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376444703.json.gz",
+    "bytes": 7957
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376444831.json.gz",
+    "bytes": 8607
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376444970.json.gz",
+    "bytes": 9084
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376445147.json.gz",
+    "bytes": 11435
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376445246.json.gz",
+    "bytes": 5414
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376445363.json.gz",
+    "bytes": 7985
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/density-1795376502988.json.gz",
+    "bytes": 978
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/end-1.srj.json.gz",
+    "bytes": 368424
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/end-2.srj.json.gz",
+    "bytes": 369124
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/end-3.srj.json.gz",
+    "bytes": 378560
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/error-4.srj.json.gz",
+    "bytes": 381673
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/events.jsonl",
+    "bytes": 50660
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/graph-1-1-input.json.gz",
+    "bytes": 1402428
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/graph-2-1-input.json.gz",
+    "bytes": 1653861
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/graph-2-2-input.json.gz",
+    "bytes": 1653937
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/run.log",
+    "bytes": 869
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/result.json",
+    "bytes": 367
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/stage-1-highDensityRouteSolver.json.gz",
+    "bytes": 463933
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/stage-1-uniformPortDistributionSolver.json.gz",
+    "bytes": 2309925
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/stage-2-uniformPortDistributionSolver.json.gz",
+    "bytes": 2533308
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/stage-2-highDensityRouteSolver.json.gz",
+    "bytes": 709551
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/start-1.srj.json.gz",
+    "bytes": 367621
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/start-2.srj.json.gz",
+    "bytes": 368455
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/start-3.srj.json.gz",
+    "bytes": 369757
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-local/start-4.srj.json.gz",
+    "bytes": 381673
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-native/circuit.json.gz",
+    "bytes": 137133
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-native/error-1.srj.json.gz",
+    "bytes": 468994
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-native/events.jsonl",
+    "bytes": 22766
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-native/fanout-1-best.json.gz",
+    "bytes": 584478
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-native/fanout-1-input.json.gz",
+    "bytes": 469181
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-native/fanout-checkpoint.json.gz",
+    "bytes": 584478
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-native/result.json",
+    "bytes": 403
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-native/run.log",
+    "bytes": 1287
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-native/start-1.srj.json.gz",
+    "bytes": 468994
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/bus-1-input.json.gz",
+    "bytes": 366169
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/bus-2-input.json.gz",
+    "bytes": 367032
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/circuit.json.gz",
+    "bytes": 113802
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376411167.json.gz",
+    "bytes": 2994
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376411230.json.gz",
+    "bytes": 6953
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376411344.json.gz",
+    "bytes": 8790
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376411615.json.gz",
+    "bytes": 10541
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376411446.json.gz",
+    "bytes": 9778
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376411653.json.gz",
+    "bytes": 3253
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376411693.json.gz",
+    "bytes": 5602
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376411790.json.gz",
+    "bytes": 8934
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376411743.json.gz",
+    "bytes": 8382
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376411853.json.gz",
+    "bytes": 9972
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376414307.json.gz",
+    "bytes": 3253
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376414349.json.gz",
+    "bytes": 5602
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376414393.json.gz",
+    "bytes": 8382
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376414443.json.gz",
+    "bytes": 8934
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376414530.json.gz",
+    "bytes": 9972
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376415841.json.gz",
+    "bytes": 5641
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376415907.json.gz",
+    "bytes": 7340
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376415982.json.gz",
+    "bytes": 8398
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376416091.json.gz",
+    "bytes": 10493
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376416237.json.gz",
+    "bytes": 12624
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376416697.json.gz",
+    "bytes": 6011
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376416781.json.gz",
+    "bytes": 7199
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376416741.json.gz",
+    "bytes": 2967
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376416825.json.gz",
+    "bytes": 9044
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376416878.json.gz",
+    "bytes": 9979
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376416946.json.gz",
+    "bytes": 10768
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376416988.json.gz",
+    "bytes": 3000
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376417046.json.gz",
+    "bytes": 7240
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376417145.json.gz",
+    "bytes": 9091
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376417264.json.gz",
+    "bytes": 10025
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376417418.json.gz",
+    "bytes": 10809
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376417487.json.gz",
+    "bytes": 2967
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376417528.json.gz",
+    "bytes": 7199
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376417624.json.gz",
+    "bytes": 9979
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376417573.json.gz",
+    "bytes": 9044
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376417678.json.gz",
+    "bytes": 10768
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376417728.json.gz",
+    "bytes": 3000
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376417882.json.gz",
+    "bytes": 9091
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376417787.json.gz",
+    "bytes": 7240
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376418038.json.gz",
+    "bytes": 10025
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376418191.json.gz",
+    "bytes": 10809
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376418237.json.gz",
+    "bytes": 4492
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376418425.json.gz",
+    "bytes": 9234
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376418315.json.gz",
+    "bytes": 7099
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376418553.json.gz",
+    "bytes": 10138
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376418764.json.gz",
+    "bytes": 5152
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376418698.json.gz",
+    "bytes": 10962
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376418871.json.gz",
+    "bytes": 6523
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376418926.json.gz",
+    "bytes": 7479
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376418983.json.gz",
+    "bytes": 9220
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376419132.json.gz",
+    "bytes": 9822
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376419193.json.gz",
+    "bytes": 5350
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376419269.json.gz",
+    "bytes": 6157
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376419364.json.gz",
+    "bytes": 7873
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376419413.json.gz",
+    "bytes": 9343
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376419462.json.gz",
+    "bytes": 10080
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376419560.json.gz",
+    "bytes": 6079
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376419504.json.gz",
+    "bytes": 4054
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376419664.json.gz",
+    "bytes": 7498
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376419947.json.gz",
+    "bytes": 4101
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376419745.json.gz",
+    "bytes": 9610
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376419892.json.gz",
+    "bytes": 13142
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376420105.json.gz",
+    "bytes": 7508
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376420216.json.gz",
+    "bytes": 9631
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376420349.json.gz",
+    "bytes": 3899
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376420435.json.gz",
+    "bytes": 5929
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376420504.json.gz",
+    "bytes": 8315
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376420581.json.gz",
+    "bytes": 9623
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376420727.json.gz",
+    "bytes": 13935
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376420769.json.gz",
+    "bytes": 6044
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376420808.json.gz",
+    "bytes": 7067
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376420891.json.gz",
+    "bytes": 9068
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376420998.json.gz",
+    "bytes": 10590
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376421199.json.gz",
+    "bytes": 3892
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376421338.json.gz",
+    "bytes": 6846
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376421137.json.gz",
+    "bytes": 12401
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376421428.json.gz",
+    "bytes": 9646
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376421660.json.gz",
+    "bytes": 7394
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376421843.json.gz",
+    "bytes": 5505
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376421880.json.gz",
+    "bytes": 6048
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376421917.json.gz",
+    "bytes": 7337
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376421977.json.gz",
+    "bytes": 8344
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376422033.json.gz",
+    "bytes": 10553
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376422073.json.gz",
+    "bytes": 2458
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376422115.json.gz",
+    "bytes": 5601
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376422164.json.gz",
+    "bytes": 8319
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376422235.json.gz",
+    "bytes": 9780
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376422300.json.gz",
+    "bytes": 10441
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376425749.json.gz",
+    "bytes": 4767
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376426219.json.gz",
+    "bytes": 9841
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376426057.json.gz",
+    "bytes": 7704
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376426262.json.gz",
+    "bytes": 4916
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376426331.json.gz",
+    "bytes": 5979
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376426380.json.gz",
+    "bytes": 6908
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376426435.json.gz",
+    "bytes": 7862
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376426564.json.gz",
+    "bytes": 9990
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376426668.json.gz",
+    "bytes": 7620
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376426607.json.gz",
+    "bytes": 2994
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376426761.json.gz",
+    "bytes": 9443
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376426884.json.gz",
+    "bytes": 10419
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376427155.json.gz",
+    "bytes": 3253
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376427117.json.gz",
+    "bytes": 11183
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376427204.json.gz",
+    "bytes": 6777
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376427263.json.gz",
+    "bytes": 9041
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376427315.json.gz",
+    "bytes": 9583
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376427382.json.gz",
+    "bytes": 10616
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376428578.json.gz",
+    "bytes": 3253
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376428622.json.gz",
+    "bytes": 6777
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376428672.json.gz",
+    "bytes": 9041
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376428729.json.gz",
+    "bytes": 9583
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376428800.json.gz",
+    "bytes": 10616
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376430012.json.gz",
+    "bytes": 5894
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376430227.json.gz",
+    "bytes": 9064
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376430143.json.gz",
+    "bytes": 8009
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376430486.json.gz",
+    "bytes": 13275
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376430337.json.gz",
+    "bytes": 11133
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376430603.json.gz",
+    "bytes": 6166
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376430642.json.gz",
+    "bytes": 2967
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376430684.json.gz",
+    "bytes": 7590
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376430731.json.gz",
+    "bytes": 9430
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376430783.json.gz",
+    "bytes": 10351
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376430899.json.gz",
+    "bytes": 3000
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376430852.json.gz",
+    "bytes": 11143
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376430945.json.gz",
+    "bytes": 7623
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376431044.json.gz",
+    "bytes": 9471
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376431236.json.gz",
+    "bytes": 10396
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376431397.json.gz",
+    "bytes": 11184
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376431440.json.gz",
+    "bytes": 2967
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376431484.json.gz",
+    "bytes": 7590
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376431541.json.gz",
+    "bytes": 9430
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376431595.json.gz",
+    "bytes": 10351
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376431657.json.gz",
+    "bytes": 11143
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376431698.json.gz",
+    "bytes": 3000
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376431744.json.gz",
+    "bytes": 7623
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376431838.json.gz",
+    "bytes": 9471
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376431945.json.gz",
+    "bytes": 10396
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376432094.json.gz",
+    "bytes": 11184
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376432139.json.gz",
+    "bytes": 4651
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376432254.json.gz",
+    "bytes": 7511
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/density-1795376591578.json.gz",
+    "bytes": 1557
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/end-1.srj.json.gz",
+    "bytes": 367036
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/end-2.srj.json.gz",
+    "bytes": 367784
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/end-3.srj.json.gz",
+    "bytes": 378210
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/error-4.srj.json.gz",
+    "bytes": 381441
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/events.jsonl",
+    "bytes": 53742
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/graph-1-1-input.json.gz",
+    "bytes": 1892171
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/graph-2-1-input.json.gz",
+    "bytes": 2159654
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/graph-2-2-input.json.gz",
+    "bytes": 2162124
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/result.json",
+    "bytes": 407
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/run.log",
+    "bytes": 1076
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/stage-1-highDensityRouteSolver.json.gz",
+    "bytes": 458543
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/stage-1-uniformPortDistributionSolver.json.gz",
+    "bytes": 2918207
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/stage-2-highDensityRouteSolver.json.gz",
+    "bytes": 591863
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/stage-2-uniformPortDistributionSolver.json.gz",
+    "bytes": 3044312
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/start-1.srj.json.gz",
+    "bytes": 366213
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/start-2.srj.json.gz",
+    "bytes": 367075
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/start-3.srj.json.gz",
+    "bytes": 368463
+  },
+  {
+    "file": "preloaded-port-fix/orangecrab-spaced/start-4.srj.json.gz",
+    "bytes": 381441
+  },
+  {
+    "file": "runtime-versions.json",
+    "bytes": 893
+  }
+]

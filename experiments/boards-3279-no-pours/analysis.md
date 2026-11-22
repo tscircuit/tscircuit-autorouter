@@ -1,58 +1,94 @@
 # Latest board analysis
 
-Runtime at the start of this run: tscircuit **0.0.3279**, core **0.0.2460**, capacity-autorouter **0.0.1154**, bundled fanout-solver **0.0.103**. All 19 original TSX boards use default routing with copper pours disabled. The TSX, render harness, and observer remain unchanged. Dependency versions, entry hashes, the baseline lockfile, and artifact digest are recorded beside this report.
+Runtime at the start: **tscircuit 0.0.3279**, **core 0.0.2460**, **capacity-autorouter 0.0.1154**, bundled **fanout-solver 0.0.103**. All 19 original TSX boards run through default tscircuit routing with copper pours disabled. The board, render and observer files are unchanged from the previous run; candidate dependencies use the baseline frozen lockfile.
 
-The latest baseline still completes **0/19** boards. Sixteen emit partial results and three reach the 600-second render budget. All sixteen comparable outputs have exactly the same copper and error counts as the previous corrected run. All 187 captured pipeline inputs are unchanged. The blockers remain seven detailed-routing cases, six native fanout failures, four graph-search failures, and two bus-search budget cases. One of the detailed-routing cases reaches its failure near the render deadline and does not emit Circuit JSON.
+The latest baseline still completes **0/19** boards. Sixteen emit partial results; three hit the 600-second render budget. Compared with the previous corrected 0.0.3278 run, all 16 comparable emitted copper/error counts and all 187 captured pipeline inputs are unchanged.
 
-## Selected fix
+## Chosen fix
 
-A regional repair uses A01 after B01 fails. A01 protects the target cell of a layer transition, but did not reserve the via copper radius around unrelated fixed terminals on every layer. A replacement via connecting signal layers 0–2 could cover a layer-3 boundary terminal. The repair accepted this candidate; a later B01 cell then failed because its terminal was obstructed.
+A regional repair accepted a replacement via connecting signal layers 0–2 whose through barrel covered a foreign terminal on layer 3. The next detailed-routing cell could not escape that terminal. Intercepting the candidate and repaired output showed the via-to-terminal distance was 0.27281 mm, below their 0.28 mm combined copper radius and the 0.39 mm required distance including clearance.
 
-The source change adds an optional physical via-to-port distance to the existing search (26 production lines). The consumer enables it explicitly only when a physical regional repair reconstructs movable preloaded copper (16 production lines). These replacements become preloaded copper for subsequent cells. Ordinary routing and regions containing only immutable native preloads retain their existing selection. No search strategy, sampling limit, tie breaker, extra budget, board-model propagation, or final-repair change is added.
+The fix adds an optional via-to-port distance predicate to the existing A01 search (26 changed production lines). The consumer enables it only for physical regional repairs that reconstruct movable preloaded copper (16 added adapter lines). All vias in that joint repair must leave the fixed terminals usable. Routing strategies, ordering, costs, budgets, general board-model propagation and final repair behavior are unchanged.
 
-Broader activation was rejected: it changed DDR routing and introduced copper contacts. An endpoint-layer exclusion was also rejected because it stopped the original circuit earlier. Passing extra fixed-route context to global repair and changing the deferred contact guard did not pass both DDR regression samples, so neither is included. The final explicit scope retains the 207-cell gain and restores both native DDR samples to their original DRC-clean snapshots.
+A smaller final-output-only check was tested: it rejected the unsafe candidate but stopped at 1,421 cells. Checking only preloaded via connections or only other endpoint layers also stopped at 1,421. Applying the complete geometric constraint during A01 selection produces a valid escape and reaches 1,684 cells. The source change extends the existing search rather than adding a routing strategy. Grid-mapping and rectangle-layer-filter alternatives recovered none of 556 captured failed leaf cases.
 
-Source Bun CI and source/consumer builds pass. The final consumer's nine Bun CI shards and frozen-lock 19-board comparison are running; their outcomes will be recorded below.
-
-## Real reproduction
-
-Two connection pairs are retained from an actual captured regional candidate. Coordinates are translated and identities are anonymized; geometry, layers, grid, copper dimensions, and route order are retained. The autorouter snapshot converts the observed 2x search frame back to board-world millimetres. It uses the regular `getBugReportSnapshotSvg` helper in a fixed before/after frame. Both native PCB PNGs were visually inspected. Cut-terminal continuity is disabled because this is a subcircuit without pads at its cut boundary; all copper checks remain enabled.
-
-| Real subcircuit | Before | After |
+| Captured real input | Before | After |
 | --- | ---: | ---: |
-| Copper DRC errors | 1 | 0 |
-| Routed connections | 2/2 | 2/2 |
-| Terminals inside foreign through-via clearance | 1 | 0 |
+| Subcircuit copper DRC errors | 1 | 0 |
+| Subcircuit connections routed | 2/2 | 2/2 |
+| Full detailed-routing input: cells completed | 1,477 | 1,684 |
+| Internal route pieces | 3,312 | 3,605 |
+| Detailed-routing iterations before stopping | 432,804 | 278,385 |
+| Complete original boards | 0/19 | 0/19 |
+
+The old failure at `cmn_248 / source_net_186` disappears. Routing later stops at `topology_merge_6579 / source_net_3_mst7`. The emitted circuit still has 53 traces and 97 vias: core publishes newly routed copper only when the entire routing phase succeeds. Additional internal cells are not published board connections.
+
+## Real SVG reproduction
+
+Two connection pairs are retained from an actual observed regional candidate. Only identities and origin are changed; geometry, layers, grid, copper dimensions and route order are retained. The native PCB reproduction restores the observed 2x search frame to board-world millimetres and uses the regular `getBugReportSnapshotSvg` helper. Both native PCB and source PNGs were visually inspected. Cut-terminal continuity is disabled for this subcircuit without pads; copper DRC remains enabled. The direct repro constructor and unprotected portfolio produce identical complete route geometry.
 
 | Before | After |
 | --- | --- |
-| ![Before](https://raw.githubusercontent.com/tscircuit/tscircuit-autorouter/cc95f4c1/tests/repro/__snapshots__/through-via-terminal-window.snap.svg) | ![After](https://raw.githubusercontent.com/tscircuit/tscircuit-autorouter/a32e89447c0a1427af4c44dd9d8d4b452d2c6fdf/tests/repro/__snapshots__/through-via-terminal-window.snap.svg) |
+| ![Before](https://raw.githubusercontent.com/tscircuit/tscircuit-autorouter/44f8a36b/tests/repro/__snapshots__/through-via-terminal-window.snap.svg) | ![After](https://raw.githubusercontent.com/tscircuit/tscircuit-autorouter/4ef5518bad6c663393be9f9787cbac76b1114de6/tests/repro/__snapshots__/through-via-terminal-window.snap.svg) |
 
-## PR stack
+## All 19 boards
+
+The final paired run has the same 16 emitted copper arrays, the same error counts, and identical non-autorouting error elements on all 16 outputs. All 187 captured constructor/SRJ inputs are identical, with no added or removed inputs. The same three cases hit the render budget. Only the affected detailed-routing failure moves later. No new emitted-board regression was observed.
+
+| Blocking stage | Before | After |
+| --- | ---: | ---: |
+| Native fanout | 6 | 6 |
+| Graph pathfinding | 4 | 4 |
+| Bus lanes | 2 | 2 |
+| Detailed routing | 7 | 7 |
+
+Counts below are emitted PCB traces/vias, not the internal fanout or detailed-routing progress. Wall times are one paired run with concurrent workers; they do not establish a performance trend.
+
+| Board | Blocking stage | Emitted traces/vias, before = after | Seconds before → after |
+| --- | --- | ---: | ---: |
+| butterstick-local | Bus budget | No circuit emitted | 600.1 → 600.1 |
+| butterstick-native | Fanout | 0/0 | 199.7 → 201.0 |
+| butterstick-spaced | Bus budget | No circuit emitted | 600.2 → 600.2 |
+| glider-local | Detailed routing | 53/97 | 353.6 → 345.3 |
+| glider-native | Fanout | 0/0 | 165.7 → 165.7 |
+| glider-spaced | Graph pathfinding | 53/92 | 357.2 → 362.4 |
+| h616-default-order-local | Graph pathfinding | 16/32 | 31.3 → 31.7 |
+| h616-local | Graph pathfinding | 16/32 | 53.6 → 52.0 |
+| h616-native | Fanout | 0/0 | 335.3 → 342.4 |
+| h616-spaced | Graph pathfinding | 16/32 | 30.7 → 31.1 |
+| icepi-local | Detailed routing | 16/30 | 167.7 → 169.0 |
+| icepi-native | Fanout | 0/0 | 74.9 → 67.1 |
+| icepi-spaced | Detailed routing | 52/98 | 393.2 → 398.9 |
+| imx6-local | Detailed routing (budget) | No circuit emitted | 600.9 → 600.9 |
+| imx6-native | Fanout | 0/0 | 94.1 → 95.3 |
+| imx6-spaced | Detailed routing | 17/30 | 553.4 → 512.2 |
+| orangecrab-local | Detailed routing | 52/97 | 178.6 → 176.5 |
+| orangecrab-native | Fanout | 0/0 | 558.8 → 555.0 |
+| orangecrab-spaced | Detailed routing | 52/103 | 252.8 → 254.9 |
+
+The six native fanout cases remain at 79/91, 83/95, 123/174, 13/32, 8/32 and 139/273 connections after 256 assignment attempts each. Graph and bus failures occur before the changed routing stage. Their inputs are retained for separate investigation; this fix does not report them as complete.
+
+## Older failing capture and snapshot
+
+One existing native partial-routing SVG changes. Its functional assertions pass. This older 0.0.3257 capture already failed before the fix and still fails afterward; its internal completed cells decrease from 463 to 204, and route pieces from 802 to 353. Inspecting its repaired output identified the reason: an accepted replacement via left **0.06838 mm** clearance at a foreign terminal against a **0.089 mm** routing requirement (`0.252829 − 0.28/2 − 0.0889/2`). A separate final-output-only validator rejects the same candidate and also stops at 204 cells. The extra old prefix depended on accepting that clearance violation. This is recorded explicitly rather than treating every internal progress count as unchanged.
+
+The updated regular SVG was regenerated locally, visually inspected, and is byte-identical to CI’s received SVG (`b4bd741258695a432c943dfe236f370c86b5edc7e006c119a9698dbe3b7d9c18`). The two native DDR regression samples remain solved and DRC-clean with their original snapshots. No production renderer was changed.
+
+## Pipeline and runtime verification
+
+Preloaded copper remains in the SRJ trace list. In the observed local phases, trace counts grow from 0 to 8 to 16 while obstacle counts lacking Circuit JSON metadata remain constant at 10, 12 or 4 by circuit family. Detailed routing receives native fixed-route primitives and real pad obstacles.
+
+Blacksmith 32-vCPU ARM Ubuntu 24.04, Bun 1.4.3, 19 concurrent renders, 600 seconds each. Baseline run: https://github.com/tscircuit/tscircuit-autorouter/actions/runs/45049784828 . Final paired run: https://github.com/tscircuit/tscircuit-autorouter/actions/runs/45061903558 . Candidate artifact 14770376506 has SHA-256 `e16bcfe69a7bc0d8dcdc196ca40a83e6b03435f932109da0e2a2525df5baeebb`.
+
+The source-equivalent change is applied to the release entry and decoded/re-serialized Bun and Node worker sources. Per-bundle hashes are retained. All three outer bundles and both embedded worker bodies pass parser checks. Source and patched release have equal constructor inputs and complete route geometry with protection enabled and disabled, plus four equal regional activation cases. `source-equivalence.json` records the hashes. The final PR’s production files equal the verified production commit; later changes repair test typing/formatting and update the native SVG.
+
+Broader prototypes are superseded. Unconditional activation, general board-model forwarding, extra final fixed-route repair context, and changing the deferred contact guard did not pass regression checks and are not included.
+
+## PRs and checks
 
 - Source repro: https://github.com/tscircuit/high-density-a01/pull/153
 - Source fix: https://github.com/tscircuit/high-density-a01/pull/154
 - Autorouter real PCB repro: https://github.com/tscircuit/tscircuit-autorouter/pull/4121
 - Autorouter integration: https://github.com/tscircuit/tscircuit-autorouter/pull/4122
 
-The source repro starts from the A01 commit already pinned by the latest autorouter, which is on the existing source PR #151. No tscircuit main-package PR was created.
-
-## Paired board methodology
-
-Blacksmith 32-vCPU ARM Ubuntu 24.04, Bun 1.4.3, 19 concurrent TSX renders, 600 seconds per board. The candidate installs the baseline's exact frozen lockfile. The source-equivalent change is applied to the release entry and the decoded/re-serialized Bun and Node worker sources. Per-bundle hashes and source commits are captured. All three bundles pass parser checks. A separate source/release comparison verifies equal constructor inputs and complete route geometry with the rule both disabled and enabled, plus four regional activation cases (`source-equivalence.json`). Earlier candidate runs are superseded and are not final regression evidence.
-
-## Captured detailed-routing replay
-
-The explicitly scoped production change was replayed against the same captured detailed-routing constructor input. The old failure at the fourth-layer boundary terminal disappears. Another independently constrained region still prevents completion.
-
-| Captured detailed-routing input | Before | After |
-| --- | ---: | ---: |
-| Mesh cells completed | 1,477 | 1,684 |
-| Route pieces emitted internally | 3,312 | 3,605 |
-| Detailed-routing iterations | 432,804 | 278,385 |
-
-These are internal pipeline counts, not fully connected board nets. The observed source/consumer subcircuit remains two connections routed in both versions.
-
-The remaining native fanout results are 79/91, 83/95, 123/174, 13/32, 8/32 and 139/273 connections across the six circuit families after 256 assignment attempts each. They stop before this fix's routing stage. The graph-search cases also fail before detailed routing. The two bus cases remain bounded by the 600-second render budget. These upstream failures need separate routing work; this change does not report them as complete.
-
-The observer also verifies saved copper remains in the SRJ trace list. In the local cases, native fixed traces grow from 0 to 8 to 16 while the count of obstacles lacking Circuit JSON metadata stays constant (10, 12, or 4 by board family), rather than growing by hundreds of rectangles per trace. Detailed routing receives native fixed-route primitives and real pad obstacles.
+The source starts from the A01 commit already pinned by the latest autorouter (existing source PR #151). No tscircuit main-package PR was created. Source Bun CI and builds pass. The corrected consumer repro passes all nine Bun shards, type, format, build and Vercel checks. The final integration’s nine-shard run is still running; completion will be recorded before handing over.

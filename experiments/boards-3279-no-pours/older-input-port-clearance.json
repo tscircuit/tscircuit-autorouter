@@ -1,0 +1,25 @@
+{
+  "node": "topology_merge_13599",
+  "route": "source_net_43_fixed_37_4",
+  "via": {
+    "center": {
+      "x": 17.093214436501313,
+      "y": 6.404950920174919
+    },
+    "minZ": 0,
+    "maxZ": 5,
+    "diameter": 0.28
+  },
+  "port": {
+    "portPointId": "ce46454_preloadgap0_z1::1",
+    "x": 17.339999999999996,
+    "y": 6.349999999999982,
+    "z": 1,
+    "connectionName": "source_net_139",
+    "rootConnectionName": "connectivity_net10",
+    "nextPortPointId": "ce46442_preloadgap0_z1::1"
+  },
+  "distance": 0.25282942467093295,
+  "radius": 0.27344999999999997,
+  "physicalOverlap": false
+}
