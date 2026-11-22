@@ -31,7 +31,7 @@ The integration also updates the existing routed-circuit repro snapshot using `g
 
 All six originally failing cases now pass locally: pedometer high-density routing, pedometer low-effort graph routing, OV9281 regional repair, canonical preloaded-port duplication, native fixed-trace routing, and the full-board DDR clearance snapshot. Only the changed native fixed-trace PCB snapshot needed updating. The private local dependency overlay initially held stale B01/A13 checkouts; after aligning to the repo pins and regenerating, the local snapshot is byte-identical to CI’s received SVG. Its functional routing assertions already pass and it retains zero relaxed DRC errors. The full-board clearance snapshot remains unchanged.
 
-A focused regression test ensures that greedy finishing still accepts movable-route crossings. Source CI tests pass. Fresh full autorouter CI is running at https://github.com/tscircuit/tscircuit-autorouter/actions/runs/45027269618. The original failure inventory is in `initial-ci-regressions.json`.
+A focused regression test ensures that greedy finishing still accepts movable-route crossings. Source CI tests pass. All nine final autorouter Bun CI shards pass at https://github.com/tscircuit/tscircuit-autorouter/actions/runs/45027269618. The successful head, jobs, and conclusions are recorded in `final-ci.json`. The original failure inventory is in `initial-ci-regressions.json`.
 
 ## All-board benchmark
 
