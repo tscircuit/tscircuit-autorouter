@@ -28,7 +28,7 @@ The focused native example now completes **3/3 requests using 2 vias**. The comp
 
 ## Controlled comparison with the previous PR
 
-[Replay run 45022398643](https://github.com/tscircuit/tscircuit-autorouter/actions/runs/45022398643) starts both implementations from exactly the same original best assignment in each of the ten full-circuit captures. It reruns only the final plane recovery pass, isolating this reviewer change from wall-clock assignment-search differences. Previous source: `c19eb7f80f2ddd7b9c21a07d87b8a6ae4c7b9f88`; prototype source: `ee0c50148fb4a8073022bda1c63e1a6902d4b8e7`. Production source `02d798e4357a39804f9744b059baabc3e94b4612` makes variable names clearer and updates the repro assertions/snapshots, with the same routing logic. Final reviewed head `16d9e5754f5a60aff9978fd6546f635430c894c9` additionally updates the affected native ButterStick and U22 repro expectations; its production library is identical.
+[Replay run 45022398643](https://github.com/tscircuit/tscircuit-autorouter/actions/runs/45022398643) starts both implementations from exactly the same original best assignment in each of the ten full-circuit captures. It reruns only the final plane recovery pass, isolating this reviewer change from wall-clock assignment-search differences. Previous source: `c19eb7f80f2ddd7b9c21a07d87b8a6ae4c7b9f88`; prototype source: `ee0c50148fb4a8073022bda1c63e1a6902d4b8e7`. Production source `02d798e4357a39804f9744b059baabc3e94b4612` makes variable names clearer and updates the repro assertions/snapshots, with the same routing logic. Final reviewed head `6a87a557fc124b1ce29ffdd2a8a9d530127861e2` additionally updates the affected native ButterStick and U22 repro expectations; its production library is identical.
 
 | Metric, identical captured assignments | Previous PR | Via reuse |
 |---|---:|---:|
@@ -64,7 +64,7 @@ The original Blacksmith workflow was rerun from Core `c00a55255f10b52a1d39117ee3
 '''
 for r in rows:
  s=r['sample'];text+=f"| {s} | {r['requested']} | {r['before']} → {r['after']} | {r['vias'][0]} → {r['vias'][1]} | {r['assignments'][0]} → {r['assignments'][1]} | {r['commonPrefixBest'][0]} → {r['commonPrefixBest'][1]} | [before]({s}-before.svg) · [after]({s}-after.svg) |\n"
-text+='\nTimed cases are reported separately; the raw outputs are not described as equivalent completed work. Original assignment histories match exactly at every common completed prefix. The frozen comparison above isolates the via-reuse behavior. `statistics.json` retains raw gained/lost identities, all structural checks, length, circuit/pad counts, connected full-board nets and exact PCB hashes.\n'
+text+='\nGlider spaced completes 36 → 35 assignments before timeout: raw best escapes are 137 → 135, with 9 before-only and 7 after-only requests; both runs reach 135 at common completed work. H616 spaced completes 193 assignments in both runs with 111 escapes. Timed cases are reported separately; the raw outputs are not described as equivalent completed work. Original assignment histories match exactly at every common completed prefix. The frozen comparison above isolates the via-reuse behavior. `statistics.json` retains raw gained/lost identities, all structural checks, length, circuit/pad counts, connected full-board nets and exact PCB hashes.\n'
 text+='''
 ## Scope and failure locations
 
@@ -82,7 +82,7 @@ The ordinary assignment search is unchanged. Reuse is tried only in the existing
 
 [Repro #372](https://github.com/tscircuit/fanout-solver/pull/372) remains the base of [fix #373](https://github.com/tscircuit/fanout-solver/pull/373). Native focused and complete U22 SVG snapshots update naturally in the stacked fix. Existing performance repro assertions/snapshots are updated to the actual eleven-via output.
 
-Exact-head type/format checks pass. All eight native macOS test shards pass in [45024229833](https://github.com/tscircuit/fanout-solver/actions/runs/45024229833). The [independent all-ten full-pipeline audit](https://github.com/tscircuit/tscircuit-autorouter/actions/runs/45023168296) passes constructor equality, original component/pad/net membership, CUI electrical-net identity, native copper DRC, independent pad/drill restrictions, physical reused-via ownership, bus atomicity, plane endpoints, route correctness and common-prefix assignment histories. Original geometry is retained for every equal-256-assignment comparison. Via and wire-length measurements are reported, including raw timed differences.
+Exact-head type/format checks pass. All eight native macOS test shards pass in [45025005681](https://github.com/tscircuit/fanout-solver/actions/runs/45025005681). The [independent all-ten full-pipeline audit](https://github.com/tscircuit/tscircuit-autorouter/actions/runs/45023168296) passes constructor equality, original component/pad/net membership, CUI electrical-net identity, native copper DRC, independent pad/drill restrictions, physical reused-via ownership, bus atomicity, plane endpoints, route correctness and common-prefix assignment histories. Original geometry is retained for every equal-256-assignment comparison. Via and wire-length measurements are reported, including raw timed differences.
 
 | Original focused repro | Revised fix |
 |---|---|
