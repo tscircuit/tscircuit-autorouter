@@ -1,0 +1,42 @@
+name: Inspect native track-preference route deltas and capture a real fixture
+on:
+  push:
+    branches: [analysis/e2e-inspect-track-preference-2461]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Wait for native candidate experiment
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh run watch 45074557558 --repo tscircuit/tscircuit-autorouter --exit-status --interval 30
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45071220846
+          pattern: native-*-source-tracks
+          path: before
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45074557558
+          pattern: native-*-source-track-preference
+          path: after
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45070654984
+          name: full-circuit-interception-icepi-spaced
+          path: capture
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Compare actual gained and lost buses and export the native fixture
+        run: python3 experiments/e2e-samples-20261120/inspect-track-preference2461.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: track-preference-inspection
+          path: inspection
