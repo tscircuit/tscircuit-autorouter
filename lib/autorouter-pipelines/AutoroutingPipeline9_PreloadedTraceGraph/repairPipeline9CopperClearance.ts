@@ -1,3 +1,4 @@
+import { shortenPairedFanoutTrees } from "./shortenPairedFanoutTrees"
 import { getPinRowEscapeCandidates } from "./getPinRowEscapeCandidates"
 import { type ClearancePathInput, findClearancePath } from "@tscircuit/repair04"
 import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
@@ -247,5 +248,5 @@ export function repairPipeline9CopperClearance(
     }
     if (current === previous) break
   }
-  return current
+  return shortenPairedFanoutTrees(input, current, evaluate)
 }
