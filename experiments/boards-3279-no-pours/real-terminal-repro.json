@@ -1,0 +1,27 @@
+{
+  "fixtureEqualsCompleteCapturedConstructor": true,
+  "terminalCount": 52,
+  "constructorSha256": "edc4c08cbd6fa67f0c0e982b285ec1e5ed85cddfe7437c9488088bba16816001",
+  "results": [
+    {
+      "protectFixedPortsFromVias": false,
+      "solved": true,
+      "routedConnections": 26,
+      "directEqualsPortfolioRoutes": true,
+      "routeSha256": "01744e2fb1a095302c4587990b46bb82432e50a692b79217051ce39702c09214",
+      "blockedTerminalCount": 4,
+      "distinctBlockedTerminalCount": 4,
+      "endpointCopperGapMm": -0.007691868704603755
+    },
+    {
+      "protectFixedPortsFromVias": true,
+      "solved": true,
+      "routedConnections": 26,
+      "directEqualsPortfolioRoutes": true,
+      "routeSha256": "f7614dde063ac321b5932e6808ca1ee18c1fada04e0c02e115a3cd839836671b",
+      "blockedTerminalCount": 0,
+      "distinctBlockedTerminalCount": 0,
+      "endpointCopperGapMm": 0.14765518001799427
+    }
+  ]
+}

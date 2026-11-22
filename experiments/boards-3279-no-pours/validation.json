@@ -1,13 +1,14 @@
 {
   "sourceFix": {
-    "commit": "ef5f73daea12db0cfcb12e7ad61ebd54bde3549e",
-    "run": 45059480330,
+    "commit": "53117459c90f117403e0452511921aa7e1e9302b",
+    "run": 45072506932,
     "status": "success",
-    "build": "success"
+    "productionEqualsPreviousFix": true
   },
   "autorouterRepro": {
-    "commit": "44f8a36b5a3d830770d8bd4f4552fe7eca202dfc",
-    "run": 45062614803,
+    "commit": "8895a36f9fa7c728ac76460cb0cec01887714aac",
+    "run": 45072941587,
+    "status": "success",
     "bunShardsPassed": 9,
     "typeCheck": "success",
     "formatCheck": "success",
@@ -15,10 +16,11 @@
     "vercelBuild": "success"
   },
   "autorouterFix": {
-    "commit": "4ef5518bad6c663393be9f9787cbac76b1114de6",
-    "run": 45065013481,
-    "bunShardsPassed": 9,
+    "commit": "63aba983458a0e4ac53cdd94983704f551022e55",
+    "run": 45072968679,
     "status": "success",
+    "bunShardsPassed": 9,
+    "focusedTypeCheck": "success",
     "localBuild": "ESM and DTS pass"
   },
   "originalBoards": {
@@ -39,10 +41,74 @@
   },
   "beforeAfterAssets": {
     "allHttpStatus": 200,
-    "pcbBeforeSha256": "867ec1d504ff1669363459e39648b09619c79caf9abdb3276d10347984450004",
-    "pcbAfterSha256": "5792637c2e8d520ee7ccb681f8c491d5ab21fb4957f46fd87735b9c1377d9dbd",
-    "sourceBeforeSha256": "054eb6983b184ca342ee16df79870dcace2913f6621bb30ab56fcecc62300d0d",
-    "sourceAfterSha256": "53e1af7f490e04c2a239301a0ccc78d8d67017ca07bc494338a4cedca32bef97",
-    "visuallyInspected": true
+    "nativePngsVisuallyInspected": 4,
+    "sameCompleteSolveForBothViews": true,
+    "snapshots": {
+      "before/through-via-terminal-window.snap.svg": {
+        "bytes": 353815,
+        "sha256": "f73711eed0221b0701172a9520c6015c78fef060dc35dc4774ed3227da2d166b"
+      },
+      "before/through-via-terminal-window-bottom-detail.snap.svg": {
+        "bytes": 92918,
+        "sha256": "6ff39dbb7210f88edc8b0d8bdf7de007c0157e48d9550d524a136232a15b25e8"
+      },
+      "after/through-via-terminal-window.snap.svg": {
+        "bytes": 354011,
+        "sha256": "9ec8c5561ffc00c330b0d9140a284d78aa1558dad1f94ec9cd76a8f6041e56ad"
+      },
+      "after/through-via-terminal-window-bottom-detail.snap.svg": {
+        "bytes": 94017,
+        "sha256": "2ba80747549b1ceb6b57828dd507f833825f7aa6e8b1f270509657f2094d4c49"
+      }
+    }
+  },
+  "previousReproValidation": {
+    "sourceFix": {
+      "commit": "ef5f73daea12db0cfcb12e7ad61ebd54bde3549e",
+      "run": 45059480330,
+      "status": "success",
+      "build": "success"
+    },
+    "autorouterRepro": {
+      "commit": "44f8a36b5a3d830770d8bd4f4552fe7eca202dfc",
+      "run": 45062614803,
+      "bunShardsPassed": 9,
+      "typeCheck": "success",
+      "formatCheck": "success",
+      "build": "success",
+      "vercelBuild": "success"
+    },
+    "autorouterFix": {
+      "commit": "4ef5518bad6c663393be9f9787cbac76b1114de6",
+      "run": 45065013481,
+      "bunShardsPassed": 9,
+      "status": "success",
+      "localBuild": "ESM and DTS pass"
+    },
+    "beforeAfterAssets": {
+      "allHttpStatus": 200,
+      "pcbBeforeSha256": "867ec1d504ff1669363459e39648b09619c79caf9abdb3276d10347984450004",
+      "pcbAfterSha256": "5792637c2e8d520ee7ccb681f8c491d5ab21fb4957f46fd87735b9c1377d9dbd",
+      "sourceBeforeSha256": "054eb6983b184ca342ee16df79870dcace2913f6621bb30ab56fcecc62300d0d",
+      "sourceAfterSha256": "53e1af7f490e04c2a239301a0ccc78d8d67017ca07bc494338a4cedca32bef97",
+      "visuallyInspected": true
+    }
+  },
+  "autorouterVisualization": {
+    "commit": "d1b156bec928e93283587904e1a34eb749a8179a",
+    "run": 45072955601,
+    "status": "success",
+    "bunShardsPassed": 9
+  },
+  "localValidation": {
+    "focusedSnapshots": "pass",
+    "focusedTypeCheck": "pass",
+    "consumerEsmAndDtsBuild": "pass",
+    "routingProductionFilesEqualPriorBenchmarkedFix": true
+  },
+  "sourceRepro": {
+    "commit": "eb772de73d36f2c935af760b8430291b11eac210",
+    "run": 45072469007,
+    "status": "success"
   }
 }

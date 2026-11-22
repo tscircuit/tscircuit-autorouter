@@ -14,8 +14,9 @@ A smaller final-output-only check was tested: it rejected the unsafe candidate b
 
 | Captured real input | Before | After |
 | --- | ---: | ---: |
-| Subcircuit copper DRC errors | 1 | 0 |
-| Subcircuit connections routed | 2/2 | 2/2 |
+| Complete subcircuit relaxed copper DRC errors | 14 | 10 |
+| Subcircuit connections routed | 26/26 | 26/26 |
+| Foreign terminals inside required via clearance | 4 | 0 |
 | Full detailed-routing input: cells completed | 1,477 | 1,684 |
 | Internal route pieces | 3,312 | 3,605 |
 | Detailed-routing iterations before stopping | 432,804 | 278,385 |
@@ -25,11 +26,14 @@ The old failure at `cmn_248 / source_net_186` disappears. Routing later stops at
 
 ## Real SVG reproduction
 
-Two connection pairs are retained from an actual observed regional candidate. Only identities and origin are changed; geometry, layers, grid, copper dimensions and route order are retained. The native PCB reproduction restores the observed 2x search frame to board-world millimetres and uses the regular `getBugReportSnapshotSvg` helper. Both native PCB and source PNGs were visually inspected. Cut-terminal continuity is disabled for this subcircuit without pads; copper DRC remains enabled. The direct repro constructor and unprotected portfolio produce identical complete route geometry.
+The repro now retains the complete observed regional candidate: 52 terminals and 26 connections, with no reduction, coordinate translation or identity changes in the constructor fixture. Its JSON equals the captured constructor props. The test restores the observed 2x search frame to board-world millimetres about the candidate center. Cut-terminal continuity is disabled because pads outside this region are absent; benchmark relaxed copper DRC remains enabled. Both versions route all 26 connections; other existing DRC errors remain.
 
-| Before | After |
-| --- | --- |
-| ![Before](https://raw.githubusercontent.com/tscircuit/tscircuit-autorouter/44f8a36b5a3d830770d8bd4f4552fe7eca202dfc/tests/repro/__snapshots__/through-via-terminal-window.snap.svg) | ![After](https://raw.githubusercontent.com/tscircuit/tscircuit-autorouter/4ef5518bad6c663393be9f9787cbac76b1114de6/tests/repro/__snapshots__/through-via-terminal-window.snap.svg) |
+The native PCB renderer uses the complete routed result for both views. The overview shows the whole subcircuit; the bottom-layer close-up changes only the camera and visible layer, with identical before/after bounds. Blue is bottom copper and red rings are through vias. The foreign endpoint overlaps the nearest via by 0.00769 mm before the fix and has 0.14766 mm copper clearance afterward. All four revised native PCB PNGs were visually inspected, and all four public SVG links return HTTP 200. The checked-in SVG paths are identical across the stack so the routing fix creates a normal GitHub snapshot diff.
+
+| View | Before | After |
+| --- | --- | --- |
+| Complete subcircuit | ![Before](https://raw.githubusercontent.com/tscircuit/tscircuit-autorouter/d1b156bec928e93283587904e1a34eb749a8179a/tests/repro/__snapshots__/through-via-terminal-window.snap.svg) | ![After](https://raw.githubusercontent.com/tscircuit/tscircuit-autorouter/63aba983458a0e4ac53cdd94983704f551022e55/tests/repro/__snapshots__/through-via-terminal-window.snap.svg) |
+| Bottom-layer close-up | ![Before](https://raw.githubusercontent.com/tscircuit/tscircuit-autorouter/d1b156bec928e93283587904e1a34eb749a8179a/tests/repro/__snapshots__/through-via-terminal-window-bottom-detail.snap.svg) | ![After](https://raw.githubusercontent.com/tscircuit/tscircuit-autorouter/63aba983458a0e4ac53cdd94983704f551022e55/tests/repro/__snapshots__/through-via-terminal-window-bottom-detail.snap.svg) |
 
 ## All 19 boards
 
@@ -72,7 +76,7 @@ The six native fanout cases remain at 79/91, 83/95, 123/174, 13/32, 8/32 and 139
 
 One existing native partial-routing SVG changes. Its functional assertions pass. This older 0.0.3257 capture already failed before the fix and still fails afterward; its internal completed cells decrease from 463 to 204, and route pieces from 802 to 353. Inspecting its repaired output identified the reason: an accepted replacement via left **0.06838 mm** clearance at a foreign terminal against a **0.089 mm** routing requirement (`0.252829 − 0.28/2 − 0.0889/2`). A separate final-output-only validator rejects the same candidate and also stops at 204 cells. The extra old prefix depended on accepting that clearance violation. This is recorded explicitly rather than treating every internal progress count as unchanged.
 
-The updated regular SVG was regenerated locally, visually inspected, and is byte-identical to CI’s received SVG (`b4bd741258695a432c943dfe236f370c86b5edc7e006c119a9698dbe3b7d9c18`). The two native DDR regression samples remain solved and DRC-clean with their original snapshots. No production renderer was changed.
+The updated regular SVG was regenerated locally, visually inspected, and is byte-identical to CI’s received SVG (`b4bd741258695a432c943dfe236f370c86b5edc7e006c119a9698dbe3b7d9c18`). The two native DDR regression samples remain solved and DRC-clean with their original snapshots. The optional native PCB view is a separate visualization change; default graphics snapshots retain their existing rendering.
 
 ## Pipeline and runtime verification
 
@@ -89,6 +93,9 @@ Broader prototypes are superseded. Unconditional activation, general board-model
 - Source repro: https://github.com/tscircuit/high-density-a01/pull/153
 - Source fix: https://github.com/tscircuit/high-density-a01/pull/154
 - Autorouter real PCB repro: https://github.com/tscircuit/tscircuit-autorouter/pull/4121
+- Autorouter visualization: https://github.com/tscircuit/tscircuit-autorouter/pull/4127
 - Autorouter integration: https://github.com/tscircuit/tscircuit-autorouter/pull/4122
 
-The source starts from the A01 commit already pinned by the latest autorouter (existing source PR #151). No tscircuit main-package PR was created. Source Bun CI and builds pass. The corrected consumer repro passes all nine Bun shards, type, format, build and Vercel checks. All nine final integration shards pass: https://github.com/tscircuit/tscircuit-autorouter/actions/runs/45065013481 . Repro CI: https://github.com/tscircuit/tscircuit-autorouter/actions/runs/45062614803 . Source fix CI: https://github.com/tscircuit/high-density-a01/actions/runs/45059480330 . Both fixes are ready for review.
+The source starts from the A01 commit already pinned by the latest autorouter (existing source PR #151). No tscircuit main-package PR was created. The consumer stack is repro #4121 → visualization #4127 → routing fix #4122. The visualization PR adds an opt-in native PCB camera and layer view to the existing snapshot helper using the already installed renderer. The routing production files are unchanged from the benchmarked fix.
+
+The revised source fix passes Bun CI: https://github.com/tscircuit/high-density-a01/actions/runs/45072506932 . Local focused snapshot tests, the focused type check, and the consumer ESM/DTS build pass. All nine Bun shards pass on each revised consumer PR: [repro 8895a36f](https://github.com/tscircuit/tscircuit-autorouter/actions/runs/45072941587), [visualization d1b156be](https://github.com/tscircuit/tscircuit-autorouter/actions/runs/45072955601), and [fix 63aba983](https://github.com/tscircuit/tscircuit-autorouter/actions/runs/45072968679). The repro also passes type, format, build and Vercel checks. Source repro CI passes: https://github.com/tscircuit/high-density-a01/actions/runs/45072469007 . Final results and asset hashes are recorded in validation.json; real-terminal-repro.json records complete-constructor equality, portfolio/direct output hashes, and measured endpoint clearance.
