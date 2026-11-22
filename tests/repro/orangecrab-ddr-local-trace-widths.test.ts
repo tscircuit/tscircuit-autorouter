@@ -5,7 +5,7 @@ test("measures OrangeCrab A11 copper at its requested DDR width", async (): Prom
   const { boardSvg, traceSvg, traceLengthMm, traceNominalMm } =
     getDdrLocalWidthSnapshots("orangecrab", "source_net_3")
   expect(traceLengthMm).toBeCloseTo(12.6296092, 5)
-  expect(traceNominalMm).toBe(0)
+  expect(traceNominalMm).toBeCloseTo(6.9465975, 5)
   await expect(boardSvg).toMatchSvgSnapshot(import.meta.path, {
     svgName: "board",
     scale: 1,

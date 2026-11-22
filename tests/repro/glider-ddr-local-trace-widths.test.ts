@@ -5,7 +5,7 @@ test("measures Glider ADDR3 copper at its requested DDR width", async (): Promis
   const { boardSvg, traceSvg, traceLengthMm, traceNominalMm } =
     getDdrLocalWidthSnapshots("glider", "source_net_8")
   expect(traceLengthMm).toBeCloseTo(34.1787052, 5)
-  expect(traceNominalMm).toBe(0)
+  expect(traceNominalMm).toBeCloseTo(26.2615910, 5)
   await expect(boardSvg).toMatchSvgSnapshot(import.meta.path, {
     svgName: "board",
     scale: 1,

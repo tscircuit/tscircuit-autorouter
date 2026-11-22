@@ -16,6 +16,7 @@ import { getJumpersGraphics } from "lib/utils/getJumperGraphics"
 import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
 import { isObstacleConnectedToRoute } from "lib/solvers/TraceWidthSolver/isObstacleConnectedToRoute"
 import { getSegmentToObstacleDistance } from "lib/utils/getSegmentToObstacleDistance"
+import { widenClearInteriorSegments } from "./widenClearInteriorSegments"
 
 const CURSOR_STEP_DISTANCE = 0.1
 const MIN_TERMINAL_TAPER_DISTANCE = 0.75
@@ -149,9 +150,11 @@ export class TraceWidthSolver extends BaseSolver {
   refineWidths({
     hdRoutes,
     otherHdRoutes = [],
+    board,
   }: {
     hdRoutes: HighDensityRoute[]
     otherHdRoutes?: HighDensityRoute[]
+    board?: SimpleRouteJson
   }): HighDensityRoute[] {
     if (!this.solved) {
       throw new Error("Width refinement requires completed width selection")
@@ -161,6 +164,10 @@ export class TraceWidthSolver extends BaseSolver {
     this.processedRoutes = []
     let indexReady = false
     let widthsChanged = false
+    const routesWithNeckdowns: Array<{
+      routeIndex: number
+      nominalWidth: number
+    }> = []
     for (const route of hdRoutes) {
       const nominalWidth = this.getNominalTraceWidthForRoute(route)
       if (nominalWidth === undefined || route.route.length < 2) {
@@ -171,7 +178,13 @@ export class TraceWidthSolver extends BaseSolver {
         (point): boolean =>
           (point.traceThickness ?? route.traceThickness) >= nominalWidth,
       )
-      if (hasRequestedWidth) {
+      if (
+        hasRequestedWidth ||
+        route.route.some(
+          (point) =>
+            (point.traceThickness ?? route.traceThickness) > nominalWidth,
+        )
+      ) {
         this.processedRoutes.push(route)
         continue
       }
@@ -193,10 +206,37 @@ export class TraceWidthSolver extends BaseSolver {
         this.finalizeCurrentTrace(nominalWidth)
         widthsChanged = true
       } else {
+        routesWithNeckdowns.push({
+          routeIndex: this.processedRoutes.length,
+          nominalWidth,
+        })
         this.processedRoutes.push(route)
         this.currentTrace = null
       }
     }
+
+    // Reserve each complete nominal-width route before widening individual
+    // segments. An earlier neckdown must not displace an already feasible net.
+    for (const { routeIndex, nominalWidth } of routesWithNeckdowns) {
+      const route = this.processedRoutes[routeIndex]!
+      this.currentTrace = route
+      this.currentTargetWidth = nominalWidth
+      const requiredClearance = nominalWidth / 2 + this.obstacleMargin
+      const refined = widenClearInteriorSegments({
+        board,
+        route,
+        nominalWidth,
+        hasClearance: (start, end) =>
+          this.getClearanceForSegment(start, end) >= requiredClearance,
+      })
+      if (refined !== route) {
+        this.hdRouteSHI.removeRoute(route.connectionName)
+        this.hdRouteSHI.addRoute(refined)
+        this.processedRoutes[routeIndex] = refined
+        widthsChanged = true
+      }
+    }
+    this.currentTrace = null
     this.refiningWidths = false
     this.hdRoutesWithWidths = this.processedRoutes
     if (!widthsChanged) return hdRoutes
@@ -508,7 +548,13 @@ export class TraceWidthSolver extends BaseSolver {
         clearance = Math.min(
           clearance,
           segmentToSegmentMinDistance(start, end, a, b) -
-            (a.traceThickness ?? route.traceThickness) / 2,
+            (this.refiningWidths
+              ? Math.max(
+                  a.traceThickness ?? route.traceThickness,
+                  b.traceThickness ?? route.traceThickness,
+                )
+              : (a.traceThickness ?? route.traceThickness)) /
+              2,
         )
       }
       // The spatial index returns owning routes for both traces and vias.

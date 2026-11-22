@@ -18,7 +18,13 @@ export type HighDensityIntraNodeRoute = {
   rootConnectionName?: string // Parent connection for merged routes
   traceThickness: number
   viaDiameter: number // Now used in conflict calculation
-  route: Array<{ x: number; y: number; z: number; insideJumperPad?: boolean }>
+  route: Array<{
+    x: number
+    y: number
+    z: number
+    insideJumperPad?: boolean
+    traceThickness?: number
+  }>
   vias: Array<{ x: number; y: number }> // Will be indexed
   jumpers?: Jumper[]
 }
@@ -83,6 +89,7 @@ function segmentToSegmentDistanceSq(
 
 // --- New Interfaces for Bucket Contents ---
 interface StoredSegment {
+  searchRadius: number
   segmentId: string
   segment: [Point, Point] // Keep original Point type if needed by other parts
   parentRoute: HighDensityRoute
@@ -104,89 +111,10 @@ export class HighDensityRouteSpatialIndex {
   private maximumCopperRadius = 0
 
   constructor(routes: HighDensityRoute[], cellSize: number = 1.0) {
-    // console.time("HighDensityRouteSpatialIndex Constructor");
     this.segmentBuckets = new Map()
-    this.viaBuckets = new Map() // Initialize via buckets
+    this.viaBuckets = new Map()
     this.CELL_SIZE = cellSize
-    const epsilon = 1e-9 // For segment boundary checks
-
-    for (const route of routes) {
-      if (!route || !route.connectionName) {
-        console.warn("Skipping route with missing data:", route)
-        continue
-      }
-      this.maximumCopperRadius = Math.max(
-        this.maximumCopperRadius,
-        route.traceThickness / 2,
-        route.viaDiameter / 2,
-      )
-
-      // --- Index Segments ---
-      if (route.route && route.route.length >= 2) {
-        for (let i = 0; i < route.route.length - 1; i++) {
-          const p1 = route.route[i]
-          const p2 = route.route[i + 1]
-          // Skip zero-length segments
-          if (p1.x === p2.x && p1.y === p2.y) continue
-          // Skip segments inside jumper pads (jumper wires are not collidable)
-          if (p1.insideJumperPad && p2.insideJumperPad) continue
-
-          const segment: Segment = [p1, p2]
-          const bounds = getSegmentBounds(segment)
-
-          const segmentInfo: StoredSegment = {
-            segmentId: `${route.connectionName}-seg-${i}`,
-            segment: segment,
-            parentRoute: route,
-          }
-
-          const minIndexX = Math.floor(bounds.minX / this.CELL_SIZE)
-          const maxIndexX = Math.floor((bounds.maxX + epsilon) / this.CELL_SIZE)
-          const minIndexY = Math.floor(bounds.minY / this.CELL_SIZE)
-          const maxIndexY = Math.floor((bounds.maxY + epsilon) / this.CELL_SIZE)
-
-          for (let ix = minIndexX; ix <= maxIndexX; ix++) {
-            for (let iy = minIndexY; iy <= maxIndexY; iy++) {
-              const bucketKey = `${ix}x${iy}` as BucketCoordinate
-              let bucketList = this.segmentBuckets.get(bucketKey)
-              if (!bucketList) {
-                bucketList = []
-                this.segmentBuckets.set(bucketKey, bucketList)
-              }
-              bucketList.push(segmentInfo)
-            }
-          }
-        }
-      }
-
-      // --- Index Vias ---
-      if (route.vias && route.vias.length > 0) {
-        for (let i = 0; i < route.vias.length; i++) {
-          const via = route.vias[i]
-          if (via === undefined || via === null) continue // Basic check
-
-          const storedVia: StoredVia = {
-            viaId: `${route.connectionName}-via-${i}`,
-            x: via.x,
-            y: via.y,
-            parentRoute: route,
-          }
-
-          // Vias belong to a single bucket
-          const ix = Math.floor(via.x / this.CELL_SIZE)
-          const iy = Math.floor(via.y / this.CELL_SIZE)
-          const bucketKey = `${ix}x${iy}` as BucketCoordinate
-
-          let bucketList = this.viaBuckets.get(bucketKey)
-          if (!bucketList) {
-            bucketList = []
-            this.viaBuckets.set(bucketKey, bucketList)
-          }
-          bucketList.push(storedVia)
-        }
-      }
-    }
-    // console.timeEnd("HighDensityRouteSpatialIndex Constructor");
+    for (const route of routes) this.addRoute(route)
   }
 
   /**
@@ -257,7 +185,7 @@ export class HighDensityRouteSpatialIndex {
             }
 
             // Required separation distance from query centerline to segment edge
-            const requiredSeparation = margin + route.traceThickness / 2
+            const requiredSeparation = margin + segmentInfo.searchRadius
             const requiredSeparationSq = requiredSeparation * requiredSeparation
 
             // Use original points for segmentToSegmentDistanceSq if it relies on the Point type
@@ -391,7 +319,18 @@ export class HighDensityRouteSpatialIndex {
         const segment: Segment = [p1, p2]
         const bounds = getSegmentBounds(segment)
 
+        const searchRadius =
+          Math.max(
+            route.traceThickness,
+            p1.traceThickness ?? route.traceThickness,
+            p2.traceThickness ?? route.traceThickness,
+          ) / 2
+        this.maximumCopperRadius = Math.max(
+          this.maximumCopperRadius,
+          searchRadius,
+        )
         const segmentInfo: StoredSegment = {
+          searchRadius,
           segmentId: `${route.connectionName}-seg-${i}`,
           segment: segment,
           parentRoute: route,
@@ -502,7 +441,7 @@ export class HighDensityRouteSpatialIndex {
               y: segmentInfo.segment[1].y,
             }
 
-            const requiredSeparation = margin + route.traceThickness / 2
+            const requiredSeparation = margin + segmentInfo.searchRadius
             const requiredSeparationSq = requiredSeparation * requiredSeparation
 
             const distSq = pointToSegmentDistanceSq(point, p1, p2)

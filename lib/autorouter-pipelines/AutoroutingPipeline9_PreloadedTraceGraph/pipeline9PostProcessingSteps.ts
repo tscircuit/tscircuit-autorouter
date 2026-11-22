@@ -186,6 +186,7 @@ export const pipeline9PostProcessingSteps = [
               .length === 0,
           refineTraceWidths: (routes: HighDensityRoute[]): HighDensityRoute[] =>
             pipeline.traceWidthSolver!.refineWidths({
+              board: pipeline.originalSrj,
               hdRoutes: routes,
               otherHdRoutes: otherHdRoutes.map(
                 (route): HighDensityRoute => ({
