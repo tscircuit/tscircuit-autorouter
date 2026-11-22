@@ -53,44 +53,47 @@ const createSameNetViaPadCircuitJson = (): AnyCircuitElement[] => [
   },
 ]
 
-test.failing("getDrcErrors allows a same-net via next to the pad its trace ends on", (): void => {
-  const { errors } = getDrcErrors(createSameNetViaPadCircuitJson(), {
-    viaToPadClearance: 0.2,
-    includeTraceContinuity: false,
-  })
-  const sameNetViaPadErrors = errors.filter(
-    (error) =>
-      error.type === "pcb_pad_pad_clearance_error" &&
-      error.pcb_pad_ids.includes("via_a") &&
-      error.pcb_pad_ids.includes("pad_a"),
-  )
-  const svg = getSvgFromGraphicsObject(
-    {
-      rects: [
-        { center: { x: 0, y: 0 }, width: 0.5, height: 0.5, fill: "#f87171" },
-      ],
-      lines: [
-        {
-          points: [
-            { x: 0, y: 0 },
-            { x: 1, y: 0 },
-          ],
-          strokeColor: "#2563eb",
-          strokeWidth: 0.1,
-        },
-      ],
-      circles: [{ center: { x: 0.6, y: 0 }, radius: 0.3, fill: "#16a34a" }],
-      texts: [
-        {
-          x: 0,
-          y: 0.8,
-          text: `Same-net via to pad errors: ${sameNetViaPadErrors.length}`,
-          fontSize: 0.12,
-        },
-      ],
-    },
-    { backgroundColor: "white" },
-  )
-  expect(svg).toMatchSvgSnapshot(import.meta.path)
-  expect(sameNetViaPadErrors).toHaveLength(0)
-})
+test.failing(
+  "getDrcErrors allows a same-net via next to the pad its trace ends on",
+  (): void => {
+    const { errors } = getDrcErrors(createSameNetViaPadCircuitJson(), {
+      viaToPadClearance: 0.2,
+      includeTraceContinuity: false,
+    })
+    const sameNetViaPadErrors = errors.filter(
+      (error) =>
+        error.type === "pcb_pad_pad_clearance_error" &&
+        error.pcb_pad_ids.includes("via_a") &&
+        error.pcb_pad_ids.includes("pad_a"),
+    )
+    const svg = getSvgFromGraphicsObject(
+      {
+        rects: [
+          { center: { x: 0, y: 0 }, width: 0.5, height: 0.5, fill: "#f87171" },
+        ],
+        lines: [
+          {
+            points: [
+              { x: 0, y: 0 },
+              { x: 1, y: 0 },
+            ],
+            strokeColor: "#2563eb",
+            strokeWidth: 0.1,
+          },
+        ],
+        circles: [{ center: { x: 0.6, y: 0 }, radius: 0.3, fill: "#16a34a" }],
+        texts: [
+          {
+            x: 0,
+            y: 0.8,
+            text: `Same-net via to pad errors: ${sameNetViaPadErrors.length}`,
+            fontSize: 0.12,
+          },
+        ],
+      },
+      { backgroundColor: "white" },
+    )
+    expect(svg).toMatchSvgSnapshot(import.meta.path)
+    expect(sameNetViaPadErrors).toHaveLength(0)
+  },
+)
