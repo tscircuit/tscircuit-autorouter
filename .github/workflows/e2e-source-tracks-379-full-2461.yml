@@ -1,7 +1,7 @@
-name: Rebenchmark uploaded full circuits on latest published Core 2461 and native autorouter
+name: Verify open source-aligned fanout fix on latest published full-circuit stack
 on:
   push:
-    branches: [analysis/e2e-latest-stack-2461-20261122]
+    branches: [analysis/e2e-source-tracks-379-full-2461]
 concurrency:
   group: e2e-uploaded-${{ github.ref }}
   cancel-in-progress: true
@@ -41,6 +41,14 @@ jobs:
             if (cd core && bun install --ignore-scripts); then break; fi
             if [ "$attempt" = 3 ]; then exit 1; fi
           done
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: 478f76a452c9cd27a06c70bb66d9d9f1b94109a6
+          path: source-track-fix
+      - name: Apply only the open source-aligned boundary candidate fix
+        run: |
+          cp source-track-fix/lib/route-bus/route-analytic-boundary-alternatives.ts core/node_modules/@tscircuit/fanout-solver/lib/route-bus/route-analytic-boundary-alternatives.ts
       - name: Prepare exact uploaded sources and record dependency revisions
         run: |
           python3 - <<'PYSAMPLES'
@@ -83,6 +91,8 @@ jobs:
           static=Path('core/node_modules/@tscircuit/fanout-solver/lib/route-bus/plan-static-clearance.ts').read_bytes()
           revisions['fanoutStaticSourceSha256']=hashlib.sha256(static).hexdigest()
           revisions['corePatchApplied']=False
+          revisions['fanoutPatchCommit']='478f76a452c9cd27a06c70bb66d9d9f1b94109a6'
+          revisions['fanoutPatchFiles']=['lib/route-bus/route-analytic-boundary-alternatives.ts']
           (runtime/'revisions.json').write_text(json.dumps(revisions,indent=2)+'\n')
           print(json.dumps(revisions))
           PYSAMPLES
