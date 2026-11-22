@@ -29,7 +29,7 @@ Two connection pairs are retained from an actual observed regional candidate. On
 
 | Before | After |
 | --- | --- |
-| ![Before](https://raw.githubusercontent.com/tscircuit/tscircuit-autorouter/44f8a36b/tests/repro/__snapshots__/through-via-terminal-window.snap.svg) | ![After](https://raw.githubusercontent.com/tscircuit/tscircuit-autorouter/4ef5518bad6c663393be9f9787cbac76b1114de6/tests/repro/__snapshots__/through-via-terminal-window.snap.svg) |
+| ![Before](https://raw.githubusercontent.com/tscircuit/tscircuit-autorouter/44f8a36b5a3d830770d8bd4f4552fe7eca202dfc/tests/repro/__snapshots__/through-via-terminal-window.snap.svg) | ![After](https://raw.githubusercontent.com/tscircuit/tscircuit-autorouter/4ef5518bad6c663393be9f9787cbac76b1114de6/tests/repro/__snapshots__/through-via-terminal-window.snap.svg) |
 
 ## All 19 boards
 
@@ -91,4 +91,4 @@ Broader prototypes are superseded. Unconditional activation, general board-model
 - Autorouter real PCB repro: https://github.com/tscircuit/tscircuit-autorouter/pull/4121
 - Autorouter integration: https://github.com/tscircuit/tscircuit-autorouter/pull/4122
 
-The source starts from the A01 commit already pinned by the latest autorouter (existing source PR #151). No tscircuit main-package PR was created. Source Bun CI and builds pass. The corrected consumer repro passes all nine Bun shards, type, format, build and Vercel checks. The final integration’s nine-shard run is still running; completion will be recorded before handing over.
+The source starts from the A01 commit already pinned by the latest autorouter (existing source PR #151). No tscircuit main-package PR was created. Source Bun CI and builds pass. The corrected consumer repro passes all nine Bun shards, type, format, build and Vercel checks. All nine final integration shards pass: https://github.com/tscircuit/tscircuit-autorouter/actions/runs/45065013481 . Repro CI: https://github.com/tscircuit/tscircuit-autorouter/actions/runs/45062614803 . Source fix CI: https://github.com/tscircuit/high-density-a01/actions/runs/45059480330 . Both fixes are ready for review.

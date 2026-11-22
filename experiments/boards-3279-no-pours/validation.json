@@ -1,0 +1,48 @@
+{
+  "sourceFix": {
+    "commit": "ef5f73daea12db0cfcb12e7ad61ebd54bde3549e",
+    "run": 45059480330,
+    "status": "success",
+    "build": "success"
+  },
+  "autorouterRepro": {
+    "commit": "44f8a36b5a3d830770d8bd4f4552fe7eca202dfc",
+    "run": 45062614803,
+    "bunShardsPassed": 9,
+    "typeCheck": "success",
+    "formatCheck": "success",
+    "build": "success",
+    "vercelBuild": "success"
+  },
+  "autorouterFix": {
+    "commit": "4ef5518bad6c663393be9f9787cbac76b1114de6",
+    "run": 45065013481,
+    "bunShardsPassed": 9,
+    "status": "success",
+    "localBuild": "ESM and DTS pass"
+  },
+  "originalBoards": {
+    "run": 45061903558,
+    "artifact": 14770376506,
+    "artifactSha256": "e16bcfe69a7bc0d8dcdc196ca40a83e6b03435f932109da0e2a2525df5baeebb",
+    "completeBefore": 0,
+    "completeAfter": 0,
+    "emittedCopperArraysIdentical": 16,
+    "nonroutingErrorArraysIdentical": 16,
+    "sameTimeouts": 3,
+    "identicalCapturedInputs": 187
+  },
+  "nativeSnapshot": {
+    "localEqualsCiReceived": true,
+    "sha256": "b4bd741258695a432c943dfe236f370c86b5edc7e006c119a9698dbe3b7d9c18",
+    "visuallyInspected": true
+  },
+  "beforeAfterAssets": {
+    "allHttpStatus": 200,
+    "pcbBeforeSha256": "867ec1d504ff1669363459e39648b09619c79caf9abdb3276d10347984450004",
+    "pcbAfterSha256": "5792637c2e8d520ee7ccb681f8c491d5ab21fb4957f46fd87735b9c1377d9dbd",
+    "sourceBeforeSha256": "054eb6983b184ca342ee16df79870dcace2913f6621bb30ab56fcecc62300d0d",
+    "sourceAfterSha256": "53e1af7f490e04c2a239301a0ccc78d8d67017ca07bc494338a4cedca32bef97",
+    "visuallyInspected": true
+  }
+}
