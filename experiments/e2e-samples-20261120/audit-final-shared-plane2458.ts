@@ -91,7 +91,15 @@ for (const sample of samples) {
   const layerSignature=a=>JSON.stringify(Object.entries(a.busLayerAssignments).sort())
   const sameAssignmentPrefix=before.state.attempts.slice(0,commonCount).every((a,i)=>layerSignature(a)===layerSignature(after.state.attempts[i]))
   const commonPrefixBest=captures.map(c=>Math.max(...c.state.attempts.slice(0,commonCount).map(a=>a.routedConnectionCount)))
+  const histories=captures.map(c=>json(join(c.folder,"pipeline-internals.json")).completedAssignments)
+  const historyCount=Math.min(...histories.map(h=>h.length))
+  const unchangedOriginalAssignmentPrefix=isDeepStrictEqual(histories[0].slice(0,historyCount),histories[1].slice(0,historyCount))
+  assert(unchangedOriginalAssignmentPrefix,sample+" original assignment decisions changed")
   const retained=before.best.plans.filter(p=>after.best.plans.some(q=>q.connectionName===p.connectionName&&isDeepStrictEqual(p,q))).length
+  if(before.state.attempts.length===256&&after.state.attempts.length===256) {
+    assert.equal(lost.length,0,sample+" lost existing routes")
+    assert.equal(retained,before.best.plans.length,sample+" changed existing route geometry")
+  }
   const beforeGeometry=new Set(before.structuralIssues.map(i=>JSON.stringify(i)))
   const newStructuralIssues=after.structuralIssues.filter(i=>!beforeGeometry.has(JSON.stringify(i)))
   assert.equal(newStructuralIssues.length,0,sample+" introduced endpoint/route issues: "+JSON.stringify(newStructuralIssues))
@@ -103,7 +111,7 @@ for (const sample of samples) {
     vias:captures.map(c=>c.drc.checkedViaCount),
     assignments:captures.map(c=>c.state.attempts.length),
     gained,lost,retainedOriginalPlans:retained,inputsEqual:true,pcbSvgEqual:pcbEqual,
-    commonCompletedAssignmentCount:commonCount,sameAssignmentPrefix,commonPrefixBest,
+    commonCompletedAssignmentCount:commonCount,sameAssignmentPrefix,commonPrefixBest,unchangedOriginalAssignmentPrefix,originalAssignmentHistoryCount:historyCount,
     independentDrillViolations:captures.map(c=>c.drillViolations),independentViaPadClearanceViolations:captures.map(c=>c.viaPadClearanceViolations),
     sourceNetMismatchPairs:captures.map(c=>c.aliasMismatches),unknownSourcePorts:captures.map(c=>c.unknownPorts),
     structuralIssues:captures.map(c=>c.structuralIssues),

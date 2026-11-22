@@ -27,11 +27,11 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           for attempt in $(seq 1 60); do
-            status=$(gh api repos/tscircuit/tscircuit-autorouter/actions/runs/45011756344 --jq .status)
+            status=$(gh api repos/tscircuit/tscircuit-autorouter/actions/runs/45013934138 --jq .status)
             if [ "$status" = completed ]; then break; fi
             sleep 15
           done
-          test "$(gh api repos/tscircuit/tscircuit-autorouter/actions/runs/45011756344 --jq .conclusion)" = success
+          test "$(gh api repos/tscircuit/tscircuit-autorouter/actions/runs/45013934138 --jq .conclusion)" = success
       - uses: actions/download-artifact@v4
         with:
           run-id: 45006486986
@@ -40,12 +40,12 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
       - uses: actions/download-artifact@v4
         with:
-          run-id: 45011756344
+          run-id: 45013934138
           pattern: full-circuit-interception-*
           path: after
           github-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Audit unchanged inputs, physical vias, bus atomicity and native copper
-        run: bun experiments/e2e-samples-20261120/audit-shared-plane2458.ts
+        run: bun experiments/e2e-samples-20261120/audit-final-shared-plane2458.ts
       - uses: actions/upload-artifact@v4
         if: always()
         with:
