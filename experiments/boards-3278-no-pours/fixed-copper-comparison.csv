@@ -1,0 +1,20 @@
+board,beforeStage,afterStage,beforeStop,afterStop,beforeTraces,afterTraces,beforeVias,afterVias,sameCopper,sameErrorCounts
+butterstick-local,bus,bus,600-second render budget,600-second render budget,,,,,,True
+butterstick-native,fanout,fanout,settled,settled,0,0,0,0,True,True
+butterstick-spaced,bus,bus,600-second render budget,600-second render budget,,,,,,True
+glider-local,highDensityRouteSolver,highDensityRouteSolver,settled,settled,53,53,97,97,True,True
+glider-native,fanout,fanout,settled,settled,0,0,0,0,True,True
+glider-spaced,portPointPathingSolver,portPointPathingSolver,settled,settled,53,53,92,92,True,True
+h616-default-order-local,portPointPathingSolver,portPointPathingSolver,settled,settled,16,16,32,32,True,True
+h616-local,portPointPathingSolver,portPointPathingSolver,settled,settled,16,16,32,32,True,True
+h616-native,fanout,fanout,settled,settled,0,0,0,0,True,True
+h616-spaced,portPointPathingSolver,portPointPathingSolver,settled,settled,16,16,32,32,True,True
+icepi-local,highDensityRouteSolver,highDensityRouteSolver,settled,settled,16,16,30,30,True,True
+icepi-native,fanout,fanout,settled,settled,0,0,0,0,True,True
+icepi-spaced,highDensityRouteSolver,highDensityRouteSolver,settled,settled,52,52,98,98,True,True
+imx6-local,highDensityRouteSolver,highDensityRouteSolver,settled,600-second render budget,17,,30,,,False
+imx6-native,fanout,fanout,settled,settled,0,0,0,0,True,True
+imx6-spaced,highDensityRouteSolver,highDensityRouteSolver,settled,settled,17,17,30,30,True,True
+orangecrab-local,highDensityRouteSolver,highDensityRouteSolver,settled,settled,52,52,97,97,True,True
+orangecrab-native,fanout,fanout,settled,settled,0,0,0,0,True,True
+orangecrab-spaced,highDensityRouteSolver,highDensityRouteSolver,settled,settled,52,52,103,103,True,True

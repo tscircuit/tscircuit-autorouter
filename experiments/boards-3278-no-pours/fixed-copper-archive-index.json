@@ -1,0 +1,3526 @@
+[
+  {
+    "file": "bun.lock",
+    "bytes": 68721
+  },
+  {
+    "file": "fix-provenance.json",
+    "bytes": 1244
+  },
+  {
+    "file": "fixed-copper/butterstick-local/bus-2-input.json.gz",
+    "bytes": 892670
+  },
+  {
+    "file": "fixed-copper/butterstick-local/bus-1-input.json.gz",
+    "bytes": 892796
+  },
+  {
+    "file": "fixed-copper/butterstick-local/bus-3-input.json.gz",
+    "bytes": 893817
+  },
+  {
+    "file": "fixed-copper/butterstick-local/bus-5-input.json.gz",
+    "bytes": 894676
+  },
+  {
+    "file": "fixed-copper/butterstick-local/end-1.srj.json.gz",
+    "bytes": 895333
+  },
+  {
+    "file": "fixed-copper/butterstick-local/bus-4-input.json.gz",
+    "bytes": 894809
+  },
+  {
+    "file": "fixed-copper/butterstick-local/events.jsonl",
+    "bytes": 37881
+  },
+  {
+    "file": "fixed-copper/butterstick-local/result.json",
+    "bytes": 139
+  },
+  {
+    "file": "fixed-copper/butterstick-local/run.log",
+    "bytes": 246
+  },
+  {
+    "file": "fixed-copper/butterstick-local/start-1.srj.json.gz",
+    "bytes": 893428
+  },
+  {
+    "file": "fixed-copper/butterstick-local/start-2.srj.json.gz",
+    "bytes": 895381
+  },
+  {
+    "file": "fixed-copper/butterstick-native/circuit.json.gz",
+    "bytes": 229736
+  },
+  {
+    "file": "fixed-copper/butterstick-native/error-1.srj.json.gz",
+    "bytes": 1284775
+  },
+  {
+    "file": "fixed-copper/butterstick-native/events.jsonl",
+    "bytes": 7025
+  },
+  {
+    "file": "fixed-copper/butterstick-native/fanout-1-best.json.gz",
+    "bytes": 1377417
+  },
+  {
+    "file": "fixed-copper/butterstick-native/fanout-1-input.json.gz",
+    "bytes": 1284930
+  },
+  {
+    "file": "fixed-copper/butterstick-native/fanout-checkpoint.json.gz",
+    "bytes": 1377376
+  },
+  {
+    "file": "fixed-copper/butterstick-native/result.json",
+    "bytes": 399
+  },
+  {
+    "file": "fixed-copper/butterstick-native/run.log",
+    "bytes": 1286
+  },
+  {
+    "file": "fixed-copper/butterstick-native/start-1.srj.json.gz",
+    "bytes": 1284775
+  },
+  {
+    "file": "fixed-copper/butterstick-spaced/bus-1-input.json.gz",
+    "bytes": 890980
+  },
+  {
+    "file": "fixed-copper/butterstick-spaced/bus-2-input.json.gz",
+    "bytes": 890840
+  },
+  {
+    "file": "fixed-copper/butterstick-spaced/bus-3-input.json.gz",
+    "bytes": 892022
+  },
+  {
+    "file": "fixed-copper/butterstick-spaced/bus-4-input.json.gz",
+    "bytes": 893068
+  },
+  {
+    "file": "fixed-copper/butterstick-spaced/bus-5-input.json.gz",
+    "bytes": 892956
+  },
+  {
+    "file": "fixed-copper/butterstick-spaced/events.jsonl",
+    "bytes": 32066
+  },
+  {
+    "file": "fixed-copper/butterstick-spaced/end-1.srj.json.gz",
+    "bytes": 892697
+  },
+  {
+    "file": "fixed-copper/butterstick-spaced/result.json",
+    "bytes": 140
+  },
+  {
+    "file": "fixed-copper/butterstick-spaced/run.log",
+    "bytes": 246
+  },
+  {
+    "file": "fixed-copper/glider-local/bus-1-input.json.gz",
+    "bytes": 974826
+  },
+  {
+    "file": "fixed-copper/butterstick-spaced/start-2.srj.json.gz",
+    "bytes": 892757
+  },
+  {
+    "file": "fixed-copper/butterstick-spaced/start-1.srj.json.gz",
+    "bytes": 890677
+  },
+  {
+    "file": "fixed-copper/glider-local/bus-2-input.json.gz",
+    "bytes": 975613
+  },
+  {
+    "file": "fixed-copper/glider-local/circuit.json.gz",
+    "bytes": 203294
+  },
+  {
+    "file": "fixed-copper/glider-local/density-1795352901421.json.gz",
+    "bytes": 3966
+  },
+  {
+    "file": "fixed-copper/glider-local/density-1795352901709.json.gz",
+    "bytes": 4749
+  },
+  {
+    "file": "fixed-copper/glider-local/density-1795352901995.json.gz",
+    "bytes": 5654
+  },
+  {
+    "file": "fixed-copper/glider-local/density-1795352903579.json.gz",
+    "bytes": 8893
+  },
+  {
+    "file": "fixed-copper/glider-local/density-1795352902650.json.gz",
+    "bytes": 11072
+  },
+  {
+    "file": "fixed-copper/glider-local/density-1795352903909.json.gz",
+    "bytes": 10567
+  },
+  {
+    "file": "fixed-copper/glider-local/density-1795352904240.json.gz",
+    "bytes": 13717
+  },
+  {
+    "file": "fixed-copper/glider-local/density-1795352904777.json.gz",
+    "bytes": 6112
+  },
+  {
+    "file": "fixed-copper/glider-local/density-1795352904500.json.gz",
+    "bytes": 4713
+  },
+  {
+    "file": "fixed-copper/glider-local/density-1795352905708.json.gz",
+    "bytes": 12741
+  },
+  {
+    "file": "fixed-copper/glider-local/density-1795352906283.json.gz",
+    "bytes": 7539
+  },
+  {
+    "file": "fixed-copper/glider-local/density-1795352906553.json.gz",
+    "bytes": 9632
+  },
+  {
+    "file": "fixed-copper/glider-local/density-1795352906827.json.gz",
+    "bytes": 11736
+  },
+  {
+    "file": "fixed-copper/glider-local/density-1795352907116.json.gz",
+    "bytes": 13753
+  },
+  {
+    "file": "fixed-copper/glider-local/density-1795352908588.json.gz",
+    "bytes": 11052
+  },
+  {
+    "file": "fixed-copper/glider-local/density-1795352908889.json.gz",
+    "bytes": 13835
+  },
+  {
+    "file": "fixed-copper/glider-local/density-1795352910419.json.gz",
+    "bytes": 13626
+  },
+  {
+    "file": "fixed-copper/glider-local/density-1795352910680.json.gz",
+    "bytes": 3007
+  },
+  {
+    "file": "fixed-copper/glider-local/density-1795352911018.json.gz",
+    "bytes": 4388
+  },
+  {
+    "file": "fixed-copper/glider-local/density-1795352911304.json.gz",
+    "bytes": 4687
+  },
+  {
+    "file": "fixed-copper/glider-local/density-1795352912503.json.gz",
+    "bytes": 4247
+  },
+  {
+    "file": "fixed-copper/glider-local/density-1795352912224.json.gz",
+    "bytes": 2847
+  },
+  {
+    "file": "fixed-copper/glider-local/density-1795353112611.json.gz",
+    "bytes": 2195
+  },
+  {
+    "file": "fixed-copper/glider-local/end-1.srj.json.gz",
+    "bytes": 975499
+  },
+  {
+    "file": "fixed-copper/glider-local/end-2.srj.json.gz",
+    "bytes": 976151
+  },
+  {
+    "file": "fixed-copper/glider-local/end-3.srj.json.gz",
+    "bytes": 990682
+  },
+  {
+    "file": "fixed-copper/glider-local/error-4.srj.json.gz",
+    "bytes": 1000701
+  },
+  {
+    "file": "fixed-copper/glider-local/events.jsonl",
+    "bytes": 28818
+  },
+  {
+    "file": "fixed-copper/glider-local/graph-2-1-input.json.gz",
+    "bytes": 1968236
+  },
+  {
+    "file": "fixed-copper/glider-local/graph-1-1-input.json.gz",
+    "bytes": 1692802
+  },
+  {
+    "file": "fixed-copper/glider-local/result.json",
+    "bytes": 359
+  },
+  {
+    "file": "fixed-copper/glider-local/run.log",
+    "bytes": 1399
+  },
+  {
+    "file": "fixed-copper/glider-local/stage-1-uniformPortDistributionSolver.json.gz",
+    "bytes": 3214283
+  },
+  {
+    "file": "fixed-copper/glider-local/stage-1-highDensityRouteSolver.json.gz",
+    "bytes": 1119567
+  },
+  {
+    "file": "fixed-copper/glider-local/stage-2-highDensityRouteSolver.json.gz",
+    "bytes": 1405830
+  },
+  {
+    "file": "fixed-copper/glider-local/stage-2-uniformPortDistributionSolver.json.gz",
+    "bytes": 3480342
+  },
+  {
+    "file": "fixed-copper/glider-local/start-1.srj.json.gz",
+    "bytes": 974752
+  },
+  {
+    "file": "fixed-copper/glider-local/start-2.srj.json.gz",
+    "bytes": 975537
+  },
+  {
+    "file": "fixed-copper/glider-local/start-3.srj.json.gz",
+    "bytes": 976874
+  },
+  {
+    "file": "fixed-copper/glider-local/start-4.srj.json.gz",
+    "bytes": 1000701
+  },
+  {
+    "file": "fixed-copper/glider-native/error-1.srj.json.gz",
+    "bytes": 1094325
+  },
+  {
+    "file": "fixed-copper/glider-native/events.jsonl",
+    "bytes": 6590
+  },
+  {
+    "file": "fixed-copper/glider-native/circuit.json.gz",
+    "bytes": 238946
+  },
+  {
+    "file": "fixed-copper/glider-native/fanout-1-best.json.gz",
+    "bytes": 1191265
+  },
+  {
+    "file": "fixed-copper/glider-native/fanout-checkpoint.json.gz",
+    "bytes": 1191512
+  },
+  {
+    "file": "fixed-copper/glider-native/fanout-1-input.json.gz",
+    "bytes": 1094521
+  },
+  {
+    "file": "fixed-copper/glider-native/result.json",
+    "bytes": 394
+  },
+  {
+    "file": "fixed-copper/glider-native/run.log",
+    "bytes": 1281
+  },
+  {
+    "file": "fixed-copper/glider-spaced/bus-1-input.json.gz",
+    "bytes": 971364
+  },
+  {
+    "file": "fixed-copper/glider-native/start-1.srj.json.gz",
+    "bytes": 1094325
+  },
+  {
+    "file": "fixed-copper/glider-spaced/bus-2-input.json.gz",
+    "bytes": 972181
+  },
+  {
+    "file": "fixed-copper/glider-spaced/circuit.json.gz",
+    "bytes": 199898
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795352908273.json.gz",
+    "bytes": 3366
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795352908662.json.gz",
+    "bytes": 4882
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795352909065.json.gz",
+    "bytes": 6792
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795352922257.json.gz",
+    "bytes": 3628
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795352909861.json.gz",
+    "bytes": 10750
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795352909475.json.gz",
+    "bytes": 7644
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795352922765.json.gz",
+    "bytes": 4900
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795352923152.json.gz",
+    "bytes": 6789
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795352924007.json.gz",
+    "bytes": 10744
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795352923527.json.gz",
+    "bytes": 7680
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795352933681.json.gz",
+    "bytes": 3561
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795352934058.json.gz",
+    "bytes": 4885
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795352934450.json.gz",
+    "bytes": 6731
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795352934910.json.gz",
+    "bytes": 8509
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795352935323.json.gz",
+    "bytes": 11011
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795352935866.json.gz",
+    "bytes": 5225
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795352936257.json.gz",
+    "bytes": 6570
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795352936643.json.gz",
+    "bytes": 8414
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795352937043.json.gz",
+    "bytes": 10211
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795352937891.json.gz",
+    "bytes": 7940
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795352937440.json.gz",
+    "bytes": 12704
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795352938276.json.gz",
+    "bytes": 8026
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795352938664.json.gz",
+    "bytes": 11642
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795352939046.json.gz",
+    "bytes": 12134
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795352939460.json.gz",
+    "bytes": 14745
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795352939779.json.gz",
+    "bytes": 7747
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795352940100.json.gz",
+    "bytes": 8846
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795352940445.json.gz",
+    "bytes": 9321
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795352941100.json.gz",
+    "bytes": 12919
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795352940767.json.gz",
+    "bytes": 10117
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795352952130.json.gz",
+    "bytes": 4535
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795352952524.json.gz",
+    "bytes": 6311
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795352953326.json.gz",
+    "bytes": 10089
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795352952921.json.gz",
+    "bytes": 9155
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795352953718.json.gz",
+    "bytes": 14816
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795352964320.json.gz",
+    "bytes": 2205
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795352965640.json.gz",
+    "bytes": 3808
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795352966032.json.gz",
+    "bytes": 4996
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795352967588.json.gz",
+    "bytes": 3808
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795352966415.json.gz",
+    "bytes": 2214
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795352968002.json.gz",
+    "bytes": 4996
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795352970543.json.gz",
+    "bytes": 5811
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795352971286.json.gz",
+    "bytes": 8794
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795352970886.json.gz",
+    "bytes": 7795
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795352971628.json.gz",
+    "bytes": 10449
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795352971995.json.gz",
+    "bytes": 15756
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795352987061.json.gz",
+    "bytes": 7243
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795352987395.json.gz",
+    "bytes": 7721
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795352987761.json.gz",
+    "bytes": 9515
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795352988146.json.gz",
+    "bytes": 10408
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795352988502.json.gz",
+    "bytes": 15747
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795353004297.json.gz",
+    "bytes": 7169
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795353004703.json.gz",
+    "bytes": 8453
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795353005037.json.gz",
+    "bytes": 9477
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795353005364.json.gz",
+    "bytes": 11693
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795353005800.json.gz",
+    "bytes": 15920
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795353007465.json.gz",
+    "bytes": 4780
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795353007850.json.gz",
+    "bytes": 5384
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795353011961.json.gz",
+    "bytes": 4743
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795353012348.json.gz",
+    "bytes": 5390
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795353015965.json.gz",
+    "bytes": 4522
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795353016353.json.gz",
+    "bytes": 5332
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795353016866.json.gz",
+    "bytes": 10591
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795353017215.json.gz",
+    "bytes": 13382
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795353017544.json.gz",
+    "bytes": 14740
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795353017890.json.gz",
+    "bytes": 16189
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795353018245.json.gz",
+    "bytes": 18163
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795353018620.json.gz",
+    "bytes": 10445
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795353019013.json.gz",
+    "bytes": 13260
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795353019391.json.gz",
+    "bytes": 14616
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795353019770.json.gz",
+    "bytes": 16066
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795353020191.json.gz",
+    "bytes": 18033
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795353020530.json.gz",
+    "bytes": 10592
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795353020854.json.gz",
+    "bytes": 13404
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795353021190.json.gz",
+    "bytes": 14720
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795353021530.json.gz",
+    "bytes": 16898
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795353022257.json.gz",
+    "bytes": 10447
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795353021881.json.gz",
+    "bytes": 18264
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795353022685.json.gz",
+    "bytes": 13276
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795353023081.json.gz",
+    "bytes": 14594
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795353023905.json.gz",
+    "bytes": 18130
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795353023495.json.gz",
+    "bytes": 16759
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795353024233.json.gz",
+    "bytes": 11085
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795353024572.json.gz",
+    "bytes": 12429
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795353024904.json.gz",
+    "bytes": 15986
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795353025239.json.gz",
+    "bytes": 16817
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795353025594.json.gz",
+    "bytes": 18175
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795353025919.json.gz",
+    "bytes": 11091
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795353026255.json.gz",
+    "bytes": 12410
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795353026599.json.gz",
+    "bytes": 15359
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795353026935.json.gz",
+    "bytes": 16114
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795353027302.json.gz",
+    "bytes": 18074
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795353028004.json.gz",
+    "bytes": 7417
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795353028330.json.gz",
+    "bytes": 11911
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795353028696.json.gz",
+    "bytes": 12065
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795353029032.json.gz",
+    "bytes": 17175
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795353029408.json.gz",
+    "bytes": 7562
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795353029802.json.gz",
+    "bytes": 7695
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795353030573.json.gz",
+    "bytes": 12383
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795353030191.json.gz",
+    "bytes": 12221
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795353030963.json.gz",
+    "bytes": 17503
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795353031293.json.gz",
+    "bytes": 10033
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795353031638.json.gz",
+    "bytes": 11637
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795353032020.json.gz",
+    "bytes": 12987
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795353032365.json.gz",
+    "bytes": 16180
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795353032746.json.gz",
+    "bytes": 16903
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795353033535.json.gz",
+    "bytes": 11933
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795353033143.json.gz",
+    "bytes": 10297
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795353033933.json.gz",
+    "bytes": 13285
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795353034353.json.gz",
+    "bytes": 16494
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795353034779.json.gz",
+    "bytes": 17220
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795353035105.json.gz",
+    "bytes": 10024
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795353035455.json.gz",
+    "bytes": 11612
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795353035817.json.gz",
+    "bytes": 13004
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795353036156.json.gz",
+    "bytes": 15988
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795353036544.json.gz",
+    "bytes": 16834
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795353036935.json.gz",
+    "bytes": 10294
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795353037324.json.gz",
+    "bytes": 11909
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795353037740.json.gz",
+    "bytes": 13303
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795353038152.json.gz",
+    "bytes": 16302
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795353038591.json.gz",
+    "bytes": 17149
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795353038966.json.gz",
+    "bytes": 10748
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795353039307.json.gz",
+    "bytes": 11998
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795353039662.json.gz",
+    "bytes": 13956
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795353040053.json.gz",
+    "bytes": 15665
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795353040421.json.gz",
+    "bytes": 16956
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795353044862.json.gz",
+    "bytes": 6182
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795353046306.json.gz",
+    "bytes": 15451
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795353045955.json.gz",
+    "bytes": 11622
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795353045210.json.gz",
+    "bytes": 8059
+  },
+  {
+    "file": "fixed-copper/glider-spaced/density-1795353046630.json.gz",
+    "bytes": 6396
+  },
+  {
+    "file": "fixed-copper/glider-spaced/end-1.srj.json.gz",
+    "bytes": 972325
+  },
+  {
+    "file": "fixed-copper/glider-spaced/end-2.srj.json.gz",
+    "bytes": 973011
+  },
+  {
+    "file": "fixed-copper/glider-spaced/end-3.srj.json.gz",
+    "bytes": 984966
+  },
+  {
+    "file": "fixed-copper/glider-spaced/error-4.srj.json.gz",
+    "bytes": 995051
+  },
+  {
+    "file": "fixed-copper/glider-spaced/events.jsonl",
+    "bytes": 48786
+  },
+  {
+    "file": "fixed-copper/glider-spaced/graph-1-1-input.json.gz",
+    "bytes": 1854095
+  },
+  {
+    "file": "fixed-copper/glider-spaced/graph-2-1-input.json.gz",
+    "bytes": 2132814
+  },
+  {
+    "file": "fixed-copper/glider-spaced/result.json",
+    "bytes": 360
+  },
+  {
+    "file": "fixed-copper/glider-spaced/run.log",
+    "bytes": 777
+  },
+  {
+    "file": "fixed-copper/glider-spaced/stage-1-highDensityRouteSolver.json.gz",
+    "bytes": 1118843
+  },
+  {
+    "file": "fixed-copper/glider-spaced/stage-1-uniformPortDistributionSolver.json.gz",
+    "bytes": 3402883
+  },
+  {
+    "file": "fixed-copper/glider-spaced/start-1.srj.json.gz",
+    "bytes": 971531
+  },
+  {
+    "file": "fixed-copper/glider-spaced/start-2.srj.json.gz",
+    "bytes": 972351
+  },
+  {
+    "file": "fixed-copper/glider-spaced/start-3.srj.json.gz",
+    "bytes": 973731
+  },
+  {
+    "file": "fixed-copper/glider-spaced/start-4.srj.json.gz",
+    "bytes": 995051
+  },
+  {
+    "file": "fixed-copper/h616-default-order-local/bus-1-input.json.gz",
+    "bytes": 157011
+  },
+  {
+    "file": "fixed-copper/h616-default-order-local/bus-2-input.json.gz",
+    "bytes": 157876
+  },
+  {
+    "file": "fixed-copper/h616-default-order-local/circuit.json.gz",
+    "bytes": 80365
+  },
+  {
+    "file": "fixed-copper/h616-default-order-local/end-2.srj.json.gz",
+    "bytes": 158548
+  },
+  {
+    "file": "fixed-copper/h616-default-order-local/error-3.srj.json.gz",
+    "bytes": 159397
+  },
+  {
+    "file": "fixed-copper/h616-default-order-local/end-1.srj.json.gz",
+    "bytes": 157788
+  },
+  {
+    "file": "fixed-copper/h616-default-order-local/events.jsonl",
+    "bytes": 14174
+  },
+  {
+    "file": "fixed-copper/h616-default-order-local/graph-1-1-input.json.gz",
+    "bytes": 966304
+  },
+  {
+    "file": "fixed-copper/h616-default-order-local/run.log",
+    "bytes": 788
+  },
+  {
+    "file": "fixed-copper/h616-default-order-local/result.json",
+    "bytes": 368
+  },
+  {
+    "file": "fixed-copper/h616-default-order-local/start-1.srj.json.gz",
+    "bytes": 156955
+  },
+  {
+    "file": "fixed-copper/h616-default-order-local/start-2.srj.json.gz",
+    "bytes": 157821
+  },
+  {
+    "file": "fixed-copper/h616-local/bus-1-input.json.gz",
+    "bytes": 157011
+  },
+  {
+    "file": "fixed-copper/h616-default-order-local/start-3.srj.json.gz",
+    "bytes": 159397
+  },
+  {
+    "file": "fixed-copper/h616-local/bus-2-input.json.gz",
+    "bytes": 157876
+  },
+  {
+    "file": "fixed-copper/h616-local/circuit.json.gz",
+    "bytes": 80365
+  },
+  {
+    "file": "fixed-copper/h616-local/end-1.srj.json.gz",
+    "bytes": 157788
+  },
+  {
+    "file": "fixed-copper/h616-local/end-2.srj.json.gz",
+    "bytes": 158548
+  },
+  {
+    "file": "fixed-copper/h616-local/error-3.srj.json.gz",
+    "bytes": 159672
+  },
+  {
+    "file": "fixed-copper/h616-local/events.jsonl",
+    "bytes": 16307
+  },
+  {
+    "file": "fixed-copper/h616-local/graph-1-1-input.json.gz",
+    "bytes": 971666
+  },
+  {
+    "file": "fixed-copper/h616-local/graph-1-2-input.json.gz",
+    "bytes": 971684
+  },
+  {
+    "file": "fixed-copper/h616-local/graph-1-3-input.json.gz",
+    "bytes": 971044
+  },
+  {
+    "file": "fixed-copper/h616-local/result.json",
+    "bytes": 354
+  },
+  {
+    "file": "fixed-copper/h616-local/run.log",
+    "bytes": 774
+  },
+  {
+    "file": "fixed-copper/h616-local/start-1.srj.json.gz",
+    "bytes": 156955
+  },
+  {
+    "file": "fixed-copper/h616-local/start-3.srj.json.gz",
+    "bytes": 159672
+  },
+  {
+    "file": "fixed-copper/h616-local/start-2.srj.json.gz",
+    "bytes": 157821
+  },
+  {
+    "file": "fixed-copper/h616-native/circuit.json.gz",
+    "bytes": 110121
+  },
+  {
+    "file": "fixed-copper/h616-native/error-1.srj.json.gz",
+    "bytes": 229492
+  },
+  {
+    "file": "fixed-copper/h616-native/events.jsonl",
+    "bytes": 13759
+  },
+  {
+    "file": "fixed-copper/h616-native/fanout-1-best.json.gz",
+    "bytes": 315526
+  },
+  {
+    "file": "fixed-copper/h616-native/fanout-1-input.json.gz",
+    "bytes": 229639
+  },
+  {
+    "file": "fixed-copper/h616-native/fanout-checkpoint.json.gz",
+    "bytes": 315526
+  },
+  {
+    "file": "fixed-copper/h616-native/result.json",
+    "bytes": 391
+  },
+  {
+    "file": "fixed-copper/h616-native/run.log",
+    "bytes": 1281
+  },
+  {
+    "file": "fixed-copper/h616-native/start-1.srj.json.gz",
+    "bytes": 229492
+  },
+  {
+    "file": "fixed-copper/h616-spaced/bus-1-input.json.gz",
+    "bytes": 156770
+  },
+  {
+    "file": "fixed-copper/h616-spaced/circuit.json.gz",
+    "bytes": 80528
+  },
+  {
+    "file": "fixed-copper/h616-spaced/bus-2-input.json.gz",
+    "bytes": 157674
+  },
+  {
+    "file": "fixed-copper/h616-spaced/end-1.srj.json.gz",
+    "bytes": 157588
+  },
+  {
+    "file": "fixed-copper/h616-spaced/end-2.srj.json.gz",
+    "bytes": 158374
+  },
+  {
+    "file": "fixed-copper/h616-spaced/error-3.srj.json.gz",
+    "bytes": 159215
+  },
+  {
+    "file": "fixed-copper/h616-spaced/events.jsonl",
+    "bytes": 14189
+  },
+  {
+    "file": "fixed-copper/h616-spaced/graph-1-1-input.json.gz",
+    "bytes": 1074840
+  },
+  {
+    "file": "fixed-copper/h616-spaced/run.log",
+    "bytes": 775
+  },
+  {
+    "file": "fixed-copper/h616-spaced/result.json",
+    "bytes": 355
+  },
+  {
+    "file": "fixed-copper/h616-spaced/start-1.srj.json.gz",
+    "bytes": 156717
+  },
+  {
+    "file": "fixed-copper/h616-spaced/start-2.srj.json.gz",
+    "bytes": 157621
+  },
+  {
+    "file": "fixed-copper/h616-spaced/start-3.srj.json.gz",
+    "bytes": 159215
+  },
+  {
+    "file": "fixed-copper/icepi-local/bus-1-input.json.gz",
+    "bytes": 588922
+  },
+  {
+    "file": "fixed-copper/icepi-local/bus-2-input.json.gz",
+    "bytes": 589732
+  },
+  {
+    "file": "fixed-copper/icepi-local/circuit.json.gz",
+    "bytes": 156107
+  },
+  {
+    "file": "fixed-copper/icepi-local/density-1795352933748.json.gz",
+    "bytes": 2460
+  },
+  {
+    "file": "fixed-copper/icepi-local/end-2.srj.json.gz",
+    "bytes": 587714
+  },
+  {
+    "file": "fixed-copper/icepi-local/end-1.srj.json.gz",
+    "bytes": 587015
+  },
+  {
+    "file": "fixed-copper/icepi-local/error-3.srj.json.gz",
+    "bytes": 588486
+  },
+  {
+    "file": "fixed-copper/icepi-local/events.jsonl",
+    "bytes": 20009
+  },
+  {
+    "file": "fixed-copper/icepi-local/graph-1-1-input.json.gz",
+    "bytes": 1788184
+  },
+  {
+    "file": "fixed-copper/icepi-local/graph-1-2-input.json.gz",
+    "bytes": 1788890
+  },
+  {
+    "file": "fixed-copper/icepi-local/graph-1-3-input.json.gz",
+    "bytes": 1788908
+  },
+  {
+    "file": "fixed-copper/icepi-local/result.json",
+    "bytes": 358
+  },
+  {
+    "file": "fixed-copper/icepi-local/stage-1-highDensityRouteSolver.json.gz",
+    "bytes": 730452
+  },
+  {
+    "file": "fixed-copper/icepi-local/run.log",
+    "bytes": 1400
+  },
+  {
+    "file": "fixed-copper/icepi-local/stage-1-uniformPortDistributionSolver.json.gz",
+    "bytes": 2979408
+  },
+  {
+    "file": "fixed-copper/icepi-local/start-1.srj.json.gz",
+    "bytes": 586243
+  },
+  {
+    "file": "fixed-copper/icepi-local/start-3.srj.json.gz",
+    "bytes": 588486
+  },
+  {
+    "file": "fixed-copper/icepi-local/start-2.srj.json.gz",
+    "bytes": 587055
+  },
+  {
+    "file": "fixed-copper/icepi-native/circuit.json.gz",
+    "bytes": 207441
+  },
+  {
+    "file": "fixed-copper/icepi-native/error-1.srj.json.gz",
+    "bytes": 715879
+  },
+  {
+    "file": "fixed-copper/icepi-native/fanout-1-best.json.gz",
+    "bytes": 728900
+  },
+  {
+    "file": "fixed-copper/icepi-native/events.jsonl",
+    "bytes": 4364
+  },
+  {
+    "file": "fixed-copper/icepi-native/fanout-1-input.json.gz",
+    "bytes": 715734
+  },
+  {
+    "file": "fixed-copper/icepi-native/result.json",
+    "bytes": 392
+  },
+  {
+    "file": "fixed-copper/icepi-native/run.log",
+    "bytes": 1280
+  },
+  {
+    "file": "fixed-copper/icepi-native/start-1.srj.json.gz",
+    "bytes": 715879
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/bus-1-input.json.gz",
+    "bytes": 583530
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/bus-2-input.json.gz",
+    "bytes": 584353
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/circuit.json.gz",
+    "bytes": 170445
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795352973399.json.gz",
+    "bytes": 16701
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795352973137.json.gz",
+    "bytes": 11269
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795352973675.json.gz",
+    "bytes": 17450
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795352973997.json.gz",
+    "bytes": 19943
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795352974272.json.gz",
+    "bytes": 21140
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795352974531.json.gz",
+    "bytes": 11265
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795352974796.json.gz",
+    "bytes": 16696
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795352975061.json.gz",
+    "bytes": 17443
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795352975316.json.gz",
+    "bytes": 19937
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795352975571.json.gz",
+    "bytes": 20626
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795352975825.json.gz",
+    "bytes": 4910
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795352976103.json.gz",
+    "bytes": 6153
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795352976362.json.gz",
+    "bytes": 7895
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795352976626.json.gz",
+    "bytes": 9100
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795352976908.json.gz",
+    "bytes": 12959
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795352985641.json.gz",
+    "bytes": 7004
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795352985897.json.gz",
+    "bytes": 10448
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795352986146.json.gz",
+    "bytes": 13016
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795352986712.json.gz",
+    "bytes": 21099
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795352986406.json.gz",
+    "bytes": 18062
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795352986956.json.gz",
+    "bytes": 9697
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795352987210.json.gz",
+    "bytes": 16221
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795352987458.json.gz",
+    "bytes": 16827
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795352987762.json.gz",
+    "bytes": 19936
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795352988031.json.gz",
+    "bytes": 20556
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795352988273.json.gz",
+    "bytes": 7796
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795352988515.json.gz",
+    "bytes": 9638
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795352988757.json.gz",
+    "bytes": 13901
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795352989040.json.gz",
+    "bytes": 16836
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795352989304.json.gz",
+    "bytes": 20124
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795352989541.json.gz",
+    "bytes": 6551
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795352989777.json.gz",
+    "bytes": 10453
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795352990074.json.gz",
+    "bytes": 12624
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795352990327.json.gz",
+    "bytes": 17069
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795352990597.json.gz",
+    "bytes": 21116
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795352990845.json.gz",
+    "bytes": 7570
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795352991057.json.gz",
+    "bytes": 2096
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795352991309.json.gz",
+    "bytes": 3317
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795352991528.json.gz",
+    "bytes": 3497
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795352991751.json.gz",
+    "bytes": 4934
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795352991979.json.gz",
+    "bytes": 6767
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795352992195.json.gz",
+    "bytes": 2130
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795352992412.json.gz",
+    "bytes": 3361
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795352992665.json.gz",
+    "bytes": 3529
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795352992890.json.gz",
+    "bytes": 4948
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795352993364.json.gz",
+    "bytes": 13990
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795352993579.json.gz",
+    "bytes": 16636
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795352993844.json.gz",
+    "bytes": 17859
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795352994076.json.gz",
+    "bytes": 20447
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795352994350.json.gz",
+    "bytes": 20866
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795352994587.json.gz",
+    "bytes": 13925
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795352994831.json.gz",
+    "bytes": 16548
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795352995102.json.gz",
+    "bytes": 17774
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795352995340.json.gz",
+    "bytes": 20385
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795352995798.json.gz",
+    "bytes": 14656
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795352996032.json.gz",
+    "bytes": 16311
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795352995593.json.gz",
+    "bytes": 20802
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795352996263.json.gz",
+    "bytes": 16557
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795352996952.json.gz",
+    "bytes": 14574
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795352996709.json.gz",
+    "bytes": 19306
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795352996481.json.gz",
+    "bytes": 17217
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795352997211.json.gz",
+    "bytes": 16226
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795352997471.json.gz",
+    "bytes": 16477
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795352997726.json.gz",
+    "bytes": 17142
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795352997967.json.gz",
+    "bytes": 19243
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795352998197.json.gz",
+    "bytes": 11131
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795352998427.json.gz",
+    "bytes": 17153
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795352998677.json.gz",
+    "bytes": 19328
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795352998924.json.gz",
+    "bytes": 20727
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795352999165.json.gz",
+    "bytes": 21234
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795352999390.json.gz",
+    "bytes": 10872
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795352999621.json.gz",
+    "bytes": 16890
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795352999871.json.gz",
+    "bytes": 19030
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353000135.json.gz",
+    "bytes": 20438
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353000378.json.gz",
+    "bytes": 20959
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353000610.json.gz",
+    "bytes": 15629
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353000839.json.gz",
+    "bytes": 16460
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353001076.json.gz",
+    "bytes": 17090
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353001331.json.gz",
+    "bytes": 18385
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353001575.json.gz",
+    "bytes": 20781
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353001802.json.gz",
+    "bytes": 15648
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353002035.json.gz",
+    "bytes": 16484
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353002282.json.gz",
+    "bytes": 17100
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353002519.json.gz",
+    "bytes": 18387
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353002773.json.gz",
+    "bytes": 20766
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353003146.json.gz",
+    "bytes": 18237
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353003382.json.gz",
+    "bytes": 15532
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353003622.json.gz",
+    "bytes": 16370
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353003856.json.gz",
+    "bytes": 17092
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353004109.json.gz",
+    "bytes": 17894
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353004348.json.gz",
+    "bytes": 20670
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353004572.json.gz",
+    "bytes": 15549
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353004801.json.gz",
+    "bytes": 16391
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353005042.json.gz",
+    "bytes": 17099
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353005280.json.gz",
+    "bytes": 17899
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353005535.json.gz",
+    "bytes": 20661
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353005742.json.gz",
+    "bytes": 11356
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353005958.json.gz",
+    "bytes": 14561
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353006160.json.gz",
+    "bytes": 14774
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353006372.json.gz",
+    "bytes": 17388
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353006635.json.gz",
+    "bytes": 21459
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353006870.json.gz",
+    "bytes": 11958
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353007093.json.gz",
+    "bytes": 15162
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353007332.json.gz",
+    "bytes": 15376
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353007574.json.gz",
+    "bytes": 17994
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353007838.json.gz",
+    "bytes": 22076
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353008208.json.gz",
+    "bytes": 18980
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353008423.json.gz",
+    "bytes": 10821
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353008647.json.gz",
+    "bytes": 12356
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353008857.json.gz",
+    "bytes": 14101
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353009071.json.gz",
+    "bytes": 14614
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353009289.json.gz",
+    "bytes": 17058
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353009520.json.gz",
+    "bytes": 11437
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353009777.json.gz",
+    "bytes": 12962
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353010060.json.gz",
+    "bytes": 14670
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353010316.json.gz",
+    "bytes": 15179
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353010577.json.gz",
+    "bytes": 17633
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353010995.json.gz",
+    "bytes": 12620
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353010777.json.gz",
+    "bytes": 10814
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353011203.json.gz",
+    "bytes": 14138
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353011410.json.gz",
+    "bytes": 15709
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353011622.json.gz",
+    "bytes": 17131
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353011862.json.gz",
+    "bytes": 11433
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353012116.json.gz",
+    "bytes": 13213
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353012367.json.gz",
+    "bytes": 14705
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353012611.json.gz",
+    "bytes": 16289
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353012878.json.gz",
+    "bytes": 17714
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353013076.json.gz",
+    "bytes": 11516
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353013765.json.gz",
+    "bytes": 19241
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353013547.json.gz",
+    "bytes": 15613
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353013981.json.gz",
+    "bytes": 22976
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353014211.json.gz",
+    "bytes": 12047
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353014455.json.gz",
+    "bytes": 14757
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353014686.json.gz",
+    "bytes": 16131
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353014924.json.gz",
+    "bytes": 19777
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353015158.json.gz",
+    "bytes": 23403
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353015588.json.gz",
+    "bytes": 13363
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353015366.json.gz",
+    "bytes": 10614
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353015803.json.gz",
+    "bytes": 15992
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353016014.json.gz",
+    "bytes": 20806
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353016259.json.gz",
+    "bytes": 23168
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353016453.json.gz",
+    "bytes": 11519
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353016931.json.gz",
+    "bytes": 14601
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353017150.json.gz",
+    "bytes": 19246
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353017357.json.gz",
+    "bytes": 22978
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353017574.json.gz",
+    "bytes": 12050
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353017795.json.gz",
+    "bytes": 14667
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353018280.json.gz",
+    "bytes": 19778
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353018519.json.gz",
+    "bytes": 23410
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353018718.json.gz",
+    "bytes": 11743
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353018035.json.gz",
+    "bytes": 15117
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353018917.json.gz",
+    "bytes": 13195
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353019135.json.gz",
+    "bytes": 13902
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353019335.json.gz",
+    "bytes": 14156
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353019538.json.gz",
+    "bytes": 17572
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353019763.json.gz",
+    "bytes": 12281
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353020023.json.gz",
+    "bytes": 13737
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353020252.json.gz",
+    "bytes": 14441
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353020522.json.gz",
+    "bytes": 14698
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353020756.json.gz",
+    "bytes": 18101
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353020953.json.gz",
+    "bytes": 11743
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353021153.json.gz",
+    "bytes": 13195
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353021355.json.gz",
+    "bytes": 13902
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353021577.json.gz",
+    "bytes": 14156
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353021783.json.gz",
+    "bytes": 17572
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353022021.json.gz",
+    "bytes": 12281
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353022258.json.gz",
+    "bytes": 13737
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353022485.json.gz",
+    "bytes": 14441
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353022981.json.gz",
+    "bytes": 18101
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353022738.json.gz",
+    "bytes": 14698
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/density-1795353179745.json.gz",
+    "bytes": 8389
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/end-1.srj.json.gz",
+    "bytes": 584271
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/end-2.srj.json.gz",
+    "bytes": 585054
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/end-3.srj.json.gz",
+    "bytes": 599423
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/events.jsonl",
+    "bytes": 73142
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/error-4.srj.json.gz",
+    "bytes": 605737
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/graph-1-1-input.json.gz",
+    "bytes": 1889805
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/graph-1-2-input.json.gz",
+    "bytes": 1890686
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/graph-2-1-input.json.gz",
+    "bytes": 2147863
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/result.json",
+    "bytes": 359
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/run.log",
+    "bytes": 2159
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/stage-1-highDensityRouteSolver.json.gz",
+    "bytes": 713127
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/stage-1-uniformPortDistributionSolver.json.gz",
+    "bytes": 3089904
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/stage-2-highDensityRouteSolver.json.gz",
+    "bytes": 951553
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/stage-2-uniformPortDistributionSolver.json.gz",
+    "bytes": 3312900
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/start-1.srj.json.gz",
+    "bytes": 583487
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/start-2.srj.json.gz",
+    "bytes": 584310
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/start-3.srj.json.gz",
+    "bytes": 585828
+  },
+  {
+    "file": "fixed-copper/icepi-spaced/start-4.srj.json.gz",
+    "bytes": 605737
+  },
+  {
+    "file": "fixed-copper/imx6-local/bus-1-input.json.gz",
+    "bytes": 1006393
+  },
+  {
+    "file": "fixed-copper/imx6-local/bus-2-input.json.gz",
+    "bytes": 1007316
+  },
+  {
+    "file": "fixed-copper/imx6-local/bus-3-input.json.gz",
+    "bytes": 1007293
+  },
+  {
+    "file": "fixed-copper/imx6-local/bus-4-input.json.gz",
+    "bytes": 1008046
+  },
+  {
+    "file": "fixed-copper/imx6-local/density-1795353383106.json.gz",
+    "bytes": 1415
+  },
+  {
+    "file": "fixed-copper/imx6-local/end-1.srj.json.gz",
+    "bytes": 1005433
+  },
+  {
+    "file": "fixed-copper/imx6-local/end-2.srj.json.gz",
+    "bytes": 1006543
+  },
+  {
+    "file": "fixed-copper/imx6-local/error-3.srj.json.gz",
+    "bytes": 1007510
+  },
+  {
+    "file": "fixed-copper/imx6-local/events.jsonl",
+    "bytes": 33751
+  },
+  {
+    "file": "fixed-copper/imx6-local/graph-1-1-input.json.gz",
+    "bytes": 2358129
+  },
+  {
+    "file": "fixed-copper/imx6-local/graph-1-2-input.json.gz",
+    "bytes": 2358705
+  },
+  {
+    "file": "fixed-copper/imx6-local/result.json",
+    "bytes": 132
+  },
+  {
+    "file": "fixed-copper/imx6-local/run.log",
+    "bytes": 1276
+  },
+  {
+    "file": "fixed-copper/imx6-local/stage-1-highDensityRouteSolver.json.gz",
+    "bytes": 1156407
+  },
+  {
+    "file": "fixed-copper/imx6-local/stage-1-uniformPortDistributionSolver.json.gz",
+    "bytes": 4125318
+  },
+  {
+    "file": "fixed-copper/imx6-local/start-1.srj.json.gz",
+    "bytes": 1004566
+  },
+  {
+    "file": "fixed-copper/imx6-local/start-2.srj.json.gz",
+    "bytes": 1005487
+  },
+  {
+    "file": "fixed-copper/imx6-local/start-3.srj.json.gz",
+    "bytes": 1007510
+  },
+  {
+    "file": "fixed-copper/imx6-native/circuit.json.gz",
+    "bytes": 288102
+  },
+  {
+    "file": "fixed-copper/imx6-native/events.jsonl",
+    "bytes": 4710
+  },
+  {
+    "file": "fixed-copper/imx6-native/error-1.srj.json.gz",
+    "bytes": 1360593
+  },
+  {
+    "file": "fixed-copper/imx6-native/fanout-1-best.json.gz",
+    "bytes": 1378805
+  },
+  {
+    "file": "fixed-copper/imx6-native/fanout-1-input.json.gz",
+    "bytes": 1360780
+  },
+  {
+    "file": "fixed-copper/imx6-native/fanout-checkpoint.json.gz",
+    "bytes": 1378805
+  },
+  {
+    "file": "fixed-copper/imx6-native/result.json",
+    "bytes": 391
+  },
+  {
+    "file": "fixed-copper/imx6-native/run.log",
+    "bytes": 1278
+  },
+  {
+    "file": "fixed-copper/imx6-native/start-1.srj.json.gz",
+    "bytes": 1360593
+  },
+  {
+    "file": "fixed-copper/imx6-spaced/bus-1-input.json.gz",
+    "bytes": 1005729
+  },
+  {
+    "file": "fixed-copper/imx6-spaced/bus-2-input.json.gz",
+    "bytes": 1006682
+  },
+  {
+    "file": "fixed-copper/imx6-spaced/bus-3-input.json.gz",
+    "bytes": 1006661
+  },
+  {
+    "file": "fixed-copper/imx6-spaced/bus-4-input.json.gz",
+    "bytes": 1007352
+  },
+  {
+    "file": "fixed-copper/imx6-spaced/density-1795353311830.json.gz",
+    "bytes": 853
+  },
+  {
+    "file": "fixed-copper/imx6-spaced/circuit.json.gz",
+    "bytes": 213965
+  },
+  {
+    "file": "fixed-copper/imx6-spaced/end-1.srj.json.gz",
+    "bytes": 1005834
+  },
+  {
+    "file": "fixed-copper/imx6-spaced/end-2.srj.json.gz",
+    "bytes": 1006827
+  },
+  {
+    "file": "fixed-copper/imx6-spaced/events.jsonl",
+    "bytes": 31344
+  },
+  {
+    "file": "fixed-copper/imx6-spaced/error-3.srj.json.gz",
+    "bytes": 1007797
+  },
+  {
+    "file": "fixed-copper/imx6-spaced/graph-1-1-input.json.gz",
+    "bytes": 2678029
+  },
+  {
+    "file": "fixed-copper/imx6-spaced/graph-1-2-input.json.gz",
+    "bytes": 2678044
+  },
+  {
+    "file": "fixed-copper/imx6-spaced/graph-1-4-input.json.gz",
+    "bytes": 2679575
+  },
+  {
+    "file": "fixed-copper/imx6-spaced/graph-1-3-input.json.gz",
+    "bytes": 2679560
+  },
+  {
+    "file": "fixed-copper/imx6-spaced/result.json",
+    "bytes": 358
+  },
+  {
+    "file": "fixed-copper/imx6-spaced/run.log",
+    "bytes": 1523
+  },
+  {
+    "file": "fixed-copper/imx6-spaced/stage-1-highDensityRouteSolver.json.gz",
+    "bytes": 1157975
+  },
+  {
+    "file": "fixed-copper/imx6-spaced/stage-1-uniformPortDistributionSolver.json.gz",
+    "bytes": 4520626
+  },
+  {
+    "file": "fixed-copper/imx6-spaced/start-1.srj.json.gz",
+    "bytes": 1004936
+  },
+  {
+    "file": "fixed-copper/imx6-spaced/start-2.srj.json.gz",
+    "bytes": 1005890
+  },
+  {
+    "file": "fixed-copper/imx6-spaced/start-3.srj.json.gz",
+    "bytes": 1007797
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/bus-1-input.json.gz",
+    "bytes": 367667
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/bus-2-input.json.gz",
+    "bytes": 368501
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/circuit.json.gz",
+    "bytes": 113422
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352869779.json.gz",
+    "bytes": 12122
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352869425.json.gz",
+    "bytes": 8206
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352870154.json.gz",
+    "bytes": 8194
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352870504.json.gz",
+    "bytes": 12096
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352870605.json.gz",
+    "bytes": 5087
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352870724.json.gz",
+    "bytes": 7317
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352870853.json.gz",
+    "bytes": 9109
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352871028.json.gz",
+    "bytes": 10527
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352871345.json.gz",
+    "bytes": 5092
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352871247.json.gz",
+    "bytes": 12505
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352871451.json.gz",
+    "bytes": 5425
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352871574.json.gz",
+    "bytes": 7999
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352871728.json.gz",
+    "bytes": 9486
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352871905.json.gz",
+    "bytes": 11649
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352872151.json.gz",
+    "bytes": 8774
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352872257.json.gz",
+    "bytes": 6014
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352872398.json.gz",
+    "bytes": 7517
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352872538.json.gz",
+    "bytes": 9230
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352872693.json.gz",
+    "bytes": 10147
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352872891.json.gz",
+    "bytes": 11445
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352872994.json.gz",
+    "bytes": 6213
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352873151.json.gz",
+    "bytes": 7741
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352873305.json.gz",
+    "bytes": 9436
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352873473.json.gz",
+    "bytes": 10360
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352873655.json.gz",
+    "bytes": 11651
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352873763.json.gz",
+    "bytes": 6004
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352873885.json.gz",
+    "bytes": 7502
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352874045.json.gz",
+    "bytes": 8645
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352874399.json.gz",
+    "bytes": 11451
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352874204.json.gz",
+    "bytes": 10089
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352874513.json.gz",
+    "bytes": 6201
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352874657.json.gz",
+    "bytes": 7727
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352874794.json.gz",
+    "bytes": 8852
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352874942.json.gz",
+    "bytes": 10297
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352875346.json.gz",
+    "bytes": 6266
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352875124.json.gz",
+    "bytes": 11649
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352875440.json.gz",
+    "bytes": 5319
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352875541.json.gz",
+    "bytes": 7667
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352875651.json.gz",
+    "bytes": 8331
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352875790.json.gz",
+    "bytes": 8798
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352875957.json.gz",
+    "bytes": 11156
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352876050.json.gz",
+    "bytes": 5344
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352876162.json.gz",
+    "bytes": 7708
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352876309.json.gz",
+    "bytes": 8378
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352876450.json.gz",
+    "bytes": 8847
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352876638.json.gz",
+    "bytes": 11184
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352876738.json.gz",
+    "bytes": 5347
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352876866.json.gz",
+    "bytes": 7713
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352876988.json.gz",
+    "bytes": 8380
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352877123.json.gz",
+    "bytes": 8852
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352877310.json.gz",
+    "bytes": 11191
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352877439.json.gz",
+    "bytes": 4490
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352877561.json.gz",
+    "bytes": 6108
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352877702.json.gz",
+    "bytes": 7897
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352877854.json.gz",
+    "bytes": 9342
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352878057.json.gz",
+    "bytes": 11040
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352878408.json.gz",
+    "bytes": 8203
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352878563.json.gz",
+    "bytes": 10165
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352878726.json.gz",
+    "bytes": 12466
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352878854.json.gz",
+    "bytes": 5039
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352879027.json.gz",
+    "bytes": 6899
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352879191.json.gz",
+    "bytes": 8708
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352879352.json.gz",
+    "bytes": 10523
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352879548.json.gz",
+    "bytes": 12802
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352879786.json.gz",
+    "bytes": 6964
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352879918.json.gz",
+    "bytes": 8765
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352880031.json.gz",
+    "bytes": 10582
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352880220.json.gz",
+    "bytes": 12860
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352880611.json.gz",
+    "bytes": 8765
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352880454.json.gz",
+    "bytes": 6964
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352880713.json.gz",
+    "bytes": 10582
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352881028.json.gz",
+    "bytes": 5081
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352881439.json.gz",
+    "bytes": 10569
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352880925.json.gz",
+    "bytes": 12860
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352881988.json.gz",
+    "bytes": 8000
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352882134.json.gz",
+    "bytes": 10552
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352882504.json.gz",
+    "bytes": 5811
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352882645.json.gz",
+    "bytes": 6662
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352882821.json.gz",
+    "bytes": 7853
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352882981.json.gz",
+    "bytes": 9055
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352883217.json.gz",
+    "bytes": 5078
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352883099.json.gz",
+    "bytes": 4229
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352883376.json.gz",
+    "bytes": 5903
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352883522.json.gz",
+    "bytes": 7316
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352883802.json.gz",
+    "bytes": 4439
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352883699.json.gz",
+    "bytes": 8585
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352883943.json.gz",
+    "bytes": 5268
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352884086.json.gz",
+    "bytes": 6094
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352884431.json.gz",
+    "bytes": 8772
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352884247.json.gz",
+    "bytes": 7489
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352885122.json.gz",
+    "bytes": 5331
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352885233.json.gz",
+    "bytes": 7032
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352885724.json.gz",
+    "bytes": 13049
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352886110.json.gz",
+    "bytes": 8452
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352886253.json.gz",
+    "bytes": 10414
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352886448.json.gz",
+    "bytes": 12719
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352887135.json.gz",
+    "bytes": 12376
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352886798.json.gz",
+    "bytes": 8456
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352887516.json.gz",
+    "bytes": 8448
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352887845.json.gz",
+    "bytes": 12351
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352888268.json.gz",
+    "bytes": 9363
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352887963.json.gz",
+    "bytes": 5365
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352888424.json.gz",
+    "bytes": 10787
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352888660.json.gz",
+    "bytes": 5362
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352888773.json.gz",
+    "bytes": 5701
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352888890.json.gz",
+    "bytes": 8264
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352889040.json.gz",
+    "bytes": 9748
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352889244.json.gz",
+    "bytes": 11921
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352889640.json.gz",
+    "bytes": 5871
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352889519.json.gz",
+    "bytes": 9030
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352889816.json.gz",
+    "bytes": 7735
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352890013.json.gz",
+    "bytes": 9441
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352890162.json.gz",
+    "bytes": 10413
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352890365.json.gz",
+    "bytes": 11706
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352890465.json.gz",
+    "bytes": 6069
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352890625.json.gz",
+    "bytes": 7952
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352890768.json.gz",
+    "bytes": 9651
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352890923.json.gz",
+    "bytes": 10630
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352891112.json.gz",
+    "bytes": 11918
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352891221.json.gz",
+    "bytes": 5861
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352891347.json.gz",
+    "bytes": 7721
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352891488.json.gz",
+    "bytes": 8863
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352891643.json.gz",
+    "bytes": 10352
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352891949.json.gz",
+    "bytes": 6056
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352891831.json.gz",
+    "bytes": 11703
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352892088.json.gz",
+    "bytes": 7939
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352892586.json.gz",
+    "bytes": 11915
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352892809.json.gz",
+    "bytes": 6337
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352892230.json.gz",
+    "bytes": 9077
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352892384.json.gz",
+    "bytes": 10561
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352892910.json.gz",
+    "bytes": 5381
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352893145.json.gz",
+    "bytes": 8607
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352893489.json.gz",
+    "bytes": 11435
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352893018.json.gz",
+    "bytes": 7957
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352893292.json.gz",
+    "bytes": 9084
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352893585.json.gz",
+    "bytes": 5414
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352955027.json.gz",
+    "bytes": 978
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/density-1795352893703.json.gz",
+    "bytes": 7985
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/end-1.srj.json.gz",
+    "bytes": 368424
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/end-2.srj.json.gz",
+    "bytes": 369124
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/error-4.srj.json.gz",
+    "bytes": 381673
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/end-3.srj.json.gz",
+    "bytes": 378560
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/events.jsonl",
+    "bytes": 50700
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/graph-1-1-input.json.gz",
+    "bytes": 1402428
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/graph-2-1-input.json.gz",
+    "bytes": 1653861
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/graph-2-2-input.json.gz",
+    "bytes": 1653937
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/run.log",
+    "bytes": 869
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/result.json",
+    "bytes": 361
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/stage-1-highDensityRouteSolver.json.gz",
+    "bytes": 463933
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/stage-1-uniformPortDistributionSolver.json.gz",
+    "bytes": 2309925
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/stage-2-highDensityRouteSolver.json.gz",
+    "bytes": 709551
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/stage-2-uniformPortDistributionSolver.json.gz",
+    "bytes": 2533308
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/start-1.srj.json.gz",
+    "bytes": 367621
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/start-2.srj.json.gz",
+    "bytes": 368455
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/start-3.srj.json.gz",
+    "bytes": 369757
+  },
+  {
+    "file": "fixed-copper/orangecrab-local/start-4.srj.json.gz",
+    "bytes": 381673
+  },
+  {
+    "file": "fixed-copper/orangecrab-native/circuit.json.gz",
+    "bytes": 137133
+  },
+  {
+    "file": "fixed-copper/orangecrab-native/events.jsonl",
+    "bytes": 22881
+  },
+  {
+    "file": "fixed-copper/orangecrab-native/error-1.srj.json.gz",
+    "bytes": 468994
+  },
+  {
+    "file": "fixed-copper/orangecrab-native/fanout-1-best.json.gz",
+    "bytes": 584478
+  },
+  {
+    "file": "fixed-copper/orangecrab-native/fanout-1-input.json.gz",
+    "bytes": 469181
+  },
+  {
+    "file": "fixed-copper/orangecrab-native/fanout-checkpoint.json.gz",
+    "bytes": 584478
+  },
+  {
+    "file": "fixed-copper/orangecrab-native/result.json",
+    "bytes": 397
+  },
+  {
+    "file": "fixed-copper/orangecrab-native/run.log",
+    "bytes": 1287
+  },
+  {
+    "file": "fixed-copper/orangecrab-native/start-1.srj.json.gz",
+    "bytes": 468994
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/bus-2-input.json.gz",
+    "bytes": 367032
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/circuit.json.gz",
+    "bytes": 113802
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/bus-1-input.json.gz",
+    "bytes": 366169
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352857892.json.gz",
+    "bytes": 2994
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352857962.json.gz",
+    "bytes": 6953
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352858194.json.gz",
+    "bytes": 9778
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352858083.json.gz",
+    "bytes": 8790
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352858357.json.gz",
+    "bytes": 10541
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352858404.json.gz",
+    "bytes": 3253
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352858492.json.gz",
+    "bytes": 8382
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352858449.json.gz",
+    "bytes": 5602
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352858538.json.gz",
+    "bytes": 8934
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352858603.json.gz",
+    "bytes": 9972
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352860993.json.gz",
+    "bytes": 3253
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352861043.json.gz",
+    "bytes": 5602
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352861088.json.gz",
+    "bytes": 8382
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352861134.json.gz",
+    "bytes": 8934
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352861218.json.gz",
+    "bytes": 9972
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352862557.json.gz",
+    "bytes": 7340
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352862487.json.gz",
+    "bytes": 5641
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352862724.json.gz",
+    "bytes": 10493
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352862881.json.gz",
+    "bytes": 12624
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352863421.json.gz",
+    "bytes": 6011
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352862636.json.gz",
+    "bytes": 8398
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352863460.json.gz",
+    "bytes": 2967
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352863502.json.gz",
+    "bytes": 7199
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352863552.json.gz",
+    "bytes": 9044
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352863608.json.gz",
+    "bytes": 9979
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352863672.json.gz",
+    "bytes": 10768
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352863719.json.gz",
+    "bytes": 3000
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352863893.json.gz",
+    "bytes": 9091
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352863790.json.gz",
+    "bytes": 7240
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352864008.json.gz",
+    "bytes": 10025
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352864235.json.gz",
+    "bytes": 10809
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352864316.json.gz",
+    "bytes": 7199
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352864275.json.gz",
+    "bytes": 2967
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352864370.json.gz",
+    "bytes": 9044
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352864420.json.gz",
+    "bytes": 9979
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352864593.json.gz",
+    "bytes": 7240
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352864489.json.gz",
+    "bytes": 10768
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352864531.json.gz",
+    "bytes": 3000
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352864695.json.gz",
+    "bytes": 9091
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352864798.json.gz",
+    "bytes": 10025
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352865001.json.gz",
+    "bytes": 4492
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352864959.json.gz",
+    "bytes": 10809
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352865071.json.gz",
+    "bytes": 7099
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352865215.json.gz",
+    "bytes": 9234
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352865329.json.gz",
+    "bytes": 10138
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352865510.json.gz",
+    "bytes": 10962
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352865575.json.gz",
+    "bytes": 5152
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352865663.json.gz",
+    "bytes": 6523
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352865767.json.gz",
+    "bytes": 9220
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352865721.json.gz",
+    "bytes": 7479
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352865959.json.gz",
+    "bytes": 9822
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352866026.json.gz",
+    "bytes": 5350
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352866105.json.gz",
+    "bytes": 6157
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352866260.json.gz",
+    "bytes": 7873
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352866311.json.gz",
+    "bytes": 9343
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352866360.json.gz",
+    "bytes": 10080
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352866408.json.gz",
+    "bytes": 4054
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352866457.json.gz",
+    "bytes": 6079
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352866532.json.gz",
+    "bytes": 7498
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352866611.json.gz",
+    "bytes": 9610
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352866800.json.gz",
+    "bytes": 4101
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352866746.json.gz",
+    "bytes": 13142
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352866960.json.gz",
+    "bytes": 7508
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352867067.json.gz",
+    "bytes": 9631
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352867291.json.gz",
+    "bytes": 5929
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352867193.json.gz",
+    "bytes": 3899
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352867363.json.gz",
+    "bytes": 8315
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352867456.json.gz",
+    "bytes": 9623
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352867630.json.gz",
+    "bytes": 13935
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352867670.json.gz",
+    "bytes": 6044
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352867710.json.gz",
+    "bytes": 7067
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352867803.json.gz",
+    "bytes": 9068
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352867915.json.gz",
+    "bytes": 10590
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352868059.json.gz",
+    "bytes": 12401
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352868113.json.gz",
+    "bytes": 3892
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352868266.json.gz",
+    "bytes": 6846
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352868691.json.gz",
+    "bytes": 7394
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352868432.json.gz",
+    "bytes": 9646
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352868877.json.gz",
+    "bytes": 5505
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352868913.json.gz",
+    "bytes": 6048
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352868952.json.gz",
+    "bytes": 7337
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352868998.json.gz",
+    "bytes": 8344
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352869046.json.gz",
+    "bytes": 10553
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352869131.json.gz",
+    "bytes": 5601
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352869177.json.gz",
+    "bytes": 8319
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352869086.json.gz",
+    "bytes": 2458
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352869299.json.gz",
+    "bytes": 10441
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352869232.json.gz",
+    "bytes": 9780
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352873005.json.gz",
+    "bytes": 4767
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352873324.json.gz",
+    "bytes": 7704
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352873468.json.gz",
+    "bytes": 9841
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352873515.json.gz",
+    "bytes": 4916
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352873626.json.gz",
+    "bytes": 5979
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352873681.json.gz",
+    "bytes": 6908
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352873729.json.gz",
+    "bytes": 7862
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352873916.json.gz",
+    "bytes": 2994
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352873976.json.gz",
+    "bytes": 7620
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352874078.json.gz",
+    "bytes": 9443
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352873870.json.gz",
+    "bytes": 9990
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352874202.json.gz",
+    "bytes": 10419
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352874460.json.gz",
+    "bytes": 3253
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352874410.json.gz",
+    "bytes": 11183
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352874505.json.gz",
+    "bytes": 6777
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352874554.json.gz",
+    "bytes": 9041
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352874611.json.gz",
+    "bytes": 9583
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352874721.json.gz",
+    "bytes": 10616
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352875899.json.gz",
+    "bytes": 3253
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352875944.json.gz",
+    "bytes": 6777
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352876023.json.gz",
+    "bytes": 9041
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352876080.json.gz",
+    "bytes": 9583
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352876150.json.gz",
+    "bytes": 10616
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352877375.json.gz",
+    "bytes": 5894
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352877452.json.gz",
+    "bytes": 8009
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352877532.json.gz",
+    "bytes": 9064
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352877627.json.gz",
+    "bytes": 11133
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352877770.json.gz",
+    "bytes": 13275
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352877969.json.gz",
+    "bytes": 2967
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352877928.json.gz",
+    "bytes": 6166
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352878012.json.gz",
+    "bytes": 7590
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352878064.json.gz",
+    "bytes": 9430
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352878147.json.gz",
+    "bytes": 10351
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352878216.json.gz",
+    "bytes": 11143
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352878258.json.gz",
+    "bytes": 3000
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352878304.json.gz",
+    "bytes": 7623
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352878408.json.gz",
+    "bytes": 9471
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352878518.json.gz",
+    "bytes": 10396
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352878668.json.gz",
+    "bytes": 11184
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352878708.json.gz",
+    "bytes": 2967
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352878757.json.gz",
+    "bytes": 7590
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352878814.json.gz",
+    "bytes": 9430
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352878868.json.gz",
+    "bytes": 10351
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352878996.json.gz",
+    "bytes": 11143
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352879039.json.gz",
+    "bytes": 3000
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352879087.json.gz",
+    "bytes": 7623
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352879193.json.gz",
+    "bytes": 9471
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352879316.json.gz",
+    "bytes": 10396
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352879475.json.gz",
+    "bytes": 11184
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352879579.json.gz",
+    "bytes": 7511
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795352879518.json.gz",
+    "bytes": 4651
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/density-1795353039980.json.gz",
+    "bytes": 1557
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/end-1.srj.json.gz",
+    "bytes": 367036
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/end-3.srj.json.gz",
+    "bytes": 378210
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/end-2.srj.json.gz",
+    "bytes": 367784
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/error-4.srj.json.gz",
+    "bytes": 381441
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/events.jsonl",
+    "bytes": 53830
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/graph-2-1-input.json.gz",
+    "bytes": 2159654
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/graph-2-2-input.json.gz",
+    "bytes": 2162124
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/graph-1-1-input.json.gz",
+    "bytes": 1892171
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/result.json",
+    "bytes": 401
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/run.log",
+    "bytes": 1076
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/stage-1-uniformPortDistributionSolver.json.gz",
+    "bytes": 2918207
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/stage-1-highDensityRouteSolver.json.gz",
+    "bytes": 458543
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/stage-2-highDensityRouteSolver.json.gz",
+    "bytes": 591863
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/stage-2-uniformPortDistributionSolver.json.gz",
+    "bytes": 3044312
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/start-1.srj.json.gz",
+    "bytes": 366213
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/start-2.srj.json.gz",
+    "bytes": 367075
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/start-3.srj.json.gz",
+    "bytes": 368463
+  },
+  {
+    "file": "fixed-copper/orangecrab-spaced/start-4.srj.json.gz",
+    "bytes": 381441
+  },
+  {
+    "file": "matrix.json",
+    "bytes": 6998
+  },
+  {
+    "file": "runtime-versions.json",
+    "bytes": 893
+  }
+]
