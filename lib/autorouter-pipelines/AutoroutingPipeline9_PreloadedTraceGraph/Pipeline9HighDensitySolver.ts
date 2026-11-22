@@ -1,8 +1,9 @@
-import { BgaEscapeRoutingSolver } from "@tscircuit/high-density-phase-solver"
-import {
-  getBgaEscapeRoutingInput,
-  type BgaEscapeBoard,
-} from "./getBgaEscapeRoutingInput"
+import type {
+  BgaEscapeRoutingSolver,
+  BgaSurfaceRoutingSolver,
+} from "@tscircuit/high-density-phase-solver"
+import type { BgaEscapeBoard } from "./getBgaEscapeRoutingInput"
+import { createBgaRoutingSolver } from "./createBgaRoutingSolver"
 import { getBgaEscapeHdRoutes } from "./getBgaEscapeHdRoutes"
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import { Pipeline9HighDensityBatchSolver } from "./Pipeline9HighDensityBatchSolver"
@@ -47,8 +48,8 @@ import {
 
 type BgaEscapeAttempt = {
   board: BgaEscapeBoard
-  solver: BgaEscapeRoutingSolver
-  regionalError: string
+  solver: BgaEscapeRoutingSolver | BgaSurfaceRoutingSolver
+  regionalError?: string
 }
 
 export type Pipeline9HighDensitySolverParams = {
@@ -420,6 +421,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   activeNode: NodeWithPortPoints | null = null
 
   private bgaEscapeAttempt?: BgaEscapeAttempt
+  private surfaceRoutingError?: string
   private asyncRunning = false
 
   constructor(private readonly params: Pipeline9HighDensitySolverParams) {
@@ -445,6 +447,11 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     this.enableRegionalFallback = params.enableRegionalFallback ?? true
     this.maxB01Rips = params.maxB01Rips
     this.unsolvedNodePortPoints = [...params.nodePortPoints]
+    const board = params.bgaEscapeBoard
+    if (board) {
+      const solver = createBgaRoutingSolver(board, params.nodePortPoints)
+      if (solver) this.bgaEscapeAttempt = { board, solver }
+    }
     this.MAX_ITERATIONS = 100e6 * this.effort
     this.stats = {
       nodeCount: params.nodePortPoints.length,
@@ -1222,8 +1229,17 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
         return
       }
     }
+    const failure = `${solver.getSolverName()}: ${solver.error ?? "candidate violates board clearance"}`
+    if (!regionalError) {
+      // Existing surface copper only suggests the usable stack. An ordinary
+      // regional route may still reach the requested ports on another layer.
+      this.surfaceRoutingError = failure
+      this.stats.surfaceRoutingError = failure
+      this.bgaEscapeAttempt = undefined
+      return
+    }
     this.failed = true
-    this.error = `${regionalError}. BGA escape routing: ${solver.error ?? "candidate violates board clearance"}`
+    this.error = `${regionalError}. ${failure}`
   }
 
   private stepNodeRouting(): void {
@@ -1236,15 +1252,14 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
           `regional fallback failed: ${this.activeFallbackSolver.error ?? "unknown error"}`,
         ].join("; ")
         const board = this.params.bgaEscapeBoard
-        const input = board && getBgaEscapeRoutingInput(board)
-        if (board && input) {
-          this.bgaEscapeAttempt = {
-            board,
-            solver: new BgaEscapeRoutingSolver(input),
-            regionalError,
-          }
+        const solver =
+          !this.surfaceRoutingError && board && createBgaRoutingSolver(board)
+        if (board && solver) {
+          this.bgaEscapeAttempt = { board, solver, regionalError }
         } else {
-          this.error = regionalError
+          this.error = this.surfaceRoutingError
+            ? `${regionalError}. ${this.surfaceRoutingError}`
+            : regionalError
           this.failed = true
         }
         this.activeFallbackSolver = null

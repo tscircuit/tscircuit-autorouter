@@ -42,7 +42,7 @@ function supportsBgaEscapeRouting(
   const traces = srj.traces
   if (!traces?.length) return false
   return (
-    srj.layerCount >= 3 &&
+    srj.layerCount >= 2 &&
     !srj.outline?.length &&
     !srj.allowBlindAndBuriedVias &&
     !srj.buses?.length &&
@@ -87,7 +87,7 @@ export function getBgaEscapeRoutingInput({
     return
 
   const signalLayers = getBgaSignalLayers(inputSrj)
-  if (!signalLayers.some((z) => z > 0 && z < inputSrj.layerCount - 1)) return
+  if (signalLayers.length < 2) return
   const bgaIds = new Set(
     components
       .filter((component) => component.componentKind === "bga")
@@ -128,6 +128,7 @@ export function getBgaEscapeRoutingInput({
           layerCount: inputSrj.layerCount,
           minTraceWidth: inputSrj.minTraceWidth,
           minBoardEdgeClearance: inputSrj.minBoardEdgeClearance,
+          minTraceToHoleEdgeClearance: inputSrj.minTraceToHoleEdgeClearance,
           minViaHoleEdgeToViaHoleEdgeClearance:
             inputSrj.minViaHoleEdgeToViaHoleEdgeClearance,
           traceClearance: clearance,
