@@ -29,13 +29,18 @@ type TraceWidthDrawing = {
 
 function drawTraceWidths(
   routes: HighDensityRoute[],
-  nominalWidths: Map<string, number>,
+  connectionNominalTraceWidthMap: ReadonlyMap<
+    HighDensityRoute["connectionName"],
+    number
+  >,
 ): TraceWidthDrawing {
   const drawing: TraceWidthDrawing = { lines: [], totalMm: 0, nominalMm: 0 }
   for (const route of routes) {
     const nominalWidth =
-      nominalWidths.get(route.connectionName) ??
-      nominalWidths.get(route.rootConnectionName ?? route.connectionName)
+      connectionNominalTraceWidthMap.get(route.connectionName) ??
+      connectionNominalTraceWidthMap.get(
+        route.rootConnectionName ?? route.connectionName,
+      )
     if (nominalWidth === undefined) {
       throw new Error(`Missing requested width for ${route.connectionName}`)
     }
@@ -135,8 +140,8 @@ export function getDdrLocalWidthSnapshots(
   if (!bounds) throw new Error(`Missing captured connection ${connectionName}`)
 
   const name = board === "glider" ? "Glider" : "OrangeCrab"
-  const widths = solver.connectionNominalTraceWidthMap
-  const trace = drawTraceWidths(selected, widths)
+  const { connectionNominalTraceWidthMap } = solver
+  const trace = drawTraceWidths(selected, connectionNominalTraceWidthMap)
   const circles = selected.flatMap((route) =>
     route.vias.map((center) => ({
       center,
@@ -146,7 +151,7 @@ export function getDdrLocalWidthSnapshots(
   )
   return {
     boardSvg: renderWidthDrawing({
-      drawing: drawTraceWidths(routes, widths),
+      drawing: drawTraceWidths(routes, connectionNominalTraceWidthMap),
       background: capture.background,
       bounds: capture.refinement.board.bounds,
       title: `${name} DDR · remaining-phase copper`,
