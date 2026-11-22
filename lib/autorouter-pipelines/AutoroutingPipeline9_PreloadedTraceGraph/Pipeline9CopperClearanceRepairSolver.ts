@@ -1,3 +1,4 @@
+import { BaseSolver } from "lib/solvers/BaseSolver"
 import { shortenPairedFanoutTrees } from "./shortenPairedFanoutTrees"
 import { getPinRowEscapeCandidates } from "./getPinRowEscapeCandidates"
 import { type ClearancePathInput, findClearancePath } from "@tscircuit/repair04"
@@ -75,11 +76,11 @@ function improvesCopper(before: Report, after: Report): boolean {
   return true
 }
 
-export function repairPipeline9CopperClearance(
+function* repairCopperClearance(
   input: SimpleRouteJson,
   pointPairs: SimpleRouteJson,
   traces: Trace[],
-): Trace[] {
+): Generator<void, Trace[]> {
   const clearance = input.minTraceToPadEdgeClearance
   if (
     !clearance ||
@@ -205,6 +206,7 @@ export function repairPipeline9CopperClearance(
   for (let sweep = 0; sweep < 5; sweep++) {
     const previous = current
     for (const id of dirtyTraceIds()) {
+      if (budget.searches >= 160 || budget.nodes >= 600_000) break
       const trace = current.find((t) => t.pcb_trace_id === id)
       if (!trace || !canReplaceTrace(input, trace)) continue
       const wireRuns: Span[] = []
@@ -222,6 +224,8 @@ export function repairPipeline9CopperClearance(
         if (first?.route_type !== "wire" || last?.route_type !== "wire") continue
         const allowVias = lo === 0 && hi === trace.route.length - 1 && trace.route.some((p) => p.route_type === "via")
         for (const reverse of [false, true]) {
+          if (budget.searches >= 160 || budget.nodes >= 600_000) break
+          yield
           const replacement = search(trace, first, last, current.filter((t) => t !== trace), allowVias, reverse)
           if (!replacement) continue
           const candidate = {
@@ -238,10 +242,12 @@ export function repairPipeline9CopperClearance(
     for (const id of dirtyTraceIds()) {
       const target = current.find((t) => t.pcb_trace_id === id)
       if (!target) continue
+      if (budget.searches >= 160 || budget.nodes >= 600_000) break
       const candidates = getPinRowEscapeCandidates(
         input, current, target, (t) => canReplaceTrace(input, t), search,
       )
       for (const candidate of candidates) {
+        yield
         if (accept(candidate)) break
       }
       if (current !== previous) break
@@ -249,4 +255,34 @@ export function repairPipeline9CopperClearance(
     if (current === previous) break
   }
   return shortenPairedFanoutTrees(input, current, evaluate)
+}
+
+export class Pipeline9CopperClearanceRepairSolver extends BaseSolver {
+  private readonly repair?: Generator<void, Trace[]>
+  private output: Trace[]
+
+  constructor(
+    input: SimpleRouteJson,
+    pointPairs: SimpleRouteJson,
+    routedTraces: Trace[],
+    remainingJointRepairIssues: number,
+  ) {
+    super()
+    this.output = routedTraces
+    if (remainingJointRepairIssues > 0) {
+      this.repair = repairCopperClearance(input, pointPairs, routedTraces)
+    }
+  }
+
+  override _step(): void {
+    const result = this.repair?.next()
+    if (result && !result.done) return
+    if (result) this.output = result.value
+    this.solved = true
+  }
+
+  getOutput(): Trace[] {
+    if (!this.solved) throw new Error("Copper clearance repair is still in progress")
+    return this.output
+  }
 }

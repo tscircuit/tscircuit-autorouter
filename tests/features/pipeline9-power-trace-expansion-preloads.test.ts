@@ -71,9 +71,11 @@ test("Pipeline9 power expansion uses current preloads without disabling its stag
     "Cannot get output before solving is complete",
   )
   expect(powerStep.solverName).toBe("powerTraceExpansionSolver")
-  expect(solver.pipelineDef.at(-2)?.solverName).toBe(
+  expect(solver.pipelineDef.slice(-3).map((step) => step.solverName)).toEqual([
     "lengthMatchingPostProcessingSolver",
-  )
+    "copperClearanceRepairSolver",
+    "powerTraceExpansionSolver",
+  ])
   solver.getNewTracesBeforePowerExpansion = () => newlyRoutedTraces
   solver.getUpdatedPreloadedTraces = () => [
     updatedPowerTrace,
