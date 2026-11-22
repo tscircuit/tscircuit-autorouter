@@ -81,13 +81,13 @@ function isRouteInsideConnectedPad(
   for (const obstacle of obstacles) {
     const isRectangularPad = obstacle.type === "rect" && !obstacle.shape
     if (!isRectangularPad) continue
-    if (!isObstacleConnectedToRoute(obstacle, route, connMap)) continue
     const isInsidePad = route.route.every(
       (point) =>
         obstacle.layers.includes(mapZToLayerName(point.z, layerCount)) &&
         isPointInRect(point, obstacle),
     )
-    if (isInsidePad) return true
+    if (!isInsidePad) continue
+    if (isObstacleConnectedToRoute(obstacle, route, connMap)) return true
   }
   return false
 }

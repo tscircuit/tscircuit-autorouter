@@ -41,4 +41,4 @@
               document.currentScript.parentElement.addEventListener('mouseleave', () => {
                 document.currentScript.parentElement.getElementById('crosshair').style.display = 'none';
               });
-            ]]></script><g data-testid="connectivity-checks"><rect x="12" y="12" width="400" height="44" rx="6" fill="white" stroke="#166534"/><text x="24" y="40" font-family="Arial, sans-serif" font-size="20" fill="#166534">Pad connectivity checks: 151152</text></g></svg>
+            ]]></script><g data-testid="connectivity-checks"><rect x="12" y="12" width="400" height="44" rx="6" fill="white" stroke="#166534"/><text x="24" y="40" font-family="Arial, sans-serif" font-size="20" fill="#166534">Pad connectivity checks: 0</text></g></svg>
