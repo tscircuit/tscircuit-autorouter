@@ -1,0 +1,21 @@
+name: Validate centered plane escape fix source
+on:
+  push:
+    branches: [analysis/validate-inner-centered-2457]
+permissions:
+  contents: read
+jobs:
+  source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: 7e77a91
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: bun install --frozen-lockfile
+      - run: bun run typecheck
+      - run: bun run format:check
