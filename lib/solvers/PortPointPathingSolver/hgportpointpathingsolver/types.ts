@@ -92,6 +92,8 @@ export type RegionMemoryPfMap = Map<RegionId, number>
 export type RegionRipCountMap = Map<RegionId, number>
 
 export interface HgPortPointPathingSolverParams {
+  /** Keep physical crossing capacity while constrained native copper is negotiated. */
+  preservePreloadedPortCapacity?: boolean
   graph: HyperGraphHg
   connections: ConnectionHgWithNetId[]
   colorMap?: Record<string, string>
