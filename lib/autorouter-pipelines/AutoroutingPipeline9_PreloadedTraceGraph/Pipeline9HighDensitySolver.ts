@@ -813,7 +813,9 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
         ...fallbackProblem.nodeWithPortPoints,
         portPoints: fallbackProblem.nodeWithPortPoints.portPoints.map(
           (point) => {
-            const layers = allowedZLayersByConnectionName.get(point.connectionName)
+            const layers = allowedZLayersByConnectionName.get(
+              point.connectionName,
+            )
             if (!layers) return point
             return { ...point, allowedZLayers: [...layers] }
           },

@@ -10,7 +10,10 @@ import {
 import type { HighDensityRoute } from "lib/types/high-density-types"
 
 type IntraNodeCopperInput = {
-  allowedZLayersByConnectionName?: ReadonlyMap<ConnectionName, readonly number[]>
+  allowedZLayersByConnectionName?: ReadonlyMap<
+    ConnectionName,
+    readonly number[]
+  >
   fixedHdRoutes: HighDensityRoute[]
   connMap: ConnectivityMap
   layerCount: number
@@ -24,10 +27,9 @@ type IntraNodeCopperContext = Omit<IntraNodeCopperInput, "fixedHdRoutes"> & {
 
 function isIntraNodeSegmentOnAllowedLayer(
   segment: Parameters<StaticSegmentValidator>[0],
-  { allowedZLayersByConnectionName }: Pick<
-    IntraNodeCopperInput,
-    "allowedZLayersByConnectionName"
-  >,
+  {
+    allowedZLayersByConnectionName,
+  }: Pick<IntraNodeCopperInput, "allowedZLayersByConnectionName">,
 ): boolean {
   const allowedZLayers = allowedZLayersByConnectionName?.get(
     segment.connectionName,
@@ -113,7 +115,8 @@ export function createIntraNodeSegmentValidator(
     ]
   })
   if (copper.length === 0) {
-    return (segment): boolean => isIntraNodeSegmentOnAllowedLayer(segment, input)
+    return (segment): boolean =>
+      isIntraNodeSegmentOnAllowedLayer(segment, input)
   }
   const index = new FlatbushIndex<HighDensityRoute>(copper.length)
   for (const primitive of copper) {
