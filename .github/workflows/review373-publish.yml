@@ -1,0 +1,41 @@
+name: Publish audited shared-via full-circuit evidence
+on:
+  push:
+    branches: [analysis/publish-shared-plane-via-reuse-2458]
+permissions:
+  contents: write
+  actions: read
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: harness
+      - name: Wait for exact audited runs and native checks
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          for spec in tscircuit/tscircuit-autorouter:45022986170 tscircuit/tscircuit-autorouter:45023168296 tscircuit/fanout-solver:45024229833 tscircuit/fanout-solver:45024229859 tscircuit/fanout-solver:45024229917; do
+            repo=${spec%:*}
+            run=${spec##*:}
+            for attempt in $(seq 1 140); do
+              status=$(gh api repos/$repo/actions/runs/$run --jq .status)
+              if [ "$status" = completed ]; then break; fi
+              sleep 15
+            done
+            test "$(gh api repos/$repo/actions/runs/$run --jq .conclusion)" = success
+          done
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45023168296
+          name: shared-via-completion-audit
+          path: audited-results
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/checkout@v4
+        with:
+          ref: analysis/e2e-full-circuit-interception-results-20261120
+          path: report
+      - name: Publish measured analysis and complete PCB SVG artifacts
+        run: python3 harness/experiments/e2e-samples-20261120/review373-publish.py
