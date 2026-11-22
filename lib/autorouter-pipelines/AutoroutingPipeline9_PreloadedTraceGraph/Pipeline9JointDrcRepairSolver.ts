@@ -1262,9 +1262,8 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         prioritizeCircuitJsonErrors: boolean
       }
     >()
-    const multilayerObstacles = params.obstacles.filter(
-      (obstacle) =>
-        isExistingMultilayerObstacle(obstacle),
+    const multilayerObstacles = params.obstacles.filter((obstacle) =>
+      isExistingMultilayerObstacle(obstacle),
     )
     const connectedObstaclesByConnectionName = new Map<
       string,

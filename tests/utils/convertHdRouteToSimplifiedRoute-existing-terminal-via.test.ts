@@ -57,21 +57,30 @@ test("a planned via occupies the same layers as an existing barrel and still req
     traceThickness: 0.15,
     viaDiameter: 0.45,
     vias: [{ x: 0, y: 0 }],
-    route: [{ x: 0, y: 0, z: 0 }, { x: 0, y: 0, z: 1 }],
+    route: [
+      { x: 0, y: 0, z: 0 },
+      { x: 0, y: 0, z: 1 },
+    ],
   }
   for (const representsFutureVia of [true, false]) {
     const route = convertHdRouteToSimplifiedRoute(hdRoute, 4, {
-      obstacles: [{
-        type: "rect",
-        layers: ["top", "inner1", "inner2", "bottom"],
-        center: { x: 0, y: 0 },
-        width: 0.45,
-        height: 0.45,
-        connectedTo: ["GND"],
-        representsFutureVia,
-      }],
+      obstacles: [
+        {
+          type: "rect",
+          layers: ["top", "inner1", "inner2", "bottom"],
+          center: { x: 0, y: 0 },
+          width: 0.45,
+          height: 0.45,
+          connectedTo: ["GND"],
+          representsFutureVia,
+        },
+      ],
     })
-    expect(route.filter((p) => p.route_type === "via")).toHaveLength(representsFutureVia ? 1 : 0)
-    expect(route.filter((p) => p.route_type === "through_obstacle")).toHaveLength(representsFutureVia ? 0 : 1)
+    expect(route.filter((p) => p.route_type === "via")).toHaveLength(
+      representsFutureVia ? 1 : 0,
+    )
+    expect(
+      route.filter((p) => p.route_type === "through_obstacle"),
+    ).toHaveLength(representsFutureVia ? 0 : 1)
   }
 })
