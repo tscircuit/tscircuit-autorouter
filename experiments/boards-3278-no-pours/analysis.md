@@ -59,6 +59,7 @@ Copper counts include the emitted partial/preloaded output; they do not mean suc
 - Source repro: https://github.com/tscircuit/tiny-hypergraph/pull/338
 - Source fix: https://github.com/tscircuit/tiny-hypergraph/pull/339
 - Autorouter repro: https://github.com/tscircuit/tscircuit-autorouter/pull/4111
-- Local checks cover fixed-copper preservation, greedy/final acceptance, frontier parity, serial/worker prepared routing, focused SVGs, and source/repro typechecking. Autorouter production build passes.
+- Autorouter integration: https://github.com/tscircuit/tscircuit-autorouter/pull/4112
+- Local checks cover fixed-copper preservation, greedy/final acceptance, frontier parity, serial/worker prepared routing, focused SVGs, and source/repro typechecking. Autorouter production build, integration/repro typecheck, runtime-worker parity, and focused integration checks pass. Source full CI tests pass; full autorouter CI shards are still running.
 
 The baseline and fixed artifact digests, runtime hashes, full per-board results, and common input comparisons are committed alongside this report. No tscircuit main-package PR was created.
