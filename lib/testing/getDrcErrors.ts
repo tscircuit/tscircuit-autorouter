@@ -19,6 +19,7 @@ import type {
 } from "circuit-json"
 import { Point } from "graphics-debug"
 import type { GetDrcErrorsOptions } from "lib/types/drc-types"
+import { annotateTraceEndpointPorts } from "lib/utils/autorouting-drc/annotateTraceEndpointPorts"
 import { createDrcConnectivityMap } from "lib/utils/createDrcConnectivityMap"
 import { MIN_VIA_TO_VIA_CLEARANCE } from "lib/utils/drcPresets"
 
@@ -57,6 +58,7 @@ export const getDrcErrors = (
   circuitJson: CircuitJson,
   options: GetDrcErrorsOptions = {},
 ): GetDrcErrorsResult => {
+  annotateTraceEndpointPorts(circuitJson)
   const connMap = createDrcConnectivityMap(circuitJson)
   const vias = circuitJson.filter(
     (

@@ -53,7 +53,7 @@ const createSameNetViaPadCircuitJson = (): AnyCircuitElement[] => [
   },
 ]
 
-test.failing("getDrcErrors allows a same-net via next to the pad its trace ends on", (): void => {
+test("getDrcErrors allows a same-net via next to the pad its trace ends on", (): void => {
   const { errors } = getDrcErrors(createSameNetViaPadCircuitJson(), {
     viaToPadClearance: 0.2,
     includeTraceContinuity: false,
