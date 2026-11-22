@@ -70,6 +70,35 @@ const renderFrame = (
  * it did not touch before, then keeps the result because it has fewer DRC
  * errors.
  */
+const convertFixtureRoutesToTraces = ({
+  fixture,
+  connMap,
+  hdRoutes,
+}: {
+  fixture: JointRepairFixture
+  connMap: ConnectivityMap
+  hdRoutes: HighDensityRoute[]
+}): SimplifiedPcbTrace[] =>
+  convertPipeline7HdRoutesToSimplifiedPcbTraces({
+    connections: fixture.newConnections,
+    originalConnections: fixture.originalSrj.connections,
+    hdRoutes,
+    layerCount: fixture.layerCount,
+    obstacles: fixture.obstacles,
+    defaultViaHoleDiameter: fixture.defaultViaHoleDiameter,
+    connMap,
+  })
+
+/** A pad contact's id names the trace and the pad it overlaps. */
+const getPadContactIds = (errors: Record<string, unknown>[]): string[] =>
+  errors
+    .filter(
+      (error) =>
+        typeof error.message === "string" &&
+        error.message.includes("overlaps with pcb_smtpad"),
+    )
+    .map((error) => String(error.pcb_trace_error_id))
+
 test("A13 joint repair moves a trace onto pads of other nets", async (): Promise<void> => {
   const fixture = JSON.parse(
     gunzipSync(
@@ -110,27 +139,20 @@ test("A13 joint repair moves a trace onto pads of other nets", async (): Promise
     inputSrj: fixture.originalSrj,
     srjWithPointPairs: fixture.srj,
   })
-  const toTraces = (hdRoutes: HighDensityRoute[]): SimplifiedPcbTrace[] =>
-    convertPipeline7HdRoutesToSimplifiedPcbTraces({
-      connections: fixture.newConnections,
-      originalConnections: fixture.originalSrj.connections,
-      hdRoutes,
-      layerCount: fixture.layerCount,
-      obstacles: fixture.obstacles,
-      defaultViaHoleDiameter: fixture.defaultViaHoleDiameter,
+  const before = evaluate(
+    convertFixtureRoutesToTraces({
+      fixture,
       connMap,
-    })
-  const before = evaluate(toTraces(fixture.newHdRoutes))
-  const after = evaluate(toTraces(joint.getOutput()))
-  // A contact's id names the trace and the pad it overlaps.
-  const getPadContactIds = (errors: Record<string, unknown>[]): string[] =>
-    errors
-      .filter(
-        (error) =>
-          typeof error.message === "string" &&
-          error.message.includes("overlaps with pcb_smtpad"),
-      )
-      .map((error) => String(error.pcb_trace_error_id))
+      hdRoutes: fixture.newHdRoutes,
+    }),
+  )
+  const after = evaluate(
+    convertFixtureRoutesToTraces({
+      fixture,
+      connMap,
+      hdRoutes: joint.getOutput(),
+    }),
+  )
   const inputContactIds = new Set(getPadContactIds(before.errors))
   const newPadContactIds = getPadContactIds(after.errors).filter(
     (id) => !inputContactIds.has(id),
