@@ -5,9 +5,12 @@ import { convertToCircuitJson } from "lib/utils/convertToCircuitJson"
 import report from "./bugreport117-511b60.json" with { type: "json" }
 
 const srj = report.simple_route_json as SimpleRouteJson
-const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(structuredClone(srj))
+const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
+  structuredClone(srj),
+)
 solver.solve()
-if (!solver.solved || solver.failed) throw new Error(String(solver.error ?? "Routing did not complete"))
+if (!solver.solved || solver.failed)
+  throw new Error(String(solver.error ?? "Routing did not complete"))
 
 const elements = convertToCircuitJson(
   solver.srjWithPointPairs!,
@@ -15,4 +18,5 @@ const elements = convertToCircuitJson(
   { originalSrj: srj },
 )
 const warnings = checkPcbTraceStyle(elements)
-if (warnings.length) throw new Error(warnings.map((warning) => warning.message).join("\n"))
+if (warnings.length)
+  throw new Error(warnings.map((warning) => warning.message).join("\n"))
