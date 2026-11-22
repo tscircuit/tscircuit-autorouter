@@ -3,10 +3,13 @@ import { HighDensitySolverA01 } from "@tscircuit/high-density-a01"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { getBugReportSnapshotSvg } from "lib/testing/getBugReportSnapshotSvg"
 import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
+import type { NodeWithPortPoints } from "lib/types/high-density-types"
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 import { applyToPoint, compose, scale, translate } from "transformation-matrix"
 import input from "../fixtures/through-via-terminal-window.json"
+
+const nodeWithPortPoints: NodeWithPortPoints = input.nodeWithPortPoints
 
 test("the complete captured region exposes through vias covering foreign terminals", async (): Promise<void> => {
   // All 52 terminals from the observed regional candidate, without reduction.
@@ -15,7 +18,7 @@ test("the complete captured region exposes through vias covering foreign termina
   expect(solver.solved).toBeTrue()
   const routes = solver.getOutput()
   expect(routes).toHaveLength(26)
-  const center = input.nodeWithPortPoints.center
+  const center = nodeWithPortPoints.center
   // Undo the captured grow/shrink candidate's 2x search frame about its center.
   const searchToBoard = compose(
     translate(center.x, center.y),
@@ -40,13 +43,13 @@ test("the complete captured region exposes through vias covering foreign termina
     bounds: { minX: -11.4, maxX: -3.8, minY: -11.3, maxY: -5.8 },
     obstacles: [],
     connections: [
-      ...new Set(input.nodeWithPortPoints.portPoints.map((port) => port.connectionName)),
+      ...new Set(nodeWithPortPoints.portPoints.map((port) => port.connectionName)),
     ].map((name) => ({
       name,
-      rootConnectionName: input.nodeWithPortPoints.portPoints.find(
+      rootConnectionName: nodeWithPortPoints.portPoints.find(
         (port) => port.connectionName === name,
       )!.rootConnectionName,
-      pointsToConnect: input.nodeWithPortPoints.portPoints
+      pointsToConnect: nodeWithPortPoints.portPoints
         .filter((port) => port.connectionName === name)
         .map((port) => ({
           ...applyToPoint(searchToBoard, port),
