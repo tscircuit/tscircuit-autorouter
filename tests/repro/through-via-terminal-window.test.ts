@@ -43,7 +43,9 @@ test("the complete captured region exposes through vias covering foreign termina
     bounds: { minX: -11.4, maxX: -3.8, minY: -11.3, maxY: -5.8 },
     obstacles: [],
     connections: [
-      ...new Set(nodeWithPortPoints.portPoints.map((port) => port.connectionName)),
+      ...new Set(
+        nodeWithPortPoints.portPoints.map((port) => port.connectionName),
+      ),
     ].map((name) => ({
       name,
       rootConnectionName: nodeWithPortPoints.portPoints.find(
