@@ -3,7 +3,7 @@ import { HighDensitySolverA01 } from "@tscircuit/high-density-a01"
 import { getSvgFromGraphicsObject } from "graphics-debug"
 import { materializePipeline9HdRouteVias } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/materializePipeline9HdRouteVias"
 
-test("captured regional A01 output fails Pipeline9 via materialization", async (): Promise<void> => {
+test("captured regional A01 output passes Pipeline9 via materialization", async (): Promise<void> => {
   // Minimized from a captured regional solve: five connection pairs, six
   // layers, grid size and copper dimensions retained. Identities are
   // anonymized and coordinates are translated to the local origin.
@@ -68,9 +68,7 @@ test("captured regional A01 output fails Pipeline9 via materialization", async (
     solver.nodeWithPortPoints.portPoints[3]!,
   )
   expect(route.vias).toHaveLength(1)
-  expect(() => materializePipeline9HdRouteVias(routes)).toThrow(
-    'Pipeline9 route "signal_1" changes layers from z=0 to z=5 without an explicit via',
-  )
+  expect(materializePipeline9HdRouteVias(routes)).toHaveLength(5)
 
   await expect(
     getSvgFromGraphicsObject(solver.visualize({ showViaLandings: true }), {
