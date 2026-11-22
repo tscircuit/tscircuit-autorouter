@@ -1,0 +1,68 @@
+name: Check changed complete routing fixtures on native macOS
+on:
+  push:
+    branches: [analysis/native-shared-plane-regressions-2458]
+permissions:
+  contents: read
+jobs:
+  native-regressions:
+    runs-on: macos-15
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: 61a36089682bb0c8e4e2b4f8079b6cec481c500e
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: bun install --frozen-lockfile
+      - name: Compare native routing, physical holes, vias and length
+        run: |
+          cat > native-regression.ts <<'TS'
+          import { readFileSync, writeFileSync } from "node:fs"
+          import { FanoutSolver } from "./lib/fanout-solver"
+          import { getPlanVias } from "./lib/route-bus/plan-copper"
+          import { distance, distancePointToObstacle } from "./lib/geometry"
+          import { getSvgFromGraphicsObject } from "graphics-debug"
+          const mode=process.argv[2]
+          const cases=[['top','datasets/fixtures/fanout31-am62l-top-center.json'],['bottom','tests/fixtures/dataset31-bottom-left-offset.json']]
+          for(const [name,path] of cases) {
+           const {simpleRouteJson,solverOptions}=JSON.parse(readFileSync(path,'utf8'))
+           const solver=new FanoutSolver(simpleRouteJson,{...solverOptions,maxLayerCombinations:1})
+           solver.solve()
+           const output=solver.getOutput(),plans=output.routePlans??Reflect.get(solver,'bestAttempt').plans
+           const vias=plans.flatMap(p=>getPlanVias(p))
+           let pads=0,holes=0
+           const drillGap=Math.max(simpleRouteJson.minViaHoleEdgeToViaHoleEdgeClearance??0,simpleRouteJson.minPlatedHoleDrillEdgeToDrillEdgeClearance??0)
+           for(const via of vias)for(const pad of simpleRouteJson.obstacles)if(!pad.isCopperPour&&pad.layers.some(l=>via.spanLayers.includes(l))&&distancePointToObstacle(via.center,pad)<via.diameter/2-1e-9)pads++
+           for(let i=0;i<vias.length;i++)for(let j=i+1;j<vias.length;j++)if(vias[i].spanLayers.some(l=>vias[j].spanLayers.includes(l))&&distance(vias[i].center,vias[j].center)<(vias[i].holeDiameter+vias[j].holeDiameter)/2+drillGap-1e-9)holes++
+           const summary={mode,name,solved:solver.solved,count:plans.length,vias:vias.length,length:plans.reduce((s,p)=>s+p.length,0),pads,holes,valid:output.validation.valid}
+           console.log('NATIVE_REGRESSION',JSON.stringify(summary))
+           writeFileSync(mode+'-'+name+'.json',JSON.stringify({summary,plans}))
+           writeFileSync(mode+'-'+name+'.svg',getSvgFromGraphicsObject(solver.visualize()))
+          }
+          TS
+          bun native-regression.ts after
+          git checkout d00fab4d45623176b501270f78115b0c47e936d4 -- lib
+          bun native-regression.ts before
+          python3 - <<'PY'
+          import json
+          for name in ['top','bottom']:
+              a=json.load(open('before-'+name+'.json'))['summary'];b=json.load(open('after-'+name+'.json'))['summary']
+              assert a['solved'] and b['solved'] and b['valid']
+              assert a['count']==b['count']==135
+              assert b['vias']<=a['vias']
+              assert b['pads']<=a['pads']
+              assert b['holes']<=a['holes']
+              print('NATIVE_COMPARISON',json.dumps({'case':name,'before':a,'after':b}))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: native-regression-comparisons
+          path: |
+            before-*.json
+            after-*.json
+            before-*.svg
+            after-*.svg
