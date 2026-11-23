@@ -3,11 +3,76 @@ import type { SimpleRouteJson } from "lib/types"
 import { isViaPadClearanceError } from "./isViaPadClearanceError"
 import type { Pipeline9DrcError } from "./pipeline9JointDrcRepairUtils"
 
+const isIdenticalErrorValue = (left: unknown, right: unknown): boolean => {
+  if (typeof left === "number" || typeof right === "number") {
+    return (
+      typeof left === "number" &&
+      typeof right === "number" &&
+      Number.isFinite(left) &&
+      Number.isFinite(right) &&
+      Object.is(left, right)
+    )
+  }
+  if (
+    left === null ||
+    right === null ||
+    typeof left !== "object" ||
+    typeof right !== "object"
+  ) {
+    return left === right
+  }
+  if (Array.isArray(left) || Array.isArray(right)) {
+    return (
+      Array.isArray(left) &&
+      Array.isArray(right) &&
+      left.length === right.length &&
+      left.every((item, index) => isIdenticalErrorValue(item, right[index]))
+    )
+  }
+  const leftRecord = left as Record<string, unknown>
+  const rightRecord = right as Record<string, unknown>
+  const keys = Object.keys(leftRecord)
+  if (keys.length !== Object.keys(rightRecord).length) return false
+  return keys.every(
+    (key) =>
+      Object.hasOwn(rightRecord, key) &&
+      isIdenticalErrorValue(leftRecord[key], rightRecord[key]),
+  )
+}
+
+const isConnectivityTraceError = (
+  error: Pipeline9DrcError,
+  traceId: string,
+  overlapPrefix: string,
+): boolean => {
+  if (
+    error.type !== "pcb_trace_error" ||
+    error.drc_source !== undefined ||
+    typeof error.pcb_trace_error_id !== "string" ||
+    error.pcb_trace_error_id.startsWith(overlapPrefix)
+  ) {
+    return false
+  }
+  if (
+    Array.isArray(error.pcb_port_ids) &&
+    error.pcb_port_ids.length > 0 &&
+    error.pcb_port_ids.every((portId) => typeof portId === "string")
+  ) {
+    return true
+  }
+  return (
+    error.pcb_trace_error_id === `disconnected_endpoint_${traceId}_start` ||
+    error.pcb_trace_error_id === `disconnected_endpoint_${traceId}_end`
+  )
+}
+
 /**
  * Partial publication is limited to remaining fixed-pad errors covered by the
- * physical obstacle non-regression guard. Call only after that guard and the
- * new-via guard pass. Unknown, connectivity and moving
- * copper errors still require a completely reference-clean repair.
+ * physical obstacle non-regression guard, plus pre-existing connectivity errors
+ * that remain identical to the stage input (matched at most once). Call only
+ * after the physical obstacle guard and new-via guard pass. Unknown, newly
+ * introduced connectivity, and moving copper errors still require a completely
+ * reference-clean repair.
  */
 export const canPublishPartialFixedObstacleRepair = ({
   originalSrj,
@@ -33,6 +98,14 @@ export const canPublishPartialFixedObstacleRepair = ({
   for (const error of remainingErrors) {
     if (typeof error.pcb_trace_id !== "string") return false
     const prefix = `overlap_${error.pcb_trace_id}_`
+    if (isConnectivityTraceError(error, error.pcb_trace_id, prefix)) {
+      const unchangedIndex = unmatchedErrors.findIndex((original) =>
+        isIdenticalErrorValue(original, error),
+      )
+      if (unchangedIndex === -1) return false
+      unmatchedErrors.splice(unchangedIndex, 1)
+      continue
+    }
     const overlapPadId =
       error.type === "pcb_trace_error" &&
       typeof error.pcb_trace_error_id === "string" &&
