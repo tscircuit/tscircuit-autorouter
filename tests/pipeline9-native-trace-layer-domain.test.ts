@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { assertPreloadedTracesStayOnAllowedLayers } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/assertPreloadedTracesStayOnAllowedLayers"
+import { assertPreloadedTracesStayOnAllowedLayers } from "lib/utils/assertPreloadedTracesStayOnAllowedLayers"
 import type { SimplifiedPcbTrace } from "lib/types"
 
 test("final native copper keeps its signal layers while through vias may cross inner layers", (): void => {

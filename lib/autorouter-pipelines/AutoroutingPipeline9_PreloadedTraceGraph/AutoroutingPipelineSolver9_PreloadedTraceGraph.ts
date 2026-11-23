@@ -1,4 +1,3 @@
-import { assertPreloadedTracesStayOnAllowedLayers } from "./assertPreloadedTracesStayOnAllowedLayers"
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import type { Pipeline9EffortCleanupSolver } from "./Pipeline9EffortCleanupSolver"
 import type { RectDiffPipeline } from "@tscircuit/rectdiff"
@@ -363,14 +362,6 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   _step() {
     const pipelineStepDef = this.pipelineDef[this.currentPipelineStepIndex]
     if (!pipelineStepDef) {
-      assertPreloadedTracesStayOnAllowedLayers({
-        traces: [
-          ...this.powerTraceExpansionSolver!.getOutput(),
-          ...this.getPowerTraceExpansionFixedTraces(),
-        ],
-        preloadedTraces: this.originalSrj.traces ?? [],
-        layerCount: this.srj.layerCount,
-      })
       this.solved = true
       return
     }

@@ -250,13 +250,16 @@ export const pipeline9PostProcessingSteps = [
         configuredOptions.onlyConnectionNames ??
         getPowerTraceExpansionConnectionNames(pipeline.originalSrj)
       return [
-        preparePipeline7PowerTraceExpansionInput({
-          originalSrj: pipeline.originalSrj,
-          newlyRoutedTraces: pipeline.getNewTracesBeforePowerExpansion(),
-          currentPreloadedTraces: pipeline.getUpdatedPreloadedTraces(),
-          expandedConnectionNames: onlyConnectionNames,
-          resolveConnectedTraceAliases: true,
-        }),
+        {
+          ...preparePipeline7PowerTraceExpansionInput({
+            originalSrj: pipeline.originalSrj,
+            newlyRoutedTraces: pipeline.getNewTracesBeforePowerExpansion(),
+            currentPreloadedTraces: pipeline.getUpdatedPreloadedTraces(),
+            expandedConnectionNames: onlyConnectionNames,
+            resolveConnectedTraceAliases: true,
+          }),
+          originalPreloadedTraces: pipeline.originalSrj.traces ?? [],
+        },
         {
           allowNewVias: false,
           ...configuredOptions,

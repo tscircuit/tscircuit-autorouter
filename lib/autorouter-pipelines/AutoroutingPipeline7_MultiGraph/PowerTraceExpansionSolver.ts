@@ -7,13 +7,21 @@ import type { GraphicsObject } from "graphics-debug"
 import type { SimpleRouteJson, SimplifiedPcbTraces } from "lib/types"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
 import { getViaToPadClearance } from "lib/utils/getViaToPadClearance"
+import { assertPreloadedTracesStayOnAllowedLayers } from "lib/utils/assertPreloadedTracesStayOnAllowedLayers"
 import { BaseSolver } from "../../solvers/BaseSolver"
+
+/** Board-world route points in mm, right-handed: +X right, +Y up, +Z above.
+ * Original trace domains remain authoritative after output geometry changes. */
+export type PowerTraceExpansionSolverInput = SimpleRouteJson & {
+  fixedTraces?: SimplifiedPcbTraces
+  originalPreloadedTraces?: SimplifiedPcbTraces
+}
 
 export class PowerTraceExpansionSolver extends BaseSolver {
   readonly powerTraceExpanderSolver: PowerTraceExpanderSolver
 
   constructor(
-    public readonly inputSrj: SimpleRouteJson,
+    public readonly inputSrj: PowerTraceExpansionSolverInput,
     public readonly options: PowerTraceExpanderOptions = {},
   ) {
     super()
@@ -27,8 +35,8 @@ export class PowerTraceExpansionSolver extends BaseSolver {
     if (options.onlyConnectionNames?.length === 0) {
       this.MAX_ITERATIONS = 1
       this.progress = 1
-      this.solved = true
       this.stats = { selectedTraceCount: 0, bypassed: true }
+      this.finish()
       return
     }
 
@@ -47,11 +55,26 @@ export class PowerTraceExpansionSolver extends BaseSolver {
       return
     }
 
-    if (solver.solved) this.solved = true
+    if (solver.solved) this.finish()
+  }
+
+  private finish(): void {
+    const { originalPreloadedTraces, fixedTraces = [] } = this.inputSrj
+    if (originalPreloadedTraces) {
+      assertPreloadedTracesStayOnAllowedLayers({
+        traces: [
+          ...(this.powerTraceExpanderSolver.getOutput() as SimplifiedPcbTraces),
+          ...fixedTraces,
+        ],
+        preloadedTraces: originalPreloadedTraces,
+        layerCount: this.inputSrj.layerCount,
+      })
+    }
+    this.solved = true
   }
 
   override getConstructorParams(): readonly [
-    SimpleRouteJson,
+    PowerTraceExpansionSolverInput,
     PowerTraceExpanderOptions,
   ] {
     return [this.inputSrj, this.options] as const
