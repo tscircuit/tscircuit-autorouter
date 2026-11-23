@@ -48,11 +48,10 @@ function supportsBgaEscapeRouting(
     !srj.buses?.length &&
     !srj.differentialPairs?.length &&
     !srj.jumpers?.length &&
-    traces.every(
-      (trace) =>
-        trace.route.every(
-          (point) => point.route_type === "wire" || point.route_type === "via",
-        ),
+    traces.every((trace) =>
+      trace.route.every(
+        (point) => point.route_type === "wire" || point.route_type === "via",
+      ),
     ) &&
     srj.obstacles.every(
       (obstacle) =>
