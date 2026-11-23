@@ -66,13 +66,15 @@ for side in ['main','after']:
 originals=[r for r in rows if r['sample'].endswith('-original')]
 unchanged=[r['sample'] for r in originals if r['sameCompletedOutput']]
 failure_summary=f"The main comparison retains {planes[0]} → {planes[1]} plane drops. H616 original has {next(r for r in rows if r['sample']=='h616-original')['planes'][0]} → {next(r for r in rows if r['sample']=='h616-original')['planes'][1]} plane drops. Exact unchanged original-region outputs: {', '.join(unchanged)}. Rejection counts are candidate checks, not counts of disconnected nets; selected actual collision geometry is published under [failure-locations](failure-locations/)."
-before_sha='09c722b7ab93545f007c735328c50858537b483e'
-after_sha='f1cca42fea2b2079f259912e780470f02e6f5206'
+before_sha='150228779f490eeb2dad3bb7fb63dc2673d1a9fa'
+after_sha='c000bad2781ef331f3213cfe71e138b14adbe855'
 image=lambda sha,suffix:f"https://raw.githubusercontent.com/tscircuit/fanout-solver/{sha}/tests/__snapshots__/repro-icepi-spaced-auto-handoffs{suffix}.snap.svg"
 images='| Native before | Native after |\n|---|---|\n'
 for suffix in ['', '-source-channels']:
     images+=f'| ![Before]({image(before_sha,suffix)}) | ![After]({image(after_sha,suffix)}) |\n'
-validation="""Validation passed: [all-ten Core rerun](https://github.com/tscircuit/tscircuit-autorouter/actions/runs/45117573719), [independent audit and exact-head source checks](https://github.com/tscircuit/tscircuit-autorouter/actions/runs/45117702632), [main-based repro native macOS CI](https://github.com/tscircuit/fanout-solver/actions/runs/45117404284), and [independent fix native macOS CI](https://github.com/tscircuit/fanout-solver/actions/runs/45117537372).
+validation="""Validation passed: [all-ten Core rerun](https://github.com/tscircuit/tscircuit-autorouter/actions/runs/45117573719), [independent physical audit](https://github.com/tscircuit/tscircuit-autorouter/actions/runs/45117702632), [main-based repro native macOS CI](https://github.com/tscircuit/fanout-solver/actions/runs/45119909119), and [independent fix native macOS CI](https://github.com/tscircuit/fanout-solver/actions/runs/45119935717).
+
+The final-head [typecheck and format check](https://github.com/tscircuit/tscircuit-autorouter/actions/runs/45120056849) also pass.
 
 The audit checks identical constructor inputs, original circuit geometry and net membership, components/pads, original source-net aliases, native copper DRC, independent via/pad and drill spacing, bus atomicity with consistent layer/direction/via use, and route endpoints. No new structural issue or physical clearance violation is accepted. PCB SHA-256 values and route identities are retained in the published statistics and manifest.
 """

@@ -17,7 +17,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          for spec in tscircuit/tscircuit-autorouter:45117702632 tscircuit/fanout-solver:45117404284 tscircuit/fanout-solver:45117537372; do
+          for spec in tscircuit/tscircuit-autorouter:45117702632 tscircuit/tscircuit-autorouter:45120056849 tscircuit/fanout-solver:45119909119 tscircuit/fanout-solver:45119935717; do
             repo=${spec%:*}
             run=${spec##*:}
             for attempt in $(seq 1 180); do
