@@ -5,21 +5,10 @@
     "status": "success",
     "productionEqualsPreviousFix": true
   },
-  "autorouterRepro": {
-    "commit": "76ae099ccd57e79c456c79bd530381b6bc58eb15",
-    "run": 45085972816,
-    "status": "success",
-    "bunShardsPassed": 9,
-    "typeCheck": "success",
-    "formatCheck": "success",
-    "build": "success",
-    "vercelBuild": "success"
-  },
-  "autorouterFix": {
-    "commit": "df7df8ded6f1bddc61dbc1cea3b6d6d2acc93b1c",
-    "run": 45086064570,
-    "status": "success",
-    "bunShardsPassed": 9
+  "sourceRepro": {
+    "commit": "eb772de73d36f2c935af760b8430291b11eac210",
+    "run": 45072469007,
+    "status": "success"
   },
   "originalBoards": {
     "run": 45061903558,
@@ -37,38 +26,11 @@
     "sha256": "b4bd741258695a432c943dfe236f370c86b5edc7e006c119a9698dbe3b7d9c18",
     "visuallyInspected": true
   },
-  "beforeAfterAssets": {
-    "allHttpStatus": 200,
-    "nativePngsVisuallyInspected": 4,
-    "snapshots": {
-      "before/through-via-terminal-window.snap.svg": {
-        "bytes": 355933,
-        "sha256": "e4899f2d0b525b4dd6ddadb5d2df83379018f79622d43fb1e5048f5fd30cc4db"
-      },
-      "before/through-via-terminal-window-bottom-detail.snap.svg": {
-        "bytes": 93445,
-        "sha256": "380fbcb32105690509017a7c590afc5caa3d64ae1d97a5f4673dd0a66419c8af"
-      },
-      "after/through-via-terminal-window.snap.svg": {
-        "bytes": 356129,
-        "sha256": "98358e5dcb5610c714a37020f6f096a38be28e4d62b722b19d48c82781d3cc36"
-      },
-      "after/through-via-terminal-window-bottom-detail.snap.svg": {
-        "bytes": 94544,
-        "sha256": "2bc345c96538b13dc7cda8c5654cf00057ac3fbe74eec8685c857a0c9a824ae5"
-      }
-    }
-  },
-  "previousReproValidation": {
-    "sourceFix": {
-      "commit": "ef5f73daea12db0cfcb12e7ad61ebd54bde3549e",
-      "run": 45059480330,
-      "status": "success",
-      "build": "success"
-    },
+  "supersededConstructedRegionValidation": {
     "autorouterRepro": {
-      "commit": "44f8a36b5a3d830770d8bd4f4552fe7eca202dfc",
-      "run": 45062614803,
+      "commit": "76ae099ccd57e79c456c79bd530381b6bc58eb15",
+      "run": 45085972816,
+      "status": "success",
       "bunShardsPassed": 9,
       "typeCheck": "success",
       "formatCheck": "success",
@@ -76,172 +38,248 @@
       "vercelBuild": "success"
     },
     "autorouterFix": {
-      "commit": "4ef5518bad6c663393be9f9787cbac76b1114de6",
-      "run": 45065013481,
-      "bunShardsPassed": 9,
-      "status": "success",
-      "localBuild": "ESM and DTS pass"
-    },
-    "beforeAfterAssets": {
-      "allHttpStatus": 200,
-      "pcbBeforeSha256": "867ec1d504ff1669363459e39648b09619c79caf9abdb3276d10347984450004",
-      "pcbAfterSha256": "5792637c2e8d520ee7ccb681f8c491d5ab21fb4957f46fd87735b9c1377d9dbd",
-      "sourceBeforeSha256": "054eb6983b184ca342ee16df79870dcace2913f6621bb30ab56fcecc62300d0d",
-      "sourceAfterSha256": "53e1af7f490e04c2a239301a0ccc78d8d67017ca07bc494338a4cedca32bef97",
-      "visuallyInspected": true
-    }
-  },
-  "autorouterVisualization": {
-    "commit": "c69519ae2f697a106d1842b53b511b9b05a1a311",
-    "run": 45086012265,
-    "status": "success",
-    "bunShardsPassed": 9
-  },
-  "localValidation": {
-    "focusedSnapshots": "pass",
-    "focusedTypeCheck": "pass",
-    "consumerEsmAndDtsBuild": "pass",
-    "routingProductionFilesEqualPriorBenchmarkedFix": true
-  },
-  "sourceRepro": {
-    "commit": "eb772de73d36f2c935af760b8430291b11eac210",
-    "run": 45072469007,
-    "status": "success"
-  },
-  "beforeCutAnnotations": {
-    "autorouterVisualization": {
-      "commit": "d1b156bec928e93283587904e1a34eb749a8179a",
-      "run": 45072955601,
-      "status": "success",
-      "bunShardsPassed": 9
-    },
-    "autorouterFix": {
-      "commit": "63aba983458a0e4ac53cdd94983704f551022e55",
-      "run": 45072968679,
-      "status": "success",
-      "bunShardsPassed": 9,
-      "focusedTypeCheck": "success",
-      "localBuild": "ESM and DTS pass"
-    },
-    "beforeAfterAssets": {
-      "allHttpStatus": 200,
-      "nativePngsVisuallyInspected": 4,
-      "sameCompleteSolveForBothViews": true,
-      "snapshots": {
-        "before/through-via-terminal-window.snap.svg": {
-          "bytes": 353815,
-          "sha256": "f73711eed0221b0701172a9520c6015c78fef060dc35dc4774ed3227da2d166b"
-        },
-        "before/through-via-terminal-window-bottom-detail.snap.svg": {
-          "bytes": 92918,
-          "sha256": "6ff39dbb7210f88edc8b0d8bdf7de007c0157e48d9550d524a136232a15b25e8"
-        },
-        "after/through-via-terminal-window.snap.svg": {
-          "bytes": 354011,
-          "sha256": "9ec8c5561ffc00c330b0d9140a284d78aa1558dad1f94ec9cd76a8f6041e56ad"
-        },
-        "after/through-via-terminal-window-bottom-detail.snap.svg": {
-          "bytes": 94017,
-          "sha256": "2ba80747549b1ceb6b57828dd507f833825f7aa6e8b1f270509657f2094d4c49"
-        }
-      }
-    }
-  },
-  "cutTerminalAudit": {
-    "file": "cut-terminal-audit.json",
-    "localAssertionsPerMode": 136,
-    "focusedSnapshots": "pass",
-    "focusedTypeCheck": "pass",
-    "nativeGeometryUnchangedByAnnotations": true,
-    "unannotatedViewsByteIdentical": 8
-  },
-  "beforeAdjacentCopper": {
-    "autorouterRepro": {
-      "commit": "8895a36f9fa7c728ac76460cb0cec01887714aac",
-      "run": 45072941587,
-      "status": "success",
-      "bunShardsPassed": 9,
-      "typeCheck": "success",
-      "formatCheck": "success",
-      "build": "success",
-      "vercelBuild": "success"
-    },
-    "autorouterVisualization": {
-      "commit": "51dd4abc91aefe0f86bc07d02fe4630894390018",
-      "run": 45077935334,
-      "status": "success",
-      "bunShardsPassed": 9
-    },
-    "autorouterFix": {
-      "commit": "cdd3d16f258fe8af9adebb455e1b8f1fe36a2dac",
-      "run": 45078046121,
+      "commit": "df7df8ded6f1bddc61dbc1cea3b6d6d2acc93b1c",
+      "run": 45086064570,
       "status": "success",
       "bunShardsPassed": 9
     },
     "beforeAfterAssets": {
       "allHttpStatus": 200,
       "nativePngsVisuallyInspected": 4,
-      "cutBoundaryAnnotated": true,
       "snapshots": {
         "before/through-via-terminal-window.snap.svg": {
-          "bytes": 354310,
-          "sha256": "3a8776d7e8dce11078092787150fc9faf4b21ef463e6877f79e9889a23d3d813"
+          "bytes": 355933,
+          "sha256": "e4899f2d0b525b4dd6ddadb5d2df83379018f79622d43fb1e5048f5fd30cc4db"
         },
         "before/through-via-terminal-window-bottom-detail.snap.svg": {
           "bytes": 93445,
-          "sha256": "9ede5a06ce9e5bf87099e98e6555ba99c738287d12c3d69fb35c7d84424eec8e"
+          "sha256": "380fbcb32105690509017a7c590afc5caa3d64ae1d97a5f4673dd0a66419c8af"
         },
         "after/through-via-terminal-window.snap.svg": {
-          "bytes": 354506,
-          "sha256": "e9f3201bca5c57daa29f83a6261611fc64300255a1a3343ac4a93b6f2ae01f4a"
+          "bytes": 356129,
+          "sha256": "98358e5dcb5610c714a37020f6f096a38be28e4d62b722b19d48c82781d3cc36"
         },
         "after/through-via-terminal-window-bottom-detail.snap.svg": {
           "bytes": 94544,
           "sha256": "2bc345c96538b13dc7cda8c5654cf00057ac3fbe74eec8685c857a0c9a824ae5"
         }
       }
+    },
+    "previousReproValidation": {
+      "sourceFix": {
+        "commit": "ef5f73daea12db0cfcb12e7ad61ebd54bde3549e",
+        "run": 45059480330,
+        "status": "success",
+        "build": "success"
+      },
+      "autorouterRepro": {
+        "commit": "44f8a36b5a3d830770d8bd4f4552fe7eca202dfc",
+        "run": 45062614803,
+        "bunShardsPassed": 9,
+        "typeCheck": "success",
+        "formatCheck": "success",
+        "build": "success",
+        "vercelBuild": "success"
+      },
+      "autorouterFix": {
+        "commit": "4ef5518bad6c663393be9f9787cbac76b1114de6",
+        "run": 45065013481,
+        "bunShardsPassed": 9,
+        "status": "success",
+        "localBuild": "ESM and DTS pass"
+      },
+      "beforeAfterAssets": {
+        "allHttpStatus": 200,
+        "pcbBeforeSha256": "867ec1d504ff1669363459e39648b09619c79caf9abdb3276d10347984450004",
+        "pcbAfterSha256": "5792637c2e8d520ee7ccb681f8c491d5ab21fb4957f46fd87735b9c1377d9dbd",
+        "sourceBeforeSha256": "054eb6983b184ca342ee16df79870dcace2913f6621bb30ab56fcecc62300d0d",
+        "sourceAfterSha256": "53e1af7f490e04c2a239301a0ccc78d8d67017ca07bc494338a4cedca32bef97",
+        "visuallyInspected": true
+      }
+    },
+    "autorouterVisualization": {
+      "commit": "c69519ae2f697a106d1842b53b511b9b05a1a311",
+      "run": 45086012265,
+      "status": "success",
+      "bunShardsPassed": 9
+    },
+    "localValidation": {
+      "focusedSnapshots": "pass",
+      "focusedTypeCheck": "pass",
+      "consumerEsmAndDtsBuild": "pass",
+      "routingProductionFilesEqualPriorBenchmarkedFix": true
+    },
+    "beforeCutAnnotations": {
+      "autorouterVisualization": {
+        "commit": "d1b156bec928e93283587904e1a34eb749a8179a",
+        "run": 45072955601,
+        "status": "success",
+        "bunShardsPassed": 9
+      },
+      "autorouterFix": {
+        "commit": "63aba983458a0e4ac53cdd94983704f551022e55",
+        "run": 45072968679,
+        "status": "success",
+        "bunShardsPassed": 9,
+        "focusedTypeCheck": "success",
+        "localBuild": "ESM and DTS pass"
+      },
+      "beforeAfterAssets": {
+        "allHttpStatus": 200,
+        "nativePngsVisuallyInspected": 4,
+        "sameCompleteSolveForBothViews": true,
+        "snapshots": {
+          "before/through-via-terminal-window.snap.svg": {
+            "bytes": 353815,
+            "sha256": "f73711eed0221b0701172a9520c6015c78fef060dc35dc4774ed3227da2d166b"
+          },
+          "before/through-via-terminal-window-bottom-detail.snap.svg": {
+            "bytes": 92918,
+            "sha256": "6ff39dbb7210f88edc8b0d8bdf7de007c0157e48d9550d524a136232a15b25e8"
+          },
+          "after/through-via-terminal-window.snap.svg": {
+            "bytes": 354011,
+            "sha256": "9ec8c5561ffc00c330b0d9140a284d78aa1558dad1f94ec9cd76a8f6041e56ad"
+          },
+          "after/through-via-terminal-window-bottom-detail.snap.svg": {
+            "bytes": 94017,
+            "sha256": "2ba80747549b1ceb6b57828dd507f833825f7aa6e8b1f270509657f2094d4c49"
+          }
+        }
+      }
+    },
+    "cutTerminalAudit": {
+      "file": "cut-terminal-audit.json",
+      "localAssertionsPerMode": 136,
+      "focusedSnapshots": "pass",
+      "focusedTypeCheck": "pass",
+      "nativeGeometryUnchangedByAnnotations": true,
+      "unannotatedViewsByteIdentical": 8
+    },
+    "beforeAdjacentCopper": {
+      "autorouterRepro": {
+        "commit": "8895a36f9fa7c728ac76460cb0cec01887714aac",
+        "run": 45072941587,
+        "status": "success",
+        "bunShardsPassed": 9,
+        "typeCheck": "success",
+        "formatCheck": "success",
+        "build": "success",
+        "vercelBuild": "success"
+      },
+      "autorouterVisualization": {
+        "commit": "51dd4abc91aefe0f86bc07d02fe4630894390018",
+        "run": 45077935334,
+        "status": "success",
+        "bunShardsPassed": 9
+      },
+      "autorouterFix": {
+        "commit": "cdd3d16f258fe8af9adebb455e1b8f1fe36a2dac",
+        "run": 45078046121,
+        "status": "success",
+        "bunShardsPassed": 9
+      },
+      "beforeAfterAssets": {
+        "allHttpStatus": 200,
+        "nativePngsVisuallyInspected": 4,
+        "cutBoundaryAnnotated": true,
+        "snapshots": {
+          "before/through-via-terminal-window.snap.svg": {
+            "bytes": 354310,
+            "sha256": "3a8776d7e8dce11078092787150fc9faf4b21ef463e6877f79e9889a23d3d813"
+          },
+          "before/through-via-terminal-window-bottom-detail.snap.svg": {
+            "bytes": 93445,
+            "sha256": "9ede5a06ce9e5bf87099e98e6555ba99c738287d12c3d69fb35c7d84424eec8e"
+          },
+          "after/through-via-terminal-window.snap.svg": {
+            "bytes": 354506,
+            "sha256": "e9f3201bca5c57daa29f83a6261611fc64300255a1a3343ac4a93b6f2ae01f4a"
+          },
+          "after/through-via-terminal-window-bottom-detail.snap.svg": {
+            "bytes": 94544,
+            "sha256": "2bc345c96538b13dc7cda8c5654cf00057ac3fbe74eec8685c857a0c9a824ae5"
+          }
+        }
+      }
+    },
+    "adjacentCopper": {
+      "provenance": "adjacent-copper-evidence.json",
+      "capturedNeighborRoutesEqualBeforeAfter": true,
+      "sourceRegionGeometryUnchanged": true,
+      "sourceRoutingCodeUnchanged": true,
+      "addedExistingTraces": 2,
+      "picturedNetOuterCuts": 2,
+      "otherOuterCutErrors": 48,
+      "copperDrcBeforeAfter": [
+        15,
+        10
+      ],
+      "localAssertionsPerVisualMode": 141,
+      "localFocusedTypeChecks": "pass",
+      "visuallyInspectedConnectedFeature": true,
+      "geometryProof": [
+        {
+          "mode": "before",
+          "view": "whole",
+          "candidateGeometryRemovedOrChanged": 0,
+          "realNeighborSegmentsAdded": 6
+        },
+        {
+          "mode": "before",
+          "view": "-bottom-detail",
+          "candidateGeometryRemovedOrChanged": 0,
+          "realNeighborSegmentsAdded": 0
+        },
+        {
+          "mode": "after",
+          "view": "whole",
+          "candidateGeometryRemovedOrChanged": 0,
+          "realNeighborSegmentsAdded": 6
+        },
+        {
+          "mode": "after",
+          "view": "-bottom-detail",
+          "candidateGeometryRemovedOrChanged": 0,
+          "realNeighborSegmentsAdded": 0
+        }
+      ]
     }
   },
-  "adjacentCopper": {
-    "provenance": "adjacent-copper-evidence.json",
-    "capturedNeighborRoutesEqualBeforeAfter": true,
-    "sourceRegionGeometryUnchanged": true,
-    "sourceRoutingCodeUnchanged": true,
-    "addedExistingTraces": 2,
-    "picturedNetOuterCuts": 2,
-    "otherOuterCutErrors": 48,
-    "copperDrcBeforeAfter": [
-      15,
-      10
-    ],
-    "localAssertionsPerVisualMode": 141,
-    "localFocusedTypeChecks": "pass",
-    "visuallyInspectedConnectedFeature": true,
-    "geometryProof": [
-      {
-        "mode": "before",
-        "view": "whole",
-        "candidateGeometryRemovedOrChanged": 0,
-        "realNeighborSegmentsAdded": 6
-      },
-      {
-        "mode": "before",
-        "view": "-bottom-detail",
-        "candidateGeometryRemovedOrChanged": 0,
-        "realNeighborSegmentsAdded": 0
-      },
-      {
-        "mode": "after",
-        "view": "whole",
-        "candidateGeometryRemovedOrChanged": 0,
-        "realNeighborSegmentsAdded": 6
-      },
-      {
-        "mode": "after",
-        "view": "-bottom-detail",
-        "candidateGeometryRemovedOrChanged": 0,
-        "realNeighborSegmentsAdded": 0
-      }
-    ]
+  "reproductionProvenance": "native-parent-replay.json",
+  "beforeAfterAssets": {
+    "nativeOverviewsVisuallyInspected": 2,
+    "nativeZoomsVisuallyInspected": 2,
+    "geometryProof": "native-parent-camera-proof.json",
+    "allFourPublicSvgLinksHttpStatus": 200
+  },
+  "localValidation": {
+    "directParentReplays": "pass before and after",
+    "focusedTypeChecks": "pass",
+    "productionRoutingFilesEqualPriorBenchmarkedFix": true
+  },
+  "autorouterRepro": {
+    "commit": "fb8c55d4f0a8ee9502c64bd15265b4e2d6196a83",
+    "run": 45119278551,
+    "status": "success",
+    "typeCheck": "success",
+    "formatCheck": "success",
+    "build": "success",
+    "vercelBuild": "success",
+    "bunShardsPassed": 9
+  },
+  "autorouterVisualization": {
+    "commit": "032c787145e92955b1ff8b1495455429d58d31dd",
+    "run": 45119397912,
+    "status": "in_progress",
+    "initialInstallFailure": "Resolved on retry: Sharp libvips downloaded successfully. The final test shard is running.",
+    "bunShardsPassed": 8,
+    "retryRequested": true
+  },
+  "autorouterFix": {
+    "commit": "63ef0f5251a03d53c0e1f310f0a7e85626274835",
+    "run": 45119469571,
+    "status": "success",
+    "bunShardsPassed": 9
   }
 }

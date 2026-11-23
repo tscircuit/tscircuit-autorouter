@@ -2,7 +2,6 @@
   "before": {
     "nativeSnapshot": "/workspace/work/router-3279-visualization/tests/repro/__snapshots__/through-via-terminal-window.snap.svg",
     "sha256": "035e4b9250b9a0c6ceb81067d33ea77ee5a7ba707432142454920569df9559e9",
-    "zoomChangesOnlyRootViewport": false,
     "worldBounds": {
       "minX": -15,
       "maxX": -2,
@@ -16,12 +15,12 @@
       68.32108692638377
     ],
     "zoomChanges": "Root viewport and white background extent only; all native copper and pad elements unchanged",
-    "nativeCopperAndPadElementsUnchanged": 7004
+    "nativeCopperAndPadElementsUnchanged": 7004,
+    "allNativeCopperAndPadElementsUnchanged": true
   },
   "after": {
     "nativeSnapshot": "/workspace/work/router-3279/tests/repro/__snapshots__/through-via-terminal-window.snap.svg",
     "sha256": "84c986d084e8f674afcc73bdd3ec3dc6db8bbf1a8f7353af3461c43dcc0a8977",
-    "zoomChangesOnlyRootViewport": false,
     "worldBounds": {
       "minX": -15,
       "maxX": -2,
@@ -35,6 +34,7 @@
       68.32108692638377
     ],
     "zoomChanges": "Root viewport and white background extent only; all native copper and pad elements unchanged",
-    "nativeCopperAndPadElementsUnchanged": 7307
+    "nativeCopperAndPadElementsUnchanged": 7307,
+    "allNativeCopperAndPadElementsUnchanged": true
   }
 }

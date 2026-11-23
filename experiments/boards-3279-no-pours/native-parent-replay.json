@@ -4,8 +4,8 @@
     "sha256": "87134c75e21f6225e90a27dcb20010b4f3ce061a1d7de1e6f7423176b70b005a",
     "byteIdenticalToObservedConstructor": true,
     "nodes": 3130,
-    "padObstacles": 1714,
-    "preloadedHdPieces": 1013
+    "preloadedHdPieces": 1013,
+    "obstacles": 1714
   },
   "execution": "Each test constructs and solves one Pipeline9HighDensitySolver with the complete captured constructor. Only ConnectivityMap is rehydrated; no saved output traces or neighbor fixtures are loaded.",
   "nativeView": "showAcceptedRoutes renders the same instance routes and getUpdatedFixedHdRoutes plus its actual obstacles.",
