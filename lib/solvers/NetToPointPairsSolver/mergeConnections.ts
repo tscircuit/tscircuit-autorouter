@@ -8,6 +8,11 @@ import {
 import { DSU } from "lib/utils/dsu"
 import { getPointKey } from "lib/utils/getPointKey"
 
+export interface MergeConnectionsOptions {
+  /** Preserve legacy first-width selection unless maximum is explicitly requested. */
+  nominalTraceWidth?: "first" | "maximum"
+}
+
 /**
  * Merges SimpleRouteConnections that share common ConnectionPoints into single connections.
  * This is useful for grouping related traces/nets that were defined separately
@@ -18,6 +23,7 @@ import { getPointKey } from "lib/utils/getPointKey"
  */
 export function mergeConnections(
   simpleRouteConnections: SimpleRouteConnection[],
+  options: MergeConnectionsOptions = {},
 ): SimpleRouteConnection[] {
   if (simpleRouteConnections.length === 0) {
     return []
@@ -125,11 +131,16 @@ export function mergeConnections(
         mergedNetConnectionNames.add(simpleRouteConnection.__netConnectionName)
       }
 
-      // Aliases may specify a narrow local approach and a wider net target.
-      // Keep the strongest declared target when building the shared net.
-      if (simpleRouteConnection.nominalTraceWidth !== undefined) {
+      // Local aliases may have a narrower target than the overall net.
+      // Keep first-width behavior unless the caller requests the shared maximum.
+      if (nominalTraceWidth === undefined) {
+        nominalTraceWidth = simpleRouteConnection.nominalTraceWidth
+      } else if (
+        options.nominalTraceWidth === "maximum" &&
+        simpleRouteConnection.nominalTraceWidth !== undefined
+      ) {
         nominalTraceWidth = Math.max(
-          nominalTraceWidth ?? 0,
+          nominalTraceWidth,
           simpleRouteConnection.nominalTraceWidth,
         )
       }

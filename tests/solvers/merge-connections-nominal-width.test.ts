@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test"
+import { mergeConnections } from "lib/solvers/NetToPointPairsSolver/mergeConnections"
 import { NetToPointPairsSolver } from "lib/solvers/NetToPointPairsSolver/NetToPointPairsSolver"
 import type { SimpleRouteJson } from "lib/types"
 import { getInitiallyConnectedMapFromSimpleRouteJson } from "lib/utils/get-initially-connected-map-from-simple-route-json"
@@ -33,7 +34,12 @@ test("a narrow local alias retains the net's wider nominal target in every branc
     input.connections,
     input.connections.toReversed(),
   ]) {
-    const srj = { ...input, connections }
+    const srj = {
+      ...input,
+      connections: mergeConnections(connections, {
+        nominalTraceWidth: "maximum",
+      }),
+    }
     const solver = new NetToPointPairsSolver(
       srj,
       {},
