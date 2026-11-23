@@ -38,7 +38,7 @@ The separate visualization PR adds `visualize({ showAcceptedRoutes: true })`. It
 
 The zoom changes only the native SVG viewport and white background extent. Every native copper and pad element is retained unchanged; `native-parent-camera-proof.json` records the camera and geometry check. Both overviews and zooms were visually inspected. These zooms show surrounding pads and retained neighboring copper from the same execution, without stitching in other outputs.
 
-The checked-in SVG path is identical before and after, giving a regular GitHub snapshot diff: [before](https://github.com/tscircuit/tscircuit-autorouter/blob/032c787145e92955b1ff8b1495455429d58d31dd/tests/repro/__snapshots__/through-via-terminal-window.snap.svg), [after](https://github.com/tscircuit/tscircuit-autorouter/blob/63ef0f5251a03d53c0e1f310f0a7e85626274835/tests/repro/__snapshots__/through-via-terminal-window.snap.svg). `native-parent-replay.json` records the input and snapshot hashes and exact parent progress. The original failing cell has zero accepted routes before and nine after, including `source_net_186`; the later failure remains.
+The checked-in SVG path is identical before and after, giving a regular GitHub snapshot diff: [before](https://github.com/tscircuit/tscircuit-autorouter/blob/9759442a73d031b7e922e79464b2eb2137aa3013/tests/repro/__snapshots__/through-via-terminal-window.snap.svg), [after](https://github.com/tscircuit/tscircuit-autorouter/blob/b40118e93977a7b1dd50aa80dd3793621a1c9807/tests/repro/__snapshots__/through-via-terminal-window.snap.svg). `native-parent-replay.json` records the input and snapshot hashes and exact parent progress. The original failing cell has zero accepted routes before and nine after, including `source_net_186`; the later failure remains.
 
 ## All 19 boards
 
@@ -105,4 +105,14 @@ The source starts from the A01 commit already pinned by the latest autorouter (e
 
 The source fix passes Bun CI: https://github.com/tscircuit/high-density-a01/actions/runs/45072506932 . Source production code and the 19-board routing change are unchanged. The new direct parent replays and focused type checks pass locally before and after.
 
-All nine Bun shards pass on [repro fb8c55d4](https://github.com/tscircuit/tscircuit-autorouter/actions/runs/45119278551) and [fix 63ef0f52](https://github.com/tscircuit/tscircuit-autorouter/actions/runs/45119469571). Repro type, format, build and Vercel checks also pass. [Visualization 032c7871](https://github.com/tscircuit/tscircuit-autorouter/actions/runs/45119397912) has eight passing shards; the last is still running after retrying an unrelated Sharp libvips HTTP 403 download failure. The retry successfully installed dependencies. Its final result is pending, so the complete three-PR stack is not yet described as fully green. validation.json records this checkpoint.
+All nine Bun shards passed on the original consumer heads: repro `fb8c55d4` (45119278551), visualization `032c7871` (45119397912, including its successful install retry), and fix `63ef0f52` (45119469571). Repro type, format, build and Vercel checks also pass.
+
+## Critical PR review
+
+The routing change is supported as a small clearance-correctness fix: it prevents a measured foreign-terminal violation and accepts the formerly blocked connection. The 207-node progress improvement does not establish that this is the most beneficial board-completion fix; all 19 boards remain incomplete and emitted copper is unchanged.
+
+Review identified two issues that are now corrected. The consumer regression no longer requires a specific later failure or an exact progress count. The native renderer now tags a through via on every physical layer, preserving explicit blind/buried spans; the complete captured-parent test checks that all via circles cover the actual four-layer board. Empty-parent views also use the native bounds helper instead of producing infinite coordinates.
+
+Both complete parent replays pass locally with their existing SVGs unchanged: before 115.01 seconds / 6 assertions, after 102.23 seconds / 3 assertions. Six related renderer tests (30 assertions), both focused type checks, a real captured-route through/blind-span diagnostic, and an empty-view finite-bounds check pass. Routing production files and the source dependency pin are byte-identical to the 19-board benchmarked fix, so no new routing result is claimed from this cleanup.
+
+Updated visualization `9759442a` is running CI 45158955941; rebased fix `b40118e9` is running CI 45159221693. Current CI results are pending and are recorded separately from the prior fully green heads in validation.json.

@@ -255,8 +255,27 @@
   },
   "localValidation": {
     "directParentReplays": "pass before and after",
-    "focusedTypeChecks": "pass",
-    "productionRoutingFilesEqualPriorBenchmarkedFix": true
+    "focusedTypeChecks": "pass both branches",
+    "productionRoutingFilesEqualPriorBenchmarkedFix": true,
+    "capturedParentBefore": {
+      "status": "pass",
+      "assertions": 6,
+      "seconds": 115.01
+    },
+    "capturedParentAfter": {
+      "status": "pass",
+      "assertions": 3,
+      "seconds": 102.23
+    },
+    "relatedRendererTests": {
+      "status": "pass",
+      "tests": 6,
+      "assertions": 30
+    },
+    "physicalThroughAndBlindViaDiagnostic": "pass using a real route from the captured parent output",
+    "emptyParentFiniteBounds": "pass",
+    "routingProductionUnchanged": true,
+    "svgSnapshotsUnchanged": true
   },
   "autorouterRepro": {
     "commit": "fb8c55d4f0a8ee9502c64bd15265b4e2d6196a83",
@@ -269,17 +288,31 @@
     "bunShardsPassed": 9
   },
   "autorouterVisualization": {
-    "commit": "032c787145e92955b1ff8b1495455429d58d31dd",
-    "run": 45119397912,
-    "status": "in_progress",
-    "initialInstallFailure": "Resolved on retry: Sharp libvips downloaded successfully. The final test shard is running.",
-    "bunShardsPassed": 8,
-    "retryRequested": true
+    "commit": "9759442a73d031b7e922e79464b2eb2137aa3013",
+    "run": 45158955941,
+    "status": "in_progress"
   },
   "autorouterFix": {
-    "commit": "63ef0f5251a03d53c0e1f310f0a7e85626274835",
-    "run": 45119469571,
-    "status": "success",
-    "bunShardsPassed": 9
+    "commit": "b40118e93977a7b1dd50aa80dd3793621a1c9807",
+    "run": 45159221693,
+    "status": "in_progress"
+  },
+  "previousFullyGreenConsumerHeads": {
+    "repro": {
+      "commit": "fb8c55d4f0a8ee9502c64bd15265b4e2d6196a83",
+      "run": 45119278551,
+      "bunShardsPassed": 9
+    },
+    "visualization": {
+      "commit": "032c787145e92955b1ff8b1495455429d58d31dd",
+      "run": 45119397912,
+      "bunShardsPassed": 9,
+      "installRetry": "succeeded"
+    },
+    "fix": {
+      "commit": "63ef0f5251a03d53c0e1f310f0a7e85626274835",
+      "run": 45119469571,
+      "bunShardsPassed": 9
+    }
   }
 }

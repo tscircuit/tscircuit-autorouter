@@ -11,7 +11,7 @@
   "nativeView": "showAcceptedRoutes renders the same instance routes and getUpdatedFixedHdRoutes plus its actual obstacles.",
   "previousComposedFixture": "Withdrawn. The prior isolated A01 candidate plus two saved neighboring traces was a constructed regional example, not an untouched parent snapshot.",
   "before": {
-    "commit": "032c787145e92955b1ff8b1495455429d58d31dd",
+    "commit": "9759442a73d031b7e922e79464b2eb2137aa3013",
     "solved": false,
     "failed": true,
     "solvedNodes": 1477,
@@ -21,10 +21,11 @@
     "error": "Pipeline9 primary high-density routing failed: B01 failed: No path found for source_net_186; regional fallback failed: Failed to solve 1 nodes, cmn_248. err0: GrowShrinkHighDensityIntraNodeSolver failed after resizing to 8x. Last error: All solvers failed in hyper solver. Example failures: ViaPossibilitiesSolver2 failed with: Exceeded max via count of 5, ViaPossibilitiesSolver2 failed with: Exceeded max via count of 5, SingleHighDensityRouteSolver ran out of iterations (MAX_ITERATIONS=10000), SingleHighDensityRouteSolver ran out of iterations (MAX_ITERATIONS=10000), SingleHighDensityRouteSolver ran out of iterations (MAX_ITERATIONS=10000).",
     "snapshotSha256": "035e4b9250b9a0c6ceb81067d33ea77ee5a7ba707432142454920569df9559e9",
     "freshLocalTest": "pass",
-    "focusedTypeCheck": "pass"
+    "focusedTypeCheck": "pass",
+    "localExpectCalls": 6
   },
   "after": {
-    "commit": "63ef0f5251a03d53c0e1f310f0a7e85626274835",
+    "commit": "b40118e93977a7b1dd50aa80dd3793621a1c9807",
     "solved": false,
     "failed": true,
     "solvedNodes": 1684,
@@ -34,6 +35,13 @@
     "error": "Pipeline9 primary high-density routing failed: B01 failed: No path found for source_net_3_mst7; regional fallback failed: Failed to solve 1 nodes, topology_merge_6579. err0: GrowShrinkHighDensityIntraNodeSolver failed after resizing to 8x. Last error: All solvers failed in hyper solver. Example failures: Candidate solution rejected by validator, Candidate solution rejected by validator, CachedIntraNodeRouteSolver ran out of iterations (MAX_ITERATIONS=5196.152422706632), CachedIntraNodeRouteSolver ran out of iterations (MAX_ITERATIONS=5196.152422706632), CachedIntraNodeRouteSolver ran out of iterations (MAX_ITERATIONS=5196.152422706632).",
     "snapshotSha256": "84c986d084e8f674afcc73bdd3ec3dc6db8bbf1a8f7353af3461c43dcc0a8977",
     "freshLocalTest": "pass",
-    "focusedTypeCheck": "pass"
-  }
+    "focusedTypeCheck": "pass",
+    "localExpectCalls": 3
+  },
+  "previousFullyGreenCommits": {
+    "before": "032c787145e92955b1ff8b1495455429d58d31dd",
+    "after": "63ef0f5251a03d53c0e1f310f0a7e85626274835"
+  },
+  "regressionAssertion": "The originally blocked cmn_248/source_net_186 route must be accepted. No requirement to fail later or to have an exact progress count.",
+  "nativeViaLayerAssertion": "All via circles in the actual four-layer, through-via capture cover z0,1,2,3."
 }
