@@ -1,3 +1,4 @@
+import { assignUniquePcbTraceIdsToNewTraces } from "lib/utils/assignUniquePcbTraceIdsToNewTraces"
 import { distance } from "@tscircuit/math-utils"
 import { findClearancePath, type ClearancePathInput } from "@tscircuit/repair04"
 import { BaseSolver } from "lib/solvers/BaseSolver"
@@ -13,14 +14,14 @@ import { getViaDimensions } from "lib/utils/getViaDimensions"
 import { getViaToPadClearance } from "lib/utils/getViaToPadClearance"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import {
-  getBoundedTerminalGroups,
-  type BoundedTerminalGroup,
-} from "./getBoundedTerminalGroups"
+  getLengthConstrainedConnections,
+  type LengthConstrainedConnection,
+} from "./getLengthConstrainedConnections"
 
 type XY = { x: number; y: number }
 type Point = XY & { z: number }
 type Trunk = {
-  group: BoundedTerminalGroup
+  group: LengthConstrainedConnection
   indices: number[]
   path: Point[]
   trace: SimplifiedPcbTrace
@@ -39,12 +40,11 @@ function lengthOf(path: Point[]): number {
 }
 
 /** Route length-limited, via-free connections before ordinary point-pair routing consumes their escape channels. */
-export class BoundedConnectionSolver extends BaseSolver {
-  readonly traces: SimplifiedPcbTrace[] = []
-  private readonly groups: BoundedTerminalGroup[]
-  private readonly context: SimpleRouteJson
+export class LengthConstrainedTraceSolver extends BaseSolver {
+  traces: SimplifiedPcbTrace[] = []
+  private readonly groups: LengthConstrainedConnection[]
+  private readonly existingTraces: SimplifiedPcbTrace[]
   private readonly via: ReturnType<typeof getViaDimensions>
-  private readonly occupiedIds: Set<string>
   private readonly clearance: number
 
   constructor(
@@ -52,18 +52,17 @@ export class BoundedConnectionSolver extends BaseSolver {
     escapes: EscapeViaMetadata[],
   ) {
     super()
-    this.groups = getBoundedTerminalGroups(input)
+    this.groups = getLengthConstrainedConnections(input)
     this.via = getViaDimensions(input)
     this.clearance =
       input.minTraceToPadEdgeClearance ?? input.defaultObstacleMargin ?? 0.15
-    this.occupiedIds = new Set(input.traces?.map((t) => t.pcb_trace_id))
-    this.context = { ...input, traces: [...(input.traces ?? [])] }
+    this.existingTraces = this.groups.length ? [...(input.traces ?? [])] : []
     if (!this.groups.length) return
     const connections = new Map(input.connections.map((c) => [c.name, c]))
     for (const escape of escapes) {
       const connection = connections.get(escape.connectionName)!
       const pin = connection.pointsToConnect[escape.sourcePointIndex]!
-      this.context.traces!.push({
+      this.existingTraces.push({
         type: "pcb_trace",
         pcb_trace_id: escape.pointId,
         connection_name: connection.name,
@@ -97,8 +96,8 @@ export class BoundedConnectionSolver extends BaseSolver {
     const board = this.input.bounds
     return findClearancePath({
       srj: {
-        ...this.context,
-        traces: [...this.context.traces!, ...this.traces, ...extra],
+        ...this.input,
+        traces: [...this.existingTraces, ...this.traces, ...extra],
       } as ClearancePathInput["srj"],
       routes: [
         {
@@ -137,12 +136,9 @@ export class BoundedConnectionSolver extends BaseSolver {
     suffix: string,
     pins: (string | undefined)[],
   ): SimplifiedPcbTrace {
-    const base = `${c.name}_${suffix}`
-    let id = base
-    for (let i = 1; this.occupiedIds.has(id); i++) id = `${base}_${i}`
     return {
       type: "pcb_trace",
-      pcb_trace_id: id,
+      pcb_trace_id: `${c.name}_${suffix}`,
       connection_name: c.name,
       isFixed: true,
       connectsTo: pins.filter((id): id is string => id !== undefined),
@@ -226,20 +222,9 @@ export class BoundedConnectionSolver extends BaseSolver {
       bestTap = tapLength
       arms.push(tap)
       const lengths = arms.map(lengthOf)
-      let longestPathRatio = 0
-      for (let i = 0; i < arms.length; i++) {
-        for (let j = i + 1; j < arms.length; j++) {
-          const distanceBetweenPins = lengths[i]! + lengths[j]!
-          const limit = Math.max(
-            group.limits[indices[i]!]!,
-            group.limits[indices[j]!]!,
-          )
-          longestPathRatio = Math.max(
-            longestPathRatio,
-            distanceBetweenPins / limit,
-          )
-        }
-      }
+      const pairRatio = (i: number, j: number): number =>
+        (lengths[i]! + lengths[j]!) /
+        Math.max(group.limits[indices[i]!]!, group.limits[indices[j]!]!)
       best = {
         traces: arms.map((arm, i) =>
           this.makeTrace(group.connection, arm, `branch_${i}`, [
@@ -247,93 +232,118 @@ export class BoundedConnectionSolver extends BaseSolver {
           ]),
         ),
         length: lengthOf(path) + tapLength,
-        longestPathRatio,
+        longestPathRatio: Math.max(
+          pairRatio(0, 1),
+          pairRatio(0, 2),
+          pairRatio(1, 2),
+        ),
       }
     }
     return best
   }
 
-  private plan(groups: BoundedTerminalGroup[]): Tree | undefined {
-    let best: Tree | undefined
-    const attach = (pending: Trunk[], trees: Tree[]): void => {
-      const [trunk, ...rest] = pending
-      if (!trunk) {
-        const length = trees.reduce((sum, tree) => sum + tree.length, 0)
-        const longestPathRatio = Math.max(
-          ...trees.map((tree) => tree.longestPathRatio),
-        )
-        if (
-          !best ||
-          longestPathRatio < best.longestPathRatio ||
-          (longestPathRatio === best.longestPathRatio && length < best.length)
-        )
-          best = {
-            length,
-            longestPathRatio,
-            traces: trees.flatMap((tree) => tree.traces),
-          }
-        return
-      }
-      const tree = this.attachBranch(trunk, [
-        ...trees.flatMap((t) => t.traces),
-        ...rest.map((t) => t.trace),
+  private getTrunks(
+    group: LengthConstrainedConnection,
+    otherTrunks: Trunk[],
+  ): Trunk[] {
+    const trunks: Trunk[] = []
+    const pairs =
+      group.points.length === 2
+        ? [[0, 1]]
+        : [
+            [0, 1, 2],
+            [0, 2, 1],
+            [1, 2, 0],
+          ]
+    for (const indices of pairs) {
+      const a = group.points[indices[0]!]!
+      const b = group.points[indices[1]!]!
+      // A three-pin connection splits the trunk at the branch junction.
+      const limit =
+        indices.length === 2
+          ? Math.min(...group.limits)
+          : group.limits[indices[0]!]! + group.limits[indices[1]!]!
+      const path = this.search(
+        group.connection,
+        a,
+        b,
+        a.layer,
+        otherTrunks.map((t) => t.trace),
+        Math.max(...group.limits),
+      )
+      if (!path || lengthOf(path) > limit) continue
+      const trace = this.makeTrace(group.connection, path, "trunk", [
+        a.pointId,
+        b.pointId,
       ])
-      if (tree) attach(rest, [...trees, tree])
+      trunks.push({ group, indices, path, trace })
     }
-    const chooseTrunks = (
-      pending: BoundedTerminalGroup[],
-      trunks: Trunk[],
-    ): void => {
-      const [group, ...rest] = pending
-      if (!group) {
-        attach(trunks, [])
-        if (trunks.length > 1) attach([...trunks].reverse(), [])
-        return
-      }
-      const orders =
-        group.points.length === 2
-          ? [[0, 1]]
-          : [
-              [0, 1, 2],
-              [0, 2, 1],
-              [1, 2, 0],
-            ]
-      for (const indices of orders) {
-        const a = group.points[indices[0]!]!,
-          b = group.points[indices[1]!]!
-        const budget =
-          group.points.length === 2
-            ? Math.min(group.limits[indices[0]!]!, group.limits[indices[1]!]!)
-            : group.limits[indices[0]!]! + group.limits[indices[1]!]!
-        const path = this.search(
-          group.connection,
-          a,
-          b,
-          a.layer,
-          trunks.map((t) => t.trace),
-          Math.max(...group.limits),
+    return trunks
+  }
+
+  private routeBranches(trunks: Trunk[]): Tree | undefined {
+    const traces: SimplifiedPcbTrace[] = []
+    let length = 0
+    let longestPathRatio = 0
+    for (const [i, trunk] of trunks.entries()) {
+      const remainingTrunks = trunks.slice(i + 1).map((t) => t.trace)
+      const tree = this.attachBranch(trunk, [...traces, ...remainingTrunks])
+      if (!tree) return
+      traces.push(...tree.traces)
+      length += tree.length
+      longestPathRatio = Math.max(longestPathRatio, tree.longestPathRatio)
+    }
+    return { traces, length, longestPathRatio }
+  }
+
+  private plan(
+    groups: LengthConstrainedConnection[],
+  ): SimplifiedPcbTrace[] | undefined {
+    let best: Tree | undefined
+    // Place the trunks before branching. The first branch can otherwise
+    // occupy the only single-layer path available to the neighboring net.
+    const orders =
+      groups.length === 1 ? [groups] : [groups, [...groups].reverse()]
+    for (const order of orders) {
+      let candidates: Trunk[][] = [[]]
+      for (const group of order) {
+        candidates = candidates.flatMap((trunks) =>
+          this.getTrunks(group, trunks).map((next) => [...trunks, next]),
         )
-        if (!path || lengthOf(path) > budget) continue
-        const trace = this.makeTrace(group.connection, path, "trunk", [
-          a.pointId,
-          b.pointId,
-        ])
-        chooseTrunks(rest, [...trunks, { group, indices, path, trace }])
+      }
+      for (const trunks of candidates) {
+        const branchOrders =
+          trunks.length === 1 ? [trunks] : [trunks, [...trunks].reverse()]
+        for (const branches of branchOrders) {
+          const tree = this.routeBranches(branches)
+          if (
+            tree &&
+            (!best ||
+              tree.longestPathRatio < best.longestPathRatio ||
+              (tree.longestPathRatio === best.longestPathRatio &&
+                tree.length < best.length))
+          )
+            best = tree
+        }
       }
     }
-    chooseTrunks(groups, [])
-    if (groups.length > 1) chooseTrunks([...groups].reverse(), [])
-    return best
+    return best?.traces
   }
 
   override _step(): void {
     const first = this.groups.shift()
     if (!first) {
+      if (this.traces.length) {
+        this.traces = assignUniquePcbTraceIdsToNewTraces(
+          this.traces,
+          this.input.traces ?? [],
+        )
+      }
       this.solved = true
       return
     }
     const groups = [first]
-    // Jointly plan at most two neighboring stars, bounding the trunk permutations.
+    // Adjacent pins can share an escape channel. Plan one competing net at a time.
     const neighboring = this.groups.findIndex((g) =>
       first.points.some((a) =>
         g.points.some(
@@ -343,9 +353,18 @@ export class BoundedConnectionSolver extends BaseSolver {
     )
     if (neighboring >= 0) groups.push(this.groups.splice(neighboring, 1)[0]!)
     const pins = groups.flatMap((g) => g.points)
-    const excluded = new Set(
-      [...this.groups, ...groups].map((g) => g.connection.name),
-    )
+    const maxLength = Math.max(...groups.flatMap((g) => g.limits))
+    const excluded = new Set([
+      ...this.input.connections
+        .filter((c) => c.maxLength !== undefined || c.maxViaCount !== undefined)
+        .map((c) => c.netConnectionName ?? c.name),
+      ...(this.input.buses ?? []).flatMap((bus) => bus.connectionNames),
+      ...(this.input.differentialPairs ?? []).flatMap(
+        (pair) => pair.connectionNames,
+      ),
+      ...this.existingTraces.map((t) => t.connection_name),
+      ...this.traces.map((t) => t.connection_name),
+    ])
     for (const c of this.input.connections) {
       if (
         excluded.has(c.name) ||
@@ -353,30 +372,7 @@ export class BoundedConnectionSolver extends BaseSolver {
         c.path ||
         c.isOffBoard ||
         c.externallyConnectedPointIds?.length ||
-        c.maxLength !== undefined ||
-        c.maxViaCount !== undefined ||
         c.pointsToConnect.length !== 2
-      )
-        continue
-      if (
-        this.input.buses?.some((bus) => bus.connectionNames.includes(c.name)) ||
-        this.input.differentialPairs?.some((pair) =>
-          pair.connectionNames.includes(c.name),
-        )
-      )
-        continue
-      if (
-        this.input.connections.some(
-          (branch) =>
-            branch.netConnectionName === c.name &&
-            (branch.maxLength !== undefined ||
-              branch.maxViaCount !== undefined),
-        )
-      )
-        continue
-      if (
-        this.context.traces!.some((t) => t.connection_name === c.name) ||
-        this.traces.some((t) => t.connection_name === c.name)
       )
         continue
       const [a, b] = c.pointsToConnect
@@ -390,8 +386,7 @@ export class BoundedConnectionSolver extends BaseSolver {
         b.terminalVia
       )
         continue
-      if (distance(a, b) > Math.max(...groups.flatMap((group) => group.limits)))
-        continue
+      if (distance(a, b) > maxLength) continue
       if (
         !pins.some(
           (p) =>
@@ -419,17 +414,16 @@ export class BoundedConnectionSolver extends BaseSolver {
       throw new Error(
         `No via-free routing within the length budgets for ${groups.map((g) => g.connection.name).join(", ")}`,
       )
-    this.traces.push(...plan.traces)
-    for (const t of this.traces) this.occupiedIds.add(t.pcb_trace_id)
+    this.traces.push(...plan)
   }
 
-  getRoutingInput(input: SimpleRouteJson): SimpleRouteJson {
-    if (!this.traces.length) return input
+  getOutputSimpleRouteJson(): SimpleRouteJson {
+    if (!this.traces.length) return this.input
     const routed = new Set(this.traces.map((t) => t.connection_name))
     return {
-      ...input,
-      traces: [...(input.traces ?? []), ...this.traces],
-      connections: input.connections.filter((c) => !routed.has(c.name)),
+      ...this.input,
+      traces: [...(this.input.traces ?? []), ...this.traces],
+      connections: this.input.connections.filter((c) => !routed.has(c.name)),
     }
   }
 }

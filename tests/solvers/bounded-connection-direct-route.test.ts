@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { BoundedConnectionSolver } from "lib/solvers/BoundedConnectionSolver/BoundedConnectionSolver"
+import { LengthConstrainedTraceSolver } from "lib/solvers/LengthConstrainedTraceSolver/LengthConstrainedTraceSolver"
 import type { SimpleRouteJson } from "lib/types"
 
 test("a bounded two-pin connection routes on its declared layer around foreign copper", () => {
@@ -29,7 +29,7 @@ test("a bounded two-pin connection routes on its declared layer around foreign c
       },
     ],
   }
-  const solver = new BoundedConnectionSolver(input, [])
+  const solver = new LengthConstrainedTraceSolver(input, [])
   solver.solve()
   expect(solver.solved).toBe(true)
   const [trace] = solver.traces
@@ -48,6 +48,6 @@ test("a bounded two-pin connection routes on its declared layer around foreign c
   }
   expect(length).toBeGreaterThan(4)
   expect(length).toBeLessThanOrEqual(5.5)
-  expect(solver.getRoutingInput(input).connections).toHaveLength(0)
+  expect(solver.getOutputSimpleRouteJson().connections).toHaveLength(0)
   expect(input.connections).toHaveLength(1)
 })

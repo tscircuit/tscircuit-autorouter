@@ -40,7 +40,7 @@ import { getPipeline9BoundedRepairBudget } from "./applyPipeline9BoundedRegional
 import { Pipeline9RegionalB01RepairSolver } from "./Pipeline9RegionalB01RepairSolver"
 import { Pipeline9BoundedRegionalRepairSolver } from "./Pipeline9BoundedRegionalRepairSolver"
 import { applyPipeline9TerminalEscapeRelocations } from "./applyPipeline9TerminalEscapeRelocations"
-import { assignUniquePcbTraceIdsToNewTraces } from "./assignUniquePcbTraceIdsToNewTraces"
+import { assignUniquePcbTraceIdsToNewTraces } from "lib/utils/assignUniquePcbTraceIdsToNewTraces"
 import {
   type PreloadedHighDensityRoute,
   convertPreloadedTraceToHdRoutes,

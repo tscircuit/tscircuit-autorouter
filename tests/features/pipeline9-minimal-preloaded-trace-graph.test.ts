@@ -41,6 +41,15 @@ test("Pipeline9 owns copied stages with minimal preloaded-trace changes", () => 
       solverClass,
     })),
   )
+  const constrainedSrj = structuredClone(srj)
+  constrainedSrj.connections[0]!.maxLength = 10
+  constrainedSrj.connections[0]!.maxViaCount = 0
+  const constrainedSolver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
+    constrainedSrj,
+  )
+  expect(constrainedSolver.pipelineDef.map((step) => step.solverName)).toEqual(
+    solver.pipelineDef.map((step) => step.solverName),
+  )
   solver.solveUntilPhase("portPointPathingSolver")
   traceFreeSolver.solveUntilPhase("portPointPathingSolver")
 
@@ -106,7 +115,7 @@ test("Pipeline9 owns copied stages with minimal preloaded-trace changes", () => 
   const pipeline7SharedStageCount = pipeline7.pipelineDef.filter(
     (step) => step.solverName !== "exactGeometryDrcForceImproveSolver",
   ).length
-  expect(solver.pipelineDef).toHaveLength(pipeline7SharedStageCount + 4)
+  expect(solver.pipelineDef).toHaveLength(pipeline7SharedStageCount + 5)
   for (const stageName of [
     "highDensityRepairSolver",
     "highDensityStitchSolver",

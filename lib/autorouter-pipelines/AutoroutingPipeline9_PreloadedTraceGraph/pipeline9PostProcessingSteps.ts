@@ -9,7 +9,7 @@ import type { SimplifiedPcbTraces } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { NetToPointPairsSolver } from "../../solvers/NetToPointPairsSolver/NetToPointPairsSolver"
 import { LengthMatchingPostProcessingSolver } from "../../solvers/length-matching-post-processing-solver"
-import { assignUniquePcbTraceIdsToNewTraces } from "./assignUniquePcbTraceIdsToNewTraces"
+import { assignUniquePcbTraceIdsToNewTraces } from "lib/utils/assignUniquePcbTraceIdsToNewTraces"
 import { getTerminalLayerIndicesByPcbPortId } from "./getTerminalLayerIndicesByPcbPortId"
 import { canonicalizePipeline9HdRoutes } from "./canonicalizePipeline9HdRoutes"
 import { convertPreloadedTraceToHdRoutes } from "./convertPreloadedTraceToHdRoutes"
@@ -33,14 +33,14 @@ function getCleanupTraces(
   return assignUniquePcbTraceIdsToNewTraces(
     convertPipeline7HdRoutesToSimplifiedPcbTraces({
       connections: pipeline.netToPointPairsSolver!.newConnections,
-      originalConnections: pipeline.routingInput.connections,
+      originalConnections: pipeline.originalSrj.connections,
       hdRoutes: canonicalizePipeline9HdRoutes(routes),
       layerCount: pipeline.srj.layerCount,
       obstacles: pipeline.srj.obstacles,
       defaultViaHoleDiameter: pipeline.viaHoleDiameter,
       connMap: pipeline.connMap,
     }),
-    pipeline.routingInput.traces ?? [],
+    pipeline.srj.traces ?? [],
   )
 }
 
@@ -83,7 +83,7 @@ export const pipeline9PostProcessingSteps = [
         {
           srj: srjWithMaterializedPreloadedTraces,
           srjWithPointPairs: srjWithMaterializedPreloadedTraces,
-          originalSrj: pipeline.routingInput,
+          originalSrj: { ...pipeline.originalSrj, traces: pipeline.srj.traces },
           newConnections: pipeline.netToPointPairsSolver?.newConnections ?? [],
           newHdRoutes: pipeline.globalDrcForceImproveSolver!.getOutput(),
           originalNewHdRoutes:
@@ -119,7 +119,7 @@ export const pipeline9PostProcessingSteps = [
           pipeline.connMap,
         ),
       )
-      const inputSrj = { ...pipeline.routingInput, traces: preloadedTraces }
+      const inputSrj = { ...pipeline.originalSrj, traces: preloadedTraces }
       const hdRoutes = canonicalizePipeline9HdRoutes(
         pipeline.pipeline9JointDrcRepairSolver!.getOutput(),
       )
@@ -251,7 +251,7 @@ export const pipeline9PostProcessingSteps = [
         getPowerTraceExpansionConnectionNames(pipeline.originalSrj)
       return [
         preparePipeline7PowerTraceExpansionInput({
-          originalSrj: pipeline.routingInput,
+          originalSrj: pipeline.originalSrj,
           newlyRoutedTraces: pipeline.getNewTracesBeforePowerExpansion(),
           currentPreloadedTraces: pipeline.getUpdatedPreloadedTraces(),
           expandedConnectionNames: onlyConnectionNames,

@@ -6,16 +6,22 @@ import {
 } from "lib/types"
 import { getPointKey } from "lib/utils/getPointKey"
 
-export interface BoundedTerminalGroup {
+export interface LengthConstrainedConnection {
   connection: SimpleRouteConnection
   points: SingleLayerConnectionPoint[]
   limits: number[]
 }
 
 /** Identify direct connections and small stars with a via-free budget at every pin. */
-export function getBoundedTerminalGroups(
+export function getLengthConstrainedConnections(
   srj: SimpleRouteJson,
-): BoundedTerminalGroup[] {
+): LengthConstrainedConnection[] {
+  if (
+    !srj.connections.some(
+      (c) => c.maxViaCount === 0 && c.maxLength !== undefined,
+    )
+  )
+    return []
   const budgets = new Map<string, Map<string, number>>()
   const excluded = new Set([
     ...(srj.buses ?? []).flatMap((bus) => bus.connectionNames),
@@ -34,7 +40,7 @@ export function getBoundedTerminalGroups(
     limits.set(pin, Math.min(c.maxLength, limits.get(pin) ?? Infinity))
     budgets.set(c.netConnectionName, limits)
   }
-  const groups: BoundedTerminalGroup[] = []
+  const groups: LengthConstrainedConnection[] = []
   for (const connection of srj.connections) {
     const points = connection.pointsToConnect
     if (points.length < 2 || points.length > 3 || excluded.has(connection.name))

@@ -1,4 +1,4 @@
-import { BoundedConnectionSolver } from "lib/solvers/BoundedConnectionSolver/BoundedConnectionSolver"
+import { LengthConstrainedTraceSolver } from "lib/solvers/LengthConstrainedTraceSolver/LengthConstrainedTraceSolver"
 import { ComponentDetectionSolver } from "lib/solvers/ComponentDetectionSolver/ComponentDetectionSolver"
 import { MultiTargetNecessaryCrampedPortPointSolver } from "lib/solvers/NecessaryCrampedPortPointSolver/MultiTargetNecessaryCrampedPortPointSolver"
 import { retainRequiredCrampedPortPoints } from "lib/solvers/NecessaryCrampedPortPointSolver/retainRequiredCrampedPortPoints"
@@ -84,21 +84,22 @@ export const pipeline9TopologySteps = [
     },
   }),
   definePipeline9Step({
-    solverName: "boundedConnectionSolver",
-    solverClass: BoundedConnectionSolver,
+    solverName: "lengthConstrainedTraceSolver",
+    solverClass: LengthConstrainedTraceSolver,
     getConstructorParams: (pipeline) => [
       pipeline.srj,
       pipeline.escapeViaLocationSolver!.createdEscapeVias,
     ],
     onSolved: (pipeline) => {
-      pipeline.applyBoundedConnections(pipeline.boundedConnectionSolver!)
+      pipeline.srj =
+        pipeline.lengthConstrainedTraceSolver!.getOutputSimpleRouteJson()
     },
   }),
   definePipeline9Step({
     solverName: "netToPointPairsSolver",
     solverClass: NetToPointPairsSolver2_OffBoardConnection,
     getConstructorParams: (pipeline) => {
-      const inputSrj = pipeline.srjWithEscapeViaLocations ?? pipeline.srj
+      const inputSrj = pipeline.srj
       return [
         inputSrj,
         pipeline.colorMap,
