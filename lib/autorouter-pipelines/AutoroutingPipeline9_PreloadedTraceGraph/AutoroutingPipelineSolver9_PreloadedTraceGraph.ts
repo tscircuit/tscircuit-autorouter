@@ -197,8 +197,14 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     super()
     const srjWithBoardValidObstacleLayers =
       createSrjWithBoardValidObstacleLayers(srj)
-    if (!srj.connections.some((c) => c.maxViaCount === 0 && c.maxLength !== undefined)) {
-      this.pipelineDef = this.pipelineDef.filter((step) => step.solverName !== "boundedConnectionSolver")
+    if (
+      !srj.connections.some(
+        (c) => c.maxViaCount === 0 && c.maxLength !== undefined,
+      )
+    ) {
+      this.pipelineDef = this.pipelineDef.filter(
+        (step) => step.solverName !== "boundedConnectionSolver",
+      )
     }
     this.routingInput = srjWithBoardValidObstacleLayers
     this.originalSrj = srjWithBoardValidObstacleLayers

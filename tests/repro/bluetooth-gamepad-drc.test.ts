@@ -78,12 +78,17 @@ test("the Bluetooth gamepad routes with zero copper errors, connected terminals 
       includeTraceContinuity: false,
     },
   }
-  const { errors, locationAwareErrors, circuitJson } = evaluateRelaxedDrc(snapshotInput)
+  const { errors, locationAwareErrors, circuitJson } =
+    evaluateRelaxedDrc(snapshotInput)
   expect(locationAwareErrors).toHaveLength(errors.length)
-  expect(checkTraceContinuity(circuitJson, {
-    getExternalViaConnections: getExternalViaGroups(snapshotInput.srjWithPointPairs),
-    isDeclaredTerminal: () => false,
-  })).toHaveLength(0)
+  expect(
+    checkTraceContinuity(circuitJson, {
+      getExternalViaConnections: getExternalViaGroups(
+        snapshotInput.srjWithPointPairs,
+      ),
+      isDeclaredTerminal: () => false,
+    }),
+  ).toHaveLength(0)
   await expect(
     getBugReportSnapshotSvg(snapshotInput, { showErrorLocations: true }),
   ).toMatchSvgSnapshot(import.meta.path)

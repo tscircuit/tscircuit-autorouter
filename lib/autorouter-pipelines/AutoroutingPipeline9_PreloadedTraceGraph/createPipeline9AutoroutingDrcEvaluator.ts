@@ -54,13 +54,28 @@ export const createPipeline9AutoroutingDrcEvaluator = ({
   clearanceTolerance?: number
   connectivityMaps?: CircuitJsonConnectivityMaps
 }): Pipeline9AutoroutingDrcEvaluator => {
-  const terminals = new Map(inputSrj.connections.map((connection) => [
-    connection.name, connection.pointsToConnect.filter((p) => p.pointId && !p.pcb_port_id && !("terminalVia" in p)),
-  ]))
+  const terminals = new Map(
+    inputSrj.connections.map((connection) => [
+      connection.name,
+      connection.pointsToConnect.filter(
+        (p) => p.pointId && !p.pcb_port_id && !("terminalVia" in p),
+      ),
+    ]),
+  )
   const routingConnectivity = {
     getExternalViaConnections: getExternalViaGroups(srjWithPointPairs),
-    isDeclaredTerminal: (name: string, endpoint: { x: number; y: number; layer: string }): boolean =>
-      terminals.get(name)?.some((p) => (p.layer === endpoint.layer || p.layers?.includes(endpoint.layer)) && Math.hypot(p.x - endpoint.x, p.y - endpoint.y) <= 1e-6) ?? false,
+    isDeclaredTerminal: (
+      name: string,
+      endpoint: { x: number; y: number; layer: string },
+    ): boolean =>
+      terminals
+        .get(name)
+        ?.some(
+          (p) =>
+            (p.layer === endpoint.layer ||
+              p.layers?.includes(endpoint.layer)) &&
+            Math.hypot(p.x - endpoint.x, p.y - endpoint.y) <= 1e-6,
+        ) ?? false,
   }
   const conversionOptions = {
     minTraceWidth: inputSrj.minTraceWidth,

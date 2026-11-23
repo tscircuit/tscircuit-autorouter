@@ -500,7 +500,8 @@ export const checkTraceContinuity = (
   const getPhysicalConnectivity = (): ConnectivityMap => {
     if (physicalConnectivity) return physicalConnectivity
     const map = new ConnectivityMap({})
-    const connections: string[][] = routing?.getExternalViaConnections(circuitJson) ?? []
+    const connections: string[][] =
+      routing?.getExternalViaConnections(circuitJson) ?? []
     const indexedSegments = segments.map((segment, order) => ({
       ...segment,
       order,

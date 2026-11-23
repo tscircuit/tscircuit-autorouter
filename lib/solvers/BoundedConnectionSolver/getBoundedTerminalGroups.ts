@@ -13,7 +13,9 @@ export interface BoundedTerminalGroup {
 }
 
 /** Identify direct connections and small stars with a via-free budget at every pin. */
-export function getBoundedTerminalGroups(srj: SimpleRouteJson): BoundedTerminalGroup[] {
+export function getBoundedTerminalGroups(
+  srj: SimpleRouteJson,
+): BoundedTerminalGroup[] {
   const budgets = new Map<string, Map<string, number>>()
   const excluded = new Set([
     ...(srj.buses ?? []).flatMap((bus) => bus.connectionNames),
@@ -35,13 +37,29 @@ export function getBoundedTerminalGroups(srj: SimpleRouteJson): BoundedTerminalG
   const groups: BoundedTerminalGroup[] = []
   for (const connection of srj.connections) {
     const points = connection.pointsToConnect
-    if (points.length < 2 || points.length > 3 || excluded.has(connection.name)) continue
-    if (connection.isOffBoard || connection.externallyConnectedPointIds?.length || (connection.path && connection.path.length > 2)) continue
-    if (!points.every(isSingleLayerConnectionPoint) || points.some((p) => p.layer !== points[0]!.layer || p.terminalVia)) continue
-    const directLimit = points.length === 2 && connection.maxViaCount === 0 ? connection.maxLength : undefined
+    if (points.length < 2 || points.length > 3 || excluded.has(connection.name))
+      continue
+    if (
+      connection.isOffBoard ||
+      connection.externallyConnectedPointIds?.length ||
+      (connection.path && connection.path.length > 2)
+    )
+      continue
+    if (
+      !points.every(isSingleLayerConnectionPoint) ||
+      points.some((p) => p.layer !== points[0]!.layer || p.terminalVia)
+    )
+      continue
+    const directLimit =
+      points.length === 2 && connection.maxViaCount === 0
+        ? connection.maxLength
+        : undefined
     const pinBudgets = budgets.get(connection.name)
-    const limits = points.map((p) => directLimit ?? pinBudgets?.get(getPointKey(p)) ?? Infinity)
-    if (limits.every((limit) => Number.isFinite(limit) && limit > 0)) groups.push({ connection, points, limits })
+    const limits = points.map(
+      (p) => directLimit ?? pinBudgets?.get(getPointKey(p)) ?? Infinity,
+    )
+    if (limits.every((limit) => Number.isFinite(limit) && limit > 0))
+      groups.push({ connection, points, limits })
   }
   return groups
 }
