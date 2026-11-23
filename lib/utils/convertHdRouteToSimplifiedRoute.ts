@@ -1,3 +1,4 @@
+import { isExistingMultilayerObstacle } from "lib/utils/isExistingMultilayerObstacle"
 import { distance, pointToBoxDistance } from "@tscircuit/math-utils"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { isObstacleConnectedToRoute } from "lib/solvers/TraceWidthSolver/isObstacleConnectedToRoute"
@@ -54,9 +55,6 @@ const pointInsideObstacle = (
   obstacle: Obstacle,
 ) => pointToBoxDistance(point, obstacle) <= SAME_NET_OBSTACLE_TOLERANCE
 
-const isMultilayerObstacle = (obstacle: Obstacle) =>
-  (obstacle.__zLayers?.length ?? obstacle.layers?.length ?? 0) > 1
-
 const isThroughObstacleSegment = (
   hdRoute: HdRouteWithOptionalJumpers,
   start: Point,
@@ -76,7 +74,7 @@ const isThroughObstacleSegment = (
   return (
     opts.obstacles?.some(
       (obstacle) =>
-        isMultilayerObstacle(obstacle) &&
+        isExistingMultilayerObstacle(obstacle) &&
         pointInsideObstacle(start, obstacle) &&
         pointInsideObstacle(end, obstacle) &&
         isObstacleConnectedToRoute(obstacle, hdRoute, opts.connMap),

@@ -6,10 +6,11 @@ import {
   stackGraphicsHorizontally,
 } from "graphics-debug"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
+import { createPipeline9AutoroutingDrcEvaluator } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/createPipeline9AutoroutingDrcEvaluator"
 import type { SimpleRouteJson } from "lib/types"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
 
-test("routes STMP157 DDR with fixed data copper", async (): Promise<void> => {
+test("routes STM32MP157 DDR signals around the four completed data bytes", async (): Promise<void> => {
   const input: SimpleRouteJson = JSON.parse(
     gunzipSync(
       Uint8Array.from(
@@ -22,39 +23,52 @@ test("routes STMP157 DDR with fixed data copper", async (): Promise<void> => {
       ),
     ).toString("utf8"),
   )
-  const reference: SimpleRouteJson = JSON.parse(
-    gunzipSync(
-      Uint8Array.from(
-        readFileSync(
-          new URL(
-            "../fixtures/assets/stmp157-native-ddr-via-space/physical-reference.srj.json.gz",
-            import.meta.url,
-          ),
-        ),
-      ),
-    ).toString("utf8"),
-  )
+  expect(input.obstacles).toHaveLength(710)
+  expect(input.traces?.filter((trace) => trace.isFixed)).toHaveLength(32)
+
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(input, {
     cacheProvider: null,
   })
   solver.solve()
 
-  // On failure, only the previously completed data copper is publishable.
-  let output = reference
-  let status = "Remaining DDR routing failed"
-  if (solver.solved) {
-    output = {
-      ...reference,
-      traces: [...reference.traces!, ...solver.getOutputSimplifiedPcbTraces()],
-    }
-    status = "Remaining DDR routing completed"
-  }
+  expect(solver.solved, solver.error ?? "").toBe(true)
+  const routes = solver.getOutputSimplifiedPcbTraces()
+  expect(new Set(routes.map((trace) => trace.connection_name))).toEqual(
+    new Set(input.connections.map((connection) => connection.name)),
+  )
+  expect(routes).toHaveLength(solver.srjWithPointPairs!.connections.length)
+  // The source stack uses inner1, inner3 and inner6 for power and ground planes.
+  const signalLayers = new Set(["top", "inner2", "inner4", "inner5", "bottom"])
+  const routedWireLayers = new Set(
+    routes.flatMap((trace) =>
+      trace.route.flatMap((point) =>
+        point.route_type === "wire" ? [point.layer] : [],
+      ),
+    ),
+  )
+  expect(routedWireLayers).toEqual(signalLayers)
+  const checkCopper = createPipeline9AutoroutingDrcEvaluator({
+    inputSrj: input,
+    srjWithPointPairs: solver.srjWithPointPairs!,
+    includeBoardClearance: true,
+    clearanceTolerance: 1e-9,
+    drcOptions: {
+      traceClearance: input.minTraceToPadEdgeClearance,
+      viaToPadClearance: input.minViaEdgeToPadEdgeClearance,
+      viaClearance: input.minViaHoleEdgeToViaHoleEdgeClearance,
+      holeClearance: input.minTraceToHoleEdgeClearance,
+    },
+  })
+  expect(checkCopper(routes).errors).toEqual([])
+  const output = solver.getOutputSimpleRouteJson()
+  expect(output.traces?.filter((trace) => trace.isFixed)).toEqual(input.traces)
   const graphics = convertSrjToGraphicsObject(output)
   graphics.points = []
+  const status = `All ${input.connections.length} remaining nets routed`
   await expect(
     getSvgFromGraphicsObject(
       stackGraphicsHorizontally([graphics], {
-        titles: [`STMP157 native DDR | ${status}`],
+        titles: [`STM32MP157 DDR | 32 fixed data nets | ${status}`],
       }),
       { backgroundColor: "white" },
     ),
