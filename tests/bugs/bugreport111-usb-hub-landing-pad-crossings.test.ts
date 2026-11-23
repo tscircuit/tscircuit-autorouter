@@ -48,14 +48,5 @@ test("bugreport111: Pipeline 9 plans no other net across the pads its fixed crys
         : [],
     )
     .sort()
-  // Recorded as planned today; a pad of another net is not routable space.
-  expect(crossings).toEqual([
-    "pcb_smtpad_55 source_net_0",
-    "pcb_smtpad_55 source_net_13",
-    "pcb_smtpad_57 source_net_12",
-    "pcb_smtpad_57 source_net_33",
-    "pcb_smtpad_59 source_net_33",
-    "pcb_smtpad_61 source_net_49",
-    "pcb_smtpad_61 source_net_49",
-  ])
+  expect(crossings).toEqual([])
 })
