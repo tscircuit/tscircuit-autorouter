@@ -477,6 +477,9 @@ const getTinyRouteConnectionsOrThrow = (
 }
 
 const VIA_GEOMETRY_TOLERANCE_MM = 1e-9
+// Cells >= ~0.38x viaDiameter are routinely solved in-place via GrowShrink / negative BOUNDARY_PADDING;
+// trigger the split-graph guard only when a non-cramped transition lands in a sub-drill-core cell (<= 0.36x viaDiameter, e.g. 0.12mm vs 0.45mm).
+const SUB_VIA_CORE_TRIGGER_RATIO = 0.36
 
 const getSplitSerializedRegionId = (regionId: string, z: number): string =>
   `${regionId}::z${z}`
@@ -1854,11 +1857,82 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   private hasSubViaRegionLayerChanges(
     pipeline: TinyHyperGraphSectionPipelineWithTerminalNetIds,
   ): boolean {
-    if (this.splittableSubViaRegionIds.size === 0) return false
+    const minViaPadDiameter = this.params.minViaPadDiameter
+    if (
+      this.splittableSubViaRegionIds.size === 0 ||
+      typeof minViaPadDiameter !== "number" ||
+      !Number.isFinite(minViaPadDiameter) ||
+      minViaPadDiameter <= 0
+    ) {
+      return false
+    }
+    const solveGraphSolver =
+      pipeline.getSolver<TinyHyperGraphSolver>("solveGraph")
+    if (solveGraphSolver?.stats?.acceptedGreedyFinalRouteOnTimeout) {
+      return false
+    }
+
+    const triggerMaxSide =
+      minViaPadDiameter * SUB_VIA_CORE_TRIGGER_RATIO + VIA_GEOMETRY_TOLERANCE_MM
     const solvedTinySolver = pipeline.getSolvedTinySolver()
     const changedPreloadedRouteIds =
       this.getChangedPreloadedRouteIds(solvedTinySolver)
     const regionMetadata = solvedTinySolver.topology.regionMetadata ?? []
+    const portMetadata = solvedTinySolver.topology.portMetadata ?? []
+
+    for (
+      let regionId = 0;
+      regionId < solvedTinySolver.state.regionSegments.length;
+      regionId++
+    ) {
+      const originalRegionId = regionMetadata[regionId]?.capacityMeshNodeId
+      if (
+        !originalRegionId ||
+        !this.splittableSubViaRegionIds.has(originalRegionId)
+      ) {
+        continue
+      }
+      const originalRegion = this.originalRegionById.get(originalRegionId)
+      if (
+        !originalRegion ||
+        Math.min(originalRegion.d.width, originalRegion.d.height) >
+          triggerMaxSide
+      ) {
+        continue
+      }
+      for (const [routeId, fromPortId, toPortId] of solvedTinySolver.state
+        .regionSegments[regionId] ?? []) {
+        if (
+          solvedTinySolver.topology.portZ[fromPortId] ===
+          solvedTinySolver.topology.portZ[toPortId]
+        ) {
+          continue
+        }
+        if (
+          portMetadata[fromPortId]?.cramped ||
+          portMetadata[toPortId]?.cramped
+        ) {
+          continue
+        }
+        const routeMetadata = this.getRouteMetadata(solvedTinySolver, routeId)
+        if (
+          hasPreloadedTraceSectionMetadata(routeMetadata) &&
+          !changedPreloadedRouteIds.has(routeId)
+        ) {
+          continue
+        }
+        return true
+      }
+    }
+    return false
+  }
+
+  private hasSameNetMultiLayerSplitReentry(
+    pipeline: TinyHyperGraphSectionPipelineWithTerminalNetIds,
+  ): boolean {
+    const solvedTinySolver = pipeline.getSolvedTinySolver()
+    const regionMetadata = solvedTinySolver.topology.regionMetadata ?? []
+    const layersByNodeAndNet = new Map<string, number>()
 
     for (
       let regionId = 0;
@@ -1874,20 +1948,15 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       }
       for (const [routeId, fromPortId, toPortId] of solvedTinySolver.state
         .regionSegments[regionId] ?? []) {
-        if (
-          solvedTinySolver.topology.portZ[fromPortId] ===
-          solvedTinySolver.topology.portZ[toPortId]
-        ) {
-          continue
+        const z = solvedTinySolver.topology.portZ[fromPortId]
+        if (z !== solvedTinySolver.topology.portZ[toPortId]) continue
+        const netId = solvedTinySolver.problem.routeNet[routeId]
+        const key = `${originalRegionId}\0${netId}`
+        const prevZ = layersByNodeAndNet.get(key)
+        if (prevZ !== undefined && prevZ !== z) {
+          return true
         }
-        const routeMetadata = this.getRouteMetadata(solvedTinySolver, routeId)
-        if (
-          hasPreloadedTraceSectionMetadata(routeMetadata) &&
-          !changedPreloadedRouteIds.has(routeId)
-        ) {
-          continue
-        }
-        return true
+        layersByNodeAndNet.set(key, z)
       }
     }
     return false
@@ -2172,7 +2241,11 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       this.candidatePortfolioPhase === "subViaGuard" &&
       (this.tinyPipelineSolver.solved || this.tinyPipelineSolver.failed)
     ) {
-      if (this.tinyPipelineSolver.solved && !this.tinyPipelineSolver.failed) {
+      if (
+        this.tinyPipelineSolver.solved &&
+        !this.tinyPipelineSolver.failed &&
+        !this.hasSameNetMultiLayerSplitReentry(this.tinyPipelineSolver)
+      ) {
         if (this.subViaGuardInputNodes) {
           this.inputNodeWithPortPoints = this.subViaGuardInputNodes
         }

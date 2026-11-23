@@ -350,6 +350,101 @@ describe("TinyHypergraphPortPointPathingSolver minViaPadDiameter node guard (#40
     expect(solver.failed).toBeFalse()
   })
 
+  test("leaves moderate overhang-compatible cells (> 0.36x viaDiameter) untouched when no sub-core transition occurs", () => {
+    const capacityMeshNodes: CapacityMeshNode[] = [
+      makeNode({
+        id: "cmn_start",
+        x: 0,
+        y: 0,
+        width: 0.5,
+        height: 0.5,
+        availableZ: [0],
+        containsTarget: true,
+        connectedTo: ["conn_overhang"],
+      }),
+      makeNode({
+        id: "cmn_overhang_saddle",
+        x: 0.4,
+        y: 0,
+        width: 0.25,
+        height: 0.8,
+        availableZ: [0, 1],
+      }),
+      makeNode({
+        id: "cmn_end",
+        x: 0.8,
+        y: 0,
+        width: 0.5,
+        height: 0.5,
+        availableZ: [1],
+        containsTarget: true,
+        connectedTo: ["conn_overhang"],
+      }),
+    ]
+
+    const segmentPortPoints: SegmentPortPoint[] = [
+      makeSegmentPortPoint({
+        id: "spp_1",
+        nodeA: "cmn_start",
+        nodeB: "cmn_overhang_saddle",
+        x: 0.25,
+        y: 0,
+        availableZ: [0],
+      }),
+      makeSegmentPortPoint({
+        id: "spp_2",
+        nodeA: "cmn_overhang_saddle",
+        nodeB: "cmn_end",
+        x: 0.55,
+        y: 0,
+        availableZ: [1],
+      }),
+    ]
+
+    const simpleRouteJsonConnections: SimpleRouteConnection[] = [
+      {
+        name: "conn_overhang",
+        pointsToConnect: [
+          { x: 0, y: 0, layer: "top" },
+          { x: 0.8, y: 0, layer: "bottom" },
+        ],
+      },
+    ]
+
+    const connectivityMap = new ConnectivityMap({
+      net_overhang: ["conn_overhang"],
+    })
+
+    const { graph, connections } = buildHyperGraph({
+      simpleRouteJsonConnections,
+      capacityMeshNodes,
+      segmentPortPoints,
+      layerCount: 2,
+      connectivityMap,
+    })
+
+    const solver = new TinyHypergraphPortPointPathingSolver({
+      graph,
+      connections,
+      layerCount: 2,
+      effort: 1,
+      flags: DEFAULT_FLAGS,
+      weights: DEFAULT_WEIGHTS,
+      minViaPadDiameter: 0.45,
+    })
+
+    let enteredSubViaGuard = false
+    while (!solver.solved && !solver.failed) {
+      solver.step()
+      if ((solver as any).candidatePortfolioPhase === "subViaGuard") {
+        enteredSubViaGuard = true
+      }
+    }
+
+    expect(enteredSubViaGuard).toBeFalse()
+    expect(solver.solved).toBeTrue()
+  })
+
   test("bugreport86-40bf8e portPointPathingSolver plans zero layer changes inside nodes smaller than viaDiameter", () => {
     const srj = migrateLegacyObstacleCircuitJsonMetadata(
       structuredClone(bugReport.simple_route_json) as SimpleRouteJson,
