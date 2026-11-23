@@ -1,3 +1,4 @@
+import { isExistingMultilayerObstacle } from "lib/utils/isExistingMultilayerObstacle"
 import { distance, pointToBoxDistance } from "@tscircuit/math-utils"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { isObstacleConnectedToRoute } from "lib/solvers/TraceWidthSolver/isObstacleConnectedToRoute"
@@ -6,6 +7,7 @@ import {
   type Obstacle,
   type SimplifiedPcbTraces,
   type SingleLayerConnectionPoint,
+  getConnectionPointLayers,
   isSingleLayerConnectionPoint,
 } from "lib/types"
 import { HighDensityIntraNodeRoute, Jumper } from "lib/types/high-density-types"
@@ -53,9 +55,6 @@ const pointInsideObstacle = (
   obstacle: Obstacle,
 ) => pointToBoxDistance(point, obstacle) <= SAME_NET_OBSTACLE_TOLERANCE
 
-const isMultilayerObstacle = (obstacle: Obstacle) =>
-  (obstacle.__zLayers?.length ?? obstacle.layers?.length ?? 0) > 1
-
 const isThroughObstacleSegment = (
   hdRoute: HdRouteWithOptionalJumpers,
   start: Point,
@@ -75,7 +74,7 @@ const isThroughObstacleSegment = (
   return (
     opts.obstacles?.some(
       (obstacle) =>
-        isMultilayerObstacle(obstacle) &&
+        isExistingMultilayerObstacle(obstacle) &&
         pointInsideObstacle(start, obstacle) &&
         pointInsideObstacle(end, obstacle) &&
         isObstacleConnectedToRoute(obstacle, hdRoute, opts.connMap),
@@ -247,6 +246,61 @@ const attachTerminalViasToSimplifiedRoute = ({
   return [...prependSegments, ...linearRoute, ...appendSegments, ...jumpers]
 }
 
+/** Records existing terminal copper in board-world mm (+X right, +Y up),
+ * without requesting another drill at that position. */
+const attachExistingTerminalViaTransitions = ({
+  route,
+  connectionPoints,
+  obstacles,
+}: {
+  route: SimplifiedPcbTraces[number]["route"]
+  connectionPoints: ReadonlyArray<ConnectionPoint>
+  obstacles: ReadonlyArray<Obstacle>
+}): SimplifiedPcbTraces[number]["route"] => {
+  const prepend: SimplifiedPcbTraces[number]["route"] = []
+  const append: SimplifiedPcbTraces[number]["route"] = []
+  for (const side of ["start", "end"] as const) {
+    const endpoint = side === "start" ? route[0] : route.at(-1)
+    if (endpoint?.route_type !== "wire") continue
+    const terminal = connectionPoints.find(
+      (point) =>
+        point.pcb_port_id && point.x === endpoint.x && point.y === endpoint.y,
+    )
+    if (!terminal?.pcb_port_id) continue
+    const terminalLayer = getConnectionPointLayers(terminal)[0]!
+    if (terminalLayer === endpoint.layer) continue
+    const existingVia = obstacles.find(
+      (obstacle) =>
+        obstacle.circuitJsonMetadata?.pcb_via_id &&
+        !obstacle.netIsAssignable &&
+        obstacle.center.x === endpoint.x &&
+        obstacle.center.y === endpoint.y &&
+        obstacle.layers.includes(endpoint.layer) &&
+        obstacle.connectedTo.includes(terminal.pcb_port_id!),
+    )
+    if (!existingVia) continue
+    const transition = {
+      route_type: "through_obstacle" as const,
+      start: { x: endpoint.x, y: endpoint.y },
+      end: { x: endpoint.x, y: endpoint.y },
+      from_layer: side === "start" ? terminalLayer : endpoint.layer,
+      to_layer: side === "start" ? endpoint.layer : terminalLayer,
+      width: endpoint.width,
+      circuitJsonMetadata: existingVia.circuitJsonMetadata,
+    }
+    const terminalWire = {
+      route_type: "wire" as const,
+      x: endpoint.x,
+      y: endpoint.y,
+      width: endpoint.width,
+      layer: terminalLayer,
+    }
+    if (side === "start") prepend.push(terminalWire, transition)
+    else append.push(transition, terminalWire)
+  }
+  return [...prepend, ...route, ...append]
+}
+
 export const convertHdRouteToSimplifiedRoute = (
   hdRoute: HdRouteWithOptionalJumpers,
   layerCount: number,
@@ -366,12 +420,17 @@ export const convertHdRouteToSimplifiedRoute = (
     }
   }
 
-  return attachTerminalViasToSimplifiedRoute({
+  const routeWithTerminalVias = attachTerminalViasToSimplifiedRoute({
     route: result,
     hdRoute,
     layerCount,
     connectionPoints: opts.connectionPoints,
     tolerance: opts.terminalViaAttachTolerance,
     defaultViaHoleDiameter: opts.defaultViaHoleDiameter,
+  })
+  return attachExistingTerminalViaTransitions({
+    route: routeWithTerminalVias,
+    connectionPoints: opts.connectionPoints ?? [],
+    obstacles: opts.connectedMultilayerObstacles ?? opts.obstacles ?? [],
   })
 }

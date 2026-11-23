@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test"
 import { HighDensityForceImproveSolver } from "high-density-repair01/lib/HighDensityForceImproveSolver"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
+import type { PreloadedHighDensityRoute } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/convertPreloadedTraceToHdRoutes"
 import type { Pipeline9HighDensitySolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver"
 import type { SimpleRouteJson } from "lib/types"
 import type {
@@ -54,6 +55,7 @@ test("Pipeline9 preserves vias through force improvement", (): void => {
   pipeline9.highDensityNodePortPoints = [nodeWithPortPoints]
   pipeline9.highDensityRouteSolver = {
     routes: [rawRoute],
+    getUpdatedFixedHdRoutes: (): PreloadedHighDensityRoute[] => [],
   } as Pipeline9HighDensitySolver
 
   const forceImproveStep = pipeline9.pipelineDef.find(

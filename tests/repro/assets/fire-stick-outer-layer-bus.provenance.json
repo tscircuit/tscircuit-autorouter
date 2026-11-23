@@ -1,0 +1,8 @@
+{
+  "source": "https://tscircuit.com/gokul/fire-stick",
+  "description": "Author-owned board routing input for C38.pin2 to TP5.1, contributed under the repository MIT license.",
+  "capture": "review/automation-nov19-pass2/c38-repair-source_net_1-input.srj.json",
+  "captureVersion": "@tscircuit/capacity-autorouter@0.0.1129",
+  "inputSha256": "843ce51b954413d565fe6c2482335b039b7d18382fcff159aa2ecfba7c70e3a1",
+  "adaptations": "None. Gzip stores the original SRJ bytes; no obstacles, routes, bus constraints or layer names changed."
+}

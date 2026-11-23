@@ -591,8 +591,13 @@ const getTracePairCenter = (left: TraceSegment, right: TraceSegment): Point => {
 /** Keeps candidate ordering and geometry identical to the full-board evaluator. */
 export const createTraceObstacleClearanceEvaluator = (
   staticCircuitJson: AnyCircuitElement[],
-  options: { traceClearance?: number; holeClearance?: number } = {},
+  options: {
+    traceClearance?: number
+    holeClearance?: number
+    clearanceTolerance?: number
+  } = {},
 ): ObstacleClearanceEvaluator => {
+  const clearanceTolerance = options.clearanceTolerance ?? DRC_EPSILON
   const elements = staticCircuitJson
     .filter(
       (element): element is Exclude<PadOrVia, { type: "pcb_via" }> =>
@@ -785,7 +790,7 @@ export const createTraceObstacleClearanceEvaluator = (
             : getTraceObstacleClearance(start, end, width, item)
         if (
           "trace" in item
-            ? clearance.gap > traceClearance - DRC_EPSILON
+            ? clearance.gap > traceClearance - clearanceTolerance
             : clearance.gap > 0
         )
           continue
@@ -852,7 +857,7 @@ export const createTraceObstacleClearanceEvaluator = (
       }
       if (
         overlappingTypedPairs.has(pairId) ||
-        gap + DRC_EPSILON >= traceClearance ||
+        gap + clearanceTolerance >= traceClearance ||
         (typedErrors.get(pairId)?.gap ?? Infinity) <= gap
       )
         return
@@ -879,7 +884,7 @@ export const createTraceObstacleClearanceEvaluator = (
       })
     }
     for (const via of vias) {
-      const margin = traceClearance + maxTypedRadius + DRC_EPSILON
+      const margin = traceClearance + maxTypedRadius + clearanceTolerance
       const nearbySegments = typedSegmentIndex
         .search({
           minX: via.minX - margin,
@@ -925,7 +930,7 @@ export const createTraceObstacleClearanceEvaluator = (
         }
         if (
           overlappingHolePairs.has(pairId) ||
-          gap + 1e-6 >= holeClearance ||
+          gap + (options.clearanceTolerance ?? 1e-6) >= holeClearance ||
           (holeErrors.get(pairId)?.gap ?? Infinity) <= gap
         )
           continue

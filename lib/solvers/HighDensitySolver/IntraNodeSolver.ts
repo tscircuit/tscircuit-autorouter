@@ -75,7 +75,9 @@ export class IntraNodeRouteSolver extends BaseSolver {
   viaDiameter: number
   traceWidth: number
   obstacleMargin: number
+  padObstacles: SingleHighDensityRouteSolver["padObstacles"]
   captureSearchDebug: boolean
+  readonly fixedHdRoutes: HighDensityIntraNodeRoute[]
   rerouteAttemptsByConnection: Map<string, number>
 
   POSTROUTE_VIA_TRACE_CLEARANCE = 0.1
@@ -96,6 +98,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
 
   constructor(params: {
     nodeWithPortPoints: NodeWithPortPoints
+    fixedHdRoutes?: HighDensityIntraNodeRoute[]
     colorMap?: Record<string, string>
     hyperParameters?: Partial<HighDensityHyperParameters>
     connMap?: ConnectivityMap
@@ -118,6 +121,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
     this.nodeWithPortPoints = nodeWithPortPoints
     this.colorMap = colorMap ?? {}
     this.solvedRoutes = []
+    this.fixedHdRoutes = params.fixedHdRoutes ?? []
     this.hyperParameters = params.hyperParameters ?? {}
     this.failedSubSolvers = []
     this.connMap = params.connMap
@@ -127,7 +131,8 @@ export class IntraNodeRouteSolver extends BaseSolver {
     this.captureSearchDebug = params.captureSearchDebug ?? true
     const precomputedParams =
       params.precomputedIntraNodeRouteParams ??
-      precomputeIntraNodeRouteParams(nodeWithPortPoints)
+      precomputeIntraNodeRouteParams(params)
+    this.padObstacles = precomputedParams.padObstacles
     this.rootConnectionNameByConnectionName = new Map(
       precomputedParams.rootConnectionNameByConnectionName,
     )
@@ -226,6 +231,18 @@ export class IntraNodeRouteSolver extends BaseSolver {
     typeof SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost
   >[0] {
     const { connectionName, rootConnectionName, points } = unsolvedConnection
+    const netId =
+      this.connMap?.getNetConnectedToId(connectionName) ??
+      rootConnectionName ??
+      connectionName
+    const fixedHdRoutes = this.fixedHdRoutes.filter((route) => {
+      const fixedNetId =
+        this.connMap?.getNetConnectedToId(route.connectionName) ??
+        route.rootConnectionName ??
+        route.connectionName
+      return fixedNetId !== netId
+    })
+    const obstacleRoutes = [...fixedHdRoutes, ...this.solvedRoutes]
     return {
       connectionName,
       rootConnectionName,
@@ -239,11 +256,12 @@ export class IntraNodeRouteSolver extends BaseSolver {
         z: points[points.length - 1].z,
       },
       obstacleRoutes: this.connMap
-        ? this.solvedRoutes.filter(
+        ? obstacleRoutes.filter(
             (sr) =>
               !this.connMap!.areIdsConnected(sr.connectionName, connectionName),
           )
-        : this.solvedRoutes,
+        : obstacleRoutes,
+      padObstacles: this.padObstacles,
       futureConnections: this.unsolvedConnections,
       layerCount: this.nodeWithPortPoints.portPoints.reduce(
         (max, p) => Math.max(max, (p.z ?? 0) + 1),

@@ -1,110 +1,79 @@
-import { getDifferentialPairsForPostProcessing } from "lib/utils/getDifferentialPairsForPostProcessing"
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
-import { Pipeline9EffortCleanupSolver } from "./Pipeline9EffortCleanupSolver"
-import { createPipeline9AutoroutingDrcEvaluator } from "./createPipeline9AutoroutingDrcEvaluator"
-import { RectDiffPipeline } from "@tscircuit/rectdiff"
+import type { Pipeline9EffortCleanupSolver } from "./Pipeline9EffortCleanupSolver"
+import type { RectDiffPipeline } from "@tscircuit/rectdiff"
 import type { PowerTraceExpanderOptions } from "@tscircuit/power-trace-expander"
-import { ConnectivityMap } from "circuit-json-to-connectivity-map"
+import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject, Line } from "graphics-debug"
 import { Pipeline9HighDensityForceImproveSolver } from "./Pipeline9HighDensityForceImproveSolver"
-import { GlobalDrcForceImproveSolver } from "high-density-repair03/lib"
+import type { GlobalDrcForceImproveSolver } from "high-density-repair03/lib"
 import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
-import { CacheProvider } from "lib/cache/types"
-import { ComponentDetectionSolver } from "lib/solvers/ComponentDetectionSolver/ComponentDetectionSolver"
-import { MultiTargetNecessaryCrampedPortPointSolver } from "lib/solvers/NecessaryCrampedPortPointSolver/MultiTargetNecessaryCrampedPortPointSolver"
-import { retainRequiredCrampedPortPoints } from "lib/solvers/NecessaryCrampedPortPointSolver/retainRequiredCrampedPortPoints"
-import { NodeDimensionSubdivisionSolver } from "lib/solvers/NodeDimensionSubdivisionSolver/NodeDimensionSubdivisionSolver"
-import { buildHyperGraph } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver"
-import {
-  type ChangedPreloadedTraceSection,
-  TinyHypergraphPortPointPathingSolver,
-} from "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver"
-import { MultiGraphTopologyPlannerSolver } from "lib/solvers/TopologyPlanningSolver/MultiGraphTopologyPlannerSolver"
-import { TopologyMergingSolver } from "lib/solvers/TopologyMergingSolver/TopologyMergingSolver"
-import { createPreloadedPortValidator } from "./createPreloadedPortValidator"
-import { UniformPortDistributionSolver } from "lib/solvers/UniformPortDistributionSolver/UniformPortDistributionSolver"
+import type { CacheProvider } from "lib/cache/types"
+import type { ComponentDetectionSolver } from "lib/solvers/ComponentDetectionSolver/ComponentDetectionSolver"
+import type { MultiTargetNecessaryCrampedPortPointSolver } from "lib/solvers/NecessaryCrampedPortPointSolver/MultiTargetNecessaryCrampedPortPointSolver"
+import type { NodeDimensionSubdivisionSolver } from "lib/solvers/NodeDimensionSubdivisionSolver/NodeDimensionSubdivisionSolver"
+import { TinyHypergraphPortPointPathingSolver } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver"
+import type { MultiGraphTopologyPlannerSolver } from "lib/solvers/TopologyPlanningSolver/MultiGraphTopologyPlannerSolver"
+import type { TopologyMergingSolver } from "lib/solvers/TopologyMergingSolver/TopologyMergingSolver"
+import { ClearanceGapIndex } from "./ClearanceGapIndex"
+import { findConflictingGaps } from "./findConflictingGaps"
+import { splitNodesWithoutThroughViaSite } from "./splitNodesWithoutThroughViaSite"
+import type { UniformPortDistributionSolver } from "lib/solvers/UniformPortDistributionSolver/UniformPortDistributionSolver"
 import { getColorMap } from "lib/solvers/colors"
-import {
+import type {
   CapacityMeshEdge,
   CapacityMeshNode,
-  SimpleRouteConnection,
   SimpleRouteJson,
   SimplifiedPcbTraces,
 } from "lib/types"
-import {
+import type {
   HighDensityRoute,
   NodeWithPortPoints,
 } from "lib/types/high-density-types"
-import { combineVisualizations } from "lib/utils/combineVisualizations"
 import { applyNetColorsToGraphicsObject } from "lib/utils/applyNetColorsToGraphicsObject"
 import {
   convertSrjToGraphicsObject,
   type TraceColorMode,
 } from "lib/utils/convertSrjToGraphicsObject"
 import { createSrjWithBoardValidObstacleLayers } from "lib/utils/create-srj-with-board-valid-obstacle-layers"
-import { createObstacleLabelFormatter } from "lib/utils/formatObstacleLabel"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
-import { getInitiallyConnectedMapFromSimpleRouteJson } from "lib/utils/get-initially-connected-map-from-simple-route-json"
-import {
-  getGraphicsLayerForConnectionPoint,
-  getGraphicsLayerForObstacle,
-} from "lib/utils/getGraphicsObjectLayer"
-import { getPresuppliedTraceVisualization } from "lib/utils/getPresuppliedTraceVisualization"
 import { calculateOptimalCapacityDepth } from "lib/utils/getTunedTotalCapacity1"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
-import {
+import type {
   AvailableSegmentPointSolver,
-  type SharedEdgeSegment,
+  SharedEdgeSegment,
 } from "../../solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
 import { BaseSolver } from "../../solvers/BaseSolver"
-import { CapacityMeshEdgeSolver } from "../../solvers/CapacityMeshSolver/CapacityMeshEdgeSolver"
-import { CapacityMeshEdgeSolver2_NodeTreeOptimization } from "../../solvers/CapacityMeshSolver/CapacityMeshEdgeSolver2_NodeTreeOptimization"
-import { CapacityNodeTargetMerger } from "../../solvers/CapacityNodeTargetMerger/CapacityNodeTargetMerger"
-import { DeadEndSolver } from "../../solvers/DeadEndSolver/DeadEndSolver"
-import { EscapeViaLocationSolver } from "../../solvers/EscapeViaLocationSolver/EscapeViaLocationSolver"
+import type { CapacityMeshEdgeSolver } from "../../solvers/CapacityMeshSolver/CapacityMeshEdgeSolver"
+import type { CapacityNodeTargetMerger } from "../../solvers/CapacityNodeTargetMerger/CapacityNodeTargetMerger"
+import type { DeadEndSolver } from "../../solvers/DeadEndSolver/DeadEndSolver"
+import type { EscapeViaLocationSolver } from "../../solvers/EscapeViaLocationSolver/EscapeViaLocationSolver"
 import { Pipeline4HighDensityRepairSolver } from "../../solvers/HighDensityRepairSolver/Pipeline4HighDensityRepairSolver"
-import { MultiSectionPortPointOptimizer } from "../../solvers/MultiSectionPortPointOptimizer"
-import { NetToPointPairsSolver } from "../../solvers/NetToPointPairsSolver/NetToPointPairsSolver"
-import { NetToPointPairsSolver2_OffBoardConnection } from "../../solvers/NetToPointPairsSolver2_OffBoardConnection/NetToPointPairsSolver2_OffBoardConnection"
-import { MultipleHighDensityRouteStitchSolver3 } from "../../solvers/RouteStitchingSolver/MultipleHighDensityRouteStitchSolver3"
-import { SingleLayerNodeMergerSolver } from "../../solvers/SingleLayerNodeMerger/SingleLayerNodeMergerSolver"
-import { StrawSolver } from "../../solvers/StrawSolver/StrawSolver"
+import type { MultiSectionPortPointOptimizer } from "../../solvers/MultiSectionPortPointOptimizer"
+import type { NetToPointPairsSolver } from "../../solvers/NetToPointPairsSolver/NetToPointPairsSolver"
+import type { MultipleHighDensityRouteStitchSolver3 } from "../../solvers/RouteStitchingSolver/MultipleHighDensityRouteStitchSolver3"
+import type { SingleLayerNodeMergerSolver } from "../../solvers/SingleLayerNodeMerger/SingleLayerNodeMergerSolver"
+import type { StrawSolver } from "../../solvers/StrawSolver/StrawSolver"
 import { TraceSimplificationSolver } from "@tscircuit/trace-simplification-solver"
-import { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolver"
-import { LengthMatchingPostProcessingSolver } from "../../solvers/length-matching-post-processing-solver"
-import { applyFixedRouteReplacementsToPreloadedTraces } from "./applyFixedRouteReplacementsToPreloadedTraces"
+import type { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolver"
+import type { LengthMatchingPostProcessingSolver } from "../../solvers/length-matching-post-processing-solver"
 import { assignUniquePcbTraceIdsToNewTraces } from "./assignUniquePcbTraceIdsToNewTraces"
-import { getTerminalLayerIndicesByPcbPortId } from "./getTerminalLayerIndicesByPcbPortId"
-import { getPipeline9NetByConnectionName } from "./getPipeline9NetByConnectionName"
-import {
-  getMaterializedPreloadedSectionHdRoutes,
-  removeChangedSectionsFromFixedHdRoutes,
-} from "./materializeHypergraphPreloadedTraceSections"
 import { canonicalizePipeline9HdRoutes } from "./canonicalizePipeline9HdRoutes"
-import { materializePipeline9HdRouteVias } from "./materializePipeline9HdRouteVias"
-import { simplifyPipeline9CollinearRoutePoints } from "./simplifyPipeline9CollinearRoutePoints"
-import {
-  type PreparedPipeline9MutationSections,
-  applyPipeline9MutatedPreloadedSections,
-  preparePipeline9MutatedPreloadedSections,
-} from "./pipeline9MutatedPreloadedTraceSimplification"
-import {
-  convertPreloadedTraceToHdRoutes,
-  type PreloadedHighDensityRoute,
-} from "./convertPreloadedTraceToHdRoutes"
 import { Pipeline9HighDensitySolver } from "./Pipeline9HighDensitySolver"
-import { Pipeline9JointDrcRepairSolver } from "./Pipeline9JointDrcRepairSolver"
-import { PreloadedTraceGraphSolver } from "./PreloadedTraceGraphSolver"
+import type { Pipeline9JointDrcRepairSolver } from "./Pipeline9JointDrcRepairSolver"
+import type { PreloadedTraceGraphSolver } from "./PreloadedTraceGraphSolver"
 import { PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver } from "./PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver"
-import { MergedComponentTopologyView } from "../AutoroutingPipeline7_MultiGraph/MergedComponentTopologyView"
-import { PowerTraceExpansionSolver } from "../AutoroutingPipeline7_MultiGraph/PowerTraceExpansionSolver"
+import type { MergedComponentTopologyView } from "../AutoroutingPipeline7_MultiGraph/MergedComponentTopologyView"
+import type { PowerTraceExpansionSolver } from "../AutoroutingPipeline7_MultiGraph/PowerTraceExpansionSolver"
 import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "../AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
-import { getPowerTraceExpansionConnectionNames } from "../AutoroutingPipeline7_MultiGraph/getPowerTraceExpansionConnectionNames"
-import { lockHdRouteTerminals } from "../AutoroutingPipeline7_MultiGraph/lock-hd-route-terminals"
-import {
-  preparePipeline7PowerTraceExpansionInput,
-  type Pipeline7PowerTraceExpansionInput,
-} from "../AutoroutingPipeline7_MultiGraph/prepare-pipeline7-power-trace-expansion-input"
+import type { Pipeline7PowerTraceExpansionInput } from "../AutoroutingPipeline7_MultiGraph/prepare-pipeline7-power-trace-expansion-input"
+import { definePipeline9Step } from "./definePipeline9Step"
+import { getPipeline9PortPointPathingInput } from "./getPipeline9PortPointPathingInput"
+import { visualizePipeline9 } from "./visualizePipeline9"
+import { pipeline9TopologySteps } from "./pipeline9TopologySteps"
+import { pipeline9HighDensitySteps } from "./pipeline9HighDensitySteps"
+import { pipeline9TraceRefinementSteps } from "./pipeline9TraceRefinementSteps"
+import { pipeline9PostProcessingSteps } from "./pipeline9PostProcessingSteps"
+import { getPreloadedTraceUpdatesAfterHighDensity } from "./pipeline9PreloadedTraceUpdates"
 
 interface CapacityMeshSolverOptions {
   capacityDepth?: number
@@ -120,134 +89,6 @@ interface CapacityMeshSolverOptions {
   powerTraceExpansion?: PowerTraceExpanderOptions
 }
 export type AutoroutingPipelineSolverOptions = CapacityMeshSolverOptions
-
-type Pipeline9PreloadedFixedRouteState = {
-  originalFixedRoutes: PreloadedHighDensityRoute[]
-  updatedFixedRoutes: PreloadedHighDensityRoute[]
-  replacedConnectionNames: Set<string>
-  mutationMasks: Map<string, boolean[]>
-}
-
-type PipelineStep<T extends new (...args: any[]) => BaseSolver> = {
-  solverName: string
-  solverClass: T
-  getConstructorParams: (
-    instance: AutoroutingPipelineSolver9_PreloadedTraceGraph,
-  ) => ConstructorParameters<T>
-  onSolved?: (instance: AutoroutingPipelineSolver9_PreloadedTraceGraph) => void
-}
-
-/**
- * Collects the capacity mesh node ids produced by component-local topology
- * generation.
- *
- * @param capacityMeshNodes Capacity mesh nodes after topology merging and subdivision.
- * @returns A set of component-local capacity mesh node ids.
- */
-function getComponentCapacityMeshNodeIds(
-  capacityMeshNodes: CapacityMeshNode[] | null | undefined,
-) {
-  return new Set(
-    (capacityMeshNodes ?? [])
-      .filter((node) => node._isComponentTopologyNode)
-      .map((node) => node.capacityMeshNodeId),
-  )
-}
-
-/**
- * Checks whether a shared edge segment touches a component-local mesh node.
- *
- * @param segment Shared edge segment produced by AvailableSegmentPointSolver.
- * @param componentCapacityMeshNodeIds Component-local capacity mesh node ids.
- * @returns True when either node on the segment belongs to a component region.
- */
-function isComponentSharedEdgeSegment(
-  segment: SharedEdgeSegment,
-  componentCapacityMeshNodeIds: Set<string>,
-) {
-  return segment.nodeIds.some((nodeId) =>
-    componentCapacityMeshNodeIds.has(nodeId),
-  )
-}
-
-/**
- * Removes component-region shared edge segments before running the necessary
- * cramped port point solver.
- *
- * @param params.sharedEdgeSegments Candidate shared edge segments.
- * @param params.componentCapacityMeshNodeIds Component-local capacity mesh node ids.
- * @returns Shared edge segments that do not touch component-local mesh nodes.
- */
-function getNonComponentSharedEdgeSegments({
-  sharedEdgeSegments,
-  componentCapacityMeshNodeIds,
-}: {
-  sharedEdgeSegments: SharedEdgeSegment[]
-  componentCapacityMeshNodeIds: Set<string>
-}) {
-  return sharedEdgeSegments.filter(
-    (segment) =>
-      !isComponentSharedEdgeSegment(segment, componentCapacityMeshNodeIds),
-  )
-}
-
-/**
- * Restores untouched component-region segments after the necessary cramped port
- * point solver filters the non-component mesh.
- *
- * @param params.originalSharedEdgeSegments Original shared edge segments from AvailableSegmentPointSolver.
- * @param params.filteredSharedEdgeSegments Solver-filtered shared edge segments for non-component regions.
- * @param params.componentCapacityMeshNodeIds Component-local capacity mesh node ids.
- * @returns Shared edge segments where component regions are untouched and other regions use solver output.
- */
-function mergeComponentSharedEdgeSegments({
-  originalSharedEdgeSegments,
-  filteredSharedEdgeSegments,
-  componentCapacityMeshNodeIds,
-}: {
-  originalSharedEdgeSegments: SharedEdgeSegment[]
-  filteredSharedEdgeSegments: SharedEdgeSegment[]
-  componentCapacityMeshNodeIds: Set<string>
-}) {
-  const filteredSegmentsByEdgeId = new Map(
-    filteredSharedEdgeSegments.map((segment) => [segment.edgeId, segment]),
-  )
-
-  return originalSharedEdgeSegments.map((segment) => {
-    // Component-local cramped points are intentionally preserved even if they
-    // would otherwise be filtered by the necessary cramped port point solver.
-    if (isComponentSharedEdgeSegment(segment, componentCapacityMeshNodeIds)) {
-      return segment
-    }
-
-    return filteredSegmentsByEdgeId.get(segment.edgeId) ?? segment
-  })
-}
-
-function definePipelineStep<
-  T extends new (
-    ...args: any[]
-  ) => BaseSolver,
-  const P extends ConstructorParameters<T>,
->(
-  solverName: keyof AutoroutingPipelineSolver9_PreloadedTraceGraph,
-  solverClass: T,
-  getConstructorParams: (
-    instance: AutoroutingPipelineSolver9_PreloadedTraceGraph,
-  ) => P,
-  opts: {
-    onSolved?: (
-      instance: AutoroutingPipelineSolver9_PreloadedTraceGraph,
-    ) => void
-  } = {},
-): PipelineStep<T> {
-  return {
-    solverName,
-    solverClass,
-    getConstructorParams,
-    onSolved: opts.onSolved,
-  }
-}
 
 export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   override getSolverName(): string {
@@ -305,6 +146,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   srjWithEscapeViaLocations?: SimpleRouteJson
   srjWithPointPairs?: SimpleRouteJson
   originalSrj: SimpleRouteJson
+  private readonly excludedGaps = new ClearanceGapIndex()
+  private hasRefinedFixedWireViaSites = false
   capacityNodes: CapacityMeshNode[] | null = null
   capacityEdges: CapacityMeshEdge[] | null = null
   /** Available segment points after non-component cramped points are filtered. */
@@ -312,793 +155,37 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   highDensityNodePortPoints?: NodeWithPortPoints[]
 
   cacheProvider: CacheProvider | null = null
+  /** Each instance owns its stage definitions so networked routing can replace a stage. */
   pipelineDef = [
-    definePipelineStep(
-      "preprocessSimpleRouteJsonSolver",
-      PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver,
-      (cms) => [
-        cms.originalSrj,
-        { traceColorMode: cms.visualizationTraceColorMode },
+    definePipeline9Step({
+      solverName: "preprocessSimpleRouteJsonSolver",
+      solverClass: PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver,
+      getConstructorParams: (pipeline) => [
+        pipeline.originalSrj,
+        { traceColorMode: pipeline.visualizationTraceColorMode },
       ],
-      {
-        onSolved: (cms) => {
-          cms.setSimpleRouteJson(
-            cms.preprocessSimpleRouteJsonSolver!.getOutputSimpleRouteJson(),
+      onSolved: (pipeline) => {
+        pipeline.setSimpleRouteJson(
+          pipeline.preprocessSimpleRouteJsonSolver!.getOutputSimpleRouteJson(),
+        )
+      },
+    }),
+    ...pipeline9TopologySteps,
+    definePipeline9Step({
+      solverName: "portPointPathingSolver",
+      solverClass: TinyHypergraphPortPointPathingSolver,
+      getConstructorParams: (pipeline) => {
+        const segmentPortPoints =
+          pipeline.preloadedTraceGraphSolver!.getRoutablePortPoints(
+            pipeline.excludedGaps,
           )
-        },
+        return [getPipeline9PortPointPathingInput(segmentPortPoints, pipeline)]
       },
-    ),
-    definePipelineStep(
-      "componentDetectionSolver",
-      ComponentDetectionSolver,
-      (cms) => [{ inputSrj: cms.srj }],
-    ),
-    definePipelineStep(
-      "escapeViaLocationSolver",
-      EscapeViaLocationSolver,
-      (cms) => [
-        cms.srj,
-        {
-          connMap: cms.connMap,
-          viaDiameter: cms.viaDiameter,
-          minTraceWidth: cms.minTraceWidth,
-          obstacleMargin: cms.srj.defaultObstacleMargin ?? 0.15,
-        },
-      ],
-      {
-        onSolved: (cms) => {
-          cms.srjWithEscapeViaLocations =
-            cms.escapeViaLocationSolver?.getOutputSimpleRouteJson()
-        },
-      },
-    ),
-    definePipelineStep(
-      "netToPointPairsSolver",
-      NetToPointPairsSolver2_OffBoardConnection,
-      (cms) => {
-        const inputSrj = cms.srjWithEscapeViaLocations ?? cms.srj
-        return [
-          inputSrj,
-          cms.colorMap,
-          getInitiallyConnectedMapFromSimpleRouteJson(inputSrj),
-        ]
-      },
-      {
-        onSolved: (cms) => {
-          cms.srjWithPointPairs =
-            cms.netToPointPairsSolver?.getNewSimpleRouteJson()
-          cms.colorMap = getColorMap(cms.srjWithPointPairs!, cms.connMap)
-          cms.connMap = getConnectivityMapFromSimpleRouteJson(
-            cms.srjWithPointPairs!,
-          )
-        },
-      },
-    ),
-    definePipelineStep(
-      "topologyPlanningSolver",
-      MultiGraphTopologyPlannerSolver,
-      (cms) => [
-        {
-          inputSrj: cms.srjWithPointPairs!,
-          componentDetectionOutput: cms.componentDetectionSolver!.getOutput(),
-          viaDiameter: cms.viaDiameter,
-          obstacleMargin: cms.srj.defaultObstacleMargin ?? 0.15,
-        },
-      ],
-      {
-        onSolved: (cms) => {
-          const output = cms.topologyPlanningSolver!.getOutput()
-
-          cms.globalTopologyGeneratorSolver =
-            cms.topologyPlanningSolver!.globalTopologySolver
-          cms.componentTopologyGeneratorSolver =
-            new MergedComponentTopologyView(cms.topologyPlanningSolver!)
-        },
-      },
-    ),
-    definePipelineStep(
-      "topologyMergingSolver",
-      TopologyMergingSolver,
-      (cms) => {
-        const topologyOutput = cms.topologyPlanningSolver!.getOutput()
-
-        return [
-          {
-            layerCount: cms.srj.layerCount,
-            allowBlindAndBuriedVias: cms.srj.allowBlindAndBuriedVias,
-            nodeGroups: [
-              {
-                groupId: "global",
-                nodes: topologyOutput.globalMeshNodes,
-                isComponent: false,
-              },
-              ...topologyOutput.componentMeshNodes.map((nodes, index) => ({
-                groupId: `component-${index}`,
-                nodes,
-                isComponent: true,
-              })),
-            ],
-          },
-        ]
-      },
-      {
-        onSolved: (cms) => {
-          cms.capacityNodes = cms.topologyMergingSolver!.getOutput()
-        },
-      },
-    ),
-    definePipelineStep(
-      "nodeDimensionSubdivisionSolver",
-      NodeDimensionSubdivisionSolver,
-      (cms) => [
-        cms.capacityNodes!,
-        cms.maxNodeDimension,
-        cms.maxNodeRatio,
-        cms.minNodeArea,
-      ],
-      {
-        onSolved: (cms) => {
-          cms.capacityNodes = cms.nodeDimensionSubdivisionSolver!.outputNodes
-        },
-      },
-    ),
-    definePipelineStep(
-      "edgeSolver",
-      CapacityMeshEdgeSolver2_NodeTreeOptimization,
-      (cms) => [cms.capacityNodes!],
-      {
-        onSolved: (cms) => {
-          cms.capacityEdges = cms.edgeSolver?.edges!
-        },
-      },
-    ),
-    definePipelineStep(
-      "availableSegmentPointSolver",
-      AvailableSegmentPointSolver,
-      (cms) => [
-        {
-          nodes: cms.capacityNodes!,
-          edges: cms.capacityEdges || [],
-          traceWidth: cms.minTraceWidth,
-          colorMap: cms.colorMap,
-          shouldReturnCrampedPortPoints: true,
-          connections: cms.srjWithPointPairs!.connections,
-        },
-      ],
-    ),
-    definePipelineStep(
-      "necessaryCrampedPortPointSolver",
-      MultiTargetNecessaryCrampedPortPointSolver,
-      (cms) => {
-        const componentCapacityMeshNodeIds = getComponentCapacityMeshNodeIds(
-          cms.capacityNodes,
-        )
-
-        return [
-          {
-            capacityMeshNodes: cms.capacityNodes!.filter(
-              (node) =>
-                !componentCapacityMeshNodeIds.has(node.capacityMeshNodeId),
-            ),
-            // Do not let the cramped-port solver remove component-local port
-            // points. Those regions are generated by the topology planner and
-            // remain valid even when the generated port points are cramped.
-            sharedEdgeSegments: getNonComponentSharedEdgeSegments({
-              sharedEdgeSegments: cms.availableSegmentPointSolver!.getOutput(),
-              componentCapacityMeshNodeIds,
-            }),
-            simpleRouteJson: cms.srjWithPointPairs!,
-            preserveConnectionReachability: true,
-          },
-        ]
-      },
-      {
-        onSolved: (cms) => {
-          const componentCapacityMeshNodeIds = getComponentCapacityMeshNodeIds(
-            cms.capacityNodes,
-          )
-
-          const filteredSegments = mergeComponentSharedEdgeSegments({
-            originalSharedEdgeSegments:
-              cms.availableSegmentPointSolver!.getOutput(),
-            filteredSharedEdgeSegments:
-              cms.necessaryCrampedPortPointSolver!.getOutput(),
-            componentCapacityMeshNodeIds,
-          })
-          cms.sharedEdgeSegmentsWithNecessaryCrampedPortPoints =
-            retainRequiredCrampedPortPoints({
-              nodes: cms.capacityNodes!,
-              originalSegments: cms.availableSegmentPointSolver!.getOutput(),
-              filteredSegments,
-              connections: cms.srjWithPointPairs!.connections,
-            })
-        },
-      },
-    ),
-    definePipelineStep(
-      "preloadedTraceGraphSolver",
-      PreloadedTraceGraphSolver,
-      (cms) => [
-        cms.sharedEdgeSegmentsWithNecessaryCrampedPortPoints!,
-        cms.srjWithPointPairs!,
-      ],
-    ),
-    definePipelineStep(
-      "portPointPathingSolver",
-      TinyHypergraphPortPointPathingSolver,
-      (cms) => {
-        const sharedEdgeSegments =
-          cms.sharedEdgeSegmentsWithNecessaryCrampedPortPoints ??
-          cms.necessaryCrampedPortPointSolver?.getOutput() ??
-          cms.availableSegmentPointSolver!.getOutput()
-        const { graph, connections } = buildHyperGraph({
-          capacityMeshNodes: cms.capacityNodes!,
-          layerCount: cms.srj.layerCount,
-          connectivityMap: cms.connMap,
-          segmentPortPoints: sharedEdgeSegments.flatMap(
-            (seg) => seg.portPoints,
-          ),
-          simpleRouteJsonConnections: cms.srjWithPointPairs!.connections,
-        })
-
-        return [
-          {
-            graph,
-            connections,
-            layerCount: cms.srj.layerCount,
-            effort: Math.min(1, cms.effort),
-            preserveTerminalPcbPortIds: true,
-            captureSearchDebug: cms.opts.captureSearchDebug ?? false,
-            minViaPadDiameter: cms.viaDiameter,
-            flags: {
-              FORCE_CENTER_FIRST: true,
-              RIPPING_ENABLED: true,
-              USE_SELECTIVE_RERIP_ROUTING: true,
-              USE_PREPARED_PORT_POINT_ROUTING: true,
-              USE_PARTIAL_RIP_ROUTING_WITH_PRELOADED_TRACES: true,
-            },
-            weights: {
-              SHUFFLE_SEED: 0,
-              MEMORY_PF_FACTOR: 4,
-              CENTER_OFFSET_DIST_PENALTY_FACTOR: 0,
-              CENTER_OFFSET_FOCUS_SHIFT: 0,
-              NODE_PF_FACTOR: 0,
-              LAYER_CHANGE_COST: 0,
-              RIPPING_PF_COST: 0.0,
-              NODE_PF_MAX_PENALTY: 100,
-              BASE_CANDIDATE_COST: 0.6,
-              MAX_ITERATIONS_PER_PATH: 0,
-              RANDOM_WALK_DISTANCE: 0,
-              START_RIPPING_PF_THRESHOLD: 0.3,
-              END_RIPPING_PF_THRESHOLD: 1,
-              MAX_RIPS: 1000,
-              RANDOM_RIP_FRACTION: 0.3,
-              STRAIGHT_LINE_DEVIATION_PENALTY_FACTOR: 4,
-              GREEDY_MULTIPLIER: 0.7,
-              MIN_ALLOWED_BOARD_SCORE: -10000,
-            },
-          },
-        ]
-      },
-    ),
-    definePipelineStep(
-      "uniformPortDistributionSolver",
-      UniformPortDistributionSolver,
-      (cms) => [
-        {
-          nodeWithPortPoints:
-            cms.portPointPathingSolver?.getOutput().nodesWithPortPoints ?? [],
-          inputNodesWithPortPoints:
-            cms.portPointPathingSolver?.getOutput().inputNodeWithPortPoints ??
-            [],
-          minTraceWidth: cms.minTraceWidth,
-          obstacles: cms.srj.obstacles,
-          layerCount: cms.srj.layerCount,
-          useLayerAwareGeometry: cms.srj.layerCount > 2,
-          preserveSolitaryPorts: Boolean(cms.srj.traces?.length),
-          isPortPointClear: createPreloadedPortValidator({
-            srj: cms.srj,
-            connMap: cms.connMap,
-            traceWidth: cms.minTraceWidth,
-            viaDiameter: cms.viaDiameter,
-          }),
-        },
-      ],
-    ),
-    definePipelineStep(
-      "highDensityRouteSolver",
-      Pipeline9HighDensitySolver,
-      (cms) => {
-        const portPointPathingSolver = cms.portPointPathingSolver
-        if (!portPointPathingSolver) {
-          throw new Error(
-            "Pipeline9 invariant violated: high-density routing requires the completed port-point pathing solver",
-          )
-        }
-        const portPointPathingOutput = portPointPathingSolver.getOutput()
-        const uniformNodes =
-          cms.uniformPortDistributionSolver?.getOutput() ?? []
-        const fallbackNodes = portPointPathingOutput.nodesWithPortPoints
-        const nodePortPointsSource =
-          uniformNodes.length > 0 ? uniformNodes : fallbackNodes
-
-        cms.highDensityNodePortPoints = structuredClone(nodePortPointsSource)
-        const originalFixedHdRoutes = (cms.originalSrj.traces ?? []).flatMap(
-          (trace, traceIndex) =>
-            convertPreloadedTraceToHdRoutes(
-              trace,
-              traceIndex,
-              cms.originalSrj.layerCount,
-              cms.viaDiameter,
-              cms.connMap,
-            ),
-        )
-        const fixedHdRoutes = removeChangedSectionsFromFixedHdRoutes({
-          traces: cms.originalSrj.traces ?? [],
-          fixedHdRoutes: originalFixedHdRoutes,
-          sections: cms.getChangedPreloadedTraceSections(),
-        })
-        const hasImmutablePreloadedCopper = fixedHdRoutes.some(
-          (route) => route.isFixed === true,
-        )
-        let obstacleMargin = cms.srj.defaultObstacleMargin ?? 0.15
-        if (
-          hasImmutablePreloadedCopper &&
-          cms.srj.minTraceToPadEdgeClearance !== undefined
-        ) {
-          obstacleMargin = cms.srj.minTraceToPadEdgeClearance
-        }
-
-        return [
-          {
-            nodePortPoints: nodePortPointsSource,
-            boardGeometry: {
-              bounds: cms.originalSrj.bounds,
-              outline: cms.originalSrj.outline,
-              minBoardEdgeClearance: cms.originalSrj.minBoardEdgeClearance,
-            },
-            fixedHdRoutes,
-            connMap: cms.connMap,
-            colorMap: cms.colorMap,
-            obstacles: cms.srj.obstacles,
-            layerCount: cms.srj.layerCount,
-            allowBlindAndBuriedVias: cms.srj.allowBlindAndBuriedVias,
-            viaDiameter: cms.viaDiameter,
-            viaHoleDiameter: cms.viaHoleDiameter,
-            minViaHoleEdgeToViaHoleEdgeClearance:
-              cms.originalSrj.minViaHoleEdgeToViaHoleEdgeClearance ?? 0.1,
-            traceWidth: cms.minTraceWidth,
-            obstacleMargin,
-            minClearance: cms.srj.minTraceToPadEdgeClearance,
-            viaCopperClearance: cms.srj.minPadEdgeToPadEdgeClearance ?? 0.1,
-            viaToPadClearance: cms.srj.minViaEdgeToPadEdgeClearance,
-            effort: Math.min(1, cms.effort),
-            includeBoardObstacles: true,
-            nodePfById: portPointPathingSolver.computeNodePfMap(),
-            preserveTerminalPcbPortIds: true,
-          },
-        ]
-      },
-    ),
-    definePipelineStep(
-      "highDensityForceImproveSolver",
-      Pipeline9HighDensityForceImproveSolver,
-      (cms) => [
-        {
-          inputSrj: cms.srj,
-          nodeWithPortPoints: cms.highDensityNodePortPoints ?? [],
-          hdRoutes: simplifyPipeline9CollinearRoutePoints(
-            materializePipeline9HdRouteVias(cms.highDensityRouteSolver!.routes),
-          ),
-          colorMap: cms.colorMap,
-          totalStepsPerNode: Math.max(
-            12,
-            Math.round(20 * Math.min(1, cms.effort)),
-          ),
-          nodeAssignmentMargin: cms.srj.defaultObstacleMargin ?? 0.2,
-          preserveTopologyPortAnchors: true,
-        },
-      ],
-    ),
-    definePipelineStep(
-      "highDensityRepairSolver",
-      Pipeline4HighDensityRepairSolver,
-      (cms) => [
-        {
-          nodeWithPortPoints: cms.highDensityNodePortPoints ?? [],
-          hdRoutes:
-            cms.highDensityForceImproveSolver?.getOutput() ??
-            cms.highDensityRouteSolver!.routes,
-          obstacles: cms.srj.obstacles,
-          colorMap: cms.colorMap,
-          repairMargin: cms.srj.defaultObstacleMargin ?? 0.2,
-          minimumTraceWidth: cms.srj.minTraceWidth,
-          minClearance: cms.srj.minTraceToPadEdgeClearance,
-          viaCopperClearance: cms.srj.minPadEdgeToPadEdgeClearance ?? 0.1,
-          layerCount: cms.srj.layerCount,
-          allowBlindAndBuriedVias: cms.srj.allowBlindAndBuriedVias,
-          connMap: cms.connMap,
-        },
-      ],
-    ),
-    definePipelineStep(
-      "highDensityStitchSolver",
-      MultipleHighDensityRouteStitchSolver3,
-      (cms) => [
-        {
-          connections: [
-            ...cms.srjWithPointPairs!.connections,
-            ...cms
-              .getChangedPreloadedTraceSections()
-              .map((section) => section.connection),
-          ] as SimpleRouteConnection[],
-          hdRoutes:
-            cms.highDensityRepairSolver?.getOutput() ??
-            cms.highDensityForceImproveSolver?.getOutput() ??
-            cms.highDensityRouteSolver!.routes,
-          otherHdRoutes: cms
-            .highDensityRouteSolver!.getUpdatedFixedHdRoutes()
-            .map(
-              (route): HighDensityRoute => ({
-                ...route,
-                rootConnectionName:
-                  cms.originalSrj.traces![route.preloadedTraceIndex]!
-                    .connection_name,
-              }),
-            ),
-          minClearance:
-            cms.srj.minTraceToPadEdgeClearance ?? cms.srj.defaultObstacleMargin,
-          colorMap: cms.colorMap,
-          layerCount: cms.srj.layerCount,
-          defaultViaDiameter: cms.viaDiameter,
-          preserveTerminalPcbPortIds: true,
-          preferSameLayerTerminalEndpoints: true,
-        },
-      ],
-    ),
-    definePipelineStep(
-      "traceSimplificationSolver",
-      TraceSimplificationSolver,
-      (cms) => {
-        const preloadedHdRoutes = cms
-          .getPreloadedTraceUpdatesAfterHighDensity()
-          .updatedPreloadedTraces.flatMap((trace, traceIndex) =>
-            convertPreloadedTraceToHdRoutes(
-              trace,
-              traceIndex,
-              cms.originalSrj.layerCount,
-              cms.viaDiameter,
-              cms.connMap,
-            ).map((route) => ({
-              ...route,
-              // Simplification resolves IDs through connMap, not net keys.
-              rootConnectionName: trace.connection_name,
-            })),
-          )
-        const materializedConnectionNames = new Set<string>(
-          cms
-            .getChangedPreloadedTraceSections()
-            .map((section) => section.connectionName),
-        )
-        // Via merging requires exactly co-located layer transitions.
-        const newHdRoutes = canonicalizePipeline9HdRoutes(
-          cms.highDensityStitchSolver!.mergedHdRoutes.filter(
-            (route) => !materializedConnectionNames.has(route.connectionName),
-          ),
-        )
-        const netByConnectionName = getPipeline9NetByConnectionName(
-          [...newHdRoutes, ...preloadedHdRoutes],
-          cms.connMap,
-        )
-
-        return [
-          {
-            hdRoutes: newHdRoutes,
-            obstacles: cms.srj.obstacles,
-            connMap: cms.connMap,
-            colorMap: cms.colorMap,
-            outline: cms.srj.outline,
-            defaultViaDiameter: cms.viaDiameter,
-            layerCount: cms.srj.layerCount,
-            minTraceToPadEdgeClearance: cms.srj.minTraceToPadEdgeClearance,
-            minBoardEdgeClearance: cms.srj.minBoardEdgeClearance,
-            otherHdRoutes: preloadedHdRoutes,
-            netByConnectionName,
-            enableCrossingViaReduction: true,
-            terminalLayerIndicesByPcbPortId: getTerminalLayerIndicesByPcbPortId(
-              cms.srj.connections,
-              cms.srj.obstacles,
-              cms.srj.layerCount,
-            ),
-            iterations: 2,
-          },
-        ]
-      },
-    ),
-    definePipelineStep(
-      "mutatedPreloadedTraceSimplificationSolver",
-      TraceSimplificationSolver,
-      (cms) => {
-        const preparedSections = cms.getPreparedMutatedPreloadedTraceSections()
-        const editableHdRoutes = preparedSections.sections.map(
-          (section) => section.hdRoute,
-        )
-        const otherHdRoutes = [
-          ...preparedSections.immutableHdRoutes,
-          ...cms.traceSimplificationSolver!.simplifiedHdRoutes,
-        ]
-        return [
-          {
-            hdRoutes: editableHdRoutes,
-            obstacles: cms.srj.obstacles,
-            connMap: cms.connMap,
-            colorMap: cms.colorMap,
-            outline: cms.srj.outline,
-            defaultViaDiameter: cms.viaDiameter,
-            layerCount: cms.srj.layerCount,
-            minTraceToPadEdgeClearance: cms.srj.minTraceToPadEdgeClearance,
-            minBoardEdgeClearance: cms.srj.minBoardEdgeClearance,
-            otherHdRoutes,
-            netByConnectionName: getPipeline9NetByConnectionName(
-              [...editableHdRoutes, ...otherHdRoutes],
-              cms.connMap,
-            ),
-            enableCrossingViaReduction: true,
-            preserveRouteEndpoints: true,
-            enableVertexShortcuts: true,
-            iterations: 2,
-          },
-        ]
-      },
-    ),
-    definePipelineStep("traceWidthSolver", TraceWidthSolver, (cms) => [
-      {
-        hdRoutes: cms.traceSimplificationSolver!.simplifiedHdRoutes,
-        obstacles: cms.srj.obstacles,
-        connMap: cms.connMap,
-        colorMap: cms.colorMap,
-        minTraceWidth: cms.minTraceWidth,
-        connection: cms.srjWithPointPairs!.connections,
-        obstacleMargin: cms.srj.minTraceToPadEdgeClearance ?? 0.15,
-        minTraceToHoleEdgeClearance: cms.srj.minTraceToHoleEdgeClearance,
-        layerCount: cms.srj.layerCount,
-      },
-    ]),
-    definePipelineStep(
-      "globalDrcForceImproveSolver",
-      GlobalDrcForceImproveSolver,
-      (cms) => {
-        const srjWithMaterializedPreloadedTraces =
-          cms.getSrjWithMaterializedPreloadedTraces()
-        return [
-          {
-            srj: srjWithMaterializedPreloadedTraces as any,
-            hdRoutes: lockHdRouteTerminals({
-              hdRoutes: canonicalizePipeline9HdRoutes(
-                cms.traceWidthSolver!.getHdRoutesWithWidths(),
-              ),
-              connections: cms.netToPointPairsSolver?.newConnections ?? [],
-            }),
-            connMap: cms.connMap,
-            effort: Math.min(1, cms.effort),
-            maxIterations: 16,
-            enableLargeBoardBroadFallback: false,
-            enablePostSolveClearanceRelaxation: false,
-            deferTraceContactGuard: true,
-          },
-        ]
-      },
-    ),
-    definePipelineStep(
-      "pipeline9JointDrcRepairSolver",
-      Pipeline9JointDrcRepairSolver,
-      (cms) => {
-        const preloadedTraceUpdates =
-          cms.getPreloadedTraceUpdatesAfterHighDensity()
-        const srjWithMaterializedPreloadedTraces =
-          cms.getSrjWithMaterializedPreloadedTraces()
-        return [
-          {
-            srj: srjWithMaterializedPreloadedTraces,
-            srjWithPointPairs: srjWithMaterializedPreloadedTraces,
-            originalSrj: cms.originalSrj,
-            newConnections: cms.netToPointPairsSolver?.newConnections ?? [],
-            newHdRoutes: cms.globalDrcForceImproveSolver!.getOutput(),
-            originalNewHdRoutes:
-              cms.globalDrcForceImproveSolver!.guardedInputHdRoutes,
-            updatedPreloadedTraces:
-              preloadedTraceUpdates.updatedPreloadedTraces,
-            mutatedPreloadedTraceIds: new Set(
-              preloadedTraceUpdates.mutatedPreloadedTraces.map(
-                (trace) => trace.pcb_trace_id,
-              ),
-            ),
-            connMap: cms.connMap,
-            obstacles: cms.srj.obstacles,
-            layerCount: cms.srj.layerCount,
-            defaultViaDiameter: cms.viaDiameter,
-            defaultViaHoleDiameter: cms.viaHoleDiameter,
-            effort: Math.min(1, cms.effort),
-            colorMap: cms.colorMap,
-          },
-        ]
-      },
-    ),
-    definePipelineStep(
-      "effortCleanupSolver",
-      Pipeline9EffortCleanupSolver,
-      (cms) => {
-        const preloadedTraces = cms.getUpdatedPreloadedTraces()
-        const otherHdRoutes = preloadedTraces.flatMap((trace, index) =>
-          convertPreloadedTraceToHdRoutes(
-            trace,
-            index,
-            cms.srj.layerCount,
-            cms.viaDiameter,
-            cms.connMap,
-          ),
-        )
-        const inputSrj = { ...cms.originalSrj, traces: preloadedTraces }
-        const hdRoutes = canonicalizePipeline9HdRoutes(
-          cms.pipeline9JointDrcRepairSolver!.getOutput(),
-        )
-        const convert = (routes: HighDensityRoute[]): SimplifiedPcbTraces =>
-          assignUniquePcbTraceIdsToNewTraces(
-            convertPipeline7HdRoutesToSimplifiedPcbTraces({
-              connections: cms.netToPointPairsSolver!.newConnections,
-              originalConnections: cms.originalSrj.connections,
-              hdRoutes: canonicalizePipeline9HdRoutes(routes),
-              layerCount: cms.srj.layerCount,
-              obstacles: cms.srj.obstacles,
-              defaultViaHoleDiameter: cms.viaHoleDiameter,
-              connMap: cms.connMap,
-            }),
-            cms.originalSrj.traces ?? [],
-          )
-        const evaluateCleanupDrc = createPipeline9AutoroutingDrcEvaluator({
-          inputSrj,
-          srjWithPointPairs: cms.srjWithPointPairs!,
-          includeBoardClearance: true,
-          drcOptions: {
-            traceClearance:
-              cms.originalSrj.minTraceToPadEdgeClearance ??
-              cms.originalSrj.defaultObstacleMargin ??
-              0.1,
-            viaClearance:
-              cms.originalSrj.minViaHoleEdgeToViaHoleEdgeClearance ?? 0.1,
-          },
-        })
-        return [
-          {
-            effort: cms.effort,
-            viaRemovalPasses:
-              cms.pipeline9JointDrcRepairSolver!.stats
-                .initialBoundedRegionalRepairAddedViaCount > 0
-                ? 2
-                : 1,
-            config: {
-              hdRoutes,
-              preserveRouteEndpoints: true,
-              obstacles: cms.srj.obstacles,
-              connMap: cms.connMap,
-              colorMap: cms.colorMap,
-              outline: cms.srj.outline,
-              defaultViaDiameter: cms.viaDiameter,
-              layerCount: cms.srj.layerCount,
-              minTraceToPadEdgeClearance: cms.srj.minTraceToPadEdgeClearance,
-              minBoardEdgeClearance: cms.srj.minBoardEdgeClearance,
-              otherHdRoutes,
-              enableCrossingViaReduction: true,
-              terminalLayerIndicesByPcbPortId:
-                getTerminalLayerIndicesByPcbPortId(
-                  cms.srj.connections,
-                  cms.srj.obstacles,
-                  cms.srj.layerCount,
-                ),
-            },
-            getCost: (
-              routes: HighDensityRoute[],
-            ): { vias: number; points: number } => {
-              const traces = convert(routes)
-              return {
-                vias: traces.reduce(
-                  (sum, trace) =>
-                    sum +
-                    trace.route.filter((point) => point.route_type === "via")
-                      .length,
-                  0,
-                ),
-                points: traces.reduce(
-                  (sum, trace) => sum + trace.route.length,
-                  0,
-                ),
-              }
-            },
-            isValid: (routes: HighDensityRoute[]): boolean =>
-              evaluateCleanupDrc(convert(routes)).errors.length === 0,
-            refineTraceWidths: (
-              routes: HighDensityRoute[],
-            ): HighDensityRoute[] =>
-              cms.traceWidthSolver!.refineWidths({
-                hdRoutes: routes,
-                otherHdRoutes: otherHdRoutes.map(
-                  (route): HighDensityRoute => ({
-                    ...route,
-                    rootConnectionName:
-                      preloadedTraces[route.preloadedTraceIndex]!
-                        .connection_name,
-                  }),
-                ),
-              }),
-          },
-        ]
-      },
-    ),
-    definePipelineStep(
-      "lengthMatchingPostProcessingSolver",
-      LengthMatchingPostProcessingSolver,
-      (
-        cms,
-      ): ConstructorParameters<typeof LengthMatchingPostProcessingSolver> => {
-        const netToPointPairsSolver = cms.netToPointPairsSolver
-        if (!netToPointPairsSolver)
-          throw new Error(
-            "Pipeline9: length-matching post-processing requires NetToPointPairsSolver output",
-          )
-        const hdRoutes = cms.effortCleanupSolver!.getOutput()
-        const { differentialPairs, differentialPairLanes } =
-          getDifferentialPairsForPostProcessing({
-            pipelineName: "Pipeline9",
-            srj: cms.srj,
-            pointPairConnections: netToPointPairsSolver.newConnections,
-            pathHopsByConnectionName:
-              netToPointPairsSolver.pathHopsByConnectionName,
-            hdRoutes,
-          })
-        return [
-          {
-            hdRoutes,
-            differentialPairs,
-            differentialPairLanes,
-            buses: cms.srj.buses ?? [],
-            connections: [
-              ...cms.srj.connections,
-              ...netToPointPairsSolver.newConnections,
-            ],
-            obstacles: cms.srj.obstacles,
-            traces: cms.getUpdatedPreloadedTraces(),
-            bounds: cms.srj.bounds,
-            layerCount: cms.srj.layerCount,
-            obstacleMargin: cms.srj.minTraceToPadEdgeClearance ?? 0.15,
-          },
-        ]
-      },
-    ),
-    definePipelineStep(
-      "powerTraceExpansionSolver",
-      PowerTraceExpansionSolver,
-      (cms) => {
-        const configuredOptions = cms.opts.powerTraceExpansion ?? {}
-        const onlyConnectionNames =
-          configuredOptions.onlyConnectionNames ??
-          getPowerTraceExpansionConnectionNames(cms.originalSrj)
-        return [
-          preparePipeline7PowerTraceExpansionInput({
-            originalSrj: cms.originalSrj,
-            newlyRoutedTraces: cms.getNewTracesBeforePowerExpansion(),
-            currentPreloadedTraces: cms.getUpdatedPreloadedTraces(),
-            expandedConnectionNames: onlyConnectionNames,
-            resolveConnectedTraceAliases: true,
-          }),
-          {
-            allowNewVias: false,
-            ...configuredOptions,
-            onlyConnectionNames,
-          },
-        ]
-      },
-    ),
-  ]
+    }),
+    ...pipeline9HighDensitySteps,
+    ...pipeline9TraceRefinementSteps,
+    ...pipeline9PostProcessingSteps,
+  ].map((step): typeof step => ({ ...step }))
 
   constructor(
     public srj: SimpleRouteJson,
@@ -1219,6 +306,59 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     )
   }
 
+  private refineFixedWireViaSites(
+    nodesWithPortPoints: readonly NodeWithPortPoints[],
+  ): boolean {
+    const layerChangeNodeIds = new Set(
+      nodesWithPortPoints
+        .filter((node) =>
+          node.portPointsInPairs?.some(([entry, exit]) => entry.z !== exit.z),
+        )
+        .map((node) => node.capacityMeshNodeId),
+    )
+    const nodes = this.capacityNodes!
+    const refined = splitNodesWithoutThroughViaSite({
+      nodes,
+      layerChangeNodeIds,
+      srj: this.originalSrj,
+      connMap: this.connMap,
+      viaDiameter: this.viaDiameter,
+    })
+    if (nodes === refined) return false
+
+    // The provisional plan uses a physically impossible via. Rebuild the edges,
+    // shared ports and path on the constrained mesh before exposing the plan.
+    this.hasRefinedFixedWireViaSites = true
+    this.capacityNodes = refined
+    return true
+  }
+
+  private refinePortPointPlan(): boolean {
+    const { clearanceGapsByPortId } = this.preloadedTraceGraphSolver!
+    const checkViaSites =
+      !this.hasRefinedFixedWireViaSites &&
+      this.originalSrj.traces?.some((trace) => trace.isFixed)
+    if (!checkViaSites && clearanceGapsByPortId.size < 2) return false
+
+    const { nodesWithPortPoints } = this.portPointPathingSolver!.getOutput()
+    if (checkViaSites && this.refineFixedWireViaSites(nodesWithPortPoints)) {
+      this.currentPipelineStepIndex = this.pipelineDef.findIndex(
+        (step) => step.solverName === "edgeSolver",
+      )
+    } else {
+      const conflictingGaps = findConflictingGaps({
+        nodesWithPortPoints,
+        clearanceGapsByPortId,
+        connMap: this.connMap,
+        srj: this.srjWithPointPairs!,
+      })
+      if (conflictingGaps.length === 0) return false
+      for (const gap of conflictingGaps) this.excludedGaps.add(gap)
+    }
+    this.portPointPathingSolver = undefined
+    return true
+  }
+
   _step() {
     const pipelineStepDef = this.pipelineDef[this.currentPipelineStepIndex]
     if (!pipelineStepDef) {
@@ -1235,6 +375,23 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           this.startTimeOfPhase[pipelineStepDef.solverName]
         pipelineStepDef.onSolved?.(this)
         this.activeSubSolver = null
+        if (
+          pipelineStepDef.solverName === "portPointPathingSolver" &&
+          this.refinePortPointPlan()
+        ) {
+          return
+        }
+        if (
+          pipelineStepDef.solverName === "highDensityRouteSolver" &&
+          this.highDensityRouteSolver?.completedBoardRoutes
+        ) {
+          // The BGA solver returns complete, clearance-checked port-to-port
+          // paths. Node stitching and its geometric repairs apply to fragments.
+          this.currentPipelineStepIndex = this.pipelineDef.findIndex(
+            (step) => step.solverName === "powerTraceExpansionSolver",
+          )
+          return
+        }
         this.currentPipelineStepIndex++
       } else if (this.activeSubSolver.failed) {
         this.error = this.activeSubSolver?.error
@@ -1245,8 +402,11 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     }
 
     const constructorParams = pipelineStepDef.getConstructorParams(this)
-    // @ts-ignore
-    this.activeSubSolver = new pipelineStepDef.solverClass(...constructorParams)
+    const activeSubSolver: BaseSolver = Reflect.construct(
+      pipelineStepDef.solverClass,
+      constructorParams,
+    )
+    this.activeSubSolver = activeSubSolver
     if (this.activeSubSolver instanceof TraceSimplificationSolver) {
       this.activeSubSolver.MAX_SIMPLIFICATION_PIPELINE_LOOPS = Math.ceil(
         this.activeSubSolver.MAX_SIMPLIFICATION_PIPELINE_LOOPS *
@@ -1262,7 +422,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         this.MAX_ITERATIONS,
         this.iterations + this.activeSubSolver.MAX_ITERATIONS + 1,
       )
-    ;(this as any)[pipelineStepDef.solverName] = this.activeSubSolver
+    Object.assign(this, { [pipelineStepDef.solverName]: activeSubSolver })
     this.timeSpentOnPhase[pipelineStepDef.solverName] = 0
     this.startTimeOfPhase[pipelineStepDef.solverName] = performance.now()
   }
@@ -1283,183 +443,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   }
 
   visualize(): GraphicsObject {
-    if (!this.solved && this.activeSubSolver) {
-      return this.visualizeStage(this.activeSubSolver)
-    }
-    const escapeViaLocationViz = this.escapeViaLocationSolver?.visualize()
-    const netToPPSolver = this.netToPointPairsSolver?.visualize()
-    const componentDetectionViz = this.componentDetectionSolver?.visualize()
-    const componentTopologyGeneratorViz =
-      this.componentTopologyGeneratorSolver?.visualize()
-    const globalTopologyGeneratorViz =
-      this.globalTopologyGeneratorSolver?.visualize()
-    const topologyMergingViz = this.topologyMergingSolver?.visualize()
-    const nodeSubdivisionViz = this.nodeDimensionSubdivisionSolver?.visualize()
-    const nodeTargetMergerViz = this.nodeTargetMerger?.visualize()
-    const singleLayerNodeMergerViz = this.singleLayerNodeMerger?.visualize()
-    const strawSolverViz = this.strawSolver?.visualize()
-    const edgeViz = this.edgeSolver?.visualize()
-    const deadEndViz = this.deadEndSolver?.visualize()
-    const availableSegmentPointViz =
-      this.availableSegmentPointSolver?.visualize()
-    const portPointPathingViz = this.portPointPathingSolver?.visualize()
-    const multiSectionOptViz = this.multiSectionPortPointOptimizer?.visualize()
-    const uniformPortDistributionViz =
-      this.uniformPortDistributionSolver?.visualize()
-    const highDensityViz = this.highDensityRouteSolver?.visualize()
-    const highDensityForceImproveViz =
-      this.highDensityForceImproveSolver?.visualize()
-    const highDensityRepairViz = this.highDensityRepairSolver?.visualize()
-    const highDensityStitchViz = this.highDensityStitchSolver?.visualize()
-    const traceSimplificationViz = this.traceSimplificationSolver?.visualize()
-    const mutatedPreloadedTraceSimplificationViz =
-      this.mutatedPreloadedTraceSimplificationSolver?.visualize()
-    const lengthMatchingPostProcessingViz =
-      this.lengthMatchingPostProcessingSolver?.visualize()
-    const powerTraceExpansionViz = this.powerTraceExpansionSolver?.visualize()
-    const traceWidthViz = this.traceWidthSolver?.visualize()
-    const necessaryCrampedPortPointSolverViz =
-      this.necessaryCrampedPortPointSolver?.visualize()
-    const highDensityRouteSolverViz = this.highDensityRouteSolver?.visualize()
-    const srjToVisualize = this.originalSrj
-    const problemOutline = srjToVisualize.outline
-    const problemLines: Line[] = []
-
-    problemLines.push({
-      points: [
-        {
-          x: srjToVisualize.bounds?.minX ?? -50,
-          y: srjToVisualize.bounds?.minY ?? -50,
-        },
-        {
-          x: srjToVisualize.bounds?.maxX ?? 50,
-          y: srjToVisualize.bounds?.minY ?? -50,
-        },
-        {
-          x: srjToVisualize.bounds?.maxX ?? 50,
-          y: srjToVisualize.bounds?.maxY ?? 50,
-        },
-        {
-          x: srjToVisualize.bounds?.minX ?? -50,
-          y: srjToVisualize.bounds?.maxY ?? 50,
-        },
-        {
-          x: srjToVisualize.bounds?.minX ?? -50,
-          y: srjToVisualize.bounds?.minY ?? -50,
-        },
-      ],
-      strokeColor: "rgba(255,0,0,0.25)",
-    })
-
-    if (problemOutline && problemOutline.length >= 2) {
-      const outlinePoints = problemOutline.map(
-        (point: { x: number; y: number }) => ({
-          x: point.x,
-          y: point.y,
-        }),
-      )
-
-      outlinePoints.push({ ...outlinePoints[0]! })
-
-      problemLines.push({
-        points: outlinePoints,
-        strokeColor: "rgba(0, 136, 255, 0.95)",
-      })
-    }
-
-    const formatObstacleLabel = createObstacleLabelFormatter(srjToVisualize)
-
-    const problemBaseViz = {
-      points: [
-        ...srjToVisualize.connections.flatMap((c) =>
-          c.pointsToConnect.map((p) => ({
-            ...p,
-            layer: getGraphicsLayerForConnectionPoint(
-              p,
-              srjToVisualize.layerCount,
-            ),
-            label: `${c.name} ${p.pcb_port_id ?? ""}`,
-          })),
-        ),
-      ],
-      rects: [
-        ...(srjToVisualize.obstacles ?? [])
-          .filter((o) => !o.isCopperPour)
-          .map((o) => ({
-            ...o,
-            fill: o.layers?.includes("top")
-              ? "rgba(255,0,0,0.25)"
-              : o.layers?.includes("bottom")
-                ? "rgba(0,0,255,0.25)"
-                : "rgba(255,0,0,0.25)",
-            layer: getGraphicsLayerForObstacle(o, srjToVisualize.layerCount),
-            label: formatObstacleLabel(o),
-          })),
-      ],
-      lines: problemLines,
-    } as GraphicsObject
-    const visualizationOptions = {
-      traceColorMode: this.visualizationTraceColorMode,
-    } as const
-    const routeViz = getPresuppliedTraceVisualization({
-      srj: srjToVisualize,
-      visualizationOptions,
-    })
-    const problemViz = combineVisualizations(problemBaseViz, routeViz)
-    const processedProblemViz =
-      this.preprocessSimpleRouteJsonSolver?.visualize()
-    const globalDrcForceImproveViz =
-      this.globalDrcForceImproveSolver?.visualize()
-    const pipeline9JointDrcRepairViz =
-      this.pipeline9JointDrcRepairSolver?.visualize()
-    const visualizations = [
-      problemViz,
-      processedProblemViz,
-      componentDetectionViz,
-      componentTopologyGeneratorViz,
-      escapeViaLocationViz,
-      netToPPSolver,
-      globalTopologyGeneratorViz,
-      topologyMergingViz,
-      nodeSubdivisionViz,
-      nodeTargetMergerViz,
-      singleLayerNodeMergerViz,
-      strawSolverViz,
-      edgeViz,
-      deadEndViz,
-      availableSegmentPointViz,
-      necessaryCrampedPortPointSolverViz,
-      portPointPathingViz,
-      multiSectionOptViz,
-      uniformPortDistributionViz,
-      highDensityViz
-        ? combineVisualizations(problemBaseViz, highDensityViz)
-        : null,
-      highDensityForceImproveViz,
-      highDensityRepairViz,
-      highDensityStitchViz,
-      traceSimplificationViz,
-      mutatedPreloadedTraceSimplificationViz,
-      traceWidthViz,
-      globalDrcForceImproveViz,
-      pipeline9JointDrcRepairViz,
-      lengthMatchingPostProcessingViz,
-      powerTraceExpansionViz,
-      this.solved
-        ? combineVisualizations(
-            { lines: problemLines },
-            getPresuppliedTraceVisualization({
-              srj: this.originalSrj,
-              visualizationOptions,
-            }),
-            this.visualizeFinalOutput(),
-          )
-        : null,
-    ].filter(Boolean) as GraphicsObject[]
-    const graphics = combineVisualizations(...visualizations)
-    return this.visualizationTraceColorMode === "net"
-      ? applyNetColorsToGraphicsObject(graphics, this.colorMap)
-      : graphics
+    return visualizePipeline9(this)
   }
 
   visualizeStage(stageSolver: {
@@ -1521,6 +505,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   }
 
   _getOutputHdRoutes(): HighDensityRoute[] {
+    const completedBoardRoutes =
+      this.highDensityRouteSolver?.completedBoardRoutes
+    if (completedBoardRoutes) return completedBoardRoutes
     const hasLengthMatchPairs =
       (this.originalSrj.differentialPairs?.length ?? 0) > 0 ||
       (this.originalSrj.buses ?? []).some(
@@ -1542,133 +529,17 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     )
   }
 
-  private getOriginalFixedHdRoutes(): PreloadedHighDensityRoute[] {
-    return (this.originalSrj.traces ?? []).flatMap((trace, traceIndex) =>
-      convertPreloadedTraceToHdRoutes(
-        trace,
-        traceIndex,
-        this.originalSrj.layerCount,
-        this.viaDiameter,
-        this.connMap,
-      ),
-    )
-  }
-
-  private getChangedPreloadedTraceSections(): ChangedPreloadedTraceSection[] {
-    return (
-      this.portPointPathingSolver?.getOutput().changedPreloadedTraceSections ??
-      []
-    )
-  }
-
-  private getPreloadedFixedRouteStateAfterHighDensity(): Pipeline9PreloadedFixedRouteState {
-    const originalFixedRoutes = this.getOriginalFixedHdRoutes()
-    const changedSections = this.getChangedPreloadedTraceSections()
-    const fixedRoutesWithoutChangedSections =
-      removeChangedSectionsFromFixedHdRoutes({
-        traces: this.originalSrj.traces ?? [],
-        fixedHdRoutes: originalFixedRoutes,
-        sections: changedSections,
-      })
-    const materializedSectionRoutes =
-      changedSections.length === 0
-        ? []
-        : getMaterializedPreloadedSectionHdRoutes({
-            traces: this.originalSrj.traces ?? [],
-            sections: changedSections,
-            stitchedHdRoutes:
-              this.highDensityStitchSolver?.mergedHdRoutes ?? [],
-            layerCount: this.originalSrj.layerCount,
-          })
-    const materializedTraceIds = new Set(
-      changedSections.map((section) => section.traceId),
-    )
-    const materializedOriginalRouteNames = originalFixedRoutes
-      .filter((route) =>
-        materializedTraceIds.has(
-          this.originalSrj.traces?.[route.preloadedTraceIndex]?.pcb_trace_id ??
-            "",
-        ),
-      )
-      .map((route) => route.connectionName)
-    return {
-      originalFixedRoutes,
-      updatedFixedRoutes: [
-        ...(this.highDensityRouteSolver?.getUpdatedFixedHdRoutes() ??
-          fixedRoutesWithoutChangedSections),
-        ...materializedSectionRoutes,
-      ],
-      replacedConnectionNames: new Set([
-        ...(this.highDensityRouteSolver?.fixedRouteReplacements.keys() ?? []),
-        ...materializedOriginalRouteNames,
-      ]),
-      mutationMasks: new Map([
-        ...(this.highDensityRouteSolver?.preloadedTraceMutationMasks ?? []),
-        ...materializedSectionRoutes.map(
-          (route) =>
-            [
-              route.connectionName,
-              Array(route.route.length - 1).fill(true),
-            ] as const,
-        ),
-      ]),
-    }
-  }
-
-  private getPreparedMutatedPreloadedTraceSections(): PreparedPipeline9MutationSections {
-    const fixedRouteState = this.getPreloadedFixedRouteStateAfterHighDensity()
-    return preparePipeline9MutatedPreloadedSections({
-      updatedFixedRoutes: fixedRouteState.updatedFixedRoutes,
-      regionalMutationMasks: fixedRouteState.mutationMasks,
-    })
-  }
-
-  private getPreloadedTraceUpdatesAfterHighDensity(): ReturnType<
-    typeof applyFixedRouteReplacementsToPreloadedTraces
-  > {
-    const fixedRouteState = this.getPreloadedFixedRouteStateAfterHighDensity()
-    const preparedSections = this.getPreparedMutatedPreloadedTraceSections()
-    const updatedFixedRoutes =
-      this.mutatedPreloadedTraceSimplificationSolver?.solved === true
-        ? applyPipeline9MutatedPreloadedSections({
-            updatedFixedRoutes: preparedSections.normalizedFixedRoutes,
-            sections: preparedSections.sections,
-            simplifiedHdRoutes:
-              this.mutatedPreloadedTraceSimplificationSolver.simplifiedHdRoutes,
-          })
-        : fixedRouteState.updatedFixedRoutes
-
-    return applyFixedRouteReplacementsToPreloadedTraces({
-      originalTraces: this.originalSrj.traces ?? [],
-      originalFixedRoutes: fixedRouteState.originalFixedRoutes,
-      updatedFixedRoutes,
-      replacedConnectionNames: fixedRouteState.replacedConnectionNames,
-      layerCount: this.originalSrj.layerCount,
-      defaultViaHoleDiameter: this.viaHoleDiameter,
-      obstacles: this.originalSrj.obstacles,
-      connMap: this.connMap,
-    })
-  }
-
-  private getSrjWithMaterializedPreloadedTraces(): SimpleRouteJson {
-    return {
-      ...this.srjWithPointPairs!,
-      traces:
-        this.getPreloadedTraceUpdatesAfterHighDensity().updatedPreloadedTraces,
-    }
-  }
-
   getUpdatedPreloadedTraces(): SimplifiedPcbTraces {
     return (
       this.pipeline9JointDrcRepairSolver?.getUpdatedPreloadedTraces() ??
-      this.getPreloadedTraceUpdatesAfterHighDensity().updatedPreloadedTraces
+      getPreloadedTraceUpdatesAfterHighDensity(this).updatedPreloadedTraces
     )
   }
 
   getMutatedPreloadedTraces(): SimplifiedPcbTraces {
     return (
       this.pipeline9JointDrcRepairSolver?.getMutatedPreloadedTraces() ??
-      this.getPreloadedTraceUpdatesAfterHighDensity().mutatedPreloadedTraces
+      getPreloadedTraceUpdatesAfterHighDensity(this).mutatedPreloadedTraces
     )
   }
 

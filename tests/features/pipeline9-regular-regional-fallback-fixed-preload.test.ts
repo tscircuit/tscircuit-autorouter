@@ -2,7 +2,6 @@ import { Pipeline9RegionalB01RepairSolver } from "lib/autorouter-pipelines/Autor
 import { expect, test } from "bun:test"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { DrcEvaluator } from "high-density-repair03/lib"
-import { getPipeline9FixedRouteObstacles } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/applyPipeline9RegionalB01Repairs"
 import type { PreloadedHighDensityRoute } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/convertPreloadedTraceToHdRoutes"
 import type { SimpleRouteJson } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
@@ -39,7 +38,7 @@ const crossesFixedPreload = (
   return false
 }
 
-test("Pipeline9 regular regional fallback keeps immutable preloads as obstacles", () => {
+test("Pipeline9 regular regional fallback keeps immutable preloads as route constraints", () => {
   const route: HighDensityRoute = {
     connectionName: "movable",
     rootConnectionName: "movable-root",
@@ -121,46 +120,6 @@ test("Pipeline9 regular regional fallback keeps immutable preloads as obstacles"
   }
   const fixedRouteBeforeRepair = structuredClone(fixedRoute)
   const routeBeforeRepair = structuredClone(route)
-
-  const fixedRouteObstacles = getPipeline9FixedRouteObstacles({
-    fixedObstacleRoutes: [fixedRoute],
-    layerCount: srj.layerCount,
-  })
-  expect(fixedRouteObstacles).toHaveLength(4)
-  expect(fixedRouteObstacles).toEqual(
-    expect.arrayContaining([
-      expect.objectContaining({
-        layers: ["top"],
-        center: { x: 0, y: 0 },
-        width: 2,
-        height: 0.1,
-        connectedTo: ["fixed", "fixed-root"],
-      }),
-      expect.objectContaining({
-        layers: ["top", "bottom"],
-        center: { x: 2, y: 1 },
-        width: 0.3,
-        height: 0.3,
-        connectedTo: ["fixed", "fixed-root"],
-      }),
-    ]),
-  )
-  const diagonalObstacles = fixedRouteObstacles.filter((obstacle) =>
-    obstacle.obstacleId?.includes("wire_1"),
-  )
-  expect(diagonalObstacles.map((obstacle) => obstacle.center)).toEqual([
-    { x: 1.25, y: 0.25 },
-    { x: 1.75, y: 0.75 },
-  ])
-  expect(
-    diagonalObstacles.every(
-      (obstacle) =>
-        obstacle.layers[0] === "top" &&
-        obstacle.width < 0.75 &&
-        obstacle.height < 0.75 &&
-        obstacle.ccwRotationDegrees === undefined,
-    ),
-  ).toBeTrue()
 
   const repairSolver = new Pipeline9RegionalB01RepairSolver({
     srj,
