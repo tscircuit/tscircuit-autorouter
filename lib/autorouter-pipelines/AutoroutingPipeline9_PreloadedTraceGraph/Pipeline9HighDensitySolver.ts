@@ -9,7 +9,7 @@ import {
   type NodeWithPortPoints as B01NodeWithPortPoints,
 } from "@tscircuit/high-density-b01"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import type { GraphicsObject } from "graphics-debug"
+import { type GraphicsObject, getBounds } from "graphics-debug"
 import type { CapacityMeshNodeId } from "lib/types/capacity-mesh-types"
 import type { HighDensityBoardGeometry } from "lib/types/high-density-board-geometry"
 import type {
@@ -19,6 +19,8 @@ import type {
   PortPoint,
 } from "lib/types/high-density-types"
 import type { Obstacle, SimpleRouteJson } from "lib/types/srj-types"
+import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
+import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { BaseSolver } from "../../solvers/BaseSolver"
 import { HighDensitySolver } from "../../solvers/HighDensitySolver/HighDensitySolver"
@@ -1309,7 +1311,57 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     }
   }
 
-  override visualize(): GraphicsObject {
+  override visualize(
+    options: { showAcceptedRoutes?: boolean } = {},
+  ): GraphicsObject {
+    if (options.showAcceptedRoutes) {
+      // A finished child only describes its last cell. Show the copper actually
+      // retained by this parent, including accepted replacements of preloads.
+      const nodes = this.params.nodePortPoints
+      const bounds =
+        this.boardGeometry?.bounds ??
+        getBounds({
+          rects: nodes.map((node) => ({
+            center: node.center,
+            width: node.width,
+            height: node.height,
+          })),
+        })
+      const graphics: GraphicsObject = convertSrjToGraphicsObject({
+        layerCount: this.layerCount,
+        allowBlindAndBuriedVias: this.allowBlindAndBuriedVias,
+        minTraceWidth: this.traceWidth,
+        minViaDiameter: this.viaDiameter,
+        bounds,
+        obstacles: this.obstacles,
+        connections: [],
+        traces: [...this.getUpdatedFixedHdRoutes(), ...this.routes].map(
+          (route, index) => ({
+            type: "pcb_trace",
+            pcb_trace_id: `hd_route_${index}`,
+            connection_name: route.connectionName,
+            rootConnectionName: route.rootConnectionName,
+            route: convertHdRouteToSimplifiedRoute(route, this.layerCount, {
+              obstacles: this.obstacles,
+              connMap: this.connMap,
+              defaultViaHoleDiameter: this.params.viaHoleDiameter,
+            }),
+          }),
+        ),
+      })
+      const status = this.failed ? "Failed" : this.solved ? "Solved" : "Routing"
+      graphics.texts = [
+        {
+          x: bounds.minX,
+          y: bounds.maxY + 2,
+          text: `${status}: ${this.stats.solvedNodeCount}/${this.stats.nodeCount} nodes`,
+          anchorSide: "bottom_left",
+          fontSize: 1.5,
+          color: this.failed ? "#b91c1c" : "#166534",
+        },
+      ]
+      return graphics
+    }
     return (
       this.activeFallbackSolver?.visualize() ??
       this.activeRegularSolver?.visualize() ??

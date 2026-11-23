@@ -131,9 +131,13 @@ export const convertSrjToGraphicsObject = (
           const toZ = mapLayerNameToZ(routePoint.to_layer, layerCount)
           const viaRadius =
             (routePoint.via_diameter ?? viaDimensions.padDiameter) / 2
+          const minZ = srj.allowBlindAndBuriedVias ? Math.min(fromZ, toZ) : 0
+          const maxZ = srj.allowBlindAndBuriedVias
+            ? Math.max(fromZ, toZ)
+            : layerCount - 1
           const zLayers = Array.from(
-            { length: Math.abs(toZ - fromZ) + 1 },
-            (_, index) => Math.min(fromZ, toZ) + index,
+            { length: maxZ - minZ + 1 },
+            (_, index) => minZ + index,
           )
 
           circles.push({
