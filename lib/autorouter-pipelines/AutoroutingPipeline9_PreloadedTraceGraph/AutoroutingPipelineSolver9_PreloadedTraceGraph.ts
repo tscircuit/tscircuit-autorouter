@@ -384,6 +384,17 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         ) {
           return
         }
+        if (
+          pipelineStepDef.solverName === "highDensityRouteSolver" &&
+          this.highDensityRouteSolver?.completedBoardRoutes
+        ) {
+          // The BGA solver returns complete, clearance-checked port-to-port
+          // paths. Node stitching and its geometric repairs apply to fragments.
+          this.currentPipelineStepIndex = this.pipelineDef.findIndex(
+            (step) => step.solverName === "powerTraceExpansionSolver",
+          )
+          return
+        }
         this.currentPipelineStepIndex++
       } else if (this.activeSubSolver.failed) {
         this.error = this.activeSubSolver?.error
@@ -497,6 +508,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   }
 
   _getOutputHdRoutes(): HighDensityRoute[] {
+    const completedBoardRoutes =
+      this.highDensityRouteSolver?.completedBoardRoutes
+    if (completedBoardRoutes) return completedBoardRoutes
     const hasLengthMatchPairs =
       (this.originalSrj.differentialPairs?.length ?? 0) > 0 ||
       (this.originalSrj.buses ?? []).some(
