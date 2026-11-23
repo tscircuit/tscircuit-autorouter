@@ -10,6 +10,7 @@ import { materializePipeline9HdRouteVias } from "./materializePipeline9HdRouteVi
 import { simplifyPipeline9CollinearRoutePoints } from "./simplifyPipeline9CollinearRoutePoints"
 import { Pipeline9HighDensitySolver } from "./Pipeline9HighDensitySolver"
 import { definePipeline9Step } from "./definePipeline9Step"
+import type { BgaEscapeBoard } from "./getBgaEscapeRoutingInput"
 import {
   getOriginalFixedHdRoutes,
   getChangedPreloadedTraceSections,
@@ -60,10 +61,12 @@ export const pipeline9HighDensitySteps = [
 
       pipeline.highDensityNodePortPoints = structuredClone(nodePortPointsSource)
       const originalFixedHdRoutes = getOriginalFixedHdRoutes(pipeline)
+      const changedPreloadedTraceSections =
+        getChangedPreloadedTraceSections(pipeline)
       const fixedHdRoutes = removeChangedSectionsFromFixedHdRoutes({
         traces: pipeline.originalSrj.traces ?? [],
         fixedHdRoutes: originalFixedHdRoutes,
-        sections: getChangedPreloadedTraceSections(pipeline),
+        sections: changedPreloadedTraceSections,
       })
       const hasImmutablePreloadedCopper = fixedHdRoutes.some(
         (route) => route.isFixed === true,
@@ -76,16 +79,28 @@ export const pipeline9HighDensitySteps = [
         obstacleMargin = pipeline.srj.minTraceToPadEdgeClearance
       }
 
+      let bgaEscapeBoard: BgaEscapeBoard | undefined
+      if (
+        originalFixedHdRoutes.length > 0 &&
+        changedPreloadedTraceSections.length === 0
+      ) {
+        bgaEscapeBoard = {
+          inputSrj: {
+            ...pipeline.originalSrj,
+            traces: pipeline.originalSrj.traces?.map((trace) => ({
+              ...trace,
+              isFixed: true,
+            })),
+          },
+          pointPairs: pipeline.srjWithPointPairs!.connections,
+          components: pipeline.componentDetectionSolver!.getOutput(),
+        }
+      }
+
       return [
         {
           nodePortPoints: nodePortPointsSource,
-          bgaEscapeBoard: hasImmutablePreloadedCopper
-            ? {
-                inputSrj: pipeline.originalSrj,
-                pointPairs: pipeline.srjWithPointPairs!.connections,
-                components: pipeline.componentDetectionSolver!.getOutput(),
-              }
-            : undefined,
+          bgaEscapeBoard,
           boardGeometry: {
             bounds: pipeline.originalSrj.bounds,
             outline: pipeline.originalSrj.outline,
