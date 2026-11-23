@@ -1,0 +1,19 @@
+name: Check final independent fanout cleanup source
+on:
+  push:
+    branches: [analysis/check-independent-boundary382-final]
+permissions:
+  contents: read
+jobs:
+  source-checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: c000bad2781ef331f3213cfe71e138b14adbe855
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - run: bun run typecheck
+      - run: bun run format:check
