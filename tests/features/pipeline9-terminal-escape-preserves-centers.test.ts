@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
+import { convertHdRoutesToSimplifiedPcbTraces } from "lib/utils/convertHdRoutesToSimplifiedPcbTraces"
 import { applyPipeline9TerminalEscapeRelocations } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/applyPipeline9TerminalEscapeRelocations"
 import {
   evaluateRelaxedDrc,
@@ -74,7 +74,7 @@ test("terminal escape repairs remove a pad collision without moving either endpo
     evaluateRelaxedDrc({
       inputSrj: srj,
       srjWithPointPairs: srj,
-      routedTraces: convertPipeline7HdRoutesToSimplifiedPcbTraces({
+      routedTraces: convertHdRoutesToSimplifiedPcbTraces({
         connections: srj.connections,
         originalConnections: srj.connections,
         hdRoutes: routes,

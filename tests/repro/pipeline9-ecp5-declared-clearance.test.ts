@@ -11,7 +11,7 @@ import {
   PcbConnectivityMap,
 } from "circuit-json-to-connectivity-map"
 import { convertCircuitJsonToPcbSvg } from "circuit-to-svg"
-import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
+import { convertHdRoutesToSimplifiedPcbTraces } from "lib/utils/convertHdRoutesToSimplifiedPcbTraces"
 import { Pipeline9JointDrcRepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9JointDrcRepairSolver"
 import { replaceNativePcbTraces } from "tests/fixtures/replaceNativePcbTraces"
 
@@ -52,7 +52,7 @@ test("ECP5 DDR repair beside fixed data copper", async (): Promise<void> => {
   expect(solver.solved).toBeTrue()
   expect(solver.failed).toBeFalse()
   const srj = fixture.input.originalSrj
-  const traces = convertPipeline7HdRoutesToSimplifiedPcbTraces({
+  const traces = convertHdRoutesToSimplifiedPcbTraces({
     connections: fixture.input.newConnections,
     originalConnections: srj.connections,
     hdRoutes: solver.getOutput(),

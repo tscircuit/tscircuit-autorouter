@@ -8,9 +8,9 @@ import type { SimpleRouteJson } from "lib/types"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
 import { getViaToPadClearance } from "lib/utils/getViaToPadClearance"
 import {
-  type ConvertPipeline7HdRoutesOptions,
-  createPipeline7HdRoutesToSimplifiedPcbTracesConverter,
-} from "./convertPipeline7HdRoutesToSimplifiedPcbTraces"
+  type ConvertHdRoutesOptions,
+  createHdRoutesToSimplifiedPcbTracesConverter,
+} from "lib/utils/convertHdRoutesToSimplifiedPcbTraces"
 
 const AUTOROUTING_TRACE_CLEARANCE = 0.1
 const AUTOROUTING_VIA_CLEARANCE = 0.1
@@ -22,7 +22,7 @@ const AUTOROUTING_VIA_CLEARANCE = 0.1
  * by tests and benchmarks; it is intentionally not used in this hot path.
  */
 export const createPipeline7AutoroutingDrcEvaluator = (
-  conversionOptions: Omit<ConvertPipeline7HdRoutesOptions, "hdRoutes"> & {
+  conversionOptions: Omit<ConvertHdRoutesOptions, "hdRoutes"> & {
     srjWithPointPairs: SimpleRouteJson
     originalSrj: SimpleRouteJson
   },
@@ -54,7 +54,7 @@ export const createPipeline7AutoroutingDrcEvaluator = (
     spatialCellSize,
   })
   const convertCandidateRoutes =
-    createPipeline7HdRoutesToSimplifiedPcbTracesConverter(conversionOptions)
+    createHdRoutesToSimplifiedPcbTracesConverter(conversionOptions)
   const originalTraces = conversionOptions.originalSrj.traces ?? []
 
   return ({ routes, hdRoutes }) => {

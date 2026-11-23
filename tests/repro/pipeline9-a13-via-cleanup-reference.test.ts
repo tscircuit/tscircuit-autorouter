@@ -2,7 +2,7 @@ import { expect, test } from "bun:test"
 import { readFileSync } from "node:fs"
 import { gunzipSync } from "node:zlib"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import { createPipeline7HdRoutesToSimplifiedPcbTracesConverter } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
+import { createHdRoutesToSimplifiedPcbTracesConverter } from "lib/utils/convertHdRoutesToSimplifiedPcbTraces"
 import { Pipeline9JointDrcRepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9JointDrcRepairSolver"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { getA13ViaCleanupSnapshotSvg } from "tests/fixtures/getA13ViaCleanupSnapshotSvg"
@@ -47,15 +47,14 @@ test("preserves native A13 trace clearance while removing repaired vias", async 
   expect(new Set(routes.map((route) => route.connectionName))).toEqual(
     new Set(params.newHdRoutes.map((route) => route.connectionName)),
   )
-  const convertNewRoutes =
-    createPipeline7HdRoutesToSimplifiedPcbTracesConverter({
-      connections: params.newConnections,
-      originalConnections: params.originalSrj.connections,
-      layerCount: params.layerCount,
-      obstacles: params.obstacles,
-      defaultViaHoleDiameter: params.defaultViaHoleDiameter,
-      connMap,
-    })
+  const convertNewRoutes = createHdRoutesToSimplifiedPcbTracesConverter({
+    connections: params.newConnections,
+    originalConnections: params.originalSrj.connections,
+    layerCount: params.layerCount,
+    obstacles: params.obstacles,
+    defaultViaHoleDiameter: params.defaultViaHoleDiameter,
+    connMap,
+  })
   const snapshotInput = {
     inputSrj: params.originalSrj,
     srjWithPointPairs: params.srjWithPointPairs,

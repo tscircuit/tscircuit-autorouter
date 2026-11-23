@@ -1,8 +1,8 @@
 import { expect, test } from "bun:test"
 import {
-  convertPipeline7HdRoutesToSimplifiedPcbTraces,
-  createPipeline7HdRoutesToSimplifiedPcbTracesConverter,
-} from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
+  convertHdRoutesToSimplifiedPcbTraces,
+  createHdRoutesToSimplifiedPcbTracesConverter,
+} from "lib/utils/convertHdRoutesToSimplifiedPcbTraces"
 import { createPipeline7AutoroutingDrcEvaluator } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/create-pipeline7-autorouting-drc-evaluator"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import type { SimpleRouteJson } from "lib/types"
@@ -65,7 +65,7 @@ test("Pipeline7 autorouting DRC finds every reference trace collision", () => {
       viaDiameter: 0.3,
     },
   ]
-  const traces = convertPipeline7HdRoutesToSimplifiedPcbTraces({
+  const traces = convertHdRoutesToSimplifiedPcbTraces({
     ...conversionOptions,
     hdRoutes: routes,
   })
@@ -128,24 +128,23 @@ test("Pipeline7 candidate conversion reuses static obstacle connectivity", () =>
       viaDiameter: 0.3,
     },
   ]
-  const convertCandidateRoutes =
-    createPipeline7HdRoutesToSimplifiedPcbTracesConverter({
-      connections: [connection],
-      originalConnections: [connection],
-      layerCount: 2,
-      obstacles: [
-        {
-          type: "rect",
-          layers: ["top", "bottom"],
-          center: { x: 1, y: 0 },
-          width: 0.5,
-          height: 0.5,
-          connectedTo: ["pad"],
-        },
-      ],
-      defaultViaHoleDiameter: 0.15,
-      connMap,
-    })
+  const convertCandidateRoutes = createHdRoutesToSimplifiedPcbTracesConverter({
+    connections: [connection],
+    originalConnections: [connection],
+    layerCount: 2,
+    obstacles: [
+      {
+        type: "rect",
+        layers: ["top", "bottom"],
+        center: { x: 1, y: 0 },
+        width: 0.5,
+        height: 0.5,
+        connectedTo: ["pad"],
+      },
+    ],
+    defaultViaHoleDiameter: 0.15,
+    connMap,
+  })
 
   const firstResult = convertCandidateRoutes(routes)
   const secondResult = convertCandidateRoutes(structuredClone(routes))

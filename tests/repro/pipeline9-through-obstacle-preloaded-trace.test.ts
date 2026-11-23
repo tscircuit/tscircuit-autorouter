@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test"
 import { convertCircuitJsonToPcbSvg } from "circuit-to-svg"
 import { Pipeline9JointDrcRepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9JointDrcRepairSolver"
-import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
+import { convertHdRoutesToSimplifiedPcbTraces } from "lib/utils/convertHdRoutesToSimplifiedPcbTraces"
 import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 import capturedSample003JointRepair from "./assets/pipeline9-through-obstacle-sample003.json" with {
@@ -58,7 +58,7 @@ test("Pipeline9 preserves a materialized through-obstacle fanout trace", () => {
 
   const routedBoardTraces = [
     ...jointDrcRepair.getUpdatedPreloadedTraces(),
-    ...convertPipeline7HdRoutesToSimplifiedPcbTraces({
+    ...convertHdRoutesToSimplifiedPcbTraces({
       connections: jointDrcRepair.params.newConnections,
       originalConnections: params.originalSrj.connections,
       hdRoutes: jointDrcRepair.getOutput(),
