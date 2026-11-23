@@ -38,6 +38,7 @@ import { createSrjWithBoardValidObstacleLayers } from "lib/utils/create-srj-with
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 import { calculateOptimalCapacityDepth } from "lib/utils/getTunedTotalCapacity1"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
+import { getRoutingLayerIndices } from "lib/utils/getRoutingLayerIndices"
 import type {
   AvailableSegmentPointSolver,
   SharedEdgeSegment,
@@ -146,6 +147,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   srjWithEscapeViaLocations?: SimpleRouteJson
   srjWithPointPairs?: SimpleRouteJson
   originalSrj: SimpleRouteJson
+  readonly routingLayerIndices: number[]
   private readonly excludedGaps = new ClearanceGapIndex()
   private hasRefinedFixedWireViaSites = false
   capacityNodes: CapacityMeshNode[] | null = null
@@ -192,6 +194,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     public readonly opts: CapacityMeshSolverOptions = {},
   ) {
     super()
+    this.routingLayerIndices = getRoutingLayerIndices(srj)
     const srjWithBoardValidObstacleLayers =
       createSrjWithBoardValidObstacleLayers(srj)
     this.originalSrj = srjWithBoardValidObstacleLayers
@@ -579,6 +582,10 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     if (!this.solved) {
       throw new Error("Cannot get output before solving is complete")
     }
+    return this.getRoutedTracesAfterPowerExpansion()
+  }
+
+  getRoutedTracesAfterPowerExpansion(): SimplifiedPcbTraces {
     if (!this.powerTraceExpansionSolver) {
       throw new Error(
         "Pipeline9 invariant violated: solved pipeline is missing the unconditional power-trace expansion solver",

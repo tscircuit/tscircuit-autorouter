@@ -63,6 +63,8 @@ export type JumperType = "1206x4" | "0603"
 
 export interface SimpleRouteJson {
   layerCount: number
+  /** Layers available for planar trace segments. Vias retain their physical span. */
+  routingLayers?: string[]
   /** Whether autorouters may use vias that do not span the full board stack. */
   allowBlindAndBuriedVias?: boolean
   minTraceWidth: number

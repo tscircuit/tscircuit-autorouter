@@ -2,7 +2,7 @@ import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import type { Obstacle, SimpleRouteJson } from "lib/types"
 
-test("keeps an inner signal route when the two surface layers have no path", () => {
+test("respects the declared routing layers when the surface paths are blocked", () => {
   const surfaceLayers = ["top", "bottom"]
   const balls: Obstacle[] = [-2.8, -2, -1.2].flatMap((x) =>
     [-0.8, 0, 0.8].map(
@@ -74,9 +74,6 @@ test("keeps an inner signal route when the two surface layers have no path", () 
   })
   solver.solve()
   expect(solver.solved, solver.error ?? "").toBe(true)
-  expect(solver.highDensityRouteSolver?.stats.surfaceRoutingError).toContain(
-    "no_path",
-  )
   const routes = solver.getOutputSimplifiedPcbTraces()
   expect(routes).toHaveLength(1)
   expect(
@@ -84,4 +81,12 @@ test("keeps an inner signal route when the two surface layers have no path", () 
       (point) => point.route_type === "wire" && point.layer.startsWith("inner"),
     ),
   ).toBe(true)
+
+  const restricted = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
+    { ...input, routingLayers: surfaceLayers },
+    { cacheProvider: null },
+  )
+  restricted.solve()
+  expect(restricted.failed).toBe(true)
+  expect(restricted.solved).toBe(false)
 })

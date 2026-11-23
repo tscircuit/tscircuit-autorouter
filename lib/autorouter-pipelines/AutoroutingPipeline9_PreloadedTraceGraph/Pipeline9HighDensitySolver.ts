@@ -63,6 +63,7 @@ export type Pipeline9HighDensitySolverParams = {
   obstacles: Obstacle[]
   boardGeometry?: HighDensityBoardGeometry
   layerCount: number
+  routingLayerIndices?: number[]
   allowBlindAndBuriedVias?: boolean
   viaDiameter: number
   viaHoleDiameter?: number
@@ -423,7 +424,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   activeNode: NodeWithPortPoints | null = null
 
   private bgaRoutingAttempt?: BgaRoutingAttempt
-  private surfaceRoutingError?: string
+  private readonly routingLayerIndices: number[]
   private asyncRunning = false
 
   constructor(private readonly params: Pipeline9HighDensitySolverParams) {
@@ -434,6 +435,9 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     this.obstacles = params.obstacles
     this.boardGeometry = params.boardGeometry
     this.layerCount = params.layerCount
+    this.routingLayerIndices =
+      params.routingLayerIndices ??
+      Array.from({ length: params.layerCount }, (_, z) => z)
     this.allowBlindAndBuriedVias = params.allowBlindAndBuriedVias ?? false
     this.viaDiameter = params.viaDiameter
     this.traceWidth = params.traceWidth
@@ -715,7 +719,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       // Once B01 has proved that assignment unroutable, the regional repair
       // must be able to add a legal layer transition; board obstacles still
       // constrain which of these layers it can actually use.
-      availableZ: Array.from({ length: this.layerCount }, (_, z) => z),
+      availableZ: this.routingLayerIndices,
     }
     const fixedHdRoutes = this.getUpdatedFixedHdRoutes()
     const hasImmutablePreload = this.fixedHdRoutes.some(
@@ -1071,7 +1075,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
         ),
         portPoints: [],
         portPointsInPairs: [],
-        availableZ: Array.from({ length: this.layerCount }, (_, z) => z),
+        availableZ: this.routingLayerIndices,
       },
       this.getUpdatedFixedHdRoutes(),
     )
@@ -1210,16 +1214,9 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     if (!board) return false
     const input = getBgaEscapeRoutingInput(board)
     if (!input) return false
-    const bottomLayer = input.board.layerCount - 1
-    const regionalPlan =
-      regionalError === undefined
-        ? {
-            usesInnerLayer: this.params.nodePortPoints.some(({ portPoints }) =>
-              portPoints.some(({ z }) => z > 0 && z < bottomLayer),
-            ),
-          }
-        : undefined
-    const solver = createBgaRoutingSolver(input, regionalPlan)
+    const solver = createBgaRoutingSolver(input, {
+      regionalRoutingAvailable: regionalError === undefined,
+    })
     if (!solver) return false
     this.bgaRoutingAttempt = { board, solver, regionalError }
     return true
@@ -1248,16 +1245,8 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       }
     }
     const failure = `${solver.getSolverName()}: ${solver.error ?? "candidate violates board clearance"}`
-    if (!regionalError) {
-      // Existing surface copper only suggests the usable stack. An ordinary
-      // regional route may still reach the requested ports on another layer.
-      this.surfaceRoutingError = failure
-      this.stats.surfaceRoutingError = failure
-      this.bgaRoutingAttempt = undefined
-      return
-    }
     this.failed = true
-    this.error = `${regionalError}. ${failure}`
+    this.error = regionalError ? `${regionalError}. ${failure}` : failure
   }
 
   private stepNodeRouting(): void {
@@ -1269,13 +1258,8 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
           `Pipeline9 primary high-density routing failed: ${this.activeFallbackReason ?? "unknown error"}`,
           `regional fallback failed: ${this.activeFallbackSolver.error ?? "unknown error"}`,
         ].join("; ")
-        if (
-          this.surfaceRoutingError ||
-          !this.tryStartBgaRouting(regionalError)
-        ) {
-          this.error = this.surfaceRoutingError
-            ? `${regionalError}. ${this.surfaceRoutingError}`
-            : regionalError
+        if (!this.tryStartBgaRouting(regionalError)) {
+          this.error = regionalError
           this.failed = true
         }
         this.activeFallbackSolver = null

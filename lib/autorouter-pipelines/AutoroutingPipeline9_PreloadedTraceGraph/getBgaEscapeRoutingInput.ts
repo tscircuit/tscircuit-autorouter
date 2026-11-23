@@ -9,7 +9,7 @@ import { getBgaLikeObstacleSubset } from "lib/solvers/ComponentDetectionSolver/d
 import type { SimpleRouteConnection, SimpleRouteJson } from "lib/types"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
 import { getViaToPadClearance } from "lib/utils/getViaToPadClearance"
-import { getBgaSignalLayers } from "./getBgaSignalLayers"
+import { getRoutingLayerIndices } from "lib/utils/getRoutingLayerIndices"
 
 export type BgaEscapeBoard = {
   inputSrj: SimpleRouteJson
@@ -86,7 +86,7 @@ export function getBgaEscapeRoutingInput({
   )
     return
 
-  const signalLayers = getBgaSignalLayers(inputSrj)
+  const signalLayers = getRoutingLayerIndices(inputSrj)
   if (signalLayers.length < 2) return
   const bgaIds = new Set(
     components

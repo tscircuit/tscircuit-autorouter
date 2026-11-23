@@ -1,3 +1,4 @@
+import { getRoutingLayerIndices } from "lib/utils/getRoutingLayerIndices"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { DrcEvaluator } from "high-density-repair03/lib"
 import type { SimpleRouteConnection, SimpleRouteJson } from "lib/types"
@@ -428,7 +429,7 @@ export const preparePipeline9RegionalB01Candidate = ({
     center,
     width: regionSize,
     height: regionSize,
-    availableZ: Array.from({ length: srj.layerCount }, (_, z) => z),
+    availableZ: getRoutingLayerIndices(srj),
     portPoints: [],
     portPointsInPairs: [],
   }
@@ -528,7 +529,7 @@ export const preparePipeline9RegularRegionalCandidate = ({
     center,
     width: regionSize,
     height: regionSize,
-    availableZ: Array.from({ length: srj.layerCount }, (_, z) => z),
+    availableZ: getRoutingLayerIndices(srj),
     portPoints: [],
     portPointsInPairs: [],
   }

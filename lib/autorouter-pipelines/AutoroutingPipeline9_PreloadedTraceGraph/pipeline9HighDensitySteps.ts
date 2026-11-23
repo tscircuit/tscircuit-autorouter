@@ -96,6 +96,7 @@ export const pipeline9HighDensitySteps = [
           colorMap: pipeline.colorMap,
           obstacles: pipeline.srj.obstacles,
           layerCount: pipeline.srj.layerCount,
+          routingLayerIndices: pipeline.routingLayerIndices,
           allowBlindAndBuriedVias: pipeline.srj.allowBlindAndBuriedVias,
           viaDiameter: pipeline.viaDiameter,
           viaHoleDiameter: pipeline.viaHoleDiameter,

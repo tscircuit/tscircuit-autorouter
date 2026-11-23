@@ -1,3 +1,4 @@
+import { getRoutingLayerIndices } from "lib/utils/getRoutingLayerIndices"
 import { defaultB01Params } from "@tscircuit/high-density-b01"
 import { pointToSegmentDistance } from "@tscircuit/math-utils"
 import type { HighDensityRoute } from "lib/types/high-density-types"
@@ -134,7 +135,7 @@ export const preparePipeline9TracePairRepair = ({
     center: { x: (minX + maxX) / 2, y: (minY + maxY) / 2 },
     width: maxX - minX,
     height: maxY - minY,
-    availableZ: Array.from({ length: srj.layerCount }, (_, z) => z),
+    availableZ: getRoutingLayerIndices(srj),
     portPoints: [],
     portPointsInPairs: [],
   }

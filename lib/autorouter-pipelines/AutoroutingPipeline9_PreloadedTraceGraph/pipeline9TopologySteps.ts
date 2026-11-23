@@ -18,6 +18,7 @@ import { NetToPointPairsSolver2_OffBoardConnection } from "../../solvers/NetToPo
 import { PreloadedTraceGraphSolver } from "./PreloadedTraceGraphSolver"
 import { MergedComponentTopologyView } from "../AutoroutingPipeline7_MultiGraph/MergedComponentTopologyView"
 import { definePipeline9Step } from "./definePipeline9Step"
+import { restrictCapacityNodesToRoutingLayers } from "./restrictCapacityNodesToRoutingLayers"
 
 function getComponentCapacityMeshNodeIds(
   capacityMeshNodes: CapacityMeshNode[] | null,
@@ -150,7 +151,14 @@ export const pipeline9TopologySteps = [
       ]
     },
     onSolved: (pipeline) => {
-      pipeline.capacityNodes = pipeline.topologyMergingSolver!.getOutput()
+      const nodes = pipeline.topologyMergingSolver!.getOutput()
+      pipeline.capacityNodes =
+        pipeline.routingLayerIndices.length < pipeline.srj.layerCount
+          ? restrictCapacityNodesToRoutingLayers(
+              nodes,
+              pipeline.routingLayerIndices,
+            )
+          : nodes
     },
   }),
   definePipeline9Step({
