@@ -41,7 +41,7 @@ export const getDifferentialPairsForPostProcessing = ({
       return hops.map((hop) => {
         if (hop.emittedConnectionName === undefined)
           throw new Error(
-            `${errorPrefix} connection "${connectionName}" hop ${hop.fromPointId} -> ${hop.toPointId} is missing from NetToPointPairsSolver output`,
+            `${errorPrefix} connection "${connectionName}" hop ${hop.fromPointKey} -> ${hop.toPointKey} is missing from NetToPointPairsSolver output`,
           )
         return hop.emittedConnectionName
       }) as [string, ...string[]]

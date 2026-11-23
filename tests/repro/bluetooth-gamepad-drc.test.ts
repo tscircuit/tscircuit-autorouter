@@ -91,19 +91,21 @@ test("copper DRC on the four-layer Bluetooth gamepad", async (): Promise<void> =
 })
 
 test("the MCU-to-crystal routes meet the board's 10 mm limit", () => {
-  for (const clock of ["source_net_19", "source_net_20"]) {
-    const connection = input.connections.find((c) => c.name === clock)!
-    const terminals = connection.pointsToConnect
-    expect(connection.traceConstraints).toHaveLength(terminals.length)
-    for (const point of terminals) {
-      expect(connection.traceConstraints).toContainEqual(
-        expect.objectContaining({
-          pointIds: [point.pointId],
-          maxLength: 10,
-          maxViaCount: 0,
-        }),
-      )
-    }
+  for (const [clock, mcu, crystal, capacitor] of [
+    ["source_net_19", "pcb_port_33", "pcb_port_57", "pcb_port_61"],
+    ["source_net_20", "pcb_port_34", "pcb_port_60", "pcb_port_63"],
+  ] as const) {
+    const branches = input.connections.filter(
+      (c) => c.netConnectionName === clock,
+    )
+    expect(branches).toHaveLength(3)
+    const terminals = [mcu, crystal, capacitor].map((id) => {
+      const branch = branches.find((c) => c.pointsToConnect[0]?.pointId === id)!
+      expect(branch.pointsToConnect).toHaveLength(1)
+      expect(branch.maxLength).toBe(10)
+      expect(branch.maxViaCount).toBe(0)
+      return branch.pointsToConnect[0]!
+    })
     const routes = solver
       .getOutputSimplifiedPcbTraces()
       .filter((trace) => trace.connection_name === clock)
