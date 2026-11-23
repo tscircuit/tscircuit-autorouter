@@ -61,6 +61,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   >[0] & {
     boardGeometry?: HighDensityBoardGeometry
     preservePhysicalGeometry?: boolean
+    protectFixedPortsFromVias?: boolean
     solutionValidator?: (routes: HighDensityIntraNodeRoute[]) => boolean
   }
   solvedRoutes: HighDensityIntraNodeRoute[] = []
@@ -135,6 +136,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       rejectOverlappingTerminals?: boolean
       boardGeometry?: HighDensityBoardGeometry
       preservePhysicalGeometry?: boolean
+      protectFixedPortsFromVias?: boolean
       solutionValidator?: (routes: HighDensityIntraNodeRoute[]) => boolean
     },
   ) {
@@ -687,6 +689,11 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
         nodeWithPortPoints: this.nodeWithPortPoints,
         cellSizeMm: 0.1,
         viaDiameter: this.constructorParams.viaDiameter ?? 0.3,
+        viaMinDistFromPort:
+          this.constructorParams.protectFixedPortsFromVias
+            ? ((this.constructorParams.viaDiameter ?? 0.3) +
+                (this.constructorParams.traceWidth ?? 0.15)) / 2 + traceMargin
+            : undefined,
         viaMinDistFromBorder: (this.constructorParams.viaDiameter ?? 0.3) / 2,
         traceMargin,
         traceThickness: this.constructorParams.traceWidth ?? 0.15,

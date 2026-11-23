@@ -176,6 +176,10 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
       obstacles: params.obstacles,
       fixedHdRoutes: params.fixedHdRoutes,
       preservePhysicalGeometry: params.preservePhysicalGeometry,
+      protectFixedPortsFromVias:
+        params.preservePhysicalGeometry === true &&
+        params.allowBlindAndBuriedVias !== true &&
+        Boolean(params.movablePreloadedConnectionNames?.size),
       layerCount: params.layerCount,
       useGrowShrinkHighDensityIntraNodeSolver: true,
       rejectOverlappingTerminals: params.preservePhysicalGeometry,

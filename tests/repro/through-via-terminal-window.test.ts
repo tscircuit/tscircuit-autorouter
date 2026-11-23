@@ -27,12 +27,12 @@ test("replays the captured parent through the terminal-via repair", async (): Pr
     connMap: new ConnectivityMap(input.connMap.netMap),
   })
   solver.solve()
-  expect(solver.failed).toBeTrue()
-  expect(solver.error).toContain("cmn_248")
-  expect(solver.stats.solvedNodeCount).toBe(1477)
-  expect(
-    solver.routes.some((route) => route.regionId === "cmn_248"),
-  ).toBeFalse()
+  expect(solver.routes).toContainEqual(
+    expect.objectContaining({
+      regionId: "cmn_248",
+      connectionName: "source_net_186",
+    }),
+  )
   const graphics = solver.visualize({ showAcceptedRoutes: true })
   // Every drilled via in this captured four-layer input is a through via.
   expect(new Set(graphics.circles!.map((via) => via.layer))).toEqual(
