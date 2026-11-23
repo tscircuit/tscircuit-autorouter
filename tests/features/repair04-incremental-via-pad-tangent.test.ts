@@ -5,7 +5,7 @@ import {
   RelaxTraceClearanceSolver,
 } from "@tscircuit/repair04"
 import { expect, test } from "bun:test"
-import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
+import { convertHdRoutesToSimplifiedPcbTraces } from "lib/utils/convertHdRoutesToSimplifiedPcbTraces"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import type { SimpleRouteJson } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
@@ -115,7 +115,7 @@ test("incremental clearance projection slides pad-contacting vias apart without 
       evaluateRelaxedDrc({
         inputSrj: originalSrj,
         srjWithPointPairs: originalSrj,
-        routedTraces: convertPipeline7HdRoutesToSimplifiedPcbTraces({
+        routedTraces: convertHdRoutesToSimplifiedPcbTraces({
           connections: originalSrj.connections,
           originalConnections: originalSrj.connections,
           hdRoutes: candidate,

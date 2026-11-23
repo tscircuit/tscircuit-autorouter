@@ -4,7 +4,7 @@ import { gunzipSync } from "node:zlib"
 import type { AnyCircuitElement } from "circuit-json"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { convertCircuitJsonToPcbSvg } from "circuit-to-svg"
-import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
+import { convertHdRoutesToSimplifiedPcbTraces } from "lib/utils/convertHdRoutesToSimplifiedPcbTraces"
 import { getPipeline9DrcContact } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9JointDrcRepairUtils"
 import { createPipeline9AutoroutingDrcEvaluator } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/createPipeline9AutoroutingDrcEvaluator"
 import { Pipeline9JointDrcRepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9JointDrcRepairSolver"
@@ -85,7 +85,7 @@ const convertFixtureRoutesToTraces = ({
   connMap: ConnectivityMap
   hdRoutes: HighDensityRoute[]
 }): SimplifiedPcbTrace[] =>
-  convertPipeline7HdRoutesToSimplifiedPcbTraces({
+  convertHdRoutesToSimplifiedPcbTraces({
     connections: fixture.newConnections,
     originalConnections: fixture.originalSrj.connections,
     hdRoutes,

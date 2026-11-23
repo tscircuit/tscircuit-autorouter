@@ -1,13 +1,13 @@
 import type { DrcEvaluator } from "high-density-repair03/lib"
-import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
+import { convertHdRoutesToSimplifiedPcbTraces } from "lib/utils/convertHdRoutesToSimplifiedPcbTraces"
 import { createPipeline9AutoroutingDrcEvaluator } from "./createPipeline9AutoroutingDrcEvaluator"
 import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
-import type { ConvertPipeline7HdRoutesOptions } from "../AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
+import type { ConvertHdRoutesOptions } from "lib/utils/convertHdRoutesToSimplifiedPcbTraces"
 import { normalizePipeline9DrcErrorsForRepair } from "./normalizePipeline9DrcErrorsForRepair"
 import { preparePipeline9DrcRoutedTraces } from "./preparePipeline9DrcRoutedTraces"
 
 type CreatePipeline9RelaxedDrcEvaluatorOptions = Omit<
-  ConvertPipeline7HdRoutesOptions,
+  ConvertHdRoutesOptions,
   "hdRoutes"
 > & {
   srjWithPointPairs: SimpleRouteJson
@@ -29,7 +29,7 @@ export const createPipeline9RelaxedDrcEvaluator = (
       throw new Error("Pipeline9 relaxed DRC evaluation requires HD routes")
     }
 
-    const newTraces = convertPipeline7HdRoutesToSimplifiedPcbTraces({
+    const newTraces = convertHdRoutesToSimplifiedPcbTraces({
       ...options,
       hdRoutes: evaluatedRoutes,
     })

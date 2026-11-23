@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test"
 import { readFileSync } from "node:fs"
 import { gunzipSync } from "node:zlib"
-import { createPipeline7HdRoutesToSimplifiedPcbTracesConverter } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
+import { createHdRoutesToSimplifiedPcbTracesConverter } from "lib/utils/convertHdRoutesToSimplifiedPcbTraces"
 import { createPipeline9AutoroutingDrcEvaluator } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/createPipeline9AutoroutingDrcEvaluator"
 import { Pipeline9JointDrcRepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9JointDrcRepairSolver"
 import { getBugReportSnapshotSvg } from "lib/testing/getBugReportSnapshotSvg"
@@ -34,7 +34,7 @@ test("Glider projection priority", async (): Promise<void> => {
     ...srj,
     connections: [...srj.connections, ...connections],
   })
-  const convert = createPipeline7HdRoutesToSimplifiedPcbTracesConverter({
+  const convert = createHdRoutesToSimplifiedPcbTracesConverter({
     connections,
     originalConnections: srj.connections,
     layerCount: srj.layerCount,

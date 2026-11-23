@@ -1,7 +1,7 @@
 import { getNewViaPadViolations } from "@tscircuit/repair04"
 import { expect, test } from "bun:test"
 import type { DrcEvaluator } from "high-density-repair03/lib"
-import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
+import { convertHdRoutesToSimplifiedPcbTraces } from "lib/utils/convertHdRoutesToSimplifiedPcbTraces"
 import { Pipeline9BoundedRegionalRepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9BoundedRegionalRepairSolver"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import type { SimpleRouteJson } from "lib/types"
@@ -22,7 +22,7 @@ test("bounded regional repair clears coupled contacts within its shared work bud
     return evaluateRelaxedDrc({
       inputSrj: originalSrj,
       srjWithPointPairs: originalSrj,
-      routedTraces: convertPipeline7HdRoutesToSimplifiedPcbTraces({
+      routedTraces: convertHdRoutesToSimplifiedPcbTraces({
         connections: originalSrj.connections,
         originalConnections: originalSrj.connections,
         hdRoutes: evaluatedRoutes,

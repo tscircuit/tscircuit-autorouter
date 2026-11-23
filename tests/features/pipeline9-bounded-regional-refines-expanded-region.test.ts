@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
+import { convertHdRoutesToSimplifiedPcbTraces } from "lib/utils/convertHdRoutesToSimplifiedPcbTraces"
 import { Pipeline9JointDrcRepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9JointDrcRepairSolver"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { loadPipeline9JointDrcInput } from "../fixtures/loadPipeline9JointDrcInput"
@@ -44,7 +44,7 @@ test("expanding a stalled region refines a narrow detour within its existing all
   const { errors } = evaluateRelaxedDrc({
     inputSrj: params.originalSrj,
     srjWithPointPairs: params.srjWithPointPairs,
-    routedTraces: convertPipeline7HdRoutesToSimplifiedPcbTraces({
+    routedTraces: convertHdRoutesToSimplifiedPcbTraces({
       connections: params.newConnections,
       originalConnections: params.originalSrj.connections,
       hdRoutes: routes,

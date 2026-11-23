@@ -2,7 +2,7 @@ import { expect, test } from "bun:test"
 import type { AnyCircuitElement } from "circuit-json"
 import { convertCircuitJsonToPcbSvg } from "circuit-to-svg"
 import type { DrcEvaluator } from "high-density-repair03/lib"
-import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
+import { convertHdRoutesToSimplifiedPcbTraces } from "lib/utils/convertHdRoutesToSimplifiedPcbTraces"
 import { Pipeline9BoundedRegionalRepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9BoundedRegionalRepairSolver"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { createPcbBoardElement } from "lib/testing/utils/convertToCircuitJson"
@@ -62,7 +62,7 @@ test("publishes the SRJ18 repairs while the imported C43 pad still covers TP5", 
     return evaluateRelaxedDrc({
       inputSrj: originalSrj,
       srjWithPointPairs: originalSrj,
-      routedTraces: convertPipeline7HdRoutesToSimplifiedPcbTraces({
+      routedTraces: convertHdRoutesToSimplifiedPcbTraces({
         connections: originalSrj.connections,
         originalConnections: originalSrj.connections,
         hdRoutes: candidate,
