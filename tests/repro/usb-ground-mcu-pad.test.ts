@@ -21,14 +21,21 @@ test("snapshot the USB ground route near MCU pin 15", async (): Promise<void> =>
   expect(solver.solved, solver.error ?? "").toBeTrue()
 
   // J1.A12 and the U1 exposed ground pad are ports 14 and 53 in this capture.
-  const ground = solver.getOutputSimplifiedPcbTraces().filter(
-    (trace) => trace.connectsTo?.includes("pcb_port_14") &&
-      trace.connectsTo.includes("pcb_port_53"),
-  )
+  const ground = solver
+    .getOutputSimplifiedPcbTraces()
+    .filter(
+      (trace) =>
+        trace.connectsTo?.includes("pcb_port_14") &&
+        trace.connectsTo.includes("pcb_port_53"),
+    )
   expect(ground).toHaveLength(1)
 
-  const pads = input.obstacles.filter((o) => o.componentId === "pcb_component_3")
-  const pin15 = pads.findIndex((o) => o.circuitJsonMetadata?.source_port_name === "pin15")
+  const pads = input.obstacles.filter(
+    (o) => o.componentId === "pcb_component_3",
+  )
+  const pin15 = pads.findIndex(
+    (o) => o.circuitJsonMetadata?.source_port_name === "pin15",
+  )
   expect(pin15).toBeGreaterThanOrEqual(0)
   const graphics = convertSrjToGraphicsObject({
     ...input,
