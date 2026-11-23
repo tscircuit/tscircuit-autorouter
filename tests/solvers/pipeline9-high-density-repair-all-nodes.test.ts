@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
+import type { PreloadedHighDensityRoute } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/convertPreloadedTraceToHdRoutes"
 import { Pipeline4HighDensityRepairSolver } from "lib/solvers/HighDensityRepairSolver/Pipeline4HighDensityRepairSolver"
 import type {
   HighDensityRoute,
@@ -46,6 +47,9 @@ test("Pipeline9 repairs every node when the board has more than 80 repair sample
     { cacheProvider: null },
   )
   pipeline.highDensityNodePortPoints = nodes
+  pipeline.highDensityRouteSolver = {
+    getUpdatedFixedHdRoutes: (): PreloadedHighDensityRoute[] => [],
+  } as typeof pipeline.highDensityRouteSolver
   pipeline.highDensityForceImproveSolver = {
     getOutput: (): HighDensityRoute[] => routes,
   } as typeof pipeline.highDensityForceImproveSolver

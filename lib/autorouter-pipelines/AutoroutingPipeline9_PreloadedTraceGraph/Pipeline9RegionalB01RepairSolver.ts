@@ -260,7 +260,10 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
     this.attemptedCandidateCount++
     const errors = getPipeline9DrcErrors(this.params.drcEvaluator, routes)
     if (
-      isPipeline9DrcCandidateBetter(errors, this.bestErrors) &&
+      isPipeline9DrcCandidateBetter({
+        candidateErrors: errors,
+        currentErrors: this.bestErrors,
+      }) &&
       !this.introducesViaInPad(routes)
     ) {
       this.bestRoutes = routes
@@ -348,7 +351,10 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
         candidate.routes,
       )
       if (
-        isPipeline9DrcCandidateBetter(candidateErrors, this.bestErrors) &&
+        isPipeline9DrcCandidateBetter({
+          candidateErrors,
+          currentErrors: this.bestErrors,
+        }) &&
         !this.introducesViaInPad(candidate.routes)
       ) {
         this.bestRoutes = candidate.routes
@@ -414,7 +420,12 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
       this.attemptedCandidateCount++
       this.fallbackCandidateCount++
       const errors = getPipeline9DrcErrors(this.params.drcEvaluator, routes)
-      if (isPipeline9DrcCandidateBetter(errors, this.bestErrors)) {
+      if (
+        isPipeline9DrcCandidateBetter({
+          candidateErrors: errors,
+          currentErrors: this.bestErrors,
+        })
+      ) {
         if (this.introducesViaInPad(routes)) {
           // Clean the proposal without replacing the accepted routes yet.
           this.beginCleanup({ kind: "regular-candidate", routes, errors })
@@ -478,15 +489,22 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
     const hasRepair =
       cleanup.kind === "regular-candidate" || this.acceptedCandidateCount > 0
     if (hasRepair && cleanup.errors.length > 0) {
+      const repelledRoutes = applyBroadRepulsionForces(
+        { ...this.params.srj, traces: undefined },
+        cleanup.routes,
+        this.params.effort,
+        1,
+        this.params.connMap,
+      )
+      // Earlier preload repairs are complete; broad cleanup keeps them fixed.
+      for (const [index, route] of cleanup.routes.entries()) {
+        if (this.params.syntheticConnectionNames.has(route.connectionName)) {
+          repelledRoutes[index] = route
+        }
+      }
       const refinedRoutes = restorePipeline9TerminalApproaches(
         cleanup.routes,
-        applyBroadRepulsionForces(
-          { ...this.params.srj, traces: undefined },
-          cleanup.routes,
-          this.params.effort,
-          1,
-          this.params.connMap,
-        ),
+        repelledRoutes,
       )
       if (refinedRoutes && refinedRoutes !== cleanup.routes) {
         const errors = getPipeline9DrcErrors(
@@ -495,7 +513,12 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
         )
         if (
           getViaIssueCount(errors) <= getViaIssueCount(cleanup.errors) &&
-          isPipeline9DrcCandidateBetter(errors, cleanup.errors) &&
+          // Cleanup is final, so nothing after it removes a new short.
+          isPipeline9DrcCandidateBetter({
+            candidateErrors: errors,
+            currentErrors: cleanup.errors,
+            rejectNewContacts: true,
+          }) &&
           !this.introducesViaInPad(refinedRoutes)
         ) {
           cleanup.routes = refinedRoutes
@@ -623,7 +646,11 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
     const routes = solver.getOutput()
     const errors = getPipeline9DrcErrors(this.params.drcEvaluator, routes)
     if (
-      isPipeline9DrcCandidateBetter(errors, cleanup.errors) &&
+      isPipeline9DrcCandidateBetter({
+        candidateErrors: errors,
+        currentErrors: cleanup.errors,
+        rejectNewContacts: true,
+      }) &&
       !this.introducesViaInPad(routes)
     ) {
       cleanup.routes = routes
@@ -640,7 +667,10 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
     if (cleanup.kind === "regular-candidate") {
       if (
         !hasForbiddenVia &&
-        isPipeline9DrcCandidateBetter(cleanup.errors, this.bestErrors)
+        isPipeline9DrcCandidateBetter({
+          candidateErrors: cleanup.errors,
+          currentErrors: this.bestErrors,
+        })
       ) {
         this.bestRoutes = cleanup.routes
         this.bestErrors = cleanup.errors

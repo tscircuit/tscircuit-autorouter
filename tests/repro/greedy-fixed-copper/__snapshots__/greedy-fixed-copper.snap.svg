@@ -1,0 +1,91 @@
+<svg width="640" height="640" viewBox="0 0 640 640" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="white"/><g><polyline data-points="0.255,-0.24499999999998934 -0.24499999999998934,0.255" data-type="line" data-label="route: fixed_1
+region: region-9
+z: 1" points="309.14669147344193,387.3058728498587 200.61360620786266,278.7727875842794" fill="none" stroke="rgba(52, 152, 219, 0.95)" stroke-linejoin="round" stroke-width="1px" stroke-dasharray="3 2"/></g><g><polyline data-points="0.5499999999999945,-1.162499999999996 0.40000000000000036,-1.1999999999999904" data-type="line" data-label="route: signal
+region: region-11
+z: 0" points="373.1812117801339,586.4640843122024 340.62128620046064,594.6040657071197" fill="none" stroke="hsla(218, 70%, 50%, 0.8)" stroke-linejoin="round" stroke-width="1px"/></g><g><polyline data-points="0.8499999999999885,-1.2248584764713648 0.5499999999999945,-1.162499999999996" data-type="line" data-label="route: signal
+region: region-12
+z: 0" points="438.30106293948154,600 373.1812117801339,586.4640843122024" fill="none" stroke="hsla(218, 70%, 50%, 0.8)" stroke-linejoin="round" stroke-width="1px"/></g><g><polyline data-points="0.7049999999999886,1.3549999999999995 0.8549999999999885,0.2442499999999993" data-type="line" data-label="route: signal
+region: region-13
+z: 1" points="406.8264682124629,40 439.38639379213737,281.10624891748955" fill="none" stroke="rgba(52, 152, 219, 0.95)" stroke-linejoin="round" stroke-width="1px" stroke-dasharray="3 2"/></g><g><polyline data-points="0.8549999999999885,0.2442499999999993 0.8499999999999885,-1.2248584764713648" data-type="line" data-label="route: signal
+region: region-14
+z: 1 -&gt; 0" points="439.38639379213737,281.10624891748955 438.30106293948154,600" fill="none" stroke="rgba(22, 160, 133, 0.95)" stroke-linejoin="round" stroke-width="1px" stroke-dasharray="2 4 2"/></g><g><circle data-type="point" data-label="route: signal
+net: 0
+endpoint: start
+port: port_0
+z: 1" data-x="0.7049999999999886" data-y="1.3549999999999995" cx="406.8264682124629" cy="40" r="3" fill="hsla(218, 70%, 50%, 0.8)"/></g><g><circle data-type="point" data-label="route: signal
+net: 0
+endpoint: end
+port: port_18
+z: 0" data-x="0.40000000000000036" data-y="-1.1999999999999904" cx="340.62128620046064" cy="594.6040657071197" r="3" fill="hsla(218, 70%, 50%, 0.8)"/></g><g><circle data-type="point" data-label="route: fixed_1
+net: 1
+endpoint: start
+port: port_11
+z: 1" data-x="-0.24499999999998934" data-y="0.255" cx="200.61360620786266" cy="278.7727875842794" r="3" fill="hsla(43, 70%, 50%, 0.8)"/></g><g><circle data-type="point" data-label="route: fixed_1
+net: 1
+endpoint: end
+port: port_12
+z: 1" data-x="0.255" data-y="-0.24499999999998934" cx="309.14669147344193" cy="387.3058728498587" r="3" fill="hsla(43, 70%, 50%, 0.8)"/></g><g><circle data-type="point" data-label="route: fixed_1
+port: port_12
+net: 1
+z: 1" data-x="0.255" data-y="-0.24499999999998934" cx="309.14669147344193" cy="387.3058728498587" r="3" fill="hsla(43, 70%, 50%, 1)"/></g><g><circle data-type="point" data-label="route: fixed_1
+port: port_11
+net: 1
+z: 1" data-x="-0.24499999999998934" data-y="0.255" cx="200.61360620786266" cy="278.7727875842794" r="3" fill="hsla(43, 70%, 50%, 1)"/></g><g><circle data-type="point" data-label="route: signal
+port: port_15
+net: 0
+z: 0" data-x="0.5499999999999945" data-y="-1.162499999999996" cx="373.1812117801339" cy="586.4640843122024" r="3" fill="hsla(218, 70%, 50%, 1)"/></g><g><circle data-type="point" data-label="route: signal
+port: port_18
+net: 0
+z: 0" data-x="0.40000000000000036" data-y="-1.1999999999999904" cx="340.62128620046064" cy="594.6040657071197" r="3" fill="hsla(218, 70%, 50%, 1)"/></g><g><circle data-type="point" data-label="route: signal
+port: port_16
+net: 0
+z: 0" data-x="0.8499999999999885" data-y="-1.2248584764713648" cx="438.30106293948154" cy="600" r="3" fill="hsla(218, 70%, 50%, 1)"/></g><g><circle data-type="point" data-label="route: signal
+port: port_0
+net: 0
+z: 1" data-x="0.7049999999999886" data-y="1.3549999999999995" cx="406.8264682124629" cy="40" r="3" fill="hsla(218, 70%, 50%, 1)"/></g><g><circle data-type="point" data-label="route: signal
+port: port_17
+net: 0
+z: 1" data-x="0.8549999999999885" data-y="0.2442499999999993" cx="439.38639379213737" cy="281.10624891748955" r="3" fill="hsla(218, 70%, 50%, 1)"/></g><g id="crosshair" style="display: none"><line id="crosshair-h" y1="0" y2="640" stroke="#666" stroke-width="0.5"/><line id="crosshair-v" x1="0" x2="640" stroke="#666" stroke-width="0.5"/><text id="coordinates" font-family="monospace" font-size="12" fill="#666"></text></g><script><![CDATA[
+              document.currentScript.parentElement.addEventListener('mousemove', (e) => {
+                const svg = e.currentTarget;
+                const rect = svg.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const crosshair = svg.getElementById('crosshair');
+                const h = svg.getElementById('crosshair-h');
+                const v = svg.getElementById('crosshair-v');
+                const coords = svg.getElementById('coordinates');
+                
+                crosshair.style.display = 'block';
+                h.setAttribute('x1', '0');
+                h.setAttribute('x2', '640');
+                h.setAttribute('y1', y);
+                h.setAttribute('y2', y);
+                v.setAttribute('x1', x);
+                v.setAttribute('x2', x);
+                v.setAttribute('y1', '0');
+                v.setAttribute('y2', '640');
+
+                // Calculate real coordinates using inverse transformation
+                const matrix = {"a":217.06617053116318,"c":0,"e":253.79481798799532,"b":0,"d":-217.06617053116318,"f":334.124661069726};
+                // Manually invert and apply the affine transform
+                // Since we only use translate and scale, we can directly compute:
+                // x' = (x - tx) / sx
+                // y' = (y - ty) / sy
+                const sx = matrix.a;
+                const sy = matrix.d;
+                const tx = matrix.e; 
+                const ty = matrix.f;
+                const realPoint = {
+                  x: (x - tx) / sx,
+                  y: (y - ty) / sy // Flip y back since we used negative scale
+                }
+                
+                coords.textContent = `(${realPoint.x.toFixed(2)}, ${realPoint.y.toFixed(2)})`;
+                coords.setAttribute('x', (x + 5).toString());
+                coords.setAttribute('y', (y - 5).toString());
+              });
+              document.currentScript.parentElement.addEventListener('mouseleave', () => {
+                document.currentScript.parentElement.getElementById('crosshair').style.display = 'none';
+              });
+            ]]></script></svg>

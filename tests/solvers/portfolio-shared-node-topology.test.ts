@@ -27,6 +27,17 @@ test("portfolio candidates preserve standalone routes and own their mutable conn
     traceWidth: 0.1,
     viaDiameter: 0.3,
     obstacleMargin: 0.15,
+    obstacles: [
+      {
+        type: "rect" as const,
+        componentId: "ram",
+        center: { x: 0, y: 0 },
+        width: 0.2,
+        height: 0.2,
+        layers: ["top"],
+        connectedTo: ["other"],
+      },
+    ],
   }
   const portfolio = new PortfolioSingleIntraNodeSolver(params)
   for (const seed of [0, 1, 2, 3, 4, 5, 100]) {
@@ -60,6 +71,14 @@ test("portfolio candidates preserve standalone routes and own their mutable conn
   const second = portfolio.generateSolver({
     SHUFFLE_SEED: 0,
   }) as CachedIntraNodeRouteSolver
+  expect(first.padObstacles).toBe(second.padObstacles)
+  const changedPads = new PortfolioSingleIntraNodeSolver({
+    ...params,
+    obstacles: [{ ...params.obstacles[0]!, width: 0.4 }],
+  }).generateSolver({ SHUFFLE_SEED: 0 }) as CachedIntraNodeRouteSolver
+  expect(changedPads.computeCacheKeyAndTransform().cacheKey).not.toBe(
+    first.computeCacheKeyAndTransform().cacheKey,
+  )
   const secondConnections = structuredClone(second.unsolvedConnections)
   const firstInitialConnections = structuredClone(
     first.initialUnsolvedConnections,

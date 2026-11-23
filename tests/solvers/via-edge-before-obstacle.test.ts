@@ -33,9 +33,9 @@ test("rejects edge-invalid vias before obstacle queries while retaining valid an
         [0, 0.9, 0, 0],
         [0, -0.9, 0, 0],
         [1 - margin + 1e-8, 0, 0, 0],
-        [1 - margin, 0, 3, 3],
-        [0, 0, 3, 3],
-        [-0.7, 0, 3, 0],
+        [1 - margin, 0, 1, 3],
+        [0, 0, 1, 3],
+        [-0.7, 0, 1, 0],
       ]) {
         checks.mockClear()
         solver.exploredNodes.clear()

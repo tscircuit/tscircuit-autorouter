@@ -2,6 +2,8 @@ import type { SerializedHyperGraph } from "@tscircuit/hypergraph"
 import type { PreloadedTracePortAssignment } from "lib/solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
 import type { TraceId } from "lib/types"
 
+type SerializedRegionId = SerializedHyperGraph["regions"][number]["regionId"]
+
 type SerializedPort = SerializedHyperGraph["ports"][number]
 type SerializedRegion = SerializedHyperGraph["regions"][number]
 type SerializedConnection = NonNullable<
@@ -147,6 +149,54 @@ const getEndpointRegionId = (
     (regionId) => regionId !== adjacentAssignmentRegionId,
   ) ?? adjacentAssignmentRegionId
 
+/** A mesh corner can contain several edge ports at one saved-path crossing. */
+const getFixedTraceSegments = (
+  orderedPorts: OrderedTracePort[],
+): PreloadedAssignmentSegment[] => {
+  const segments: PreloadedAssignmentSegment[] = []
+  const crossingGroups: OrderedTracePort[][] = []
+  for (const crossing of orderedPorts) {
+    const group = crossingGroups.at(-1)
+    const previous = group?.[0]
+    if (
+      group &&
+      previous &&
+      previous.assignment.z === crossing.assignment.z &&
+      Math.abs(
+        previous.assignment.routePosition - crossing.assignment.routePosition,
+      ) <= ROUTE_POSITION_TOLERANCE
+    ) {
+      group.push(crossing)
+    } else {
+      crossingGroups.push([crossing])
+    }
+  }
+  for (let index = 1; index < crossingGroups.length; index++) {
+    const fromByRegion = new Map<SerializedRegionId, OrderedTracePort>()
+    for (const from of crossingGroups[index - 1]!) {
+      for (const regionId of getIncidentRegionIds(from.port)) {
+        fromByRegion.set(regionId, from)
+      }
+    }
+    const emittedRegionIds = new Set<SerializedRegionId>()
+    for (const to of crossingGroups[index]!) {
+      for (const regionId of getIncidentRegionIds(to.port)) {
+        const from = fromByRegion.get(regionId)
+        if (
+          !from ||
+          emittedRegionIds.has(regionId) ||
+          from.port.portId === to.port.portId
+        ) {
+          continue
+        }
+        segments.push({ regionId, from, to, isFixed: true })
+        emittedRegionIds.add(regionId)
+      }
+    }
+  }
+  return segments
+}
+
 /**
  * Converts ordered existing-trace boundary crossings into ordinary serialized
  * hypergraph assignments. No graph regions or ports are added.
@@ -234,7 +284,14 @@ export const serializePreloadedTraceAssignments = (
 
     const segments: PreloadedAssignmentSegment[] = []
     let previousRegionId: string | undefined
-    for (let pairIndex = 0; pairIndex < orderedPorts.length - 1; pairIndex++) {
+    if (fixedTraceIds.has(traceId)) {
+      segments.push(...getFixedTraceSegments(orderedPorts))
+    }
+    for (
+      let pairIndex = 0;
+      !fixedTraceIds.has(traceId) && pairIndex < orderedPorts.length - 1;
+      pairIndex++
+    ) {
       const from = orderedPorts[pairIndex]!
       const to = orderedPorts[pairIndex + 1]!
       if (

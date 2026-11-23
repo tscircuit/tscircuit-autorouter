@@ -49,6 +49,7 @@ test("A13 routed traces keep the declared clearance from each other", async (): 
   // clearance. Copper touching the pads of the two enclosed DM balls is a
   // separate finding and stays in the count above.
   const { errorsWithCenters } = evaluateRelaxedDrc(drcInput)
+  expect(errorsWithCenters.length).toBeLessThanOrEqual(7)
   const closeTracePairs = errorsWithCenters.filter(
     (error) => error.type === "pcb_trace_error" && /gap: /.test(error.message),
   )

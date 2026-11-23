@@ -27,7 +27,11 @@ type ViaPadClearanceEvaluator = (
 /** Reuses original pad geometry while checking candidate via copper clearance. */
 export const createViaPadClearanceEvaluator = (
   staticCircuitJson: AnyCircuitElement[],
-  options: { minClearance?: number; allowViaInPad?: boolean } = {},
+  options: {
+    minClearance?: number
+    allowViaInPad?: boolean
+    clearanceTolerance?: number
+  } = {},
 ): ViaPadClearanceEvaluator => {
   const board = staticCircuitJson.find(
     (element) => element.type === "pcb_board",
@@ -88,12 +92,12 @@ export const createViaPadClearanceEvaluator = (
         const sameNet = connMap.areIdsConnected(via.pcb_via_id, pad.id)
         if (sameNet && options.allowViaInPad !== false) continue
         let requiredClearance = clearance
-        let tolerance = 0.005
+        let tolerance = options.clearanceTolerance ?? 0.005
         let viaDiameter = via.outer_diameter
         let errorType = "pcb_pad_pad_clearance_error"
         if (sameNet) {
           requiredClearance = 0
-          tolerance = 1e-6
+          tolerance = options.clearanceTolerance ?? 1e-6
           viaDiameter = via.hole_diameter
           errorType = "pcb_placement_error"
         }

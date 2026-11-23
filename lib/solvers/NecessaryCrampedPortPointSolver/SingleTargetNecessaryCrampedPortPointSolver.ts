@@ -26,6 +26,7 @@ export class SingleTargetNecessaryCrampedPortPointSolver extends BaseSolver {
     SegmentPortPoint,
     ExploredPortPoint
   >()
+  private expandedNodeCosts = new Map<CapacityMeshNodeId, number>()
 
   constructor(private input: SingleTargetNecessaryCrampedPortPointSolverInput) {
     super()
@@ -97,12 +98,22 @@ export class SingleTargetNecessaryCrampedPortPointSolver extends BaseSolver {
         },
       )
 
-      const nextPorts = nextNodes.flatMap(
-        (node) =>
+      const candidateCost = this.getCandidateCost(
+        this.currentExploredPortPoints,
+      )
+      const nextPorts = nextNodes.flatMap((node): SegmentPortPoint[] => {
+        const expandedCost = this.expandedNodeCosts.get(node.capacityMeshNodeId)
+        // FIFO search reaches earlier expansions at no greater depth.
+        if (expandedCost !== undefined && expandedCost <= candidateCost) {
+          return []
+        }
+        this.expandedNodeCosts.set(node.capacityMeshNodeId, candidateCost)
+        return (
           this.input.mapOfCapacityMeshNodeIdToSegmentPortPoints.get(
             node.capacityMeshNodeId,
-          ) ?? [],
-      )
+          ) ?? []
+        )
+      })
 
       for (const nextPort of nextPorts) {
         if (this.input.shouldIgnoreCrampedPortPoints && nextPort.cramped) {

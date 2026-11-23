@@ -1,266 +1,33 @@
-import { pointToSegmentDistance } from "@tscircuit/math-utils"
 import Flatbush from "flatbush"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import type {
-  PreloadedTracePortAssignment,
-  SharedEdgeSegment,
   SegmentPortPoint,
+  SharedEdgeSegment,
 } from "lib/solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
-import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
+import type { SimpleRouteJson } from "lib/types"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
-import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { minimumDistanceBetweenSegments } from "lib/utils/minimumDistanceBetweenSegments"
-
-type Point = { x: number; y: number }
-type RoutePoint = SimplifiedPcbTrace["route"][number]
-type WireRoutePoint = Extract<RoutePoint, { route_type: "wire" }>
-type ViaRoutePoint = Extract<RoutePoint, { route_type: "via" }>
-
-type PreloadedTracePrimitive = {
-  traceId: string
-  fixedNetId: string
-  isFixed?: boolean
-  connectionName: string
-  routePositionStart: number
-  routePositionEnd: number
-  zLayers: number[]
-  start: Point
-  end: Point
-}
-
-const GEOMETRIC_TOLERANCE = 1e-6
-
-const getLayersBetween = (
-  fromLayer: string,
-  toLayer: string,
-  layerCount: number,
-): number[] => {
-  const fromZ = mapLayerNameToZ(fromLayer, layerCount)
-  const toZ = mapLayerNameToZ(toLayer, layerCount)
-  return Array.from(
-    { length: Math.abs(toZ - fromZ) + 1 },
-    (_, index) => Math.min(fromZ, toZ) + index,
-  )
-}
-
-const isWireRoutePoint = (point: RoutePoint): point is WireRoutePoint =>
-  point.route_type === "wire"
-
-const getPreloadedViaLayers = ({
-  via,
-  srj,
-}: {
-  via: ViaRoutePoint
-  srj: Pick<SimpleRouteJson, "layerCount" | "allowBlindAndBuriedVias">
-}): number[] => {
-  if (srj.allowBlindAndBuriedVias !== true) {
-    return Array.from({ length: srj.layerCount }, (_, z) => z)
-  }
-  if (via.layers !== undefined) {
-    return via.layers.map((layer) => mapLayerNameToZ(layer, srj.layerCount))
-  }
-  return getLayersBetween(via.from_layer, via.to_layer, srj.layerCount)
-}
-
-const getPreloadedTracePrimitives = (
-  srj: SimpleRouteJson,
-): PreloadedTracePrimitive[] => {
-  const primitives: PreloadedTracePrimitive[] = []
-  const connMap = getConnectivityMapFromSimpleRouteJson(srj)
-
-  for (const trace of srj.traces ?? []) {
-    if (!trace.connection_name) {
-      throw new Error(
-        `Preloaded trace "${trace.pcb_trace_id}" is missing a connection name`,
-      )
-    }
-    const fixedNetId =
-      connMap.getNetConnectedToId(trace.connection_name) ??
-      trace.connection_name
-
-    for (const [routePosition, routePoint] of trace.route.entries()) {
-      if (routePoint.route_type === "via") {
-        primitives.push({
-          traceId: trace.pcb_trace_id,
-          fixedNetId,
-          isFixed: trace.isFixed,
-          connectionName: trace.connection_name,
-          routePositionStart: routePosition,
-          routePositionEnd: routePosition,
-          zLayers: getPreloadedViaLayers({ via: routePoint, srj }),
-          start: routePoint,
-          end: routePoint,
-        })
-      } else if (routePoint.route_type === "through_obstacle") {
-        primitives.push({
-          traceId: trace.pcb_trace_id,
-          fixedNetId,
-          isFixed: trace.isFixed,
-          connectionName: trace.connection_name,
-          routePositionStart: routePosition,
-          routePositionEnd: routePosition + 1,
-          zLayers: getLayersBetween(
-            routePoint.from_layer,
-            routePoint.to_layer,
-            srj.layerCount,
-          ),
-          start: routePoint.start,
-          end: routePoint.end,
-        })
-      } else if (routePoint.route_type === "jumper") {
-        const z = mapLayerNameToZ(routePoint.layer, srj.layerCount)
-        for (const [padIndex, padCenter] of [
-          routePoint.start,
-          routePoint.end,
-        ].entries()) {
-          primitives.push({
-            traceId: trace.pcb_trace_id,
-            fixedNetId,
-            isFixed: trace.isFixed,
-            connectionName: trace.connection_name,
-            routePositionStart: routePosition + padIndex,
-            routePositionEnd: routePosition + padIndex,
-            zLayers: [z],
-            start: padCenter,
-            end: padCenter,
-          })
-        }
-      }
-    }
-
-    for (
-      let pointIndex = 0;
-      pointIndex < trace.route.length - 1;
-      pointIndex++
-    ) {
-      const start = trace.route[pointIndex]!
-      const end = trace.route[pointIndex + 1]!
-      if (
-        !isWireRoutePoint(start) ||
-        !isWireRoutePoint(end) ||
-        start.layer !== end.layer
-      ) {
-        continue
-      }
-      primitives.push({
-        traceId: trace.pcb_trace_id,
-        fixedNetId,
-        isFixed: trace.isFixed,
-        connectionName: trace.connection_name,
-        routePositionStart: pointIndex,
-        routePositionEnd: pointIndex + 1,
-        zLayers: [mapLayerNameToZ(start.layer, srj.layerCount)],
-        start,
-        end,
-      })
-    }
-  }
-
-  return primitives
-}
-
-const getClosestPortPoint = (
-  segment: SharedEdgeSegment,
-  primitive: PreloadedTracePrimitive,
-  z: number,
-): SegmentPortPoint | undefined =>
-  segment.portPoints
-    .filter(
-      (portPoint) =>
-        portPoint.availableZ.includes(z) &&
-        !(portPoint._preloadedTracePortAssignments ?? []).some(
-          (assignment) =>
-            assignment.z === z &&
-            assignment.fixedNetId !== primitive.fixedNetId,
-        ),
-    )
-    .map((portPoint) => ({
-      portPoint,
-      distance: pointToSegmentDistance(
-        portPoint,
-        primitive.start,
-        primitive.end,
-      ),
-    }))
-    .sort(
-      (left, right) =>
-        left.distance - right.distance ||
-        left.portPoint.distToCentermostPortOnZ -
-          right.portPoint.distToCentermostPortOnZ ||
-        left.portPoint.segmentPortPointId.localeCompare(
-          right.portPoint.segmentPortPointId,
-        ),
-    )[0]?.portPoint
-
-const preloadPort = (
-  portPoint: SegmentPortPoint,
-  primitive: PreloadedTracePrimitive,
-  z: number,
-) => {
-  portPoint._preloadedFixedNetIds = [
-    ...new Set([
-      ...(portPoint._preloadedFixedNetIds ?? []),
-      primitive.fixedNetId,
-    ]),
-  ].sort()
-
-  const dx = primitive.end.x - primitive.start.x
-  const dy = primitive.end.y - primitive.start.y
-  const lengthSquared = dx * dx + dy * dy
-  const projection =
-    lengthSquared === 0
-      ? 0
-      : Math.max(
-          0,
-          Math.min(
-            1,
-            ((portPoint.x - primitive.start.x) * dx +
-              (portPoint.y - primitive.start.y) * dy) /
-              lengthSquared,
-          ),
-        )
-  const assignment: PreloadedTracePortAssignment = {
-    traceId: primitive.traceId,
-    fixedNetId: primitive.fixedNetId,
-    routePosition:
-      primitive.routePositionStart +
-      projection * (primitive.routePositionEnd - primitive.routePositionStart),
-    tracePoint: {
-      x: primitive.start.x + projection * dx,
-      y: primitive.start.y + projection * dy,
-    },
-    z,
-  }
-  if (primitive.isFixed === true) assignment.isFixed = true
-  const existingAssignments = portPoint._preloadedTracePortAssignments ?? []
-  if (
-    !existingAssignments.some(
-      (existing) =>
-        existing.traceId === assignment.traceId &&
-        existing.fixedNetId === assignment.fixedNetId &&
-        existing.z === assignment.z &&
-        Math.abs(existing.routePosition - assignment.routePosition) <=
-          GEOMETRIC_TOLERANCE,
-    )
-  ) {
-    portPoint._preloadedTracePortAssignments = [
-      ...existingAssignments,
-      assignment,
-    ].sort(
-      (left, right) =>
-        left.traceId.localeCompare(right.traceId) ||
-        left.routePosition - right.routePosition ||
-        left.z - right.z,
-    )
-  }
-}
+import { assignPreloadedTraceToBoundary } from "./assignPreloadedTraceToBoundary"
+import { createPreloadedCopperLookup } from "./createPreloadedCopperLookup"
+import {
+  getPreloadedClearanceGapPorts,
+  type ClearanceGapPort,
+} from "./getPreloadedClearanceGapPorts"
+import {
+  getPreloadedTracePrimitives,
+  PRELOADED_TRACE_TOLERANCE,
+  type PreloadedTracePrimitive,
+} from "./getPreloadedTracePrimitives"
+import type { ClearanceGapIndex } from "./ClearanceGapIndex"
+import type { PortPointId } from "./findConflictingGaps"
 
 /**
- * Loads fixed copper onto existing capacity-graph boundary ports. Capacity
- * regions, edges, and ports are never added or removed.
+ * Loads saved copper onto capacity-graph boundary ports. Empty clearance gaps
+ * receive crossing ports without changing the mesh regions or trace geometry.
  */
 export class PreloadedTraceGraphSolver extends BaseSolver {
   private readonly primitives: PreloadedTracePrimitive[]
+  readonly clearanceGapsByPortId = new Map<PortPointId, ClearanceGapPort>()
   private readonly boundaryIndex: Flatbush | null
 
   constructor(
@@ -292,6 +59,10 @@ export class PreloadedTraceGraphSolver extends BaseSolver {
   }
 
   override _step(): void {
+    const inputPortCount = this.sharedEdgeSegments.reduce(
+      (count, segment) => count + segment.portPoints.length,
+      0,
+    )
     let boundaryDistanceCheckCount: number = 0
     for (const primitive of this.primitives) {
       if (this.boundaryIndex === null) break
@@ -299,10 +70,14 @@ export class PreloadedTraceGraphSolver extends BaseSolver {
       // boundary order stable: competing fixed-net assignments are ordered.
       const candidates: number[] = this.boundaryIndex
         .search(
-          Math.min(primitive.start.x, primitive.end.x) - GEOMETRIC_TOLERANCE,
-          Math.min(primitive.start.y, primitive.end.y) - GEOMETRIC_TOLERANCE,
-          Math.max(primitive.start.x, primitive.end.x) + GEOMETRIC_TOLERANCE,
-          Math.max(primitive.start.y, primitive.end.y) + GEOMETRIC_TOLERANCE,
+          Math.min(primitive.start.x, primitive.end.x) -
+            PRELOADED_TRACE_TOLERANCE,
+          Math.min(primitive.start.y, primitive.end.y) -
+            PRELOADED_TRACE_TOLERANCE,
+          Math.max(primitive.start.x, primitive.end.x) +
+            PRELOADED_TRACE_TOLERANCE,
+          Math.max(primitive.start.y, primitive.end.y) +
+            PRELOADED_TRACE_TOLERANCE,
         )
         .sort((left, right) => left - right)
       for (const index of candidates) {
@@ -314,19 +89,16 @@ export class PreloadedTraceGraphSolver extends BaseSolver {
             primitive.end,
             segment.start,
             segment.end,
-          ) > GEOMETRIC_TOLERANCE
+          ) > PRELOADED_TRACE_TOLERANCE
         ) {
           continue
         }
 
-        for (const z of primitive.zLayers) {
-          if (!segment.availableZ.includes(z)) continue
-          const portPoint = getClosestPortPoint(segment, primitive, z)
-          if (portPoint) preloadPort(portPoint, primitive, z)
-        }
+        assignPreloadedTraceToBoundary({ segment, primitive })
       }
     }
 
+    this.addClearanceGapPorts()
     const portPoints = this.sharedEdgeSegments.flatMap(
       (segment) => segment.portPoints,
     )
@@ -339,7 +111,7 @@ export class PreloadedTraceGraphSolver extends BaseSolver {
       preloadedTraceShapeCount: this.primitives.length,
       inputBoundaryCount: this.sharedEdgeSegments.length,
       outputBoundaryCount: this.sharedEdgeSegments.length,
-      inputPortCount: portPoints.length,
+      inputPortCount,
       outputPortCount: portPoints.length,
       preloadedPortCount: preloadedPortPoints.length,
       tracePortAssignmentCount: preloadedPortPoints.reduce(
@@ -347,9 +119,45 @@ export class PreloadedTraceGraphSolver extends BaseSolver {
           count + (portPoint._preloadedTracePortAssignments?.length ?? 0),
         0,
       ),
-      topologyChanged: false,
+      topologyChanged: portPoints.length !== inputPortCount,
     }
     this.solved = true
+  }
+
+  private addClearanceGapPorts(): void {
+    if (!this.srj.traces?.some((trace) => trace.isFixed)) return
+    const copperLookup = createPreloadedCopperLookup({
+      srj: this.srj,
+      connMap: getConnectivityMapFromSimpleRouteJson(this.srj),
+      traceWidth: this.srj.minTraceWidth,
+      viaDiameter: this.srj.minViaDiameter ?? 0.3,
+    })
+    for (const segment of this.sharedEdgeSegments) {
+      for (const z of segment.availableZ) {
+        for (const gap of getPreloadedClearanceGapPorts({
+          segment,
+          z,
+          copperLookup,
+        })) {
+          segment.portPoints.push(gap.port)
+          this.clearanceGapsByPortId.set(
+            `${gap.port.segmentPortPointId}::${z}`,
+            gap,
+          )
+        }
+      }
+    }
+  }
+
+  getRoutablePortPoints(excludedGaps: ClearanceGapIndex): SegmentPortPoint[] {
+    const portPoints = this.getOutput().flatMap((segment) => segment.portPoints)
+    if (excludedGaps.gaps.length === 0) return portPoints
+
+    const excludedPorts = new Set<SegmentPortPoint>()
+    for (const gap of this.clearanceGapsByPortId.values()) {
+      if (excludedGaps.has(gap)) excludedPorts.add(gap.port)
+    }
+    return portPoints.filter((port) => !excludedPorts.has(port))
   }
 
   getOutput(): SharedEdgeSegment[] {

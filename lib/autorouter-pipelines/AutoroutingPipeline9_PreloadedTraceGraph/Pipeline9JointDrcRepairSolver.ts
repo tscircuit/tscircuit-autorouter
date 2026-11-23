@@ -1,3 +1,4 @@
+import { isExistingMultilayerObstacle } from "lib/utils/isExistingMultilayerObstacle"
 import { RELAXED_DRC_OPTIONS } from "lib/utils/drcPresets"
 import type { AnyCircuitElement } from "circuit-json"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
@@ -56,7 +57,6 @@ import {
   type Pipeline9CollapsedTraceParticipant,
   type Pipeline9PreloadRepairTraceIds,
 } from "./pipeline9JointDrcRepairUtils"
-import { getPipeline9FixedRouteObstacles } from "./pipeline9FixedRouteCopper"
 import { preparePipeline9DrcRoutedTracesWithMetadata } from "./preparePipeline9DrcRoutedTraces"
 
 // Finish Circuit JSON repairs before targeting projected earlier copper.
@@ -245,12 +245,10 @@ const combinePreloadedTraceSectionGroup = ({
   trace,
   sectionGroup,
   syntheticConnectionName,
-  connMap,
 }: {
   trace: SimplifiedPcbTrace
   sectionGroup: PreloadedTraceSectionGroup
   syntheticConnectionName: string
-  connMap: ConnectivityMap
 }): HighDensityRoute => {
   const traceSections = sectionGroup.routes
   if (traceSections.length === 0) {
@@ -299,9 +297,7 @@ const combinePreloadedTraceSectionGroup = ({
 
   return {
     connectionName: syntheticConnectionName,
-    rootConnectionName:
-      connMap.getNetConnectedToId(trace.connection_name) ??
-      trace.connection_name,
+    rootConnectionName: trace.connection_name,
     traceThickness: Math.max(
       ...traceSections.map((section) => section.traceThickness),
     ),
@@ -1022,7 +1018,6 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
             trace,
             sectionGroup,
             syntheticConnectionName,
-            connMap: params.connMap,
           }),
         })
       }
@@ -1045,6 +1040,12 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
           params.layerCount,
           params.defaultViaDiameter,
           params.connMap,
+        ).map(
+          (route): PreloadedHighDensityRoute => ({
+            ...route,
+            // Repair resolves SRJ aliases; private connectivity keys can collide.
+            rootConnectionName: trace.connection_name,
+          }),
         )
         if (!movablePreloadedTraceIds.has(trace.pcb_trace_id)) {
           return fixedRoutes
@@ -1261,9 +1262,8 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         prioritizeCircuitJsonErrors: boolean
       }
     >()
-    const multilayerObstacles = params.obstacles.filter(
-      (obstacle) =>
-        (obstacle.__zLayers?.length ?? obstacle.layers?.length ?? 0) > 1,
+    const multilayerObstacles = params.obstacles.filter((obstacle) =>
+      isExistingMultilayerObstacle(obstacle),
     )
     const connectedObstaclesByConnectionName = new Map<
       string,
@@ -2182,15 +2182,6 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       originalSrj: {
         ...this.params.originalSrj,
         traces: undefined,
-        obstacles: [
-          ...this.params.originalSrj.obstacles,
-          ...getPipeline9FixedRouteObstacles({
-            fixedObstacleRoutes: this.fixedPreloadedObstacleRoutes,
-            layerCount: this.params.layerCount,
-            allowBlindAndBuriedVias:
-              this.params.originalSrj.allowBlindAndBuriedVias,
-          }),
-        ],
         connections: [
           ...this.params.originalSrj.connections,
           ...this.params.newConnections,
@@ -2200,6 +2191,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         ],
       },
       routes: regionalB01RepairResult.routes,
+      fixedHdRoutes: this.fixedPreloadedObstacleRoutes,
       viaHoleDiameter: this.params.defaultViaHoleDiameter,
       syntheticConnectionNames: this.syntheticConnectionNames,
       drcEvaluator: this.cachedReferenceDrcEvaluator!,
@@ -2293,6 +2285,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       ...this.exactRepairParams,
       hdRoutes: this.combinedOutput,
       inputHdRoutes: this.traceContactInputHdRoutes,
+      tracePairDrcEvaluator: this.cachedReferenceDrcEvaluator!,
       deferTraceContactGuard: false,
     })
     this.activeSubSolver = this.traceContactRepairSolver

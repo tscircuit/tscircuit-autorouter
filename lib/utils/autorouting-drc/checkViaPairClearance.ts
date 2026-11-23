@@ -14,7 +14,7 @@ type IndexedVia = Bounds & {
 export const checkViaPairClearance = (
   circuitJson: AnyCircuitElement[],
   connMap: ConnectivityMap,
-  options: { viaClearance?: number } = {},
+  options: { viaClearance?: number; clearanceTolerance?: number } = {},
 ): Record<string, unknown>[] => {
   const board = circuitJson.find((element) => element.type === "pcb_board")
   const viaClearance = Math.max(
@@ -55,7 +55,7 @@ export const checkViaPairClearance = (
       if (sameNet && distance <= 0.005) continue
       let gap = distance - viaA.hole_diameter / 2 - viaB.hole_diameter / 2
       let minimumClearance = viaClearance
-      if (gap + 0.005 >= minimumClearance) {
+      if (gap + (options.clearanceTolerance ?? 0.005) >= minimumClearance) {
         if (
           sameNet ||
           !viaA.layers.some((layer) => viaB.layers.includes(layer))
@@ -63,7 +63,11 @@ export const checkViaPairClearance = (
           continue
         gap = distance - viaA.outer_diameter / 2 - viaB.outer_diameter / 2
         minimumClearance = copperClearance
-        if (gap >= 0 && gap + 0.005 >= minimumClearance) continue
+        if (
+          gap >= 0 &&
+          gap + (options.clearanceTolerance ?? 0.005) >= minimumClearance
+        )
+          continue
       }
       const pairId = [viaA.pcb_via_id, viaB.pcb_via_id].sort().join("_")
       if (reportedPairs.has(pairId)) continue
