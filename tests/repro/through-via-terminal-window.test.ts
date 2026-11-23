@@ -1,100 +1,39 @@
 import { expect, test } from "bun:test"
-import { HighDensitySolverA01 } from "@tscircuit/high-density-a01"
-import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
-import { getBugReportSnapshotSvg } from "lib/testing/getBugReportSnapshotSvg"
-import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
-import type { NodeWithPortPoints } from "lib/types/high-density-types"
-import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
-import { mapZToLayerName } from "lib/utils/mapZToLayerName"
-import { applyToPoint, compose, scale, translate } from "transformation-matrix"
-import adjacentInput from "../fixtures/through-via-terminal-adjacent-traces.json"
-import input from "../fixtures/through-via-terminal-window.json"
+import { readFileSync } from "node:fs"
+import { gunzipSync } from "node:zlib"
+import { ConnectivityMap } from "circuit-json-to-connectivity-map"
+import { getSvgFromGraphicsObject } from "graphics-debug"
+import {
+  Pipeline9HighDensitySolver,
+  type Pipeline9HighDensitySolverParams,
+} from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver"
 
-const nodeWithPortPoints: NodeWithPortPoints = input.nodeWithPortPoints
-const adjacentTraces: SimplifiedPcbTrace[] = adjacentInput
+type CapturedParams = Omit<Pipeline9HighDensitySolverParams, "connMap"> & {
+  connMap: { netMap: Record<string, string[]> }
+}
 
-test("the complete captured region exposes through vias covering foreign terminals", async (): Promise<void> => {
-  // All 52 terminals from the observed regional candidate, without reduction.
-  const solver = new HighDensitySolverA01(input)
-  solver.solve()
-  expect(solver.solved).toBeTrue()
-  const routes = solver.getOutput()
-  expect(routes).toHaveLength(26)
-  const center = nodeWithPortPoints.center
-  // Undo the captured grow/shrink candidate's 2x search frame about its center.
-  const searchToBoard = compose(
-    translate(center.x, center.y),
-    scale(0.5),
-    translate(-center.x, -center.y),
+// Unmodified high-density parent constructor captured from an actual TSX run
+// on tscircuit 0.0.3279 / core 0.0.2460 / autorouter 0.0.1154, without pours.
+// Replay all nodes, pads and preloaded copper together. No saved output routes.
+test("replays the captured parent through the terminal-via repair", async (): Promise<void> => {
+  const fixture = readFileSync(
+    new URL("../fixtures/through-via-terminal-parent.json.gz", import.meta.url),
   )
-  const physicalRoutes = routes.map((route) => ({
-    ...route,
-    traceThickness: route.traceThickness / 2,
-    viaDiameter: route.viaDiameter / 2,
-    route: route.route.map((point) => ({
-      ...point,
-      ...applyToPoint(searchToBoard, point),
-    })),
-    vias: route.vias.map((point) => applyToPoint(searchToBoard, point)),
-  }))
-  const srj: SimpleRouteJson = {
-    layerCount: 4,
-    allowBlindAndBuriedVias: false,
-    minTraceWidth: input.traceThickness / 2,
-    minViaDiameter: input.viaDiameter / 2,
-    // Actual neighboring-cell copper, already in board-world millimetres.
-    traces: adjacentTraces,
-    bounds: { minX: -11.4, maxX: -3.8, minY: -11.3, maxY: -5.8 },
-    obstacles: [],
-    connections: [
-      ...new Set(
-        nodeWithPortPoints.portPoints.map((port) => port.connectionName),
-      ),
-    ].map((name) => ({
-      name,
-      rootConnectionName: nodeWithPortPoints.portPoints.find(
-        (port) => port.connectionName === name,
-      )!.rootConnectionName,
-      pointsToConnect: nodeWithPortPoints.portPoints
-        .filter((port) => port.connectionName === name)
-        .map((port) => ({
-          ...applyToPoint(searchToBoard, port),
-          layer: mapZToLayerName(port.z, 4),
-        })),
-    })),
-  }
-  const traces: SimplifiedPcbTrace[] = physicalRoutes.map((route, index) => ({
-    type: "pcb_trace",
-    pcb_trace_id: `route_${index}`,
-    connection_name: route.connectionName,
-    rootConnectionName: route.rootConnectionName,
-    route: convertHdRouteToSimplifiedRoute(route, 4),
-  }))
-  // These are cut terminals, so the benchmark copper checks exclude continuity
-  // to pads outside the captured region. Other existing copper errors remain.
-  const snapshot = {
-    inputSrj: srj,
-    srjWithPointPairs: srj,
-    routedTraces: traces,
-    drcOptions: { includeTraceContinuity: false },
-  }
-  const continuity = evaluateRelaxedDrc({
-    ...snapshot,
-    drcOptions: { includeTraceContinuity: true },
+  const input: CapturedParams = JSON.parse(
+    gunzipSync(new Uint8Array(fixture)).toString(),
+  )
+  const solver = new Pipeline9HighDensitySolver({
+    ...input,
+    connMap: new ConnectivityMap(input.connMap.netMap),
   })
-  // The pictured layer-change via joins the longer routes above and below.
-  // Only this net's two outer terminals remain cut from the surrounding board.
+  solver.solve()
+  expect(solver.failed).toBeTrue()
+  expect(solver.error).toContain("cmn_248")
+  expect(solver.stats.solvedNodeCount).toBe(1477)
   expect(
-    continuity.errors.filter(
-      (error) =>
-        error.type === "pcb_trace_error" &&
-        error.source_trace_id === adjacentTraces[0].connection_name &&
-        error.pcb_trace_error_id?.startsWith("disconnected_endpoint_"),
-    ),
-  ).toHaveLength(2)
-  const { errors } = evaluateRelaxedDrc(snapshot)
-  expect(errors).toHaveLength(15)
+    solver.routes.some((route) => route.regionId === "cmn_248"),
+  ).toBeFalse()
   await expect(
-    getBugReportSnapshotSvg(snapshot, { bounds: srj.bounds }),
+    getSvgFromGraphicsObject(solver.visualize(), { backgroundColor: "white" }),
   ).toMatchSvgSnapshot(import.meta.path)
 })
