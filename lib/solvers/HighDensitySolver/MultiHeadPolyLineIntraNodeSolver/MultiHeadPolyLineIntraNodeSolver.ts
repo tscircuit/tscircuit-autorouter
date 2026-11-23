@@ -11,6 +11,7 @@ import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { GraphicsObject } from "graphics-debug"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import { safeTransparentize } from "lib/solvers/colors"
+import type { Obstacle } from "lib/types"
 import {
   HighDensityIntraNodeRoute,
   NodeWithPortPoints,
@@ -21,6 +22,15 @@ import { HighDensityHyperParameters } from "../HighDensityHyperParameters"
 import { computeViaCountVariants } from "./computeViaCountVariants"
 import { constructMiddlePointsWithViaPositions } from "./constructMiddlePointsWithViaPositions"
 import { detectMultiConnectionClosedFacesWithoutVias } from "./detectMultiConnectionClosedFacesWithoutVias"
+import {
+  computeMinForeignObstacleSurplus,
+  pointToObstacleSignedDistance,
+  prepareNodeObstacleContext,
+  type PreparedNodeObstacleContext,
+  segmentToObstacleSignedDistance,
+  toBoardCoords,
+  viaOverlapsObstacleLayers,
+} from "./foreignObstacleGeometry"
 import { getEveryCombinationFromChoiceArray } from "./getEveryCombinationFromChoiceArray"
 import { getEveryPossibleOrdering } from "./getEveryPossibleOrdering"
 import { getPossibleInitialViaPositions } from "./getPossibleInitialViaPositions"
@@ -50,13 +60,20 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
 
   viaDiameter: number = 0.3
   obstacleMargin: number = 0.1
+  viaClearance: number = 0.1
   traceWidth: number = 0.15
+  layerCount: number = 2
+  allowBlindAndBuriedVias: boolean = false
+  coordinateScale: number = 1
+  obstacleContext: PreparedNodeObstacleContext
   availableZ: number[] = []
   uniqueConnections: number = 0
 
   BOUNDARY_PADDING: number
 
   lastCandidate: Candidate | null = null
+  bestObstacleValidCandidate: Candidate | null = null
+  bestObstacleValidMinGap: number = Number.NEGATIVE_INFINITY
 
   maxViaCount: number
   minViaCount: number
@@ -66,10 +83,17 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
 
   constructor(params: {
     nodeWithPortPoints: NodeWithPortPoints
+    obstacles?: Obstacle[]
     colorMap?: Record<string, string>
     hyperParameters?: Partial<HighDensityHyperParameters>
     connMap?: ConnectivityMap
     viaDiameter?: number
+    traceWidth?: number
+    obstacleMargin?: number
+    viaClearance?: number
+    layerCount?: number
+    allowBlindAndBuriedVias?: boolean
+    coordinateScale?: number
   }) {
     super()
     this.MAX_ITERATIONS = 10e3
@@ -83,12 +107,31 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
     this.BOUNDARY_PADDING = params.hyperParameters?.BOUNDARY_PADDING ?? 0.05
     this.connMap = params.connMap
     this.viaDiameter = params.viaDiameter ?? this.viaDiameter
+    this.traceWidth = params.traceWidth ?? this.traceWidth
+    this.obstacleMargin = params.obstacleMargin ?? this.obstacleMargin
+    this.viaClearance = params.viaClearance ?? this.obstacleMargin
+    this.allowBlindAndBuriedVias = params.allowBlindAndBuriedVias ?? false
+    this.coordinateScale = params.coordinateScale ?? 1
 
     // TODO swap with more sophisticated grid in SingleHighDensityRouteSolver
     this.cellSize = this.nodeWithPortPoints.width / 1024
 
     this.candidates = []
     this.availableZ = this.nodeWithPortPoints.availableZ ?? [0, 1]
+    this.layerCount =
+      params.layerCount ?? Math.max(2, ...this.availableZ.map((z) => z + 1))
+    this.obstacleContext = prepareNodeObstacleContext({
+      nodeWithPortPoints: this.nodeWithPortPoints,
+      obstacles: params.obstacles,
+      connMap: this.connMap,
+      layerCount: this.layerCount,
+      viaDiameter: this.viaDiameter,
+      traceWidth: this.traceWidth,
+      obstacleMargin: this.obstacleMargin,
+      viaClearance: this.viaClearance,
+      coordinateScale: this.coordinateScale,
+      allowBlindAndBuriedVias: this.allowBlindAndBuriedVias,
+    })
 
     this.bounds = {
       minX:
@@ -924,6 +967,106 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
       }
     }
 
+    // 2.6 Repulsive forces from foreign board obstacles
+    if (this.obstacleContext.hasForeignObstacles) {
+      for (let i = 0; i < numPolyLines; i++) {
+        const polyLine = polyLines[i]
+        const foreign =
+          this.obstacleContext.foreignObstaclesByConnection.get(
+            polyLine.connectionName,
+          ) ?? []
+        if (foreign.length === 0) continue
+        const points = [polyLine.start, ...polyLine.mPoints, polyLine.end]
+        for (let k = 1; k < points.length - 1; k++) {
+          const p = points[k]
+          if (p.z1 === p.z2) continue
+          const bp = toBoardCoords(
+            p,
+            this.obstacleContext.nodeCenter,
+            this.obstacleContext.coordinateScale,
+          )
+          for (let obsIdx = 0; obsIdx < foreign.length; obsIdx++) {
+            const obs = foreign[obsIdx]!
+            if (
+              !viaOverlapsObstacleLayers(
+                p,
+                obs,
+                this.obstacleContext.allowBlindAndBuriedVias,
+              )
+            ) {
+              continue
+            }
+            const d = pointToObstacleSignedDistance(bp.x, bp.y, obs)
+            const gap = d.signedDistanceToEdge - this.viaDiameter / 2
+            const effectiveDistance = Math.max(0, gap - this.viaClearance)
+            const mag =
+              VIA_FORCE_MULTIPLIER *
+              FORCE_MAGNITUDE *
+              (gap < this.viaClearance ? 2 : 1) *
+              Math.exp(-FORCE_DECAY_RATE * effectiveDistance) *
+              this.obstacleContext.coordinateScale
+            addForceContribution(
+              i,
+              k,
+              `obs:${obsIdx}:via`,
+              d.nx * mag,
+              d.ny * mag,
+            )
+          }
+        }
+        for (let k = 0; k < points.length - 1; k++) {
+          const p1 = points[k]
+          const p2 = points[k + 1]
+          if (p1.x === p2.x && p1.y === p2.y) continue
+          const segLayer = p1.z2
+          const b1 = toBoardCoords(
+            p1,
+            this.obstacleContext.nodeCenter,
+            this.obstacleContext.coordinateScale,
+          )
+          const b2 = toBoardCoords(
+            p2,
+            this.obstacleContext.nodeCenter,
+            this.obstacleContext.coordinateScale,
+          )
+          for (let obsIdx = 0; obsIdx < foreign.length; obsIdx++) {
+            const obs = foreign[obsIdx]!
+            if (!obs.__zLayers.includes(segLayer) && !obs.isNonPlatedHole) {
+              continue
+            }
+            const d = segmentToObstacleSignedDistance(
+              b1.x,
+              b1.y,
+              b2.x,
+              b2.y,
+              obs,
+            )
+            const gap = d.signedDistanceToEdge - this.traceWidth / 2
+            const mag =
+              SEGMENT_FORCE_MULTIPLIER *
+              FORCE_MAGNITUDE *
+              (gap < 0 ? INSIDE_VIA_FORCE_MULTIPLIER : 1) *
+              Math.exp(-FORCE_DECAY_RATE * Math.max(0, gap)) *
+              this.obstacleContext.coordinateScale
+            addForceContribution(
+              i,
+              k,
+              `obs:${obsIdx}:seg:${k}`,
+              d.nx * mag * (1 - d.t * 0.5),
+              d.ny * mag * (1 - d.t * 0.5),
+            )
+            addForceContribution(
+              i,
+              k + 1,
+              `obs:${obsIdx}:seg:${k}`,
+              d.nx * mag * (0.5 + d.t * 0.5),
+              d.ny * mag * (0.5 + d.t * 0.5),
+            )
+          }
+        }
+      }
+    }
+
     // 3. Apply forces and create the new neighbor candidate
     // Deep clone polylines to modify them
     const newPolyLines = polyLines.map((pl) => ({
@@ -1061,10 +1204,60 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
     return [newNeighbor]
   }
 
+  getMinForeignObstacleSurplus(
+    polyLines: PolyLine[],
+    segmentMarginOverride?: number,
+  ): number {
+    if (!this.obstacleContext.hasForeignObstacles) {
+      return Number.POSITIVE_INFINITY
+    }
+    return computeMinForeignObstacleSurplus({
+      polyLines,
+      context: this.obstacleContext,
+      viaDiameter: this.viaDiameter,
+      traceWidth: this.traceWidth,
+      obstacleMargin: this.obstacleMargin,
+      segmentMarginOverride,
+    })
+  }
+
+  recordObstacleValidCandidate(candidate: Candidate) {
+    if (!this.obstacleContext.hasForeignObstacles) return
+    const segOverride = this.hyperParameters?.MINIMUM_FINAL_ACCEPTANCE_GAP
+    if (
+      this.getMinForeignObstacleSurplus(candidate.polyLines, segOverride) <
+      -1e-6
+    ) {
+      return
+    }
+    const minGap =
+      candidate.minGaps.length > 0
+        ? Math.min(...candidate.minGaps)
+        : Number.POSITIVE_INFINITY
+    if (minGap > this.bestObstacleValidMinGap) {
+      this.bestObstacleValidMinGap = minGap
+      this.bestObstacleValidCandidate = {
+        ...candidate,
+        minGaps: [...candidate.minGaps],
+        polyLines: candidate.polyLines.map((pl) => ({
+          ...pl,
+          start: { ...pl.start },
+          end: { ...pl.end },
+          mPoints: pl.mPoints.map((mp) => ({ ...mp })),
+        })),
+      }
+    }
+  }
+
   checkIfSolved(candidate: Pick<Candidate, "polyLines" | "minGaps">) {
     const minGapsToOtherConnectionsValid = candidate.minGaps.every(
       (minGap) => minGap >= this.obstacleMargin,
     )
+    if (!minGapsToOtherConnectionsValid) return false
+
+    if (this.getMinForeignObstacleSurplus(candidate.polyLines) < -1e-6) {
+      return false
+    }
 
     const allPointsWithinBounds = candidate.polyLines.every((polyLine) => {
       return polyLine.mPoints.every((mPoint) => {
@@ -1075,7 +1268,7 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
       })
     })
 
-    return minGapsToOtherConnectionsValid && allPointsWithinBounds
+    return allPointsWithinBounds
   }
 
   // ------------------------------------------------------------------
@@ -1084,17 +1277,36 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
   tryFinalAcceptance() {
     const minGapTarget =
       this.hyperParameters?.MINIMUM_FINAL_ACCEPTANCE_GAP ?? undefined
-    if (
-      minGapTarget === undefined ||
-      this.lastCandidate === null ||
-      this.lastCandidate.minGaps.length === 0
-    )
-      return
+    if (minGapTarget === undefined) return
 
-    // take the smallest layer-to-layer gap of the last explored candidate
-    const minGapAchieved = Math.min(...this.lastCandidate.minGaps)
-    if (minGapAchieved >= minGapTarget) {
+    const canAccept = (candidate: Candidate | null): candidate is Candidate => {
+      if (!candidate) return false
+      if (
+        !this.obstacleContext.hasForeignObstacles &&
+        candidate.minGaps.length === 0
+      ) {
+        return false
+      }
+      // Vias must clear foreign obstacles by full obstacleMargin; segments must
+      // clear foreign obstacles by at least minGapTarget (never overlapping pads).
+      if (
+        this.getMinForeignObstacleSurplus(candidate.polyLines, minGapTarget) <
+        -1e-6
+      ) {
+        return false
+      }
+      if (candidate.minGaps.length === 0) return true
+      return Math.min(...candidate.minGaps) >= minGapTarget
+    }
+
+    if (canAccept(this.lastCandidate)) {
       // Accept this imperfect but good-enough solution
+      this.solved = true
+      this._setSolvedRoutes()
+      return
+    }
+    if (canAccept(this.bestObstacleValidCandidate)) {
+      this.lastCandidate = this.bestObstacleValidCandidate
       this.solved = true
       this._setSolvedRoutes()
       return
@@ -1117,6 +1329,7 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
       return
     }
     this.lastCandidate = currentCandidate
+    this.recordObstacleValidCandidate(currentCandidate)
     if (this.checkIfSolved(currentCandidate)) {
       this.solved = true
       this._setSolvedRoutes()
@@ -1240,26 +1453,32 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
 
                 if (Math.abs(force.fx) > 1e-6 || Math.abs(force.fy) > 1e-6) {
                   const parts = sourceId.split(":")
-                  const sourceType = parts[0] // "via" or "seg"
-                  const applyingLineIndex = parseInt(parts[1], 10)
-                  const applyingPolyline =
-                    candidateToVisualize.polyLines[applyingLineIndex]
-                  const applyingColor =
-                    this.colorMap[applyingPolyline.connectionName] ?? "gray"
+                  const sourceType = parts[0] // "via", "seg", or "obs"
+                  let applyingColor = "gray"
+                  let sourceLabel = "Obstacle"
+                  if (sourceType === "obs") {
+                    applyingColor = "#dc2626"
+                    sourceLabel = `Obstacle ${parts[1]}`
+                  } else {
+                    const applyingLineIndex = parseInt(parts[1], 10)
+                    const applyingPolyline =
+                      candidateToVisualize.polyLines[applyingLineIndex]
+                    applyingColor =
+                      this.colorMap[applyingPolyline.connectionName] ?? "gray"
+                    sourceLabel = applyingPolyline.connectionName
+                    if (sourceType === "via") {
+                      const pointIdx = parseInt(parts[2], 10)
+                      sourceLabel += ` Via ${pointIdx}`
+                    } else if (sourceType === "seg") {
+                      const p1Idx = parseInt(parts[2], 10)
+                      const p2Idx = parseInt(parts[3], 10)
+                      sourceLabel += ` Seg ${p1Idx}-${p2Idx}`
+                    }
+                  }
                   const forceScale = 20 // Adjust scale for visibility
                   const forceEndPoint = {
                     x: point.x + force.fx * forceScale,
                     y: point.y + force.fy * forceScale,
-                  }
-
-                  let sourceLabel = applyingPolyline.connectionName
-                  if (sourceType === "via") {
-                    const pointIdx = parseInt(parts[2], 10)
-                    sourceLabel += ` Via ${pointIdx}`
-                  } else if (sourceType === "seg") {
-                    const p1Idx = parseInt(parts[2], 10)
-                    const p2Idx = parseInt(parts[3], 10)
-                    sourceLabel += ` Seg ${p1Idx}-${p2Idx}`
                   }
 
                   graphicsObject.lines.push({

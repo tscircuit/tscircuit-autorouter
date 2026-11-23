@@ -1,4 +1,10 @@
 import { pointToSegmentClosestPoint } from "@tscircuit/math-utils"
+import {
+  pointToObstacleSignedDistance,
+  segmentToObstacleSignedDistance,
+  toBoardCoords,
+  viaOverlapsObstacleLayers,
+} from "./foreignObstacleGeometry"
 import { PolyLine2, MHPoint2, Candidate2 } from "./types2"
 import { MultiHeadPolyLineIntraNodeSolver } from "./MultiHeadPolyLineIntraNodeSolver"
 
@@ -173,6 +179,15 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
         collisionScore += this.obstacleMargin - gap
       }
     }
+    if (this.obstacleContext.hasForeignObstacles && candidate.polyLines) {
+      const surplus = this.getMinForeignObstacleSurplus(candidate.polyLines)
+      if (surplus < 0) {
+        collisionScore += -surplus
+        if (surplus < -this.obstacleMargin) {
+          collisionScore += this.obstacleMargin
+        }
+      }
+    }
     return collisionScore * 0.011 // 100 iterations @ hdpolyline09_optimized
   }
 
@@ -191,6 +206,7 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
       return
     }
     this.lastCandidate = currentCandidate
+    this.recordObstacleValidCandidate(currentCandidate)
 
     if (this.checkIfSolved(currentCandidate)) {
       this.solved = true
@@ -215,6 +231,7 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
     currentCandidate.minGaps = this.computeMinGapBtwPolyLines(
       currentCandidate.polyLines,
     )
+    this.recordObstacleValidCandidate(currentCandidate)
 
     if (this.checkIfSolved(currentCandidate)) {
       this.solved = true
@@ -576,6 +593,90 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
       }
     }
 
+    // 2.6 Repulsive forces from foreign board obstacles
+    if (this.obstacleContext.hasForeignObstacles) {
+      for (let i = 0; i < numPolyLines; i++) {
+        const polyLine = polyLines[i]!
+        const foreign =
+          this.obstacleContext.foreignObstaclesByConnection.get(
+            polyLine.connectionName,
+          ) ?? []
+        if (foreign.length === 0) continue
+        const { segments, vias } = geometry[i]!
+        for (const via of vias) {
+          if (!via.force) continue
+          const bp = toBoardCoords(
+            via.point,
+            this.obstacleContext.nodeCenter,
+            this.obstacleContext.coordinateScale,
+          )
+          for (const obs of foreign) {
+            if (
+              !viaOverlapsObstacleLayers(
+                via.point,
+                obs,
+                this.obstacleContext.allowBlindAndBuriedVias,
+              )
+            ) {
+              continue
+            }
+            const d = pointToObstacleSignedDistance(bp.x, bp.y, obs)
+            const gap = d.signedDistanceToEdge - this.viaDiameter / 2
+            const effectiveDistance = Math.max(0, gap - this.viaClearance)
+            const mag =
+              VIA_FORCE_MULTIPLIER *
+              FORCE_MAGNITUDE *
+              (gap < this.viaClearance ? 2 : 1) *
+              Math.exp(-FORCE_DECAY_RATE * effectiveDistance) *
+              this.obstacleContext.coordinateScale
+            via.force.fx += d.nx * mag
+            via.force.fy += d.ny * mag
+          }
+        }
+        for (const seg of segments) {
+          if (seg.lengthSquared <= EPSILON) continue
+          if (!seg.p1Force && !seg.p2Force) continue
+          const b1 = toBoardCoords(
+            seg.p1,
+            this.obstacleContext.nodeCenter,
+            this.obstacleContext.coordinateScale,
+          )
+          const b2 = toBoardCoords(
+            seg.p2,
+            this.obstacleContext.nodeCenter,
+            this.obstacleContext.coordinateScale,
+          )
+          for (const obs of foreign) {
+            if (!obs.__zLayers.includes(seg.layer) && !obs.isNonPlatedHole) {
+              continue
+            }
+            const d = segmentToObstacleSignedDistance(
+              b1.x,
+              b1.y,
+              b2.x,
+              b2.y,
+              obs,
+            )
+            const gap = d.signedDistanceToEdge - this.traceWidth / 2
+            const mag =
+              SEGMENT_FORCE_MULTIPLIER *
+              FORCE_MAGNITUDE *
+              (gap < 0 ? INSIDE_VIA_FORCE_MULTIPLIER : 1) *
+              Math.exp(-FORCE_DECAY_RATE * Math.max(0, gap)) *
+              this.obstacleContext.coordinateScale
+            if (seg.p1Force) {
+              seg.p1Force.fx += d.nx * mag * (1 - d.t * 0.5)
+              seg.p1Force.fy += d.ny * mag * (1 - d.t * 0.5)
+            }
+            if (seg.p2Force) {
+              seg.p2Force.fx += d.nx * mag * (0.5 + d.t * 0.5)
+              seg.p2Force.fy += d.ny * mag * (0.5 + d.t * 0.5)
+            }
+          }
+        }
+      }
+    }
+
     // 3. Apply forces directly to the input polyLines
     let pointsMoved = false
     for (let i = 0; i < numPolyLines; i++) {
@@ -636,6 +737,62 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
           currentForceY += boundaryForceY
           newX = mPoint.x + currentForceX
           newY = mPoint.y + currentForceY
+
+          if (this.obstacleContext.hasForeignObstacles) {
+            const foreign =
+              this.obstacleContext.foreignObstaclesByConnection.get(
+                polyLines[i]!.connectionName,
+              ) ?? []
+            let sumPushX = 0
+            let sumPushY = 0
+            let violatedCount = 0
+            let maxDeficit = 0
+            for (const obs of foreign) {
+              if (
+                !viaOverlapsObstacleLayers(
+                  mPoint,
+                  obs,
+                  this.obstacleContext.allowBlindAndBuriedVias,
+                )
+              ) {
+                continue
+              }
+              const bp = toBoardCoords(
+                { x: newX, y: newY },
+                this.obstacleContext.nodeCenter,
+                this.obstacleContext.coordinateScale,
+              )
+              const d = pointToObstacleSignedDistance(bp.x, bp.y, obs)
+              const gap = d.signedDistanceToEdge - radius
+              if (gap < this.viaClearance) {
+                const deficit = this.viaClearance - gap + 1e-4
+                violatedCount++
+                if (deficit > maxDeficit) maxDeficit = deficit
+                sumPushX += d.nx * deficit
+                sumPushY += d.ny * deficit
+              }
+            }
+            if (violatedCount > 0) {
+              const pushLen = Math.hypot(sumPushX, sumPushY)
+              const stepScale = 0.6 * this.obstacleContext.coordinateScale
+              // If opposing foreign pads cancel out outside the node (e.g. between
+              // two BGA pads), escape back toward the node center.
+              if (violatedCount >= 2 && pushLen < maxDeficit * 0.5) {
+                const toCenterX = this.nodeWithPortPoints.center.x - newX
+                const toCenterY = this.nodeWithPortPoints.center.y - newY
+                const toCenterLen = Math.hypot(toCenterX, toCenterY)
+                if (toCenterLen > EPSILON) {
+                  newX += (toCenterX / toCenterLen) * maxDeficit * stepScale
+                  newY += (toCenterY / toCenterLen) * maxDeficit * stepScale
+                }
+              } else {
+                newX += sumPushX * stepScale
+                newY += sumPushY * stepScale
+              }
+              currentForceX = newX - mPoint.x
+              currentForceY = newY - mPoint.y
+            }
+          }
 
           // Optional: Clamp via position as a hard stop if force isn't enough?
           // newX = Math.max(this.bounds.minX + radius, Math.min(this.bounds.maxX - radius, newX));

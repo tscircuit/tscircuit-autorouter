@@ -218,7 +218,7 @@ export class MultiHeadPolyLineIntraNodeSolver3 extends MultiHeadPolyLineIntraNod
     if (retainedPolylineHashes?.has(hashPolyLines(polyLines))) return null
 
     const minGaps = this.computeMinGapBtwPolyLines(polyLines)
-    const h = this.computeH({ minGaps, forces: [] }) // Initial forces are zero
+    const h = this.computeH({ minGaps, forces: [], polyLines } as any) // Initial forces are zero
 
     const initialCandidate = {
       polyLines,
@@ -230,6 +230,7 @@ export class MultiHeadPolyLineIntraNodeSolver3 extends MultiHeadPolyLineIntraNod
     }
     initialCandidate.g = this.computeG(polyLines, initialCandidate)
     initialCandidate.f = initialCandidate.g + initialCandidate.h
+    this.recordObstacleValidCandidate(initialCandidate)
 
     return initialCandidate
   }

@@ -314,6 +314,7 @@ export type Pipeline9RegularNodeSolverParams = {
   minViaHoleEdgeToViaHoleEdgeClearance?: number
   traceWidth: number
   obstacleMargin: number
+  viaToPadClearance?: number
   effort: number
   nodePfById:
     | Map<CapacityMeshNodeId, number | null>
@@ -345,6 +346,7 @@ export const createPipeline9RegularNodeSolver = ({
   captureSearchDebug = false,
   traceWidth,
   obstacleMargin,
+  viaToPadClearance,
   effort,
   nodePfById,
   obstacles,
@@ -360,6 +362,7 @@ export const createPipeline9RegularNodeSolver = ({
     viaDiameter,
     traceWidth,
     obstacleMargin,
+    viaToPadClearance,
     effort,
     nodePfById,
     obstacles,
@@ -675,6 +678,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       viaDiameter: this.viaDiameter,
       traceWidth: this.traceWidth,
       obstacleMargin: this.obstacleMargin,
+      viaToPadClearance: this.viaToPadClearance,
       effort: this.effort,
       nodePfById: this.nodePfById,
       obstacles: this.obstacles,

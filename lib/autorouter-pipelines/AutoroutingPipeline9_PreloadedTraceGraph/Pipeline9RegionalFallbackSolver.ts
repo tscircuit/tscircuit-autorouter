@@ -171,6 +171,7 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
       viaDiameter: params.viaDiameter,
       traceWidth: params.traceWidth,
       obstacleMargin: params.obstacleMargin,
+      viaToPadClearance: params.viaToPadClearance,
       effort: params.effort,
       nodePfById: params.nodePfById,
       obstacles: params.obstacles,

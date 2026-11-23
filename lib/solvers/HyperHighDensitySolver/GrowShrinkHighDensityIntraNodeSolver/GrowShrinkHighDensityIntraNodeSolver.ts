@@ -283,6 +283,9 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
     portfolioParams.viaDiameter = (portfolioParams.viaDiameter ?? 0.3) * scale
     portfolioParams.obstacleMargin =
       (portfolioParams.obstacleMargin ?? 0.15) * scale
+    if (portfolioParams.viaToPadClearance !== undefined) {
+      portfolioParams.viaToPadClearance *= scale
+    }
     portfolioParams.obstacles = portfolioParams.obstacles?.map((obstacle) => ({
       ...obstacle,
       center: scalePoint(obstacle.center, { center, scaleFactor: scale }),
