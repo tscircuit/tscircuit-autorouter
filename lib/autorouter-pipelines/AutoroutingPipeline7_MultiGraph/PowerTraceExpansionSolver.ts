@@ -5,9 +5,9 @@ import {
 } from "@tscircuit/power-trace-expander"
 import type { GraphicsObject } from "graphics-debug"
 import type { SimpleRouteJson, SimplifiedPcbTraces } from "lib/types"
+import { assertPreloadedTracesStayOnAllowedLayers } from "lib/utils/assertPreloadedTracesStayOnAllowedLayers"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
 import { getViaToPadClearance } from "lib/utils/getViaToPadClearance"
-import { assertPreloadedTracesStayOnAllowedLayers } from "lib/utils/assertPreloadedTracesStayOnAllowedLayers"
 import { BaseSolver } from "../../solvers/BaseSolver"
 
 /** Board-world route points in mm, right-handed: +X right, +Y up, +Z above.
@@ -19,15 +19,18 @@ export type PowerTraceExpansionSolverInput = SimpleRouteJson & {
 
 export class PowerTraceExpansionSolver extends BaseSolver {
   readonly powerTraceExpanderSolver: PowerTraceExpanderSolver
+  private readonly originalPreloadedTraces?: SimplifiedPcbTraces
 
   constructor(
     public readonly inputSrj: PowerTraceExpansionSolverInput,
     public readonly options: PowerTraceExpanderOptions = {},
   ) {
     super()
+    const { originalPreloadedTraces, ...powerTraceInput } = inputSrj
+    this.originalPreloadedTraces = originalPreloadedTraces
     this.powerTraceExpanderSolver = new PowerTraceExpanderSolver(
       {
-        ...inputSrj,
+        ...powerTraceInput,
         minViaEdgeToPadEdgeClearance: getViaToPadClearance(inputSrj),
       } as unknown as PowerTraceExpanderInput,
       options,
@@ -59,14 +62,13 @@ export class PowerTraceExpansionSolver extends BaseSolver {
   }
 
   private finish(): void {
-    const { originalPreloadedTraces, fixedTraces = [] } = this.inputSrj
-    if (originalPreloadedTraces) {
+    if (this.originalPreloadedTraces) {
       assertPreloadedTracesStayOnAllowedLayers({
         traces: [
           ...(this.powerTraceExpanderSolver.getOutput() as SimplifiedPcbTraces),
-          ...fixedTraces,
+          ...(this.inputSrj.fixedTraces ?? []),
         ],
-        preloadedTraces: originalPreloadedTraces,
+        preloadedTraces: this.originalPreloadedTraces,
         layerCount: this.inputSrj.layerCount,
       })
     }

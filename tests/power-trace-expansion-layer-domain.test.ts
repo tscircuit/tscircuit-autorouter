@@ -45,6 +45,9 @@ test("final power output and retained copper keep the original signal-layer doma
     const solver = new PowerTraceExpansionSolver(input, { onlyConnectionNames })
     solver.solve()
     expect(solver.solved).toBe(true)
+    expect(solver.powerTraceExpanderSolver.inputProblem).not.toHaveProperty(
+      "originalPreloadedTraces",
+    )
     expect(() => {
       const invalid = new PowerTraceExpansionSolver(
         { ...input, traces: [forbidden] },
