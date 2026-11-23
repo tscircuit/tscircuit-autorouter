@@ -20,6 +20,12 @@ jobs:
           github-token: ${{ secrets.TSCIRCUIT_BOT_GITHUB_TOKEN }}
           script: |
             const body = [
+              "## Preview This PR",
+              "",
+              "Comment `/preview` by itself to deploy the current PR commit to Vercel. The preview link appears in a PR comment when the deployment is ready.",
+              "",
+              "This command requires write access to the repository and an open PR from this repository targeting `main`.",
+              "",
               "## Benchmark This PR",
               "",
               "Run benchmarks by commenting on this PR:",

@@ -1,3 +1,4 @@
+import { isExistingMultilayerObstacle } from "lib/utils/isExistingMultilayerObstacle"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import type { GraphicsObject } from "graphics-debug"
@@ -81,9 +82,6 @@ const isPointInsideObstacle = (
   )
 }
 
-const isMultilayerObstacle = (obstacle: Obstacle) =>
-  (obstacle.__zLayers?.length ?? obstacle.layers?.length ?? 0) > 1
-
 const isSameNetMultilayerObstacleRoute = (
   route: HighDensityRoute,
   obstacles: Obstacle[],
@@ -92,7 +90,7 @@ const isSameNetMultilayerObstacleRoute = (
   route.route.length > 0 &&
   obstacles.some(
     (obstacle) =>
-      isMultilayerObstacle(obstacle) &&
+      isExistingMultilayerObstacle(obstacle) &&
       route.route.every((point) => isPointInsideObstacle(point, obstacle)) &&
       isObstacleConnectedToRoute(obstacle, route, connMap),
   )
