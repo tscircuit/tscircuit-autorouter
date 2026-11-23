@@ -19,6 +19,16 @@ import type { BgaGap, MissingBgaSlot } from "./bga-grid"
 import { getObstacleTargetConnectionName } from "./getObstacleTargetConnectionName"
 
 const BGA_MULTILAYER_REGION_VIA_DIAMETER_FACTOR = 1.2
+const MAX_BGA_PAD_ASPECT_RATIO = 1.5
+const TRACE_CHANNEL_EPSILON = 1e-6
+
+function hasBgaPadAspectRatio(obstacle: Obstacle): boolean {
+  const minDimension = Math.min(obstacle.width, obstacle.height)
+  const maxDimension = Math.max(obstacle.width, obstacle.height)
+  return (
+    minDimension > 0 && maxDimension / minDimension <= MAX_BGA_PAD_ASPECT_RATIO
+  )
+}
 
 export type InitialBgaTopologySolverInput = {
   srj: SimpleRouteJson
@@ -384,19 +394,28 @@ export class InitialBgaTopologySolver extends BaseSolver {
       srj.defaultObstacleMargin ??
       RELAXED_DRC_OPTIONS.traceClearance
     const minimumTraceChannelWidth = srj.minTraceWidth + 2 * traceClearance
+    const hasTwoDimensionalInterPadGaps = diagonalGaps.length > 0
     const getAxisGapRoutableLayers = (bgaGap: BgaGap): number[] => {
+      if (!hasTwoDimensionalInterPadGaps) {
+        return freeLayers
+      }
       const clearWidth = bgaGrid.getAxisGapClearWidth(bgaGap)
-      if (clearWidth === null || clearWidth >= minimumTraceChannelWidth) {
+      if (
+        clearWidth === null ||
+        clearWidth + TRACE_CHANNEL_EPSILON >= minimumTraceChannelWidth
+      ) {
+        return freeLayers
+      }
+      const adjacentObstacles = bgaGrid.getGapAdjacentObstacles(bgaGap)
+      if (!adjacentObstacles.every(hasBgaPadAspectRatio)) {
         return freeLayers
       }
       const adjacentPadLayers = new Set(
-        bgaGrid
-          .getGapAdjacentObstacles(bgaGap)
-          .flatMap((obstacle) =>
-            obstacle.layers.map((layerName) =>
-              mapLayerNameToZ(layerName, srj.layerCount),
-            ),
+        adjacentObstacles.flatMap((obstacle) =>
+          obstacle.layers.map((layerName) =>
+            mapLayerNameToZ(layerName, srj.layerCount),
           ),
+        ),
       )
       return freeLayers.filter((layer) => !adjacentPadLayers.has(layer))
     }

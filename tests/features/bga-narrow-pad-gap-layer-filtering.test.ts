@@ -157,3 +157,86 @@ test("InitialBgaTopologySolver measures orientation-specific adjacent pad cleara
   expect(missingNeighborLayers).toEqual([0, 1, 2, 3])
   expect(nodes.length).toBeGreaterThan(tighterNodes.length)
 })
+
+test("InitialBgaTopologySolver preserves pad-layer channels on exact IEEE-754 clearance boundaries and rasterized strip footprints", (): void => {
+  // 1) Exact boundary: 0.50 mm pitch - 0.20 mm pad = 0.30 mm clear width, while 0.1 + 2 * 0.1 === 0.30000000000000004 in IEEE-754.
+  const exactBoundaryObstacles: Obstacle[] = []
+  for (const [row, y] of [0, 0.5, 1.0].entries()) {
+    for (const [col, x] of [0, 0.64, 1.28].entries()) {
+      exactBoundaryObstacles.push({
+        obstacleId: `ov_pad_${row}_${col}`,
+        componentId: "u_ov9281",
+        type: "rect",
+        shape: "circle",
+        layers: ["top"],
+        center: { x, y },
+        width: 0.2,
+        height: 0.2,
+        connectedTo: [`ov_net_${row}_${col}`],
+      })
+    }
+  }
+  const exactBoundarySolver = new InitialBgaTopologySolver({
+    srj: {
+      layerCount: 4,
+      minTraceWidth: 0.1,
+      minViaPadDiameter: 0.3,
+      bounds: { minX: -1, maxX: 3, minY: -1, maxY: 3 },
+      obstacles: exactBoundaryObstacles,
+      connections: [],
+    },
+    componentBounds: { minX: -0.2, maxX: 1.5, minY: -0.2, maxY: 1.2 },
+    componentId: "u_ov9281",
+    markedComponentObstacles: exactBoundaryObstacles,
+    unmarkedComponentObstacles: [],
+    viaDiameter: 0.3,
+  })
+  exactBoundarySolver.solve()
+  const verticalBoundaryNodes = exactBoundarySolver
+    .getOutput()
+    .filter((node) => node.capacityMeshNodeId.startsWith("cmn_v_u_ov9281_"))
+  expect(verticalBoundaryNodes).toHaveLength(6 * 4)
+  expect(
+    verticalBoundaryNodes.some((node) => node.availableZ.includes(0)),
+  ).toBe(true)
+
+  // 2) Rasterized 1D strip slices (0.22 x 0.10 mm touching vertically at 0.10 mm Y-step, aspect > 1.5, zero diagonal gaps):
+  // must keep all freeLayers rather than treating strip slices as 2D BGA ball gaps.
+  const stripObstacles: Obstacle[] = []
+  for (const [row, y] of [0, 0.1, 0.2, 0.3].entries()) {
+    for (const [col, x] of [0, 0.5, 1.0].entries()) {
+      stripObstacles.push({
+        obstacleId: `strip_${row}_${col}`,
+        componentId: "j_strips",
+        type: "rect",
+        layers: ["top"],
+        center: { x, y },
+        width: 0.22,
+        height: 0.1,
+        connectedTo: [`strip_net_${col}`],
+      })
+    }
+  }
+  const stripSolver = new InitialBgaTopologySolver({
+    srj: {
+      layerCount: 4,
+      minTraceWidth: 0.15,
+      minTraceToPadEdgeClearance: 0.1,
+      minViaPadDiameter: 0.3,
+      bounds: { minX: -1, maxX: 3, minY: -1, maxY: 3 },
+      obstacles: stripObstacles,
+      connections: [],
+    },
+    componentBounds: { minX: -0.3, maxX: 1.3, minY: -0.2, maxY: 0.5 },
+    componentId: "j_strips",
+    markedComponentObstacles: stripObstacles,
+    unmarkedComponentObstacles: [],
+    viaDiameter: 0.3,
+  })
+  stripSolver.solve()
+  const stripHorizNodes = stripSolver
+    .getOutput()
+    .filter((node) => node.capacityMeshNodeId.startsWith("cmn_h_j_strips_"))
+  expect(stripHorizNodes).toHaveLength(8 * 4)
+  expect(stripHorizNodes.some((node) => node.availableZ.includes(0))).toBe(true)
+})
