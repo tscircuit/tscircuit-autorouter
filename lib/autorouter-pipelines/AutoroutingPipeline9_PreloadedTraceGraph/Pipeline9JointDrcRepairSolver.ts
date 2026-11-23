@@ -2177,11 +2177,24 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     )
     // Movable preloaded sections are already in the repair routes. Keep only
     // the remaining earlier copper fixed, with its original net and drill span.
+    const existingViaObstacleIds = new Set(
+      this.params.originalSrj.obstacles
+        .filter((o) => o.representsFutureVia)
+        .map((o) => o.obstacleId),
+    )
+    const newViaObstacles = this.params.srj.obstacles.filter(
+      (o) =>
+        o.representsFutureVia &&
+        o.obstacleId !== undefined &&
+        !existingViaObstacleIds.has(o.obstacleId),
+    )
     this.boundedRegionalParams = {
       connMap: this.params.connMap,
       originalSrj: {
         ...this.params.originalSrj,
-        obstacles: this.params.srj.obstacles,
+        // Preprocessing can split or merge physical pads. Keep the board's
+        // original geometry and add only newly located escape vias.
+        obstacles: [...this.params.originalSrj.obstacles, ...newViaObstacles],
         traces: undefined,
         connections: [
           ...this.params.originalSrj.connections,
