@@ -1295,6 +1295,17 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
       ) {
         return false
       }
+      if (this.obstacleContext.hasForeignObstacles) {
+        const maxSpill = Math.max(0, -this.BOUNDARY_PADDING)
+        const viasStayNearNode = candidate.polyLines.every((pl) =>
+          pl.mPoints.every(
+            (mp) =>
+              mp.z1 === mp.z2 ||
+              withinBounds(mp, this.bounds, this.viaDiameter / 2 - maxSpill),
+          ),
+        )
+        if (!viasStayNearNode) return false
+      }
       if (candidate.minGaps.length === 0) return true
       return Math.min(...candidate.minGaps) >= minGapTarget
     }

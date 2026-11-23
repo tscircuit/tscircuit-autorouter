@@ -252,6 +252,7 @@ export type PreparedNodeObstacleContext = {
   viaClearance: number
   allowBlindAndBuriedVias: boolean
   foreignObstaclesByConnection: Map<string, LayeredBoardObstacle[]>
+  sameNetSmdPadsByConnection: Map<string, LayeredBoardObstacle[]>
   requiredGapByConnection: Map<string, number>
 }
 
@@ -307,6 +308,7 @@ export const prepareNodeObstacleContext = (params: {
   const physicalHalfW = nodeWithPortPoints.width / (2 * coordinateScale)
   const physicalHalfH = nodeWithPortPoints.height / (2 * coordinateScale)
   const foreignObstaclesByConnection = new Map<string, LayeredBoardObstacle[]>()
+  const sameNetSmdPadsByConnection = new Map<string, LayeredBoardObstacle[]>()
   const requiredGapByConnection = new Map<string, number>()
 
   if (!obstacles || obstacles.length === 0) {
@@ -319,6 +321,7 @@ export const prepareNodeObstacleContext = (params: {
       viaClearance,
       allowBlindAndBuriedVias,
       foreignObstaclesByConnection,
+      sameNetSmdPadsByConnection,
       requiredGapByConnection,
     }
   }
@@ -360,6 +363,7 @@ export const prepareNodeObstacleContext = (params: {
       viaClearance,
       allowBlindAndBuriedVias,
       foreignObstaclesByConnection,
+      sameNetSmdPadsByConnection,
       requiredGapByConnection,
     }
   }
@@ -387,16 +391,28 @@ export const prepareNodeObstacleContext = (params: {
 
   let hasForeignObstacles = false
   for (const [connectionName, info] of portsByConnection.entries()) {
-    const foreign = layeredObstacles.filter(
-      (obs) =>
-        !isObstacleOnSameNet(
+    const foreign: LayeredBoardObstacle[] = []
+    const sameNetSmdPads: LayeredBoardObstacle[] = []
+    for (const obs of layeredObstacles) {
+      if (
+        isObstacleOnSameNet(
           obs,
           { connectionName, rootConnectionName: info.rootConnectionName },
           connMap,
-        ),
-    )
+        )
+      ) {
+        if (obs.__zLayers.length === 1 && !obs.isNonPlatedHole) {
+          sameNetSmdPads.push(obs)
+        }
+      } else {
+        foreign.push(obs)
+      }
+    }
     foreignObstaclesByConnection.set(connectionName, foreign)
-    if (foreign.length > 0) hasForeignObstacles = true
+    sameNetSmdPadsByConnection.set(connectionName, sameNetSmdPads)
+    if (foreign.length > 0 || sameNetSmdPads.length > 0) {
+      hasForeignObstacles = true
+    }
 
     // Fixed port points on the node border cannot move; cap segment target only
     // if an input terminal itself already sits inside obstacleMargin.
@@ -423,6 +439,7 @@ export const prepareNodeObstacleContext = (params: {
     viaClearance,
     allowBlindAndBuriedVias,
     foreignObstaclesByConnection,
+    sameNetSmdPadsByConnection,
     requiredGapByConnection,
   }
 }
@@ -457,7 +474,9 @@ export const computeMinForeignObstacleSurplus = (params: {
   for (const polyLine of polyLines) {
     const foreign =
       context.foreignObstaclesByConnection.get(polyLine.connectionName) ?? []
-    if (foreign.length === 0) continue
+    const sameNetSmdPads =
+      context.sameNetSmdPadsByConnection.get(polyLine.connectionName) ?? []
+    if (foreign.length === 0 && sameNetSmdPads.length === 0) continue
     const baseSegmentTarget =
       context.requiredGapByConnection.get(polyLine.connectionName) ??
       obstacleMargin
@@ -486,6 +505,21 @@ export const computeMinForeignObstacleSurplus = (params: {
         const d = pointToObstacleSignedDistance(bp.x, bp.y, obs)
         const gap = d.signedDistanceToEdge - viaRadius
         minSurplus = Math.min(minSurplus, gap - viaTarget)
+      }
+      // Do not spill vias into connected single-layer SMD pads (via-in-pad).
+      for (const pad of sameNetSmdPads) {
+        if (
+          !viaOverlapsObstacleLayers(
+            mPoint,
+            pad,
+            context.allowBlindAndBuriedVias,
+          )
+        ) {
+          continue
+        }
+        const d = pointToObstacleSignedDistance(bp.x, bp.y, pad)
+        const gap = d.signedDistanceToEdge - viaRadius
+        minSurplus = Math.min(minSurplus, gap)
       }
     }
 
@@ -534,9 +568,9 @@ export const doRoutesClearForeignObstacleVias = (params: {
       const bp = toBoardCoords(via, context.nodeCenter, context.coordinateScale)
       if (
         onlyCheckBoundaryOverhangVias &&
-        Math.abs(bp.x - context.nodeCenter.x) + viaRadius + viaClearance <=
+        Math.abs(bp.x - context.nodeCenter.x) + viaRadius <=
           context.physicalHalfW + 1e-6 &&
-        Math.abs(bp.y - context.nodeCenter.y) + viaRadius + viaClearance <=
+        Math.abs(bp.y - context.nodeCenter.y) + viaRadius <=
           context.physicalHalfH + 1e-6
       ) {
         continue

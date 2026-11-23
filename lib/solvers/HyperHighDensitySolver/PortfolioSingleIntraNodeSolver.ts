@@ -160,9 +160,20 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     const obstacleMargin = opts.obstacleMargin ?? 0.1
     const viaClearance = opts.viaToPadClearance ?? obstacleMargin
     const solutionValidator = opts.solutionValidator
-    // When no external regional cleanup validator owns obstacle checks, ensure
-    // vias overhanging the 1x physical node boundary clear adjacent foreign pads.
-    if (!solutionValidator && opts.obstacles && opts.obstacles.length > 0) {
+    const physicalWidth =
+      this.nodeWithPortPoints.width / obstacleCoordinateScale
+    const physicalHeight =
+      this.nodeWithPortPoints.height / obstacleCoordinateScale
+    const isSubTwoViaCell =
+      Math.max(physicalWidth, physicalHeight) <
+      viaDiameter * 2 + viaClearance * 2
+    if (
+      !solutionValidator &&
+      obstacleCoordinateScale > 1 &&
+      isSubTwoViaCell &&
+      opts.obstacles &&
+      opts.obstacles.length > 0
+    ) {
       this.obstacleContext = prepareNodeObstacleContext({
         nodeWithPortPoints: this.nodeWithPortPoints,
         obstacles: opts.obstacles,
