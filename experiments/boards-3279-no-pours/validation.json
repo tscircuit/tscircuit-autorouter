@@ -8,12 +8,18 @@
   "autorouterRepro": {
     "commit": "76ae099ccd57e79c456c79bd530381b6bc58eb15",
     "run": 45085972816,
-    "status": "running"
+    "status": "success",
+    "bunShardsPassed": 9,
+    "typeCheck": "success",
+    "formatCheck": "success",
+    "build": "success",
+    "vercelBuild": "success"
   },
   "autorouterFix": {
     "commit": "df7df8ded6f1bddc61dbc1cea3b6d6d2acc93b1c",
     "run": 45086064570,
-    "status": "running"
+    "status": "success",
+    "bunShardsPassed": 9
   },
   "originalBoards": {
     "run": 45061903558,
@@ -88,7 +94,8 @@
   "autorouterVisualization": {
     "commit": "c69519ae2f697a106d1842b53b511b9b05a1a311",
     "run": 45086012265,
-    "status": "running"
+    "status": "success",
+    "bunShardsPassed": 9
   },
   "localValidation": {
     "focusedSnapshots": "pass",
