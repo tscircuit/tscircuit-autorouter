@@ -1,0 +1,53 @@
+name: Publish independent main-based fanout evidence
+on:
+  push:
+    branches: [analysis/publish-independent-boundary-382]
+permissions:
+  contents: write
+  actions: read
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: harness
+      - name: Require all-ten physical audit and exact native CI
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          for spec in tscircuit/tscircuit-autorouter:45117702632 tscircuit/fanout-solver:45117404284 tscircuit/fanout-solver:45117537372; do
+            repo=${spec%:*}
+            run=${spec##*:}
+            for attempt in $(seq 1 180); do
+              status=$(gh api repos/$repo/actions/runs/$run --jq .status)
+              if [ "$status" = completed ]; then break; fi
+              sleep 15
+            done
+            test "$(gh api repos/$repo/actions/runs/$run --jq .conclusion)" = success
+          done
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45117702632
+          name: independent-boundary382-audit
+          path: audited-results
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45070654984
+          pattern: full-circuit-interception-*
+          path: captures-main
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45117573719
+          pattern: full-circuit-interception-*
+          path: captures-after
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/checkout@v4
+        with:
+          ref: analysis/e2e-full-circuit-interception-results-20261120
+          path: report
+      - name: Publish independent comparison and actual PCB SVGs
+        run: python3 harness/experiments/e2e-samples-20261120/publish-independent-boundary382.py
