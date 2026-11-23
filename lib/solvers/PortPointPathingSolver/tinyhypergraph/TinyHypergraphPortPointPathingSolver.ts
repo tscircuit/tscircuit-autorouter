@@ -424,6 +424,11 @@ const toSerializedRegionData = (
         : [...region.d._offBoardConnectedCapacityMeshNodeIds],
     _qfpRegionType: regionMetadata._qfpRegionType,
     _isNarrowQfpPadGap: regionMetadata._isNarrowQfpPadGap,
+    // tiny-hypergraph divides only the via term of the region cost by this
+    // share of the area; trace density and geometry keep the full node.
+    ...(region.d._viaAreaFraction !== undefined
+      ? { viaAreaFraction: region.d._viaAreaFraction }
+      : {}),
     ...(netId !== undefined ? { netId } : {}),
   }
 }

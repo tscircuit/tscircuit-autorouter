@@ -34,6 +34,9 @@ export interface CapacityMeshNode {
   _soicRegionType?: "center" | "pad" | "pad-gap"
   _isComponentTopologyNode?: boolean
   _connectedTo?: string[]
+  /** Share of the node's via centers, in (0, 1), that fixed copper and pads
+   * leave legal. Set only where they leave almost none. */
+  _viaAreaFraction?: number
 
   _parent?: CapacityMeshNode
 }

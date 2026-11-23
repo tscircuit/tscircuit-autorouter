@@ -18,6 +18,7 @@ import { NetToPointPairsSolver2_OffBoardConnection } from "../../solvers/NetToPo
 import { PreloadedTraceGraphSolver } from "./PreloadedTraceGraphSolver"
 import { MergedComponentTopologyView } from "../AutoroutingPipeline7_MultiGraph/MergedComponentTopologyView"
 import { definePipeline9Step } from "./definePipeline9Step"
+import { markViaAreaBesideFixedCopper } from "./markViaAreaBesideFixedCopper"
 
 function getComponentCapacityMeshNodeIds(
   capacityMeshNodes: CapacityMeshNode[] | null,
@@ -163,8 +164,12 @@ export const pipeline9TopologySteps = [
       pipeline.minNodeArea,
     ],
     onSolved: (pipeline) => {
-      pipeline.capacityNodes =
-        pipeline.nodeDimensionSubdivisionSolver!.outputNodes
+      pipeline.capacityNodes = markViaAreaBesideFixedCopper({
+        nodes: pipeline.nodeDimensionSubdivisionSolver!.outputNodes,
+        srj: pipeline.originalSrj,
+        connMap: pipeline.connMap,
+        viaDiameter: pipeline.viaDiameter,
+      })
     },
   }),
   definePipeline9Step({
