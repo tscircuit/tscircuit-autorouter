@@ -17,9 +17,9 @@ test("merging aliases keeps first-width behavior unless maximum is requested", (
     },
   ]
   expect(mergeConnections(connections)[0]!.nominalTraceWidth).toBe(0.1)
-  expect(
-    mergeConnections(connections, { nominalTraceWidth: "first" }),
-  ).toEqual(mergeConnections(connections))
+  expect(mergeConnections(connections, { nominalTraceWidth: "first" })).toEqual(
+    mergeConnections(connections),
+  )
   expect(
     mergeConnections(connections, { nominalTraceWidth: "maximum" })[0]!
       .nominalTraceWidth,
