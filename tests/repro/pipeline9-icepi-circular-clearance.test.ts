@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test"
 import { readFileSync } from "node:fs"
 import { gunzipSync } from "node:zlib"
-import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
+import { convertHdRoutesToSimplifiedPcbTraces } from "lib/utils/convertHdRoutesToSimplifiedPcbTraces"
 import { Pipeline9JointDrcRepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9JointDrcRepairSolver"
 import { getBugReportSnapshotSvg } from "lib/testing/getBugReportSnapshotSvg"
 import type { SimpleRouteJson } from "lib/types"
@@ -36,7 +36,7 @@ test("repairs the real iCEPi DDR board beside circular BGA pads", async (): Prom
   solver.solve()
   expect(solver.solved).toBeTrue()
 
-  const routedTraces = convertPipeline7HdRoutesToSimplifiedPcbTraces({
+  const routedTraces = convertHdRoutesToSimplifiedPcbTraces({
     connections: capture.newConnections,
     originalConnections: capture.originalSrj.connections,
     hdRoutes: solver.getOutput(),

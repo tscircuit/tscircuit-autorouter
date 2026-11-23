@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs"
 import { gunzipSync } from "node:zlib"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { getSvgFromGraphicsObject, type GraphicsObject } from "graphics-debug"
-import { createPipeline7HdRoutesToSimplifiedPcbTracesConverter } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
+import { createHdRoutesToSimplifiedPcbTracesConverter } from "lib/utils/convertHdRoutesToSimplifiedPcbTraces"
 import { createPipeline9AutoroutingDrcEvaluator } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/createPipeline9AutoroutingDrcEvaluator"
 import { createPipeline9ReferenceDrcGuard } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/createPipeline9ReferenceDrcGuard"
 import { isPipeline9DrcPriorityImprovement } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/isPipeline9DrcPriorityImprovement"
@@ -118,7 +118,7 @@ test("Glider circuit repair priorities", async (): Promise<void> => {
       (route): boolean => route.connectionName === "source_net_40",
     ),
   )
-  const convert = createPipeline7HdRoutesToSimplifiedPcbTracesConverter({
+  const convert = createHdRoutesToSimplifiedPcbTracesConverter({
     connections,
     originalConnections: srj.connections,
     layerCount: srj.layerCount,

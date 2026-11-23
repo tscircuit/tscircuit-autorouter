@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
+import { convertHdRoutesToSimplifiedPcbTraces } from "lib/utils/convertHdRoutesToSimplifiedPcbTraces"
 import { canonicalizePipeline9HdRoutes } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/canonicalizePipeline9HdRoutes"
 import { Pipeline9JointDrcRepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9JointDrcRepairSolver"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
@@ -24,7 +24,7 @@ test("initial projection repairs via clearance without moving distant clean rout
   const initial = evaluateRelaxedDrc({
     inputSrj: params.originalSrj,
     srjWithPointPairs: params.srjWithPointPairs,
-    routedTraces: convertPipeline7HdRoutesToSimplifiedPcbTraces({
+    routedTraces: convertHdRoutesToSimplifiedPcbTraces({
       ...convertOptions,
       hdRoutes: original,
     }),
@@ -62,7 +62,7 @@ test("initial projection repairs via clearance without moving distant clean rout
   const validation = evaluateRelaxedDrc({
     inputSrj: params.originalSrj,
     srjWithPointPairs: params.srjWithPointPairs,
-    routedTraces: convertPipeline7HdRoutesToSimplifiedPcbTraces({
+    routedTraces: convertHdRoutesToSimplifiedPcbTraces({
       ...convertOptions,
       hdRoutes: routes,
     }),

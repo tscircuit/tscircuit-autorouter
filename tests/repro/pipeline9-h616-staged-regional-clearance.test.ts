@@ -7,7 +7,7 @@ import {
 } from "@tscircuit/checks"
 import type { AnyCircuitElement } from "circuit-json"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
+import { convertHdRoutesToSimplifiedPcbTraces } from "lib/utils/convertHdRoutesToSimplifiedPcbTraces"
 import { createPipeline9AutoroutingDrcEvaluator } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/createPipeline9AutoroutingDrcEvaluator"
 import { Pipeline9JointDrcRepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9JointDrcRepairSolver"
 import { preparePipeline9DrcRoutedTraces } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/preparePipeline9DrcRoutedTraces"
@@ -117,7 +117,7 @@ test("captures H616 ordinary signals beside previously routed DDR copper", async
   const traces = preparePipeline9DrcRoutedTraces({
     originalPreloadedTraces: originalSrj.traces ?? [],
     mutatedPreloadedTraces: solver.getMutatedPreloadedTraces(),
-    newTraces: convertPipeline7HdRoutesToSimplifiedPcbTraces({
+    newTraces: convertHdRoutesToSimplifiedPcbTraces({
       connections: fixture.newConnections,
       originalConnections: originalSrj.connections,
       hdRoutes,

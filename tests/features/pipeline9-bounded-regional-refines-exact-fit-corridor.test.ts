@@ -4,7 +4,7 @@ import {
 } from "@tscircuit/repair04"
 import { expect, test } from "bun:test"
 import type { DrcEvaluator } from "high-density-repair03/lib"
-import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
+import { convertHdRoutesToSimplifiedPcbTraces } from "lib/utils/convertHdRoutesToSimplifiedPcbTraces"
 import { CLEARANCE_PRECISION_MARGIN } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/applyPipeline9ClearancePrecisionRepairs"
 import { Pipeline9ClearanceProjectionSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9ClearanceProjectionSolver"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
@@ -82,7 +82,7 @@ test("nominal projection clears an exact-fit corridor after margin projection ca
     return evaluateRelaxedDrc({
       inputSrj: originalSrj,
       srjWithPointPairs: originalSrj,
-      routedTraces: convertPipeline7HdRoutesToSimplifiedPcbTraces({
+      routedTraces: convertHdRoutesToSimplifiedPcbTraces({
         connections: originalSrj.connections,
         originalConnections: originalSrj.connections,
         hdRoutes: evaluatedRoutes,

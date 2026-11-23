@@ -91,8 +91,8 @@ expect(pipeline9.effortCleanupSolver?.solved).toBeTrue()
 const { Pipeline9JointDrcRepairSolver } = await import(
   "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9JointDrcRepairSolver"
 )
-const { convertPipeline7HdRoutesToSimplifiedPcbTraces } = await import(
-  "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
+const { convertHdRoutesToSimplifiedPcbTraces } = await import(
+  "lib/utils/convertHdRoutesToSimplifiedPcbTraces"
 )
 const { getConnectivityMapFromSimpleRouteJson } = await import(
   "lib/utils/getConnectivityMapFromSimpleRouteJson"
@@ -217,7 +217,7 @@ const results: EvaluateRelaxedDrcInput[] = [
   {
     inputSrj: repairSrj,
     srjWithPointPairs: repairSrj,
-    routedTraces: convertPipeline7HdRoutesToSimplifiedPcbTraces({
+    routedTraces: convertHdRoutesToSimplifiedPcbTraces({
       connections: repairSrj.connections,
       originalConnections: repairSrj.connections,
       hdRoutes: repairSolver.getOutput(),
