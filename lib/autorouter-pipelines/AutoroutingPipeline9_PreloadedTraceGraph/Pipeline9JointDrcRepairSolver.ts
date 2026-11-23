@@ -17,6 +17,7 @@ import {
   getDrcSnapshot,
   hasNewTraceObstacleOverlaps,
 } from "high-density-repair03/lib/solvers/GlobalDrcForceImproveSolver/solverHelpers"
+import { restoreOverlappingConnections } from "high-density-repair03/lib/solvers/GlobalDrcForceImproveSolver/restoreOverlappingConnections"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import { isObstacleConnectedToRoute } from "lib/solvers/TraceWidthSolver/isObstacleConnectedToRoute"
 import { combinePreloadedAndRoutedTraces } from "lib/utils/combinePreloadedAndRoutedTraces"
@@ -1920,7 +1921,37 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
           ? candidateReference
           : candidateReference.errors
         if (candidateErrors.length < startingErrors.length) {
-          this.initialBoundedRepairCandidate = candidate
+          const { srj, connMap, drcEvaluator } = this.exactRepairParams
+          const snapshot = (routes: HighDensityRoute[]) =>
+            getDrcSnapshot(srj, routes, drcEvaluator, connMap)
+          const input = snapshot(startingRoutes)
+          const output = snapshot(candidate)
+          if (!hasNewTraceObstacleOverlaps(output, input)) {
+            this.initialBoundedRepairCandidate = candidate
+            return
+          }
+          // Keep independent regional repairs while restoring routes that hit a new pad.
+          const restored = restoreOverlappingConnections({
+            routes: candidate,
+            snapshot: output,
+            inputSnapshot: input,
+            checkpointRoutes: startingRoutes,
+          })
+          if (
+            !restored ||
+            hasNewTraceObstacleOverlaps(snapshot(restored.routes), input)
+          ) {
+            return
+          }
+          const reference = this.cachedReferenceDrcEvaluator({
+            traces: [],
+            hdRoutes: restored.routes,
+            routes: restored.routes,
+          })
+          const errors = Array.isArray(reference) ? reference : reference.errors
+          if (errors.length < startingErrors.length) {
+            this.initialBoundedRepairCandidate = restored.routes
+          }
         }
       }
       return
@@ -2282,23 +2313,8 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       this.combinedOutput,
     )
     if (contacts.length === 0) {
-      const { srj, connMap, drcEvaluator } = this.exactRepairParams
-      const output = getDrcSnapshot(
-        srj,
-        this.combinedOutput,
-        drcEvaluator,
-        connMap,
-      )
-      const input = getDrcSnapshot(
-        srj,
-        this.traceContactInputHdRoutes,
-        drcEvaluator,
-        connMap,
-      )
-      if (!hasNewTraceObstacleOverlaps(output, input)) {
-        this.solved = true
-        return
-      }
+      this.solved = true
+      return
     }
     this.traceContactRepairSolver = new TraceContactRepairSolver({
       ...this.exactRepairParams,
