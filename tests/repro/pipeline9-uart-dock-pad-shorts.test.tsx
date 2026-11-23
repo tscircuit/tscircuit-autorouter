@@ -735,5 +735,5 @@ test("captures UART Dock CH342F pad shorts after Pipeline 9 completes", async ()
     <svg x="0" y="85" width="900" height="760" viewBox="${topLeft.x} ${topLeft.y} ${bottomRight.x - topLeft.x} ${bottomRight.y - topLeft.y}">${contents}${labels}</svg>
     <text x="24" y="870" font-family="sans-serif" font-size="18" fill="#111827">9: RST · 10: CTS1 · 11: RTS1 · 25: GND | Red: top copper; blue: bottom</text>
   </svg>`
-  await expect(svg).toMatchSvgSnapshot(import.meta.path)
+  await expect(svg.replace(/[ \t]+$/gm, "")).toMatchSvgSnapshot(import.meta.path)
 })
