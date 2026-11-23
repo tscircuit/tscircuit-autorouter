@@ -8,6 +8,7 @@ folder.mkdir(parents=True,exist_ok=True)
 shutil.copytree(artifact,folder,dirs_exist_ok=True)
 shutil.copyfile(harness/'cleanup382-main-publication-proof.json',folder/'main-publication-proof.json')
 shutil.copyfile(harness/'audit-independent-boundary382.ts',folder/'audit-independent-boundary382.ts')
+shutil.copyfile(harness/'independent-boundary382-routing.patch',folder/'routing.patch')
 rows=json.loads((artifact/'main/statistics.json').read_text())
 assert len(rows)==10
 assert all(r['inputsEqual'] and r['circuitGeometryAndNetsEqual'] and r['nativeDrc']==[True,True] and r['independentDrillViolations']==[0,0] and r['independentViaPadClearanceViolations']==[0,0] and r['sourceNetMismatchPairs']==[0,0] and r['structuralIssues']==[[],[]] for r in rows)
