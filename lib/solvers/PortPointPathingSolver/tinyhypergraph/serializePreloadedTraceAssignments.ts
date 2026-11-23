@@ -149,9 +149,14 @@ const getEndpointRegionId = (
     (regionId) => regionId !== adjacentAssignmentRegionId,
   ) ?? adjacentAssignmentRegionId
 
-/** A mesh corner can contain several edge ports at one saved-path crossing. */
+/**
+ * A mesh corner can contain several edge ports at one saved-path crossing.
+ * Unconnected obstacle regions hold the pads the copper lands on; they bound
+ * a run of segments instead of carrying one.
+ */
 const getFixedTraceSegments = (
   orderedPorts: OrderedTracePort[],
+  unconnectedObstacleRegionIds: ReadonlySet<SerializedRegionId>,
 ): PreloadedAssignmentSegment[] => {
   const segments: PreloadedAssignmentSegment[] = []
   const crossingGroups: OrderedTracePort[][] = []
@@ -185,6 +190,7 @@ const getFixedTraceSegments = (
         if (
           !from ||
           emittedRegionIds.has(regionId) ||
+          unconnectedObstacleRegionIds.has(regionId) ||
           from.port.portId === to.port.portId
         ) {
           continue
@@ -205,6 +211,7 @@ export const serializePreloadedTraceAssignments = (
   serializedHyperGraph: SerializedHyperGraph,
 ): SerializedPreloadedTraceStats => {
   const orderedPortsByTraceId = new Map<string, OrderedTracePort[]>()
+  const fixedPadCrossingsByTraceId = new Map<TraceId, OrderedTracePort[]>()
   const fixedNetIdByTraceId = new Map<string, string>()
   const fixedTraceIds = new Set<TraceId>()
   const connectedRegionIds = new Set(
@@ -236,14 +243,20 @@ export const serializePreloadedTraceAssignments = (
     const metadata = port.d as PortMetadataWithPreloadedAssignments | undefined
     const assignments = metadata?._preloadedTracePortAssignments ?? []
     if (assignments.length > 0) preloadedPortCount++
-    if (
-      removedObstacleRegionIds.has(port.region1Id) ||
-      removedObstacleRegionIds.has(port.region2Id)
-    ) {
-      continue
-    }
+    const removedRegionCount = getIncidentRegionIds(port).filter((regionId) =>
+      removedObstacleRegionIds.has(regionId),
+    ).length
 
     for (const assignment of assignments) {
+      if (removedRegionCount > 0) {
+        if (assignment.isFixed && removedRegionCount === 1) {
+          const padCrossings =
+            fixedPadCrossingsByTraceId.get(assignment.traceId) ?? []
+          padCrossings.push({ port, assignment })
+          fixedPadCrossingsByTraceId.set(assignment.traceId, padCrossings)
+        }
+        continue
+      }
       if (assignment.isFixed) fixedTraceIds.add(assignment.traceId)
       const existingFixedNetId = fixedNetIdByTraceId.get(assignment.traceId)
       if (
@@ -259,6 +272,20 @@ export const serializePreloadedTraceAssignments = (
       orderedPorts.push({ port, assignment })
       orderedPortsByTraceId.set(assignment.traceId, orderedPorts)
     }
+  }
+
+  // Fixed copper that crosses fewer than two connected boundaries would leave
+  // nothing in the graph. It keeps the crossings into the pads it lands on;
+  // those pad regions become endpoints of its saved route and stay in the graph.
+  for (const [traceId, padCrossings] of fixedPadCrossingsByTraceId) {
+    const connectedCrossings = orderedPortsByTraceId.get(traceId) ?? []
+    const connectedPortIds = new Set(
+      connectedCrossings.map(({ port }) => port.portId),
+    )
+    if (connectedPortIds.size >= 2) continue
+    fixedTraceIds.add(traceId)
+    fixedNetIdByTraceId.set(traceId, padCrossings[0]!.assignment.fixedNetId)
+    orderedPortsByTraceId.set(traceId, [...connectedCrossings, ...padCrossings])
   }
 
   const regionById = new Map(
@@ -285,7 +312,9 @@ export const serializePreloadedTraceAssignments = (
     const segments: PreloadedAssignmentSegment[] = []
     let previousRegionId: string | undefined
     if (fixedTraceIds.has(traceId)) {
-      segments.push(...getFixedTraceSegments(orderedPorts))
+      segments.push(
+        ...getFixedTraceSegments(orderedPorts, removedObstacleRegionIds),
+      )
     }
     for (
       let pairIndex = 0;
