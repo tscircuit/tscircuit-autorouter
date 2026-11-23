@@ -33,7 +33,12 @@ test("replays the captured parent through the terminal-via repair", async (): Pr
   expect(
     solver.routes.some((route) => route.regionId === "cmn_248"),
   ).toBeFalse()
+  const graphics = solver.visualize({ showAcceptedRoutes: true })
+  // Every drilled via in this captured four-layer input is a through via.
+  expect(new Set(graphics.circles!.map((via) => via.layer))).toEqual(
+    new Set(["z0,1,2,3"]),
+  )
   await expect(
-    getSvgFromGraphicsObject(solver.visualize(), { backgroundColor: "white" }),
+    getSvgFromGraphicsObject(graphics, { backgroundColor: "white" }),
   ).toMatchSvgSnapshot(import.meta.path)
 })
