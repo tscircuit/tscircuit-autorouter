@@ -436,7 +436,12 @@ export const applyPipeline9TerminalEscapeRelocations = ({
               drcEvaluator,
               candidateRoutes,
             )
-            if (isPipeline9DrcCandidateBetter(candidateErrors, bestErrors)) {
+            if (
+              isPipeline9DrcCandidateBetter({
+                candidateErrors,
+                currentErrors: bestErrors,
+              })
+            ) {
               bestRoutes = candidateRoutes
               bestErrors = candidateErrors
               if (bestErrors.length === 0) {
