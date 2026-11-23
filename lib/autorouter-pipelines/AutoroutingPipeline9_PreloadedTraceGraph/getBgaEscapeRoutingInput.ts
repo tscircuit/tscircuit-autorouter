@@ -1,6 +1,6 @@
 import {
   cellsPerBallPitch,
-  type BgaEscapeRoutingSolverInput,
+  type BgaRoutingSolverInput,
   type BgaTrace,
 } from "@tscircuit/high-density-phase-solver"
 import { BgaGrid } from "lib/solvers/BgaTopologyGeneratorSolver/bga-grid"
@@ -9,7 +9,7 @@ import { getBgaLikeObstacleSubset } from "lib/solvers/ComponentDetectionSolver/d
 import type { SimpleRouteConnection, SimpleRouteJson } from "lib/types"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
 import { getViaToPadClearance } from "lib/utils/getViaToPadClearance"
-import { getBgaSignalLayers } from "./getBgaSignalLayers"
+import { getRoutingLayerIndices } from "lib/utils/getRoutingLayerIndices"
 
 export type BgaEscapeBoard = {
   inputSrj: SimpleRouteJson
@@ -42,7 +42,7 @@ function supportsBgaEscapeRouting(
   const traces = srj.traces
   if (!traces?.length) return false
   return (
-    srj.layerCount >= 3 &&
+    srj.layerCount >= 2 &&
     !srj.outline?.length &&
     !srj.allowBlindAndBuriedVias &&
     !srj.buses?.length &&
@@ -69,7 +69,7 @@ export function getBgaEscapeRoutingInput({
   inputSrj,
   pointPairs,
   components,
-}: BgaEscapeBoard): BgaEscapeRoutingSolverInput | undefined {
+}: BgaEscapeBoard): BgaRoutingSolverInput | undefined {
   const clearance = inputSrj.minTraceToPadEdgeClearance
   if (clearance === undefined || !supportsBgaEscapeRouting(inputSrj)) return
   const expectedPairs = inputSrj.connections.reduce(
@@ -86,8 +86,8 @@ export function getBgaEscapeRoutingInput({
   )
     return
 
-  const signalLayers = getBgaSignalLayers(inputSrj)
-  if (!signalLayers.some((z) => z > 0 && z < inputSrj.layerCount - 1)) return
+  const signalLayers = getRoutingLayerIndices(inputSrj)
+  if (signalLayers.length < 2) return
   const bgaIds = new Set(
     components
       .filter((component) => component.componentKind === "bga")

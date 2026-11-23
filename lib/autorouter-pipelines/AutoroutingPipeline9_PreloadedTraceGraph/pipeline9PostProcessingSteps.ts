@@ -1,3 +1,4 @@
+import { getDisallowedRoutingLayer } from "lib/utils/getDisallowedRoutingLayer"
 import { getDifferentialPairsForPostProcessing } from "lib/utils/getDifferentialPairsForPostProcessing"
 import { Pipeline9EffortCleanupSolver } from "./Pipeline9EffortCleanupSolver"
 import { createPipeline9AutoroutingDrcEvaluator } from "./createPipeline9AutoroutingDrcEvaluator"
@@ -263,6 +264,18 @@ export const pipeline9PostProcessingSteps = [
           onlyConnectionNames,
         },
       ]
+    },
+    onSolved: (pipeline) => {
+      if (!pipeline.originalSrj.routingLayers) return
+      const routingLayers = new Set(pipeline.originalSrj.routingLayers)
+      for (const trace of pipeline.getRoutedTracesAfterPowerExpansion()) {
+        const layer = getDisallowedRoutingLayer(trace.route, routingLayers)
+        if (layer) {
+          pipeline.error = `Routed trace "${trace.connection_name}" used excluded layer ${layer}`
+          pipeline.failed = true
+          return
+        }
+      }
     },
   }),
 ]

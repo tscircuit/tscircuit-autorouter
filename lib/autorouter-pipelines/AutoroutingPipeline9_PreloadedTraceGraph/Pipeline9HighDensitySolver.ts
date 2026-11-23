@@ -1,4 +1,7 @@
-import { BgaEscapeRoutingSolver } from "@tscircuit/high-density-phase-solver"
+import {
+  createBgaRoutingSolver,
+  type BgaRoutingSolver,
+} from "@tscircuit/high-density-phase-solver"
 import {
   getBgaEscapeRoutingInput,
   type BgaEscapeBoard,
@@ -45,10 +48,10 @@ import {
   preparePreloadedTerminalRoutes,
 } from "./pipeline9TerminalRoutes"
 
-type BgaEscapeAttempt = {
+type BgaRoutingAttempt = {
   board: BgaEscapeBoard
-  solver: BgaEscapeRoutingSolver
-  regionalError: string
+  solver: BgaRoutingSolver
+  regionalError?: string
 }
 
 export type Pipeline9HighDensitySolverParams = {
@@ -60,6 +63,7 @@ export type Pipeline9HighDensitySolverParams = {
   obstacles: Obstacle[]
   boardGeometry?: HighDensityBoardGeometry
   layerCount: number
+  routingLayerIndices?: number[]
   allowBlindAndBuriedVias?: boolean
   viaDiameter: number
   viaHoleDiameter?: number
@@ -419,7 +423,8 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   activeFallbackReason: string | null = null
   activeNode: NodeWithPortPoints | null = null
 
-  private bgaEscapeAttempt?: BgaEscapeAttempt
+  private bgaRoutingAttempt?: BgaRoutingAttempt
+  private readonly routingLayerIndices: number[]
   private asyncRunning = false
 
   constructor(private readonly params: Pipeline9HighDensitySolverParams) {
@@ -430,6 +435,9 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     this.obstacles = params.obstacles
     this.boardGeometry = params.boardGeometry
     this.layerCount = params.layerCount
+    this.routingLayerIndices =
+      params.routingLayerIndices ??
+      Array.from({ length: params.layerCount }, (_, z) => z)
     this.allowBlindAndBuriedVias = params.allowBlindAndBuriedVias ?? false
     this.viaDiameter = params.viaDiameter
     this.traceWidth = params.traceWidth
@@ -445,6 +453,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     this.enableRegionalFallback = params.enableRegionalFallback ?? true
     this.maxB01Rips = params.maxB01Rips
     this.unsolvedNodePortPoints = [...params.nodePortPoints]
+    this.tryStartBgaRouting()
     this.MAX_ITERATIONS = 100e6 * this.effort
     this.stats = {
       nodeCount: params.nodePortPoints.length,
@@ -630,7 +639,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   }
 
   get completedBoardRoutes(): HighDensityIntraNodeRoute[] | undefined {
-    if (this.solved && this.bgaEscapeAttempt?.solver.solved) return this.routes
+    if (this.solved && this.bgaRoutingAttempt?.solver.solved) return this.routes
   }
 
   getUpdatedFixedHdRoutes(): PreloadedHighDensityRoute[] {
@@ -710,7 +719,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       // Once B01 has proved that assignment unroutable, the regional repair
       // must be able to add a legal layer transition; board obstacles still
       // constrain which of these layers it can actually use.
-      availableZ: Array.from({ length: this.layerCount }, (_, z) => z),
+      availableZ: this.routingLayerIndices,
     }
     const fixedHdRoutes = this.getUpdatedFixedHdRoutes()
     const hasImmutablePreload = this.fixedHdRoutes.some(
@@ -1066,7 +1075,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
         ),
         portPoints: [],
         portPointsInPairs: [],
-        availableZ: Array.from({ length: this.layerCount }, (_, z) => z),
+        availableZ: this.routingLayerIndices,
       },
       this.getUpdatedFixedHdRoutes(),
     )
@@ -1175,8 +1184,8 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   }
 
   override _step(): void {
-    if (this.bgaEscapeAttempt) {
-      this.stepBgaEscapeRouting(this.bgaEscapeAttempt)
+    if (this.bgaRoutingAttempt) {
+      this.stepBgaRouting(this.bgaRoutingAttempt)
       return
     }
     this.stepNodeRouting()
@@ -1200,7 +1209,20 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     )
   }
 
-  private stepBgaEscapeRouting(attempt: BgaEscapeAttempt): void {
+  private tryStartBgaRouting(regionalError?: string): boolean {
+    const board = this.params.bgaEscapeBoard
+    if (!board) return false
+    const input = getBgaEscapeRoutingInput(board)
+    if (!input) return false
+    const solver = createBgaRoutingSolver(input, {
+      regionalRoutingAvailable: regionalError === undefined,
+    })
+    if (!solver) return false
+    this.bgaRoutingAttempt = { board, solver, regionalError }
+    return true
+  }
+
+  private stepBgaRouting(attempt: BgaRoutingAttempt): void {
     const { board, solver, regionalError } = attempt
     this.activeSubSolver = solver
     solver.step()
@@ -1222,8 +1244,9 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
         return
       }
     }
+    const failure = `${solver.getSolverName()}: ${solver.error ?? "candidate violates board clearance"}`
     this.failed = true
-    this.error = `${regionalError}. BGA escape routing: ${solver.error ?? "candidate violates board clearance"}`
+    this.error = regionalError ? `${regionalError}. ${failure}` : failure
   }
 
   private stepNodeRouting(): void {
@@ -1235,15 +1258,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
           `Pipeline9 primary high-density routing failed: ${this.activeFallbackReason ?? "unknown error"}`,
           `regional fallback failed: ${this.activeFallbackSolver.error ?? "unknown error"}`,
         ].join("; ")
-        const board = this.params.bgaEscapeBoard
-        const input = board && getBgaEscapeRoutingInput(board)
-        if (board && input) {
-          this.bgaEscapeAttempt = {
-            board,
-            solver: new BgaEscapeRoutingSolver(input),
-            regionalError,
-          }
-        } else {
+        if (!this.tryStartBgaRouting(regionalError)) {
           this.error = regionalError
           this.failed = true
         }
@@ -1370,7 +1385,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
 
   override visualize(): GraphicsObject {
     return (
-      this.bgaEscapeAttempt?.solver.visualize() ??
+      this.bgaRoutingAttempt?.solver.visualize() ??
       this.activeFallbackSolver?.visualize() ??
       this.activeRegularSolver?.visualize() ??
       this.activeB01Solver?.visualize() ?? {

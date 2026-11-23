@@ -101,12 +101,16 @@ export class TwoCrossingRoutesHighDensitySolver extends BaseSolver {
     }
     // TODO check to make sure the lines cross
 
-    // TODO support more layers, use availableZLayers when it's provided
-    if (routeA.startPort.z === 0) {
-      this.escapeLayer = 1
-    } else {
-      this.escapeLayer = 0
+    const availableZ =
+      this.nodeWithPortPoints.availableZ ??
+      Array.from({ length: this.layerCount }, (_, z) => z)
+    const escapeLayer = availableZ.find((z) => z !== routeA.startPort.z)
+    if (escapeLayer === undefined) {
+      this.failed = true
+      this.error = "Crossing traces require a second routing layer"
+      return
     }
+    this.escapeLayer = escapeLayer
   }
 
   /**
