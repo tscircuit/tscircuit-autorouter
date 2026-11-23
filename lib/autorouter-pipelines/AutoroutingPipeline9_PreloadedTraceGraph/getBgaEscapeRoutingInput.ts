@@ -10,6 +10,7 @@ import type { SimpleRouteConnection, SimpleRouteJson } from "lib/types"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
 import { getViaToPadClearance } from "lib/utils/getViaToPadClearance"
 import { getBgaSignalLayers } from "./getBgaSignalLayers"
+import { getBgaViaKeepoutObstacles } from "./getBgaViaKeepoutObstacles"
 
 export type BgaEscapeBoard = {
   inputSrj: SimpleRouteJson
@@ -122,6 +123,10 @@ export function getBgaEscapeRoutingInput({
       return freeWidth >= width && freeWidth - width < pitch / cellsPerBallPitch
     })
     if (narrowChannel) {
+      const viaKeepoutObstacles = getBgaViaKeepoutObstacles(
+        inputSrj.viaKeepouts ?? [],
+        inputSrj.layerCount,
+      )
       return {
         board: {
           bounds: inputSrj.bounds,
@@ -133,7 +138,9 @@ export function getBgaEscapeRoutingInput({
           traceClearance: clearance,
           viaToPadClearance: getViaToPadClearance(inputSrj) ?? clearance,
           via: getViaDimensions(inputSrj),
-          obstacles: inputSrj.obstacles,
+          obstacles: viaKeepoutObstacles.length
+            ? [...inputSrj.obstacles, ...viaKeepoutObstacles]
+            : inputSrj.obstacles,
           connections: inputSrj.connections,
           fixedTraces: inputSrj.traces,
         },
