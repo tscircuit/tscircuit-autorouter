@@ -255,4 +255,3 @@ export {
   getConnectionPointLayer,
   getConnectionPointLayers,
 } from "../utils/connection-point-utils"
-

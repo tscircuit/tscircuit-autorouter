@@ -1,6 +1,3 @@
-Warning: truncated output (original token count: 23115)
-Total output lines: 2391
-
 import { isExistingMultilayerObstacle } from "lib/utils/isExistingMultilayerObstacle"
 import { RELAXED_DRC_OPTIONS } from "lib/utils/drcPresets"
 import type { AnyCircuitElement } from "circuit-json"
@@ -969,7 +966,529 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         continue
       }
       if (
-        !currentNewTraceIds.has(…5115 tokens truncated…      })
+        !currentNewTraceIds.has(preparedTraceId) &&
+        updatedPreloadedTraceById.has(preparedTraceId)
+      ) {
+        candidateMovablePreloadedTraceIds.add(preparedTraceId)
+      }
+    }
+    for (const traceId of getPipeline9PreloadedTraceIdsInInitialDrcRegions({
+      errorsWithCenters: currentDrc.errorsWithCenters as unknown as Array<
+        Record<string, unknown>
+      >,
+      traces: params.updatedPreloadedTraces,
+      layerCount: params.layerCount,
+      defaultViaDiameter: params.defaultViaDiameter,
+      connMap: params.connMap,
+    })) {
+      candidateMovablePreloadedTraceIds.add(traceId)
+    }
+
+    // Through-obstacle connectivity belongs to the connected component
+    // obstacle. Keep that primitive fixed and give exact repair ownership of
+    // the ordinary copper sections anchored on either side of it.
+    this.movablePreloadedSections = []
+    for (const traceId of candidateMovablePreloadedTraceIds) {
+      const trace = updatedPreloadedTraceById.get(traceId)
+      if (!trace) {
+        throw new Error(
+          `Pipeline9 cannot find preloaded trace "${traceId}" selected for exact repair`,
+        )
+      }
+      if (trace.isFixed) continue
+      const traceIndex = params.updatedPreloadedTraces.findIndex(
+        (updatedTrace) => updatedTrace.pcb_trace_id === traceId,
+      )
+      const sectionGroups = getPreloadedTraceSectionGroups({
+        trace,
+        traceIndex,
+        layerCount: params.layerCount,
+        defaultViaDiameter: params.defaultViaDiameter,
+        connMap: params.connMap,
+      })
+      for (const [traceSectionIndex, sectionGroup] of sectionGroups.entries()) {
+        const movableSectionIndex = this.movablePreloadedSections.length
+        const syntheticConnectionName = `pipeline9_preloaded_drc_${movableSectionIndex}`
+        this.movablePreloadedSections.push({
+          originalTrace: trace,
+          originalRoutePositionStart: sectionGroup.routePositionStart,
+          originalRoutePositionEnd: sectionGroup.routePositionEnd,
+          syntheticConnectionName,
+          evaluationTraceId: `${trace.pcb_trace_id}__pipeline9_section_${traceSectionIndex}`,
+          hdRoute: combinePreloadedTraceSectionGroup({
+            trace,
+            sectionGroup,
+            syntheticConnectionName,
+          }),
+        })
+      }
+    }
+    this.syntheticConnectionNames = new Set(
+      this.movablePreloadedSections.map(
+        (movableSection) => movableSection.syntheticConnectionName,
+      ),
+    )
+    const movablePreloadedTraceIds = new Set(
+      this.movablePreloadedSections.map(
+        (movableSection) => movableSection.originalTrace.pcb_trace_id,
+      ),
+    )
+    this.fixedPreloadedObstacleRoutes = params.updatedPreloadedTraces.flatMap(
+      (trace, traceIndex) => {
+        const fixedRoutes = convertPreloadedTraceToHdRoutes(
+          trace,
+          traceIndex,
+          params.layerCount,
+          params.defaultViaDiameter,
+          params.connMap,
+        ).map(
+          (route): PreloadedHighDensityRoute => ({
+            ...route,
+            // Repair resolves SRJ aliases; private connectivity keys can collide.
+            rootConnectionName: trace.connection_name,
+          }),
+        )
+        if (!movablePreloadedTraceIds.has(trace.pcb_trace_id)) {
+          return fixedRoutes
+        }
+        return fixedRoutes.filter((route) => {
+          const routePosition = route.preloadedRoutePositionStart
+          return (
+            routePosition !== undefined &&
+            trace.route[routePosition]?.route_type === "through_obstacle"
+          )
+        })
+      },
+    )
+    const movableSectionIndexesByOriginalTraceId = new Map<string, number[]>()
+    for (const [
+      movableSectionIndex,
+      movableSection,
+    ] of this.movablePreloadedSections.entries()) {
+      const originalTraceId = movableSection.originalTrace.pcb_trace_id
+      const sectionIndexes =
+        movableSectionIndexesByOriginalTraceId.get(originalTraceId) ?? []
+      sectionIndexes.push(movableSectionIndex)
+      movableSectionIndexesByOriginalTraceId.set(
+        originalTraceId,
+        sectionIndexes,
+      )
+    }
+    for (const originalTraceIds of getPipeline9PreloadedViaPairTraceGroups({
+      errors: currentDrc.errors as unknown as Array<Record<string, unknown>>,
+      circuitJson: currentDrc.circuitJson,
+      originalTraceIdByPreparedTraceId:
+        preparedCurrentOutput.originalPreloadedTraceIdByPreparedTraceId,
+    })) {
+      const movableSectionIndexes = originalTraceIds
+        .flatMap(
+          (traceId) =>
+            movableSectionIndexesByOriginalTraceId.get(traceId) ?? [],
+        )
+        .filter(
+          (sectionIndex, index, sectionIndexes) =>
+            sectionIndexes.indexOf(sectionIndex) === index,
+        )
+      if (movableSectionIndexes.length === 0) continue
+      const movableSectionIndexSet = new Set(movableSectionIndexes)
+      const mergedRoutes = mergePipeline9MovablePreloadedVias({
+        routes: movableSectionIndexes.map(
+          (movableSectionIndex) =>
+            this.movablePreloadedSections[movableSectionIndex]!.hdRoute,
+        ),
+        otherHdRoutes: [
+          ...params.newHdRoutes,
+          ...this.fixedPreloadedObstacleRoutes,
+          ...this.movablePreloadedSections.flatMap(
+            (movableSection, movableSectionIndex) =>
+              movableSectionIndexSet.has(movableSectionIndex)
+                ? []
+                : [movableSection.hdRoute],
+          ),
+        ],
+        obstacles: params.obstacles,
+        colorMap: params.colorMap,
+        layerCount: params.layerCount,
+        connMap: params.connMap,
+      })
+      for (
+        let groupIndex = 0;
+        groupIndex < movableSectionIndexes.length;
+        groupIndex++
+      ) {
+        this.movablePreloadedSections[
+          movableSectionIndexes[groupIndex]!
+        ]!.hdRoute = mergedRoutes[groupIndex]!
+      }
+    }
+    const repairRouteCount =
+      params.newHdRoutes.length + this.movablePreloadedSections.length
+    // Full-board evaluation cost grows with route count. Preserve the full
+    // budget near convergence; bound work on large, heavily conflicted boards.
+    const repairBudgetScale =
+      currentDrc.errors.length >= 20 && repairRouteCount > 120
+        ? Math.min(1, (120 * Math.max(1, params.effort)) / repairRouteCount)
+        : 1
+    // Hundreds of unresolved conflicts trigger repeated nearby-copper pair
+    // checks. Reserve longer cleanup for boards closer to convergence.
+    const pairwiseRepairBudgetScale =
+      currentDrc.errors.length >= 200
+        ? repairBudgetScale ** 2
+        : repairBudgetScale
+    const maxRepairIterations = Math.max(
+      currentDrc.errors.length >= 200 ? 2 : 8,
+      Math.floor(EXACT_REPAIR_MAX_ITERATIONS * pairwiseRepairBudgetScale),
+    )
+    const maxBroadRepairIterations = Math.max(
+      currentDrc.errors.length >= 200 ? 1 : 4,
+      Math.floor(EXACT_REPAIR_BROAD_MAX_ITERATIONS * pairwiseRepairBudgetScale),
+    )
+    const traceErrorCount: number = currentDrc.errors.filter(
+      (error): boolean => error.type === "pcb_trace_error",
+    ).length
+    this.prioritizeConflictedRoutes =
+      traceErrorCount > currentDrc.errors.length / 2
+    this.stats = {
+      initialJointDrcIssueCount: currentDrc.errors.length,
+      baselineJointDrcIssueCount: baselineDrc.errors.length,
+      initialJointDrcIssueCountByType: currentDrc.errors.reduce<
+        Record<string, number>
+      >((counts, error) => {
+        const errorType = String(error.type ?? error.error_type ?? "unknown")
+        counts[errorType] = (counts[errorType] ?? 0) + 1
+        return counts
+      }, {}),
+      movablePreloadedTraceCount: movablePreloadedTraceIds.size,
+      movablePreloadedSectionCount: this.movablePreloadedSections.length,
+      exactRepairConfiguredMaxIterations: maxRepairIterations,
+      exactRepairConfiguredViaInPadMaxIterations: maxRepairIterations,
+      exactRepairConfiguredBroadMaxIterations: maxBroadRepairIterations,
+    }
+
+    this.traceContactInputHdRoutes = structuredClone([
+      ...(params.originalNewHdRoutes ?? params.newHdRoutes),
+      ...this.movablePreloadedSections.map((section) => section.hdRoute),
+    ])
+    this.traceContactGuard = new TraceContactGuard({
+      srj: params.srjWithPointPairs as RepairSimpleRouteJson,
+      inputRoutes: this.traceContactInputHdRoutes,
+      connMap: params.connMap,
+    })
+    const initialCombinedRoutes = [
+      ...params.newHdRoutes,
+      ...this.movablePreloadedSections.map((section) => section.hdRoute),
+    ]
+    if (
+      currentDrc.errors.length === 0 &&
+      this.traceContactGuard.getNewContactPairs(initialCombinedRoutes)
+        .length === 0
+    ) {
+      this.solved = true
+      return
+    }
+
+    const movableOriginalTraceIds = new Set(
+      this.movablePreloadedSections.map(
+        (movableSection) => movableSection.originalTrace.pcb_trace_id,
+      ),
+    )
+    const nonMovableMutatedPreloadedTraces =
+      currentMutatedPreloadedTraces.filter(
+        (trace) => !movableOriginalTraceIds.has(trace.pcb_trace_id),
+      )
+    const syntheticConnectionByName = new Map(
+      this.movablePreloadedSections.map((movableSection) => [
+        movableSection.syntheticConnectionName,
+        createSyntheticConnection(movableSection, params.layerCount),
+      ]),
+    )
+    // Preloaded copper is represented by fixed and synthetic HD routes in the
+    // joint evaluator. Keeping it in the branch solver SRJ as well changes the
+    // portfolio search state and double-counts the same geometry.
+    const { traces: _preloadedTraces, ...srjWithoutPreloadedTraceObstacles } =
+      params.srjWithPointPairs
+    const extendedSrjWithPointPairs: SimpleRouteJson = {
+      ...srjWithoutPreloadedTraceObstacles,
+      connections: [
+        ...params.srjWithPointPairs.connections,
+        ...syntheticConnectionByName.values(),
+      ],
+    }
+    const autoroutingDrcEngine = new AutoroutingDrcEngine(
+      {
+        ...extendedSrjWithPointPairs,
+        obstacles: params.originalSrj.obstacles,
+        minTraceWidth: params.originalSrj.minTraceWidth,
+        minViaDiameter:
+          params.originalSrj.minViaDiameter ?? params.defaultViaDiameter,
+      } as RepairSimpleRouteJson,
+      {
+        connMap: params.connMap,
+        traceClearance,
+        viaClearance,
+        viaToPadClearance,
+        includeTraceViaOwnerMetadata: true,
+        spatialCellSize:
+          Math.max(
+            params.defaultViaDiameter,
+            params.originalSrj.minTraceWidth,
+          ) + Math.max(traceClearance, viaClearance),
+      },
+    )
+    const autoroutingBaselineDrcResult = autoroutingDrcEngine.evaluate(
+      (params.originalSrj.traces ?? []) as RepairSimplifiedPcbTraces,
+    )
+    const autoroutingBaselineViaCircuitJson = getAutoroutingViaElements(
+      params.originalSrj.traces ?? [],
+    )
+    const autoroutingBaselineDrc = {
+      ...autoroutingBaselineDrcResult,
+      errors: addAutoroutingViaTraceIds({
+        errors: autoroutingBaselineDrcResult.errors,
+        circuitJson: autoroutingBaselineViaCircuitJson,
+        evaluatedTraceIds: baselineEvaluatedTraceIds,
+      }),
+      errorsWithCenters: addAutoroutingViaTraceIds({
+        errors: autoroutingBaselineDrcResult.errorsWithCenters,
+        circuitJson: autoroutingBaselineViaCircuitJson,
+        evaluatedTraceIds: baselineEvaluatedTraceIds,
+      }),
+    }
+    // Projection can reject B and return to A. Retain both exact evaluations
+    // without keeping a portfolio's worth of full-board keys and errors.
+    const referenceDrcCache = new Map<
+      DrcCandidateKey,
+      {
+        result: NormalizedCandidateDrcResult
+        prioritizeCircuitJsonErrors: boolean
+      }
+    >()
+    const multilayerObstacles = params.obstacles.filter((obstacle) =>
+      isExistingMultilayerObstacle(obstacle),
+    )
+    const connectedObstaclesByConnectionName = new Map<
+      string,
+      Map<string | undefined, ReadonlyArray<Obstacle>>
+    >()
+    const getConnectedMultilayerObstacles = (
+      route: HighDensityRoute,
+    ): ReadonlyArray<Obstacle> => {
+      let byRoot = connectedObstaclesByConnectionName.get(route.connectionName)
+      if (!byRoot) {
+        byRoot = new Map()
+        connectedObstaclesByConnectionName.set(route.connectionName, byRoot)
+      }
+      const cached = byRoot.get(route.rootConnectionName)
+      if (cached) return cached
+      // Candidate geometry changes, but the board's net connectivity does not.
+      // Avoid rescanning every pad for every segment of every DRC proposal.
+      const connected = multilayerObstacles.filter((obstacle) =>
+        isObstacleConnectedToRoute(obstacle, route, params.connMap),
+      )
+      byRoot.set(route.rootConnectionName, connected)
+      return connected
+    }
+
+    const prepareCandidateDrcInput = (
+      evaluatedRoutes: HighDensityRoute[],
+    ): PreparedCandidateDrcInput => {
+      const evaluatedNewRoutes: HighDensityRoute[] = []
+      const evaluatedPreloadedRouteByName = new Map<string, HighDensityRoute>()
+      for (const route of evaluatedRoutes) {
+        if (!this.syntheticConnectionNames.has(route.connectionName)) {
+          evaluatedNewRoutes.push(route)
+        } else if (!evaluatedPreloadedRouteByName.has(route.connectionName)) {
+          // Duplicate logical names must retain their first matching fragment.
+          evaluatedPreloadedRouteByName.set(route.connectionName, route)
+        }
+      }
+      const evaluatedNewTraces = convertNewRoutes(evaluatedNewRoutes)
+      const uniquelyNamedNewTraces = assignUniquePcbTraceIdsToNewTraces(
+        evaluatedNewTraces,
+        params.originalSrj.traces ?? [],
+      )
+      const replacedOriginalTraceIds = new Set<string>()
+      const originalTraceIdByEvaluationTraceId = new Map<string, string>()
+      const evaluatedMovablePreloadedTraces = this.movablePreloadedSections.map(
+        (movableSection) => {
+          const evaluatedRoute = evaluatedPreloadedRouteByName.get(
+            movableSection.syntheticConnectionName,
+          )
+          if (!evaluatedRoute) {
+            throw new Error(
+              `Pipeline9 joint DRC repair lost preloaded section "${movableSection.syntheticConnectionName}"`,
+            )
+          }
+          const originalTraceId = movableSection.originalTrace.pcb_trace_id
+          originalTraceIdByEvaluationTraceId.set(
+            movableSection.evaluationTraceId,
+            originalTraceId,
+          )
+          const replacesOriginalTrace =
+            !replacedOriginalTraceIds.has(originalTraceId)
+          replacedOriginalTraceIds.add(originalTraceId)
+          return {
+            ...movableSection.originalTrace,
+            pcb_trace_id: movableSection.evaluationTraceId,
+            ...(replacesOriginalTrace
+              ? { __replaces_pcb_trace_id: originalTraceId }
+              : { __replaces_pcb_trace_id: undefined }),
+            route: convertHdRouteToSimplifiedRoute(
+              evaluatedRoute,
+              params.layerCount,
+              {
+                defaultViaHoleDiameter: params.defaultViaHoleDiameter,
+                connectedMultilayerObstacles:
+                  getConnectedMultilayerObstacles(evaluatedRoute),
+                connMap: params.connMap,
+              },
+            ),
+          }
+        },
+      )
+      const solverTraceIdByEvaluationTraceId = new Map<string, string>()
+      for (
+        let traceIndex = 0;
+        traceIndex < evaluatedNewTraces.length;
+        traceIndex++
+      ) {
+        solverTraceIdByEvaluationTraceId.set(
+          uniquelyNamedNewTraces[traceIndex]!.pcb_trace_id,
+          evaluatedNewTraces[traceIndex]!.pcb_trace_id,
+        )
+      }
+      for (const movableSection of this.movablePreloadedSections) {
+        solverTraceIdByEvaluationTraceId.set(
+          movableSection.evaluationTraceId,
+          `${movableSection.syntheticConnectionName}_0`,
+        )
+      }
+      const movableTraceIds = new Set(solverTraceIdByEvaluationTraceId.values())
+      const routedTraces = [
+        ...nonMovableMutatedPreloadedTraces,
+        ...evaluatedMovablePreloadedTraces,
+        ...uniquelyNamedNewTraces,
+      ]
+      const evaluatedTraces = combinePreloadedAndRoutedTraces(
+        params.originalSrj.traces ?? [],
+        routedTraces,
+      )
+      return {
+        evaluatedTraces,
+        movableTraceIds,
+        originalTraceIdByEvaluationTraceId,
+        routedTraces,
+        solverTraceIdByEvaluationTraceId,
+      }
+    }
+    const normalizeCandidateDrcResult = ({
+      errors,
+      errorsWithCenters,
+      circuitJson,
+      movableTraceIds,
+      solverTraceIdByEvaluationTraceId,
+    }: {
+      errors: Array<Record<string, unknown>>
+      errorsWithCenters: Array<Record<string, unknown>>
+      circuitJson: AnyCircuitElement[]
+      movableTraceIds: ReadonlySet<string>
+      solverTraceIdByEvaluationTraceId: ReadonlyMap<string, string>
+    }): NormalizedCandidateDrcResult => {
+      const remappedCircuitJson = circuitJson.map((element) => {
+        if (
+          !("pcb_trace_id" in element) ||
+          typeof element.pcb_trace_id !== "string"
+        )
+          return element
+        const solverTraceId = solverTraceIdByEvaluationTraceId.get(
+          element.pcb_trace_id,
+        )
+        return solverTraceId
+          ? { ...element, pcb_trace_id: solverTraceId }
+          : element
+      })
+      return {
+        errors: normalizePipeline9DrcErrorsForRepair({
+          errors: remapDrcTraceIds(errors, solverTraceIdByEvaluationTraceId),
+          circuitJson: remappedCircuitJson,
+          newTraceIds: movableTraceIds,
+        }),
+        errorsWithCenters: normalizePipeline9DrcErrorsForRepair({
+          errors: remapDrcTraceIds(
+            errorsWithCenters,
+            solverTraceIdByEvaluationTraceId,
+          ),
+          circuitJson: remappedCircuitJson,
+          newTraceIds: movableTraceIds,
+        }),
+      }
+    }
+
+    // Candidate repairs change route geometry, not the declared connectivity.
+    const connectivityMaps = {
+      source: getConnectivityMapFromSimpleRouteJson(
+        params.originalSrj === params.srjWithPointPairs
+          ? params.originalSrj
+          : {
+              ...params.originalSrj,
+              connections: [
+                ...params.srjWithPointPairs.connections,
+                ...params.originalSrj.connections,
+              ],
+            },
+      ),
+      route: getConnectivityMapFromSimpleRouteJson(params.srjWithPointPairs),
+    }
+    const evaluateCandidateDrc = createPipeline9AutoroutingDrcEvaluator({
+      includeBoardClearance: true,
+      connectivityMaps,
+      inputSrj: params.originalSrj,
+      srjWithPointPairs: params.srjWithPointPairs,
+      drcOptions: { traceClearance, viaClearance: viaHoleClearance },
+    })
+    const referenceDrcEvaluator = (
+      { routes, hdRoutes }: Parameters<DrcEvaluator>[0],
+      includeTraceContinuity = true,
+    ): NormalizedCandidateDrcResult => {
+      const evaluatedRoutes = routes ?? hdRoutes
+      if (!evaluatedRoutes) {
+        throw new Error("Pipeline9 reference DRC repair requires HD routes")
+      }
+      const candidateDrcInput = prepareCandidateDrcInput(evaluatedRoutes)
+      const evaluatedDrc = evaluateCandidateDrc(
+        candidateDrcInput.routedTraces,
+        { includeTraceContinuity },
+      )
+      const evaluatedTraceIds = new Set(
+        candidateDrcInput.evaluatedTraces.map((trace) => trace.pcb_trace_id),
+      )
+      const evaluatedErrors = addAutoroutingViaTraceIds({
+        errors: evaluatedDrc.errors as unknown as Array<
+          Record<string, unknown>
+        >,
+        circuitJson: evaluatedDrc.circuitJson,
+        evaluatedTraceIds,
+      })
+      const evaluatedErrorsWithCenters = addAutoroutingViaTraceIds({
+        errors: evaluatedDrc.errorsWithCenters as unknown as Array<
+          Record<string, unknown>
+        >,
+        circuitJson: evaluatedDrc.circuitJson,
+        evaluatedTraceIds,
+      })
+      const evaluatedNewErrors = filterPipeline9DrcErrorsAgainstBaseline({
+        errors: evaluatedErrors,
+        baselineErrors,
+        originalTraceIdByPreparedTraceId:
+          candidateDrcInput.originalTraceIdByEvaluationTraceId,
+      })
+      const evaluatedNewErrorsWithCenters =
+        filterPipeline9DrcErrorsAgainstBaseline({
+          errors: evaluatedErrorsWithCenters,
+          baselineErrors: baselineErrorsWithCenters,
+          originalTraceIdByPreparedTraceId:
+            candidateDrcInput.originalTraceIdByEvaluationTraceId,
+        })
       const prioritizeCircuitJsonErrors =
         hasNativePreloadedTraces ||
         !this.initialBoundedRegionalRepairSolver?.solved
@@ -1869,4 +2388,3 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     return this.exactRepairSolver?.visualize() ?? {}
   }
 }
-
