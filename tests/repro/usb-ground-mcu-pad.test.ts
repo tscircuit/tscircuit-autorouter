@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs"
 import { gunzipSync } from "node:zlib"
 import { getSvgFromGraphicsObject } from "graphics-debug"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
+import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import type { SimpleRouteJson } from "lib/types"
 import { getSegmentToObstacleDistance } from "lib/utils/getSegmentToObstacleDistance"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
@@ -22,13 +23,12 @@ test("snapshot the USB ground route near MCU pin 15", async (): Promise<void> =>
   expect(solver.solved, solver.error ?? "").toBeTrue()
 
   // J1.A12 and the U1 exposed ground pad are ports 14 and 53 in this capture.
-  const ground = solver
-    .getOutputSimplifiedPcbTraces()
-    .filter(
-      (trace) =>
-        trace.connectsTo?.includes("pcb_port_14") &&
-        trace.connectsTo.includes("pcb_port_53"),
-    )
+  const routedTraces = solver.getOutputSimplifiedPcbTraces()
+  const ground = routedTraces.filter(
+    (trace) =>
+      trace.connectsTo?.includes("pcb_port_14") &&
+      trace.connectsTo.includes("pcb_port_53"),
+  )
   expect(ground).toHaveLength(1)
 
   const pads = input.obstacles.filter(
@@ -58,5 +58,13 @@ test("snapshot the USB ground route near MCU pin 15", async (): Promise<void> =>
   })
   graphics.rects[pin15]!.fill = "#fbbf24"
   const svg = getSvgFromGraphicsObject(graphics, { backgroundColor: "white" })
-  await expect(svg).toMatchSvgSnapshot(import.meta.path)
+  const { errors } = evaluateRelaxedDrc({
+    inputSrj: input,
+    srjWithPointPairs: solver.srjWithPointPairs!,
+    routedTraces,
+  })
+  const label = `<text x="16" y="32" font-family="sans-serif" font-size="19">Full-board relaxed DRC errors: ${errors.length}</text>`
+  await expect(svg.replace("</svg>", label + "</svg>")).toMatchSvgSnapshot(
+    import.meta.path,
+  )
 })
