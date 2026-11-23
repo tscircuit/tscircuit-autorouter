@@ -85,13 +85,7 @@ export const pipeline9HighDensitySteps = [
         changedPreloadedTraceSections.length === 0
       ) {
         bgaEscapeBoard = {
-          inputSrj: {
-            ...pipeline.originalSrj,
-            traces: pipeline.originalSrj.traces?.map((trace) => ({
-              ...trace,
-              isFixed: true,
-            })),
-          },
+          inputSrj: pipeline.originalSrj,
           pointPairs: pipeline.srjWithPointPairs!.connections,
           components: pipeline.componentDetectionSolver!.getOutput(),
         }
