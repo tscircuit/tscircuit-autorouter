@@ -27,6 +27,7 @@ test("Pipeline9 routes across a preloaded default via's missing bottom obstacle"
       {
         type: "pcb_trace",
         pcb_trace_id: "preloaded-transition",
+        isFixed: true,
         connection_name: "preloaded-transition",
         route: [
           { route_type: "wire", x: 0, y: -1, width: 0.1, layer: "top" },

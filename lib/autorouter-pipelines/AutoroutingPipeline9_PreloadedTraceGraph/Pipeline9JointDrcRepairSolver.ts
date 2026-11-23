@@ -2181,6 +2181,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       connMap: this.params.connMap,
       originalSrj: {
         ...this.params.originalSrj,
+        obstacles: this.params.srj.obstacles,
         traces: undefined,
         connections: [
           ...this.params.originalSrj.connections,

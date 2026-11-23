@@ -1,3 +1,4 @@
+import type { BoundedConnectionSolver } from "../../solvers/BoundedConnectionSolver/BoundedConnectionSolver"
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import type { Pipeline9EffortCleanupSolver } from "./Pipeline9EffortCleanupSolver"
 import type { RectDiffPipeline } from "@tscircuit/rectdiff"
@@ -145,7 +146,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   connMap!: ConnectivityMap
   srjWithEscapeViaLocations?: SimpleRouteJson
   srjWithPointPairs?: SimpleRouteJson
-  originalSrj: SimpleRouteJson
+  boundedConnectionSolver?: BoundedConnectionSolver
+  readonly originalSrj: SimpleRouteJson
+  routingInput: SimpleRouteJson
   private readonly excludedGaps = new ClearanceGapIndex()
   private hasRefinedFixedWireViaSites = false
   capacityNodes: CapacityMeshNode[] | null = null
@@ -194,6 +197,10 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     super()
     const srjWithBoardValidObstacleLayers =
       createSrjWithBoardValidObstacleLayers(srj)
+    if (!srj.connections.some((c) => c.maxViaCount === 0 && c.maxLength !== undefined)) {
+      this.pipelineDef = this.pipelineDef.filter((step) => step.solverName !== "boundedConnectionSolver")
+    }
+    this.routingInput = srjWithBoardValidObstacleLayers
     this.originalSrj = srjWithBoardValidObstacleLayers
     this.opts = { ...opts }
     const mutableOpts = this.opts
@@ -227,6 +234,12 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     this.startTimeOfPhase = {}
     this.endTimeOfPhase = {}
     this.timeSpentOnPhase = {}
+  }
+
+  applyBoundedConnections(solver: BoundedConnectionSolver): void {
+    this.routingInput = solver.getRoutingInput(this.originalSrj)
+    this.srj = solver.getRoutingInput(this.srj)
+    this.srjWithEscapeViaLocations = this.srj
   }
 
   private setSimpleRouteJson(srj: SimpleRouteJson) {
@@ -320,7 +333,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     const refined = splitNodesWithoutThroughViaSite({
       nodes,
       layerChangeNodeIds,
-      srj: this.originalSrj,
+      srj: this.routingInput,
       connMap: this.connMap,
       viaDiameter: this.viaDiameter,
     })
@@ -337,7 +350,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     const { clearanceGapsByPortId } = this.preloadedTraceGraphSolver!
     const checkViaSites =
       !this.hasRefinedFixedWireViaSites &&
-      this.originalSrj.traces?.some((trace) => trace.isFixed)
+      this.routingInput.traces?.some((trace) => trace.isFixed)
     if (!checkViaSites && clearanceGapsByPortId.size < 2) return false
 
     const { nodesWithPortPoints } = this.portPointPathingSolver!.getOutput()
@@ -550,7 +563,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
 
     const routedTraces = convertPipeline7HdRoutesToSimplifiedPcbTraces({
       connections: this.netToPointPairsSolver?.newConnections ?? [],
-      originalConnections: this.originalSrj.connections,
+      originalConnections: this.routingInput.connections,
       hdRoutes: canonicalizePipeline9HdRoutes(this._getOutputHdRoutes()),
       layerCount: this.srj.layerCount,
       obstacles: this.srj.obstacles,
@@ -559,7 +572,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     })
     return assignUniquePcbTraceIdsToNewTraces(
       routedTraces,
-      this.originalSrj.traces ?? [],
+      this.routingInput.traces ?? [],
     )
   }
 
@@ -585,6 +598,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       )
     }
     return [
+      ...(this.boundedConnectionSolver?.traces ?? []),
       ...this.getPowerTraceExpansionFixedTraces().filter(
         (trace) => trace.__replaces_pcb_trace_id !== undefined,
       ),

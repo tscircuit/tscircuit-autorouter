@@ -1,3 +1,4 @@
+import { BoundedConnectionSolver } from "lib/solvers/BoundedConnectionSolver/BoundedConnectionSolver"
 import { ComponentDetectionSolver } from "lib/solvers/ComponentDetectionSolver/ComponentDetectionSolver"
 import { MultiTargetNecessaryCrampedPortPointSolver } from "lib/solvers/NecessaryCrampedPortPointSolver/MultiTargetNecessaryCrampedPortPointSolver"
 import { retainRequiredCrampedPortPoints } from "lib/solvers/NecessaryCrampedPortPointSolver/retainRequiredCrampedPortPoints"
@@ -80,6 +81,17 @@ export const pipeline9TopologySteps = [
       pipeline.srj =
         pipeline.escapeViaLocationSolver!.getOutputSimpleRouteJson()
       pipeline.srjWithEscapeViaLocations = pipeline.srj
+    },
+  }),
+  definePipeline9Step({
+    solverName: "boundedConnectionSolver",
+    solverClass: BoundedConnectionSolver,
+    getConstructorParams: (pipeline) => [
+      pipeline.srj,
+      pipeline.escapeViaLocationSolver!.createdEscapeVias,
+    ],
+    onSolved: (pipeline) => {
+      pipeline.applyBoundedConnections(pipeline.boundedConnectionSolver!)
     },
   }),
   definePipeline9Step({

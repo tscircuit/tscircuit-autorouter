@@ -1,4 +1,6 @@
-import { beforeAll, expect, test } from "bun:test"
+import { checkTraceContinuity } from "lib/utils/autorouting-drc/checkTraceContinuity"
+import { getExternalViaGroups } from "lib/utils/autorouting-drc/getExternalViaGroups"
+import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { getBugReportSnapshotSvg } from "lib/testing/getBugReportSnapshotSvg"
@@ -60,13 +62,11 @@ const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(input, {
   cacheProvider: null,
 })
 
-beforeAll(() => {
+test("the Bluetooth gamepad routes with zero copper errors, connected terminals and via-free crystal paths under 10 mm", async (): Promise<void> => {
   solver.solve()
   expect(solver.solved).toBe(true)
   expect(solver.failed).toBe(false)
-})
 
-test("copper DRC on the four-layer Bluetooth gamepad", async (): Promise<void> => {
   const snapshotInput = {
     inputSrj: input,
     srjWithPointPairs: solver.srjWithPointPairs!,
@@ -78,19 +78,17 @@ test("copper DRC on the four-layer Bluetooth gamepad", async (): Promise<void> =
       includeTraceContinuity: false,
     },
   }
-  const { errors, locationAwareErrors } = evaluateRelaxedDrc(snapshotInput)
+  const { errors, locationAwareErrors, circuitJson } = evaluateRelaxedDrc(snapshotInput)
   expect(locationAwareErrors).toHaveLength(errors.length)
-  const contacts = errors.filter((error) =>
-    error.message.includes("accidental contact"),
-  )
-  expect(contacts).toHaveLength(0)
+  expect(checkTraceContinuity(circuitJson, {
+    getExternalViaConnections: getExternalViaGroups(snapshotInput.srjWithPointPairs),
+    isDeclaredTerminal: () => false,
+  })).toHaveLength(0)
   await expect(
     getBugReportSnapshotSvg(snapshotInput, { showErrorLocations: true }),
   ).toMatchSvgSnapshot(import.meta.path)
   expect(errors).toHaveLength(0)
-})
 
-test("the MCU-to-crystal routes meet the board's 10 mm limit", () => {
   for (const [clock, mcu, crystal, capacitor] of [
     ["source_net_19", "pcb_port_33", "pcb_port_57", "pcb_port_61"],
     ["source_net_20", "pcb_port_34", "pcb_port_60", "pcb_port_63"],

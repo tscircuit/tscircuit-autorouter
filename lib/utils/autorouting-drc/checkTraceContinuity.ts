@@ -281,6 +281,10 @@ const getMissingConnectionCenter = (
 /** Validates routed endpoints and via alignment without invoking board-wide checks. */
 export const checkTraceContinuity = (
   circuitJson: AnyCircuitElement[],
+  routing?: {
+    getExternalViaConnections: (elements: AnyCircuitElement[]) => string[][]
+    isDeclaredTerminal: (connection: string, endpoint: Wire) => boolean
+  },
 ): Record<string, unknown>[] => {
   const errors: Record<string, unknown>[] = []
   const ports = circuitJson.filter((element) => element.type === "pcb_port")
@@ -496,7 +500,7 @@ export const checkTraceContinuity = (
   const getPhysicalConnectivity = (): ConnectivityMap => {
     if (physicalConnectivity) return physicalConnectivity
     const map = new ConnectivityMap({})
-    const connections: string[][] = []
+    const connections: string[][] = routing?.getExternalViaConnections(circuitJson) ?? []
     const indexedSegments = segments.map((segment, order) => ({
       ...segment,
       order,
@@ -879,6 +883,7 @@ export const checkTraceContinuity = (
     for (const [index, endpoint] of [first, last].entries()) {
       if (endpoint.route_type !== "wire") continue
       if (index === 1 && sameEndpoints && !firstConnected) continue
+      if (routing?.isDeclaredTerminal(sourceTraceId, endpoint)) continue
       if (
         [...padsByPort.values()].some((portPads) =>
           portPads.some((pad) => routePointTouchesPad(endpoint, pad)),

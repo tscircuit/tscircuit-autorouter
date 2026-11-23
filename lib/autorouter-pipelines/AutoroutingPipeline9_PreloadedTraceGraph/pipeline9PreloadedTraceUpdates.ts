@@ -29,7 +29,7 @@ type Pipeline9PreloadedFixedRouteState = {
 export function getOriginalFixedHdRoutes(
   pipeline: AutoroutingPipelineSolver9_PreloadedTraceGraph,
 ): PreloadedHighDensityRoute[] {
-  return (pipeline.originalSrj.traces ?? []).flatMap((trace, traceIndex) =>
+  return (pipeline.routingInput.traces ?? []).flatMap((trace, traceIndex) =>
     convertPreloadedTraceToHdRoutes(
       trace,
       traceIndex,
@@ -56,7 +56,7 @@ function getPreloadedFixedRouteStateAfterHighDensity(
   const changedSections = getChangedPreloadedTraceSections(pipeline)
   const fixedRoutesWithoutChangedSections =
     removeChangedSectionsFromFixedHdRoutes({
-      traces: pipeline.originalSrj.traces ?? [],
+      traces: pipeline.routingInput.traces ?? [],
       fixedHdRoutes: originalFixedRoutes,
       sections: changedSections,
     })
@@ -64,7 +64,7 @@ function getPreloadedFixedRouteStateAfterHighDensity(
     changedSections.length === 0
       ? []
       : getMaterializedPreloadedSectionHdRoutes({
-          traces: pipeline.originalSrj.traces ?? [],
+          traces: pipeline.routingInput.traces ?? [],
           sections: changedSections,
           stitchedHdRoutes:
             pipeline.highDensityStitchSolver?.mergedHdRoutes ?? [],
@@ -76,7 +76,7 @@ function getPreloadedFixedRouteStateAfterHighDensity(
   const materializedOriginalRouteNames = originalFixedRoutes
     .filter((route) =>
       materializedTraceIds.has(
-        pipeline.originalSrj.traces?.[route.preloadedTraceIndex]
+        pipeline.routingInput.traces?.[route.preloadedTraceIndex]
           ?.pcb_trace_id ?? "",
       ),
     )
@@ -132,7 +132,7 @@ export function getPreloadedTraceUpdatesAfterHighDensity(
       : fixedRouteState.updatedFixedRoutes
 
   return applyFixedRouteReplacementsToPreloadedTraces({
-    originalTraces: pipeline.originalSrj.traces ?? [],
+    originalTraces: pipeline.routingInput.traces ?? [],
     originalFixedRoutes: fixedRouteState.originalFixedRoutes,
     updatedFixedRoutes,
     replacedConnectionNames: fixedRouteState.replacedConnectionNames,
