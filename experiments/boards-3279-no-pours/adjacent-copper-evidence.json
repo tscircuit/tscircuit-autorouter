@@ -1,0 +1,191 @@
+{
+  "feature": "Upper-left top/inner1 layer-change via",
+  "neighborCell": "cmn_1130",
+  "originalAndFixedNeighborRoutesEqual": true,
+  "neighborRouteSha256": "826a8256e12564367efa0d34b7cea598ca5314e0a497a5b92878911c99fc5fba",
+  "capturedNeighborRoutes": [
+    {
+      "connectionName": "source_net_201",
+      "rootConnectionName": "connectivity_net128",
+      "regionId": "cmn_1130",
+      "traceThickness": 0.11,
+      "viaDiameter": 0.45,
+      "route": [
+        {
+          "portPointId": "ce21817_pp0_z1::1",
+          "x": -10.575,
+          "y": -7.316666666666666,
+          "z": 1,
+          "connectionName": "source_net_201",
+          "rootConnectionName": "connectivity_net128",
+          "nextPortPointId": "ce21817_pp1_z1::1"
+        },
+        {
+          "x": -10.575,
+          "y": -7.2375,
+          "z": 1
+        },
+        {
+          "x": -10.575,
+          "y": -7.1187499999999995,
+          "z": 1
+        },
+        {
+          "portPointId": "ce21817_pp1_z1::1",
+          "x": -10.575,
+          "y": -7,
+          "z": 1,
+          "connectionName": "source_net_201",
+          "rootConnectionName": "connectivity_net128",
+          "prevPortPointId": "ce21817_pp0_z1::1"
+        }
+      ],
+      "vias": []
+    },
+    {
+      "connectionName": "source_net_201",
+      "rootConnectionName": "connectivity_net128",
+      "regionId": "cmn_1130",
+      "traceThickness": 0.11,
+      "viaDiameter": 0.45,
+      "route": [
+        {
+          "portPointId": "ce21817_pp1_z0::0",
+          "x": -10.575,
+          "y": -7,
+          "z": 0,
+          "connectionName": "source_net_201",
+          "rootConnectionName": "connectivity_net128",
+          "nextPortPointId": "ce21817_pp2_z0::0"
+        },
+        {
+          "x": -10.575,
+          "y": -6.8812500000000005,
+          "z": 0
+        },
+        {
+          "x": -10.575,
+          "y": -6.7625,
+          "z": 0
+        },
+        {
+          "portPointId": "ce21817_pp2_z0::0",
+          "x": -10.575,
+          "y": -6.683333333333334,
+          "z": 0,
+          "connectionName": "source_net_201",
+          "rootConnectionName": "connectivity_net128",
+          "prevPortPointId": "ce21817_pp1_z0::0"
+        }
+      ],
+      "vias": []
+    }
+  ],
+  "fixture": [
+    {
+      "type": "pcb_trace",
+      "pcb_trace_id": "adjacent_cell_trace_0",
+      "connection_name": "source_net_201",
+      "rootConnectionName": "connectivity_net128",
+      "route": [
+        {
+          "route_type": "wire",
+          "x": -10.575,
+          "y": -7.316666666666666,
+          "width": 0.11,
+          "layer": "inner1"
+        },
+        {
+          "route_type": "wire",
+          "x": -10.575,
+          "y": -7.2375,
+          "width": 0.11,
+          "layer": "inner1"
+        },
+        {
+          "route_type": "wire",
+          "x": -10.575,
+          "y": -7.1187499999999995,
+          "width": 0.11,
+          "layer": "inner1"
+        },
+        {
+          "route_type": "wire",
+          "x": -10.575,
+          "y": -7,
+          "width": 0.11,
+          "layer": "inner1"
+        }
+      ]
+    },
+    {
+      "type": "pcb_trace",
+      "pcb_trace_id": "adjacent_cell_trace_1",
+      "connection_name": "source_net_201",
+      "rootConnectionName": "connectivity_net128",
+      "route": [
+        {
+          "route_type": "wire",
+          "x": -10.575,
+          "y": -7,
+          "width": 0.11,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -10.575,
+          "y": -6.8812500000000005,
+          "width": 0.11,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -10.575,
+          "y": -6.7625,
+          "width": 0.11,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -10.575,
+          "y": -6.683333333333334,
+          "width": 0.11,
+          "layer": "top"
+        }
+      ]
+    }
+  ],
+  "modes": [
+    {
+      "mode": "before",
+      "copperDrc": 15,
+      "withOuterCutEnds": 63,
+      "outerCutEndErrors": 48,
+      "picturedNetOuterCuts": 2,
+      "newContextErrors": [
+        {
+          "type": "pcb_trace_error",
+          "error_type": "pcb_trace_error",
+          "message": "PCB trace unnamed trace is too close to unnamed trace (gap: 0.088mm)",
+          "pcb_trace_id": "adjacent_cell_trace_1",
+          "source_trace_id": "",
+          "pcb_trace_error_id": "overlap_adjacent_cell_trace_1_route_11",
+          "pcb_component_ids": [],
+          "center": {
+            "x": -10.505659871244635,
+            "y": -7.0707258064516125
+          },
+          "pcb_port_ids": []
+        }
+      ]
+    },
+    {
+      "mode": "after",
+      "copperDrc": 10,
+      "withOuterCutEnds": 58,
+      "outerCutEndErrors": 48,
+      "picturedNetOuterCuts": 2,
+      "newContextErrors": []
+    }
+  ]
+}

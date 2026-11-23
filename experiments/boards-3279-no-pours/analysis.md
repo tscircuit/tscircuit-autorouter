@@ -14,7 +14,7 @@ A smaller final-output-only check was tested: it rejected the unsafe candidate b
 
 | Captured real input | Before | After |
 | --- | ---: | ---: |
-| Region relaxed copper DRC errors | 14 | 10 |
+| Region and captured neighbor copper DRC errors | 15 | 10 |
 | Region terminal pairs routed | 26/26 | 26/26 |
 | Foreign terminals inside required via clearance | 4 | 0 |
 | Full detailed-routing input: cells completed | 1,477 | 1,684 |
@@ -32,16 +32,26 @@ The native PCB renderer uses the complete routed result for both views. The over
 
 | View | Before | After |
 | --- | --- | --- |
-| Complete subcircuit | ![Before](https://raw.githubusercontent.com/tscircuit/tscircuit-autorouter/51dd4abc91aefe0f86bc07d02fe4630894390018/tests/repro/__snapshots__/through-via-terminal-window.snap.svg) | ![After](https://raw.githubusercontent.com/tscircuit/tscircuit-autorouter/cdd3d16f258fe8af9adebb455e1b8f1fe36a2dac/tests/repro/__snapshots__/through-via-terminal-window.snap.svg) |
-| Bottom-layer close-up | ![Before](https://raw.githubusercontent.com/tscircuit/tscircuit-autorouter/51dd4abc91aefe0f86bc07d02fe4630894390018/tests/repro/__snapshots__/through-via-terminal-window-bottom-detail.snap.svg) | ![After](https://raw.githubusercontent.com/tscircuit/tscircuit-autorouter/cdd3d16f258fe8af9adebb455e1b8f1fe36a2dac/tests/repro/__snapshots__/through-via-terminal-window-bottom-detail.snap.svg) |
+| Complete subcircuit | ![Before](https://raw.githubusercontent.com/tscircuit/tscircuit-autorouter/c69519ae2f697a106d1842b53b511b9b05a1a311/tests/repro/__snapshots__/through-via-terminal-window.snap.svg) | ![After](https://raw.githubusercontent.com/tscircuit/tscircuit-autorouter/df7df8ded6f1bddc61dbc1cea3b6d6d2acc93b1c/tests/repro/__snapshots__/through-via-terminal-window.snap.svg) |
+| Bottom-layer close-up | ![Before](https://raw.githubusercontent.com/tscircuit/tscircuit-autorouter/c69519ae2f697a106d1842b53b511b9b05a1a311/tests/repro/__snapshots__/through-via-terminal-window-bottom-detail.snap.svg) | ![After](https://raw.githubusercontent.com/tscircuit/tscircuit-autorouter/df7df8ded6f1bddc61dbc1cea3b6d6d2acc93b1c/tests/repro/__snapshots__/through-via-terminal-window-bottom-detail.snap.svg) |
 
-## Why the region shows open ends
+## The specific upper-left via
 
-This is a regional router input, containing 26 terminal-pair routes across 16 connection names, rather than a physical circuit with its pads and neighboring routes. All 52 output endpoints match the original captured port objects, including coordinates, layer and identity. The physical coordinates match the parent region exactly. Every endpoint lies on the original 5.875 × 3.9 mm mesh-cell boundary; all 13 layer transitions are co-located with their vias. The expanded repair search may detour beyond that original port boundary.
+The pictured via connects top and inner1 ports at the same X/Y position. Its two short arms overlap in projection, with red top copper hiding green inner1 copper. My earlier extraction omitted two real traces along that boundary, so this piece remained visibly isolated even after I added a frame.
 
-Enabling continuity-to-pad checking adds exactly 52 errors, all at these cut terminals: 66 total errors before and 62 after. The reported 14 → 10 measures copper DRC with those expected cut-end errors excluded. This capture does not demonstrate complete board connectivity.
+Replaying the original detailed-routing input recovers both neighboring-cell traces from `cmn_1130`: one top-layer continuation to the route above and one inner1 continuation to the route below. They are byte-identical in the original and fixed parent runs. The repro now includes both as existing SRJ traces, in physical millimetres, and checks that this net has only its two outer cut ends. The parent capture and fixture data are recorded in adjacent-copper-evidence.json.
 
-The visualization now outlines the actual cut-port boundary and labels the open ends. It adds no pads, copper, or invented connections. All native copper SVG elements are unchanged by the annotation; eight unannotated graphics/native views remain byte-identical. Both revised overviews and both close-ups were visually inspected. The snapshot test now also checks all 52 terminal objects, every via transition, and boundary membership. See cut-terminal-audit.json for the measurements.
+![The exact feature with its captured neighboring copper](upper-left-with-adjacent-copper.svg)
+
+This correction adds six real line segments to the full native PCB views and preserves every existing candidate copper element. The bottom-layer detail is geometrically unchanged because both added traces are on other layers. All revised views were visually inspected.
+
+## Remaining outer cut terminals
+
+The regional candidate has 26 terminal pairs and 52 input ports across 16 connection names. Every candidate output endpoint matches the original input port, and all 13 layer transitions meet their vias. The expanded search may detour outside the original mesh-port boundary.
+
+Adding the two neighboring traces joins four of the previously open mesh terminals. Forty-eight outer cut-end errors remain when continuity-to-pad checking is enabled: 63 total errors before and 58 after. The copper-only count is now 15 → 10; restoring the genuine neighboring copper exposes one additional original clearance error (a 0.088 mm gap between the top-layer continuation and a different net), which disappears with the existing fix. The isolated candidate without these two traces had the previously reported 14 → 10 count.
+
+Physical pads and the rest of the board remain outside this regional sample. This reproduction demonstrates the local clearance fix, not complete board connectivity. The pictured via now visibly joins the routes above and below instead of relying on a cut-boundary explanation.
 
 ## All 19 boards
 
@@ -106,4 +116,4 @@ Broader prototypes are superseded. Unconditional activation, general board-model
 
 The source starts from the A01 commit already pinned by the latest autorouter (existing source PR #151). No tscircuit main-package PR was created. The consumer stack is repro #4121 → visualization #4127 → routing fix #4122. The visualization PR adds an opt-in native PCB camera and layer view to the existing snapshot helper using the already installed renderer. The routing production files are unchanged from the benchmarked fix.
 
-The revised source fix passes Bun CI: https://github.com/tscircuit/high-density-a01/actions/runs/45072506932 . Local focused snapshot tests, the focused type check, and the consumer ESM/DTS build pass. All nine Bun shards pass on each consumer PR: [repro 8895a36f](https://github.com/tscircuit/tscircuit-autorouter/actions/runs/45072941587), [visualization with cut-boundary annotations 51dd4abc](https://github.com/tscircuit/tscircuit-autorouter/actions/runs/45077935334), and [fix cdd3d16f](https://github.com/tscircuit/tscircuit-autorouter/actions/runs/45078046121). The repro also passes type, format, build and Vercel checks. Source repro CI passes: https://github.com/tscircuit/high-density-a01/actions/runs/45072469007 . Final results and asset hashes are recorded in validation.json; real-terminal-repro.json records complete-constructor equality, portfolio/direct output hashes, and measured endpoint clearance.
+The source fix passes Bun CI: https://github.com/tscircuit/high-density-a01/actions/runs/45072506932 . Source production code and the 19-board routing change are unchanged. Local focused snapshot, endpoint, via and neighboring-join checks pass in both modes (141 assertions), as do focused type checks. The updated repro passes type, format and build CI. Full nine-shard runs are pending for repro 76ae099c, visualization c69519ae and fix df7df8de; final results are recorded in validation.json.
