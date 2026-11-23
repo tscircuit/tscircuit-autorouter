@@ -4,6 +4,7 @@ import { gunzipSync } from "node:zlib"
 import { getSvgFromGraphicsObject } from "graphics-debug"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import type { SimpleRouteJson } from "lib/types"
+import { getSegmentToObstacleDistance } from "lib/utils/getSegmentToObstacleDistance"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
 
 test("snapshot the USB ground route near MCU pin 15", async (): Promise<void> => {
@@ -37,6 +38,18 @@ test("snapshot the USB ground route near MCU pin 15", async (): Promise<void> =>
     (o) => o.circuitJsonMetadata?.source_port_name === "pin15",
   )
   expect(pin15).toBeGreaterThanOrEqual(0)
+  const route = ground[0]!.route
+  for (const [index, start] of route.entries()) {
+    const end = route[index + 1]
+    if (start.route_type !== "wire" || start.layer !== "top" || !end) continue
+    if (end.route_type !== "wire" && end.route_type !== "via") continue
+    const distance = getSegmentToObstacleDistance({
+      start,
+      end,
+      obstacle: pads[pin15]!,
+    })
+    expect(distance).toBeGreaterThan(start.width / 2)
+  }
   const graphics = convertSrjToGraphicsObject({
     ...input,
     connections: [],

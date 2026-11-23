@@ -13,6 +13,10 @@ import {
   type SimpleRouteJson as RepairSimpleRouteJson,
   type SimplifiedPcbTraces as RepairSimplifiedPcbTraces,
 } from "high-density-repair03/lib"
+import {
+  getDrcSnapshot,
+  hasNewTraceObstacleOverlaps,
+} from "high-density-repair03/lib/solvers/GlobalDrcForceImproveSolver/solverHelpers"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import { isObstacleConnectedToRoute } from "lib/solvers/TraceWidthSolver/isObstacleConnectedToRoute"
 import { combinePreloadedAndRoutedTraces } from "lib/utils/combinePreloadedAndRoutedTraces"
@@ -2278,8 +2282,23 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       this.combinedOutput,
     )
     if (contacts.length === 0) {
-      this.solved = true
-      return
+      const { srj, connMap, drcEvaluator } = this.exactRepairParams
+      const output = getDrcSnapshot(
+        srj,
+        this.combinedOutput,
+        drcEvaluator,
+        connMap,
+      )
+      const input = getDrcSnapshot(
+        srj,
+        this.traceContactInputHdRoutes,
+        drcEvaluator,
+        connMap,
+      )
+      if (!hasNewTraceObstacleOverlaps(output, input)) {
+        this.solved = true
+        return
+      }
     }
     this.traceContactRepairSolver = new TraceContactRepairSolver({
       ...this.exactRepairParams,
