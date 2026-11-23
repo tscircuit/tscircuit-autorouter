@@ -181,6 +181,7 @@ type TinyRegionMetadata = {
   netId?: number
   NetId?: number
   serializedRegionId?: string
+  _containsObstacle?: boolean
   _qfpRegionType?: InputNodeWithPortPoints["_qfpRegionType"]
   _isNarrowQfpPadGap?: boolean
   _offBoardConnectionId?: string
@@ -857,7 +858,9 @@ const clearPreloadedEndpointRegionNetIds = (loaded: LoadedTinyGraph) => {
       const hasExplicitNetId =
         typeof metadata?.netId === "number" ||
         typeof metadata?.NetId === "number"
-      if (!hasExplicitNetId) {
+      // A pad that saved copper lands on stays reserved for that copper's net;
+      // any other endpoint is only where the saved route happens to stop.
+      if (!hasExplicitNetId && metadata?._containsObstacle !== true) {
         loaded.problem.regionNetId[regionIndex] = -1
       }
     }
