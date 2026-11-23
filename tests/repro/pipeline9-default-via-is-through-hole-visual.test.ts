@@ -1,3 +1,5 @@
+import { pointToSegmentDistance } from "@tscircuit/math-utils"
+import { getPreloadedTracePrimitives } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/getPreloadedTracePrimitives"
 import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import { getBugReportSnapshotSvg } from "lib/testing/getBugReportSnapshotSvg"
@@ -57,6 +59,34 @@ test("Pipeline9 routes across a preloaded default via's missing bottom obstacle"
 
   expect(solver.solved).toBeTrue()
   expect(solver.failed).toBeFalse()
+  // Both lengths of saved wire terminate at the via, even in compact SRJ
+  // which only stores one wire coordinate on either side of the transition.
+  const wires = getPreloadedTracePrimitives(inputSrj).filter(
+    (primitive) => primitive.routePositionStart !== primitive.routePositionEnd,
+  )
+  expect(
+    wires.map(({ start, end, zLayers }) => [start.y, end.y, zLayers]),
+  ).toEqual([
+    [-1, 0, [0]],
+    [0, 1, [2]],
+  ])
+  const bottomTrace = solver
+    .getOutputSimplifiedPcbTraces()
+    .find((trace) => trace.connection_name === "bottom-trace")!
+  const bottomWires = bottomTrace.route.filter(
+    (point) => point.route_type === "wire",
+  )
+  expect(bottomWires.length).toBeGreaterThan(1)
+  for (let i = 1; i < bottomWires.length; i++) {
+    const a = bottomWires[i - 1]!,
+      b = bottomWires[i]!
+    const copperGap =
+      pointToSegmentDistance({ x: 0, y: 0 }, a, b) -
+      (Math.max(a.width, b.width) + inputSrj.minViaPadDiameter!) / 2
+    expect(copperGap).toBeGreaterThanOrEqual(
+      inputSrj.minTraceToPadEdgeClearance! - 1e-7,
+    )
+  }
   expect(
     getBugReportSnapshotSvg({
       inputSrj,
