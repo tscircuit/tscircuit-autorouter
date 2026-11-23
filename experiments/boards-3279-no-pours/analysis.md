@@ -14,9 +14,8 @@ A smaller final-output-only check was tested: it rejected the unsafe candidate b
 
 | Captured real input | Before | After |
 | --- | ---: | ---: |
-| Region and captured neighbor copper DRC errors | 15 | 10 |
-| Region terminal pairs routed | 26/26 | 26/26 |
-| Foreign terminals inside required via clearance | 4 | 0 |
+| Isolated captured A01 candidate: terminal pairs routed | 26/26 | 26/26 |
+| Isolated captured A01 candidate: foreign terminals inside via clearance | 4 | 0 |
 | Full detailed-routing input: cells completed | 1,477 | 1,684 |
 | Internal route pieces | 3,312 | 3,605 |
 | Detailed-routing iterations before stopping | 432,804 | 278,385 |
@@ -24,34 +23,22 @@ A smaller final-output-only check was tested: it rejected the unsafe candidate b
 
 The old failure at `cmn_248 / source_net_186` disappears. Routing later stops at `topology_merge_6579 / source_net_3_mst7`. The emitted circuit still has 53 traces and 97 vias: core publishes newly routed copper only when the entire routing phase succeeds. Additional internal cells are not published board connections.
 
-## Real SVG reproduction
+## Direct parent reproduction
 
-The repro now retains the complete observed regional candidate: 52 terminals and 26 terminal pairs, with no reduction, coordinate translation or identity changes in the constructor fixture. Its JSON equals the captured constructor props. The test restores the observed 2x search frame to board-world millimetres about the candidate center. Cut-terminal continuity is disabled because pads outside this region are absent; benchmark relaxed copper DRC remains enabled. Both versions route all 26 terminal pairs; other existing DRC errors remain.
+The consumer repro now runs the complete unmodified captured high-density parent constructor: 3,130 nodes, 1,714 pad obstacles and 1,013 preloaded route pieces. Its gzip is byte-identical to the observed constructor (SHA-256 `87134c75e21f6225e90a27dcb20010b4f3ce061a1d7de1e6f7423176b70b005a`). Only the serialized ConnectivityMap is rehydrated. The test executes one parent solver and snapshots that instance; it loads no saved output copper and applies no coordinate scaling.
 
-The native PCB renderer uses the complete routed result for both views. The overview shows the whole subcircuit; the bottom-layer close-up changes only the camera and visible layer, with identical before/after bounds. Blue is bottom copper and red rings are through vias. The foreign endpoint overlaps the nearest via by 0.00769 mm before the fix and has 0.14766 mm copper clearance afterward. All four revised native PCB PNGs were visually inspected, and all four public SVG links return HTTP 200. The checked-in SVG paths are identical across the stack so the routing fix creates a normal GitHub snapshot diff.
+The previous consumer example combined an isolated captured A01 candidate with two separately captured neighboring traces. Those coordinates were real, but the example was manually assembled. Calling it restored native parent output was inaccurate. That consumer fixture and its derived regional DRC claims (15 → 10) are withdrawn. The source A01 test remains an explicitly isolated captured-unit replay. Historical adjacent-copper and cut-terminal evidence files describe that superseded constructed example.
 
-| View | Before | After |
+The separate visualization PR adds `visualize({ showAcceptedRoutes: true })`. It renders the actual parent’s accepted routes, `getUpdatedFixedHdRoutes()` and its pad obstacles, with its failed/solved progress. Default child/candidate visualization is unchanged. This is a native routing-state diagnostic, not a completed-board rendering; unfinished routing can have open ends.
+
+| Native parent state | Before | After |
 | --- | --- | --- |
-| Complete subcircuit | ![Before](https://raw.githubusercontent.com/tscircuit/tscircuit-autorouter/c69519ae2f697a106d1842b53b511b9b05a1a311/tests/repro/__snapshots__/through-via-terminal-window.snap.svg) | ![After](https://raw.githubusercontent.com/tscircuit/tscircuit-autorouter/df7df8ded6f1bddc61dbc1cea3b6d6d2acc93b1c/tests/repro/__snapshots__/through-via-terminal-window.snap.svg) |
-| Bottom-layer close-up | ![Before](https://raw.githubusercontent.com/tscircuit/tscircuit-autorouter/c69519ae2f697a106d1842b53b511b9b05a1a311/tests/repro/__snapshots__/through-via-terminal-window-bottom-detail.snap.svg) | ![After](https://raw.githubusercontent.com/tscircuit/tscircuit-autorouter/df7df8ded6f1bddc61dbc1cea3b6d6d2acc93b1c/tests/repro/__snapshots__/through-via-terminal-window-bottom-detail.snap.svg) |
+| Overview | ![Before](native-parent-before.png) | ![After](native-parent-after.png) |
+| Same viewport around the original failure | ![Before](native-parent-before-detail.png) | ![After](native-parent-after-detail.png) |
 
-## The specific upper-left via
+The zoom changes only the native SVG viewport and white background extent. Every native copper and pad element is retained unchanged; `native-parent-camera-proof.json` records the camera and geometry check. Both overviews and zooms were visually inspected. These zooms show surrounding pads and retained neighboring copper from the same execution, without stitching in other outputs.
 
-The pictured via connects top and inner1 ports at the same X/Y position. Its two short arms overlap in projection, with red top copper hiding green inner1 copper. My earlier extraction omitted two real traces along that boundary, so this piece remained visibly isolated even after I added a frame.
-
-Replaying the original detailed-routing input recovers both neighboring-cell traces from `cmn_1130`: one top-layer continuation to the route above and one inner1 continuation to the route below. They are byte-identical in the original and fixed parent runs. The repro now includes both as existing SRJ traces, in physical millimetres, and checks that this net has only its two outer cut ends. The parent capture and fixture data are recorded in adjacent-copper-evidence.json.
-
-![The exact feature with its captured neighboring copper](upper-left-with-adjacent-copper.svg)
-
-This correction adds six real line segments to the full native PCB views and preserves every existing candidate copper element. The bottom-layer detail is geometrically unchanged because both added traces are on other layers. All revised views were visually inspected.
-
-## Remaining outer cut terminals
-
-The regional candidate has 26 terminal pairs and 52 input ports across 16 connection names. Every candidate output endpoint matches the original input port, and all 13 layer transitions meet their vias. The expanded search may detour outside the original mesh-port boundary.
-
-Adding the two neighboring traces joins four of the previously open mesh terminals. Forty-eight outer cut-end errors remain when continuity-to-pad checking is enabled: 63 total errors before and 58 after. The copper-only count is now 15 → 10; restoring the genuine neighboring copper exposes one additional original clearance error (a 0.088 mm gap between the top-layer continuation and a different net), which disappears with the existing fix. The isolated candidate without these two traces had the previously reported 14 → 10 count.
-
-Physical pads and the rest of the board remain outside this regional sample. This reproduction demonstrates the local clearance fix, not complete board connectivity. The pictured via now visibly joins the routes above and below instead of relying on a cut-boundary explanation.
+The checked-in SVG path is identical before and after, giving a regular GitHub snapshot diff: [before](https://github.com/tscircuit/tscircuit-autorouter/blob/032c787145e92955b1ff8b1495455429d58d31dd/tests/repro/__snapshots__/through-via-terminal-window.snap.svg), [after](https://github.com/tscircuit/tscircuit-autorouter/blob/63ef0f5251a03d53c0e1f310f0a7e85626274835/tests/repro/__snapshots__/through-via-terminal-window.snap.svg). `native-parent-replay.json` records the input and snapshot hashes and exact parent progress. The original failing cell has zero accepted routes before and nine after, including `source_net_186`; the later failure remains.
 
 ## All 19 boards
 
@@ -94,7 +81,7 @@ The six native fanout cases remain at 79/91, 83/95, 123/174, 13/32, 8/32 and 139
 
 One existing native partial-routing SVG changes. Its functional assertions pass. This older 0.0.3257 capture already failed before the fix and still fails afterward; its internal completed cells decrease from 463 to 204, and route pieces from 802 to 353. Inspecting its repaired output identified the reason: an accepted replacement via left **0.06838 mm** clearance at a foreign terminal against a **0.089 mm** routing requirement (`0.252829 − 0.28/2 − 0.0889/2`). A separate final-output-only validator rejects the same candidate and also stops at 204 cells. The extra old prefix depended on accepting that clearance violation. This is recorded explicitly rather than treating every internal progress count as unchanged.
 
-The updated regular SVG was regenerated locally, visually inspected, and is byte-identical to CI’s received SVG (`b4bd741258695a432c943dfe236f370c86b5edc7e006c119a9698dbe3b7d9c18`). The two native DDR regression samples remain solved and DRC-clean with their original snapshots. The optional native PCB view is a separate visualization change; default graphics snapshots retain their existing rendering.
+The updated regular SVG was regenerated locally, visually inspected, and is byte-identical to CI’s received SVG (`b4bd741258695a432c943dfe236f370c86b5edc7e006c119a9698dbe3b7d9c18`). The two native DDR regression samples remain solved and DRC-clean with their original snapshots. The optional retained-parent view is a separate visualization change; default graphics snapshots retain their existing rendering.
 
 ## Pipeline and runtime verification
 
@@ -114,6 +101,6 @@ Broader prototypes are superseded. Unconditional activation, general board-model
 - Autorouter visualization: https://github.com/tscircuit/tscircuit-autorouter/pull/4127
 - Autorouter integration: https://github.com/tscircuit/tscircuit-autorouter/pull/4122
 
-The source starts from the A01 commit already pinned by the latest autorouter (existing source PR #151). No tscircuit main-package PR was created. The consumer stack is repro #4121 → visualization #4127 → routing fix #4122. The visualization PR adds an opt-in native PCB camera and layer view to the existing snapshot helper using the already installed renderer. The routing production files are unchanged from the benchmarked fix.
+The source starts from the A01 commit already pinned by the latest autorouter (existing source PR #151). No tscircuit main-package PR was created. The consumer stack is repro #4121 → visualization #4127 → routing fix #4122. The visualization PR adds an opt-in retained-state view to the parent’s native visualization. The earlier generic PCB snapshot-helper extension is removed. The routing production files are unchanged from the benchmarked fix.
 
-The source fix passes Bun CI: https://github.com/tscircuit/high-density-a01/actions/runs/45072506932 . Source production code and the 19-board routing change are unchanged. Local focused snapshot, endpoint, via and neighboring-join checks pass in both modes (141 assertions), as do focused type checks. The updated repro passes type, format and build CI. All nine Bun shards pass on [repro 76ae099c](https://github.com/tscircuit/tscircuit-autorouter/actions/runs/45085972816), [visualization c69519ae](https://github.com/tscircuit/tscircuit-autorouter/actions/runs/45086012265), and [fix df7df8de](https://github.com/tscircuit/tscircuit-autorouter/actions/runs/45086064570). The repro also passes Vercel build checks. Final results are recorded in validation.json.
+The source fix passes Bun CI: https://github.com/tscircuit/high-density-a01/actions/runs/45072506932 . Source production code and the 19-board routing change are unchanged. The new direct parent snapshot replay and focused type checks pass locally before and after. Current consumer heads are repro `fb8c55d4`, visualization `032c7871`, and fix `63ef0f52`; their final CI results will be recorded in validation.json. One initial visualization shard stopped during dependency installation because Sharp’s unchanged libvips download returned HTTP 403; it did not execute tests.

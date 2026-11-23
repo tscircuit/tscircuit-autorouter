@@ -23,5 +23,7 @@
       "distinctBlockedTerminalCount": 0,
       "endpointCopperGapMm": 0.14765518001799427
     }
-  ]
+  ],
+  "status": "superseded_constructed_regional_example",
+  "replacement": "native-parent-replay.json"
 }

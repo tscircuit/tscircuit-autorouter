@@ -187,5 +187,7 @@
       "picturedNetOuterCuts": 2,
       "newContextErrors": []
     }
-  ]
+  ],
+  "status": "superseded_constructed_regional_example",
+  "replacement": "native-parent-replay.json"
 }
