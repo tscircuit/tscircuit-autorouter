@@ -1,0 +1,147 @@
+name: Validate independent main-based boundary handoffs on all ten full circuits
+on:
+  push:
+    branches: [analysis/e2e-independent-boundary-382]
+concurrency:
+  group: e2e-uploaded-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+jobs:
+  baseline:
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        sample: ["butterstick-original", "butterstick-spaced", "glider-original", "glider-spaced", "h616-original", "h616-spaced", "icepi-original", "icepi-spaced", "imx6-original", "imx6-spaced"]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 6e04803dd1d642822782a79bf3743cc8b844a186
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/core
+          ref: ce2683b98de40a7d4eaa4dc055ae105096c744d8
+          path: core
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Install pinned latest core dependencies
+        run: |
+          python3 - <<'PYSETUP'
+          from pathlib import Path
+          config=Path('core/bunfig.toml');config.write_text(config.read_text().replace('save = false','save = true'))
+          PYSETUP
+          for attempt in 1 2 3; do
+            if bun install --ignore-scripts; then break; fi
+            if [ "$attempt" = 3 ]; then exit 1; fi
+          done
+          for attempt in 1 2 3; do
+            if (cd core && bun install --ignore-scripts); then break; fi
+            if [ "$attempt" = 3 ]; then exit 1; fi
+          done
+      - name: Prepare exact uploaded sources and record dependency revisions
+        run: |
+          python3 - <<'PYSAMPLES'
+          import hashlib,json,shutil,zipfile
+          from pathlib import Path
+          source=Path('experiments/e2e-samples-20261120');runtime=Path('core/e2e-runtime');runtime.mkdir()
+          for name in ['worker-deep.tsx','run-deep.py','assess.ts','correct-workflow.tsx','connectivity.ts','intercept-internals.ts']:shutil.copyfile(source/name,runtime/name)
+          import gzip
+          (runtime/'expected-circuits.json').write_bytes(gzip.decompress((source/'expected-circuits.json.gz').read_bytes()))
+          manifest=json.loads((source/'inputs.json').read_text())
+          assert hashlib.sha256((source/'samples.zip').read_bytes()).hexdigest()==manifest['archiveSha256']
+          with zipfile.ZipFile(source/'samples.zip') as z:
+              for entry in manifest['samples']:
+                  content=z.read(entry['name'])
+                  assert hashlib.sha256(content).hexdigest()==entry['sha256']
+                  target=runtime/'samples'/entry['name'];target.parent.mkdir(exist_ok=True);target.write_bytes(content)
+          revisions={'tscircuit':'0.0.3280','core':'ce2683b98de40a7d4eaa4dc055ae105096c744d8','router':'native-installed-package','winding':'08d8da9d8dbb037eba332e7bfd685063f8805ed4','sampleMode':'fanout_first','archiveSha256':manifest['archiveSha256'],'coreLockSha256':hashlib.sha256(Path('core/bun.lock').read_bytes()).hexdigest()}
+          for package in ['@tscircuit/fanout-solver','@tscircuit/winding-breakout-point-solver','@tscircuit/capacity-autorouter','@tscircuit/props','@tscircuit/bus-lanes-solver','@tscircuit/checks','circuit-to-svg','react']:
+              revisions[package]=json.loads((Path('core/node_modules')/package/'package.json').read_text())['version']
+          assert revisions['@tscircuit/fanout-solver']=='0.0.104'
+          assert revisions['@tscircuit/capacity-autorouter']=='0.0.1156'
+          plane=Path('core/node_modules/@tscircuit/fanout-solver/lib/route-bus/route-plane-terminated-bus.ts').read_bytes()
+          assert b'initialBlockingBusCounts' in plane
+          assert (Path('core/node_modules/@tscircuit/fanout-solver/lib/route-bus/get-plane-via-reuse-alternative.ts')).exists()
+          solver=Path('core/node_modules/@tscircuit/fanout-solver/lib/fanout-solver.ts').read_bytes()
+          assert b'get outputSrj()' in solver
+          revisions['fanoutSolverSourceSha256']=hashlib.sha256(solver).hexdigest()
+          revisions['fanoutPlaneSourceSha256']=hashlib.sha256(plane).hexdigest()
+          winding=Path('core/node_modules/@tscircuit/winding-breakout-point-solver/lib/layer-assignment/assign-connection-layers.ts').read_bytes()
+          assert b'toReversed()' in winding
+          revisions['windingAssignmentSha256']=hashlib.sha256(winding).hexdigest()
+          assert revisions['windingAssignmentSha256']=='50b2a4a8955f04cf68caf2614d03e5ce40c39b0ad24ea7fde68f05f1400f7311'
+          revisions['interception']='read-only winding stages and original fanout clearance rejections'
+          analytic=Path('core/node_modules/@tscircuit/fanout-solver/lib/route-bus/route-analytic-boundary-alternatives.ts').read_bytes()
+          revisions['fanoutAnalyticSourceSha256']=hashlib.sha256(analytic).hexdigest()
+          mutual=Path('core/node_modules/@tscircuit/fanout-solver/lib/route-bus/plan-mutual-clearance.ts').read_bytes()
+          revisions['fanoutMutualSourceSha256']=hashlib.sha256(mutual).hexdigest()
+          copper=Path('core/node_modules/@tscircuit/fanout-solver/lib/route-bus/plan-copper.ts').read_bytes()
+          revisions['fanoutCopperSourceSha256']=hashlib.sha256(copper).hexdigest()
+          static=Path('core/node_modules/@tscircuit/fanout-solver/lib/route-bus/plan-static-clearance.ts').read_bytes()
+          revisions['fanoutStaticSourceSha256']=hashlib.sha256(static).hexdigest()
+          revisions['corePatchApplied']=False
+          (runtime/'revisions.json').write_text(json.dumps(revisions,indent=2)+'\n')
+          print(json.dumps(revisions))
+          PYSAMPLES
+      - uses: actions/checkout@v4
+        with:
+          repository: tscircuit/fanout-solver
+          ref: 8defd8999b77572c2ea5a84c043e20a5fd23b414
+          path: fanout-source
+      - name: Apply only the reviewed fanout source patch
+        run: |
+          python3 - <<'PYOVERLAY'
+          import hashlib,json,shutil
+          from pathlib import Path
+          root=Path('core/node_modules/@tscircuit/fanout-solver')
+          files=['lib/fanout-solver.ts','lib/route-bus/types.ts','lib/route-bus/route-analytic-boundary-alternatives.ts']
+          revisions=Path('core/e2e-runtime/revisions.json')
+          data=json.loads(revisions.read_text())
+          data['fanoutPatchCommit']='8defd8999b77572c2ea5a84c043e20a5fd23b414'
+          data['fanoutPatchFiles']={}
+          for name in files:
+              target=root/name
+              target.parent.mkdir(parents=True,exist_ok=True)
+              shutil.copyfile(Path('fanout-source')/name,target)
+              data['fanoutPatchFiles'][name]=hashlib.sha256(target.read_bytes()).hexdigest()
+          revisions.write_text(json.dumps(data,indent=2)+'\n')
+          print(json.dumps(data))
+          PYOVERLAY
+      - name: Route exact Core with compact boundary handoffs and intercept decisions
+        env:
+          E2E_SAMPLE: ${{ matrix.sample }}
+          E2E_WORKFLOW: fanout_first
+        run: |
+          cd core/e2e-runtime
+          python3 run-deep.py "$E2E_SAMPLE" "$GITHUB_WORKSPACE/results/$E2E_SAMPLE"
+          bun assess.ts "$E2E_SAMPLE" "$GITHUB_WORKSPACE/results/$E2E_SAMPLE"
+          cd "$GITHUB_WORKSPACE"
+          bun experiments/e2e-samples-20261120/audit-diagnostics.ts "results/$E2E_SAMPLE"
+      - name: Publish complete stage captures and PCB SVG
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: full-circuit-interception-${{ matrix.sample }}
+          path: results
+          if-no-files-found: error
+      - name: Export captured evidence
+        if: always()
+        env:
+          E2E_SAMPLE: ${{ matrix.sample }}
+        run: |
+          python3 - <<'PYEXPORT'
+          import base64,io,os,zipfile
+          from pathlib import Path
+          root=Path('results')
+          stream=io.BytesIO()
+          with zipfile.ZipFile(stream,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=9) as z:
+              for p in root.rglob('*'):
+                  if p.name in ['report.json','process.json','assessment.json','diagnostics.json','pipeline-internals.json']:z.writestr(str(p.relative_to(root)),p.read_bytes())
+          print('E2E_EVIDENCE_BEGIN')
+          encoded=base64.b64encode(stream.getvalue()).decode()
+          for offset in range(0,len(encoded),8000):print(encoded[offset:offset+8000])
+          print('E2E_EVIDENCE_END')
+          PYEXPORT
