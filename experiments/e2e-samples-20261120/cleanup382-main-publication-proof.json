@@ -1,0 +1,9 @@
+{
+  "main": "7ed7a8c16db6a9058b716914f889534d706c846a",
+  "npmFanout": "0.0.104",
+  "baselineRun": 45070654984,
+  "sourceFiles": 125,
+  "publishedFiles": 125,
+  "differentFiles": [],
+  "canReuseExactPublishedBaseline": true
+}
