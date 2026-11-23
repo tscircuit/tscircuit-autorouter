@@ -60,6 +60,7 @@ export const pipeline9TraceRefinementSteps = [
           defaultViaDiameter: pipeline.viaDiameter,
           layerCount: pipeline.srj.layerCount,
           minTraceToPadEdgeClearance: pipeline.srj.minTraceToPadEdgeClearance,
+          minTraceToHoleEdgeClearance: pipeline.srj.minTraceToHoleEdgeClearance,
           minBoardEdgeClearance: pipeline.srj.minBoardEdgeClearance,
           otherHdRoutes: preloadedHdRoutes,
           netByConnectionName,
@@ -97,6 +98,7 @@ export const pipeline9TraceRefinementSteps = [
           defaultViaDiameter: pipeline.viaDiameter,
           layerCount: pipeline.srj.layerCount,
           minTraceToPadEdgeClearance: pipeline.srj.minTraceToPadEdgeClearance,
+          minTraceToHoleEdgeClearance: pipeline.srj.minTraceToHoleEdgeClearance,
           minBoardEdgeClearance: pipeline.srj.minBoardEdgeClearance,
           otherHdRoutes,
           netByConnectionName: getPipeline9NetByConnectionName(

@@ -43,12 +43,14 @@ export const createPipeline9AutoroutingDrcEvaluator = ({
   srjWithPointPairs,
   drcOptions = {},
   includeBoardClearance = false,
+  clearanceTolerance,
   connectivityMaps,
 }: {
   inputSrj: SimpleRouteJson
   srjWithPointPairs: SimpleRouteJson
   drcOptions?: GetDrcErrorsOptions
   includeBoardClearance?: boolean
+  clearanceTolerance?: number
   connectivityMaps?: CircuitJsonConnectivityMaps
 }): Pipeline9AutoroutingDrcEvaluator => {
   const conversionOptions = {
@@ -73,6 +75,7 @@ export const createPipeline9AutoroutingDrcEvaluator = ({
   const evaluateTraceObstacles = createTraceObstacleClearanceEvaluator(
     staticCircuitJson,
     {
+      clearanceTolerance,
       traceClearance:
         drcOptions.traceClearance ?? RELAXED_DRC_OPTIONS.traceClearance,
       holeClearance:
@@ -80,6 +83,7 @@ export const createPipeline9AutoroutingDrcEvaluator = ({
     },
   )
   const evaluateViaPads = createViaPadClearanceEvaluator(staticCircuitJson, {
+    clearanceTolerance,
     allowViaInPad: inputSrj.allowViaInPad,
     minClearance:
       drcOptions.viaToPadClearance ?? getViaToPadClearance(inputSrj),
@@ -122,6 +126,7 @@ export const createPipeline9AutoroutingDrcEvaluator = ({
       ...obstacleErrors.holeErrors,
       ...evaluateViaPads(circuitJson, connMap),
       ...checkViaPairClearance(circuitJson, connMap, {
+        clearanceTolerance,
         viaClearance:
           drcOptions.viaClearance ?? RELAXED_DRC_OPTIONS.viaClearance,
       }),
