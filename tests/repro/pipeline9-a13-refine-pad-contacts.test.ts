@@ -5,6 +5,7 @@ import type { AnyCircuitElement } from "circuit-json"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { convertCircuitJsonToPcbSvg } from "circuit-to-svg"
 import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
+import { getPipeline9DrcContact } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9JointDrcRepairUtils"
 import { createPipeline9AutoroutingDrcEvaluator } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/createPipeline9AutoroutingDrcEvaluator"
 import { Pipeline9JointDrcRepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9JointDrcRepairSolver"
 import type {
@@ -13,6 +14,11 @@ import type {
   SimplifiedPcbTrace,
 } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
+import {
+  AutoroutingDrcEngine,
+  type SimpleRouteJson as RepairSimpleRouteJson,
+  type SimplifiedPcbTraces as RepairSimplifiedPcbTraces,
+} from "high-density-repair03/lib"
 import { createPcbBoardElement } from "lib/utils/convertToCircuitJson"
 
 type JointRepairFixture = {
@@ -89,15 +95,27 @@ const convertFixtureRoutesToTraces = ({
     connMap,
   })
 
-/** A pad contact's id names the trace and the pad it overlaps. */
-const getPadContactIds = (errors: Record<string, unknown>[]): string[] =>
-  errors
-    .filter(
-      (error) =>
-        typeof error.message === "string" &&
-        error.message.includes("overlaps with pcb_smtpad"),
-    )
-    .map((error) => String(error.pcb_trace_error_id))
+/** The contacts the DRC engine reports, keyed as joint repair compares them. */
+const getContactKeys = ({
+  drcEngine,
+  traces,
+}: {
+  drcEngine: AutoroutingDrcEngine
+  traces: SimplifiedPcbTrace[]
+}): string[] => {
+  const contactKeys: string[] = []
+  const { errors } = drcEngine.evaluate(traces as RepairSimplifiedPcbTraces)
+  for (const error of errors) {
+    const contact = getPipeline9DrcContact(error)
+    if (!contact) continue
+    if (contact.kind === "identified") {
+      contactKeys.push(contact.key)
+    } else {
+      contactKeys.push("unidentified contact")
+    }
+  }
+  return contactKeys
+}
 
 test("A13 joint repair moves a trace onto pads of other nets", async (): Promise<void> => {
   const fixture = JSON.parse(
@@ -139,23 +157,32 @@ test("A13 joint repair moves a trace onto pads of other nets", async (): Promise
     inputSrj: fixture.originalSrj,
     srjWithPointPairs: fixture.srj,
   })
-  const before = evaluate(
-    convertFixtureRoutesToTraces({
-      fixture,
-      connMap,
-      hdRoutes: fixture.newHdRoutes,
-    }),
+  // Contacts as the DRC engine joint repair compares candidates with.
+  const drcEngine = new AutoroutingDrcEngine(
+    {
+      ...fixture.srj,
+      obstacles: fixture.originalSrj.obstacles,
+    } as RepairSimpleRouteJson,
+    { connMap },
   )
-  const after = evaluate(
-    convertFixtureRoutesToTraces({
-      fixture,
-      connMap,
-      hdRoutes: joint.getOutput(),
-    }),
+  const inputTraces = convertFixtureRoutesToTraces({
+    fixture,
+    connMap,
+    hdRoutes: fixture.newHdRoutes,
+  })
+  const outputTraces = convertFixtureRoutesToTraces({
+    fixture,
+    connMap,
+    hdRoutes: joint.getOutput(),
+  })
+  const before = evaluate(inputTraces)
+  const after = evaluate(outputTraces)
+  const inputContacts = new Set(
+    getContactKeys({ drcEngine, traces: inputTraces }),
   )
-  const inputContactIds = new Set(getPadContactIds(before.errors))
-  const newPadContactIds = getPadContactIds(after.errors).filter(
-    (id) => !inputContactIds.has(id),
+  const outputContacts = getContactKeys({ drcEngine, traces: outputTraces })
+  const newContacts = outputContacts.filter(
+    (contact) => !inputContacts.has(contact),
   )
 
   await expect(renderFrame(before.circuitJson, fixture.srj)).toMatchSvgSnapshot(
@@ -166,5 +193,5 @@ test("A13 joint repair moves a trace onto pads of other nets", async (): Promise
     import.meta.path,
     { svgName: "joint-output" },
   )
-  expect(newPadContactIds.length).toBeGreaterThan(0)
+  expect(newContacts).toEqual([])
 })
