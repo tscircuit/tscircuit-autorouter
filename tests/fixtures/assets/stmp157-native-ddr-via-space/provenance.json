@@ -4,8 +4,8 @@
   "attribution": "OLIMEX Ltd.",
   "license": "CC-BY-SA-3.0-US",
   "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/us/",
-  "capture": "Native remaining phase of the STM32MP157 DDR TSX through tscircuit 0.0.3277, Core 0.0.2458, Bus lanes 0.0.65 and capacity-autorouter 0.0.1152.",
-  "inputSha256": "6194a92955de71cfc9663b09c2ff4a2acf478d29dceb81d3e3d1052abfaf1db1",
+  "capture": "Native remaining-phase SRJ emitted by the STM32MP157 DDR TSX on tscircuit 0.0.3285 with board routingLayers. All obstacles, fixed data traces and connections match the original capture.",
+  "inputSha256": "74e7efd823612a94be55aeb7efe2808c46da02a00b011f1520b86a0149e161c6",
   "scope": "All 40 remaining connections, 710 physical pad obstacles and 32 fixed data-byte traces from the same phase input. All coordinates are board-world millimetres. The eight copper layers, through-vias, net widths and board clearance rules come from the source board.",
   "rules": {
     "traceWidthMm": 0.127,
@@ -15,5 +15,5 @@
     "allowViaInPad": false,
     "allowBlindAndBuriedVias": false
   },
-  "circuit": "https://github.com/ShiboSoftwareDev/core-ddr-benchmark/tree/24dc44c166d4258c3538f8b1f66953f1b6f58690/circuits"
+  "circuit": "https://github.com/ShiboSoftwareDev/core-ddr-benchmark/tree/5376a569cd82ef0dc715d9ac142abed8c087961f/circuits"
 }
