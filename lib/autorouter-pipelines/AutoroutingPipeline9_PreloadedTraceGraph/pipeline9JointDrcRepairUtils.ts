@@ -143,38 +143,37 @@ export type Pipeline9DrcContact =
 export const getPipeline9DrcContact = (
   error: Pipeline9DrcError,
 ): Pipeline9DrcContact | undefined => {
-  const isContact =
-    error.type === "pcb_trace_error" &&
-    typeof error.actual_clearance === "number" &&
-    error.actual_clearance < 0
-  if (!isContact) return undefined
+  if (error.type !== "pcb_trace_error") return undefined
+  if (typeof error.actual_clearance !== "number") return undefined
+  if (error.actual_clearance >= 0) return undefined
+
   const unidentified: Pipeline9DrcContact = { kind: "unidentified" }
   const traceId = error.pcb_trace_id
   const obstacleIds = [error.pcb_smtpad_id, error.pcb_plated_hole_id].filter(
     (id) => id !== undefined,
   )
-  if (obstacleIds.length > 0) {
-    // A trace on a pad or plated hole names one trace and one obstacle.
+
+  // A trace on a pad or plated hole names one trace and one obstacle.
+  if (obstacleIds.length > 1) return unidentified
+  if (obstacleIds.length === 1) {
     const obstacleId = obstacleIds[0]
-    const isNamed =
-      obstacleIds.length === 1 &&
-      typeof obstacleId === "string" &&
-      obstacleId !== "" &&
-      typeof traceId === "string" &&
-      traceId !== ""
-    if (!isNamed) return unidentified
+    if (typeof traceId !== "string") return unidentified
+    if (traceId === "") return unidentified
+    if (typeof obstacleId !== "string") return unidentified
+    if (obstacleId === "") return unidentified
     return { kind: "identified", key: `${traceId} touches ${obstacleId}` }
   }
+
   // A trace touching another trace or its via names two different traces.
-  const traceIds: unknown[] = Array.isArray(error.pcb_trace_ids)
-    ? error.pcb_trace_ids
-    : []
-  const isTracePair =
-    traceIds.length === 2 &&
-    traceIds.every((id) => typeof id === "string" && id !== "") &&
-    traceIds[0] !== traceIds[1]
-  if (!isTracePair) return unidentified
-  const key = traceIds.map(String).sort().join(" touches ")
+  if (!Array.isArray(error.pcb_trace_ids)) return unidentified
+  if (error.pcb_trace_ids.length !== 2) return unidentified
+  const [firstTraceId, secondTraceId]: unknown[] = error.pcb_trace_ids
+  if (typeof firstTraceId !== "string") return unidentified
+  if (typeof secondTraceId !== "string") return unidentified
+  if (firstTraceId === "") return unidentified
+  if (secondTraceId === "") return unidentified
+  if (firstTraceId === secondTraceId) return unidentified
+  const key = [firstTraceId, secondTraceId].sort().join(" touches ")
   return { kind: "identified", key }
 }
 
@@ -215,11 +214,10 @@ export const isPipeline9DrcCandidateBetter = ({
   currentErrors: Pipeline9DrcError[]
   rejectNewContacts?: boolean
 }): boolean => {
-  if (
-    rejectNewContacts &&
-    introducesPipeline9DrcContact(candidateErrors, currentErrors)
-  ) {
-    return false
+  if (rejectNewContacts) {
+    if (introducesPipeline9DrcContact(candidateErrors, currentErrors)) {
+      return false
+    }
   }
   return (
     candidateErrors.length < currentErrors.length ||

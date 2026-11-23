@@ -108,9 +108,11 @@ const getContactKeys = ({
   for (const error of errors) {
     const contact = getPipeline9DrcContact(error)
     if (!contact) continue
-    contactKeys.push(
-      contact.kind === "identified" ? contact.key : "unidentified contact",
-    )
+    if (contact.kind === "identified") {
+      contactKeys.push(contact.key)
+    } else {
+      contactKeys.push("unidentified contact")
+    }
   }
   return contactKeys
 }
