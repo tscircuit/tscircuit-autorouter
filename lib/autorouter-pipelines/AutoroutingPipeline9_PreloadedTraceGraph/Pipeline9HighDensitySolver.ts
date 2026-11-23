@@ -466,10 +466,8 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     const board = params.bgaEscapeBoard
     const input = board && getBgaEscapeRoutingInput(board)
     if (board && input) {
-      this.bgaEscapeAttempt = {
-        board,
-        solver: new BgaEscapeRoutingSolver(input),
-      }
+      const solver = BgaEscapeRoutingSolver.createIfApplicable(input)
+      if (solver) this.bgaEscapeAttempt = { board, solver }
     }
   }
 

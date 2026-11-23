@@ -125,6 +125,7 @@
     "@tscircuit/solver-utils": "^0.0.23",
     "fast-json-stable-stringify": "^2.1.0",
     "object-hash": "^3.0.0",
-    "stack-svgs": "^0.0.1"
+    "stack-svgs": "^0.0.1",
+    "@tscircuit/high-density-phase-solver": "github:tscircuit/high-density-phase-solver#65d234de33e758353843b6ad35a5d9aac2b56f51"
   }
 }
