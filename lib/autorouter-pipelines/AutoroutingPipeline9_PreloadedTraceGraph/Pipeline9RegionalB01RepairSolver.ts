@@ -31,7 +31,6 @@ import {
 import {
   getPipeline9DrcErrors,
   getPipeline9RouteIndexByTraceId,
-  introducesPipeline9DrcContact,
   isPipeline9DrcCandidateBetter,
   isPipeline9DrcErrorOwnedByPreloadRepair,
   type Pipeline9DrcError,
@@ -581,13 +580,11 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
       throw new Error(`Regional via-pad projection failed: ${solver.error}`)
     }
     if (!solver.solved) return
-    const routes = solver.getOutput().slice(0, cleanup.routes.length)
-    const errors = getPipeline9DrcErrors(this.params.drcEvaluator, routes)
-    // Cleanup is final, so keep the projection only if it adds no short.
-    if (!introducesPipeline9DrcContact(errors, cleanup.errors)) {
-      cleanup.routes = routes
-      cleanup.errors = errors
-    }
+    cleanup.routes = solver.getOutput().slice(0, cleanup.routes.length)
+    cleanup.errors = getPipeline9DrcErrors(
+      this.params.drcEvaluator,
+      cleanup.routes,
+    )
     this.activeSubSolver = null
     this.phase = "prepare-safe-layer"
   }
