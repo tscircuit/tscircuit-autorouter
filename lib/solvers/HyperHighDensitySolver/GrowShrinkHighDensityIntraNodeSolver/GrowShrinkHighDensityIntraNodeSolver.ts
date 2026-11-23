@@ -4,6 +4,8 @@ import type {
   NodeWithPortPoints,
 } from "lib/types/high-density-types"
 import { BaseSolver } from "../../BaseSolver"
+import { hasPhysicalForeignObstacleViaOverlap } from "../../HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/foreignObstacleGeometry"
+import { MultiHeadPolyLineIntraNodeSolver } from "../../HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/MultiHeadPolyLineIntraNodeSolver"
 import { PortfolioSingleIntraNodeSolver } from "../PortfolioSingleIntraNodeSolver"
 import {
   createInvalidDirectConnectionRoutes,
@@ -23,6 +25,7 @@ export type GrowShrinkHighDensityIntraNodeSolverParams =
     maxInnerIterationsPerGrowthAttempt?: number
     fallbackToInvalidGeometryOnFailure?: boolean
     preservePhysicalGeometry?: boolean
+    checkForeignObstacleViaOverlap?: boolean
     growShrinkSolutionValidator?: (
       routes: HighDensityIntraNodeRoute[],
     ) => boolean
@@ -137,6 +140,9 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
   growthAttempts = 0
   maxGrowthAttempts: number
   minimumGrowthAttempts: number
+  private enforcingForeignObstacleViaClearance = false
+  private fallbackPrimarySolvedRoutes?: HighDensityIntraNodeRoute[]
+  private fallbackPrimarySolver?: PortfolioSingleIntraNodeSolver
 
   constructor(params: GrowShrinkHighDensityIntraNodeSolverParams) {
     super()
@@ -253,6 +259,9 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
     }
     this.activeSubSolver = new PortfolioSingleIntraNodeSolver({
       ...portfolioParams,
+      enforceForeignObstacleViaClearance:
+        this.enforcingForeignObstacleViaClearance ||
+        portfolioParams.enforceForeignObstacleViaClearance,
       preservePhysicalGeometry: this.preservePhysicalGeometry,
       // The search emits local coordinates; copper guards consume board-world mm.
       priorityCoordinateScale:
@@ -333,9 +342,55 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
   }
 
   private acceptSolution(solver: PortfolioSingleIntraNodeSolver): void {
+    const unscaledRoutes = this.getUnscaledRoutes(solver.solvedRoutes)
+    const viaDiameter = this.constructorParams.viaDiameter ?? 0.3
+    const minNodeDim = Math.min(
+      this.nodeWithPortPoints.width,
+      this.nodeWithPortPoints.height,
+    )
+    const maxNodeDim = Math.max(
+      this.nodeWithPortPoints.width,
+      this.nodeWithPortPoints.height,
+    )
+    const isCompactSingleToTwoViaCell =
+      minNodeDim >= viaDiameter - 1e-6 && maxNodeDim < viaDiameter * 2
+    const wonWithNegativeBoundaryPolyLine =
+      solver.activeSubSolver instanceof MultiHeadPolyLineIntraNodeSolver &&
+      solver.activeSubSolver.BOUNDARY_PADDING < 0
+    if (
+      isCompactSingleToTwoViaCell &&
+      wonWithNegativeBoundaryPolyLine &&
+      (this.constructorParams.checkForeignObstacleViaOverlap ?? true) &&
+      !this.enforcingForeignObstacleViaClearance &&
+      !this.constructorParams.enforceForeignObstacleViaClearance &&
+      !this.preservePhysicalGeometry &&
+      !this.constructorParams.growShrinkSolutionValidator &&
+      hasPhysicalForeignObstacleViaOverlap({
+        nodeWithPortPoints: this.nodeWithPortPoints,
+        routes: unscaledRoutes,
+        obstacles: this.constructorParams.obstacles,
+        connMap: this.constructorParams.connMap,
+        layerCount:
+          this.constructorParams.layerCount ??
+          Math.max(
+            2,
+            ...(this.nodeWithPortPoints.availableZ ?? [0, 1]).map((z) => z + 1),
+          ),
+        defaultViaDiameter: this.constructorParams.viaDiameter ?? 0.3,
+        allowBlindAndBuriedVias:
+          this.constructorParams.allowBlindAndBuriedVias ?? false,
+      })
+    ) {
+      this.fallbackPrimarySolvedRoutes = unscaledRoutes
+      this.fallbackPrimarySolver = solver
+      this.enforcingForeignObstacleViaClearance = true
+      this.growthAttempts = 0
+      this.scaleFactor = 1
+      return
+    }
     this.winningSolver = solver
     this.error = null
-    this.solvedRoutes = this.getUnscaledRoutes(solver.solvedRoutes)
+    this.solvedRoutes = unscaledRoutes
     this.solved = true
     this.failed = false
   }
@@ -370,6 +425,14 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
     this.activeSubSolver = null
 
     if (this.growthAttempts >= this.maxGrowthAttempts) {
+      if (this.fallbackPrimarySolvedRoutes) {
+        this.winningSolver = this.fallbackPrimarySolver
+        this.solvedRoutes = this.fallbackPrimarySolvedRoutes
+        this.solved = true
+        this.failed = false
+        this.error = null
+        return
+      }
       if (this.constructorParams.fallbackToInvalidGeometryOnFailure) {
         this.solvedRoutes = createInvalidDirectConnectionRoutes(
           this.nodeWithPortPoints,

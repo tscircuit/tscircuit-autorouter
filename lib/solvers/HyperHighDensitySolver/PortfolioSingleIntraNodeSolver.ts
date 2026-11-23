@@ -67,6 +67,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     boardGeometry?: HighDensityBoardGeometry
     preservePhysicalGeometry?: boolean
     viaToPadClearance?: number
+    enforceForeignObstacleViaClearance?: boolean
     solutionValidator?: (routes: HighDensityIntraNodeRoute[]) => boolean
   }
   solvedRoutes: HighDensityIntraNodeRoute[] = []
@@ -143,6 +144,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       boardGeometry?: HighDensityBoardGeometry
       preservePhysicalGeometry?: boolean
       viaToPadClearance?: number
+      enforceForeignObstacleViaClearance?: boolean
       solutionValidator?: (routes: HighDensityIntraNodeRoute[]) => boolean
     },
   ) {
@@ -158,19 +160,11 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     const viaDiameter = opts.viaDiameter ?? 0.3
     const traceWidth = opts.traceWidth ?? 0.15
     const obstacleMargin = opts.obstacleMargin ?? 0.1
-    const viaClearance = opts.viaToPadClearance ?? obstacleMargin
+    const viaClearance = opts.viaToPadClearance ?? Math.min(obstacleMargin, 0.1)
     const solutionValidator = opts.solutionValidator
-    const physicalWidth =
-      this.nodeWithPortPoints.width / obstacleCoordinateScale
-    const physicalHeight =
-      this.nodeWithPortPoints.height / obstacleCoordinateScale
-    const isSubTwoViaCell =
-      Math.max(physicalWidth, physicalHeight) <
-      viaDiameter * 2 + viaClearance * 2
     if (
+      opts.enforceForeignObstacleViaClearance &&
       !solutionValidator &&
-      obstacleCoordinateScale > 1 &&
-      isSubTwoViaCell &&
       opts.obstacles &&
       opts.obstacles.length > 0
     ) {
@@ -202,7 +196,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
             context: this.obstacleContext,
             defaultViaDiameter: viaDiameter,
             viaClearance,
-            onlyCheckBoundaryOverhangVias: true,
+            onlyCheckBoundaryOverhangVias: false,
           })
         ) {
           return false
@@ -822,26 +816,30 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     }
     if (hyperParameters.MULTI_HEAD_POLYLINE_SOLVER) {
       const allowOutsideBoundary =
+        Boolean(this.constructorParams.enforceForeignObstacleViaClearance) &&
         (hyperParameters.BOUNDARY_PADDING ?? 0) < 0 &&
         !this.constructorParams.solutionValidator
       return new MultiHeadPolyLineIntraNodeSolver3({
         nodeWithPortPoints: this.nodeWithPortPoints,
-        obstacles: allowOutsideBoundary
-          ? this.constructorParams.obstacles
-          : undefined,
         connMap: this.connMap,
         hyperParameters: hyperParameters,
         viaDiameter: this.constructorParams.viaDiameter,
-        traceWidth: this.constructorParams.traceWidth,
-        obstacleMargin: this.constructorParams.obstacleMargin,
-        viaClearance:
-          this.constructorParams.viaToPadClearance ??
-          this.constructorParams.obstacleMargin,
-        layerCount: this.constructorParams.layerCount,
-        allowBlindAndBuriedVias: this.constructorParams.allowBlindAndBuriedVias,
-        coordinateScale: preservePhysicalGeometry
-          ? 1
-          : (this.constructorParams.priorityCoordinateScale ?? 1),
+        ...(allowOutsideBoundary
+          ? {
+              obstacles: this.constructorParams.obstacles,
+              traceWidth: this.constructorParams.traceWidth,
+              obstacleMargin: this.constructorParams.obstacleMargin,
+              viaClearance:
+                this.constructorParams.viaToPadClearance ??
+                this.constructorParams.obstacleMargin,
+              layerCount: this.constructorParams.layerCount,
+              allowBlindAndBuriedVias:
+                this.constructorParams.allowBlindAndBuriedVias,
+              coordinateScale: preservePhysicalGeometry
+                ? 1
+                : (this.constructorParams.priorityCoordinateScale ?? 1),
+            }
+          : {}),
       }) as any
     }
     if (hyperParameters.PRIORITY_DAG_FAMILY_SIZE) {
@@ -854,6 +852,9 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     }
     return new CachedIntraNodeRouteSolver({
       ...this.constructorParams,
+      ...(this.constructorParams.enforceForeignObstacleViaClearance
+        ? { cacheProvider: null }
+        : {}),
       hyperParameters,
       precomputedIntraNodeRouteParams: this.precomputedIntraNodeRouteParams,
     })

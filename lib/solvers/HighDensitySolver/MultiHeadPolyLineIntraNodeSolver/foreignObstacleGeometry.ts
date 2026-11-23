@@ -543,6 +543,69 @@ export const computeMinForeignObstacleSurplus = (params: {
 }
 
 /**
+ * Returns true when any placed via in `routes` (already in 1x board coordinates)
+ * physically overlaps (`gap < -1e-6`) a foreign board obstacle on a shared layer.
+ */
+export const hasPhysicalForeignObstacleViaOverlap = (params: {
+  nodeWithPortPoints: NodeWithPortPoints
+  routes: HighDensityIntraNodeRoute[]
+  obstacles?: Obstacle[]
+  connMap?: ConnectivityMap
+  layerCount: number
+  defaultViaDiameter: number
+  allowBlindAndBuriedVias: boolean
+}): boolean => {
+  const {
+    nodeWithPortPoints,
+    routes,
+    obstacles,
+    connMap,
+    layerCount,
+    defaultViaDiameter,
+    allowBlindAndBuriedVias,
+  } = params
+  if (!obstacles || obstacles.length === 0) return false
+  if (!routes.some((r) => r.vias.length > 0)) return false
+
+  const physicalHalfW = nodeWithPortPoints.width / 2
+  const physicalHalfH = nodeWithPortPoints.height / 2
+  const spilledRoutes = routes
+    .map((route) => ({
+      ...route,
+      vias: route.vias.filter(
+        (via) =>
+          Math.abs(via.x - nodeWithPortPoints.center.x) >
+            physicalHalfW + 1e-6 ||
+          Math.abs(via.y - nodeWithPortPoints.center.y) > physicalHalfH + 1e-6,
+      ),
+    }))
+    .filter((route) => route.vias.length > 0)
+  if (spilledRoutes.length === 0) return false
+
+  const context = prepareNodeObstacleContext({
+    nodeWithPortPoints,
+    obstacles,
+    connMap,
+    layerCount,
+    viaDiameter: defaultViaDiameter,
+    traceWidth: 0.1,
+    obstacleMargin: 0,
+    viaClearance: 0,
+    coordinateScale: 1,
+    allowBlindAndBuriedVias,
+  })
+  if (!context.hasForeignObstacles) return false
+
+  return !doRoutesClearForeignObstacleVias({
+    routes: spilledRoutes,
+    context,
+    defaultViaDiameter,
+    viaClearance: 0,
+    onlyCheckBoundaryOverhangVias: false,
+  })
+}
+
+/**
  * Checks that placed vias in `routes` clear foreign board obstacles by `viaClearance`.
  */
 export const doRoutesClearForeignObstacleVias = (params: {

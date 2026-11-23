@@ -375,6 +375,7 @@ export const createPipeline9RegularNodeSolver = ({
     boardGeometry,
     preserveTerminalPcbPortIds: false,
     growShrinkFallbackToInvalidGeometryOnFailure: false,
+    checkForeignObstacleViaOverlap: true,
     captureSearchDebug,
     priorityDagSearch,
     priorityDiagnostics,

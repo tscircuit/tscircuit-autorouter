@@ -70,6 +70,7 @@ export class HighDensitySolver extends BaseSolver {
   preserveTerminalPcbPortIds: boolean
   growShrinkMaxInnerIterationsPerGrowthAttempt?: number
   growShrinkFallbackToInvalidGeometryOnFailure: boolean
+  checkForeignObstacleViaOverlap: boolean
   growShrinkSolutionValidator?: (routes: HighDensityIntraNodeRoute[]) => boolean
   captureSearchDebug: boolean
   readonly benchmarkDiagnosticCounters: Record<string, number>
@@ -120,6 +121,7 @@ export class HighDensitySolver extends BaseSolver {
     preserveTerminalPcbPortIds,
     growShrinkMaxInnerIterationsPerGrowthAttempt,
     growShrinkFallbackToInvalidGeometryOnFailure,
+    checkForeignObstacleViaOverlap = false,
     growShrinkSolutionValidator,
     captureSearchDebug,
     priorityDagSearch = false,
@@ -149,6 +151,7 @@ export class HighDensitySolver extends BaseSolver {
     preserveTerminalPcbPortIds?: boolean
     growShrinkMaxInnerIterationsPerGrowthAttempt?: number
     growShrinkFallbackToInvalidGeometryOnFailure?: boolean
+    checkForeignObstacleViaOverlap?: boolean
     growShrinkSolutionValidator?: (
       routes: HighDensityIntraNodeRoute[],
     ) => boolean
@@ -189,6 +192,7 @@ export class HighDensitySolver extends BaseSolver {
       growShrinkMaxInnerIterationsPerGrowthAttempt
     this.growShrinkFallbackToInvalidGeometryOnFailure =
       growShrinkFallbackToInvalidGeometryOnFailure ?? false
+    this.checkForeignObstacleViaOverlap = checkForeignObstacleViaOverlap
     this.growShrinkSolutionValidator = growShrinkSolutionValidator
     this.captureSearchDebug = captureSearchDebug ?? true
     this.benchmarkDiagnosticCounters = priorityDiagnostics ?? {}
@@ -455,6 +459,7 @@ export class HighDensitySolver extends BaseSolver {
         this.growShrinkMaxInnerIterationsPerGrowthAttempt,
       fallbackToInvalidGeometryOnFailure:
         this.growShrinkFallbackToInvalidGeometryOnFailure,
+      checkForeignObstacleViaOverlap: this.checkForeignObstacleViaOverlap,
       growShrinkSolutionValidator: this.growShrinkSolutionValidator,
       captureSearchDebug: this.captureSearchDebug,
     }

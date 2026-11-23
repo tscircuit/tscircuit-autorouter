@@ -133,46 +133,6 @@ export class CachedPortfolioSingleIntraNodeSolver
         .sort(([a], [b]) => a.localeCompare(b)),
     )
 
-    const traceWidth = roundCoord(this.constructorParams.traceWidth ?? 0.15)
-    const viaDiameter = roundCoord(this.constructorParams.viaDiameter ?? 0.3)
-    const obstacleMargin = roundCoord(
-      this.constructorParams.obstacleMargin ?? 0.15,
-    )
-    const reach = Math.max(viaDiameter, traceWidth) + obstacleMargin * 2 + 1.0
-    const halfW = node.width / 2 + reach
-    const halfH = node.height / 2 + reach
-    const nearbyObstacles = (this.constructorParams.obstacles ?? [])
-      .filter((obs) => {
-        const r = Math.hypot(obs.width, obs.height) / 2
-        return (
-          Math.abs(obs.center.x - center.x) <= halfW + r &&
-          Math.abs(obs.center.y - center.y) <= halfH + r
-        )
-      })
-      .map((obs) => ({
-        x: roundCoord(obs.center.x - center.x),
-        y: roundCoord(obs.center.y - center.y),
-        width: roundCoord(obs.width),
-        height: roundCoord(obs.height),
-        shape: obs.shape,
-        ccwRotationDegrees: obs.ccwRotationDegrees
-          ? roundCoord(obs.ccwRotationDegrees)
-          : undefined,
-        layers: [...obs.layers].sort(),
-        zLayers: obs.zLayers ? [...obs.zLayers].sort() : undefined,
-        isNonPlatedHole: obs.isNonPlatedHole || undefined,
-        connectedPorts: normalizedPortPoints
-          .filter((pp) =>
-            obs.connectedTo.some(
-              (id) =>
-                id === pp.connectionName ||
-                (this.connMap?.areIdsConnected(pp.connectionName, id) ?? false),
-            ),
-          )
-          .map((pp) => pp.connectionName),
-      }))
-      .sort((a, b) => a.x - b.x || a.y - b.y || a.width - b.width)
-
     // Note: connMap is omitted as hashing it is complex and might be too broad.
     const keyData = {
       cacheSchemaVersion: PORTFOLIO_SINGLE_INTRA_NODE_CACHE_SCHEMA_VERSION,
@@ -181,10 +141,9 @@ export class CachedPortfolioSingleIntraNodeSolver
       gridSearchSegmentWork: this.gridSearchSegmentWork,
       gridSearchWorkScale: this.gridSearchWorkScale,
       rejectOverlappingTerminals: this.rejectOverlappingTerminals,
-      traceWidth,
-      viaDiameter,
-      obstacleMargin,
-      ...(nearbyObstacles.length > 0 ? { nearbyObstacles } : {}),
+      traceWidth: roundCoord(this.constructorParams.traceWidth ?? 0.15),
+      viaDiameter: roundCoord(this.constructorParams.viaDiameter ?? 0.3),
+      obstacleMargin: roundCoord(this.constructorParams.obstacleMargin ?? 0.15),
       // TODO connMap
     }
 
