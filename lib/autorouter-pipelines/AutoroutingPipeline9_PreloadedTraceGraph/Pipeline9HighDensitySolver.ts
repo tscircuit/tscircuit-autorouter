@@ -1,4 +1,5 @@
 import type { ConnectionName } from "lib/types/srj-types"
+import type { ChangedPreloadedTraceSection } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver"
 import { BgaEscapeRoutingSolver } from "@tscircuit/high-density-phase-solver"
 import {
   getBgaEscapeRoutingInput,
@@ -54,6 +55,7 @@ type BgaEscapeAttempt = {
 export type Pipeline9HighDensitySolverParams = {
   nodePortPoints: NodeWithPortPoints[]
   bgaEscapeBoard?: BgaEscapeBoard
+  changedPreloadedTraceSections?: readonly ChangedPreloadedTraceSection[]
   fixedHdRoutes: PreloadedHighDensityRoute[]
   connMap: ConnectivityMap
   colorMap?: Record<string, string>
@@ -464,7 +466,11 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       regionalRepairCandidateRejectionCount: 0,
     }
     const board = params.bgaEscapeBoard
-    const input = board && getBgaEscapeRoutingInput(board)
+    const input =
+      board &&
+      params.fixedHdRoutes.length > 0 &&
+      !params.changedPreloadedTraceSections?.length &&
+      getBgaEscapeRoutingInput(board)
     if (board && input) {
       const solver = BgaEscapeRoutingSolver.createIfApplicable(input)
       if (solver) this.bgaEscapeAttempt = { board, solver }
