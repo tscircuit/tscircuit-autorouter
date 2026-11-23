@@ -1,0 +1,228 @@
+[
+  {
+    "sample": "butterstick-original",
+    "requested": 91,
+    "provenImpossibleRequests": 0,
+    "pitches": [
+      {
+        "pitch": [
+          0.8,
+          0.8
+        ],
+        "requests": 91
+      }
+    ],
+    "traceWidths": {
+      "0.1": 20,
+      "0.15": 18,
+      "0.089": 53
+    },
+    "constructorInputSha256": "a0a9664de25f684555a47499961a5125036b1925e50677f97b9810f2f032a729",
+    "components": 350,
+    "pads": 1623,
+    "membershipErrors": [],
+    "fullCircuitStatus": "failed"
+  },
+  {
+    "sample": "butterstick-spaced",
+    "requested": 91,
+    "provenImpossibleRequests": 0,
+    "pitches": [
+      {
+        "pitch": [
+          0.8,
+          0.8
+        ],
+        "requests": 91
+      }
+    ],
+    "traceWidths": {
+      "0.089": 91
+    },
+    "constructorInputSha256": "f0be39deedf02af27dd8926bc6cd3bb919ddf8c61030c70c60d2f8fb33972cd3",
+    "components": 350,
+    "pads": 1623,
+    "membershipErrors": [],
+    "fullCircuitStatus": "failed"
+  },
+  {
+    "sample": "glider-original",
+    "requested": 95,
+    "provenImpossibleRequests": 0,
+    "pitches": [
+      {
+        "pitch": [
+          0.8,
+          0.8
+        ],
+        "requests": 95
+      }
+    ],
+    "traceWidths": {
+      "0.11": 95
+    },
+    "constructorInputSha256": "c2ccaf6f6402b7da7a27fa032d0601d17f54e7138efc7776903ba81387ad6bfc",
+    "components": 379,
+    "pads": 1700,
+    "membershipErrors": [],
+    "fullCircuitStatus": "failed"
+  },
+  {
+    "sample": "glider-spaced",
+    "requested": 211,
+    "provenImpossibleRequests": 0,
+    "pitches": [
+      {
+        "pitch": [
+          1,
+          1
+        ],
+        "requests": 211
+      }
+    ],
+    "traceWidths": {
+      "0.11": 211
+    },
+    "constructorInputSha256": "8b58a4dc645054de9f24541f712d472d964056e719111a089883958ba5566423",
+    "components": 379,
+    "pads": 1700,
+    "membershipErrors": [],
+    "fullCircuitStatus": "failed"
+  },
+  {
+    "sample": "h616-original",
+    "requested": 174,
+    "provenImpossibleRequests": 0,
+    "pitches": [
+      {
+        "pitch": [
+          0.65,
+          0.65
+        ],
+        "requests": 174
+      }
+    ],
+    "traceWidths": {
+      "0.1": 57,
+      "0.15": 5,
+      "0.08": 112
+    },
+    "constructorInputSha256": "06f9743a8ed0e655b189ce025a093d598e665a93e290a20bee4ab7a0d94ad5c5",
+    "components": 125,
+    "pads": 760,
+    "membershipErrors": [],
+    "fullCircuitStatus": "failed"
+  },
+  {
+    "sample": "h616-spaced",
+    "requested": 174,
+    "provenImpossibleRequests": 0,
+    "pitches": [
+      {
+        "pitch": [
+          0.65,
+          0.65
+        ],
+        "requests": 174
+      }
+    ],
+    "traceWidths": {
+      "0.08": 174
+    },
+    "constructorInputSha256": "95a286bfc908329a8f26194762f1cd5cd85562ceaa4510ffa93697e029307a6f",
+    "components": 125,
+    "pads": 760,
+    "membershipErrors": [],
+    "fullCircuitStatus": "failed"
+  },
+  {
+    "sample": "icepi-original",
+    "requested": 32,
+    "provenImpossibleRequests": 0,
+    "pitches": [
+      {
+        "pitch": [
+          0.5,
+          0.5
+        ],
+        "requests": 32
+      }
+    ],
+    "traceWidths": {
+      "0.15": 9,
+      "0.1": 23
+    },
+    "constructorInputSha256": "8026aa1a986e5c18a7d5ed2c432c0f18a17cc1d34fa61fdbf14362931db5eb84",
+    "components": 280,
+    "pads": 1426,
+    "membershipErrors": [],
+    "fullCircuitStatus": "failed"
+  },
+  {
+    "sample": "icepi-spaced",
+    "requested": 92,
+    "provenImpossibleRequests": 0,
+    "pitches": [
+      {
+        "pitch": [
+          0.8,
+          0.8
+        ],
+        "requests": 92
+      }
+    ],
+    "traceWidths": {
+      "0.1": 92
+    },
+    "constructorInputSha256": "53cf2949e82898452a7463f514e3b4104caeb34a7190418cef6e24cce57b3374",
+    "components": 280,
+    "pads": 1426,
+    "membershipErrors": [],
+    "fullCircuitStatus": "failed"
+  },
+  {
+    "sample": "imx6-original",
+    "requested": 32,
+    "provenImpossibleRequests": 7,
+    "pitches": [
+      {
+        "pitch": [
+          0.5,
+          0.5
+        ],
+        "requests": 32
+      }
+    ],
+    "traceWidths": {
+      "0.12": 20,
+      "0.119": 12
+    },
+    "constructorInputSha256": "a2e247f73eda3dfd4635eb09007b6c8b7bf0eed19f67d8d1de9b568a459b0442",
+    "components": 498,
+    "pads": 1904,
+    "membershipErrors": [],
+    "fullCircuitStatus": "failed"
+  },
+  {
+    "sample": "imx6-spaced",
+    "requested": 32,
+    "provenImpossibleRequests": 7,
+    "pitches": [
+      {
+        "pitch": [
+          0.5,
+          0.5
+        ],
+        "requests": 32
+      }
+    ],
+    "traceWidths": {
+      "0.119": 32
+    },
+    "constructorInputSha256": "e55ac5109f7af8b269c7870fe898f784fc09e5095671ee933934dba758ffe534",
+    "components": 498,
+    "pads": 1904,
+    "membershipErrors": [],
+    "fullCircuitStatus": "failed"
+  }
+]

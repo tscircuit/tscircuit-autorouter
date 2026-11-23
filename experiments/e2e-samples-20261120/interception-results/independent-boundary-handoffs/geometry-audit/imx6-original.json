@@ -1,0 +1,874 @@
+{
+  "sample": "imx6-original",
+  "requested": 32,
+  "provenImpossibleRequests": 7,
+  "proofs": [
+    {
+      "connection": "source_trace_10",
+      "source": {
+        "x": 14.750010388624133,
+        "y": -16.750010388624133,
+        "layer": "top",
+        "pointId": "pcb_port_192",
+        "pcb_port_id": "pcb_port_192"
+      },
+      "bus": "ESC_U10_pin127",
+      "termination": {
+        "type": "plane",
+        "layer": "inner1"
+      },
+      "pitch": 0.5,
+      "traceWidth": 0.12,
+      "traceToPadClearance": 0.119,
+      "viaDiameter": 0.4,
+      "viaToPadClearance": 0.119,
+      "smallestPadRadius": 0.125,
+      "maximumDistanceToNearestPadCenter": 0.35355339059327373,
+      "requiredViaDistanceToNearestPadCenter": 0.444,
+      "closedForeignPadBoundary": [
+        {
+          "axis": "x",
+          "side": -1,
+          "foreignPadPorts": [
+            "pcb_port_177",
+            "pcb_port_178",
+            "pcb_port_179"
+          ],
+          "intervals": [
+            [
+              -0.804,
+              -0.196
+            ],
+            [
+              -0.304,
+              0.304
+            ],
+            [
+              0.196,
+              0.804
+            ]
+          ]
+        },
+        {
+          "axis": "x",
+          "side": 1,
+          "foreignPadPorts": [
+            "pcb_port_205",
+            "pcb_port_206",
+            "pcb_port_207"
+          ],
+          "intervals": [
+            [
+              -0.804,
+              -0.196
+            ],
+            [
+              -0.304,
+              0.304
+            ],
+            [
+              0.196,
+              0.804
+            ]
+          ]
+        },
+        {
+          "axis": "y",
+          "side": -1,
+          "foreignPadPorts": [
+            "pcb_port_177",
+            "pcb_port_191",
+            "pcb_port_205"
+          ],
+          "intervals": [
+            [
+              -0.804,
+              -0.196
+            ],
+            [
+              -0.304,
+              0.304
+            ],
+            [
+              0.196,
+              0.804
+            ]
+          ]
+        },
+        {
+          "axis": "y",
+          "side": 1,
+          "foreignPadPorts": [
+            "pcb_port_179",
+            "pcb_port_193",
+            "pcb_port_207"
+          ],
+          "intervals": [
+            [
+              -0.804,
+              -0.196
+            ],
+            [
+              -0.304,
+              0.304
+            ],
+            [
+              0.196,
+              0.804
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "connection": "breakout:pcb_breakout_point_1",
+      "source": {
+        "x": 9.250010388624133,
+        "y": -16.750010388624133,
+        "layer": "top",
+        "pointId": "pcb_port_81",
+        "pcb_port_id": "pcb_port_81"
+      },
+      "bus": "connection:breakout:pcb_breakout_point_1",
+      "termination": {
+        "type": "boundary"
+      },
+      "pitch": 0.5,
+      "traceWidth": 0.119,
+      "traceToPadClearance": 0.119,
+      "viaDiameter": 0.4,
+      "viaToPadClearance": 0.119,
+      "smallestPadRadius": 0.125,
+      "maximumDistanceToNearestPadCenter": 0.35355339059327373,
+      "requiredViaDistanceToNearestPadCenter": 0.444,
+      "closedForeignPadBoundary": [
+        {
+          "axis": "x",
+          "side": -1,
+          "foreignPadPorts": [
+            "pcb_port_66",
+            "pcb_port_67",
+            "pcb_port_68"
+          ],
+          "intervals": [
+            [
+              -0.8035,
+              -0.1965
+            ],
+            [
+              -0.3035,
+              0.3035
+            ],
+            [
+              0.1965,
+              0.8035
+            ]
+          ]
+        },
+        {
+          "axis": "x",
+          "side": 1,
+          "foreignPadPorts": [
+            "pcb_port_94",
+            "pcb_port_95",
+            "pcb_port_96"
+          ],
+          "intervals": [
+            [
+              -0.8035,
+              -0.1965
+            ],
+            [
+              -0.3035,
+              0.3035
+            ],
+            [
+              0.1965,
+              0.8035
+            ]
+          ]
+        },
+        {
+          "axis": "y",
+          "side": -1,
+          "foreignPadPorts": [
+            "pcb_port_66",
+            "pcb_port_80",
+            "pcb_port_94"
+          ],
+          "intervals": [
+            [
+              -0.8035,
+              -0.1965
+            ],
+            [
+              -0.3035,
+              0.3035
+            ],
+            [
+              0.1965,
+              0.8035
+            ]
+          ]
+        },
+        {
+          "axis": "y",
+          "side": 1,
+          "foreignPadPorts": [
+            "pcb_port_68",
+            "pcb_port_82",
+            "pcb_port_96"
+          ],
+          "intervals": [
+            [
+              -0.8035,
+              -0.1965
+            ],
+            [
+              -0.3035,
+              0.3035
+            ],
+            [
+              0.1965,
+              0.8035
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "connection": "breakout:pcb_breakout_point_2",
+      "source": {
+        "x": 9.250010388624133,
+        "y": -15.250010388624133,
+        "layer": "top",
+        "pointId": "pcb_port_84",
+        "pcb_port_id": "pcb_port_84"
+      },
+      "bus": "connection:breakout:pcb_breakout_point_2",
+      "termination": {
+        "type": "boundary"
+      },
+      "pitch": 0.5,
+      "traceWidth": 0.119,
+      "traceToPadClearance": 0.119,
+      "viaDiameter": 0.4,
+      "viaToPadClearance": 0.119,
+      "smallestPadRadius": 0.125,
+      "maximumDistanceToNearestPadCenter": 0.35355339059327373,
+      "requiredViaDistanceToNearestPadCenter": 0.444,
+      "closedForeignPadBoundary": [
+        {
+          "axis": "x",
+          "side": -1,
+          "foreignPadPorts": [
+            "pcb_port_69",
+            "pcb_port_70",
+            "pcb_port_71"
+          ],
+          "intervals": [
+            [
+              -0.8035,
+              -0.1965
+            ],
+            [
+              -0.3035,
+              0.3035
+            ],
+            [
+              0.1965,
+              0.8035
+            ]
+          ]
+        },
+        {
+          "axis": "x",
+          "side": 1,
+          "foreignPadPorts": [
+            "pcb_port_97",
+            "pcb_port_98",
+            "pcb_port_99"
+          ],
+          "intervals": [
+            [
+              -0.8035,
+              -0.1965
+            ],
+            [
+              -0.3035,
+              0.3035
+            ],
+            [
+              0.1965,
+              0.8035
+            ]
+          ]
+        },
+        {
+          "axis": "y",
+          "side": -1,
+          "foreignPadPorts": [
+            "pcb_port_69",
+            "pcb_port_83",
+            "pcb_port_97"
+          ],
+          "intervals": [
+            [
+              -0.8035,
+              -0.1965
+            ],
+            [
+              -0.3035,
+              0.3035
+            ],
+            [
+              0.1965,
+              0.8035
+            ]
+          ]
+        },
+        {
+          "axis": "y",
+          "side": 1,
+          "foreignPadPorts": [
+            "pcb_port_71",
+            "pcb_port_85",
+            "pcb_port_99"
+          ],
+          "intervals": [
+            [
+              -0.8035,
+              -0.1965
+            ],
+            [
+              -0.3035,
+              0.3035
+            ],
+            [
+              0.1965,
+              0.8035
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "connection": "breakout:pcb_breakout_point_3",
+      "source": {
+        "x": 9.750010388624133,
+        "y": -16.750010388624133,
+        "layer": "top",
+        "pointId": "pcb_port_95",
+        "pcb_port_id": "pcb_port_95"
+      },
+      "bus": "connection:breakout:pcb_breakout_point_3",
+      "termination": {
+        "type": "boundary"
+      },
+      "pitch": 0.5,
+      "traceWidth": 0.119,
+      "traceToPadClearance": 0.119,
+      "viaDiameter": 0.4,
+      "viaToPadClearance": 0.119,
+      "smallestPadRadius": 0.125,
+      "maximumDistanceToNearestPadCenter": 0.35355339059327373,
+      "requiredViaDistanceToNearestPadCenter": 0.444,
+      "closedForeignPadBoundary": [
+        {
+          "axis": "x",
+          "side": -1,
+          "foreignPadPorts": [
+            "pcb_port_80",
+            "pcb_port_81",
+            "pcb_port_82"
+          ],
+          "intervals": [
+            [
+              -0.8035,
+              -0.1965
+            ],
+            [
+              -0.3035,
+              0.3035
+            ],
+            [
+              0.1965,
+              0.8035
+            ]
+          ]
+        },
+        {
+          "axis": "x",
+          "side": 1,
+          "foreignPadPorts": [
+            "pcb_port_108",
+            "pcb_port_109",
+            "pcb_port_110"
+          ],
+          "intervals": [
+            [
+              -0.8035,
+              -0.1965
+            ],
+            [
+              -0.3035,
+              0.3035
+            ],
+            [
+              0.1965,
+              0.8035
+            ]
+          ]
+        },
+        {
+          "axis": "y",
+          "side": -1,
+          "foreignPadPorts": [
+            "pcb_port_80",
+            "pcb_port_94",
+            "pcb_port_108"
+          ],
+          "intervals": [
+            [
+              -0.8035,
+              -0.1965
+            ],
+            [
+              -0.3035,
+              0.3035
+            ],
+            [
+              0.1965,
+              0.8035
+            ]
+          ]
+        },
+        {
+          "axis": "y",
+          "side": 1,
+          "foreignPadPorts": [
+            "pcb_port_82",
+            "pcb_port_96",
+            "pcb_port_110"
+          ],
+          "intervals": [
+            [
+              -0.8035,
+              -0.1965
+            ],
+            [
+              -0.3035,
+              0.3035
+            ],
+            [
+              0.1965,
+              0.8035
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "connection": "breakout:pcb_breakout_point_6",
+      "source": {
+        "x": 9.250010388624133,
+        "y": -15.750010388624133,
+        "layer": "top",
+        "pointId": "pcb_port_83",
+        "pcb_port_id": "pcb_port_83"
+      },
+      "bus": "connection:breakout:pcb_breakout_point_6",
+      "termination": {
+        "type": "boundary"
+      },
+      "pitch": 0.5,
+      "traceWidth": 0.119,
+      "traceToPadClearance": 0.119,
+      "viaDiameter": 0.4,
+      "viaToPadClearance": 0.119,
+      "smallestPadRadius": 0.125,
+      "maximumDistanceToNearestPadCenter": 0.35355339059327373,
+      "requiredViaDistanceToNearestPadCenter": 0.444,
+      "closedForeignPadBoundary": [
+        {
+          "axis": "x",
+          "side": -1,
+          "foreignPadPorts": [
+            "pcb_port_68",
+            "pcb_port_69",
+            "pcb_port_70"
+          ],
+          "intervals": [
+            [
+              -0.8035,
+              -0.1965
+            ],
+            [
+              -0.3035,
+              0.3035
+            ],
+            [
+              0.1965,
+              0.8035
+            ]
+          ]
+        },
+        {
+          "axis": "x",
+          "side": 1,
+          "foreignPadPorts": [
+            "pcb_port_96",
+            "pcb_port_97",
+            "pcb_port_98"
+          ],
+          "intervals": [
+            [
+              -0.8035,
+              -0.1965
+            ],
+            [
+              -0.3035,
+              0.3035
+            ],
+            [
+              0.1965,
+              0.8035
+            ]
+          ]
+        },
+        {
+          "axis": "y",
+          "side": -1,
+          "foreignPadPorts": [
+            "pcb_port_68",
+            "pcb_port_82",
+            "pcb_port_96"
+          ],
+          "intervals": [
+            [
+              -0.8035,
+              -0.1965
+            ],
+            [
+              -0.3035,
+              0.3035
+            ],
+            [
+              0.1965,
+              0.8035
+            ]
+          ]
+        },
+        {
+          "axis": "y",
+          "side": 1,
+          "foreignPadPorts": [
+            "pcb_port_70",
+            "pcb_port_84",
+            "pcb_port_98"
+          ],
+          "intervals": [
+            [
+              -0.8035,
+              -0.1965
+            ],
+            [
+              -0.3035,
+              0.3035
+            ],
+            [
+              0.1965,
+              0.8035
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "connection": "breakout:pcb_breakout_point_10",
+      "source": {
+        "x": 9.250010388624133,
+        "y": -14.750010388624133,
+        "layer": "top",
+        "pointId": "pcb_port_85",
+        "pcb_port_id": "pcb_port_85"
+      },
+      "bus": "connection:breakout:pcb_breakout_point_10",
+      "termination": {
+        "type": "boundary"
+      },
+      "pitch": 0.5,
+      "traceWidth": 0.119,
+      "traceToPadClearance": 0.119,
+      "viaDiameter": 0.4,
+      "viaToPadClearance": 0.119,
+      "smallestPadRadius": 0.125,
+      "maximumDistanceToNearestPadCenter": 0.35355339059327373,
+      "requiredViaDistanceToNearestPadCenter": 0.444,
+      "closedForeignPadBoundary": [
+        {
+          "axis": "x",
+          "side": -1,
+          "foreignPadPorts": [
+            "pcb_port_70",
+            "pcb_port_71",
+            "pcb_port_72"
+          ],
+          "intervals": [
+            [
+              -0.8035,
+              -0.1965
+            ],
+            [
+              -0.3035,
+              0.3035
+            ],
+            [
+              0.1965,
+              0.8035
+            ]
+          ]
+        },
+        {
+          "axis": "x",
+          "side": 1,
+          "foreignPadPorts": [
+            "pcb_port_98",
+            "pcb_port_99",
+            "pcb_port_100"
+          ],
+          "intervals": [
+            [
+              -0.8035,
+              -0.1965
+            ],
+            [
+              -0.3035,
+              0.3035
+            ],
+            [
+              0.1965,
+              0.8035
+            ]
+          ]
+        },
+        {
+          "axis": "y",
+          "side": -1,
+          "foreignPadPorts": [
+            "pcb_port_70",
+            "pcb_port_84",
+            "pcb_port_98"
+          ],
+          "intervals": [
+            [
+              -0.8035,
+              -0.1965
+            ],
+            [
+              -0.3035,
+              0.3035
+            ],
+            [
+              0.1965,
+              0.8035
+            ]
+          ]
+        },
+        {
+          "axis": "y",
+          "side": 1,
+          "foreignPadPorts": [
+            "pcb_port_72",
+            "pcb_port_86",
+            "pcb_port_100"
+          ],
+          "intervals": [
+            [
+              -0.8035,
+              -0.1965
+            ],
+            [
+              -0.3035,
+              0.3035
+            ],
+            [
+              0.1965,
+              0.8035
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "connection": "breakout:pcb_breakout_point_11",
+      "source": {
+        "x": 9.250010388624133,
+        "y": -16.250010388624133,
+        "layer": "top",
+        "pointId": "pcb_port_82",
+        "pcb_port_id": "pcb_port_82"
+      },
+      "bus": "connection:breakout:pcb_breakout_point_11",
+      "termination": {
+        "type": "boundary"
+      },
+      "pitch": 0.5,
+      "traceWidth": 0.119,
+      "traceToPadClearance": 0.119,
+      "viaDiameter": 0.4,
+      "viaToPadClearance": 0.119,
+      "smallestPadRadius": 0.125,
+      "maximumDistanceToNearestPadCenter": 0.35355339059327373,
+      "requiredViaDistanceToNearestPadCenter": 0.444,
+      "closedForeignPadBoundary": [
+        {
+          "axis": "x",
+          "side": -1,
+          "foreignPadPorts": [
+            "pcb_port_67",
+            "pcb_port_68",
+            "pcb_port_69"
+          ],
+          "intervals": [
+            [
+              -0.8035,
+              -0.1965
+            ],
+            [
+              -0.3035,
+              0.3035
+            ],
+            [
+              0.1965,
+              0.8035
+            ]
+          ]
+        },
+        {
+          "axis": "x",
+          "side": 1,
+          "foreignPadPorts": [
+            "pcb_port_95",
+            "pcb_port_96",
+            "pcb_port_97"
+          ],
+          "intervals": [
+            [
+              -0.8035,
+              -0.1965
+            ],
+            [
+              -0.3035,
+              0.3035
+            ],
+            [
+              0.1965,
+              0.8035
+            ]
+          ]
+        },
+        {
+          "axis": "y",
+          "side": -1,
+          "foreignPadPorts": [
+            "pcb_port_67",
+            "pcb_port_81",
+            "pcb_port_95"
+          ],
+          "intervals": [
+            [
+              -0.8035,
+              -0.1965
+            ],
+            [
+              -0.3035,
+              0.3035
+            ],
+            [
+              0.1965,
+              0.8035
+            ]
+          ]
+        },
+        {
+          "axis": "y",
+          "side": 1,
+          "foreignPadPorts": [
+            "pcb_port_69",
+            "pcb_port_83",
+            "pcb_port_97"
+          ],
+          "intervals": [
+            [
+              -0.8035,
+              -0.1965
+            ],
+            [
+              -0.3035,
+              0.3035
+            ],
+            [
+              0.1965,
+              0.8035
+            ]
+          ]
+        }
+      ]
+    }
+  ],
+  "pitches": [
+    {
+      "pitch": [
+        0.5,
+        0.5
+      ],
+      "requests": 32
+    }
+  ],
+  "traceWidths": {
+    "0.12": 20,
+    "0.119": 12
+  },
+  "constructorInputSha256": "a2e247f73eda3dfd4635eb09007b6c8b7bf0eed19f67d8d1de9b568a459b0442",
+  "components": 498,
+  "pads": 1904,
+  "membershipErrors": [],
+  "diagnostics": [
+    {
+      "component": "<board#3446 />",
+      "requested": 32,
+      "available": true,
+      "routed": 20,
+      "vias": 15,
+      "drcValid": true,
+      "drcIssues": [],
+      "solved": false,
+      "failed": true,
+      "latestStage": "FanoutSolver",
+      "routedConnections": [
+        "breakout:pcb_breakout_point_4",
+        "breakout:pcb_breakout_point_0",
+        "breakout:pcb_breakout_point_8",
+        "source_trace_12",
+        "source_trace_14",
+        "source_trace_11",
+        "source_trace_17",
+        "source_trace_19",
+        "source_trace_16",
+        "source_trace_15",
+        "source_trace_9",
+        "source_trace_18",
+        "source_trace_2",
+        "source_trace_3",
+        "source_trace_5",
+        "source_trace_4",
+        "source_trace_13",
+        "source_trace_0",
+        "source_trace_1",
+        "source_trace_8"
+      ]
+    }
+  ],
+  "fullCircuitStatus": "failed"
+}

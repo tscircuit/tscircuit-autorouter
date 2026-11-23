@@ -1,0 +1,114 @@
+diff --git a/lib/fanout-solver.ts b/lib/fanout-solver.ts
+index 198c7eb..22458dd 100644
+--- a/lib/fanout-solver.ts
++++ b/lib/fanout-solver.ts
+@@ -1024,8 +1024,9 @@ function getCandidateEscapeLayersForBus(params: {
+   srj: SimpleRouteJson
+   config: ResolvedFanoutConfig
+   staticClearanceCache: RouteBusStaticClearanceCache
++  preferSourceTracks: boolean
+ }): string[] {
+-  const { bus, srj, config, staticClearanceCache } = params
++  const { bus, srj, config, staticClearanceCache, preferSourceTracks } = params
+   const busAllowedLayers = bus.allowedLayers
+   const allowedEscapeLayers =
+     busAllowedLayers === undefined
+@@ -1040,6 +1041,7 @@ function getCandidateEscapeLayersForBus(params: {
+       routeBus({
+         srj,
+         bus,
++        preferSourceTracks,
+         targetLayer,
+         acceptedPlans: [],
+         layerNames: config.layerNames,
+@@ -1355,6 +1357,8 @@ export class FanoutSolver extends BaseSolver {
+         srj: this.routingSrj,
+         config: this.config,
+         staticClearanceCache: this.routeStaticClearanceCache,
++        preferSourceTracks:
++          this.boundaryBuses.length === this.preparedBuses.length,
+       })
+       this.nextCandidateLayerBusIndex++
+       this.stats = {
+@@ -5860,6 +5864,8 @@ export class FanoutSolver extends BaseSolver {
+         viaHoleDiameter: this.config.viaHoleDiameter,
+         clearance: this.config.clearance,
+         compactBusTracks: this.config.compactBusTracks,
++        preferSourceTracks:
++          this.boundaryBuses.length === this.preparedBuses.length,
+         allowBlindAndBuriedVias: this.config.allowBlindAndBuriedVias,
+         allowSameNetMerges: this.config.allowSameNetMerges,
+         staticClearanceCache: this.routeStaticClearanceCache,
+diff --git a/lib/route-bus/route-analytic-boundary-alternatives.ts b/lib/route-bus/route-analytic-boundary-alternatives.ts
+index 359e308..85cf95e 100644
+--- a/lib/route-bus/route-analytic-boundary-alternatives.ts
++++ b/lib/route-bus/route-analytic-boundary-alternatives.ts
+@@ -6,8 +6,10 @@ import {
+   busUsesCoordinatedWindingChannel,
+   getCornerSide,
+   getLocalCornerSide,
++  getPerpendicularAxis,
+ } from "./directions"
+ import { planIsClear } from "./plan-clearance"
++import { getInitialViaPoint } from "./source-escape"
+ import {
+   getLegacyPreferredTrack,
+   getPreferredTrack,
+@@ -113,7 +115,35 @@ export function searchConnectionOrder(
+ 
+   const preparedConnection = connectionOrder[connectionIndex]!
+   const connectionRank = getConnectionRank(bus, preparedConnection)
++  const preferSourceTracks =
++    context.preferSourceTracks === true &&
++    compactBusTracks &&
++    !startAtSource &&
++    !getCornerSide(bus) &&
++    !getLocalCornerSide(bus) &&
++    !busUsesCoordinatedWindingChannel(bus) &&
++    !fixedBoundaryTracksByConnectionIndex &&
++    bus.connections.every((connection) => !connection.hasExplicitExitTarget)
++  const sourceAlignedTracks: number[] = []
++  if (preferSourceTracks) {
++    const escapeLayerStart = targetUsesVia
++      ? getInitialViaPoint({
++          preparedConnection,
++          bus,
++          targetLayer,
++          traceWidth,
++          viaDiameter,
++          clearance,
++          viaHandedness,
++        })
++      : preparedConnection.sourcePoint
++    sourceAlignedTracks.push(
++      getPerpendicularAxis(escapeLayerStart, bus.direction),
++      getPerpendicularAxis(preparedConnection.sourcePoint, bus.direction),
++    )
++  }
+   const preferredTracks = [
++    ...sourceAlignedTracks,
+     getPreferredTrack({
+       bus,
+       connection: preparedConnection,
+@@ -153,7 +183,7 @@ export function searchConnectionOrder(
+     )
+   for (let trackIndex = 0; trackIndex < trackCandidates.length; trackIndex++) {
+     const track = trackCandidates[trackIndex]!
+-    const cacheKey = `boundary:${startAtSource}:${bus.busId}:${bus.direction}:${targetLayer}:${preparedConnection.connectionIndex}:${viaHandedness}:${trackIndex}:${bus.exitEdge ?? "legacy"}:${cornerLaneOffsets.exit}:${cornerLaneOffsets.localChannel}:${cornerLaneOffsets.boundaryChannel}:${cornerBandTargetTrackOffset ?? 0}:${fixedBoundaryTracksByConnectionIndex?.get(preparedConnection.connectionIndex) ?? "default"}`
++    const cacheKey = `boundary:${startAtSource}:${preferSourceTracks}:${bus.busId}:${bus.direction}:${targetLayer}:${preparedConnection.connectionIndex}:${viaHandedness}:${trackIndex}:${bus.exitEdge ?? "legacy"}:${cornerLaneOffsets.exit}:${cornerLaneOffsets.localChannel}:${cornerLaneOffsets.boundaryChannel}:${cornerBandTargetTrackOffset ?? 0}:${fixedBoundaryTracksByConnectionIndex?.get(preparedConnection.connectionIndex) ?? "default"}`
+     if (staticClearanceCache?.get(cacheKey) === false) continue
+     const plan = buildPlan({
+       preparedConnection,
+diff --git a/lib/route-bus/types.ts b/lib/route-bus/types.ts
+index d154e45..c979ac5 100644
+--- a/lib/route-bus/types.ts
++++ b/lib/route-bus/types.ts
+@@ -15,6 +15,8 @@ export type RouteBusStaticClearanceCache = Map<PlanClearanceKey, boolean>
+ 
+ export interface RouteBusParams {
+   srj: SimpleRouteJson
++  /** Prefer source-aligned tracks for compact automatic boundary handoffs. */
++  preferSourceTracks?: boolean
+   bus: PreparedBus
+   targetLayer: string
+   acceptedPlans: FanoutRoutePlan[]
