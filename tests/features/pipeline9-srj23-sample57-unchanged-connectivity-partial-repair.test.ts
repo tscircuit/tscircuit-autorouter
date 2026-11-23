@@ -108,13 +108,11 @@ test("partial publication allows unchanged stage-input connectivity errors match
       originalSrj,
       initialErrors: [
         missingConnectionError,
-        disconnectedEndpointError,
         fixedPadClearanceError,
         clearedViaTraceError,
       ],
       remainingErrors: [
         { ...missingConnectionError, center: { x: -12.15, y: 0.365 } },
-        { ...disconnectedEndpointError, center: { x: 1, y: 2 } },
         { ...fixedPadClearanceError, actual_clearance: 0.07 },
       ],
     }),
@@ -152,7 +150,7 @@ test("partial publication allows unchanged stage-input connectivity errors match
     ).toBeFalse()
   }
 
-  // Identical moving-copper or board-edge errors still require a clean repair.
+  // Portless disconnected-endpoint, moving-copper, and board-edge errors still require clean/independent repair.
   const movingTraceOverlap: Pipeline9DrcError = {
     type: "pcb_trace_error",
     pcb_trace_id: "trace_a",
@@ -166,6 +164,7 @@ test("partial publication allows unchanged stage-input connectivity errors match
     pcb_port_ids: [],
   }
   for (const disallowed of [
+    disconnectedEndpointError,
     clearedViaTraceError,
     movingTraceOverlap,
     boardEdgeError,

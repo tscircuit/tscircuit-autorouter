@@ -40,39 +40,25 @@ const isIdenticalErrorValue = (left: unknown, right: unknown): boolean => {
   )
 }
 
-const isConnectivityTraceError = (
+const isPortConnectivityTraceError = (
   error: Pipeline9DrcError,
-  traceId: string,
   overlapPrefix: string,
-): boolean => {
-  if (
-    error.type !== "pcb_trace_error" ||
-    error.drc_source !== undefined ||
-    typeof error.pcb_trace_error_id !== "string" ||
-    error.pcb_trace_error_id.startsWith(overlapPrefix)
-  ) {
-    return false
-  }
-  if (
-    Array.isArray(error.pcb_port_ids) &&
-    error.pcb_port_ids.length > 0 &&
-    error.pcb_port_ids.every((portId) => typeof portId === "string")
-  ) {
-    return true
-  }
-  return (
-    error.pcb_trace_error_id === `disconnected_endpoint_${traceId}_start` ||
-    error.pcb_trace_error_id === `disconnected_endpoint_${traceId}_end`
-  )
-}
+): boolean =>
+  error.type === "pcb_trace_error" &&
+  error.drc_source === undefined &&
+  typeof error.pcb_trace_error_id === "string" &&
+  !error.pcb_trace_error_id.startsWith(overlapPrefix) &&
+  Array.isArray(error.pcb_port_ids) &&
+  error.pcb_port_ids.length > 0 &&
+  error.pcb_port_ids.every((portId) => typeof portId === "string")
 
 /**
  * Partial publication is limited to remaining fixed-pad errors covered by the
- * physical obstacle non-regression guard, plus pre-existing connectivity errors
- * that remain identical to the stage input (matched at most once). Call only
- * after the physical obstacle guard and new-via guard pass. Unknown, newly
- * introduced connectivity, and moving copper errors still require a completely
- * reference-clean repair.
+ * physical obstacle non-regression guard, plus pre-existing port connectivity
+ * errors that remain identical to the stage input (matched at most once). Call
+ * only after the physical obstacle guard and new-via guard pass. Unknown,
+ * portless disconnected-endpoint, newly introduced connectivity, and moving
+ * copper errors still require a completely reference-clean repair.
  */
 export const canPublishPartialFixedObstacleRepair = ({
   originalSrj,
@@ -98,7 +84,7 @@ export const canPublishPartialFixedObstacleRepair = ({
   for (const error of remainingErrors) {
     if (typeof error.pcb_trace_id !== "string") return false
     const prefix = `overlap_${error.pcb_trace_id}_`
-    if (isConnectivityTraceError(error, error.pcb_trace_id, prefix)) {
+    if (isPortConnectivityTraceError(error, prefix)) {
       const unchangedIndex = unmatchedErrors.findIndex((original) =>
         isIdenticalErrorValue(original, error),
       )
