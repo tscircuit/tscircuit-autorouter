@@ -12,6 +12,10 @@ on:
         description: Compare isolated upstream geometry against main
         type: boolean
         default: false
+      legacy_fixtures:
+        description: Inspect complete legacy routing fixtures instead of mesh stages
+        type: boolean
+        default: false
       base_ref:
         description: Base ref for isolated geometry comparison
         type: string
@@ -185,5 +189,11 @@ jobs:
         run: |
           for revision in base head; do
             cp tooling/scripts/inspect-pre-hd.ts "$revision/inspect-pre-hd.ts"
-            (cd "$revision" && bun install --ignore-scripts --backend=copyfile && REVISION="$revision" bun inspect-pre-hd.ts)
+            cp tooling/scripts/inspect-legacy.py "$revision/inspect-legacy.py"
+            (cd "$revision" && bun install --ignore-scripts --backend=copyfile)
+            if [ "${{ inputs.legacy_fixtures }}" = "true" ]; then
+              (cd "$revision" && REVISION="$revision" python3 inspect-legacy.py)
+            else
+              (cd "$revision" && REVISION="$revision" bun inspect-pre-hd.ts)
+            fi
           done
