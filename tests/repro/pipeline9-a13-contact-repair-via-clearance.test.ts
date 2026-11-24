@@ -172,8 +172,5 @@ test("A13 contact repair leaves its new via inside the pad clearance", async ():
     import.meta.path,
     { svgName: "joint-output" },
   )
-  expect(newViaPadKeys).toEqual([
-    "source_net_77_0 via beside pcb_smtpad_105",
-    "source_net_77_0 via beside pcb_smtpad_111",
-  ])
+  expect(newViaPadKeys).toEqual([])
 })
