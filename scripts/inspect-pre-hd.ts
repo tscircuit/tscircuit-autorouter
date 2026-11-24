@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs"
 import { gunzipSync } from "node:zlib"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "./lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 function hash(value: unknown): string {
-  return createHash("sha256").update(JSON.stringify(value)).digest("hex")
+  return createHash("sha256").update(JSON.stringify(value ?? null)).digest("hex")
 }
 for (const [name, file] of [["stmp157", "stmp157-remaining-mesh/input.srj.json.gz"], ["a64", "a64-ddr-edge-lookup/input.srj.json.gz"]]) {
   const input = JSON.parse(gunzipSync(readFileSync(`tests/fixtures/assets/${file}`)).toString())
