@@ -679,6 +679,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
   clearanceProjectionSolver?: Pipeline9ClearanceProjectionSolver
   private drcEvaluator?: DrcEvaluator
   private cachedReferenceDrcEvaluator?: DrcEvaluator
+  private checkpointReferenceDrcEvaluator?: DrcEvaluator
   private clearancePrecisionDrcEvaluator?: DrcEvaluator
   private clearancePrecisionIndexedDrcEvaluator?: DrcEvaluator
   private clearanceMarginDrcEvaluator?: ClearanceMarginDrcEvaluator
@@ -1448,7 +1449,10 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     })
     const referenceDrcEvaluator = (
       { routes, hdRoutes }: Parameters<DrcEvaluator>[0],
-      includeTraceContinuity = true,
+      options: {
+        skipTraceContinuity?: boolean
+        includeInheritedAndFixedCopperFindings?: boolean
+      } = {},
     ): NormalizedCandidateDrcResult => {
       const evaluatedRoutes = routes ?? hdRoutes
       if (!evaluatedRoutes) {
@@ -1457,7 +1461,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       const candidateDrcInput = prepareCandidateDrcInput(evaluatedRoutes)
       const evaluatedDrc = evaluateCandidateDrc(
         candidateDrcInput.routedTraces,
-        { includeTraceContinuity },
+        { includeTraceContinuity: !options.skipTraceContinuity },
       )
       const evaluatedTraceIds = new Set(
         candidateDrcInput.evaluatedTraces.map((trace) => trace.pcb_trace_id),
@@ -1476,22 +1480,29 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         circuitJson: evaluatedDrc.circuitJson,
         evaluatedTraceIds,
       })
-      const evaluatedNewErrors = filterPipeline9DrcErrorsAgainstBaseline({
-        errors: evaluatedErrors,
-        baselineErrors,
-        originalTraceIdByPreparedTraceId:
-          candidateDrcInput.originalTraceIdByEvaluationTraceId,
-      })
-      const evaluatedNewErrorsWithCenters =
-        filterPipeline9DrcErrorsAgainstBaseline({
-          errors: evaluatedErrorsWithCenters,
-          baselineErrors: baselineErrorsWithCenters,
-          originalTraceIdByPreparedTraceId:
-            candidateDrcInput.originalTraceIdByEvaluationTraceId,
-        })
+      // Search scoring prioritizes current fixes. Checkpoint publication
+      // instead compares complete, unprioritized findings from both boards.
+      const retainAllFindings = options.includeInheritedAndFixedCopperFindings
+      const evaluatedNewErrors = retainAllFindings
+        ? evaluatedErrors
+        : filterPipeline9DrcErrorsAgainstBaseline({
+            errors: evaluatedErrors,
+            baselineErrors,
+            originalTraceIdByPreparedTraceId:
+              candidateDrcInput.originalTraceIdByEvaluationTraceId,
+          })
+      const evaluatedNewErrorsWithCenters = retainAllFindings
+        ? evaluatedErrorsWithCenters
+        : filterPipeline9DrcErrorsAgainstBaseline({
+            errors: evaluatedErrorsWithCenters,
+            baselineErrors: baselineErrorsWithCenters,
+            originalTraceIdByPreparedTraceId:
+              candidateDrcInput.originalTraceIdByEvaluationTraceId,
+          })
       const prioritizeCircuitJsonErrors =
-        hasNativePreloadedTraces ||
-        !this.initialBoundedRegionalRepairSolver?.solved
+        !retainAllFindings &&
+        (hasNativePreloadedTraces ||
+          !this.initialBoundedRegionalRepairSolver?.solved)
       return normalizeCandidateDrcResult({
         errors: prioritizeCircuitJsonErrors
           ? prioritizeCircuitJsonDrcErrors(evaluatedNewErrors)
@@ -1546,11 +1557,21 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     }
     cachedReferenceDrcEvaluator.inputMode = "routes-only"
     this.cachedReferenceDrcEvaluator = cachedReferenceDrcEvaluator
+    this.checkpointReferenceDrcEvaluator = (input) => {
+      this.referenceDrcValidationCount += 1
+      return referenceDrcEvaluator(input, {
+        includeInheritedAndFixedCopperFindings: true,
+      })
+    }
+    this.checkpointReferenceDrcEvaluator.inputMode = "routes-only"
     this.clearancePrecisionDrcEvaluator = ({
       routes,
       hdRoutes,
     }): ReturnType<DrcEvaluator> =>
-      referenceDrcEvaluator({ traces: [], routes, hdRoutes }, false)
+      referenceDrcEvaluator(
+        { traces: [], routes, hdRoutes },
+        { skipTraceContinuity: true },
+      )
     const createMarginCircuitJson = (
       routes: HighDensityRoute[],
     ): AnyCircuitElement[] => {
@@ -2273,20 +2294,41 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     solver: TraceContactRepairSolver,
   ): HighDensityRoute[] {
     const output = solver.getOutput()
-    const reference = this.cachedReferenceDrcEvaluator
+    const reference = this.checkpointReferenceDrcEvaluator
     // The last repair may reject its candidate and restore the pre-force
     // routes. In that case, also compare the original input to joint repair:
     // a validated force improvement should not be lost with the later repair.
     if (output !== solver.params.inputHdRoutes || !reference) return output
-    const { hdRoutes: jointInput, srj, connMap } = this.exactRepairParams!
+    if (!this.exactRepairParams) {
+      throw new Error("Pipeline9 checkpoint acceptance is missing repair state")
+    }
+    const { hdRoutes: jointInput, srj, connMap } = this.exactRepairParams
     if (this.traceContactGuard.getNewContactPairs(jointInput).length > 0) {
       return output
     }
+    const routeCounts = new Map<HighDensityRoute["connectionName"], number>()
+    for (const route of output) {
+      const name = route.connectionName
+      routeCounts.set(name, (routeCounts.get(name) ?? 0) + 1)
+    }
+    if (jointInput.length !== output.length) return output
+    for (const route of jointInput) {
+      const name = route.connectionName
+      const remaining = routeCounts.get(name) ?? 0
+      if (remaining === 0) return output
+      routeCounts.set(name, remaining - 1)
+    }
     const baseline = getDrcSnapshot(srj, output, reference, connMap)
     const candidate = getDrcSnapshot(srj, jointInput, reference, connMap)
-    return canRetainPipeline9RepairCheckpoint(candidate, baseline)
-      ? jointInput
-      : output
+    const retained = canRetainPipeline9RepairCheckpoint(candidate, baseline)
+    this.stats = {
+      ...this.stats,
+      traceContactRollbackCheckpointRetained: retained,
+      traceContactRollbackBaselineFindings: baseline.count,
+      traceContactRollbackCheckpointFindings: candidate.count,
+      referenceDrcValidationCount: this.referenceDrcValidationCount,
+    }
+    return retained ? jointInput : output
   }
 
   private finishWithTraceContactCheck(): void {
