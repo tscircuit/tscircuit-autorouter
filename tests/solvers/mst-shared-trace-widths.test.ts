@@ -5,7 +5,10 @@ import type { ConnectionPoint, SimpleRouteConnection } from "lib/types"
 
 test("the shared path gets the widest target while each branch keeps its own", (): void => {
   const pad = (pointId: string, x: number, y: number): ConnectionPoint => ({
-    pointId, x, y, layer: "top",
+    pointId,
+    x,
+    y,
+    layer: "top",
   })
   const supply = pad("supply", 0, 0)
   const split = pad("split", 1, 0)

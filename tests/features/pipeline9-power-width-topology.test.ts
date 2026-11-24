@@ -5,7 +5,10 @@ import { getInitiallyConnectedMapFromSimpleRouteJson } from "lib/utils/get-initi
 
 test("Pipeline 9 uses source path widths before off-board endpoint substitution", (): void => {
   const pad = (pointId: string, x: number, y: number): ConnectionPoint => ({
-    pointId, x, y, layer: "top",
+    pointId,
+    x,
+    y,
+    layer: "top",
   })
   const junction = pad("junction", 0, 0)
   const monitor = pad("monitor", 0, 1)

@@ -60,7 +60,8 @@ export function getMstEdgeTraceWidths(
 
     const [start, ...rest] = source.pointsToConnect.map((point): TreeNode => {
       const mergedPoint = mergedPointByKey.get(getPointKey(point))
-      const node = mergedPoint && treeNodes.get(DisjointSet.pointToKey(mergedPoint))
+      const node =
+        mergedPoint && treeNodes.get(DisjointSet.pointToKey(mergedPoint))
       if (!node) {
         throw new Error(`MST is missing a terminal of "${source.name}"`)
       }

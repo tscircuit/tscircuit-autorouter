@@ -51,8 +51,11 @@ test("RP2040 motor controller: default Pipeline 9 relaxed DRC", async (): Promis
     vmHf?.route.some((start, index, route) => {
       const end = route[index + 1]
       return (
-        start.route_type === "wire" && end?.route_type === "wire" &&
-        start.layer === end.layer && start.width === 0.8 && end.width === 0.8 &&
+        start.route_type === "wire" &&
+        end?.route_type === "wire" &&
+        start.layer === end.layer &&
+        start.width === 0.8 &&
+        end.width === 0.8 &&
         (start.x !== end.x || start.y !== end.y)
       )
     }),
@@ -63,5 +66,7 @@ test("RP2040 motor controller: default Pipeline 9 relaxed DRC", async (): Promis
     process.platform === "linux"
       ? import.meta.path.replace(/\.test\.ts$/, "-linux.test.ts")
       : import.meta.path
-  await expect(getBugReportSnapshotSvg(drcInput)).toMatchSvgSnapshot(snapshotPath)
+  await expect(getBugReportSnapshotSvg(drcInput)).toMatchSvgSnapshot(
+    snapshotPath,
+  )
 })

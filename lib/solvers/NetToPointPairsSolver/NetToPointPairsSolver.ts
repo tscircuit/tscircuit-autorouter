@@ -148,11 +148,13 @@ export class NetToPointPairsSolver extends BaseSolver {
       return
     }
     const { connection, sources } = this.unprocessedConnections.pop()!
-    const defaultWidth = this.ogSrj.nominalTraceWidth ?? this.ogSrj.minTraceWidth
+    const defaultWidth =
+      this.ogSrj.nominalTraceWidth ?? this.ogSrj.minTraceWidth
     const sourceWidths =
       this.options.preserveBranchWidths && sources.length > 1
         ? sources.map(
-            (source) => source.nominalTraceWidth ?? source.width ?? defaultWidth,
+            (source) =>
+              source.nominalTraceWidth ?? source.width ?? defaultWidth,
           )
         : []
     const hasMixedWidths = sourceWidths.some(
@@ -224,7 +226,9 @@ export class NetToPointPairsSolver extends BaseSolver {
       }
       const branchWidth = branchWidths?.get(edge)
       if (branchWidths && branchWidth === undefined) {
-        throw new Error(`Missing width for a routed branch of "${connection.name}"`)
+        throw new Error(
+          `Missing width for a routed branch of "${connection.name}"`,
+        )
       }
       this.emitConnection(
         {
