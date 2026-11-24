@@ -1,4 +1,5 @@
 export type TraceId = string
+export type ConnectionName = string
 export type NetId = string
 export type BusId = string
 export type PointId = string
@@ -200,9 +201,10 @@ export interface SimplifiedPcbTrace {
   pcb_trace_id: TraceId
   /** Preserve this preloaded trace's copper geometry throughout routing. */
   isFixed?: boolean
+  allowedLayers?: string[]
   /** Preloaded trace intentionally replaced by this routed output. */
   __replaces_pcb_trace_id?: TraceId
-  connection_name: string
+  connection_name: ConnectionName
   connectsTo?: Array<TraceId | NetId | PointId>
   route: Array<
     | {

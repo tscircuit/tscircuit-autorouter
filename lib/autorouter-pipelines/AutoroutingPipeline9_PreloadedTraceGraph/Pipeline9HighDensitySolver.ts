@@ -1,3 +1,4 @@
+import type { ConnectionName } from "lib/types/srj-types"
 import type { ChangedPreloadedTraceSection } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver"
 import { BgaEscapeRoutingSolver } from "@tscircuit/bga-escape-routing-solver"
 import {
@@ -817,9 +818,39 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       )
       regionalCopperRoutes = [...regionalCopperRoutes, ...routedCopperRoutes]
     }
+    const allowedZLayersByConnectionName = new Map<
+      ConnectionName,
+      ReadonlySet<number>
+    >()
+    for (const [
+      connectionName,
+      section,
+    ] of fallbackProblem.fixedRouteSectionsByConnectionName) {
+      const masks = section.sourceRoutes.flatMap((route) => {
+        if (route.allowedZLayers) return [route.allowedZLayers]
+        return []
+      })
+      if (masks.length === 0) continue
+      const allowedLayers = masks[0]!.filter((z) =>
+        masks.every((mask) => mask.includes(z)),
+      )
+      allowedZLayersByConnectionName.set(connectionName, new Set(allowedLayers))
+    }
     this.activeFallbackSolver = new Pipeline9RegionalFallbackSolver({
       captureSearchDebug: this.params.captureSearchDebug,
-      nodeWithPortPoints: fallbackProblem.nodeWithPortPoints,
+      nodeWithPortPoints: {
+        ...fallbackProblem.nodeWithPortPoints,
+        portPoints: fallbackProblem.nodeWithPortPoints.portPoints.map(
+          (point) => {
+            const layers = allowedZLayersByConnectionName.get(
+              point.connectionName,
+            )
+            if (!layers) return point
+            return { ...point, allowedZLayers: [...layers] }
+          },
+        ),
+      },
+      allowedZLayersByConnectionName,
       colorMap: this.colorMap,
       connMap: this.connMap,
       viaDiameter: this.viaDiameter,

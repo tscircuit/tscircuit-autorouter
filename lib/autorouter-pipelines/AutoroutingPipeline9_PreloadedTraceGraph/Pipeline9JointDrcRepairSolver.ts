@@ -297,6 +297,7 @@ const combinePreloadedTraceSectionGroup = ({
 
   return {
     connectionName: syntheticConnectionName,
+    allowedZLayers: sectionGroup.routes[0]?.allowedZLayers,
     rootConnectionName: trace.connection_name,
     traceThickness: Math.max(
       ...traceSections.map((section) => section.traceThickness),

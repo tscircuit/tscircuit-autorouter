@@ -1,3 +1,4 @@
+import type { ConnectionName } from "lib/types/srj-types"
 import { createIntraNodeSegmentValidator } from "./createIntraNodeSegmentValidator"
 import {
   HighDensitySolverA01,
@@ -702,11 +703,27 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       if (preservePhysicalGeometry) {
         traceThickness = this.constructorParams.traceWidth ?? 0.15
       }
+      const allowedZLayersByConnectionName = new Map<
+        ConnectionName,
+        readonly number[]
+      >()
+      for (const point of this.nodeWithPortPoints.portPoints) {
+        if (point.allowedZLayers) {
+          allowedZLayersByConnectionName.set(
+            point.connectionName,
+            point.allowedZLayers,
+          )
+        }
+      }
+      let fixedHdRoutes: HighDensityIntraNodeRoute[] = []
+      if (preservePhysicalGeometry) {
+        fixedHdRoutes = this.constructorParams.fixedHdRoutes ?? []
+      }
       let staticSegmentValidator: StaticSegmentValidator | undefined
-      const fixedHdRoutes = this.constructorParams.fixedHdRoutes
-      if (preservePhysicalGeometry && fixedHdRoutes?.length) {
+      if (fixedHdRoutes.length > 0 || allowedZLayersByConnectionName.size > 0) {
         staticSegmentValidator = createIntraNodeSegmentValidator({
           fixedHdRoutes,
+          allowedZLayersByConnectionName,
           connMap: this.connMap ?? new ConnectivityMap({}),
           layerCount: this.constructorParams.layerCount ?? 2,
           clearance: this.constructorParams.obstacleMargin ?? 0.1,
