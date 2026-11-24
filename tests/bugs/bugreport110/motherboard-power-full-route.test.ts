@@ -2,28 +2,44 @@ import { expect, test } from "bun:test"
 import { createHash } from "node:crypto"
 import { writeFileSync } from "node:fs"
 import { gzipSync } from "node:zlib"
+import {
+  type PowerTraceExpanderInput,
+  PowerTraceExpanderSolver,
+} from "@tscircuit/power-trace-expander"
 import { PowerTraceExpanderSolver as OriginalPowerTraceExpanderSolver } from "@tscircuit/power-trace-expander-baseline"
 import { solveForComparison } from "../../../fixtures/bug-reports/bugreport110-motherboard-power-phase/solve-for-comparison"
 
 test("preserves the complete motherboard output against the original expander on the same runtime", (): void => {
   const current = solveForComparison()
-  // Completed search trees are not needed for the baseline replay.
-  Bun.gc(true)
-  const original = new OriginalPowerTraceExpanderSolver(
-    current.expansionInput,
-    current.expansionOptions,
-  )
-  original.solve()
-  expect(original.failed).toBe(false)
-  expect(original.solved).toBe(true)
   if (!current.expansionInput.fixedTraces) {
     throw new Error("Motherboard expansion input is missing fixed copper")
   }
-  const originalOutput: string = JSON.stringify({
-    ...current.output,
-    traces: [...current.expansionInput.fixedTraces, ...original.getOutput()],
-  })
-  const currentOutput: string = JSON.stringify(current.output)
+  // The baseline expander ignores per-trace width targets, so compare both
+  // expanders on the same input without them.
+  const expansionInput = {
+    ...current.expansionInput,
+    traces: (current.expansionInput.traces ?? []).map(
+      ({ nominalTraceWidth: _target, ...trace }) => trace,
+    ),
+  } as PowerTraceExpanderInput
+  const solveWith = (
+    Solver:
+      | typeof PowerTraceExpanderSolver
+      | typeof OriginalPowerTraceExpanderSolver,
+  ): string => {
+    // Completed search trees are not needed for the next replay.
+    Bun.gc(true)
+    const solver = new Solver(expansionInput, current.expansionOptions)
+    solver.solve()
+    expect(solver.failed).toBe(false)
+    expect(solver.solved).toBe(true)
+    return JSON.stringify({
+      ...current.output,
+      traces: [...current.expansionInput.fixedTraces!, ...solver.getOutput()],
+    })
+  }
+  const currentOutput: string = solveWith(PowerTraceExpanderSolver)
+  const originalOutput: string = solveWith(OriginalPowerTraceExpanderSolver)
   const originalHash: string = createHash("sha256")
     .update(originalOutput)
     .digest("hex")

@@ -31,6 +31,13 @@ export class PowerTraceExpansionSolver extends BaseSolver {
     this.powerTraceExpanderSolver = new PowerTraceExpanderSolver(
       {
         ...powerTraceInput,
+        // The expander's input traces call the desired width nominalTraceWidth
+        traces: powerTraceInput.traces?.map(
+          ({ __desiredNominalTraceWidth, ...trace }) => ({
+            ...trace,
+            nominalTraceWidth: __desiredNominalTraceWidth,
+          }),
+        ),
         minViaEdgeToPadEdgeClearance: getViaToPadClearance(inputSrj),
       } as unknown as PowerTraceExpanderInput,
       options,
@@ -87,7 +94,11 @@ export class PowerTraceExpansionSolver extends BaseSolver {
       throw new Error("Cannot get power trace expansion output before solving")
     }
 
-    return this.powerTraceExpanderSolver.getOutput() as SimplifiedPcbTraces
+    return this.powerTraceExpanderSolver
+      .getOutput()
+      .map(
+        ({ nominalTraceWidth: _desired, ...trace }) => trace,
+      ) as SimplifiedPcbTraces
   }
 
   override visualize(): GraphicsObject {
