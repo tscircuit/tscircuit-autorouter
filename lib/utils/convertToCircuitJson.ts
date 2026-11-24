@@ -7,7 +7,12 @@ import type {
 } from "circuit-json"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { getViaLayers } from "high-density-repair03/lib"
-import { Obstacle, SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
+import {
+  type ConnectionPoint,
+  Obstacle,
+  SimpleRouteJson,
+  SimplifiedPcbTrace,
+} from "lib/types"
 import { HighDensityRoute } from "lib/types/high-density-types"
 import { getConnectionPointLayers } from "lib/types/srj-types"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
@@ -417,6 +422,14 @@ function getRouteEndpoints(
   )
 }
 
+// A named routing point is a terminal even when the input has no component
+// pad. A requested escape via only becomes copper when the router emits it.
+function getTerminalPortId(point: ConnectionPoint): string | undefined {
+  if (point.pcb_port_id) return point.pcb_port_id
+  if ("terminalVia" in point && point.terminalVia) return undefined
+  return point.pointId
+}
+
 /**
  * Create source_trace elements from the SimpleRouteJson connections
  * These represent the logical connections between points
@@ -450,7 +463,7 @@ function createSourceTraces(
   connections.forEach((connection) => {
     // Extract port IDs from the connection points
     const connectedPortIds = connection.pointsToConnect
-      .map((point) => point.pcb_port_id)
+      .map(getTerminalPortId)
       .filter((pointId): pointId is string => Boolean(pointId))
     const connectedPortIdSet = new Set(connectedPortIds)
     const getNonEndpointObstacleConnectivityIds = (
@@ -656,11 +669,12 @@ function createPcbPorts(srj: SimpleRouteJson): AnyCircuitElement[] {
 
   srj.connections.forEach((connection) => {
     connection.pointsToConnect.forEach((point) => {
-      if (point.pcb_port_id) {
-        portMap.set(point.pcb_port_id, {
+      const portId = getTerminalPortId(point)
+      if (portId) {
+        portMap.set(portId, {
           type: "pcb_port",
-          pcb_port_id: point.pcb_port_id,
-          source_port_id: point.pcb_port_id, // Assuming same ID for simplicity
+          pcb_port_id: portId,
+          source_port_id: portId,
           x: point.x,
           y: point.y,
           layers: getConnectionPointLayers(point),
@@ -1047,6 +1061,7 @@ function extractViasFromRoutes(
   const vias: PcbVia[] = []
   const viaLocations = new Set<string>() // Track unique via locations
 
+  // Process routes based on their type
   if (routes.length > 0) {
     if ("type" in routes[0] && routes[0].type === "pcb_trace") {
       // Extract vias from SimplifiedPcbTraces
@@ -1261,6 +1276,37 @@ export function convertToCircuitJson(
       options.connectivityMaps?.route ??
         getConnectivityMapFromSimpleRouteJson(srjWithPointPairs),
     )
+
+  // The SRJ describes an unbroken pour as rectangular tiles on named layers.
+  for (const [index, tile] of (
+    originalSrj ?? srjWithPointPairs
+  ).obstacles.entries()) {
+    if (!tile.isCopperPour) continue
+    const owner =
+      tile.connectedTo
+        .map((id) =>
+          resolveCircuitJsonSourceTraceId(
+            routeCircuitJsonSourceTraceIdResolver,
+            id,
+          ),
+        )
+        .find((id) => id !== undefined) ?? tile.connectedTo[0]
+    for (const layer of tile.layers) {
+      if (!isLayerName(layer)) continue
+      circuitJson.push({
+        type: "pcb_copper_pour",
+        pcb_copper_pour_id: `pour_${index}_${layer}`,
+        shape: "rect",
+        center: tile.center,
+        width: tile.width,
+        height: tile.height,
+        rotation: tile.ccwRotationDegrees,
+        layer,
+        covered_with_solder_mask: true,
+        source_net_id: owner,
+      })
+    }
+  }
 
   // Process routes based on their type
   if (routes.length > 0) {

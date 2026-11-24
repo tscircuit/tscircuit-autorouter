@@ -1,4 +1,6 @@
 import { expect, test } from "bun:test"
+import { getFullConnectivityMapFromCircuitJson } from "circuit-json-to-connectivity-map"
+import { convertToCircuitJson } from "lib/utils/convertToCircuitJson"
 import type { AnyCircuitElement, PcbVia } from "circuit-json"
 import type { SimpleRouteJson } from "lib/types"
 import { getViasConnectedByCopperPour } from "lib/utils/autorouting-drc/getViasConnectedByCopperPour"
@@ -49,22 +51,28 @@ test("a pour connects emitted via barrels only across continuous copper on their
     hole_diameter: 0.3,
   }
   const b = { ...a, pcb_via_id: "via-b", x: 2 }
+  function groups(copper: AnyCircuitElement[]): string[][] {
+    const circuit = [...convertToCircuitJson(srj, []), ...copper]
+    return getViasConnectedByCopperPour(
+      circuit,
+      getFullConnectivityMapFromCircuitJson(circuit),
+    )
+  }
   // The input still declares both sites externally connected.
-  expect(getViasConnectedByCopperPour(srj)([...traces, a, b])).toEqual([])
+  expect(groups([...traces, a, b])).toEqual([])
   const tile = (x: number, width: number) => ({
     type: "rect" as const,
     center: { x, y: 0 },
     width,
     height: 1,
-    connectedTo: ["ground"],
+    connectedTo: ["ground-fill", "ground"],
     isCopperPour: true,
     layers: ["inner2"],
   })
   srj.obstacles = [tile(0, 1), tile(2, 1)]
-  expect(getViasConnectedByCopperPour(srj)([...traces, a, b])).toEqual([])
+  expect(groups([...traces, a, b])).toEqual([])
   srj.obstacles.push(tile(1, 1))
   srj.connections[0]!.externallyConnectedPointIds = []
-  const groups = getViasConnectedByCopperPour(srj)
   expect(groups([...traces, a, b])).toEqual([["via-a", "via-b"]])
   expect(
     groups(

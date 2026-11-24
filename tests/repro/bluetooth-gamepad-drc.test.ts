@@ -1,5 +1,4 @@
 import { checkTraceContinuity } from "lib/utils/autorouting-drc/checkTraceContinuity"
-import { getViasConnectedByCopperPour } from "lib/utils/autorouting-drc/getViasConnectedByCopperPour"
 import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
@@ -81,11 +80,7 @@ test("the Bluetooth gamepad routes with zero copper errors, connected terminals 
   const { errors, locationAwareErrors, circuitJson } =
     evaluateRelaxedDrc(snapshotInput)
   expect(locationAwareErrors).toHaveLength(errors.length)
-  expect(
-    checkTraceContinuity(circuitJson, {
-      getViasConnectedByCopperPour: getViasConnectedByCopperPour(input),
-    }),
-  ).toHaveLength(0)
+  expect(checkTraceContinuity(circuitJson)).toHaveLength(0)
   await expect(
     getBugReportSnapshotSvg(snapshotInput, { showErrorLocations: true }),
   ).toMatchSvgSnapshot(import.meta.path)

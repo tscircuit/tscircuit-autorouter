@@ -1,3 +1,4 @@
+import { getViasConnectedByCopperPour } from "./getViasConnectedByCopperPour"
 import { getPrimaryId } from "@tscircuit/circuit-json-util"
 import {
   type Point,
@@ -237,10 +238,6 @@ const getMissingConnectionCenter = (
  * Compare those requirements with copper contact on the PCB layers. */
 export const checkTraceContinuity = (
   circuitJson: AnyCircuitElement[],
-  routing?: {
-    getViasConnectedByCopperPour?: (elements: AnyCircuitElement[]) => string[][]
-    isDeclaredTerminal?: (connection: string, endpoint: Wire) => boolean
-  },
 ): Record<string, unknown>[] => {
   const errors: Record<string, unknown>[] = []
   const ports = circuitJson.filter((element) => element.type === "pcb_port")
@@ -436,6 +433,40 @@ export const checkTraceContinuity = (
     Array.from(touchedPadsByTrace, ([id, touched]) => [id, ...touched]),
   )
   let physicalConnectivity: ConnectivityMap | undefined
+  const getPhysicalConnectivity = (): ConnectivityMap =>
+    (physicalConnectivity ??= getPhysicalTraceConnectivity({
+      segments,
+      vias: viaContacts,
+      pads,
+      touchedPadsByTrace,
+      viaConnections: [
+        ...routeViaContacts,
+        ...getViasConnectedByCopperPour(circuitJson, desiredConnectivity),
+      ],
+    }))
+  // Contacts with a point are observations on each wire. A multilayer port
+  // by itself cannot join copper on different layers.
+  const copperAtPort = new Map<PcbPort, Set<string>>()
+  for (const port of ports) {
+    if (padsByPort.has(port.pcb_port_id)) continue
+    const touching = new Set<string>()
+    for (const segment of segments) {
+      if (
+        port.layers.includes(segment.start.layer) &&
+        pointToSegmentDistance(port, segment.start, segment.end) <=
+          segment.start.width / 2
+      )
+        touching.add(segment.trace.pcb_trace_id)
+    }
+    for (const via of viaContacts) {
+      if (
+        port.layers.some((layer) => via.layers.includes(layer)) &&
+        Math.hypot(port.x - via.x, port.y - via.y) <= (via.radius ?? 0)
+      )
+        touching.add(via.id)
+    }
+    copperAtPort.set(port, touching)
+  }
   const endpointTouchesCopper = (
     trace: PcbTrace,
     endpoint: "start" | "end",
@@ -574,78 +605,70 @@ export const checkTraceContinuity = (
         pcb_port_ids: [],
       })
     }
-    if (sourceTrace && expectedPorts.length > 0) {
-      if (checkedSourceTraceIds.has(sourceTrace.source_trace_id)) continue
-      checkedSourceTraceIds.add(sourceTrace.source_trace_id)
-    }
-    for (const port of expectedPorts) {
+    const requiredPorts = checkedSourceTraceIds.has(sourceTraceId)
+      ? []
+      : expectedPorts
+    checkedSourceTraceIds.add(sourceTraceId)
+    for (const port of requiredPorts) {
       const portPads = padsByPort.get(port.pcb_port_id)
-      if (!portPads?.length) continue
+      const contacts = portPads?.map((pad) => getPrimaryId(pad)!) ?? [
+        ...copperAtPort.get(port)!,
+      ]
       if (
-        [first, last].some((point) =>
-          portPads.some((pad) => routePointTouchesPad(point, pad)),
+        contacts.some(
+          (id) =>
+            id === trace.pcb_trace_id ||
+            padContacts.areIdsConnected(trace.pcb_trace_id, id),
+        ) ||
+        contacts.some((id) =>
+          getPhysicalConnectivity().areIdsConnected(trace.pcb_trace_id, id),
         )
       )
         continue
-      if (
-        portPads.some((pad) =>
-          padContacts.areIdsConnected(trace.pcb_trace_id, getPrimaryId(pad)!),
-        )
-      )
-        continue
-      physicalConnectivity ??= getPhysicalTraceConnectivity({
-        segments,
-        vias: viaContacts,
-        pads,
-        touchedPadsByTrace,
-        viaConnections: [
-          ...routeViaContacts,
-          ...(routing?.getViasConnectedByCopperPour?.(circuitJson) ?? []),
-        ],
-      })
-      if (
-        portPads.some((pad) =>
-          physicalConnectivity!.areIdsConnected(
-            trace.pcb_trace_id,
-            getPrimaryId(pad)!,
-          ),
-        )
-      )
-        continue
+      const pad = portPads?.[0]
+      const kind = !pad
+        ? "terminal"
+        : pad.type === "pcb_smtpad"
+          ? "SMD pad"
+          : "through-hole pad"
       const portName = getDrcReadablePortName(circuitJson, port.pcb_port_id)
       traceName ??= getDrcReadableTraceName(circuitJson, trace.pcb_trace_id)
       errors.push({
         ...commonError,
-        message: `Trace [${traceName}] is missing a connection to ${portPads[0]!.type === "pcb_smtpad" ? "SMD pad" : "through-hole pad"} ${portName}`,
+        message: `Trace [${traceName}] is missing a connection to ${kind} ${portName}`,
         pcb_trace_error_id: `missing_connection_${trace.pcb_trace_id}_${port.pcb_port_id}`,
-        center: getMissingConnectionCenter(
-          first,
-          last,
-          port,
-          expectedPorts,
-          padsByPort,
-        ),
+        center: !pad
+          ? { x: port.x, y: port.y }
+          : getMissingConnectionCenter(
+              first,
+              last,
+              port,
+              expectedPorts,
+              padsByPort,
+            ),
         pcb_port_ids: [port.pcb_port_id],
       })
     }
-    if (expectedPorts.length > 0) continue
-    const firstConnected =
-      pads.some(
-        (pad) =>
-          desiredConnectivity.areIdsConnected(
-            trace.pcb_trace_id,
-            getPrimaryId(pad)!,
-          ) && routePointTouchesPad(first, pad),
-      ) || endpointTouchesCopper(trace, "start")
+    if (expectedPorts.some((p) => padsByPort.has(p.pcb_port_id))) continue
     const sameEndpoints =
       first.route_type === "wire" &&
       last.route_type === "wire" &&
       first.layer === last.layer &&
       Math.hypot(first.x - last.x, first.y - last.y) <= 1e-9
+    let firstDisconnected = false
     for (const [index, endpoint] of [first, last].entries()) {
       if (endpoint.route_type !== "wire") continue
-      if (index === 1 && sameEndpoints && !firstConnected) continue
-      if (routing?.isDeclaredTerminal?.(sourceTraceId, endpoint)) continue
+      if (index === 1 && sameEndpoints && firstDisconnected) continue
+      if (
+        expectedPorts.some(
+          (port) =>
+            copperAtPort.get(port)?.has(trace.pcb_trace_id) &&
+            port.layers.includes(endpoint.layer) &&
+            Math.hypot(port.x - endpoint.x, port.y - endpoint.y) <=
+              endpoint.width / 2,
+        )
+      )
+        continue
       if (
         pads.some(
           (pad) =>
@@ -657,6 +680,7 @@ export const checkTraceContinuity = (
         endpointTouchesCopper(trace, index === 0 ? "start" : "end")
       )
         continue
+      if (index === 0) firstDisconnected = true
       traceName ??= getDrcReadableTraceName(circuitJson, trace.pcb_trace_id)
       errors.push({
         ...commonError,
