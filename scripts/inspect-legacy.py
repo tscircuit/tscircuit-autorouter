@@ -9,6 +9,8 @@ files = [
 strict_names=os.environ.get("DIAGNOSTIC_TEST_NAMES", "")
 if strict_names:files=json.loads(strict_names)
 for name in files:
+ if name == 'pipeline9-orangecrab-via-roundoff':
+  subprocess.run(['bun','install','--ignore-scripts','--cwd','tests/repro/orangecrab-via-roundoff'],check=True)
  path=Path('tests/repro')/(name+'.test.ts')
  s=path.read_text()
  marker='  solver.solve()\n'
