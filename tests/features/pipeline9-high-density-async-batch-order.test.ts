@@ -35,6 +35,15 @@ test("crowded nodes are scheduled first in bounded batches while results retain 
       ]).flat(),
     })),
     fixedHdRoutes: [],
+    bgaEscapeBoard: {
+      inputSrj: {
+        bounds: { minX: -2, maxX: 320, minY: -3, maxY: 3 },
+        layerCount: 2,
+        minTraceWidth: 0.1,
+        obstacles: [],
+        connections: [],
+      },
+    },
     connMap: new ConnectivityMap({}),
     nodePfById: new Map(
       Array.from({ length: 40 }, (_, index) => [`node-${index}`, index / 40]),
@@ -64,6 +73,7 @@ test("crowded nodes are scheduled first in bounded batches while results retain 
   expect(tasks).toHaveLength(16)
   expect(tasks[0]!.input.nodePortPoints[0]!.capacityMeshNodeId).toBe("node-2")
   for (const { input, resolve } of tasks.toReversed()) {
+    expect(input).not.toHaveProperty("bgaEscapeBoard")
     expect(
       [...(input.nodePfById as Map<string, number | null>)].map(([id]) => id),
     ).toEqual(input.nodePortPoints.map((node) => node.capacityMeshNodeId))

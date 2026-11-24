@@ -500,7 +500,12 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
         return
       this.asyncRunning = true
       const nodes = [...this.unsolvedNodePortPoints].reverse()
-      const { connMap, nodePortPoints: _, ...params } = this.params
+      const {
+        connMap,
+        nodePortPoints: _,
+        bgaEscapeBoard: _bgaEscapeBoard,
+        ...params
+      } = this.params
       // Keep the expensive board context to a bounded number of messages.
       // Assign crowded nodes first so a difficult node does not start only
       // after hundreds of inexpensive nodes have passed through the pool.
