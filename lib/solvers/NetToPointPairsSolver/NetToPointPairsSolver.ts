@@ -11,7 +11,8 @@ import { seededRandom } from "lib/utils/cloneAndShuffleArray"
 import { BaseSolver } from "../BaseSolver"
 import { buildMinimumSpanningTree } from "./buildMinimumSpanningTree"
 import { getInitiallyConnectedStateForConnection } from "./get-initially-connected-state-for-connection"
-import { mergeConnections } from "./mergeConnections"
+import { getMstEdgeTraceWidths } from "./getMstEdgeTraceWidths"
+import { mergeConnectionsWithSources } from "./mergeConnections"
 import { orderMstEdgesForStablePairNames } from "./orderMstEdgesForStablePairNames"
 
 type ConnectionName = SimpleRouteConnection["name"]
@@ -48,7 +49,7 @@ export class NetToPointPairsSolver extends BaseSolver {
     return "NetToPointPairsSolver"
   }
 
-  unprocessedConnections: Array<SimpleRouteConnection>
+  unprocessedConnections: ReturnType<typeof mergeConnectionsWithSources>
   newConnections: Array<SimpleRouteConnection>
   readonly initiallyConnectedMap: ConnectivityMap
   /** Each connection's `path` as hops, in written order. */
@@ -88,7 +89,7 @@ export class NetToPointPairsSolver extends BaseSolver {
         }
       },
     )
-    this.unprocessedConnections = mergeConnections(
+    this.unprocessedConnections = mergeConnectionsWithSources(
       connectionsWithBusTraceWidths,
     )
     this.newConnections = []
@@ -141,7 +142,14 @@ export class NetToPointPairsSolver extends BaseSolver {
       this.solved = true
       return
     }
-    const connection = this.unprocessedConnections.pop()!
+    const { connection, sources } = this.unprocessedConnections.pop()!
+    const defaultWidth = this.ogSrj.nominalTraceWidth ?? this.ogSrj.minTraceWidth
+    const sourceWidths = sources.map(
+      (source) => source.nominalTraceWidth ?? source.width ?? defaultWidth,
+    )
+    const hasMixedWidths = sourceWidths.some(
+      (width) => width !== sourceWidths[0],
+    )
     const pathEdges = this.getPathEdges(connection)
 
     const { zeroWeightEdges, arePointsConnected } =
@@ -158,6 +166,9 @@ export class NetToPointPairsSolver extends BaseSolver {
       this.emitConnection(
         {
           ...connection,
+          ...(hasMixedWidths && {
+            nominalTraceWidth: Math.max(...sourceWidths),
+          }),
           __rootConnectionNames: connection.__rootConnectionNames ?? [
             connection.name,
           ],
@@ -190,14 +201,27 @@ export class NetToPointPairsSolver extends BaseSolver {
       optimizedEdges,
     })
 
+    const branchWidths = hasMixedWidths
+      ? getMstEdgeTraceWidths(
+          connection.pointsToConnect,
+          edges,
+          sources,
+          defaultWidth,
+        )
+      : undefined
     let mstIdx = 0
     for (const edge of edges) {
       if (arePointsConnected(edge.from, edge.to)) {
         continue
       }
+      const branchWidth = branchWidths?.get(edge)
+      if (branchWidths && branchWidth === undefined) {
+        throw new Error(`Missing width for a routed branch of "${connection.name}"`)
+      }
       this.emitConnection(
         {
           ...connection,
+          nominalTraceWidth: branchWidth ?? connection.nominalTraceWidth,
           pointsToConnect: [edge.from, edge.to],
           name: `${connection.name}_mst${mstIdx++}`,
           __rootConnectionNames: connection.__rootConnectionNames ?? [
@@ -229,7 +253,7 @@ export class NetToPointPairsSolver extends BaseSolver {
     }
 
     // Draw unprocessed connections in red
-    this.unprocessedConnections.forEach((connection) => {
+    this.unprocessedConnections.forEach(({ connection }) => {
       // Draw points
       connection.pointsToConnect.forEach((point) => {
         graphics.points!.push({

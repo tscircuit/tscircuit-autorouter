@@ -8,6 +8,11 @@ import {
 import { DSU } from "lib/utils/dsu"
 import { getPointKey } from "lib/utils/getPointKey"
 
+type MergedConnectionGroup = {
+  connection: SimpleRouteConnection
+  sources: SimpleRouteConnection[]
+}
+
 /**
  * Merges SimpleRouteConnections that share common ConnectionPoints into single connections.
  * This is useful for grouping related traces/nets that were defined separately
@@ -19,6 +24,14 @@ import { getPointKey } from "lib/utils/getPointKey"
 export function mergeConnections(
   simpleRouteConnections: SimpleRouteConnection[],
 ): SimpleRouteConnection[] {
+  return mergeConnectionsWithSources(simpleRouteConnections).map(
+    ({ connection }) => connection,
+  )
+}
+
+export function mergeConnectionsWithSources(
+  simpleRouteConnections: SimpleRouteConnection[],
+): MergedConnectionGroup[] {
   if (simpleRouteConnections.length === 0) {
     return []
   }
@@ -74,12 +87,15 @@ export function mergeConnections(
       .push(simpleRouteConnection)
   })
 
-  const mergedSimpleRouteConnections: SimpleRouteConnection[] = []
+  const mergedGroups: MergedConnectionGroup[] = []
 
   // Construct the new merged connections
   for (const simpleRouteConnectionGroup of connectionTempIdGroups.values()) {
     if (simpleRouteConnectionGroup.length === 1) {
-      mergedSimpleRouteConnections.push(simpleRouteConnectionGroup[0])
+      mergedGroups.push({
+        connection: simpleRouteConnectionGroup[0]!,
+        sources: simpleRouteConnectionGroup,
+      })
       continue // No merging needed for groups of one
     }
 
@@ -154,8 +170,11 @@ export function mergeConnections(
       nominalTraceWidth,
     }
 
-    mergedSimpleRouteConnections.push(newSimpleRouteConnection)
+    mergedGroups.push({
+      connection: newSimpleRouteConnection,
+      sources: simpleRouteConnectionGroup,
+    })
   }
 
-  return mergedSimpleRouteConnections
+  return mergedGroups
 }
