@@ -190,7 +190,7 @@ jobs:
           for revision in base head; do
             cp tooling/scripts/inspect-pre-hd.ts "$revision/inspect-pre-hd.ts"
             cp tooling/scripts/inspect-legacy.py "$revision/inspect-legacy.py"
-            (cd "$revision" && bun install --ignore-scripts --backend=copyfile)
+            (cd "$revision" && bun install --backend=copyfile)
             if [ "${{ inputs.legacy_fixtures }}" = "true" ]; then
               (cd "$revision" && REVISION="$revision" python3 inspect-legacy.py)
             else
