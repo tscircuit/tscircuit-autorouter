@@ -1236,7 +1236,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     if (solver.solved) {
       const routes = getBgaEscapeHdRoutes({
         inputSrj: board.inputSrj,
-        pointPairs: board.pointPairs,
+        pointPairs: board.pointPairs!,
         traces: solver.getOutput(),
       })
       if (routes) {

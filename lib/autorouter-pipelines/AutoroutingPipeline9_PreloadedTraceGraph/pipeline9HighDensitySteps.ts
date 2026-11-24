@@ -81,8 +81,8 @@ export const pipeline9HighDensitySteps = [
           nodePortPoints: nodePortPointsSource,
           bgaEscapeBoard: {
             inputSrj: pipeline.originalSrj,
-            pointPairs: pipeline.srjWithPointPairs!.connections,
-            components: pipeline.componentDetectionSolver!.getOutput(),
+            pointPairs: pipeline.srjWithPointPairs?.connections,
+            components: pipeline.componentDetectionSolver?.getOutput(),
           },
           boardGeometry: {
             bounds: pipeline.originalSrj.bounds,
