@@ -1461,7 +1461,11 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       const candidateDrcInput = prepareCandidateDrcInput(evaluatedRoutes)
       const evaluatedDrc = evaluateCandidateDrc(
         candidateDrcInput.routedTraces,
-        { includeTraceContinuity: !options.skipTraceContinuity },
+        {
+          includeTraceContinuity: !options.skipTraceContinuity,
+          includeFindingCategories:
+            options.includeInheritedAndFixedCopperFindings,
+        },
       )
       const evaluatedTraceIds = new Set(
         candidateDrcInput.evaluatedTraces.map((trace) => trace.pcb_trace_id),
