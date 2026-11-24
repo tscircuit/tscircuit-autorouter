@@ -47,4 +47,4 @@ test("Pipeline 9 retains the cleared CTS1-to-RTS1 pad contact after final repair
           )),
     ),
   ).toEqual([])
-}, 120_000)
+})
