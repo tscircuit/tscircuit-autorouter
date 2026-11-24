@@ -128,24 +128,23 @@ test("Pipeline7 candidate conversion reuses static obstacle connectivity", () =>
       viaDiameter: 0.3,
     },
   ]
-  const convertCandidateRoutes =
-    createHdRoutesToSimplifiedPcbTracesConverter({
-      connections: [connection],
-      originalConnections: [connection],
-      layerCount: 2,
-      obstacles: [
-        {
-          type: "rect",
-          layers: ["top", "bottom"],
-          center: { x: 1, y: 0 },
-          width: 0.5,
-          height: 0.5,
-          connectedTo: ["pad"],
-        },
-      ],
-      defaultViaHoleDiameter: 0.15,
-      connMap,
-    })
+  const convertCandidateRoutes = createHdRoutesToSimplifiedPcbTracesConverter({
+    connections: [connection],
+    originalConnections: [connection],
+    layerCount: 2,
+    obstacles: [
+      {
+        type: "rect",
+        layers: ["top", "bottom"],
+        center: { x: 1, y: 0 },
+        width: 0.5,
+        height: 0.5,
+        connectedTo: ["pad"],
+      },
+    ],
+    defaultViaHoleDiameter: 0.15,
+    connMap,
+  })
 
   const firstResult = convertCandidateRoutes(routes)
   const secondResult = convertCandidateRoutes(structuredClone(routes))

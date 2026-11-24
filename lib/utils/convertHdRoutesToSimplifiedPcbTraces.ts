@@ -19,10 +19,7 @@ export interface ConvertHdRoutesOptions {
   connMap: ConnectivityMap
 }
 
-type StaticConvertHdRoutesOptions = Omit<
-  ConvertHdRoutesOptions,
-  "hdRoutes"
->
+type StaticConvertHdRoutesOptions = Omit<ConvertHdRoutesOptions, "hdRoutes">
 
 type PreparedConnection = {
   connection: SimpleRouteConnection
@@ -131,6 +128,7 @@ export const createHdRoutesToSimplifiedPcbTracesConverter = ({
           type: "pcb_trace",
           pcb_trace_id: `${connection.name}_${index}`,
           connection_name: outputConnectionName,
+          __desiredNominalTraceWidth: connection.nominalTraceWidth,
           connectsTo,
           route: convertHdRouteToSimplifiedRoute(hdRoute, layerCount, {
             connectionPoints: connection.pointsToConnect,

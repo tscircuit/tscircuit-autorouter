@@ -845,15 +845,14 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     )
     // Repair candidates change copper geometry, but their connection metadata
     // and obstacle connectivity remain fixed throughout this solver's lifetime.
-    const convertNewRoutes =
-      createHdRoutesToSimplifiedPcbTracesConverter({
-        connections: params.newConnections,
-        originalConnections: params.originalSrj.connections,
-        layerCount: params.layerCount,
-        obstacles: params.obstacles,
-        defaultViaHoleDiameter: params.defaultViaHoleDiameter,
-        connMap: params.connMap,
-      })
+    const convertNewRoutes = createHdRoutesToSimplifiedPcbTracesConverter({
+      connections: params.newConnections,
+      originalConnections: params.originalSrj.connections,
+      layerCount: params.layerCount,
+      obstacles: params.obstacles,
+      defaultViaHoleDiameter: params.defaultViaHoleDiameter,
+      connMap: params.connMap,
+    })
     const currentNewTraces = convertNewRoutes(params.newHdRoutes)
     const currentNewTraceIds = new Set(
       currentNewTraces.map((trace) => trace.pcb_trace_id),
