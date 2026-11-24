@@ -2,6 +2,12 @@
 name: Build
 
 on:
+  workflow_dispatch:
+    inputs:
+      source_ref:
+        description: Immutable autorouter candidate commit
+        required: true
+        type: string
   push:
     branches: [main]
   pull_request:
@@ -14,6 +20,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+        with:
+          ref: ${{ inputs.source_ref || github.sha }}
 
       - name: Setup bun
         uses: oven-sh/setup-bun@v1
