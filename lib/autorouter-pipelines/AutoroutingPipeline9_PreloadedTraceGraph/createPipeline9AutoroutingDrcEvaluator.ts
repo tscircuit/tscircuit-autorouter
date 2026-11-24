@@ -23,6 +23,11 @@ import { createPipeline9FixedCopperDrcEvaluator } from "./createPipeline9FixedCo
 
 type DrcError = Record<string, unknown>
 
+type DrcEvaluatorOptions = {
+  includeTraceContinuity?: boolean
+  includeFindingCategories?: boolean
+}
+
 export type Pipeline9AutoroutingDrcResult = {
   circuitJson: AnyCircuitElement[]
   errors: DrcError[]
@@ -32,7 +37,7 @@ export type Pipeline9AutoroutingDrcResult = {
 
 export type Pipeline9AutoroutingDrcEvaluator = ((
   routedTraces: SimplifiedPcbTrace[],
-  options?: { includeTraceContinuity?: boolean },
+  options?: DrcEvaluatorOptions,
 ) => Pipeline9AutoroutingDrcResult) & {
   readonly evaluateFixedCopper: (traces: SimplifiedPcbTrace[]) => DrcError[]
 }
@@ -97,7 +102,7 @@ export const createPipeline9AutoroutingDrcEvaluator = ({
   })
   const evaluate = (
     routedTraces: SimplifiedPcbTrace[],
-    options: { includeTraceContinuity?: boolean } = {},
+    options: DrcEvaluatorOptions = {},
   ): Pipeline9AutoroutingDrcResult => {
     const traces = combinePreloadedAndRoutedTraces(
       inputSrj.traces ?? [],
@@ -112,14 +117,27 @@ export const createPipeline9AutoroutingDrcEvaluator = ({
     const connMap = createDrcConnectivityMap(circuitJson)
     annotateTraceEndpointPorts(circuitJson)
     const obstacleErrors = evaluateTraceObstacles(circuitJson, connMap)
+    const boardEdgeFindings = checkBoardTraceClearance(circuitJson, { board })
+    const continuityFindings =
+      (options.includeTraceContinuity ?? drcOptions.includeTraceContinuity) ===
+      false
+        ? []
+        : checkTraceContinuity(circuitJson)
     const errors = [
       ...obstacleErrors.traceErrors,
       ...evaluateFixedCopper(traces),
-      ...checkBoardTraceClearance(circuitJson, { board }),
-      ...((options.includeTraceContinuity ??
-        drcOptions.includeTraceContinuity) === false
-        ? []
-        : checkTraceContinuity(circuitJson)),
+      ...(options.includeFindingCategories
+        ? boardEdgeFindings.map((finding) => ({
+            ...finding,
+            drc_category: "board_edge",
+          }))
+        : boardEdgeFindings),
+      ...(options.includeFindingCategories
+        ? continuityFindings.map((finding) => ({
+            ...finding,
+            drc_category: "trace_continuity",
+          }))
+        : continuityFindings),
       ...(drcOptions.includeTypedTraceClearance === false
         ? []
         : [...obstacleErrors.viaErrors, ...obstacleErrors.padErrors]),
