@@ -47,15 +47,14 @@ test("preserves native A13 trace clearance while removing repaired vias", async 
   expect(new Set(routes.map((route) => route.connectionName))).toEqual(
     new Set(params.newHdRoutes.map((route) => route.connectionName)),
   )
-  const convertNewRoutes =
-    createHdRoutesToSimplifiedPcbTracesConverter({
-      connections: params.newConnections,
-      originalConnections: params.originalSrj.connections,
-      layerCount: params.layerCount,
-      obstacles: params.obstacles,
-      defaultViaHoleDiameter: params.defaultViaHoleDiameter,
-      connMap,
-    })
+  const convertNewRoutes = createHdRoutesToSimplifiedPcbTracesConverter({
+    connections: params.newConnections,
+    originalConnections: params.originalSrj.connections,
+    layerCount: params.layerCount,
+    obstacles: params.obstacles,
+    defaultViaHoleDiameter: params.defaultViaHoleDiameter,
+    connMap,
+  })
   const snapshotInput = {
     inputSrj: params.originalSrj,
     srjWithPointPairs: params.srjWithPointPairs,

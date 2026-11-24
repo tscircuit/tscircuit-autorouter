@@ -19,10 +19,7 @@ export interface ConvertHdRoutesOptions {
   connMap: ConnectivityMap
 }
 
-type StaticConvertHdRoutesOptions = Omit<
-  ConvertHdRoutesOptions,
-  "hdRoutes"
->
+type StaticConvertHdRoutesOptions = Omit<ConvertHdRoutesOptions, "hdRoutes">
 
 type PreparedConnection = {
   connection: SimpleRouteConnection
