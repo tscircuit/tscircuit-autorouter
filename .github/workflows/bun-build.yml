@@ -12,6 +12,10 @@ on:
         description: Compare isolated upstream geometry against main
         type: boolean
         default: false
+      diagnostic_test_names:
+        description: JSON test names for strict baseline diagnosis
+        type: string
+        default: ""
       legacy_fixtures:
         description: Inspect complete legacy routing fixtures instead of mesh stages
         type: boolean
@@ -192,7 +196,7 @@ jobs:
             cp tooling/scripts/inspect-legacy.py "$revision/inspect-legacy.py"
             (cd "$revision" && bun install --backend=copyfile)
             if [ "${{ inputs.legacy_fixtures }}" = "true" ]; then
-              (cd "$revision" && REVISION="$revision" python3 inspect-legacy.py)
+              (cd "$revision" && REVISION="$revision" DIAGNOSTIC_TEST_NAMES='${{ inputs.diagnostic_test_names }}' python3 inspect-legacy.py)
             else
               (cd "$revision" && REVISION="$revision" bun test ./inspect-pre-hd.test.ts --timeout 9999999)
             fi
