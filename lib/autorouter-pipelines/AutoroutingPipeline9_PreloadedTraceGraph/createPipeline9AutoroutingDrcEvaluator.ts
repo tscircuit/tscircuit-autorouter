@@ -123,7 +123,7 @@ export const createPipeline9AutoroutingDrcEvaluator = ({
       false
         ? []
         : checkTraceContinuity(circuitJson)
-    const errors = [
+    const errors: DrcError[] = [
       ...obstacleErrors.traceErrors,
       ...evaluateFixedCopper(traces),
       ...(options.includeFindingCategories
