@@ -8,6 +8,14 @@ on:
         description: Immutable autorouter candidate commit
         required: true
         type: string
+      compare_pre_hd:
+        description: Compare isolated upstream geometry against main
+        type: boolean
+        default: false
+      base_ref:
+        description: Base ref for isolated geometry comparison
+        type: string
+        default: adbcaf83bb2c53a911b6fc6fd1246bf9605800cd
       artifact_id:
         description: Public test artifact to inspect instead of building
         required: false
@@ -19,7 +27,7 @@ on:
 
 jobs:
   build:
-    if: inputs.artifact_id == '' && (github.event_name != 'pull_request' || !startsWith(github.head_ref, 'version-bumps/'))
+    if: inputs.artifact_id == '' && inputs.compare_pre_hd != true && (github.event_name != 'pull_request' || !startsWith(github.head_ref, 'version-bumps/'))
     runs-on: ubuntu-latest
 
     steps:
@@ -154,3 +162,28 @@ jobs:
                   out=io.BytesIO();crop.save(out,format='PNG')
                   print('CROP_PNG_BASE64=' + base64.b64encode(out.getvalue()).decode())
           PY_ARTIFACT
+
+  compare-pre-hd:
+    if: inputs.compare_pre_hd == true
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: tooling
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.base_ref }}
+          path: base
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.source_ref }}
+          path: head
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.4.3'
+      - name: Compare fresh isolated topology results before detailed routing
+        run: |
+          for revision in base head; do
+            cp tooling/scripts/inspect-pre-hd.ts "$revision/inspect-pre-hd.ts"
+            (cd "$revision" && bun install --ignore-scripts --backend=copyfile && REVISION="$revision" bun inspect-pre-hd.ts)
+          done
