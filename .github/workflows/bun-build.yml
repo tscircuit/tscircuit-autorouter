@@ -16,6 +16,14 @@ on:
         description: JSON test names for strict baseline diagnosis
         type: string
         default: ""
+      flatbush_version:
+        description: Exact Flatbush version for an ephemeral dependency control
+        type: string
+        default: ""
+      head_only:
+        description: Inspect the selected source only
+        type: boolean
+        default: false
       legacy_fixtures:
         description: Inspect complete legacy routing fixtures instead of mesh stages
         type: boolean
@@ -192,11 +200,15 @@ jobs:
       - name: Compare fresh isolated topology results before detailed routing
         run: |
           for revision in base head; do
+            if [ "${{ inputs.head_only }}" = "true" ] && [ "$revision" = "base" ]; then continue; fi
+            if [ -n "${{ inputs.flatbush_version }}" ]; then
+              REVISION_DIR="$revision" FLATBUSH_VERSION="${{ inputs.flatbush_version }}" python3 -c 'import os,json,pathlib; p=pathlib.Path(os.environ["REVISION_DIR"])/"package.json"; d=json.loads(p.read_text()); d["devDependencies"]["flatbush"]=os.environ["FLATBUSH_VERSION"]; p.write_text(json.dumps(d,indent=2)+"\n")'
+            fi
             cp tooling/scripts/inspect-pre-hd.ts "$revision/inspect-pre-hd.test.ts"
             cp tooling/scripts/inspect-legacy.py "$revision/inspect-legacy.py"
             (cd "$revision" && bun install --backend=copyfile)
             if [ "${{ inputs.legacy_fixtures }}" = "true" ]; then
-              (cd "$revision" && REVISION="$revision" DIAGNOSTIC_TEST_NAMES='${{ inputs.diagnostic_test_names }}' python3 inspect-legacy.py)
+              (cd "$revision" && REVISION="$revision" DIAGNOSTIC_TEST_NAMES='${{ inputs.diagnostic_test_names }}' FLATBUSH_VERSION='${{ inputs.flatbush_version }}' python3 inspect-legacy.py)
             else
               (cd "$revision" && REVISION="$revision" bun test ./inspect-pre-hd.test.ts --timeout 9999999)
             fi

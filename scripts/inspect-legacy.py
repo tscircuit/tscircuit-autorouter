@@ -8,8 +8,12 @@ files = [
 ]
 strict_names=os.environ.get("DIAGNOSTIC_TEST_NAMES", "")
 if strict_names:files=json.loads(strict_names)
+failed=0
+print("DIAGNOSTIC_VERSION="+Path("node_modules/flatbush/package.json").read_text(),flush=True)
 for name in files:
  if name == 'pipeline9-orangecrab-via-roundoff':
+  if os.environ.get('FLATBUSH_VERSION'):
+   manifest=Path('tests/repro/orangecrab-via-roundoff/package.json'); config=json.loads(manifest.read_text()); config['dependencies']['flatbush']=os.environ['FLATBUSH_VERSION']; manifest.write_text(json.dumps(config,indent=2)+'\n')
   subprocess.run(['bun','install','--ignore-scripts','--cwd','tests/repro/orangecrab-via-roundoff'],check=True)
  path=Path('tests/repro')/(name+'.test.ts')
  s=path.read_text()
@@ -32,4 +36,7 @@ for name in files:
  svg=Path('tests/repro/__snapshots__')/(name+'.snap.svg')
  data=svg.read_bytes()
  print('LEGACY_SVG='+json.dumps({'revision':os.environ['REVISION'],'name':name,'exit':result.returncode,'drc':re.findall(r'Relaxed DRC errors: (\d+)',data.decode())}),flush=True)
+ if result.returncode:failed+=1
  if result.returncode and not strict_names:raise SystemExit(result.returncode)
+
+if strict_names and os.environ.get("FLATBUSH_VERSION") and failed:raise SystemExit(1)
