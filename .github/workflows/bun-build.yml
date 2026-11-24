@@ -8,6 +8,10 @@ on:
         description: Immutable autorouter candidate commit
         required: true
         type: string
+      artifact_id:
+        description: Public test artifact to inspect instead of building
+        required: false
+        type: string
   push:
     branches: [main]
   pull_request:
@@ -15,7 +19,7 @@ on:
 
 jobs:
   build:
-    if: github.event_name != 'pull_request' || !startsWith(github.head_ref, 'version-bumps/')
+    if: inputs.artifact_id == '' && (github.event_name != 'pull_request' || !startsWith(github.head_ref, 'version-bumps/'))
     runs-on: ubuntu-latest
 
     steps:
@@ -103,3 +107,50 @@ jobs:
           echo '```sh' >> "$GITHUB_STEP_SUMMARY"
           echo "bun add -D $PACKAGE_URL" >> "$GITHUB_STEP_SUMMARY"
           echo '```' >> "$GITHUB_STEP_SUMMARY"
+
+  inspect-visual-artifact:
+    if: inputs.artifact_id != ''
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+    steps:
+      - name: Download the selected public test artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ARTIFACT_ID: ${{ inputs.artifact_id }}
+        run: gh api "/repos/${{ github.repository }}/actions/artifacts/$ARTIFACT_ID/zip" > artifact.zip
+      - name: Inspect the exact expected and received mesh drawing
+        run: |
+          python3 -m pip install pillow --quiet
+          python3 - <<'PY_ARTIFACT'
+          import base64, io, json, zipfile, xml.etree.ElementTree as ET
+          from PIL import Image
+          with zipfile.ZipFile('artifact.zip') as z:
+              selected = {name: z.read(name) for name in z.namelist() if 'stmp157-mesh-retention-visual' in name}
+          print('FILES=' + json.dumps({name: len(data) for name, data in selected.items()}))
+          drawings = {}
+          for name, data in selected.items():
+              if name.endswith('.svg'):
+                  root = ET.fromstring(data)
+                  drawings[name] = list(root.iter())
+                  print('SVG_TEXTS=' + json.dumps({'file':name,'texts':[el.text for el in root.iter() if el.tag.endswith('text')]}))
+          names = list(drawings)
+          if len(names) == 2:
+              a,b = (drawings[name] for name in names)
+              differences = [{'index':i,'before': {'tag':x.tag,'attrs':x.attrib,'text':x.text}, 'after':{'tag':y.tag,'attrs':y.attrib,'text':y.text}} for i,(x,y) in enumerate(zip(a,b)) if (x.tag,x.attrib,x.text)!=(y.tag,y.attrib,y.text)]
+              print('XML_DIFF=' + json.dumps({'files':names,'elementCounts':[len(a),len(b)],'differences':differences[:12],'totalDifferences':len(differences)}))
+          for name,data in selected.items():
+              if not name.endswith('.diff.png'):continue
+              img = Image.open(io.BytesIO(data)).convert('RGB')
+              mask = Image.new('L',img.size)
+              mask.putdata([255 if r>200 and b>200 and g<100 else 0 for r,g,b in img.getdata()])
+              box = mask.getbbox()
+              print('DIFF_BOUNDS=' + json.dumps(box))
+              if box:
+                  x0,y0,x1,y1=box
+                  crop=img.crop((max(0,x0-20),max(0,y0-20),min(img.width,x1+20),min(img.height,y1+20)))
+                  crop.thumbnail((768,768))
+                  out=io.BytesIO();crop.save(out,format='PNG')
+                  print('CROP_PNG_BASE64=' + base64.b64encode(out.getvalue()).decode())
+          PY_ARTIFACT
