@@ -13,10 +13,8 @@ import {
   type SimpleRouteJson as RepairSimpleRouteJson,
   type SimplifiedPcbTraces as RepairSimplifiedPcbTraces,
 } from "high-density-repair03/lib"
-import {
-  getDrcSnapshot,
-  hasNewTraceObstacleOverlaps,
-} from "high-density-repair03/lib/solvers/GlobalDrcForceImproveSolver/solverHelpers"
+import { getDrcSnapshot } from "high-density-repair03/lib/solvers/GlobalDrcForceImproveSolver/solverHelpers"
+import { canRetainPipeline9RepairCheckpoint } from "./canRetainPipeline9RepairCheckpoint"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import { isObstacleConnectedToRoute } from "lib/solvers/TraceWidthSolver/isObstacleConnectedToRoute"
 import { combinePreloadedAndRoutedTraces } from "lib/utils/combinePreloadedAndRoutedTraces"
@@ -849,15 +847,14 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     )
     // Repair candidates change copper geometry, but their connection metadata
     // and obstacle connectivity remain fixed throughout this solver's lifetime.
-    const convertNewRoutes =
-      createHdRoutesToSimplifiedPcbTracesConverter({
-        connections: params.newConnections,
-        originalConnections: params.originalSrj.connections,
-        layerCount: params.layerCount,
-        obstacles: params.obstacles,
-        defaultViaHoleDiameter: params.defaultViaHoleDiameter,
-        connMap: params.connMap,
-      })
+    const convertNewRoutes = createHdRoutesToSimplifiedPcbTracesConverter({
+      connections: params.newConnections,
+      originalConnections: params.originalSrj.connections,
+      layerCount: params.layerCount,
+      obstacles: params.obstacles,
+      defaultViaHoleDiameter: params.defaultViaHoleDiameter,
+      connMap: params.connMap,
+    })
     const currentNewTraces = convertNewRoutes(params.newHdRoutes)
     const currentNewTraceIds = new Set(
       currentNewTraces.map((trace) => trace.pcb_trace_id),
@@ -2287,27 +2284,9 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     }
     const baseline = getDrcSnapshot(srj, output, reference, connMap)
     const candidate = getDrcSnapshot(srj, jointInput, reference, connMap)
-    const connectivityErrorIds = (errors: typeof baseline.rawErrors): Set<string> =>
-      new Set(
-        errors.flatMap((error) => {
-          const id = error.pcb_trace_error_id
-          return typeof id === "string" &&
-            /^(missing_connection|missing_layer_connection|disconnected_endpoint)_/.test(id)
-            ? [id]
-            : []
-        }),
-      )
-    const baselineConnectivity = connectivityErrorIds(baseline.rawErrors)
-    if (
-      candidate.count >= baseline.count ||
-      hasNewTraceObstacleOverlaps(candidate, baseline) ||
-      [...connectivityErrorIds(candidate.rawErrors)].some(
-        (id) => !baselineConnectivity.has(id),
-      )
-    ) {
-      return output
-    }
-    return jointInput
+    return canRetainPipeline9RepairCheckpoint(candidate, baseline)
+      ? jointInput
+      : output
   }
 
   private finishWithTraceContactCheck(): void {
