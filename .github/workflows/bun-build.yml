@@ -188,12 +188,12 @@ jobs:
       - name: Compare fresh isolated topology results before detailed routing
         run: |
           for revision in base head; do
-            cp tooling/scripts/inspect-pre-hd.ts "$revision/inspect-pre-hd.ts"
+            cp tooling/scripts/inspect-pre-hd.ts "$revision/inspect-pre-hd.test.ts"
             cp tooling/scripts/inspect-legacy.py "$revision/inspect-legacy.py"
             (cd "$revision" && bun install --backend=copyfile)
             if [ "${{ inputs.legacy_fixtures }}" = "true" ]; then
               (cd "$revision" && REVISION="$revision" python3 inspect-legacy.py)
             else
-              (cd "$revision" && REVISION="$revision" bun inspect-pre-hd.ts)
+              (cd "$revision" && REVISION="$revision" bun test ./inspect-pre-hd.test.ts --timeout 9999999)
             fi
           done
