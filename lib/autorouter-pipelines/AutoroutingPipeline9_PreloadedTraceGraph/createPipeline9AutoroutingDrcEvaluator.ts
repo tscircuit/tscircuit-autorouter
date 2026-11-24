@@ -119,7 +119,7 @@ export const createPipeline9AutoroutingDrcEvaluator = ({
       ...((options.includeTraceContinuity ??
         drcOptions.includeTraceContinuity) === false
         ? []
-        : checkTraceContinuity(circuitJson)),
+        : checkTraceContinuity(circuitJson, srjWithPointPairs)),
       ...(drcOptions.includeTypedTraceClearance === false
         ? []
         : [...obstacleErrors.viaErrors, ...obstacleErrors.padErrors]),

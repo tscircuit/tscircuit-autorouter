@@ -1,3 +1,7 @@
+import {
+  getConnectionPointLayers,
+  type SimpleRouteJson,
+} from "lib/types/srj-types"
 import { getViasConnectedByCopperPour } from "./getViasConnectedByCopperPour"
 import { getPrimaryId } from "@tscircuit/circuit-json-util"
 import {
@@ -238,6 +242,7 @@ const getMissingConnectionCenter = (
  * Compare those requirements with copper contact on the PCB layers. */
 export const checkTraceContinuity = (
   circuitJson: AnyCircuitElement[],
+  routingRequest?: SimpleRouteJson,
 ): Record<string, unknown>[] => {
   const errors: Record<string, unknown>[] = []
   const ports = circuitJson.filter((element) => element.type === "pcb_port")
@@ -441,31 +446,46 @@ export const checkTraceContinuity = (
       touchedPadsByTrace,
       viaConnections: [
         ...routeViaContacts,
-        ...getViasConnectedByCopperPour(circuitJson, desiredConnectivity),
+        ...(routingRequest
+          ? getViasConnectedByCopperPour(routingRequest, circuitJson)
+          : []),
       ],
     }))
-  // Contacts with a point are observations on each wire. A multilayer port
-  // by itself cannot join copper on different layers.
-  const copperAtPort = new Map<PcbPort, Set<string>>()
-  for (const port of ports) {
-    if (padsByPort.has(port.pcb_port_id)) continue
-    const touching = new Set<string>()
-    for (const segment of segments) {
+  // A routing target can be a coordinate on the boundary of a partial board.
+  // It has no pad of its own and cannot bridge traces on different layers.
+  const routingPoints = new Map<
+    string,
+    { point: Point; layers: string[]; copperIds: string[] }
+  >()
+  for (const connection of routingRequest?.connections ?? []) {
+    for (const point of connection.pointsToConnect) {
+      const id = point.pointId
       if (
-        port.layers.includes(segment.start.layer) &&
-        pointToSegmentDistance(port, segment.start, segment.end) <=
-          segment.start.width / 2
+        !id ||
+        point.pcb_port_id ||
+        portsById.has(id) ||
+        ("terminalVia" in point && point.terminalVia) ||
+        routingPoints.has(id)
       )
-        touching.add(segment.trace.pcb_trace_id)
+        continue
+      const layers = getConnectionPointLayers(point)
+      const copperIds = new Set<string>()
+      for (const { trace, start, end } of segments) {
+        if (
+          layers.includes(start.layer) &&
+          pointToSegmentDistance(point, start, end) <= start.width / 2
+        )
+          copperIds.add(trace.pcb_trace_id)
+      }
+      for (const via of viaContacts) {
+        if (
+          via.layers.some((layer) => layers.includes(layer)) &&
+          Math.hypot(point.x - via.x, point.y - via.y) <= (via.radius ?? 0)
+        )
+          copperIds.add(via.id)
+      }
+      routingPoints.set(id, { point, layers, copperIds: [...copperIds] })
     }
-    for (const via of viaContacts) {
-      if (
-        port.layers.some((layer) => via.layers.includes(layer)) &&
-        Math.hypot(port.x - via.x, port.y - via.y) <= (via.radius ?? 0)
-      )
-        touching.add(via.id)
-    }
-    copperAtPort.set(port, touching)
   }
   const endpointTouchesCopper = (
     trace: PcbTrace,
@@ -605,51 +625,64 @@ export const checkTraceContinuity = (
         pcb_port_ids: [],
       })
     }
-    const requiredPorts = checkedSourceTraceIds.has(sourceTraceId)
-      ? []
-      : expectedPorts
-    checkedSourceTraceIds.add(sourceTraceId)
-    for (const port of requiredPorts) {
-      const portPads = padsByPort.get(port.pcb_port_id)
-      const contacts = portPads?.map((pad) => getPrimaryId(pad)!) ?? [
-        ...copperAtPort.get(port)!,
-      ]
-      if (
-        contacts.some(
-          (id) =>
-            id === trace.pcb_trace_id ||
-            padContacts.areIdsConnected(trace.pcb_trace_id, id),
-        ) ||
-        contacts.some((id) =>
-          getPhysicalConnectivity().areIdsConnected(trace.pcb_trace_id, id),
-        )
+    const targets = (sourceTrace?.connected_source_net_ids ?? []).flatMap(
+      (id) => {
+        const target = routingPoints.get(id)
+        return target ? [{ id, ...target }] : []
+      },
+    )
+    const reaches = (ids: string[]): boolean =>
+      ids.some(
+        (id) =>
+          id === trace.pcb_trace_id ||
+          padContacts.areIdsConnected(trace.pcb_trace_id, id),
+      ) ||
+      ids.some((id) =>
+        getPhysicalConnectivity().areIdsConnected(trace.pcb_trace_id, id),
       )
-        continue
-      const pad = portPads?.[0]
-      const kind = !pad
-        ? "terminal"
-        : pad.type === "pcb_smtpad"
-          ? "SMD pad"
-          : "through-hole pad"
-      const portName = getDrcReadablePortName(circuitJson, port.pcb_port_id)
-      traceName ??= getDrcReadableTraceName(circuitJson, trace.pcb_trace_id)
-      errors.push({
-        ...commonError,
-        message: `Trace [${traceName}] is missing a connection to ${kind} ${portName}`,
-        pcb_trace_error_id: `missing_connection_${trace.pcb_trace_id}_${port.pcb_port_id}`,
-        center: !pad
-          ? { x: port.x, y: port.y }
-          : getMissingConnectionCenter(
-              first,
-              last,
-              port,
-              expectedPorts,
-              padsByPort,
-            ),
-        pcb_port_ids: [port.pcb_port_id],
-      })
+    if (!checkedSourceTraceIds.has(sourceTraceId)) {
+      checkedSourceTraceIds.add(sourceTraceId)
+      for (const {
+        id,
+        point: { x, y },
+        copperIds,
+      } of targets) {
+        if (reaches(copperIds)) continue
+        errors.push({
+          ...commonError,
+          message: `Trace [${sourceTraceId}] is missing a connection to routing point ${id}`,
+          pcb_trace_error_id: `missing_connection_${trace.pcb_trace_id}_${id}`,
+          center: { x, y },
+          pcb_port_ids: [],
+        })
+      }
+      for (const port of expectedPorts) {
+        const portPads = padsByPort.get(port.pcb_port_id)
+        if (
+          !portPads?.length ||
+          reaches(portPads.map((pad) => getPrimaryId(pad)!))
+        )
+          continue
+        const kind =
+          portPads[0]!.type === "pcb_smtpad" ? "SMD pad" : "through-hole pad"
+        const portName = getDrcReadablePortName(circuitJson, port.pcb_port_id)
+        traceName ??= getDrcReadableTraceName(circuitJson, trace.pcb_trace_id)
+        errors.push({
+          ...commonError,
+          message: `Trace [${traceName}] is missing a connection to ${kind} ${portName}`,
+          pcb_trace_error_id: `missing_connection_${trace.pcb_trace_id}_${port.pcb_port_id}`,
+          center: getMissingConnectionCenter(
+            first,
+            last,
+            port,
+            expectedPorts,
+            padsByPort,
+          ),
+          pcb_port_ids: [port.pcb_port_id],
+        })
+      }
     }
-    if (expectedPorts.some((p) => padsByPort.has(p.pcb_port_id))) continue
+    if (expectedPorts.length > 0) continue
     const sameEndpoints =
       first.route_type === "wire" &&
       last.route_type === "wire" &&
@@ -660,11 +693,11 @@ export const checkTraceContinuity = (
       if (endpoint.route_type !== "wire") continue
       if (index === 1 && sameEndpoints && firstDisconnected) continue
       if (
-        expectedPorts.some(
-          (port) =>
-            copperAtPort.get(port)?.has(trace.pcb_trace_id) &&
-            port.layers.includes(endpoint.layer) &&
-            Math.hypot(port.x - endpoint.x, port.y - endpoint.y) <=
+        targets.some(
+          ({ point, layers, copperIds }) =>
+            copperIds.includes(trace.pcb_trace_id) &&
+            layers.includes(endpoint.layer) &&
+            Math.hypot(point.x - endpoint.x, point.y - endpoint.y) <=
               endpoint.width / 2,
         )
       )

@@ -80,7 +80,7 @@ test("the Bluetooth gamepad routes with zero copper errors, connected terminals 
   const { errors, locationAwareErrors, circuitJson } =
     evaluateRelaxedDrc(snapshotInput)
   expect(locationAwareErrors).toHaveLength(errors.length)
-  expect(checkTraceContinuity(circuitJson)).toHaveLength(0)
+  expect(checkTraceContinuity(circuitJson, input)).toHaveLength(0)
   await expect(
     getBugReportSnapshotSvg(snapshotInput, { showErrorLocations: true }),
   ).toMatchSvgSnapshot(import.meta.path)
