@@ -1218,10 +1218,8 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   private stepBgaEscapeRouting(attempt: BgaEscapeAttempt): void {
     const { board, solver } = attempt
     this.activeSubSolver = solver
-    const preparing = solver.stats.stage !== "route_connections"
     solver.step()
     if (
-      preparing &&
       solver.failed &&
       (solver.failure === "grid_budget" ||
         solver.failure === "terminal_outside_grid" ||
