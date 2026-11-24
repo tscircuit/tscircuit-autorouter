@@ -1,9 +1,9 @@
 import { expect, test } from "bun:test"
 import type { AnyCircuitElement, PcbVia } from "circuit-json"
 import type { SimpleRouteJson } from "lib/types"
-import { getExternalViaGroups } from "lib/utils/autorouting-drc/getExternalViaGroups"
+import { getViasConnectedByCopperPour } from "lib/utils/autorouting-drc/getViasConnectedByCopperPour"
 
-test("only emitted barrels of the declared net that reach the plane share continuity", () => {
+test("a pour connects emitted via barrels only across continuous copper on their layer", () => {
   const srj: SimpleRouteJson = {
     layerCount: 4,
     bounds: { minX: -4, minY: -4, maxX: 4, maxY: 4 },
@@ -32,7 +32,6 @@ test("only emitted barrels of the declared net that reach the plane share contin
       },
     ],
   }
-  const groups = getExternalViaGroups(srj)
   const traces: AnyCircuitElement[] = ["ground", "signal"].map((name) => ({
     type: "pcb_trace",
     pcb_trace_id: `${name}-wire`,
@@ -50,9 +49,36 @@ test("only emitted barrels of the declared net that reach the plane share contin
     hole_diameter: 0.3,
   }
   const b = { ...a, pcb_via_id: "via-b", x: 2 }
+  // The input still declares both sites externally connected.
+  expect(getViasConnectedByCopperPour(srj)([...traces, a, b])).toEqual([])
+  const tile = (x: number, width: number) => ({
+    type: "rect" as const,
+    center: { x, y: 0 },
+    width,
+    height: 1,
+    connectedTo: ["ground"],
+    isCopperPour: true,
+    layers: ["inner2"],
+  })
+  srj.obstacles = [tile(0, 1), tile(2, 1)]
+  expect(getViasConnectedByCopperPour(srj)([...traces, a, b])).toEqual([])
+  srj.obstacles.push(tile(1, 1))
+  srj.connections[0]!.externallyConnectedPointIds = []
+  const groups = getViasConnectedByCopperPour(srj)
   expect(groups([...traces, a, b])).toEqual([["via-a", "via-b"]])
+  expect(
+    groups(
+      [a, b].map((via) => ({
+        ...via,
+        pcb_trace_id: undefined,
+        source_net_id: "ground",
+      })),
+    ),
+  ).toEqual([["via-a", "via-b"]])
   expect(groups([...traces, a])).toEqual([])
-  expect(groups([...traces, a, { ...b, x: 2.1 }])).toEqual([])
+  expect(groups([...traces, a, { ...b, x: 2.1 }])).toEqual([["via-a", "via-b"]])
+  expect(groups([...traces, a, { ...b, x: 3 }])).toEqual([])
+  expect(groups([...traces, a, { ...b, hole_diameter: 0 }])).toEqual([])
   expect(groups([...traces, a, { ...b, layers: ["top", "inner1"] }])).toEqual(
     [],
   )

@@ -1,5 +1,5 @@
 import { checkTraceContinuity } from "lib/utils/autorouting-drc/checkTraceContinuity"
-import { getExternalViaGroups } from "lib/utils/autorouting-drc/getExternalViaGroups"
+import { getViasConnectedByCopperPour } from "lib/utils/autorouting-drc/getViasConnectedByCopperPour"
 import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
@@ -83,10 +83,7 @@ test("the Bluetooth gamepad routes with zero copper errors, connected terminals 
   expect(locationAwareErrors).toHaveLength(errors.length)
   expect(
     checkTraceContinuity(circuitJson, {
-      getExternalViaConnections: getExternalViaGroups(
-        snapshotInput.srjWithPointPairs,
-      ),
-      isDeclaredTerminal: () => false,
+      getViasConnectedByCopperPour: getViasConnectedByCopperPour(input),
     }),
   ).toHaveLength(0)
   await expect(

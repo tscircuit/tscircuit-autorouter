@@ -213,13 +213,20 @@ test("autorouting continuity matches checks for endpoints, siblings, pad boundar
         layers: ["top", "bottom"],
       })
     }
-    const expected = checkTracesAreContiguous(circuit)
-    expect<unknown>(checkTraceContinuity(circuit)).toEqual(expected)
-    expect(
-      expected.filter((error) =>
-        error.pcb_trace_error_id.startsWith("missing_layer_connection_"),
-      ),
-    ).toHaveLength(hasBridge ? 0 : 1)
+    const errors = checkTraceContinuity(circuit)
+    if (hasBridge) {
+      // The barrel touches the top pad and the bottom wire at the same XY.
+      expect(errors).toEqual([])
+    } else {
+      expect<unknown>(errors).toEqual(checkTracesAreContiguous(circuit))
+      expect(
+        errors.some((error) =>
+          String(error.pcb_trace_error_id).startsWith(
+            "missing_layer_connection_",
+          ),
+        ),
+      ).toBe(true)
+    }
   }
 
   for (const endX of [1.85, 1.7]) {
@@ -253,6 +260,8 @@ test("autorouting continuity matches checks for endpoints, siblings, pad boundar
   }
 
   const shortSegmentSrj = structuredClone(srj)
+  // Leave a real gap between the via and pad so only the wire can bridge it.
+  shortSegmentSrj.obstacles[1]!.width = 0.2
   shortSegmentSrj.obstacles[1]!.center.x = 2.4
   shortSegmentSrj.obstacles[1]!.layers = ["bottom"]
   shortSegmentSrj.obstacles[1]!.connectedTo = ["pcb_smtpad_b", "pcb_port_b"]

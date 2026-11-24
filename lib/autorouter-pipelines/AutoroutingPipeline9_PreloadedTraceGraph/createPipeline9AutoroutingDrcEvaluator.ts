@@ -1,4 +1,4 @@
-import { getExternalViaGroups } from "lib/utils/autorouting-drc/getExternalViaGroups"
+import { getViasConnectedByCopperPour } from "lib/utils/autorouting-drc/getViasConnectedByCopperPour"
 import type { AnyCircuitElement } from "circuit-json"
 import {
   type CircuitJsonConnectivityMaps,
@@ -63,7 +63,7 @@ export const createPipeline9AutoroutingDrcEvaluator = ({
     ]),
   )
   const routingConnectivity = {
-    getExternalViaConnections: getExternalViaGroups(srjWithPointPairs),
+    getViasConnectedByCopperPour: getViasConnectedByCopperPour(inputSrj),
     isDeclaredTerminal: (
       name: string,
       endpoint: { x: number; y: number; layer: string },
