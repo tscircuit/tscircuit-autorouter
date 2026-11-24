@@ -60,10 +60,12 @@ export const pipeline9HighDensitySteps = [
 
       pipeline.highDensityNodePortPoints = structuredClone(nodePortPointsSource)
       const originalFixedHdRoutes = getOriginalFixedHdRoutes(pipeline)
+      const changedPreloadedTraceSections =
+        getChangedPreloadedTraceSections(pipeline)
       const fixedHdRoutes = removeChangedSectionsFromFixedHdRoutes({
         traces: pipeline.originalSrj.traces ?? [],
         fixedHdRoutes: originalFixedHdRoutes,
-        sections: getChangedPreloadedTraceSections(pipeline),
+        sections: changedPreloadedTraceSections,
       })
       const hasImmutablePreloadedCopper = fixedHdRoutes.some(
         (route) => route.isFixed === true,
@@ -79,13 +81,12 @@ export const pipeline9HighDensitySteps = [
       return [
         {
           nodePortPoints: nodePortPointsSource,
-          bgaEscapeBoard: hasImmutablePreloadedCopper
-            ? {
-                inputSrj: pipeline.originalSrj,
-                pointPairs: pipeline.srjWithPointPairs!.connections,
-                components: pipeline.componentDetectionSolver!.getOutput(),
-              }
-            : undefined,
+          bgaEscapeBoard: {
+            inputSrj: pipeline.originalSrj,
+            pointPairs: pipeline.srjWithPointPairs!.connections,
+            components: pipeline.componentDetectionSolver!.getOutput(),
+          },
+          changedPreloadedTraceSections,
           boardGeometry: {
             bounds: pipeline.originalSrj.bounds,
             outline: pipeline.originalSrj.outline,

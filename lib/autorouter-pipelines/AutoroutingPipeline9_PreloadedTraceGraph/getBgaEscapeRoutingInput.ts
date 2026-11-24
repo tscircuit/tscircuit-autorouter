@@ -35,7 +35,7 @@ function hasSurfacePadConnections(srj: SimpleRouteJson): boolean {
   )
 }
 
-/** This strategy searches rectangular boards for uncoupled signals with fixed copper. */
+/** This strategy preserves supplied copper while routing uncoupled signals. */
 function supportsBgaEscapeRouting(
   srj: SimpleRouteJson,
 ): srj is SimpleRouteJson & { traces: BgaTrace[] } {
@@ -48,12 +48,10 @@ function supportsBgaEscapeRouting(
     !srj.buses?.length &&
     !srj.differentialPairs?.length &&
     !srj.jumpers?.length &&
-    traces.every(
-      (trace) =>
-        trace.isFixed &&
-        trace.route.every(
-          (point) => point.route_type === "wire" || point.route_type === "via",
-        ),
+    traces.every((trace) =>
+      trace.route.every(
+        (point) => point.route_type === "wire" || point.route_type === "via",
+      ),
     ) &&
     srj.obstacles.every(
       (obstacle) =>

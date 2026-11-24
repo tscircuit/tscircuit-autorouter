@@ -10,7 +10,6 @@ export function getBgaSignalLayers(srj: SimpleRouteJson): number[] {
     }
   }
   for (const trace of srj.traces ?? []) {
-    if (!trace.isFixed) continue
     for (const [index, point] of trace.route.entries()) {
       const next = trace.route[index + 1]
       if (

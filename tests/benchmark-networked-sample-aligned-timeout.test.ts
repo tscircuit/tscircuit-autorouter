@@ -40,9 +40,14 @@ test("the harness applies the same sample budget to existing networked construct
     },
     computeNodePfMap: (): Map<string, number> => new Map(),
   }
+  const completedStageStubs = {
+    portPointPathingSolver: pathingStub,
+    srjWithPointPairs: task.scenario,
+    componentDetectionSolver: { getOutput: (): [] => [] },
+  }
   for (const networkedCachePass of ["cold", "hot"] as const) {
     const solver = createSolverForTask({ ...task, networkedCachePass })
-    Object.assign(solver, { portPointPathingSolver: pathingStub })
+    Object.assign(solver, completedStageStubs)
     const routeStep = solver.pipelineDef.find(
       (step) => step.solverName === "highDensityRouteSolver",
     )!
@@ -65,7 +70,7 @@ test("the harness applies the same sample budget to existing networked construct
     },
   }
   const ordinaryRemoteSolver = createSolverForTask(ordinaryRemoteTask)
-  Object.assign(ordinaryRemoteSolver, { portPointPathingSolver: pathingStub })
+  Object.assign(ordinaryRemoteSolver, completedStageStubs)
   const defaultRouteStep = ordinaryRemoteSolver.pipelineDef.find(
     (step) => step.solverName === "highDensityRouteSolver",
   )!

@@ -2,7 +2,7 @@ import { expect, test } from "bun:test"
 import { getBgaSignalLayers } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/getBgaSignalLayers"
 import type { SimpleRouteJson } from "lib/types"
 
-test("uses surface terminals and fixed wire segments to identify signal layers", () => {
+test("uses surface terminals and supplied wire segments to identify signal layers", () => {
   const input: SimpleRouteJson = {
     layerCount: 8,
     minTraceWidth: 0.127,
@@ -41,4 +41,10 @@ test("uses surface terminals and fixed wire segments to identify signal layers",
   }
 
   expect(getBgaSignalLayers(input)).toEqual([0, 4, 7])
+  expect(
+    getBgaSignalLayers({
+      ...input,
+      traces: input.traces!.map((trace) => ({ ...trace, isFixed: false })),
+    }),
+  ).toEqual([0, 4, 7])
 })
