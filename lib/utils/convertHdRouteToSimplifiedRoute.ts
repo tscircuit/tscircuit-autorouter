@@ -70,6 +70,12 @@ const isThroughObstacleSegment = (
       !pointInsideObstacle(end, obstacle)
     )
       return false
+    // An imported barrel is a separate board element and survives trace repair.
+    if (
+      obstacle.circuitJsonMetadata?.pcb_via_id ||
+      obstacle.circuitJsonMetadata?.pcb_plated_hole_id
+    )
+      return true
     // A routed via also has a matching obstacle. When its owner is being
     // replaced, this rectangle cannot supply a second, independent barrel.
     const original = opts.originalTrace

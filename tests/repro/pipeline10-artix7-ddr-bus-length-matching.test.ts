@@ -36,5 +36,9 @@ test("completes Artix-7 DDR bus tuning", async () => {
       srjWithPointPairs: solver.srjWithPointPairs!,
       routedTraces,
     }),
-  ).toMatchSvgSnapshot(import.meta.path)
+  ).toMatchSvgSnapshot(
+    import.meta.path,
+    // The equal-length DDR tuning bends differ between Linux and macOS.
+    process.platform === "linux" ? { svgName: "linux" } : {},
+  )
 })

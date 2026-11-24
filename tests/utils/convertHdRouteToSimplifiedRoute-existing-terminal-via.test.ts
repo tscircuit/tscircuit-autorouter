@@ -126,4 +126,16 @@ test("a repaired trace still emits its drill after moving it within its own via 
       id === "owner" ? "via" : "through_obstacle",
     )
   }
+  const imported = convertHdRouteToSimplifiedRoute(repaired, 2, {
+    originalTrace: {
+      type: "pcb_trace",
+      pcb_trace_id: "owner",
+      connection_name: "signal",
+      route: [via],
+    },
+    obstacles: [
+      { ...obstacle, circuitJsonMetadata: { pcb_via_id: "board-via" } },
+    ],
+  })
+  expect(imported[1]?.route_type).toBe("through_obstacle")
 })
