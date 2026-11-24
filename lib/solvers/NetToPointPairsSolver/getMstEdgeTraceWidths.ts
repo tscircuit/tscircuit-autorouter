@@ -4,7 +4,7 @@ import type {
   SimpleRouteConnection,
 } from "lib/types"
 import { getPointKey } from "lib/utils/getPointKey"
-import { DisjointSet, type Edge } from "./buildMinimumSpanningTree"
+import type { Edge } from "./buildMinimumSpanningTree"
 
 type ConnectionEdge = Edge<ConnectionPoint>
 
@@ -19,13 +19,12 @@ export function getMstEdgeTraceWidths(
   defaultTraceWidth?: number,
 ): Map<ConnectionEdge, number> {
   const widths = new Map<ConnectionEdge, number>()
-  const firstEdge = edges[0]
-  if (!firstEdge) return widths
 
+  // The MST treats terminals at the same XY position as one vertex.
   const neighborsByPoint = new Map<PointKey, TreeLink[]>()
   for (const edge of edges) {
-    const from = DisjointSet.pointToKey(edge.from)
-    const to = DisjointSet.pointToKey(edge.to)
+    const from = `${edge.from.x},${edge.from.y}`
+    const to = `${edge.to.x},${edge.to.y}`
     for (const [point, neighbor] of [
       [from, to],
       [to, from],
@@ -36,7 +35,8 @@ export function getMstEdgeTraceWidths(
     }
   }
 
-  const root = DisjointSet.pointToKey(firstEdge.from)
+  const [root] = neighborsByPoint.keys()
+  if (root === undefined) return widths
   const treeNodes = new Map<PointKey, TreeNode>([[root, { depth: 0 }]])
   const pendingPoints: PointKey[] = [root]
   for (const point of pendingPoints) {
@@ -51,17 +51,18 @@ export function getMstEdgeTraceWidths(
     }
   }
 
-  const mergedPointByKey = new Map(
-    mergedPoints.map((point) => [getPointKey(point), point]),
+  const nodeByPointKey = new Map(
+    mergedPoints.map((point) => [
+      getPointKey(point),
+      treeNodes.get(`${point.x},${point.y}`),
+    ]),
   )
   for (const source of sourceConnections) {
     const width = source.nominalTraceWidth ?? source.width ?? defaultTraceWidth
     if (width === undefined || source.pointsToConnect.length < 2) continue
 
     const [start, ...rest] = source.pointsToConnect.map((point): TreeNode => {
-      const mergedPoint = mergedPointByKey.get(getPointKey(point))
-      const node =
-        mergedPoint && treeNodes.get(DisjointSet.pointToKey(mergedPoint))
+      const node = nodeByPointKey.get(getPointKey(point))
       if (!node) {
         throw new Error(`MST is missing a terminal of "${source.name}"`)
       }
