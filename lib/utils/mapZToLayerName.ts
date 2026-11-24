@@ -1,14 +1,6 @@
-export type LayerName =
-  | "top"
-  | "bottom"
-  | "inner1"
-  | "inner2"
-  | "inner3"
-  | "inner4"
-  | "inner5"
-  | "inner6"
-  | "inner7"
-  | "inner8"
+import type { LayerRef } from "circuit-json"
+
+export type LayerName = LayerRef
 
 export const mapZToLayerName = (z: number, layerCount: number): LayerName => {
   if (z === 1 && layerCount === 1) return "inner1"
@@ -18,5 +10,5 @@ export const mapZToLayerName = (z: number, layerCount: number): LayerName => {
 
   if (z === 0) return "top"
   if (z === layerCount - 1) return "bottom"
-  return `inner${z}` as any
+  return `inner${z}` as LayerName
 }

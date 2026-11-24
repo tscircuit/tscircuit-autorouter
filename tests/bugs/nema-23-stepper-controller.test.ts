@@ -2,15 +2,18 @@ import { expect, test } from "bun:test"
 import { readFileSync } from "node:fs"
 import { gunzipSync } from "node:zlib"
 import { runAllRoutingChecks } from "@tscircuit/checks"
-import { su } from "@tscircuit/circuit-json-util"
-import type { AnyCircuitElement, PcbTrace } from "circuit-json"
+import type { AnyCircuitElement } from "circuit-json"
 import { getSvgFromGraphicsObject } from "graphics-debug"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import { getPendingEffectsFromSolverTree } from "lib/solvers/getPendingEffectsFromSolverTree"
 import type { SimpleRouteJson } from "lib/types"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
 import { stackSvgsVertically } from "stack-svgs"
-import { Board, RootCircuit } from "tscircuit-for-sepic-repro"
+import {
+  Board,
+  RootCircuit,
+  type AnyCircuitElement as FixtureElement,
+} from "tscircuit-for-sepic-repro"
 import capturedInput from "../../fixtures/bug-reports/nema-23-stepper-controller/nema-23-stepper-controller.srj.json" with {
   type: "json",
 }
@@ -56,18 +59,23 @@ test("Pipeline 9 routes the NEMA 23 stepper controller", async (): Promise<void>
         ),
       ),
     ).toString("utf8"),
-  ) as AnyCircuitElement[]
+  ) as FixtureElement[]
   const root = new RootCircuit({ platform: { routingDisabled: true } })
   const board = new Board({ width: 56, height: 56, layers: 4 })
   root.add(board)
   root.render()
-  root.db = su(boardElements) as typeof root.db
+  // Replace the empty rendered board with the captured native fixture.
+  root.db = new RootCircuit().db
+  root.db.insertAll(boardElements)
   const pcbBoard = root.db.pcb_board.list()[0]!
   board.subcircuit_id = pcbBoard.subcircuit_id!
   board.pcb_board_id = pcbBoard.pcb_board_id
   // Use Core's route materialization to recover native source trace ownership.
   board._asyncAutoroutingResult = {
-    output_pcb_traces: structuredClone(routedTraces) as PcbTrace[],
+    output_pcb_traces: structuredClone(routedTraces) as Extract<
+      FixtureElement,
+      { type: "pcb_trace" }
+    >[],
   }
   board._updatePcbTraceRenderFromPcbTraces()
   const circuitJson = root.getCircuitJson() as AnyCircuitElement[]

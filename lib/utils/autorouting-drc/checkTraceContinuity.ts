@@ -265,12 +265,16 @@ export const checkTraceContinuity = (
     else padsByPort.set(pad.pcb_port_id, [pad])
   }
   const board = circuitJson.find((element) => element.type === "pcb_board")
+  const layerCount = routingRequest?.layerCount ?? board?.num_layers
   const stack: string[] = [
     "top",
     ...all_layers
       .filter((layer) => layer.startsWith("inner"))
-      .slice(0, board ? Math.max(0, board.num_layers - 2) : undefined),
-    ...(board?.num_layers === 1 ? [] : ["bottom"]),
+      .slice(
+        0,
+        layerCount === undefined ? undefined : Math.max(0, layerCount - 2),
+      ),
+    ...(layerCount === 1 ? [] : ["bottom"]),
   ]
   // Netlist IDs identify which copper an endpoint is meant to reach.
   // Only geometric contacts contribute edges to the physical map below.

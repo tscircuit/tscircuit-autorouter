@@ -1,3 +1,4 @@
+import { all_layers } from "circuit-json"
 import { pointToBoxDistance } from "@tscircuit/math-utils"
 import type {
   AnyCircuitElement,
@@ -711,18 +712,7 @@ function getBestObstaclePcbPortId(
   return bestPcbPortId ?? candidatePortIds[0]
 }
 
-const layerNames = new Set<string>([
-  "top",
-  "bottom",
-  "inner1",
-  "inner2",
-  "inner3",
-  "inner4",
-  "inner5",
-  "inner6",
-  "inner7",
-  "inner8",
-])
+const layerNames = new Set<string>(all_layers)
 
 const isLayerName = (layer: string): layer is LayerName => layerNames.has(layer)
 

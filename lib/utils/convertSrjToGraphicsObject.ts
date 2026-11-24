@@ -26,7 +26,7 @@ const GRAPHICS_LAYER_COLORS = {
   inner6: "magenta",
   inner7: "lime",
   inner8: "brown",
-} satisfies Record<LayerName, string>
+} satisfies Partial<Record<LayerName, string>>
 
 const OBSTACLE_LAYER_TRANSPARENCY = 0.5
 
@@ -38,7 +38,9 @@ export type ConvertSrjToGraphicsObjectOptions = {
 
 function getGraphicsLayerColor(layerName: string): string {
   if (Object.hasOwn(GRAPHICS_LAYER_COLORS, layerName)) {
-    return GRAPHICS_LAYER_COLORS[layerName as LayerName]
+    return GRAPHICS_LAYER_COLORS[
+      layerName as keyof typeof GRAPHICS_LAYER_COLORS
+    ]
   }
 
   const innerLayerMatch = /^inner([1-9]\d*)$/.exec(layerName)
