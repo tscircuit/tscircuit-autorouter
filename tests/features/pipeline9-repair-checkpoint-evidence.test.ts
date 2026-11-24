@@ -9,7 +9,10 @@ test("a better repair checkpoint needs complete and non-regressing DRC evidence"
     issueScore: 2,
     errors: [],
     rawErrors: [
-      { pcb_trace_error_id: "missing_connection_existing" },
+      {
+        drc_category: "trace_continuity",
+        pcb_trace_error_id: "retained",
+      },
       { pcb_trace_error_id: "other_clearance_error" },
     ],
     traceRouteIndexById: new Map(),
@@ -18,7 +21,12 @@ test("a better repair checkpoint needs complete and non-regressing DRC evidence"
     ...baseline,
     count: 1,
     issueScore: 1,
-    rawErrors: [{ pcb_trace_error_id: "missing_connection_existing" }],
+    rawErrors: [
+      {
+        drc_category: "trace_continuity",
+        pcb_trace_error_id: "retained",
+      },
+    ],
   }
 
   expect(canRetainPipeline9RepairCheckpoint(candidate, baseline)).toBe(true)
@@ -38,7 +46,9 @@ test("a better repair checkpoint needs complete and non-regressing DRC evidence"
     canRetainPipeline9RepairCheckpoint(
       {
         ...candidate,
-        rawErrors: [{ pcb_trace_error_id: "missing_layer_connection_new" }],
+        rawErrors: [
+          { drc_category: "trace_continuity", pcb_trace_error_id: "new-layer" },
+        ],
       },
       baseline,
     ),
@@ -107,9 +117,9 @@ test("a better repair checkpoint needs complete and non-regressing DRC evidence"
     actual_clearance: -0.02,
   }
   for (const error of [
-    { pcb_trace_error_id: "misaligned_via_trace_a_0" },
-    { pcb_trace_error_id: "disconnected_endpoint_trace_a_start" },
-    { pcb_trace_error_id: "trace_too_close_to_board_trace_a_segment_0" },
+    { drc_category: "trace_continuity", pcb_trace_error_id: "via-alignment" },
+    { drc_category: "trace_continuity", pcb_trace_error_id: "endpoint" },
+    { drc_category: "board_edge", pcb_trace_error_id: "edge" },
     viaContact,
     fixedCopperFinding,
   ]) {
@@ -134,7 +144,8 @@ test("a better repair checkpoint needs complete and non-regressing DRC evidence"
   ).toBe(false)
   // An unrelated Circuit JSON finding does not mask the fixed-copper finding.
   const existingContinuityFinding = {
-    pcb_trace_error_id: "missing_connection_existing",
+    drc_category: "trace_continuity",
+    pcb_trace_error_id: "retained",
   }
   const mixedBaseline: Snapshot = {
     ...baseline,
