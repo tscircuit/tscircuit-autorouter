@@ -4,6 +4,7 @@ import type {
   PcbBoard,
   PcbTrace,
   PcbVia,
+  SourceTrace,
 } from "circuit-json"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { getViaLayers } from "high-density-repair03/lib"
@@ -440,7 +441,7 @@ function createSourceTraces(
   sourceSrj = srj,
   sourceConnectivityMap?: ConnectivityMap,
 ): AnyCircuitElement[] {
-  const sourceTraces: AnyCircuitElement[] = []
+  const sourceTraces: SourceTrace[] = []
   const connections =
     sourceSrj === srj
       ? srj.connections
@@ -655,6 +656,28 @@ function createSourceTraces(
         connected_source_port_ids: connectedSourcePortIds,
         connected_source_net_ids: connectedSourceNetIds,
       })
+    }
+  }
+
+  // A via can name the pour net directly, or belong to a trace on that net.
+  const traceById = new Map(
+    sourceTraces.map((trace) => [trace.source_trace_id, trace]),
+  )
+  for (const tile of obstacles) {
+    const [netId] = tile.connectedTo
+    if (!tile.isCopperPour || !netId) continue
+    for (const ref of tile.connectedTo) {
+      const traceId = resolveCircuitJsonSourceTraceId(
+        circuitJsonSourceTraceIdResolver,
+        ref,
+      )
+      if (!traceId || traceId === netId) continue
+      const trace = traceById.get(traceId)
+      if (!trace || trace.connected_source_net_ids?.includes(netId)) continue
+      trace.connected_source_net_ids = [
+        ...(trace.connected_source_net_ids ?? []),
+        netId,
+      ]
     }
   }
 
@@ -1061,7 +1084,6 @@ function extractViasFromRoutes(
   const vias: PcbVia[] = []
   const viaLocations = new Set<string>() // Track unique via locations
 
-  // Process routes based on their type
   if (routes.length > 0) {
     if ("type" in routes[0] && routes[0].type === "pcb_trace") {
       // Extract vias from SimplifiedPcbTraces
@@ -1249,6 +1271,27 @@ export function convertToCircuitJson(
     ),
   )
 
+  for (const [index, tile] of (
+    originalSrj ?? srjWithPointPairs
+  ).obstacles.entries()) {
+    if (!tile.isCopperPour) continue
+    for (const layer of tile.layers) {
+      if (!isLayerName(layer)) continue
+      circuitJson.push({
+        type: "pcb_copper_pour",
+        pcb_copper_pour_id: `pour_${index}_${layer}`,
+        shape: "rect",
+        center: tile.center,
+        width: tile.width,
+        height: tile.height,
+        rotation: tile.ccwRotationDegrees,
+        layer,
+        covered_with_solder_mask: true,
+        source_net_id: tile.connectedTo[0],
+      })
+    }
+  }
+
   // Extract and add vias as independent pcb_via elements
   circuitJson.push(
     ...extractViasFromRoutes(
@@ -1276,37 +1319,6 @@ export function convertToCircuitJson(
       options.connectivityMaps?.route ??
         getConnectivityMapFromSimpleRouteJson(srjWithPointPairs),
     )
-
-  // The SRJ describes an unbroken pour as rectangular tiles on named layers.
-  for (const [index, tile] of (
-    originalSrj ?? srjWithPointPairs
-  ).obstacles.entries()) {
-    if (!tile.isCopperPour) continue
-    const owner =
-      tile.connectedTo
-        .map((id) =>
-          resolveCircuitJsonSourceTraceId(
-            routeCircuitJsonSourceTraceIdResolver,
-            id,
-          ),
-        )
-        .find((id) => id !== undefined) ?? tile.connectedTo[0]
-    for (const layer of tile.layers) {
-      if (!isLayerName(layer)) continue
-      circuitJson.push({
-        type: "pcb_copper_pour",
-        pcb_copper_pour_id: `pour_${index}_${layer}`,
-        shape: "rect",
-        center: tile.center,
-        width: tile.width,
-        height: tile.height,
-        rotation: tile.ccwRotationDegrees,
-        layer,
-        covered_with_solder_mask: true,
-        source_net_id: owner,
-      })
-    }
-  }
 
   // Process routes based on their type
   if (routes.length > 0) {

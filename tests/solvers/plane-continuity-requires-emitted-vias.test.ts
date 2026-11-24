@@ -79,7 +79,7 @@ test("a pour connects emitted via barrels only across continuous copper on their
       [a, b].map((via) => ({
         ...via,
         pcb_trace_id: undefined,
-        source_net_id: "ground",
+        source_net_id: "ground-fill",
       })),
     ),
   ).toEqual([["via-a", "via-b"]])
