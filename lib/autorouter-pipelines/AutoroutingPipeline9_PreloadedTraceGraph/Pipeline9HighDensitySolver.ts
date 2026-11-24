@@ -1,4 +1,4 @@
-import { BgaEscapeRoutingSolver } from "@tscircuit/high-density-phase-solver"
+import { BgaEscapeRoutingSolver } from "@tscircuit/bga-escape-routing-solver"
 import {
   getBgaEscapeRoutingInput,
   type BgaEscapeBoard,
@@ -48,7 +48,6 @@ import {
 type BgaEscapeAttempt = {
   board: BgaEscapeBoard
   solver: BgaEscapeRoutingSolver
-  regionalError: string
 }
 
 export type Pipeline9HighDensitySolverParams = {
@@ -462,6 +461,15 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       regionalPreloadedViaCandidateRejectionCount: 0,
       regionalForceImproveCandidateRejectionCount: 0,
       regionalRepairCandidateRejectionCount: 0,
+    }
+    const board = params.bgaEscapeBoard
+    const input =
+      board &&
+      params.fixedHdRoutes.length > 0 &&
+      getBgaEscapeRoutingInput(board)
+    if (board && input) {
+      const solver = BgaEscapeRoutingSolver.createIfApplicable(input)
+      if (solver) this.bgaEscapeAttempt = { board, solver }
     }
   }
 
@@ -1201,7 +1209,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   }
 
   private stepBgaEscapeRouting(attempt: BgaEscapeAttempt): void {
-    const { board, solver, regionalError } = attempt
+    const { board, solver } = attempt
     this.activeSubSolver = solver
     solver.step()
     if (!solver.solved && !solver.failed) return
@@ -1223,7 +1231,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       }
     }
     this.failed = true
-    this.error = `${regionalError}. BGA escape routing: ${solver.error ?? "candidate violates board clearance"}`
+    this.error = `BGA escape routing: ${solver.error ?? "candidate violates board clearance"}`
   }
 
   private stepNodeRouting(): void {
@@ -1235,18 +1243,8 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
           `Pipeline9 primary high-density routing failed: ${this.activeFallbackReason ?? "unknown error"}`,
           `regional fallback failed: ${this.activeFallbackSolver.error ?? "unknown error"}`,
         ].join("; ")
-        const board = this.params.bgaEscapeBoard
-        const input = board && getBgaEscapeRoutingInput(board)
-        if (board && input) {
-          this.bgaEscapeAttempt = {
-            board,
-            solver: new BgaEscapeRoutingSolver(input),
-            regionalError,
-          }
-        } else {
-          this.error = regionalError
-          this.failed = true
-        }
+        this.error = regionalError
+        this.failed = true
         this.activeFallbackSolver = null
         this.activeFallbackFixedRouteSections.clear()
         this.activeFallbackFixedObstacleRoutes = []

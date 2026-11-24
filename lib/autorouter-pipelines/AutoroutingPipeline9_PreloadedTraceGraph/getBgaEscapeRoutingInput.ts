@@ -2,7 +2,7 @@ import {
   cellsPerBallPitch,
   type BgaEscapeRoutingSolverInput,
   type BgaTrace,
-} from "@tscircuit/high-density-phase-solver"
+} from "@tscircuit/bga-escape-routing-solver"
 import { BgaGrid } from "lib/solvers/BgaTopologyGeneratorSolver/bga-grid"
 import type { DetectedComponent } from "lib/solvers/ComponentDetectionSolver/ComponentDetectionSolver"
 import { getBgaLikeObstacleSubset } from "lib/solvers/ComponentDetectionSolver/detectors/bga/BgaComponentDetector"
