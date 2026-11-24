@@ -462,15 +462,6 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       regionalForceImproveCandidateRejectionCount: 0,
       regionalRepairCandidateRejectionCount: 0,
     }
-    const board = params.bgaEscapeBoard
-    const input =
-      board &&
-      params.fixedHdRoutes.length > 0 &&
-      getBgaEscapeRoutingInput(board)
-    if (board && input) {
-      const solver = BgaEscapeRoutingSolver.createIfApplicable(input)
-      if (solver) this.bgaEscapeAttempt = { board, solver }
-    }
   }
 
   readonly benchmarkDiagnosticCounters: Record<string, number> = {}
@@ -1182,7 +1173,23 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     this.startRegionalFallback()
   }
 
+  private initializeBgaEscapeRouting(): void {
+    const board = this.params.bgaEscapeBoard
+    if (
+      !board ||
+      !this.params.fixedHdRoutes.some((route) => route.isFixed === true)
+    )
+      return
+    const input = getBgaEscapeRoutingInput(board)
+    if (!input) return
+    this.bgaEscapeAttempt = {
+      board,
+      solver: new BgaEscapeRoutingSolver(input),
+    }
+  }
+
   override _step(): void {
+    if (this.iterations === 1) this.initializeBgaEscapeRouting()
     if (this.bgaEscapeAttempt) {
       this.stepBgaEscapeRouting(this.bgaEscapeAttempt)
       return
@@ -1211,7 +1218,20 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   private stepBgaEscapeRouting(attempt: BgaEscapeAttempt): void {
     const { board, solver } = attempt
     this.activeSubSolver = solver
+    const preparing = solver.stats.stage !== "route_connections"
     solver.step()
+    if (
+      preparing &&
+      solver.failed &&
+      (solver.failure === "grid_budget" ||
+        solver.failure === "terminal_outside_grid" ||
+        solver.failure === "no_via_site")
+    ) {
+      // Unsupported local escapes do not select the BGA strategy.
+      this.bgaEscapeAttempt = undefined
+      this.activeSubSolver = null
+      return
+    }
     if (!solver.solved && !solver.failed) return
 
     this.activeSubSolver = null
