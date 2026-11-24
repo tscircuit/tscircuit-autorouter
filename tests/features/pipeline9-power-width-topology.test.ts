@@ -40,6 +40,7 @@ test("Pipeline 9 uses source path widths before off-board endpoint substitution"
     input,
     {},
     getInitiallyConnectedMapFromSimpleRouteJson(input),
+    { preserveBranchWidths: true },
   )
   solver.solve()
 

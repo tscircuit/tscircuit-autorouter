@@ -15,6 +15,10 @@ import { getMstEdgeTraceWidths } from "./getMstEdgeTraceWidths"
 import { mergeConnectionsWithSources } from "./mergeConnections"
 import { orderMstEdgesForStablePairNames } from "./orderMstEdgesForStablePairNames"
 
+export interface NetToPointPairsOptions {
+  preserveBranchWidths?: boolean
+}
+
 type ConnectionName = SimpleRouteConnection["name"]
 interface PathHop {
   fromPointId: PointId
@@ -59,6 +63,7 @@ export class NetToPointPairsSolver extends BaseSolver {
     public ogSrj: SimpleRouteJson,
     public colorMap: Record<string, string> = {},
     initiallyConnectedMap: ConnectivityMap,
+    private readonly options: NetToPointPairsOptions = {},
   ) {
     super()
     const busTraceWidthsByConnectionName = new Map<ConnectionName, number>()
@@ -144,9 +149,12 @@ export class NetToPointPairsSolver extends BaseSolver {
     }
     const { connection, sources } = this.unprocessedConnections.pop()!
     const defaultWidth = this.ogSrj.nominalTraceWidth ?? this.ogSrj.minTraceWidth
-    const sourceWidths = sources.map(
-      (source) => source.nominalTraceWidth ?? source.width ?? defaultWidth,
-    )
+    const sourceWidths =
+      this.options.preserveBranchWidths && sources.length > 1
+        ? sources.map(
+            (source) => source.nominalTraceWidth ?? source.width ?? defaultWidth,
+          )
+        : []
     const hasMixedWidths = sourceWidths.some(
       (width) => width !== sourceWidths[0],
     )
@@ -221,7 +229,7 @@ export class NetToPointPairsSolver extends BaseSolver {
       this.emitConnection(
         {
           ...connection,
-          nominalTraceWidth: branchWidth ?? connection.nominalTraceWidth,
+          ...(branchWidth !== undefined && { nominalTraceWidth: branchWidth }),
           pointsToConnect: [edge.from, edge.to],
           name: `${connection.name}_mst${mstIdx++}`,
           __rootConnectionNames: connection.__rootConnectionNames ?? [
