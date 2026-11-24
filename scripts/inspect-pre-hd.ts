@@ -15,7 +15,7 @@ for (const [name, file] of [["stmp157", "stmp157-remaining-mesh/input.srj.json.g
   }
   console.log("PRE_HD=" + JSON.stringify({revision:process.env.REVISION,name,failed:solver.failed,error:solver.error,input:hash(input),components:hash(solver.componentDetectionSolver?.getOutput()),planner:hash(solver.topologyPlanningSolver?.getOutput()),merger:solver.topologyMergingSolver?.stats,nodes:solver.capacityNodes?.length,edges:solver.capacityEdges?.length,edgesSha:hash(solver.capacityEdges)}))
 }
-for (const name of ["@tscircuit/rectdiff", "@tscircuit/solver-utils", "@tscircuit/math-utils", "graphics-debug", "circuit-json", "@tscircuit/simple-route-json"]) {
+for (const name of ["@tscircuit/rectdiff", "@tscircuit/solver-utils", "@tscircuit/math-utils", "graphics-debug", "circuit-json"]) {
   const path=`node_modules/${name}`
   const pkg=JSON.parse(readFileSync(`${path}/package.json`,"utf8"))
   const entry=pkg.module ?? pkg.main ?? "index.js"
