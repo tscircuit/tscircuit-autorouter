@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test"
 import { sample007 } from "@tscircuit/dataset-srj29-ddr3-bga-pairs"
 import { convertCircuitJsonToPcbSvg } from "circuit-to-svg"
-import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
+import { convertHdRoutesToSimplifiedPcbTraces } from "lib/utils/convertHdRoutesToSimplifiedPcbTraces"
 import { Pipeline9HighDensitySolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver"
 import { AutoroutingPipelineSolver10_BgaFanout } from "lib/autorouter-pipelines/AutoroutingPipeline10_BgaFanout/AutoroutingPipelineSolver10_BgaFanout"
 import { MultipleHighDensityRouteStitchSolver3 } from "lib/solvers/RouteStitchingSolver/MultipleHighDensityRouteStitchSolver3"
@@ -123,7 +123,7 @@ test("Pipeline 10 routes SRJ29 sample007 without reserving whole terminal region
     }
 
     const detailedRoutedTraces: SimplifiedPcbTraces =
-      convertPipeline7HdRoutesToSimplifiedPcbTraces({
+      convertHdRoutesToSimplifiedPcbTraces({
         connections: pointPairSrj.connections,
         originalConnections: inputSrj.connections,
         hdRoutes: stitchSolver.mergedHdRoutes.filter(
