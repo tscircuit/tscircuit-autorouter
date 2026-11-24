@@ -116,7 +116,7 @@
     "high-density-repair01": "git+https://github.com/tscircuit/high-density-repair01.git#bf60f51a6afb008485136749f8365d56d2f99475",
     "high-density-repair02": "https://codeload.github.com/tscircuit/high-density-repair02/tar.gz/cac656f51535aca0d9c7f09e5860b4e82a78f3cf",
     "high-density-repair03": "https://codeload.github.com/tscircuit/high-density-repair03/tar.gz/fa0bcc4344eef6973e84507a4e423633837d7705",
-    "@tscircuit/high-density-phase-solver": "github:tscircuit/high-density-phase-solver#65d234de33e758353843b6ad35a5d9aac2b56f51",
+    "@tscircuit/bga-escape-routing-solver": "github:tscircuit/bga-escape-routing-solver#ff4e2aff22b96cd3970c387f093eb0f9c8e712a3",
     "@tscircuit/high-density-a01": "git+https://github.com/tscircuit/high-density-a01.git#e9a3642aae9d45aadb197cd1386dec2142529217",
     "@tscircuit/high-density-a13": "git+https://github.com/tscircuit/high-density-a01.git#4ae21d7a15c9fbfb30378c10f948aa168d7c9cb7",
     "@tscircuit/high-density-b01": "git+https://github.com/tscircuit/high-density-b01.git#a224564f52635bb5dc8d120d43ef71f9437c7393"

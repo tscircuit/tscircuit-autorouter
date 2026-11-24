@@ -1,6 +1,6 @@
 import type { ConnectionName } from "lib/types/srj-types"
 import type { ChangedPreloadedTraceSection } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver"
-import { BgaEscapeRoutingSolver } from "@tscircuit/high-density-phase-solver"
+import { BgaEscapeRoutingSolver } from "@tscircuit/bga-escape-routing-solver"
 import {
   getBgaEscapeRoutingInput,
   type BgaEscapeBoard,
