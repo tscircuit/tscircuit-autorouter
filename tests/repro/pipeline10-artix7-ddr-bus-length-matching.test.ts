@@ -15,11 +15,26 @@ test("completes Artix-7 DDR bus tuning", async () => {
   solver.solve()
 
   expect(solver.solved).toBe(true)
+  const routedTraces = solver.getOutputSimplifiedPcbTraces()
+  // The unrouted board has only single-layer pads. Every layer transition
+  // therefore needs a via in the emitted copper.
+  expect(
+    input.obstacles.every((obstacle) => obstacle.layers.length === 1),
+  ).toBe(true)
+  expect(
+    routedTraces
+      .flatMap((trace) => trace.route)
+      .filter(
+        (point) =>
+          point.route_type === "through_obstacle" &&
+          point.from_layer !== point.to_layer,
+      ),
+  ).toEqual([])
   await expect(
     getBugReportSnapshotSvg({
       inputSrj: input,
       srjWithPointPairs: solver.srjWithPointPairs!,
-      routedTraces: solver.getOutputSimplifiedPcbTraces(),
+      routedTraces,
     }),
   ).toMatchSvgSnapshot(import.meta.path)
 })

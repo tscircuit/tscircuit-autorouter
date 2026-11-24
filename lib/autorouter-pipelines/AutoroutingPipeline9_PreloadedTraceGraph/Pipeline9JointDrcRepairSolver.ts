@@ -1336,6 +1336,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
               params.layerCount,
               {
                 defaultViaHoleDiameter: params.defaultViaHoleDiameter,
+                originalTrace: movableSection.originalTrace,
                 connectedMultilayerObstacles:
                   getConnectedMultilayerObstacles(evaluatedRoute),
                 connMap: params.connMap,
@@ -2351,6 +2352,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
           this.params.layerCount,
           {
             defaultViaHoleDiameter: this.params.defaultViaHoleDiameter,
+            originalTrace: movableSection.originalTrace,
             obstacles: this.params.obstacles,
             connMap: this.params.connMap,
           },
