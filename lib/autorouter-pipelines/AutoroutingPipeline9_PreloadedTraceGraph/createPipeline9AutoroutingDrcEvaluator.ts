@@ -81,7 +81,6 @@ export const createPipeline9AutoroutingDrcEvaluator = ({
     representedPadObstacleIndexes,
   })
   const routingConnectivity = {
-    sourceTraces: staticCircuitJson.filter((e) => e.type === "source_trace"),
     getViasConnectedByCopperPour: getViasConnectedByCopperPour(inputSrj),
     isDeclaredTerminal: (
       name: string,

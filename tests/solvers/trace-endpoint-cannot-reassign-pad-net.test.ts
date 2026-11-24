@@ -54,9 +54,12 @@ test("a wire's endpoint label cannot assign a foreign pad to its desired net", (
     inputSrj: srj,
     srjWithPointPairs: srj,
   })
-  expect(
-    evaluate([wire], { includeTraceContinuity: true }).errors.map(
-      (e) => e.pcb_trace_error_id,
-    ),
-  ).toContain("disconnected_endpoint_wire_end")
+  const { circuitJson, errors } = evaluate([wire])
+  const signal = circuitJson.find(
+    (e) => e.type === "source_trace" && e.source_trace_id === "signal",
+  )
+  expect(signal).toMatchObject({ connected_source_net_ids: ["start"] })
+  expect(errors.map((e) => e.pcb_trace_error_id)).toContain(
+    "disconnected_endpoint_wire_end",
+  )
 })

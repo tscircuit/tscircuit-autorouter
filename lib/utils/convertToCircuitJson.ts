@@ -474,7 +474,7 @@ function createSourceTraces(
       getSrjDeclaredConnectionReferences(connection),
     )
 
-    // Physical terminals fix the net; unbound routes can attach by geometry.
+    // A named terminal fixes the net even when there is no component pad.
     const obstaclesContainingEndpoints: Obstacle[] = []
     const hdRoute = hdRoutes.find((route): boolean => {
       const connectionName =
@@ -491,7 +491,8 @@ function createSourceTraces(
           if (
             endpoint.layers.some((layer) => obstacle.layers.includes(layer)) &&
             pointToBoxDistance(endpoint, obstacle) <= 0 &&
-            (connectedPortIds.length === 0 ||
+            ((connectedPortIds.length === 0 &&
+              connectedPointIds.length === 0) ||
               obstacle.netIsAssignable ||
               obstacle.connectedTo.some((id) => connectionReferences.has(id)))
           ) {
