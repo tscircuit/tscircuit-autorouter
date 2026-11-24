@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test"
 import { Pipeline9JointDrcRepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9JointDrcRepairSolver"
-import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
+import { convertHdRoutesToSimplifiedPcbTraces } from "lib/utils/convertHdRoutesToSimplifiedPcbTraces"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { loadPipeline9JointDrcInput } from "../fixtures/loadPipeline9JointDrcInput"
 
@@ -39,7 +39,7 @@ test("bounded repair clears the Linux sample 14 residue without restarting broad
   const { errors } = evaluateRelaxedDrc({
     inputSrj: params.originalSrj,
     srjWithPointPairs: params.srjWithPointPairs,
-    routedTraces: convertPipeline7HdRoutesToSimplifiedPcbTraces({
+    routedTraces: convertHdRoutesToSimplifiedPcbTraces({
       connections: params.newConnections,
       originalConnections: params.originalSrj.connections,
       hdRoutes: routes,

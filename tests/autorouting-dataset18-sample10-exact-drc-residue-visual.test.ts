@@ -6,7 +6,7 @@ import type {
 } from "high-density-repair03/lib"
 import { AutoroutingPipelineSolver7_MultiGraph } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph"
 import { createPipeline7AutoroutingDrcEvaluator } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/create-pipeline7-autorouting-drc-evaluator"
-import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
+import { convertHdRoutesToSimplifiedPcbTraces } from "lib/utils/convertHdRoutesToSimplifiedPcbTraces"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import type { SimpleRouteJson } from "lib/types"
 import { loadScenarioBySampleNumber } from "../scripts/benchmark/scenarios"
@@ -39,7 +39,7 @@ test("keeps dataset 18 sample 10 free of exact DRC residue", async () => {
   const evaluateBenchmarkDrc = (
     routes: HighDensityRoute[],
   ): ReturnType<typeof evaluateRelaxedDrc> => {
-    const routedTraces = convertPipeline7HdRoutesToSimplifiedPcbTraces({
+    const routedTraces = convertHdRoutesToSimplifiedPcbTraces({
       ...conversionOptions,
       hdRoutes: routes,
     })

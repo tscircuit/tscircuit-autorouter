@@ -7,9 +7,9 @@ import type {
   SimplifiedPcbTraces,
 } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
-import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
+import { convertHdRouteToSimplifiedRoute } from "./convertHdRouteToSimplifiedRoute"
 
-export interface ConvertPipeline7HdRoutesOptions {
+export interface ConvertHdRoutesOptions {
   connections: SimpleRouteConnection[]
   originalConnections: SimpleRouteConnection[]
   hdRoutes: HighDensityRoute[]
@@ -19,8 +19,8 @@ export interface ConvertPipeline7HdRoutesOptions {
   connMap: ConnectivityMap
 }
 
-type StaticConvertPipeline7HdRoutesOptions = Omit<
-  ConvertPipeline7HdRoutesOptions,
+type StaticConvertHdRoutesOptions = Omit<
+  ConvertHdRoutesOptions,
   "hdRoutes"
 >
 
@@ -30,14 +30,16 @@ type PreparedConnection = {
   outputConnectionName: string
 }
 
-export const createPipeline7HdRoutesToSimplifiedPcbTracesConverter = ({
+export const createHdRoutesToSimplifiedPcbTracesConverter = ({
   connections,
   originalConnections,
   layerCount,
   obstacles,
   defaultViaHoleDiameter,
   connMap,
-}: StaticConvertPipeline7HdRoutesOptions) => {
+}: StaticConvertHdRoutesOptions): ((
+  hdRoutes: HighDensityRoute[],
+) => SimplifiedPcbTraces) => {
   const netConnectionNameByOriginalConnectionName = new Map<
     string,
     string | undefined
@@ -55,7 +57,7 @@ export const createPipeline7HdRoutesToSimplifiedPcbTracesConverter = ({
     (connection) => {
       if (connection.pointsToConnect.length !== 2) {
         throw new Error(
-          `Expected Pipeline7 output connection "${connection.name}" to have two points, got ${connection.pointsToConnect.length}`,
+          `Expected routed connection "${connection.name}" to have two points, got ${connection.pointsToConnect.length}`,
         )
       }
 
@@ -146,8 +148,8 @@ export const createPipeline7HdRoutesToSimplifiedPcbTracesConverter = ({
   }
 }
 
-/** Converts Pipeline7 routes using the same net and terminal rules as final output. */
-export const convertPipeline7HdRoutesToSimplifiedPcbTraces = ({
+/** Converts high-density routes to traces with their net and terminal identifiers. */
+export const convertHdRoutesToSimplifiedPcbTraces = ({
   connections,
   originalConnections,
   hdRoutes,
@@ -155,8 +157,8 @@ export const convertPipeline7HdRoutesToSimplifiedPcbTraces = ({
   obstacles,
   defaultViaHoleDiameter,
   connMap,
-}: ConvertPipeline7HdRoutesOptions): SimplifiedPcbTraces =>
-  createPipeline7HdRoutesToSimplifiedPcbTracesConverter({
+}: ConvertHdRoutesOptions): SimplifiedPcbTraces =>
+  createHdRoutesToSimplifiedPcbTracesConverter({
     connections,
     originalConnections,
     layerCount,

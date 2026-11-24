@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test"
 import { isDeepStrictEqual } from "node:util"
 import { createPipeline7RelaxedDrcEvaluator } from "lib/testing/createPipeline7RelaxedDrcEvaluator"
-import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
+import { convertHdRoutesToSimplifiedPcbTraces } from "lib/utils/convertHdRoutesToSimplifiedPcbTraces"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import type { SimpleRouteJson } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
@@ -58,7 +58,7 @@ test("Pipeline7 repair uses the benchmark relaxed DRC path", () => {
     traceThickness: 0.1,
     viaDiameter: 0.3,
   }
-  const traces = convertPipeline7HdRoutesToSimplifiedPcbTraces({
+  const traces = convertHdRoutesToSimplifiedPcbTraces({
     ...conversionOptions,
     hdRoutes: [route],
   })

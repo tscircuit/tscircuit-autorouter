@@ -1,6 +1,6 @@
 import type { AnyCircuitElement, SourceTrace } from "circuit-json"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
+import { convertHdRoutesToSimplifiedPcbTraces } from "lib/utils/convertHdRoutesToSimplifiedPcbTraces"
 import { canonicalizePipeline9HdRoutes } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/canonicalizePipeline9HdRoutes"
 import type { PreloadedHighDensityRoute } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/convertPreloadedTraceToHdRoutes"
 import type { MultipleHighDensityRouteStitchSolver3 } from "lib/solvers/RouteStitchingSolver/MultipleHighDensityRouteStitchSolver3"
@@ -41,7 +41,7 @@ export const getH616TerminalStitchCircuit = ({
         }),
       }),
     ),
-    ...convertPipeline7HdRoutesToSimplifiedPcbTraces({
+    ...convertHdRoutesToSimplifiedPcbTraces({
       connections: fixture.input.connections,
       originalConnections: srj.connections,
       hdRoutes: canonicalizePipeline9HdRoutes(hdRoutes),

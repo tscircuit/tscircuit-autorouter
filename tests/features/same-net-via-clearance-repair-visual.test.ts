@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver7_MultiGraph } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph"
 import { createPipeline7AutoroutingDrcEvaluator } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/create-pipeline7-autorouting-drc-evaluator"
-import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
+import { convertHdRoutesToSimplifiedPcbTraces } from "lib/utils/convertHdRoutesToSimplifiedPcbTraces"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import type { SimpleRouteJson } from "lib/types"
 import { loadScenarioBySampleNumber } from "../../scripts/benchmark/scenarios"
@@ -50,7 +50,7 @@ test("shows dataset 18 sample 11's production exact DRC repair", async () => {
     originalSrj: pipeline.originalSrj,
   }
   const evaluateBenchmarkDrc = (routes: HighDensityRoute[]) => {
-    const routedTraces = convertPipeline7HdRoutesToSimplifiedPcbTraces({
+    const routedTraces = convertHdRoutesToSimplifiedPcbTraces({
       ...conversionOptions,
       hdRoutes: routes,
     })

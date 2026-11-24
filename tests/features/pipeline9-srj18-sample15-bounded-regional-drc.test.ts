@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test"
 import type { DrcEvaluator } from "high-density-repair03/lib"
-import { createPipeline7HdRoutesToSimplifiedPcbTracesConverter } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
+import { createHdRoutesToSimplifiedPcbTracesConverter } from "lib/utils/convertHdRoutesToSimplifiedPcbTraces"
 import { Pipeline9BoundedRegionalRepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9BoundedRegionalRepairSolver"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import type { SimpleRouteJson } from "lib/types"
@@ -16,7 +16,7 @@ test("regional repair publishes bounded improvements without hiding via-pad resi
   const routes = structuredClone(fixture.routes) as HighDensityRoute[]
   const originalRoutes = structuredClone(routes)
   const connMap = getConnectivityMapFromSimpleRouteJson(originalSrj)
-  const convert = createPipeline7HdRoutesToSimplifiedPcbTracesConverter({
+  const convert = createHdRoutesToSimplifiedPcbTracesConverter({
     connections: originalSrj.connections,
     originalConnections: originalSrj.connections,
     layerCount: originalSrj.layerCount,
