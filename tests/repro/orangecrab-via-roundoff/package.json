@@ -9,6 +9,7 @@
     "@tscircuit/props": "0.0.716",
     "circuit-json": "0.0.541",
     "circuit-to-svg": "0.0.454",
+    "flatbush": "4.7.0",
     "react": "19.3.1",
     "transformation-matrix": "2.16.1"
   }
