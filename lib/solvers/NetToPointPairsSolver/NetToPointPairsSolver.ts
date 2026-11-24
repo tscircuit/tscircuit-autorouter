@@ -12,7 +12,10 @@ import { BaseSolver } from "../BaseSolver"
 import { buildMinimumSpanningTree } from "./buildMinimumSpanningTree"
 import { getInitiallyConnectedStateForConnection } from "./get-initially-connected-state-for-connection"
 import { getMstEdgeTraceWidths } from "./getMstEdgeTraceWidths"
-import { mergeConnectionsWithSources } from "./mergeConnections"
+import {
+  groupConnectionsBySharedPoints,
+  mergeConnectionGroup,
+} from "./mergeConnections"
 import { orderMstEdgesForStablePairNames } from "./orderMstEdgesForStablePairNames"
 
 export interface NetToPointPairsOptions {
@@ -53,11 +56,15 @@ export class NetToPointPairsSolver extends BaseSolver {
     return "NetToPointPairsSolver"
   }
 
-  unprocessedConnections: ReturnType<typeof mergeConnectionsWithSources>
+  private readonly pendingConnectionGroups: SimpleRouteConnection[][]
   newConnections: Array<SimpleRouteConnection>
   readonly initiallyConnectedMap: ConnectivityMap
   /** Each connection's `path` as hops, in written order. */
   readonly pathHopsByConnectionName = new Map<ConnectionName, PathHop[]>()
+
+  get unprocessedConnections(): SimpleRouteConnection[] {
+    return this.pendingConnectionGroups.map(mergeConnectionGroup)
+  }
 
   constructor(
     public ogSrj: SimpleRouteJson,
@@ -94,7 +101,7 @@ export class NetToPointPairsSolver extends BaseSolver {
         }
       },
     )
-    this.unprocessedConnections = mergeConnectionsWithSources(
+    this.pendingConnectionGroups = groupConnectionsBySharedPoints(
       connectionsWithBusTraceWidths,
     )
     this.newConnections = []
@@ -143,11 +150,12 @@ export class NetToPointPairsSolver extends BaseSolver {
   }
 
   _step() {
-    if (this.unprocessedConnections.length === 0) {
+    const sources = this.pendingConnectionGroups.pop()
+    if (!sources) {
       this.solved = true
       return
     }
-    const { connection, sources } = this.unprocessedConnections.pop()!
+    const connection = mergeConnectionGroup(sources)
     const defaultWidth =
       this.ogSrj.nominalTraceWidth ?? this.ogSrj.minTraceWidth
     const sourceWidths =
@@ -265,7 +273,7 @@ export class NetToPointPairsSolver extends BaseSolver {
     }
 
     // Draw unprocessed connections in red
-    this.unprocessedConnections.forEach(({ connection }) => {
+    this.unprocessedConnections.forEach((connection) => {
       // Draw points
       connection.pointsToConnect.forEach((point) => {
         graphics.points!.push({

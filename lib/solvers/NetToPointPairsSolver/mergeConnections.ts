@@ -8,11 +8,6 @@ import {
 import { DSU } from "lib/utils/dsu"
 import { getPointKey } from "lib/utils/getPointKey"
 
-type MergedConnectionGroup = {
-  connection: SimpleRouteConnection
-  sources: SimpleRouteConnection[]
-}
-
 /**
  * Merges SimpleRouteConnections that share common ConnectionPoints into single connections.
  * This is useful for grouping related traces/nets that were defined separately
@@ -24,14 +19,14 @@ type MergedConnectionGroup = {
 export function mergeConnections(
   simpleRouteConnections: SimpleRouteConnection[],
 ): SimpleRouteConnection[] {
-  return mergeConnectionsWithSources(simpleRouteConnections).map(
-    ({ connection }) => connection,
+  return groupConnectionsBySharedPoints(simpleRouteConnections).map(
+    mergeConnectionGroup,
   )
 }
 
-export function mergeConnectionsWithSources(
+export function groupConnectionsBySharedPoints(
   simpleRouteConnections: SimpleRouteConnection[],
-): MergedConnectionGroup[] {
+): SimpleRouteConnection[][] {
   if (simpleRouteConnections.length === 0) {
     return []
   }
@@ -87,94 +82,77 @@ export function mergeConnectionsWithSources(
       .push(simpleRouteConnection)
   })
 
-  const mergedGroups: MergedConnectionGroup[] = []
+  return Array.from(connectionTempIdGroups.values())
+}
 
-  // Construct the new merged connections
-  for (const simpleRouteConnectionGroup of connectionTempIdGroups.values()) {
-    if (simpleRouteConnectionGroup.length === 1) {
-      mergedGroups.push({
-        connection: simpleRouteConnectionGroup[0]!,
-        sources: simpleRouteConnectionGroup,
-      })
-      continue // No merging needed for groups of one
+export function mergeConnectionGroup(
+  sources: readonly SimpleRouteConnection[],
+): SimpleRouteConnection {
+  if (sources.length === 0) throw new Error("Cannot merge an empty group")
+  if (sources.length === 1) return sources[0]!
+
+  const uniqueConnectionPoints = new Map<PointKey, ConnectionPoint>()
+  const mergedRootConnectionNames: Set<string> = new Set()
+  let isOffBoard = false
+  const mergedExternallyConnectedPointIds: PointId[][] = []
+  const mergedNetConnectionNames: Set<string> = new Set()
+  let nominalTraceWidth: number | undefined = undefined
+
+  sources.forEach((simpleRouteConnection) => {
+    // Collect unique points
+    simpleRouteConnection.pointsToConnect.forEach((connectionPoint) =>
+      uniqueConnectionPoints.set(getPointKey(connectionPoint), connectionPoint),
+    )
+
+    const rootConnectionNames = simpleRouteConnection.__rootConnectionNames
+    if (rootConnectionNames && rootConnectionNames.length > 0) {
+      for (const rootConnectionName of rootConnectionNames) {
+        mergedRootConnectionNames.add(rootConnectionName)
+      }
+    } else {
+      mergedRootConnectionNames.add(simpleRouteConnection.name)
     }
 
-    const uniqueConnectionPoints = new Map<PointKey, ConnectionPoint>()
-    const mergedRootConnectionNames: Set<string> = new Set()
-    let isOffBoard = false
-    const mergedExternallyConnectedPointIds: PointId[][] = []
-    const mergedNetConnectionNames: Set<string> = new Set()
-    let nominalTraceWidth: number | undefined = undefined
+    // Merge isOffBoard property
+    if (simpleRouteConnection.isOffBoard) {
+      isOffBoard = true
+    }
 
-    simpleRouteConnectionGroup.forEach((simpleRouteConnection) => {
-      // Collect unique points
-      simpleRouteConnection.pointsToConnect.forEach((connectionPoint) =>
-        uniqueConnectionPoints.set(
-          getPointKey(connectionPoint),
-          connectionPoint,
-        ),
+    // Merge externallyConnectedPointIds
+    if (simpleRouteConnection.externallyConnectedPointIds) {
+      mergedExternallyConnectedPointIds.push(
+        ...simpleRouteConnection.externallyConnectedPointIds,
       )
-
-      const rootConnectionNames = simpleRouteConnection.__rootConnectionNames
-      if (rootConnectionNames && rootConnectionNames.length > 0) {
-        for (const rootConnectionName of rootConnectionNames) {
-          mergedRootConnectionNames.add(rootConnectionName)
-        }
-      } else {
-        mergedRootConnectionNames.add(simpleRouteConnection.name)
-      }
-
-      // Merge isOffBoard property
-      if (simpleRouteConnection.isOffBoard) {
-        isOffBoard = true
-      }
-
-      // Merge externallyConnectedPointIds
-      if (simpleRouteConnection.externallyConnectedPointIds) {
-        mergedExternallyConnectedPointIds.push(
-          ...simpleRouteConnection.externallyConnectedPointIds,
-        )
-      }
-
-      // Collect netConnectionNames (deduplicate)
-      if (simpleRouteConnection.__netConnectionName) {
-        mergedNetConnectionNames.add(simpleRouteConnection.__netConnectionName)
-      }
-
-      // A merged net carries the widest width any of its connections requested
-      if (simpleRouteConnection.nominalTraceWidth !== undefined) {
-        nominalTraceWidth = Math.max(
-          nominalTraceWidth ?? 0,
-          simpleRouteConnection.nominalTraceWidth,
-        )
-      }
-    })
-
-    // Create the new merged SimpleRouteConnection
-    const newSimpleRouteConnection: SimpleRouteConnection = {
-      name: simpleRouteConnectionGroup
-        .map((connection) => connection.name)
-        .join("__"),
-      pointsToConnect: Array.from(uniqueConnectionPoints.values()),
-      isOffBoard: isOffBoard,
-      // Only include if there are any mergedExternallyConnectedPointIds
-      externallyConnectedPointIds:
-        mergedExternallyConnectedPointIds.length > 0
-          ? mergedExternallyConnectedPointIds
-          : undefined,
-      __netConnectionName:
-        mergedNetConnectionNames.size > 0
-          ? Array.from(mergedNetConnectionNames).join("__") // Combine unique net connection names
-          : undefined,
-      __rootConnectionNames: Array.from(mergedRootConnectionNames),
-      nominalTraceWidth,
     }
 
-    mergedGroups.push({
-      connection: newSimpleRouteConnection,
-      sources: simpleRouteConnectionGroup,
-    })
-  }
+    // Collect netConnectionNames (deduplicate)
+    if (simpleRouteConnection.__netConnectionName) {
+      mergedNetConnectionNames.add(simpleRouteConnection.__netConnectionName)
+    }
 
-  return mergedGroups
+    // A merged net carries the widest width any of its connections requested
+    if (simpleRouteConnection.nominalTraceWidth !== undefined) {
+      nominalTraceWidth = Math.max(
+        nominalTraceWidth ?? 0,
+        simpleRouteConnection.nominalTraceWidth,
+      )
+    }
+  })
+
+  return {
+    name: sources.map((connection) => connection.name).join("__"),
+    pointsToConnect: Array.from(uniqueConnectionPoints.values()),
+    isOffBoard: isOffBoard,
+    // Only include if there are any mergedExternallyConnectedPointIds
+    externallyConnectedPointIds:
+      mergedExternallyConnectedPointIds.length > 0
+        ? mergedExternallyConnectedPointIds
+        : undefined,
+    __netConnectionName:
+      mergedNetConnectionNames.size > 0
+        ? Array.from(mergedNetConnectionNames).join("__") // Combine unique net connection names
+        : undefined,
+    __rootConnectionNames: Array.from(mergedRootConnectionNames),
+    nominalTraceWidth,
+  }
 }
