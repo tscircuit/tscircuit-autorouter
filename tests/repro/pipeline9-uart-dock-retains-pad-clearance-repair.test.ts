@@ -26,8 +26,7 @@ test("Pipeline 9 retains the cleared CTS1-to-RTS1 pad contact after final repair
     errors.filter(
       (error) =>
         error.type === "pcb_trace_error" &&
-        (error.pcb_trace_error_id ===
-          "overlap_source_net_21_0_pcb_smtpad_54" ||
+        (error.pcb_trace_error_id === "overlap_source_net_21_0_pcb_smtpad_54" ||
           error.pcb_trace_error_id.startsWith(
             "missing_connection_source_net_21_0_",
           ) ||
