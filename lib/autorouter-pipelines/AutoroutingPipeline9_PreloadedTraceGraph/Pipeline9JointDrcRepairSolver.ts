@@ -13,6 +13,10 @@ import {
   type SimpleRouteJson as RepairSimpleRouteJson,
   type SimplifiedPcbTraces as RepairSimplifiedPcbTraces,
 } from "high-density-repair03/lib"
+import {
+  getDrcSnapshot,
+  hasNewTraceObstacleOverlaps,
+} from "high-density-repair03/lib/solvers/GlobalDrcForceImproveSolver/solverHelpers"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import { isObstacleConnectedToRoute } from "lib/solvers/TraceWidthSolver/isObstacleConnectedToRoute"
 import { combinePreloadedAndRoutedTraces } from "lib/utils/combinePreloadedAndRoutedTraces"
@@ -1784,7 +1788,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
           `Pipeline9 trace contact repair failed: ${solver.error}`,
         )
       if (!solver.solved) return
-      this.combinedOutput = solver.getOutput()
+      this.combinedOutput = this.selectTraceContactRepairOutput(solver)
       if (
         this.traceContactGuard.getNewContactPairs(this.combinedOutput).length >
         0
@@ -2266,6 +2270,44 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       indexedDrcCandidateCacheCapacity: INDEXED_DRC_CANDIDATE_CACHE_SIZE,
     }
     this.finishWithTraceContactCheck()
+  }
+
+  private selectTraceContactRepairOutput(
+    solver: TraceContactRepairSolver,
+  ): HighDensityRoute[] {
+    const output = solver.getOutput()
+    const reference = this.cachedReferenceDrcEvaluator
+    // The last repair may reject its candidate and restore the pre-force
+    // routes. In that case, also compare the original input to joint repair:
+    // a validated force improvement should not be lost with the later repair.
+    if (output !== solver.params.inputHdRoutes || !reference) return output
+    const { hdRoutes: jointInput, srj, connMap } = this.exactRepairParams!
+    if (this.traceContactGuard.getNewContactPairs(jointInput).length > 0) {
+      return output
+    }
+    const baseline = getDrcSnapshot(srj, output, reference, connMap)
+    const candidate = getDrcSnapshot(srj, jointInput, reference, connMap)
+    const connectivityErrorIds = (errors: typeof baseline.rawErrors): Set<string> =>
+      new Set(
+        errors.flatMap((error) => {
+          const id = error.pcb_trace_error_id
+          return typeof id === "string" &&
+            /^(missing_connection|missing_layer_connection|disconnected_endpoint)_/.test(id)
+            ? [id]
+            : []
+        }),
+      )
+    const baselineConnectivity = connectivityErrorIds(baseline.rawErrors)
+    if (
+      candidate.count >= baseline.count ||
+      hasNewTraceObstacleOverlaps(candidate, baseline) ||
+      [...connectivityErrorIds(candidate.rawErrors)].some(
+        (id) => !baselineConnectivity.has(id),
+      )
+    ) {
+      return output
+    }
+    return jointInput
   }
 
   private finishWithTraceContactCheck(): void {
