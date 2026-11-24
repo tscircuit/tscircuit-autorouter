@@ -62,21 +62,6 @@ export const createPipeline9AutoroutingDrcEvaluator = ({
       ),
     ]),
   )
-  const routingConnectivity = {
-    getViasConnectedByCopperPour: getViasConnectedByCopperPour(inputSrj),
-    isDeclaredTerminal: (
-      name: string,
-      endpoint: { x: number; y: number; layer: string },
-    ): boolean =>
-      terminals
-        .get(name)
-        ?.some(
-          (p) =>
-            (p.layer === endpoint.layer ||
-              p.layers?.includes(endpoint.layer)) &&
-            Math.hypot(p.x - endpoint.x, p.y - endpoint.y) <= 1e-6,
-        ) ?? false,
-  }
   const conversionOptions = {
     minTraceWidth: inputSrj.minTraceWidth,
     minViaDiameter: inputSrj.minViaDiameter,
@@ -95,6 +80,22 @@ export const createPipeline9AutoroutingDrcEvaluator = ({
     ...conversionOptions,
     representedPadObstacleIndexes,
   })
+  const routingConnectivity = {
+    sourceTraces: staticCircuitJson.filter((e) => e.type === "source_trace"),
+    getViasConnectedByCopperPour: getViasConnectedByCopperPour(inputSrj),
+    isDeclaredTerminal: (
+      name: string,
+      endpoint: { x: number; y: number; layer: string },
+    ): boolean =>
+      terminals
+        .get(name)
+        ?.some(
+          (p) =>
+            (p.layer === endpoint.layer ||
+              p.layers?.includes(endpoint.layer)) &&
+            Math.hypot(p.x - endpoint.x, p.y - endpoint.y) <= 1e-6,
+        ) ?? false,
+  }
   if (board) staticCircuitJson.push(board)
   const evaluateTraceObstacles = createTraceObstacleClearanceEvaluator(
     staticCircuitJson,

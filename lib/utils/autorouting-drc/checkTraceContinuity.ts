@@ -11,6 +11,7 @@ import type {
   PcbPort,
   PcbSmtPad,
   PcbTrace,
+  SourceTrace,
 } from "circuit-json"
 import {
   ConnectivityMap,
@@ -238,6 +239,7 @@ const getMissingConnectionCenter = (
 export const checkTraceContinuity = (
   circuitJson: AnyCircuitElement[],
   routing?: {
+    sourceTraces?: SourceTrace[]
     getViasConnectedByCopperPour?: (elements: AnyCircuitElement[]) => string[][]
     isDeclaredTerminal?: (connection: string, endpoint: Wire) => boolean
   },
@@ -245,9 +247,9 @@ export const checkTraceContinuity = (
   const errors: Record<string, unknown>[] = []
   const ports = circuitJson.filter((element) => element.type === "pcb_port")
   const traces = circuitJson.filter((element) => element.type === "pcb_trace")
-  const sourceTraces = circuitJson.filter(
-    (element) => element.type === "source_trace",
-  )
+  const sourceTraces =
+    routing?.sourceTraces ??
+    circuitJson.filter((element) => element.type === "source_trace")
   const sourceTraceById = new Map(
     sourceTraces.map((trace) => [trace.source_trace_id, trace]),
   )
@@ -272,10 +274,26 @@ export const checkTraceContinuity = (
   ]
   // Netlist IDs identify which copper an endpoint is meant to reach.
   // Only geometric contacts contribute edges to the physical map below.
-  const desiredConnectivity = getFullConnectivityMapFromCircuitJson(circuitJson)
-  const emittedVias = circuitJson.filter(
-    (element) => element.type === "pcb_via",
-  )
+  const desiredConnectivity = getFullConnectivityMapFromCircuitJson([
+    ...sourceTraces,
+    ...circuitJson.filter(
+      (e) =>
+        e.type !== "source_trace" &&
+        e.type !== "pcb_trace" &&
+        e.type !== "pcb_via",
+    ),
+  ])
+  const emittedVias = circuitJson.filter((e) => e.type === "pcb_via")
+  const owners: string[][] = []
+  for (const trace of traces) {
+    if (trace.source_trace_id)
+      owners.push([trace.pcb_trace_id, trace.source_trace_id])
+  }
+  for (const via of emittedVias) {
+    const owner = via.source_net_id ?? via.source_trace_id ?? via.pcb_trace_id
+    if (owner) owners.push([via.pcb_via_id, owner])
+  }
+  desiredConnectivity.addConnections(owners)
   const viaContacts: ViaContact[] = emittedVias
     .filter(
       (via) => Number.isFinite(via.outer_diameter) && via.outer_diameter > 0,
