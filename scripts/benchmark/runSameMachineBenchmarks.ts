@@ -73,6 +73,9 @@ export const runSameMachineBenchmarks = (
   dataset: string,
 ): SameMachineBenchmarkPlan => {
   const plan = createSameMachineBenchmarkPlan(benchmarkArgs, dataset)
+  if (process.env.BENCHMARK_CONTROL_ORDER === "head_base") {
+    plan.passes.reverse()
+  }
   const resultDirectory = resolve(directory, "same-machine-results")
   rmSync(resultDirectory, { recursive: true, force: true })
   mkdirSync(resultDirectory, { recursive: true })

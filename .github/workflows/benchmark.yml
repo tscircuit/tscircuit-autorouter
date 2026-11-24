@@ -65,6 +65,12 @@ on:
         required: false
         default: false
         type: boolean
+      control_order:
+        description: Execution order for isolated timing controls
+        required: false
+        default: base_head
+        type: choice
+        options: [base_head, head_base]
       same_machine_compare:
         description: Run the PR base and head sequentially on one Blacksmith runner
         required: false
@@ -1698,6 +1704,7 @@ jobs:
         env:
           BENCHMARK_ARGS_JSON: ${{ steps.refs.outputs.benchmark_args_json }}
           BENCHMARK_DATASET: ${{ steps.refs.outputs.dataset }}
+          BENCHMARK_CONTROL_ORDER: ${{ inputs.control_order }}
           BENCHMARK_NETWORKED_CACHE_PROPAGATION_DELAY_MS: ${{ steps.refs.outputs.networked_remote == 'true' && '65000' || '0' }}
           HD_CACHE2_SERVER_URL: ${{ steps.refs.outputs.networked_remote == 'true' && 'https://hd-cache2.tscircuit.com' || '' }}
         run: bun scripts/benchmark/runSameMachineBenchmarks.ts
