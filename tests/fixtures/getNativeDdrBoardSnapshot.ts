@@ -11,12 +11,12 @@ export function getNativeDdrBoardSnapshot({
   boardName,
   bounds,
   fixtureUrl,
-  maxIterations = Infinity,
+  maxHighDensityIterations = Infinity,
 }: {
   boardName: string
   bounds: SimpleRouteJson["bounds"]
   fixtureUrl: URL
-  maxIterations?: number
+  maxHighDensityIterations?: number
 }): string {
   const { inputSrj, preloadedConnections } = JSON.parse(
     gunzipSync(new Uint8Array(readFileSync(fixtureUrl))).toString("utf8"),
@@ -36,8 +36,12 @@ export function getNativeDdrBoardSnapshot({
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(inputSrj, {
     cacheProvider: null,
   })
-  // A finite step limit records unfinished routing without a wall-clock assertion.
-  while (!solver.solved && !solver.failed && solver.iterations < maxIterations)
+  // Bound only detailed routing; preprocessing keeps its normal iteration budget.
+  while (
+    !solver.solved &&
+    !solver.failed &&
+    (solver.highDensityRouteSolver?.iterations ?? 0) < maxHighDensityIterations
+  )
     solver.step()
   // Core commits the remaining copper only when the entire phase succeeds.
   if (solver.failed) {
