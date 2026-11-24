@@ -10,20 +10,15 @@ type ProtectedFindingKey = string
 function getProtectedFindingKey(
   error: DrcError,
 ): ProtectedFindingKey | undefined {
-  const id = error.pcb_trace_error_id
-  if (
-    typeof id === "string" &&
-    /^(missing_connection|missing_layer_connection|disconnected_endpoint|misaligned_via)_/.test(
-      id,
-    )
-  ) {
-    return id
+  if (error.drc_category === "trace_continuity") {
+    const id = error.pcb_trace_error_id
+    return typeof id === "string" ? id : JSON.stringify(error)
   }
   const clearance = error.worst_actual_clearance ?? error.actual_clearance
   if (
     error.drc_source === "fixed_copper" ||
     (typeof clearance === "number" && clearance < 0) ||
-    (typeof id === "string" && id.startsWith("trace_too_close_to_board_"))
+    error.drc_category === "board_edge"
   ) {
     // Require the same complete record to carry an existing physical finding
     // forward. A changed location, depth, or unknown identity is not proof.
