@@ -29,6 +29,17 @@ type PathEdge = {
   hops: PathHop[]
 }
 
+function isSamePadLocation(a: ConnectionPoint, b: ConnectionPoint): boolean {
+  if (a === b) return true
+  if (a.x !== b.x || a.y !== b.y) return false
+  const layersA = getConnectionPointLayers(a)
+  const layersB = getConnectionPointLayers(b)
+  return (
+    layersA.length === layersB.length &&
+    layersA.every((layer) => layersB.includes(layer))
+  )
+}
+
 /**
  * Converts a net containing many points to connect into an array of point pair
  * connections.
@@ -39,10 +50,8 @@ type PathEdge = {
  * Where we create the minimum number of pairs, we're using a minimum spanning
  * tree (MST). Consecutive IDs of a connection's `path` enter the MST as
  * zero-weight edges, so a written trace path is routed in order and the other
- * points of the net join it by distance.
- *
- * Sometimes it can be used to add additional traces to help make sure we
- * distribute load effectively. In this version we don't do that!
+ * points of the net join it by distance. An explicitly sized hop is kept with
+ * its own width even when it closes a loop.
  */
 export class NetToPointPairsSolver extends BaseSolver {
   override getSolverName(): string {
@@ -114,11 +123,13 @@ export class NetToPointPairsSolver extends BaseSolver {
       for (const hop of hops) {
         const from = pointsById.get(hop.fromPointId)
         const to = pointsById.get(hop.toPointId)
-        if (!from || !to) continue
+        if (!from || !to || isSamePadLocation(from, to)) continue
         const sharedEdge = edges.find(
           (edge) =>
-            (edge.from === from && edge.to === to) ||
-            (edge.from === to && edge.to === from),
+            (isSamePadLocation(edge.from, from) &&
+              isSamePadLocation(edge.to, to)) ||
+            (isSamePadLocation(edge.from, to) &&
+              isSamePadLocation(edge.to, from)),
         )
         if (sharedEdge) sharedEdge.hops.push(hop)
         else edges.push({ from, to, weight: 0, hops: [hop] })
@@ -170,7 +181,12 @@ export class NetToPointPairsSolver extends BaseSolver {
 
     if (connection.pointsToConnect.length === 2) {
       const [startPoint, endPoint] = connection.pointsToConnect
-      if (startPoint && endPoint && arePointsConnected(startPoint, endPoint)) {
+      if (
+        startPoint &&
+        endPoint &&
+        (arePointsConnected(startPoint, endPoint) ||
+          isSamePadLocation(startPoint, endPoint))
+      ) {
         return
       }
       this.emitConnection(
@@ -210,9 +226,7 @@ export class NetToPointPairsSolver extends BaseSolver {
     // Kruskal drops the last edge of a cycle. A requested width still needs
     // that physical pair even when the other requested pairs already span it.
     for (const pathEdge of fixedWidthEdges) {
-      if (pathEdge.from !== pathEdge.to && !edges.includes(pathEdge)) {
-        edges.push(pathEdge)
-      }
+      if (!edges.includes(pathEdge)) edges.push(pathEdge)
     }
 
     let mstIdx = 0

@@ -6,6 +6,8 @@ import { getInitiallyConnectedMapFromSimpleRouteJson } from "lib/utils/get-initi
 test("keeps each requested width edge of a loop and emits a repeated hop once", () => {
   const a = { pointId: "A", x: 0, y: 0, layer: "top" }
   const b = { pointId: "B", x: 4, y: 0, layer: "top" }
+  const aliasA = { ...a, pointId: "A2" }
+  const aliasB = { pointId: "B2", x: b.x, y: b.y, layers: ["top"] }
   const c = { pointId: "C", x: 2, y: 1, layer: "top" }
   const d = { pointId: "D", x: 2, y: 2, layer: "top" }
   const input: SimpleRouteJson = {
@@ -28,9 +30,9 @@ test("keeps each requested width edge of a loop and emits a repeated hop once", 
       },
       {
         name: "shared",
-        path: ["B", "A"],
+        path: ["B", "B2", "A2"],
         width: 0.8,
-        pointsToConnect: [b, a],
+        pointsToConnect: [b, aliasB, aliasA],
       },
       { name: "net", width: 0.3, pointsToConnect: [a, d] },
     ],
