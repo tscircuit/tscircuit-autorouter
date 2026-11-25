@@ -4,10 +4,10 @@ import { getBugReportSnapshotSvg } from "lib/testing/getBugReportSnapshotSvg"
 import type { SimpleRouteJson } from "lib/types"
 
 test("routes explicit width paths and a tap on the same net", async (): Promise<void> => {
-  const a = { pointId: "A", x: -5, y: 0, layer: "top" }
-  const b = { pointId: "B", x: 5, y: 0, layer: "top" }
-  const c = { pointId: "C", x: 0, y: 2, layer: "top" }
-  const d = { pointId: "D", x: 0, y: 4, layer: "top" }
+  const a = { pointId: "A", pcb_port_id: "A", x: -5, y: 0, layer: "top" }
+  const b = { pointId: "B", pcb_port_id: "B", x: 5, y: 0, layer: "top" }
+  const c = { pointId: "C", pcb_port_id: "C", x: 0, y: 2, layer: "top" }
+  const d = { pointId: "D", pcb_port_id: "D", x: 0, y: 4, layer: "top" }
   const input: SimpleRouteJson = {
     bounds: { minX: -7, maxX: 7, minY: -2, maxY: 6 },
     layerCount: 2,

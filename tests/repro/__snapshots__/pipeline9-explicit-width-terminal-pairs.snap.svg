@@ -45,4 +45,4 @@ VCC" data-x="0" data-y="4" x="294.54545454545456" y="192.72727272727275" width="
               document.currentScript.parentElement.addEventListener('mouseleave', () => {
                 document.currentScript.parentElement.getElementById('crosshair').style.display = 'none';
               });
-            ]]></script><g data-testid="relaxed-drc-summary"><rect x="12" y="12" width="300" height="44" rx="6" fill="white" stroke="#b91c1c"/><text x="24" y="40" font-family="Arial, sans-serif" font-size="20" font-weight="600" fill="#b91c1c">Relaxed DRC errors: 2</text></g></svg>
+            ]]></script><g data-testid="relaxed-drc-summary"><rect x="12" y="12" width="300" height="44" rx="6" fill="white" stroke="#166534"/><text x="24" y="40" font-family="Arial, sans-serif" font-size="20" font-weight="600" fill="#166534">Relaxed DRC errors: 0</text></g></svg>
