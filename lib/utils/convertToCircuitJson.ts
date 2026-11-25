@@ -8,7 +8,7 @@ import type {
   SourceTrace,
 } from "circuit-json"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import { getViaLayers } from "high-density-repair03/lib"
+import { getViaDrillLayers } from "./getViaDrillLayers"
 import { Obstacle, SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 import { HighDensityRoute } from "lib/types/high-density-types"
 import { getConnectionPointLayers } from "lib/types/srj-types"
@@ -1033,23 +1033,6 @@ export function createPcbPadElements(
  * @param minViaDiameter Default diameter for vias
  * @returns An array of PcbVia elements
  */
-function getViaDrillLayers(
-  via: { from_layer: string; to_layer: string; layers?: string[] },
-  layerCount: number,
-  allowBlindAndBuriedVias: boolean,
-): LayerName[] {
-  if (allowBlindAndBuriedVias && via.layers !== undefined) {
-    return via.layers as LayerName[]
-  }
-  const drillSpan = allowBlindAndBuriedVias
-    ? via
-    : {
-        from_layer: "top",
-        to_layer: mapZToLayerName(layerCount - 1, layerCount),
-      }
-  return getViaLayers(drillSpan, layerCount) as LayerName[]
-}
-
 function extractViasFromRoutes(
   routes: SimplifiedPcbTrace[] | HighDensityRoute[],
   layerCount: number,
