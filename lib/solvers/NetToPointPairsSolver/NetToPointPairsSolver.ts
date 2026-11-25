@@ -105,8 +105,8 @@ export class NetToPointPairsSolver extends BaseSolver {
         })
       }
       this.pathHopsByConnectionName.set(name, hops)
-      // The path owns its width. Only the other connections set the net width.
-      return { ...connection, nominalTraceWidth: undefined, width: undefined }
+      // The bus width is the default for branches outside the written path.
+      return { ...connection, nominalTraceWidth: busWidth, width: undefined }
     })
     this.unprocessedConnections = mergeConnections(connectionsForMst)
     this.newConnections = []
