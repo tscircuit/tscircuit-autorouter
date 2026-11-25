@@ -79,9 +79,12 @@ export class NetToPointPairsSolver extends BaseSolver {
       const busWidth = busTraceWidthsByConnectionName.get(name)
       const traceWidth = connection.nominalTraceWidth ?? connection.width
       const nominalTraceWidth =
-        busWidth === undefined ? traceWidth : Math.max(busWidth, traceWidth ?? 0)
+        busWidth === undefined
+          ? traceWidth
+          : Math.max(busWidth, traceWidth ?? 0)
       if (!path || path.length < 2) {
-        if (nominalTraceWidth === connection.nominalTraceWidth) return connection
+        if (nominalTraceWidth === connection.nominalTraceWidth)
+          return connection
         return { ...connection, nominalTraceWidth }
       }
       const hops: PathHop[] = []
