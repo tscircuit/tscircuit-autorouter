@@ -179,6 +179,10 @@ export interface SimpleRouteConnection {
   isOffBoard?: boolean
   netConnectionName?: string
   __netConnectionName?: string
+  /** Maximum routed length of this connection, in mm. */
+  maxLength?: number
+  /** Maximum number of vias on this connection. */
+  maxViaCount?: number
   nominalTraceWidth?: number
   /** @deprecated Use `nominalTraceWidth` instead. */
   width?: number

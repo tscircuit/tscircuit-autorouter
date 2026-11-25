@@ -1,12 +1,14 @@
+import { all_layers } from "circuit-json"
 import { pointToBoxDistance } from "@tscircuit/math-utils"
 import type {
   AnyCircuitElement,
   PcbBoard,
   PcbTrace,
   PcbVia,
+  SourceTrace,
 } from "circuit-json"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import { getViaLayers } from "high-density-repair03/lib"
+import { getViaDrillLayers } from "./getViaDrillLayers"
 import { Obstacle, SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 import { HighDensityRoute } from "lib/types/high-density-types"
 import { getConnectionPointLayers } from "lib/types/srj-types"
@@ -427,7 +429,7 @@ function createSourceTraces(
   sourceSrj = srj,
   sourceConnectivityMap?: ConnectivityMap,
 ): AnyCircuitElement[] {
-  const sourceTraces: AnyCircuitElement[] = []
+  const sourceTraces: SourceTrace[] = []
   const connections =
     sourceSrj === srj
       ? srj.connections
@@ -474,7 +476,7 @@ function createSourceTraces(
       getSrjDeclaredConnectionReferences(connection),
     )
 
-    // Physical terminals fix the net; unbound routes can attach by geometry.
+    // A named terminal fixes the net even when there is no component pad.
     const obstaclesContainingEndpoints: Obstacle[] = []
     const hdRoute = hdRoutes.find((route): boolean => {
       const connectionName =
@@ -491,7 +493,8 @@ function createSourceTraces(
           if (
             endpoint.layers.some((layer) => obstacle.layers.includes(layer)) &&
             pointToBoxDistance(endpoint, obstacle) <= 0 &&
-            (connectedPortIds.length === 0 ||
+            ((connectedPortIds.length === 0 &&
+              connectedPointIds.length === 0) ||
               obstacle.netIsAssignable ||
               obstacle.connectedTo.some((id) => connectionReferences.has(id)))
           ) {
@@ -644,6 +647,28 @@ function createSourceTraces(
     }
   }
 
+  // A via can name the pour net directly, or belong to a trace on that net.
+  const traceById = new Map(
+    sourceTraces.map((trace) => [trace.source_trace_id, trace]),
+  )
+  for (const tile of obstacles) {
+    const [netId] = tile.connectedTo
+    if (!tile.isCopperPour || !netId) continue
+    for (const ref of tile.connectedTo) {
+      const traceId = resolveCircuitJsonSourceTraceId(
+        circuitJsonSourceTraceIdResolver,
+        ref,
+      )
+      if (!traceId || traceId === netId) continue
+      const trace = traceById.get(traceId)
+      if (!trace || trace.connected_source_net_ids?.includes(netId)) continue
+      trace.connected_source_net_ids = [
+        ...(trace.connected_source_net_ids ?? []),
+        netId,
+      ]
+    }
+  }
+
   return sourceTraces
 }
 
@@ -710,18 +735,7 @@ function getBestObstaclePcbPortId(
   return bestPcbPortId ?? candidatePortIds[0]
 }
 
-const layerNames = new Set<string>([
-  "top",
-  "bottom",
-  "inner1",
-  "inner2",
-  "inner3",
-  "inner4",
-  "inner5",
-  "inner6",
-  "inner7",
-  "inner8",
-])
+const layerNames = new Set<string>(all_layers)
 
 const isLayerName = (layer: string): layer is LayerName => layerNames.has(layer)
 
@@ -1019,23 +1033,6 @@ export function createPcbPadElements(
  * @param minViaDiameter Default diameter for vias
  * @returns An array of PcbVia elements
  */
-function getViaDrillLayers(
-  via: { from_layer: string; to_layer: string; layers?: string[] },
-  layerCount: number,
-  allowBlindAndBuriedVias: boolean,
-): LayerName[] {
-  if (allowBlindAndBuriedVias && via.layers !== undefined) {
-    return via.layers as LayerName[]
-  }
-  const drillSpan = allowBlindAndBuriedVias
-    ? via
-    : {
-        from_layer: "top",
-        to_layer: mapZToLayerName(layerCount - 1, layerCount),
-      }
-  return getViaLayers(drillSpan, layerCount) as LayerName[]
-}
-
 function extractViasFromRoutes(
   routes: SimplifiedPcbTrace[] | HighDensityRoute[],
   layerCount: number,
@@ -1232,6 +1229,27 @@ export function convertToCircuitJson(
       options.representedPadObstacleIndexes,
     ),
   )
+
+  for (const [index, tile] of (
+    originalSrj ?? srjWithPointPairs
+  ).obstacles.entries()) {
+    if (!tile.isCopperPour) continue
+    for (const layer of tile.layers) {
+      if (!isLayerName(layer)) continue
+      circuitJson.push({
+        type: "pcb_copper_pour",
+        pcb_copper_pour_id: `pour_${index}_${layer}`,
+        shape: "rect",
+        center: tile.center,
+        width: tile.width,
+        height: tile.height,
+        rotation: tile.ccwRotationDegrees,
+        layer,
+        covered_with_solder_mask: true,
+        source_net_id: tile.connectedTo[0],
+      })
+    }
+  }
 
   // Extract and add vias as independent pcb_via elements
   circuitJson.push(

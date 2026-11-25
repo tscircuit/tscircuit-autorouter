@@ -1,3 +1,4 @@
+import { getWireSegmentAtRoutePoints } from "lib/utils/getWireSegmentAtRoutePoints"
 import { Circle, Line, Point, Rect } from "graphics-debug"
 import { getColorMap, safeTransparentize } from "lib/solvers/colors"
 import { SimpleRouteJson } from "lib/types"
@@ -25,7 +26,7 @@ const GRAPHICS_LAYER_COLORS = {
   inner6: "magenta",
   inner7: "lime",
   inner8: "brown",
-} satisfies Record<LayerName, string>
+} satisfies Partial<Record<LayerName, string>>
 
 const OBSTACLE_LAYER_TRANSPARENCY = 0.5
 
@@ -37,7 +38,9 @@ export type ConvertSrjToGraphicsObjectOptions = {
 
 function getGraphicsLayerColor(layerName: string): string {
   if (Object.hasOwn(GRAPHICS_LAYER_COLORS, layerName)) {
-    return GRAPHICS_LAYER_COLORS[layerName as LayerName]
+    return GRAPHICS_LAYER_COLORS[
+      layerName as keyof typeof GRAPHICS_LAYER_COLORS
+    ]
   }
 
   const innerLayerMatch = /^inner([1-9]\d*)$/.exec(layerName)
@@ -223,46 +226,51 @@ export const convertSrjToGraphicsObject = (
               layerCount,
             ),
           })
-        } else if (
-          routePoint.route_type === "wire" &&
-          nextRoutePoint.route_type === "wire" &&
-          nextRoutePoint.layer === routePoint.layer
-        ) {
+        } else {
+          const segment = getWireSegmentAtRoutePoints(
+            routePoint,
+            nextRoutePoint,
+          )
+          if (!segment) {
+            currentWireLine = undefined
+            continue
+          }
+          const [start, end] = segment
           // Skip wire segments that are inside a jumper (these are handled by the jumper drawing)
           if (
             isWireSegmentInsideJumper(
-              { x: routePoint.x, y: routePoint.y },
-              { x: nextRoutePoint.x, y: nextRoutePoint.y },
+              { x: start.x, y: start.y },
+              { x: end.x, y: end.y },
             )
           ) {
             currentWireLine = undefined
             continue
           }
 
-          traceWidth = routePoint.width
-          const isTopLayer = routePoint.layer === "top"
+          traceWidth = start.width
+          const isTopLayer = start.layer === "top"
           const baseColor =
             traceColorMode === "net"
               ? colorMap[trace.connection_name]!
-              : getGraphicsLayerColor(routePoint.layer)
+              : getGraphicsLayerColor(start.layer)
 
-          const layer = `z${mapLayerNameToZ(routePoint.layer, layerCount)}`
+          const layer = `z${mapLayerNameToZ(start.layer, layerCount)}`
           if (
             currentWireLine &&
             currentWireLine.layer === layer &&
             currentWireLine.strokeWidth === traceWidth
           ) {
             currentWireLine.points.push({
-              x: nextRoutePoint.x,
-              y: nextRoutePoint.y,
+              x: end.x,
+              y: end.y,
             })
             continue
           }
 
           currentWireLine = {
             points: [
-              { x: routePoint.x, y: routePoint.y },
-              { x: nextRoutePoint.x, y: nextRoutePoint.y },
+              { x: start.x, y: start.y },
+              { x: end.x, y: end.y },
             ],
             layer,
             strokeWidth: traceWidth,
@@ -276,8 +284,6 @@ export const convertSrjToGraphicsObject = (
             ...(isTopLayer ? {} : { strokeDash: [0.2, 0.2] }),
           }
           lines.push(currentWireLine)
-        } else {
-          currentWireLine = undefined
         }
       }
     }

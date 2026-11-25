@@ -5,7 +5,10 @@ import type {
   NodeWithPortPoints,
   PortPoint,
 } from "lib/types/high-density-types"
-import type { Obstacle } from "lib/types/srj-types"
+import type { Obstacle, SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
+import { getViaDimensions } from "lib/utils/getViaDimensions"
+import { getViaDrillLayers } from "lib/utils/getViaDrillLayers"
+import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { isPointInRect } from "lib/utils/isPointInRect"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 import type { PreloadedHighDensityRoute } from "./convertPreloadedTraceToHdRoutes"
@@ -105,4 +108,38 @@ export function preparePreloadedTerminalRoutes(
     // This path is component copper; regional repair must preserve it.
     return { ...route, isThroughObstacle: true }
   })
+}
+
+/** Terminal vias are appended during trace export. Include their barrels in
+ * repair's fixed copper. Interior vias already travel with the movable route. */
+export function getTerminalViaRoutes(
+  traces: SimplifiedPcbTrace[],
+  srj: SimpleRouteJson,
+): HighDensityRoute[] {
+  const routes: HighDensityRoute[] = []
+  for (const trace of traces) {
+    const first = trace.route[0]
+    const last = trace.route.findLast((point) => point.route_type !== "jumper")
+    for (const via of new Set([first, last])) {
+      if (via?.route_type !== "via") continue
+      const { x, y } = via
+      const layers = getViaDrillLayers(
+        via,
+        srj.layerCount,
+        srj.allowBlindAndBuriedVias === true,
+      )
+      routes.push({
+        connectionName: trace.connection_name,
+        route: [layers[0]!, layers.at(-1)!].map((layer) => ({
+          x,
+          y,
+          z: mapLayerNameToZ(layer, srj.layerCount),
+        })),
+        vias: [{ x, y }],
+        viaDiameter: via.via_diameter ?? getViaDimensions(srj).padDiameter,
+        traceThickness: srj.minTraceWidth,
+      })
+    }
+  }
+  return routes
 }

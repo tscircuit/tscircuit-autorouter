@@ -1,3 +1,4 @@
+import { getWireSegmentAtRoutePoints } from "lib/utils/getWireSegmentAtRoutePoints"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { SimplifiedPcbTrace } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
@@ -72,7 +73,6 @@ export const convertPreloadedTraceToHdRoutes = (
         pointIndex,
         pointIndex,
       )
-      continue
     }
 
     if (point.route_type === "through_obstacle") {
@@ -96,28 +96,24 @@ export const convertPreloadedTraceToHdRoutes = (
     }
 
     const nextPoint = trace.route[pointIndex + 1]
-    if (
-      point.route_type !== "wire" ||
-      nextPoint?.route_type !== "wire" ||
-      point.layer !== nextPoint.layer
-    ) {
-      continue
-    }
-
+    if (!nextPoint) continue
+    const segment = getWireSegmentAtRoutePoints(point, nextPoint)
+    if (!segment) continue
+    const [start, end] = segment
     addRoute(
       [
         {
-          x: point.x,
-          y: point.y,
-          z: mapLayerNameToZ(point.layer, layerCount),
+          x: start.x,
+          y: start.y,
+          z: mapLayerNameToZ(start.layer, layerCount),
         },
         {
-          x: nextPoint.x,
-          y: nextPoint.y,
-          z: mapLayerNameToZ(nextPoint.layer, layerCount),
+          x: end.x,
+          y: end.y,
+          z: mapLayerNameToZ(end.layer, layerCount),
         },
       ],
-      Math.max(point.width, nextPoint.width),
+      Math.max(start.width, end.width),
       defaultViaDiameter,
       [],
       pointIndex,

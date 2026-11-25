@@ -29,7 +29,7 @@ type Pipeline9PreloadedFixedRouteState = {
 export function getOriginalFixedHdRoutes(
   pipeline: AutoroutingPipelineSolver9_PreloadedTraceGraph,
 ): PreloadedHighDensityRoute[] {
-  return (pipeline.originalSrj.traces ?? []).flatMap((trace, traceIndex) =>
+  return (pipeline.srj.traces ?? []).flatMap((trace, traceIndex) =>
     convertPreloadedTraceToHdRoutes(
       trace,
       traceIndex,
@@ -56,7 +56,7 @@ function getPreloadedFixedRouteStateAfterHighDensity(
   const changedSections = getChangedPreloadedTraceSections(pipeline)
   const fixedRoutesWithoutChangedSections =
     removeChangedSectionsFromFixedHdRoutes({
-      traces: pipeline.originalSrj.traces ?? [],
+      traces: pipeline.srj.traces ?? [],
       fixedHdRoutes: originalFixedRoutes,
       sections: changedSections,
     })
@@ -64,7 +64,7 @@ function getPreloadedFixedRouteStateAfterHighDensity(
     changedSections.length === 0
       ? []
       : getMaterializedPreloadedSectionHdRoutes({
-          traces: pipeline.originalSrj.traces ?? [],
+          traces: pipeline.srj.traces ?? [],
           sections: changedSections,
           stitchedHdRoutes:
             pipeline.highDensityStitchSolver?.mergedHdRoutes ?? [],
@@ -76,8 +76,7 @@ function getPreloadedFixedRouteStateAfterHighDensity(
   const materializedOriginalRouteNames = originalFixedRoutes
     .filter((route) =>
       materializedTraceIds.has(
-        pipeline.originalSrj.traces?.[route.preloadedTraceIndex]
-          ?.pcb_trace_id ?? "",
+        pipeline.srj.traces?.[route.preloadedTraceIndex]?.pcb_trace_id ?? "",
       ),
     )
     .map((route) => route.connectionName)
@@ -132,7 +131,7 @@ export function getPreloadedTraceUpdatesAfterHighDensity(
       : fixedRouteState.updatedFixedRoutes
 
   return applyFixedRouteReplacementsToPreloadedTraces({
-    originalTraces: pipeline.originalSrj.traces ?? [],
+    originalTraces: pipeline.srj.traces ?? [],
     originalFixedRoutes: fixedRouteState.originalFixedRoutes,
     updatedFixedRoutes,
     replacedConnectionNames: fixedRouteState.replacedConnectionNames,

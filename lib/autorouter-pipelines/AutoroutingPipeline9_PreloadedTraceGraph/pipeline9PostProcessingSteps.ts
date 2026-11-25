@@ -9,7 +9,7 @@ import type { SimplifiedPcbTraces } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { NetToPointPairsSolver } from "../../solvers/NetToPointPairsSolver/NetToPointPairsSolver"
 import { LengthMatchingPostProcessingSolver } from "../../solvers/length-matching-post-processing-solver"
-import { assignUniquePcbTraceIdsToNewTraces } from "./assignUniquePcbTraceIdsToNewTraces"
+import { assignUniquePcbTraceIdsToNewTraces } from "lib/utils/assignUniquePcbTraceIdsToNewTraces"
 import { getTerminalLayerIndicesByPcbPortId } from "./getTerminalLayerIndicesByPcbPortId"
 import { canonicalizePipeline9HdRoutes } from "./canonicalizePipeline9HdRoutes"
 import { convertPreloadedTraceToHdRoutes } from "./convertPreloadedTraceToHdRoutes"
@@ -40,7 +40,7 @@ function getCleanupTraces(
       defaultViaHoleDiameter: pipeline.viaHoleDiameter,
       connMap: pipeline.connMap,
     }),
-    pipeline.originalSrj.traces ?? [],
+    pipeline.srj.traces ?? [],
   )
 }
 
@@ -83,7 +83,7 @@ export const pipeline9PostProcessingSteps = [
         {
           srj: srjWithMaterializedPreloadedTraces,
           srjWithPointPairs: srjWithMaterializedPreloadedTraces,
-          originalSrj: pipeline.originalSrj,
+          originalSrj: { ...pipeline.originalSrj, traces: pipeline.srj.traces },
           newConnections: pipeline.netToPointPairsSolver?.newConnections ?? [],
           newHdRoutes: pipeline.globalDrcForceImproveSolver!.getOutput(),
           originalNewHdRoutes:

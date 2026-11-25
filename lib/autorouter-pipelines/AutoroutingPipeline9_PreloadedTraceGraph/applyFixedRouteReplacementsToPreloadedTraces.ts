@@ -143,6 +143,7 @@ const convertUpdatedTraceRoutes = ({
     }),
   }
   return convertHdRouteToSimplifiedRoute(combinedRoute, layerCount, {
+    originalTrace: trace,
     defaultViaHoleDiameter,
     obstacles,
     connMap,

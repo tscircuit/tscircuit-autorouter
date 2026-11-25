@@ -210,6 +210,7 @@ export class EscapeViaLocationSolver extends BaseSolver {
 
     return {
       representsFutureVia: true,
+      shape: "circle",
       obstacleId: `escape-via-obstacle:${escapeVia.pointId}`,
       type: "rect",
       layers,

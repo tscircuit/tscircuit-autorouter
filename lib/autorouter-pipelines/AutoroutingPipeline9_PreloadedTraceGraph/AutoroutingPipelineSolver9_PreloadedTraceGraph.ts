@@ -1,3 +1,4 @@
+import type { LengthConstrainedTraceSolver } from "../../solvers/LengthConstrainedTraceSolver/LengthConstrainedTraceSolver"
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import type { Pipeline9EffortCleanupSolver } from "./Pipeline9EffortCleanupSolver"
 import type { RectDiffPipeline } from "@tscircuit/rectdiff"
@@ -56,7 +57,7 @@ import type { StrawSolver } from "../../solvers/StrawSolver/StrawSolver"
 import { TraceSimplificationSolver } from "@tscircuit/trace-simplification-solver"
 import type { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolver"
 import type { LengthMatchingPostProcessingSolver } from "../../solvers/length-matching-post-processing-solver"
-import { assignUniquePcbTraceIdsToNewTraces } from "./assignUniquePcbTraceIdsToNewTraces"
+import { assignUniquePcbTraceIdsToNewTraces } from "lib/utils/assignUniquePcbTraceIdsToNewTraces"
 import { canonicalizePipeline9HdRoutes } from "./canonicalizePipeline9HdRoutes"
 import { Pipeline9HighDensitySolver } from "./Pipeline9HighDensitySolver"
 import type { Pipeline9JointDrcRepairSolver } from "./Pipeline9JointDrcRepairSolver"
@@ -145,7 +146,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   connMap!: ConnectivityMap
   srjWithEscapeViaLocations?: SimpleRouteJson
   srjWithPointPairs?: SimpleRouteJson
-  originalSrj: SimpleRouteJson
+  lengthConstrainedTraceSolver?: LengthConstrainedTraceSolver
+  readonly originalSrj: SimpleRouteJson
   private readonly excludedGaps = new ClearanceGapIndex()
   private hasRefinedFixedWireViaSites = false
   capacityNodes: CapacityMeshNode[] | null = null
@@ -320,7 +322,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     const refined = splitNodesWithoutThroughViaSite({
       nodes,
       layerChangeNodeIds,
-      srj: this.originalSrj,
+      srj: this.srj,
       connMap: this.connMap,
       viaDiameter: this.viaDiameter,
     })
@@ -337,7 +339,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     const { clearanceGapsByPortId } = this.preloadedTraceGraphSolver!
     const checkViaSites =
       !this.hasRefinedFixedWireViaSites &&
-      this.originalSrj.traces?.some((trace) => trace.isFixed)
+      this.srj.traces?.some((trace) => trace.isFixed)
     if (!checkViaSites && clearanceGapsByPortId.size < 2) return false
 
     const { nodesWithPortPoints } = this.portPointPathingSolver!.getOutput()
@@ -559,7 +561,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     })
     return assignUniquePcbTraceIdsToNewTraces(
       routedTraces,
-      this.originalSrj.traces ?? [],
+      this.srj.traces ?? [],
     )
   }
 
@@ -584,9 +586,14 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         "Pipeline9 invariant violated: solved pipeline is missing the unconditional power-trace expansion solver",
       )
     }
+    const inputTraceIds = new Set(
+      this.originalSrj.traces?.map((trace) => trace.pcb_trace_id),
+    )
     return [
       ...this.getPowerTraceExpansionFixedTraces().filter(
-        (trace) => trace.__replaces_pcb_trace_id !== undefined,
+        (trace) =>
+          trace.__replaces_pcb_trace_id !== undefined ||
+          !inputTraceIds.has(trace.pcb_trace_id),
       ),
       ...this.powerTraceExpansionSolver.getOutput(),
     ]

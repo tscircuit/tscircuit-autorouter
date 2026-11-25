@@ -30,6 +30,7 @@ import type { HighDensityRoute } from "lib/types/high-density-types"
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 import { getViaToPadClearance } from "lib/utils/getViaToPadClearance"
+import { getTerminalViaRoutes } from "./pipeline9TerminalRoutes"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 import { createHdRoutesToSimplifiedPcbTracesConverter } from "lib/utils/convertHdRoutesToSimplifiedPcbTraces"
 import {
@@ -40,7 +41,7 @@ import { getPipeline9BoundedRepairBudget } from "./applyPipeline9BoundedRegional
 import { Pipeline9RegionalB01RepairSolver } from "./Pipeline9RegionalB01RepairSolver"
 import { Pipeline9BoundedRegionalRepairSolver } from "./Pipeline9BoundedRegionalRepairSolver"
 import { applyPipeline9TerminalEscapeRelocations } from "./applyPipeline9TerminalEscapeRelocations"
-import { assignUniquePcbTraceIdsToNewTraces } from "./assignUniquePcbTraceIdsToNewTraces"
+import { assignUniquePcbTraceIdsToNewTraces } from "lib/utils/assignUniquePcbTraceIdsToNewTraces"
 import {
   type PreloadedHighDensityRoute,
   convertPreloadedTraceToHdRoutes,
@@ -665,6 +666,9 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
   readonly inputNewHdRoutes: HighDensityRoute[]
   readonly inputUpdatedPreloadedTraces: SimplifiedPcbTrace[]
   readonly movablePreloadedSections: MovablePreloadedSection[]
+  private readonly convertNewRoutes: ReturnType<
+    typeof createHdRoutesToSimplifiedPcbTracesConverter
+  >
   readonly fixedPreloadedObstacleRoutes: PreloadedHighDensityRoute[]
   readonly syntheticConnectionNames: ReadonlySet<string>
   exactRepairSolver?: GlobalDrcBranchPortfolioSolver
@@ -845,7 +849,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     )
     // Repair candidates change copper geometry, but their connection metadata
     // and obstacle connectivity remain fixed throughout this solver's lifetime.
-    const convertNewRoutes = createHdRoutesToSimplifiedPcbTracesConverter({
+    this.convertNewRoutes = createHdRoutesToSimplifiedPcbTracesConverter({
       connections: params.newConnections,
       originalConnections: params.originalSrj.connections,
       layerCount: params.layerCount,
@@ -853,7 +857,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       defaultViaHoleDiameter: params.defaultViaHoleDiameter,
       connMap: params.connMap,
     })
-    const currentNewTraces = convertNewRoutes(params.newHdRoutes)
+    const currentNewTraces = this.convertNewRoutes(params.newHdRoutes)
     const currentNewTraceIds = new Set(
       currentNewTraces.map((trace) => trace.pcb_trace_id),
     )
@@ -1300,7 +1304,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
           evaluatedPreloadedRouteByName.set(route.connectionName, route)
         }
       }
-      const evaluatedNewTraces = convertNewRoutes(evaluatedNewRoutes)
+      const evaluatedNewTraces = this.convertNewRoutes(evaluatedNewRoutes)
       const uniquelyNamedNewTraces = assignUniquePcbTraceIdsToNewTraces(
         evaluatedNewTraces,
         params.originalSrj.traces ?? [],
@@ -1336,6 +1340,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
               params.layerCount,
               {
                 defaultViaHoleDiameter: params.defaultViaHoleDiameter,
+                originalTrace: movableSection.originalTrace,
                 connectedMultilayerObstacles:
                   getConnectedMultilayerObstacles(evaluatedRoute),
                 connMap: params.connMap,
@@ -2190,7 +2195,13 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         ],
       },
       routes: regionalB01RepairResult.routes,
-      fixedHdRoutes: this.fixedPreloadedObstacleRoutes,
+      fixedHdRoutes: [
+        ...this.fixedPreloadedObstacleRoutes,
+        ...getTerminalViaRoutes(
+          this.convertNewRoutes(regionalB01RepairResult.routes),
+          this.params.originalSrj,
+        ),
+      ],
       viaHoleDiameter: this.params.defaultViaHoleDiameter,
       syntheticConnectionNames: this.syntheticConnectionNames,
       drcEvaluator: this.cachedReferenceDrcEvaluator!,
@@ -2337,6 +2348,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
           this.params.layerCount,
           {
             defaultViaHoleDiameter: this.params.defaultViaHoleDiameter,
+            originalTrace: movableSection.originalTrace,
             obstacles: this.params.obstacles,
             connMap: this.params.connMap,
           },

@@ -64,16 +64,21 @@ test("routes the USB shield through both MIDI keyboard phases", async (): Promis
   phase1.solve()
   expect(phase1.solved).toBeTrue()
   const output = phase1.getOutputSimpleRouteJson()
+  // Full output retains the shield. Delta output only includes it if the
+  // router published a replacement during the second phase.
+  const shieldDelta = phase1
+    .getOutputSimplifiedPcbTraces()
+    .filter((trace) => trace.pcb_trace_id === shield.pcb_trace_id)
+  const replacement = {
+    ...shield,
+    __replaces_pcb_trace_id: shield.pcb_trace_id,
+  }
+  if (shieldDelta.length > 0) expect(shieldDelta).toEqual([replacement])
   expect(
     output.traces!.filter(
       (trace) => trace.pcb_trace_id === shield.pcb_trace_id,
     ),
-  ).toEqual([
-    {
-      ...shield,
-      __replaces_pcb_trace_id: shield.pcb_trace_id,
-    },
-  ])
+  ).toEqual([shieldDelta.length === 0 ? shield : replacement])
   const finalDrc = {
     inputSrj: output,
     srjWithPointPairs: phase1.srjWithPointPairs!,

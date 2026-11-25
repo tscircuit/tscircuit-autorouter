@@ -2,12 +2,13 @@ import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { GraphicsObject } from "graphics-debug"
 import {
   ConnectionPoint,
-  PointId,
+  PointKey,
   SimpleRouteConnection,
   SimpleRouteJson,
   getConnectionPointLayers,
 } from "lib/types"
 import { seededRandom } from "lib/utils/cloneAndShuffleArray"
+import { getPointKey } from "lib/utils/getPointKey"
 import { BaseSolver } from "../BaseSolver"
 import { buildMinimumSpanningTree } from "./buildMinimumSpanningTree"
 import { getInitiallyConnectedStateForConnection } from "./get-initially-connected-state-for-connection"
@@ -16,8 +17,10 @@ import { orderMstEdgesForStablePairNames } from "./orderMstEdgesForStablePairNam
 
 type ConnectionName = SimpleRouteConnection["name"]
 interface PathHop {
-  fromPointId: PointId
-  toPointId: PointId
+  fromPointKey: PointKey
+  toPointKey: PointKey
+  maxLength?: number
+  maxViaCount?: number
   /** Name of the point-pair connection emitted for this hop. */
   emittedConnectionName?: ConnectionName
 }
@@ -51,7 +54,7 @@ export class NetToPointPairsSolver extends BaseSolver {
   unprocessedConnections: Array<SimpleRouteConnection>
   newConnections: Array<SimpleRouteConnection>
   readonly initiallyConnectedMap: ConnectivityMap
-  /** Each connection's `path` as hops, in written order. */
+  /** Ordered path hops and two-terminal connections with a routing budget. */
   readonly pathHopsByConnectionName = new Map<ConnectionName, PathHop[]>()
 
   constructor(
@@ -93,26 +96,42 @@ export class NetToPointPairsSolver extends BaseSolver {
     )
     this.newConnections = []
     this.initiallyConnectedMap = initiallyConnectedMap
-    for (const { name, path } of ogSrj.connections) {
-      if (!path) continue
+    for (const connection of ogSrj.connections) {
+      const { name, path, pointsToConnect, maxLength, maxViaCount } = connection
       const hops: PathHop[] = []
-      for (let i = 1; i < path.length; i++) {
-        hops.push({ fromPointId: path[i - 1]!, toPointId: path[i]! })
+      if (path) {
+        for (let i = 1; i < path.length; i++) {
+          hops.push({ fromPointKey: path[i - 1]!, toPointKey: path[i]! })
+        }
       }
-      this.pathHopsByConnectionName.set(name, hops)
+      if (
+        pointsToConnect.length === 2 &&
+        (maxLength !== undefined || maxViaCount !== undefined)
+      ) {
+        const fromPointKey = getPointKey(pointsToConnect[0]!)
+        const toPointKey = getPointKey(pointsToConnect[1]!)
+        // Ordered paths already connect the terminals through their waypoints.
+        if (!path || path.length === 2) {
+          const hop = hops[0] ?? { fromPointKey, toPointKey }
+          hop.maxLength = maxLength
+          hop.maxViaCount = maxViaCount
+          if (!hops.length) hops.push(hop)
+        }
+      }
+      if (hops.length) this.pathHopsByConnectionName.set(name, hops)
     }
   }
 
   /** Zero-weight MST edges for the path pairs whose points are in `connection`. */
   getPathEdges(connection: SimpleRouteConnection): PathEdge[] {
-    const pointsById = new Map(
-      connection.pointsToConnect.map((point) => [point.pointId, point]),
+    const pointsByKey = new Map(
+      connection.pointsToConnect.map((point) => [getPointKey(point), point]),
     )
     const edges: PathEdge[] = []
     for (const hops of this.pathHopsByConnectionName.values()) {
       for (const hop of hops) {
-        const from = pointsById.get(hop.fromPointId)
-        const to = pointsById.get(hop.toPointId)
+        const from = pointsByKey.get(hop.fromPointKey)
+        const to = pointsByKey.get(hop.toPointKey)
         if (!from || !to) continue
         const sharedEdge = edges.find(
           (edge) =>
@@ -132,6 +151,18 @@ export class NetToPointPairsSolver extends BaseSolver {
   ): void {
     for (const hop of pathEdge?.hops ?? []) {
       hop.emittedConnectionName = connection.name
+      if (hop.maxLength !== undefined) {
+        connection.maxLength = Math.min(
+          connection.maxLength ?? Infinity,
+          hop.maxLength,
+        )
+      }
+      if (hop.maxViaCount !== undefined) {
+        connection.maxViaCount = Math.min(
+          connection.maxViaCount ?? Infinity,
+          hop.maxViaCount,
+        )
+      }
     }
     this.newConnections.push(connection)
   }

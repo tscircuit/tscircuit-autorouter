@@ -1,3 +1,4 @@
+import { getWireSegmentAtRoutePoints } from "lib/utils/getWireSegmentAtRoutePoints"
 import type { Point } from "@tscircuit/math-utils"
 import type {
   NetId,
@@ -119,15 +120,12 @@ export function getPreloadedTracePrimitives(
       pointIndex < trace.route.length - 1;
       pointIndex++
     ) {
-      const start = trace.route[pointIndex]!
-      const end = trace.route[pointIndex + 1]!
-      if (
-        start.route_type !== "wire" ||
-        end.route_type !== "wire" ||
-        start.layer !== end.layer
-      ) {
-        continue
-      }
+      const segment = getWireSegmentAtRoutePoints(
+        trace.route[pointIndex]!,
+        trace.route[pointIndex + 1]!,
+      )
+      if (!segment) continue
+      const [start, end] = segment
       primitives.push({
         ...preloadedTrace,
         routePositionStart: pointIndex,

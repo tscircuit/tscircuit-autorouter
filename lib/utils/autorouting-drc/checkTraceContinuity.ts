@@ -1,13 +1,7 @@
-import {
-  circlePolygon,
-  copperPolygonsTouch,
-  getPlatedHolePolygon,
-  getTraceSegmentPolygon,
-  getPrimaryId,
-} from "@tscircuit/circuit-json-util"
+import { getViasConnectedByCopperPour } from "./getViasConnectedByCopperPour"
+import { getPrimaryId } from "@tscircuit/circuit-json-util"
 import {
   type Point,
-  doesLineIntersectLine,
   isPointInsidePolygon,
   pointToSegmentDistance,
 } from "@tscircuit/math-utils"
@@ -18,6 +12,7 @@ import type {
   PcbPort,
   PcbSmtPad,
   PcbTrace,
+  SourceTrace,
 } from "circuit-json"
 import {
   ConnectivityMap,
@@ -27,54 +22,16 @@ import {
   getDrcReadablePortName,
   getDrcReadableTraceName,
 } from "./drcReadableNames"
-import RBush from "rbush"
+import {
+  getPhysicalTraceConnectivity,
+  type ViaContact,
+  type WireSegment,
+} from "./getPhysicalTraceConnectivity"
 
 type Pad = PcbSmtPad | PcbPlatedHole
 type RoutePoint = PcbTrace["route"][number]
 type PadMap = Map<string, Pad[]>
 type Wire = Extract<RoutePoint, { route_type: "wire" }>
-type WireSegment = { trace: PcbTrace; start: Wire; end: Wire }
-type ViaContact = Point & {
-  id: string
-  layers: string[]
-  radius?: number
-  ownerTraceId?: string
-}
-
-const wireSegmentsTouch = (
-  first: WireSegment,
-  second: WireSegment,
-): boolean => {
-  const minX = Math.min(first.start.x, first.end.x)
-  const minY = Math.min(first.start.y, first.end.y)
-  const maxX = Math.max(first.start.x, first.end.x)
-  const maxY = Math.max(first.start.y, first.end.y)
-  const lineThickness = (first.start.width + second.start.width) / 2
-  const expansion = Math.max(0, lineThickness) + 1e-9
-  // Preserve the connectivity predicate's bounds guard for very short segments.
-  if (
-    Number.isFinite(minX) &&
-    Number.isFinite(minY) &&
-    Number.isFinite(maxX) &&
-    Number.isFinite(maxY) &&
-    Number.isFinite(second.start.x) &&
-    Number.isFinite(second.start.y) &&
-    Number.isFinite(second.end.x) &&
-    Number.isFinite(second.end.y) &&
-    Number.isFinite(lineThickness) &&
-    (Math.min(second.start.x, second.end.x) > maxX + expansion ||
-      Math.max(second.start.x, second.end.x) < minX - expansion ||
-      Math.min(second.start.y, second.end.y) > maxY + expansion ||
-      Math.max(second.start.y, second.end.y) < minY - expansion)
-  )
-    return false
-  return doesLineIntersectLine(
-    [first.start, first.end],
-    [second.start, second.end],
-    { lineThickness },
-  )
-}
-
 /** Pad shapes produced by convertToCircuitJson, including their boundaries. */
 const pointIsInPad = (point: Point, pad: Pad): boolean => {
   if (pad.shape === "circle") {
@@ -278,10 +235,10 @@ const getMissingConnectionCenter = (
   }
 }
 
-/** Validates routed endpoints and via alignment without invoking board-wide checks. */
-export const checkTraceContinuity = (
-  circuitJson: AnyCircuitElement[],
-): Record<string, unknown>[] => {
+/** For each emitted route, source connections identify its expected terminals.
+ * Compare those requirements with copper contact on the PCB layers. */
+export const inspectTraceContinuity = (circuitJson: AnyCircuitElement[]) => {
+  const openEnds: OpenTraceEnd[] = []
   const errors: Record<string, unknown>[] = []
   const ports = circuitJson.filter((element) => element.type === "pcb_port")
   const traces = circuitJson.filter((element) => element.type === "pcb_trace")
@@ -303,17 +260,33 @@ export const checkTraceContinuity = (
     else padsByPort.set(pad.pcb_port_id, [pad])
   }
   const board = circuitJson.find((element) => element.type === "pcb_board")
+  const layerCount = board?.num_layers
   const stack: string[] = [
     "top",
     ...all_layers
       .filter((layer) => layer.startsWith("inner"))
-      .slice(0, board ? Math.max(0, board.num_layers - 2) : undefined),
-    ...(board?.num_layers === 1 ? [] : ["bottom"]),
+      .slice(
+        0,
+        layerCount === undefined ? undefined : Math.max(0, layerCount - 2),
+      ),
+    ...(layerCount === 1 ? [] : ["bottom"]),
   ]
-  const fullConnectivity = getFullConnectivityMapFromCircuitJson(circuitJson)
-  const emittedVias = circuitJson.filter(
-    (element) => element.type === "pcb_via",
+  // Netlist IDs identify which copper an endpoint is meant to reach.
+  // Only geometric contacts contribute edges to the physical map below.
+  const desiredConnectivity = getFullConnectivityMapFromCircuitJson(
+    circuitJson.filter((e) => e.type !== "pcb_trace" && e.type !== "pcb_via"),
   )
+  const emittedVias = circuitJson.filter((e) => e.type === "pcb_via")
+  const owners: string[][] = []
+  for (const trace of traces) {
+    if (trace.source_trace_id)
+      owners.push([trace.pcb_trace_id, trace.source_trace_id])
+  }
+  for (const via of emittedVias) {
+    const owner = via.source_net_id ?? via.source_trace_id ?? via.pcb_trace_id
+    if (owner) owners.push([via.pcb_via_id, owner])
+  }
+  desiredConnectivity.addConnections(owners)
   const viaContacts: ViaContact[] = emittedVias
     .filter(
       (via) => Number.isFinite(via.outer_diameter) && via.outer_diameter > 0,
@@ -326,6 +299,7 @@ export const checkTraceContinuity = (
       layers: via.layers,
       ownerTraceId: via.pcb_trace_id,
     }))
+  const routeViaContacts: string[][] = []
   const portBridges = [...viaContacts]
   const segments: WireSegment[] = []
   for (const trace of traces) {
@@ -361,23 +335,21 @@ export const checkTraceContinuity = (
         (via) => Math.hypot(via.x - point.x, via.y - point.y) <= 1e-9,
       )
       if (matchingVias.length === 0) portBridges.push(contact)
-      if (
-        !matchingVias.some(
-          (via) =>
-            via.pcb_trace_id === trace.pcb_trace_id ||
-            (!via.pcb_trace_id &&
-              fullConnectivity.areIdsConnected(
-                via.pcb_via_id,
-                trace.pcb_trace_id,
-              )),
-        )
-      ) {
-        viaContacts.push(contact)
+      for (const via of matchingVias) {
+        const layers: readonly string[] = via.layers
+        if (
+          via.outer_diameter > 0 &&
+          layers.includes(point.from_layer) &&
+          layers.includes(point.to_layer)
+        ) {
+          routeViaContacts.push([trace.pcb_trace_id, via.pcb_via_id])
+        }
       }
+      if (!matchingVias.length) viaContacts.push(contact)
     }
   }
   const portsById = new Map(ports.map((port) => [port.pcb_port_id, port]))
-  const canConnectToPort = (point: Wire, port: PcbPort): boolean => {
+  const canReachPortLayer = (point: Wire, port: PcbPort): boolean => {
     const portPads = padsByPort.get(port.pcb_port_id)
     const layers = portPads?.length
       ? [
@@ -417,7 +389,7 @@ export const checkTraceContinuity = (
       ])) {
         if (!portId) continue
         const port = portsById.get(portId)
-        if (!port || canConnectToPort(point, port)) continue
+        if (!port || canReachPortLayer(point, port)) continue
         const portPads = padsByPort.get(portId)
         const padLayers = portPads?.length
           ? [
@@ -444,250 +416,55 @@ export const checkTraceContinuity = (
       }
     }
   }
-  const touchedPortsByTrace = new Map(
+  // Pad IDs identify individual pieces of copper. One logical port can
+  // have several pads, which can sit on separate copper islands.
+  const touchedPadsByTrace = new Map(
     traces.map((trace) => [
       trace.pcb_trace_id,
-      new Set(
-        [...padsByPort]
-          .filter(([, portPads]) =>
-            [trace.route[0], trace.route.at(-1)].some(
-              (point) =>
-                point &&
-                portPads.some((pad) => routePointTouchesPad(point, pad)),
-            ),
-          )
-          .map(([portId]) => portId),
-      ),
+      pads
+        .filter((pad) =>
+          [trace.route[0], trace.route.at(-1)].some(
+            (p) => p && routePointTouchesPad(p, pad),
+          ),
+        )
+        .map((pad) => getPrimaryId(pad)!),
     ]),
   )
-  const traceIdsByTouchedPort = new Map<string, string[]>()
-  for (const [traceId, portIds] of touchedPortsByTrace) {
-    for (const portId of portIds) {
-      const traceIds = traceIdsByTouchedPort.get(portId)
-      if (traceIds) traceIds.push(traceId)
-      else traceIdsByTouchedPort.set(portId, [traceId])
-    }
-  }
-  const padConnectedPortsByTrace = new Map<string, Set<string>>()
-  const connectsThroughPads = (traceId: string, portId: string): boolean => {
-    const cached = padConnectedPortsByTrace.get(traceId)
-    if (cached) return cached.has(portId)
-    const pending = [traceId]
-    const visited = new Set(pending)
-    const connectedPorts = new Set<string>()
-    while (pending.length > 0) {
-      const current = pending.pop()!
-      for (const touchedPortId of touchedPortsByTrace.get(current)!) {
-        if (connectedPorts.has(touchedPortId)) continue
-        connectedPorts.add(touchedPortId)
-        for (const neighbor of traceIdsByTouchedPort.get(touchedPortId)!) {
-          if (visited.has(neighbor)) continue
-          visited.add(neighbor)
-          pending.push(neighbor)
-        }
-      }
-    }
-    for (const member of visited) {
-      padConnectedPortsByTrace.set(member, connectedPorts)
-    }
-    return connectedPorts.has(portId)
-  }
+  // Common case: the routes meet at an endpoint on one pad. Only build
+  // the board-wide spatial index when this cheaper physical check is insufficient.
+  const padContacts = new ConnectivityMap({})
+  padContacts.addConnections(
+    Array.from(touchedPadsByTrace, ([id, touched]) => [id, ...touched]),
+  )
   let physicalConnectivity: ConnectivityMap | undefined
-  const getPhysicalConnectivity = (): ConnectivityMap => {
-    if (physicalConnectivity) return physicalConnectivity
-    const map = new ConnectivityMap({})
-    const connections: string[][] = []
-    const indexedSegments = segments.map((segment, order) => ({
-      ...segment,
-      order,
-      minX:
-        Math.min(segment.start.x, segment.end.x) -
-        segment.start.width / 2 -
-        1e-9,
-      minY:
-        Math.min(segment.start.y, segment.end.y) -
-        segment.start.width / 2 -
-        1e-9,
-      maxX:
-        Math.max(segment.start.x, segment.end.x) +
-        segment.start.width / 2 +
-        1e-9,
-      maxY:
-        Math.max(segment.start.y, segment.end.y) +
-        segment.start.width / 2 +
-        1e-9,
+  const getPhysicalConnectivity = (): ConnectivityMap =>
+    (physicalConnectivity ??= getPhysicalTraceConnectivity({
+      segments,
+      vias: viaContacts,
+      pads,
+      touchedPadsByTrace,
+      viaConnections: [
+        ...routeViaContacts,
+        ...getViasConnectedByCopperPour(circuitJson, desiredConnectivity),
+      ],
     }))
-    const segmentIndex = new RBush<(typeof indexedSegments)[number]>().load(
-      indexedSegments,
-    )
-    for (const segment of indexedSegments) {
-      for (const candidate of segmentIndex.search(segment)) {
-        if (
-          candidate.order <= segment.order ||
-          candidate.trace.pcb_trace_id === segment.trace.pcb_trace_id ||
-          candidate.start.layer !== segment.start.layer
-        )
-          continue
-        if (wireSegmentsTouch(segment, candidate))
-          connections.push([
-            segment.trace.pcb_trace_id,
-            candidate.trace.pcb_trace_id,
-          ])
-      }
-    }
-    for (const trace of traces) {
-      for (const portId of touchedPortsByTrace.get(trace.pcb_trace_id)!)
-        connections.push([trace.pcb_trace_id, portId])
-      for (const point of trace.route) {
-        if (point.route_type !== "wire") continue
-        for (const portId of new Set([
-          point.start_pcb_port_id,
-          point.end_pcb_port_id,
-        ])) {
-          if (!portId) continue
-          const port = portsById.get(portId)
-          if (port && canConnectToPort(point, port))
-            connections.push([trace.pcb_trace_id, portId])
-        }
-      }
-    }
-    type Conductor = {
-      id: string
-      layers: string[]
-      geometry:
-        | { kind: "polygon"; polygon: ReturnType<typeof circlePolygon> }
-        | {
-            kind: "segment"
-            segment: WireSegment
-            polygon?: ReturnType<typeof circlePolygon>
-          }
-      bridge: boolean
-      platedPort: boolean
-      minX: number
-      minY: number
-      maxX: number
-      maxY: number
-    }
-    const conductors: Conductor[] = []
-    const addConductor = (
-      id: string,
-      layers: string[],
-      polygon: ReturnType<typeof circlePolygon>,
-      bridge: boolean,
-      platedPort = false,
-    ): void => {
-      if (polygon.isEmpty()) return
-      const scaled = polygon.scale(1e6, 1e6)
-      const box = scaled.box
-      conductors.push({
-        id,
-        layers,
-        geometry: { kind: "polygon", polygon: scaled },
-        bridge,
-        platedPort,
-        minX: box.xmin,
-        minY: box.ymin,
-        maxX: box.xmax,
-        maxY: box.ymax,
-      })
+  const copperAt = (point: Point, layers: string[]): string[] => {
+    const copperIds = new Set<string>()
+    for (const { trace, start, end } of segments) {
+      if (
+        layers.includes(start.layer) &&
+        pointToSegmentDistance(point, start, end) <= start.width / 2
+      )
+        copperIds.add(trace.pcb_trace_id)
     }
     for (const via of viaContacts) {
-      if (via.radius === undefined) continue
-      addConductor(via.id, via.layers, circlePolygon(via, via.radius), true)
-      if (via.ownerTraceId) connections.push([via.id, via.ownerTraceId])
-    }
-    for (const pad of pads) {
-      if (pad.type !== "pcb_plated_hole" || !pad.pcb_port_id) continue
-      addConductor(
-        pad.pcb_port_id,
-        pad.layers,
-        getPlatedHolePolygon(pad),
-        true,
-        true,
-      )
-    }
-    for (const segment of segments) {
       if (
-        segment.trace.route_thickness_mode === "interpolated" ||
-        (segment.start.x === segment.end.x && segment.start.y === segment.end.y)
+        via.layers.some((layer) => layers.includes(layer)) &&
+        Math.hypot(point.x - via.x, point.y - via.y) <= (via.radius ?? 0)
       )
-        continue
-      const radius = segment.start.width / 2
-      if (!Number.isFinite(radius) || radius <= 0) {
-        addConductor(
-          segment.trace.pcb_trace_id,
-          [segment.start.layer],
-          getTraceSegmentPolygon(
-            segment.start,
-            segment.end,
-            segment.start.width,
-          ),
-          false,
-        )
-        continue
-      }
-      // Construct copper polygons only for segments near a layer bridge.
-      conductors.push({
-        id: segment.trace.pcb_trace_id,
-        layers: [segment.start.layer],
-        geometry: { kind: "segment", segment },
-        bridge: false,
-        platedPort: false,
-        minX: (Math.min(segment.start.x, segment.end.x) - radius) * 1e6 - 0.1,
-        minY: (Math.min(segment.start.y, segment.end.y) - radius) * 1e6 - 0.1,
-        maxX: (Math.max(segment.start.x, segment.end.x) + radius) * 1e6 + 0.1,
-        maxY: (Math.max(segment.start.y, segment.end.y) + radius) * 1e6 + 0.1,
-      })
+        copperIds.add(via.id)
     }
-    const getConductorPolygon = (
-      conductor: Conductor,
-    ): ReturnType<typeof circlePolygon> => {
-      const geometry = conductor.geometry
-      if (geometry.kind === "polygon") return geometry.polygon
-      if (!geometry.polygon) {
-        const { start, end } = geometry.segment
-        geometry.polygon = getTraceSegmentPolygon(
-          start,
-          end,
-          start.width,
-        ).scale(1e6, 1e6)
-      }
-      return geometry.polygon
-    }
-    const conductorIndex = new RBush<Conductor>().load(conductors)
-    for (const conductor of conductors) {
-      if (!conductor.bridge) continue
-      for (const candidate of conductorIndex.search({
-        minX: conductor.minX - 0.1,
-        minY: conductor.minY - 0.1,
-        maxX: conductor.maxX + 0.1,
-        maxY: conductor.maxY + 0.1,
-      })) {
-        if (
-          candidate.id === conductor.id ||
-          (conductor.platedPort && candidate.bridge) ||
-          (candidate.platedPort && conductor.bridge) ||
-          !candidate.layers.some((layer) => conductor.layers.includes(layer))
-        )
-          continue
-        const polygon = getConductorPolygon(candidate)
-        const box = polygon.box
-        // Match the original bounds before testing the exact copper contact.
-        if (
-          polygon.isEmpty() ||
-          box.xmax < conductor.minX - 0.1 ||
-          box.ymax < conductor.minY - 0.1 ||
-          box.xmin > conductor.maxX + 0.1 ||
-          box.ymin > conductor.maxY + 0.1
-        )
-          continue
-        if (copperPolygonsTouch(getConductorPolygon(conductor), polygon, 0.1))
-          connections.push([conductor.id, candidate.id])
-      }
-    }
-    map.addConnections(connections)
-    physicalConnectivity = map
-    return map
+    return [...copperIds]
   }
   const endpointTouchesCopper = (
     trace: PcbTrace,
@@ -696,12 +473,12 @@ export const checkTraceContinuity = (
     const point = endpoint === "start" ? trace.route[0] : trace.route.at(-1)
     const width = getEndpointCopperWidth(trace, endpoint)
     if (point?.route_type !== "wire" || width === undefined) return false
-    const net = fullConnectivity.getNetConnectedToId(trace.pcb_trace_id)
+    const net = desiredConnectivity.getNetConnectedToId(trace.pcb_trace_id)
     if (!net) return false
     const netSegments = segments.filter(
       (segment) =>
         segment.trace.route_thickness_mode !== "interpolated" &&
-        fullConnectivity.getNetConnectedToId(segment.trace.pcb_trace_id) ===
+        desiredConnectivity.getNetConnectedToId(segment.trace.pcb_trace_id) ===
           net &&
         Math.hypot(
           segment.start.x - segment.end.x,
@@ -723,7 +500,7 @@ export const checkTraceContinuity = (
       if (
         via.ownerTraceId === trace.pcb_trace_id ||
         !via.layers.includes(point.layer) ||
-        fullConnectivity.getNetConnectedToId(via.id) !== net
+        desiredConnectivity.getNetConnectedToId(via.id) !== net
       )
         return false
       const viaReach = via.radius === undefined ? 0 : via.radius + width / 2
@@ -732,7 +509,8 @@ export const checkTraceContinuity = (
       if (
         pads.some(
           (pad) =>
-            fullConnectivity.getNetConnectedToId(getPrimaryId(pad)!) === net &&
+            desiredConnectivity.getNetConnectedToId(getPrimaryId(pad)!) ===
+              net &&
             (pad.type === "pcb_smtpad" ? [pad.layer] : pad.layers).some(
               (layer) => via.layers.includes(layer),
             ) &&
@@ -754,7 +532,12 @@ export const checkTraceContinuity = (
       )
     })
   }
-  const checkedSourceTraceIds = new Set<string>()
+  const reaches = (traceId: string, ids: string[]): boolean =>
+    ids.some(
+      (id) => id === traceId || padContacts.areIdsConnected(traceId, id),
+    ) ||
+    ids.some((id) => getPhysicalConnectivity().areIdsConnected(traceId, id))
+  const firstTraceBySource = new Map<SourceTrace, PcbTrace>()
   for (const trace of traces) {
     if (trace.route.length === 0) continue
     const first = trace.route[0]!
@@ -826,75 +609,107 @@ export const checkTraceContinuity = (
         pcb_port_ids: [],
       })
     }
-    if (sourceTrace && expectedPorts.length > 0) {
-      if (checkedSourceTraceIds.has(sourceTrace.source_trace_id)) continue
-      checkedSourceTraceIds.add(sourceTrace.source_trace_id)
-    }
-    for (const port of expectedPorts) {
-      const portPads = padsByPort.get(port.pcb_port_id)
-      if (!portPads?.length) continue
-      if (
-        [first, last].some((point) =>
-          portPads.some((pad) => routePointTouchesPad(point, pad)),
-        )
-      )
-        continue
-      if (connectsThroughPads(trace.pcb_trace_id, port.pcb_port_id)) continue
-      const physical = getPhysicalConnectivity()
-      const physicalNet = physical.getNetConnectedToId(trace.pcb_trace_id)
-      const connectedBySibling =
-        physicalNet !== undefined &&
-        physical
-          .getIdsConnectedToNet(physicalNet)
-          .some((traceId) =>
-            touchedPortsByTrace.get(traceId)?.has(port.pcb_port_id),
+    if (sourceTrace && !firstTraceBySource.has(sourceTrace)) {
+      firstTraceBySource.set(sourceTrace, trace)
+      for (const port of expectedPorts) {
+        const portPads = padsByPort.get(port.pcb_port_id)
+        if (
+          !portPads?.length ||
+          reaches(
+            trace.pcb_trace_id,
+            portPads.map((pad) => getPrimaryId(pad)!),
           )
-      if (connectedBySibling) continue
-      const portName = getDrcReadablePortName(circuitJson, port.pcb_port_id)
-      traceName ??= getDrcReadableTraceName(circuitJson, trace.pcb_trace_id)
-      errors.push({
-        ...commonError,
-        message: `Trace [${traceName}] is missing a connection to ${portPads[0]!.type === "pcb_smtpad" ? "SMD pad" : "through-hole pad"} ${portName}`,
-        pcb_trace_error_id: `missing_connection_${trace.pcb_trace_id}_${port.pcb_port_id}`,
-        center: getMissingConnectionCenter(
-          first,
-          last,
-          port,
-          expectedPorts,
-          padsByPort,
-        ),
-        pcb_port_ids: [port.pcb_port_id],
-      })
+        )
+          continue
+        const kind =
+          portPads[0]!.type === "pcb_smtpad" ? "SMD pad" : "through-hole pad"
+        const portName = getDrcReadablePortName(circuitJson, port.pcb_port_id)
+        traceName ??= getDrcReadableTraceName(circuitJson, trace.pcb_trace_id)
+        errors.push({
+          ...commonError,
+          message: `Trace [${traceName}] is missing a connection to ${kind} ${portName}`,
+          pcb_trace_error_id: `missing_connection_${trace.pcb_trace_id}_${port.pcb_port_id}`,
+          center: getMissingConnectionCenter(
+            first,
+            last,
+            port,
+            expectedPorts,
+            padsByPort,
+          ),
+          pcb_port_ids: [port.pcb_port_id],
+        })
+      }
     }
     if (expectedPorts.length > 0) continue
-    const firstConnected =
-      [...padsByPort.values()].some((portPads) =>
-        portPads.some((pad) => routePointTouchesPad(first, pad)),
-      ) || endpointTouchesCopper(trace, "start")
     const sameEndpoints =
       first.route_type === "wire" &&
       last.route_type === "wire" &&
       first.layer === last.layer &&
       Math.hypot(first.x - last.x, first.y - last.y) <= 1e-9
+    let firstDisconnected = false
     for (const [index, endpoint] of [first, last].entries()) {
       if (endpoint.route_type !== "wire") continue
-      if (index === 1 && sameEndpoints && !firstConnected) continue
+      if (index === 1 && sameEndpoints && firstDisconnected) continue
       if (
-        [...padsByPort.values()].some((portPads) =>
-          portPads.some((pad) => routePointTouchesPad(endpoint, pad)),
+        pads.some(
+          (pad) =>
+            desiredConnectivity.areIdsConnected(
+              trace.pcb_trace_id,
+              getPrimaryId(pad)!,
+            ) && routePointTouchesPad(endpoint, pad),
         ) ||
         endpointTouchesCopper(trace, index === 0 ? "start" : "end")
       )
         continue
-      traceName ??= getDrcReadableTraceName(circuitJson, trace.pcb_trace_id)
-      errors.push({
-        ...commonError,
-        message: `Trace [${traceName}] has disconnected endpoint at (${endpoint.x.toFixed(2)}, ${endpoint.y.toFixed(2)})`,
-        pcb_trace_error_id: `disconnected_endpoint_${trace.pcb_trace_id}_${index === 0 ? "start" : "end"}`,
-        center: { x: endpoint.x, y: endpoint.y },
-        pcb_port_ids: [],
+      if (index === 0) firstDisconnected = true
+      openEnds.push({
+        trace,
+        point: endpoint,
+        sourceTrace,
+        end: index === 0 ? "start" : "end",
       })
     }
   }
-  return errors
+  return {
+    errors,
+    openEnds,
+    firstTraceBySource,
+    portsById,
+    copperAt,
+    reaches,
+    disconnectedEndpointError: (end: OpenTraceEnd) =>
+      disconnectedEndpointError(circuitJson, end),
+  }
+}
+
+type OpenTraceEnd = {
+  trace: PcbTrace
+  sourceTrace?: SourceTrace
+  point: Wire
+  end: "start" | "end"
+}
+
+function disconnectedEndpointError(
+  circuitJson: AnyCircuitElement[],
+  { trace, point, end }: OpenTraceEnd,
+): Record<string, unknown> {
+  return {
+    type: "pcb_trace_error",
+    error_type: "pcb_trace_error",
+    source_trace_id: trace.source_trace_id ?? `!${trace.pcb_trace_id}`,
+    pcb_trace_id: trace.pcb_trace_id,
+    pcb_component_ids: [],
+    message: `Trace [${getDrcReadableTraceName(circuitJson, trace.pcb_trace_id)}] has disconnected endpoint at (${point.x.toFixed(2)}, ${point.y.toFixed(2)})`,
+    pcb_trace_error_id: `disconnected_endpoint_${trace.pcb_trace_id}_${end}`,
+    center: { x: point.x, y: point.y },
+    pcb_port_ids: [],
+  }
+}
+
+export function checkTraceContinuity(
+  circuitJson: AnyCircuitElement[],
+): Record<string, unknown>[] {
+  const { errors, openEnds, disconnectedEndpointError } =
+    inspectTraceContinuity(circuitJson)
+  return [...errors, ...openEnds.map(disconnectedEndpointError)]
 }

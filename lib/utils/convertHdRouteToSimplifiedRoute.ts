@@ -26,6 +26,7 @@ const SAME_POINT_TOLERANCE = 1e-12
 const SAME_NET_OBSTACLE_TOLERANCE = 1e-6
 
 export interface ConvertHdRouteToSimplifiedRouteOptions {
+  originalTrace?: SimplifiedPcbTraces[number]
   connectionPoints?: ReadonlyArray<ConnectionPoint>
   terminalViaAttachTolerance?: number
   defaultViaHoleDiameter?: number
@@ -63,20 +64,37 @@ const isThroughObstacleSegment = (
 ) => {
   if (start.toNextSegmentType === "through_obstacle") return true
 
-  if (opts.connectedMultilayerObstacles) {
-    return opts.connectedMultilayerObstacles.some(
-      (obstacle) =>
-        pointInsideObstacle(start, obstacle) &&
-        pointInsideObstacle(end, obstacle),
+  const containsTransition = (obstacle: Obstacle): boolean => {
+    if (
+      !pointInsideObstacle(start, obstacle) ||
+      !pointInsideObstacle(end, obstacle)
+    )
+      return false
+    // An imported barrel is a separate board element and survives trace repair.
+    if (
+      obstacle.circuitJsonMetadata?.pcb_via_id ||
+      obstacle.circuitJsonMetadata?.pcb_plated_hole_id
+    )
+      return true
+    // A routed via also has a matching obstacle. When its owner is being
+    // replaced, this rectangle cannot supply a second, independent barrel.
+    const original = opts.originalTrace
+    return !(
+      original &&
+      obstacle.connectedTo.includes(original.pcb_trace_id) &&
+      original.route.some(
+        (p) => p.route_type === "via" && areSameXyPoint(p, obstacle.center),
+      )
     )
   }
-
+  if (opts.connectedMultilayerObstacles) {
+    return opts.connectedMultilayerObstacles.some(containsTransition)
+  }
   return (
     opts.obstacles?.some(
       (obstacle) =>
         isExistingMultilayerObstacle(obstacle) &&
-        pointInsideObstacle(start, obstacle) &&
-        pointInsideObstacle(end, obstacle) &&
+        containsTransition(obstacle) &&
         isObstacleConnectedToRoute(obstacle, hdRoute, opts.connMap),
     ) ?? false
   )
