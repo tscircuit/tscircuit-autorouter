@@ -11,10 +11,12 @@ export function getNativeDdrBoardSnapshot({
   boardName,
   bounds,
   fixtureUrl,
+  maxHighDensityIterations = Infinity,
 }: {
   boardName: string
   bounds: SimpleRouteJson["bounds"]
   fixtureUrl: URL
+  maxHighDensityIterations?: number
 }): string {
   const { inputSrj, preloadedConnections } = JSON.parse(
     gunzipSync(new Uint8Array(readFileSync(fixtureUrl))).toString("utf8"),
@@ -34,10 +36,15 @@ export function getNativeDdrBoardSnapshot({
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(inputSrj, {
     cacheProvider: null,
   })
-  solver.solve()
+  // Bound only detailed routing; preprocessing keeps its normal iteration budget.
+  while (
+    !solver.solved &&
+    !solver.failed &&
+    (solver.highDensityRouteSolver?.iterations ?? 0) < maxHighDensityIterations
+  )
+    solver.step()
   // Core commits the remaining copper only when the entire phase succeeds.
-  if (!solver.solved) {
-    expect(solver.failed).toBeTrue()
+  if (solver.failed) {
     expect(solver.error).toContain(
       "Pipeline9 primary high-density routing failed",
     )

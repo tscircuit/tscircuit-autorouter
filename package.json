@@ -1,7 +1,7 @@
 {
   "name": "@tscircuit/capacity-autorouter",
   "main": "./dist/index.js",
-  "version": "0.0.1162",
+  "version": "0.0.1163",
   "type": "module",
   "repository": {
     "type": "git",
@@ -84,7 +84,7 @@
     "clsx": "^2.1.1",
     "dataset-srj11-45-degree": "git+https://github.com/tscircuit/dataset-srj11-45-degree.git#c49dd43c38f85fa2777c7d67393df413ca8d5a75",
     "dataset-srj18": "git+https://github.com/tscircuit/dataset-srj18.git#100e8957ce789b5b288e14c476dc83f4efc5214b",
-    "flatbush": "^4.4.0",
+    "flatbush": "4.7.0",
     "format-si-unit": "0.0.12",
     "graphics-debug": "0.0.99",
     "high-density-dataset-z04": "git+https://github.com/tscircuit/high-density-dataset-z04.git#b9128ed52f5a50102b6526319be1d4ec33dca2c2",
@@ -116,7 +116,7 @@
     "high-density-repair01": "git+https://github.com/tscircuit/high-density-repair01.git#bf60f51a6afb008485136749f8365d56d2f99475",
     "high-density-repair02": "https://codeload.github.com/tscircuit/high-density-repair02/tar.gz/cac656f51535aca0d9c7f09e5860b4e82a78f3cf",
     "high-density-repair03": "https://codeload.github.com/tscircuit/high-density-repair03/tar.gz/166b6153464b24735db47a35979d93dccb7ec888",
-    "@tscircuit/high-density-phase-solver": "https://codeload.github.com/tscircuit/high-density-phase-solver/tar.gz/f70041d56fef2f9136dff060ef654094f7fc67e0",
+    "@tscircuit/bga-escape-routing-solver": "github:tscircuit/bga-escape-routing-solver#a444afe551690e3d0abb9ab66c10aaa4da3fba9f",
     "@tscircuit/high-density-a01": "git+https://github.com/tscircuit/high-density-a01.git#e9a3642aae9d45aadb197cd1386dec2142529217",
     "@tscircuit/high-density-a13": "git+https://github.com/tscircuit/high-density-a01.git#4ae21d7a15c9fbfb30378c10f948aa168d7c9cb7",
     "@tscircuit/high-density-b01": "git+https://github.com/tscircuit/high-density-b01.git#a224564f52635bb5dc8d120d43ef71f9437c7393"

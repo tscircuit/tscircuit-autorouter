@@ -1,6 +1,9 @@
-import type { BgaEscapeBoard } from "./getBgaEscapeRoutingInput"
 import type { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
-import type { SimplifiedPcbTrace } from "lib/types"
+import type {
+  SimpleRouteConnection,
+  SimpleRouteJson,
+  SimplifiedPcbTrace,
+} from "lib/types"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { createPipeline9AutoroutingDrcEvaluator } from "./createPipeline9AutoroutingDrcEvaluator"
@@ -9,7 +12,9 @@ export function getBgaEscapeHdRoutes({
   inputSrj,
   pointPairs,
   traces,
-}: Pick<BgaEscapeBoard, "inputSrj" | "pointPairs"> & {
+}: {
+  inputSrj: SimpleRouteJson
+  pointPairs: SimpleRouteConnection[]
   traces: SimplifiedPcbTrace[]
 }): HighDensityIntraNodeRoute[] | undefined {
   const { padDiameter } = getViaDimensions(inputSrj)
