@@ -11,11 +11,14 @@ import type {
   SimplifiedPcbTraces,
   SimpleRouteBus,
   SimpleRouteConnection,
+  SimpleRouteJson,
 } from "lib/types/srj-types"
 import { BaseSolver } from "./BaseSolver"
+import { createRoutedBusLengthSolver } from "./createRoutedBusLengthSolver"
 
 type LengthMatchingPostProcessingSolverParams = {
   hdRoutes: HighDensityRoute[]
+  originalSrj?: SimpleRouteJson
   differentialPairs: DifferentialPair[]
   differentialPairLanes?: LengthMatchingPair[]
   buses?: SimpleRouteBus[]
@@ -134,16 +137,40 @@ const assertBusLengthSkew = (
   }
 }
 
+function needsRoutedBusLengthSolver(srj: SimpleRouteJson): boolean {
+  const branchedConnections = new Set(
+    srj.connections
+      .filter((connection) => connection.pointsToConnect.length > 2)
+      .map((connection) => connection.name),
+  )
+  return (srj.buses ?? []).some((bus) => {
+    if (bus.minLength !== undefined || bus.maxLength !== undefined) return true
+    if (bus.maxLengthSkew === undefined) return false
+    return (
+      Boolean(bus.lengthMatchToConnectionNames?.length) ||
+      Boolean(
+        bus.lengthMatchingPaths?.some((path) =>
+          branchedConnections.has(path.connectionName),
+        ),
+      )
+    )
+  })
+}
+
 /** Keeps single-hop coupled routing, then matches exact lanes and bus roots. */
 export class LengthMatchingPostProcessingSolver extends BaseSolver {
   private readonly differentialPairSolver: PostProcessingSolver
   private lengthMatchingSolver?: LengthMatchingSolver
   private outputHdRoutes?: HighDensityRoute[]
+  private routedBusMatcher?: ReturnType<typeof createRoutedBusLengthSolver>
+  private readonly lengthConstrainedSrj?: SimpleRouteJson
 
   constructor(
     private readonly params: LengthMatchingPostProcessingSolverParams,
   ) {
     super()
+    const srj = params.originalSrj
+    if (srj && needsRoutedBusLengthSolver(srj)) this.lengthConstrainedSrj = srj
     this.differentialPairSolver = new PostProcessingSolver({
       hdRoutes: params.hdRoutes,
       differentialPairs: params.differentialPairs,
@@ -166,7 +193,19 @@ export class LengthMatchingPostProcessingSolver extends BaseSolver {
   }
 
   override _step(): void {
-    const { buses = [], connections = [] } = this.params
+    if (this.routedBusMatcher) {
+      this.routedBusMatcher.solver.step()
+      if (this.routedBusMatcher.solver.failed) {
+        this.failed = true
+        this.error = this.routedBusMatcher.solver.error
+      } else if (this.routedBusMatcher.solver.solved) {
+        this.outputHdRoutes = this.routedBusMatcher.getMatchedHdRoutes()
+        this.solved = true
+      }
+      return
+    }
+    const { connections = [] } = this.params
+    const buses = this.lengthConstrainedSrj ? [] : (this.params.buses ?? [])
     if (!this.differentialPairSolver.solved) {
       this.differentialPairSolver.step()
       if (this.differentialPairSolver.failed) {
@@ -183,8 +222,7 @@ export class LengthMatchingPostProcessingSolver extends BaseSolver {
         ...getBusLengthMatchingPairs(buses, hdRoutes),
       ]
       if (differentialPairs.length === 0) {
-        this.outputHdRoutes = hdRoutes
-        this.solved = true
+        this.finishPairMatching(hdRoutes)
         return
       }
       this.lengthMatchingSolver = new LengthMatchingSolver({
@@ -210,8 +248,22 @@ export class LengthMatchingPostProcessingSolver extends BaseSolver {
       return
     }
     if (!this.lengthMatchingSolver.solved) return
-    this.outputHdRoutes = this.lengthMatchingSolver.getOutput().matchedHdRoutes
-    assertBusLengthSkew(buses, this.outputHdRoutes)
+    const hdRoutes = this.lengthMatchingSolver.getOutput().matchedHdRoutes
+    assertBusLengthSkew(buses, hdRoutes)
+    this.finishPairMatching(hdRoutes)
+  }
+
+  private finishPairMatching(hdRoutes: HighDensityRoute[]): void {
+    const srj = this.lengthConstrainedSrj
+    if (srj) {
+      this.routedBusMatcher = createRoutedBusLengthSolver({
+        srj,
+        hdRoutes,
+        fixedTraces: this.params.traces,
+      })
+      return
+    }
+    this.outputHdRoutes = hdRoutes
     this.solved = true
   }
 
@@ -225,6 +277,7 @@ export class LengthMatchingPostProcessingSolver extends BaseSolver {
 
   override visualize(): GraphicsObject {
     return (
+      this.routedBusMatcher?.solver.visualize() ??
       this.lengthMatchingSolver?.visualize() ??
       this.differentialPairSolver.visualize()
     )

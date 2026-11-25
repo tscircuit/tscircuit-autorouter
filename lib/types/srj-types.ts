@@ -123,6 +123,16 @@ export interface SimpleRouteBus {
   connectionExitTargets?: Readonly<
     Record<string, { x: number; y: number; layer?: string }>
   >
+  /** Planar pad-to-pad copper length in millimeters. */
+  minLength?: number
+  maxLength?: number
+  lengthMatchToConnectionNames?: string[]
+  lengthMatchingPaths?: Array<{
+    connectionName: string
+    pcbPortIds: [string, string]
+    from?: SingleLayerConnectionPoint
+    to?: SingleLayerConnectionPoint
+  }>
   /** Maximum permitted routed-length difference in millimeters. */
   maxLengthSkew?: number
   /** Resolved copper width in millimeters for members without an override. */

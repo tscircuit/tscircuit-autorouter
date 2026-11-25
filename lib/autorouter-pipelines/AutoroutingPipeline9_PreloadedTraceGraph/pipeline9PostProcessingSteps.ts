@@ -224,6 +224,7 @@ export const pipeline9PostProcessingSteps = [
         })
       return [
         {
+          originalSrj: pipeline.originalSrj,
           hdRoutes,
           differentialPairs,
           differentialPairLanes,

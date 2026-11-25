@@ -49,8 +49,9 @@ test("Pipeline9 matches a data trace to a length-bounded strobe beside fixed cop
   )
   const strobeLength = lengths.get("b")!
   const dataLength = lengths.get("a")!
-  expect(strobeLength).toBeCloseTo(12)
-  expect(dataLength).toBeCloseTo(10)
+  expect(strobeLength).toBeGreaterThanOrEqual(12.1)
+  expect(strobeLength).toBeLessThanOrEqual(12.3)
+  expect(Math.abs(dataLength - strobeLength)).toBeLessThanOrEqual(0.05)
   const fixedTrace = solver
     .getOutputSimpleRouteJson()
     .traces?.find((trace) => trace.pcb_trace_id === "fixed")
