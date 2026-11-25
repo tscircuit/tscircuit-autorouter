@@ -107,7 +107,7 @@ export const createPipeline9AutoroutingDrcEvaluator = ({
       traces,
       conversionOptions,
     )
-    circuitJson.push(board)
+    if (includeBoardClearance) circuitJson.push(board)
     const connMap = createDrcConnectivityMap(circuitJson)
     annotateTraceEndpointPorts(circuitJson)
     const obstacleErrors = evaluateTraceObstacles(circuitJson, connMap)
@@ -116,7 +116,10 @@ export const createPipeline9AutoroutingDrcEvaluator = ({
       (options.includeTraceContinuity ?? drcOptions.includeTraceContinuity) !==
       false
     ) {
-      const continuity = inspectTraceContinuity(circuitJson)
+      // Continuity needs the layer stack even when board clearance is disabled.
+      const continuity = inspectTraceContinuity(
+        includeBoardClearance ? circuitJson : [...circuitJson, board],
+      )
       continuityErrors.push(
         ...continuity.errors,
         ...checkRoutedTraceEndpoints(continuity, srjWithPointPairs.connections),
