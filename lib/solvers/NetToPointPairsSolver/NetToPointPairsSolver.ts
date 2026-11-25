@@ -74,30 +74,22 @@ export class NetToPointPairsSolver extends BaseSolver {
         )
       }
     }
-    const connectionsWithBusTraceWidths = ogSrj.connections.map(
-      (connection) => {
-        const busTraceWidth = busTraceWidthsByConnectionName.get(
-          connection.name,
-        )
-        if (busTraceWidth === undefined) return connection
-        return {
-          ...connection,
-          nominalTraceWidth: Math.max(
-            connection.nominalTraceWidth ?? 0,
-            busTraceWidth,
-          ),
-        }
-      },
-    )
-    const connectionsForMst = connectionsWithBusTraceWidths.map((connection) => {
-      const { name, path, nominalTraceWidth, width } = connection
-      if (!path || path.length < 2) return connection
+    const connectionsForMst = ogSrj.connections.map((connection) => {
+      const { name, path } = connection
+      const busWidth = busTraceWidthsByConnectionName.get(name)
+      const traceWidth = connection.nominalTraceWidth ?? connection.width
+      const nominalTraceWidth =
+        busWidth === undefined ? traceWidth : Math.max(busWidth, traceWidth ?? 0)
+      if (!path || path.length < 2) {
+        if (nominalTraceWidth === connection.nominalTraceWidth) return connection
+        return { ...connection, nominalTraceWidth }
+      }
       const hops: PathHop[] = []
       for (let i = 1; i < path.length; i++) {
         hops.push({
           fromPointId: path[i - 1]!,
           toPointId: path[i]!,
-          nominalTraceWidth: nominalTraceWidth ?? width,
+          nominalTraceWidth,
         })
       }
       this.pathHopsByConnectionName.set(name, hops)
