@@ -198,6 +198,8 @@ export interface SimpleRouteConnection {
 }
 
 export interface SimplifiedPcbTrace {
+  /** Internal: width the power trace expander should widen this trace to. */
+  __desiredNominalTraceWidth?: number
   type: "pcb_trace"
   pcb_trace_id: TraceId
   /** Preserve this preloaded trace's copper geometry throughout routing. */

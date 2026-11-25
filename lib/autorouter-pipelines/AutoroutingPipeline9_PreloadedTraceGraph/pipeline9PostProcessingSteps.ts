@@ -259,6 +259,7 @@ export const pipeline9PostProcessingSteps = [
         }),
         {
           allowNewVias: false,
+          widenInPlaceAtSearchLimit: true,
           ...configuredOptions,
           onlyConnectionNames,
         },
