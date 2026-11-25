@@ -8,6 +8,7 @@ import { getColorMap } from "lib/solvers/colors"
 import type { CapacityMeshNode, CapacityMeshNodeId } from "lib/types"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 import { getInitiallyConnectedMapFromSimpleRouteJson } from "lib/utils/get-initially-connected-map-from-simple-route-json"
+import { getViaToPadClearance } from "lib/utils/getViaToPadClearance"
 import {
   AvailableSegmentPointSolver,
   type SharedEdgeSegment,
@@ -18,6 +19,7 @@ import { NetToPointPairsSolver2_OffBoardConnection } from "../../solvers/NetToPo
 import { PreloadedTraceGraphSolver } from "./PreloadedTraceGraphSolver"
 import { MergedComponentTopologyView } from "../AutoroutingPipeline7_MultiGraph/MergedComponentTopologyView"
 import { definePipeline9Step } from "./definePipeline9Step"
+import { markNodesWithoutViaSite } from "./markNodesWithoutViaSite"
 
 function getComponentCapacityMeshNodeIds(
   capacityMeshNodes: CapacityMeshNode[] | null,
@@ -163,8 +165,16 @@ export const pipeline9TopologySteps = [
       pipeline.minNodeArea,
     ],
     onSolved: (pipeline) => {
-      pipeline.capacityNodes =
-        pipeline.nodeDimensionSubdivisionSolver!.outputNodes
+      pipeline.capacityNodes = markNodesWithoutViaSite({
+        nodes: pipeline.nodeDimensionSubdivisionSolver!.outputNodes,
+        srj: pipeline.srj,
+        connMap: pipeline.connMap,
+        viaDiameter: pipeline.viaDiameter,
+        viaToPadClearance:
+          getViaToPadClearance(pipeline.srj) ??
+          pipeline.srj.defaultObstacleMargin ??
+          0.15,
+      })
     },
   }),
   definePipeline9Step({

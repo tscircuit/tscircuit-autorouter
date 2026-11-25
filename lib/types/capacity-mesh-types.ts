@@ -34,6 +34,9 @@ export interface CapacityMeshNode {
   _soicRegionType?: "center" | "pad" | "pad-gap"
   _isComponentTopologyNode?: boolean
   _connectedTo?: string[]
+  /** The node can hold a via, but every via center inside it is closer than the
+   * via-to-pad clearance to copper its vias cannot touch. */
+  _lacksViaSite?: true
 
   _parent?: CapacityMeshNode
 }

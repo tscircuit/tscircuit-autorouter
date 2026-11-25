@@ -106,6 +106,12 @@ export type DownstreamCandidateSummary = {
 
 type CandidatePortfolioPhase = "primary" | "alternative" | "complete"
 
+/** A node with no legal via center prices a layer change as if only this share
+ * of it could hold vias (ten times its area cost) instead of forbidding it:
+ * forbidding layer changes there pushed H616's vias into crowded nodes nearby
+ * and raised its DRC findings from 43 to 124. */
+const NO_VIA_SITE_AREA_FRACTION = 0.1
+
 // A second global-routing candidate is only worthwhile when the primary
 // candidate predicts downstream congestion. Selection requires meaningful
 // trace dispersion without materially increasing predicted failure pressure.
@@ -423,6 +429,11 @@ const toSerializedRegionData = (
         : [...region.d._offBoardConnectedCapacityMeshNodeIds],
     _qfpRegionType: regionMetadata._qfpRegionType,
     _isNarrowQfpPadGap: regionMetadata._isNarrowQfpPadGap,
+    // tiny-hypergraph divides only the via term of the region cost by this
+    // share of the area; trace density and geometry keep the full node.
+    ...(region.d._lacksViaSite
+      ? { viaAreaFraction: NO_VIA_SITE_AREA_FRACTION }
+      : {}),
     ...(netId !== undefined ? { netId } : {}),
   }
 }
