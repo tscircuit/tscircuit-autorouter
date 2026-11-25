@@ -10,6 +10,7 @@ test("keeps each requested width edge of a loop and emits a repeated hop once", 
   const aliasB = { pointId: "B2", x: b.x, y: b.y, layers: ["top"] }
   const c = { pointId: "C", x: 2, y: 1, layer: "top" }
   const d = { pointId: "D", x: 2, y: 2, layer: "top" }
+  const e = { pointId: "E", x: -1, y: 0, layer: "top" }
   const input: SimpleRouteJson = {
     bounds: { minX: -1, maxX: 5, minY: -1, maxY: 2 },
     layerCount: 2,
@@ -35,6 +36,12 @@ test("keeps each requested width edge of a loop and emits a repeated hop once", 
         pointsToConnect: [b, aliasB, aliasA],
       },
       { name: "net", width: 0.3, pointsToConnect: [a, d] },
+      {
+        name: "same-pad",
+        path: ["E", "E2"],
+        width: 0.8,
+        pointsToConnect: [e, { ...e, pointId: "E2" }],
+      },
     ],
   }
   const solver = new NetToPointPairsSolver(

@@ -123,7 +123,7 @@ export class NetToPointPairsSolver extends BaseSolver {
       for (const hop of hops) {
         const from = pointsById.get(hop.fromPointId)
         const to = pointsById.get(hop.toPointId)
-        if (!from || !to || isSamePadLocation(from, to)) continue
+        if (!from || !to) continue
         const sharedEdge = edges.find(
           (edge) =>
             (isSamePadLocation(edge.from, from) &&
@@ -185,7 +185,7 @@ export class NetToPointPairsSolver extends BaseSolver {
         startPoint &&
         endPoint &&
         (arePointsConnected(startPoint, endPoint) ||
-          isSamePadLocation(startPoint, endPoint))
+          (fixedWidthEdges.length && isSamePadLocation(startPoint, endPoint)))
       ) {
         return
       }
@@ -226,7 +226,12 @@ export class NetToPointPairsSolver extends BaseSolver {
     // Kruskal drops the last edge of a cycle. A requested width still needs
     // that physical pair even when the other requested pairs already span it.
     for (const pathEdge of fixedWidthEdges) {
-      if (!edges.includes(pathEdge)) edges.push(pathEdge)
+      if (
+        !edges.includes(pathEdge) &&
+        !isSamePadLocation(pathEdge.from, pathEdge.to)
+      ) {
+        edges.push(pathEdge)
+      }
     }
 
     let mstIdx = 0
