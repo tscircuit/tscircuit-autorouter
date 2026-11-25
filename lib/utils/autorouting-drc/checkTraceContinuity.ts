@@ -533,7 +533,9 @@ export const inspectTraceContinuity = (circuitJson: AnyCircuitElement[]) => {
     })
   }
   const reaches = (traceId: string, ids: string[]): boolean =>
-    ids.some((id) => id === traceId || padContacts.areIdsConnected(traceId, id)) ||
+    ids.some(
+      (id) => id === traceId || padContacts.areIdsConnected(traceId, id),
+    ) ||
     ids.some((id) => getPhysicalConnectivity().areIdsConnected(traceId, id))
   const firstTraceBySource = new Map<SourceTrace, PcbTrace>()
   for (const trace of traces) {

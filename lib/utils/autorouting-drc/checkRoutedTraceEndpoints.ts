@@ -58,14 +58,16 @@ export function checkRoutedTraceEndpoints(
   }
   for (const end of board.openEnds) {
     const { trace, point, sourceTrace } = end
-    const atRequestedPoint = sourceTrace?.connected_source_net_ids?.some((id) => {
-      const target = points.get(id)
-      return (
-        target?.copperIds.includes(trace.pcb_trace_id) &&
-        target.layers.includes(point.layer) &&
-        Math.hypot(point.x - target.x, point.y - target.y) <= point.width / 2
-      )
-    })
+    const atRequestedPoint = sourceTrace?.connected_source_net_ids?.some(
+      (id) => {
+        const target = points.get(id)
+        return (
+          target?.copperIds.includes(trace.pcb_trace_id) &&
+          target.layers.includes(point.layer) &&
+          Math.hypot(point.x - target.x, point.y - target.y) <= point.width / 2
+        )
+      },
+    )
     if (!atRequestedPoint) errors.push(board.disconnectedEndpointError(end))
   }
   return errors
