@@ -79,13 +79,11 @@ export const pipeline9HighDensitySteps = [
       return [
         {
           nodePortPoints: nodePortPointsSource,
-          bgaEscapeBoard: hasImmutablePreloadedCopper
-            ? {
-                inputSrj: pipeline.originalSrj,
-                pointPairs: pipeline.srjWithPointPairs!.connections,
-                components: pipeline.componentDetectionSolver!.getOutput(),
-              }
-            : undefined,
+          bgaEscapeBoard: {
+            inputSrj: pipeline.originalSrj,
+            pointPairs: pipeline.srjWithPointPairs?.connections,
+            components: pipeline.componentDetectionSolver?.getOutput(),
+          },
           boardGeometry: {
             bounds: pipeline.originalSrj.bounds,
             outline: pipeline.originalSrj.outline,

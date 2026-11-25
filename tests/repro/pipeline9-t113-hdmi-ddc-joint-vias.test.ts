@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
+import { convertHdRoutesToSimplifiedPcbTraces } from "lib/utils/convertHdRoutesToSimplifiedPcbTraces"
 import { Pipeline9JointDrcRepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9JointDrcRepairSolver"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import type { SimpleRouteJson } from "lib/types"
@@ -37,7 +37,7 @@ test("Pipeline9 joint repair honors the T113 via-hole clearance", async (): Prom
   expect(solver.error).toBeNull()
 
   const outputRoutes = solver.getOutput()
-  const routedTraces = convertPipeline7HdRoutesToSimplifiedPcbTraces({
+  const routedTraces = convertHdRoutesToSimplifiedPcbTraces({
     connections: srj.connections,
     originalConnections: srj.connections,
     hdRoutes: outputRoutes,
@@ -58,7 +58,7 @@ test("Pipeline9 joint repair honors the T113 via-hole clearance", async (): Prom
 
   const beforeGraphics = convertSrjToGraphicsObject({
     ...srj,
-    traces: convertPipeline7HdRoutesToSimplifiedPcbTraces({
+    traces: convertHdRoutesToSimplifiedPcbTraces({
       connections: srj.connections,
       originalConnections: srj.connections,
       hdRoutes,

@@ -31,7 +31,7 @@ import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimpl
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 import { getViaToPadClearance } from "lib/utils/getViaToPadClearance"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
-import { createPipeline7HdRoutesToSimplifiedPcbTracesConverter } from "../AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
+import { createHdRoutesToSimplifiedPcbTracesConverter } from "lib/utils/convertHdRoutesToSimplifiedPcbTraces"
 import {
   applyPipeline9ClearancePrecisionRepairs,
   type ClearanceMarginDrcEvaluator,
@@ -845,15 +845,14 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     )
     // Repair candidates change copper geometry, but their connection metadata
     // and obstacle connectivity remain fixed throughout this solver's lifetime.
-    const convertNewRoutes =
-      createPipeline7HdRoutesToSimplifiedPcbTracesConverter({
-        connections: params.newConnections,
-        originalConnections: params.originalSrj.connections,
-        layerCount: params.layerCount,
-        obstacles: params.obstacles,
-        defaultViaHoleDiameter: params.defaultViaHoleDiameter,
-        connMap: params.connMap,
-      })
+    const convertNewRoutes = createHdRoutesToSimplifiedPcbTracesConverter({
+      connections: params.newConnections,
+      originalConnections: params.originalSrj.connections,
+      layerCount: params.layerCount,
+      obstacles: params.obstacles,
+      defaultViaHoleDiameter: params.defaultViaHoleDiameter,
+      connMap: params.connMap,
+    })
     const currentNewTraces = convertNewRoutes(params.newHdRoutes)
     const currentNewTraceIds = new Set(
       currentNewTraces.map((trace) => trace.pcb_trace_id),

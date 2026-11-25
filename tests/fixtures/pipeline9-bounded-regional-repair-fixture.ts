@@ -1,5 +1,5 @@
 import type { DrcEvaluator } from "high-density-repair03/lib"
-import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
+import { convertHdRoutesToSimplifiedPcbTraces } from "lib/utils/convertHdRoutesToSimplifiedPcbTraces"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import type { SimpleRouteJson } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
@@ -121,7 +121,7 @@ export const createBoundedRegionalRepairFixture = (
     return evaluateRelaxedDrc({
       inputSrj: originalSrj,
       srjWithPointPairs: originalSrj,
-      routedTraces: convertPipeline7HdRoutesToSimplifiedPcbTraces({
+      routedTraces: convertHdRoutesToSimplifiedPcbTraces({
         connections: originalSrj.connections,
         originalConnections: originalSrj.connections,
         hdRoutes: evaluatedRoutes,

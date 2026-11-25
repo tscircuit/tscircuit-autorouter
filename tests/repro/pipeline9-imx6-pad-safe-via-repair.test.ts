@@ -15,7 +15,7 @@ import {
 } from "@tscircuit/checks"
 import type { AnyCircuitElement, SourceTrace } from "circuit-json"
 import { GlobalDrcBranchPortfolioSolver } from "high-density-repair03/lib"
-import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
+import { convertHdRoutesToSimplifiedPcbTraces } from "lib/utils/convertHdRoutesToSimplifiedPcbTraces"
 import type { SimpleRouteJson } from "lib/types"
 import { checkTraceContinuity } from "lib/utils/autorouting-drc/checkTraceContinuity"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
@@ -57,7 +57,7 @@ test("repairs the remaining i.MX6 DDR via clearance with native board geometry",
   expect(solver.failed).toBeFalse()
   expect(solver.error).toBeNull()
   expect(fixture).toEqual(original)
-  const traces = convertPipeline7HdRoutesToSimplifiedPcbTraces({
+  const traces = convertHdRoutesToSimplifiedPcbTraces({
     connections: srj.connections,
     originalConnections: fixture.originalSrj.connections,
     hdRoutes: solver.getOutput(),

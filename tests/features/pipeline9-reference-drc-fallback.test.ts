@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
+import { convertHdRoutesToSimplifiedPcbTraces } from "lib/utils/convertHdRoutesToSimplifiedPcbTraces"
 import { Pipeline9JointDrcRepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9JointDrcRepairSolver"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import type { Obstacle, SimpleRouteJson } from "lib/types"
@@ -97,7 +97,7 @@ test("Pipeline9 falls back to reference DRC for an indexed-engine false negative
     globalDrcForceImproveTargetedForceAccepted: true,
   })
 
-  const routedTraces = convertPipeline7HdRoutesToSimplifiedPcbTraces({
+  const routedTraces = convertHdRoutesToSimplifiedPcbTraces({
     connections: [connection],
     originalConnections: [connection],
     hdRoutes: solver.getOutput(),

@@ -15,7 +15,7 @@ import { canonicalizePipeline9HdRoutes } from "./canonicalizePipeline9HdRoutes"
 import { convertPreloadedTraceToHdRoutes } from "./convertPreloadedTraceToHdRoutes"
 import { Pipeline9JointDrcRepairSolver } from "./Pipeline9JointDrcRepairSolver"
 import { PowerTraceExpansionSolver } from "../AutoroutingPipeline7_MultiGraph/PowerTraceExpansionSolver"
-import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "../AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
+import { convertHdRoutesToSimplifiedPcbTraces } from "lib/utils/convertHdRoutesToSimplifiedPcbTraces"
 import { getPowerTraceExpansionConnectionNames } from "../AutoroutingPipeline7_MultiGraph/getPowerTraceExpansionConnectionNames"
 import { lockHdRouteTerminals } from "../AutoroutingPipeline7_MultiGraph/lock-hd-route-terminals"
 import { preparePipeline7PowerTraceExpansionInput } from "../AutoroutingPipeline7_MultiGraph/prepare-pipeline7-power-trace-expansion-input"
@@ -31,7 +31,7 @@ function getCleanupTraces(
   pipeline: AutoroutingPipelineSolver9_PreloadedTraceGraph,
 ): SimplifiedPcbTraces {
   return assignUniquePcbTraceIdsToNewTraces(
-    convertPipeline7HdRoutesToSimplifiedPcbTraces({
+    convertHdRoutesToSimplifiedPcbTraces({
       connections: pipeline.netToPointPairsSolver!.newConnections,
       originalConnections: pipeline.originalSrj.connections,
       hdRoutes: canonicalizePipeline9HdRoutes(routes),
@@ -259,6 +259,7 @@ export const pipeline9PostProcessingSteps = [
         }),
         {
           allowNewVias: false,
+          widenInPlaceAtSearchLimit: true,
           ...configuredOptions,
           onlyConnectionNames,
         },

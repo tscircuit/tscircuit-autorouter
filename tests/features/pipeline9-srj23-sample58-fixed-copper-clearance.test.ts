@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
+import { convertHdRoutesToSimplifiedPcbTraces } from "lib/utils/convertHdRoutesToSimplifiedPcbTraces"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { loadScenarioBySampleNumber } from "../../scripts/benchmark/scenarios"
@@ -21,7 +21,7 @@ test("Pipeline9 preserves B01 fixed-copper clearance in SRJ23 sample 58", async 
   const { errors } = evaluateRelaxedDrc({
     inputSrj: scenario,
     srjWithPointPairs: solver.srjWithPointPairs!,
-    routedTraces: convertPipeline7HdRoutesToSimplifiedPcbTraces({
+    routedTraces: convertHdRoutesToSimplifiedPcbTraces({
       connections: solver.netToPointPairsSolver?.newConnections ?? [],
       originalConnections: scenario.connections,
       hdRoutes: solver.highDensityRouteSolver!.routes,

@@ -1,9 +1,10 @@
 import { expect, test } from "bun:test"
 import { getNativeDdrBoardSnapshot } from "tests/fixtures/getNativeDdrBoardSnapshot"
 
-test("routes the i.MX6 DDR board beside completed data-byte copper", async (): Promise<void> => {
+test("shows i.MX6 DDR routing after 100,000 high-density steps", async (): Promise<void> => {
   const svg = getNativeDdrBoardSnapshot({
-    boardName: "i.MX6",
+    boardName: "i.MX6 after 100k HD steps",
+    maxHighDensityIterations: 100_000,
     bounds: { minX: -19, maxX: 15, minY: -21, maxY: 20 },
     fixtureUrl: new URL(
       "../fixtures/assets/imx6-native-ddr-handoff.srj.json.gz",

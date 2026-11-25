@@ -2,13 +2,13 @@ import type { DrcEvaluator } from "high-density-repair03/lib"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import type { SimpleRouteJson } from "lib/types"
 import {
-  convertPipeline7HdRoutesToSimplifiedPcbTraces,
-  type ConvertPipeline7HdRoutesOptions,
-} from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
+  convertHdRoutesToSimplifiedPcbTraces,
+  type ConvertHdRoutesOptions,
+} from "lib/utils/convertHdRoutesToSimplifiedPcbTraces"
 
 /** Scores Pipeline7 repair candidates with the benchmark relaxed DRC. */
 export const createPipeline7RelaxedDrcEvaluator = (
-  conversionOptions: Omit<ConvertPipeline7HdRoutesOptions, "hdRoutes"> & {
+  conversionOptions: Omit<ConvertHdRoutesOptions, "hdRoutes"> & {
     srjWithPointPairs: SimpleRouteJson
     originalSrj: SimpleRouteJson
   },
@@ -19,7 +19,7 @@ export const createPipeline7RelaxedDrcEvaluator = (
       throw new Error("Pipeline7 relaxed DRC evaluation requires HD routes")
     }
 
-    const traces = convertPipeline7HdRoutesToSimplifiedPcbTraces({
+    const traces = convertHdRoutesToSimplifiedPcbTraces({
       ...conversionOptions,
       hdRoutes: evaluatedRoutes,
     })

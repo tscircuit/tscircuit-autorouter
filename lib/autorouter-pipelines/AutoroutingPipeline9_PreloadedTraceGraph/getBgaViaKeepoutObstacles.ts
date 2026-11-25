@@ -1,4 +1,4 @@
-import type { BgaRoutingBoard } from "@tscircuit/high-density-phase-solver"
+import type { BgaRoutingBoard } from "@tscircuit/bga-escape-routing-solver"
 import type { ViaKeepout } from "lib/types/srj-types"
 import { getUniqueValidZLayersFromLayerNames } from "lib/utils/mapLayerNameToZ"
 

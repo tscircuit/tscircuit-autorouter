@@ -2,7 +2,7 @@ import { expect, test } from "bun:test"
 import {
   BgaEscapeRoutingSolver,
   type BgaRoutingBoard,
-} from "@tscircuit/high-density-phase-solver"
+} from "@tscircuit/bga-escape-routing-solver"
 import { getBgaViaKeepoutObstacles } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/getBgaViaKeepoutObstacles"
 import type { ViaKeepout } from "lib/types/srj-types"
 import { isViaInKeepout } from "lib/utils/isViaInKeepout"

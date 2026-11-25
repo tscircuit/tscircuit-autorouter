@@ -3,7 +3,7 @@ import { getSvgFromGraphicsObject, type GraphicsObject } from "graphics-debug"
 import type { SimplifiedPcbTraces as RepairSimplifiedPcbTraces } from "high-density-repair03/lib"
 import { stackSvgsHorizontally } from "stack-svgs"
 import { createPipeline7AutoroutingDrcEvaluator } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/create-pipeline7-autorouting-drc-evaluator"
-import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
+import { convertHdRoutesToSimplifiedPcbTraces } from "lib/utils/convertHdRoutesToSimplifiedPcbTraces"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import type { SimpleRouteConnection, SimpleRouteJson } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
@@ -188,7 +188,7 @@ test("Pipeline7 DRC feedback includes preloaded traces", () => {
     srjWithPointPairs: inputSrj,
     originalSrj: inputSrj,
   }
-  const candidateTraces = convertPipeline7HdRoutesToSimplifiedPcbTraces({
+  const candidateTraces = convertHdRoutesToSimplifiedPcbTraces({
     ...conversionOptions,
     hdRoutes: candidateRoutes,
   })
