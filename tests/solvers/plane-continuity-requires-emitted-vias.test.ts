@@ -1,4 +1,6 @@
 import { expect, test } from "bun:test"
+import { getFullConnectivityMapFromCircuitJson } from "circuit-json-to-connectivity-map"
+import { convertToCircuitJson } from "lib/utils/convertToCircuitJson"
 import type { AnyCircuitElement, PcbVia } from "circuit-json"
 import type { SimpleRouteJson } from "lib/types"
 import { getViasConnectedByCopperPour } from "lib/utils/autorouting-drc/getViasConnectedByCopperPour"
@@ -50,7 +52,11 @@ test("a pour connects emitted via barrels only across continuous copper on their
   }
   const b = { ...a, pcb_via_id: "via-b", x: 2 }
   function groups(copper: AnyCircuitElement[]): string[][] {
-    return getViasConnectedByCopperPour(srj, copper)
+    const circuit = [...convertToCircuitJson(srj, []), ...copper]
+    return getViasConnectedByCopperPour(
+      circuit,
+      getFullConnectivityMapFromCircuitJson(circuit),
+    )
   }
   // The input still declares both sites externally connected.
   expect(groups([...traces, a, b])).toEqual([])

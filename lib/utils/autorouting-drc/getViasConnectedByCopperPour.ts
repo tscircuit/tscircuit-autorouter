@@ -1,28 +1,39 @@
 import type { AnyCircuitElement } from "circuit-json"
-import type { Obstacle, SimpleRouteJson } from "lib/types"
+import type { Obstacle } from "lib/types"
+import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { getConnectedCopperPourRepresentatives } from "lib/solvers/EscapeViaLocationSolver/getConnectedCopperPourRepresentatives"
-import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 
 /** SRJ models unbroken pours as net-owned rectangular tiles. Other nets'
  * vias have antipads. Only barrels intersecting the same island on a layer
  * can connect through that pour. No planned access sites are needed.
  */
 export function getViasConnectedByCopperPour(
-  srj: SimpleRouteJson,
   circuit: AnyCircuitElement[],
+  desiredConnectivity: ConnectivityMap,
 ): string[][] {
-  const pours = srj.obstacles.filter((o) => o.isCopperPour)
-  if (!pours.length) return []
-  const netAliases = getConnectivityMapFromSimpleRouteJson(srj)
   const byNet = new Map<string, Obstacle[]>()
-  for (const pour of pours) {
-    const [owner] = pour.connectedTo
-    const net = owner && netAliases.getNetConnectedToId(owner)
+  for (const pour of circuit) {
+    if (
+      pour.type !== "pcb_copper_pour" ||
+      pour.shape !== "rect" ||
+      !pour.source_net_id
+    )
+      continue
+    const net = desiredConnectivity.getNetConnectedToId(pour.source_net_id)
     if (!net) continue
     const tiles = byNet.get(net) ?? []
-    for (const layer of pour.layers) tiles.push({ ...pour, layers: [layer] })
+    tiles.push({
+      type: "rect",
+      center: pour.center,
+      width: pour.width,
+      height: pour.height,
+      ccwRotationDegrees: pour.rotation,
+      layers: [pour.layer],
+      connectedTo: [pour.source_net_id],
+    })
     byNet.set(net, tiles)
   }
+  if (!byNet.size) return []
   const islandsByNet = new Map(
     Array.from(
       byNet,
@@ -30,11 +41,6 @@ export function getViasConnectedByCopperPour(
         [net, getConnectedCopperPourRepresentatives(tiles)] as const,
     ),
   )
-  const traceOwners = new Map<string, string>()
-  for (const e of circuit) {
-    if (e.type === "pcb_trace" && e.source_trace_id)
-      traceOwners.set(e.pcb_trace_id, e.source_trace_id)
-  }
   const viasByIsland = new Map<Obstacle, Set<string>>()
   for (const via of circuit) {
     if (
@@ -42,11 +48,7 @@ export function getViasConnectedByCopperPour(
       !(via.outer_diameter > via.hole_diameter && via.hole_diameter > 0)
     )
       continue
-    const owner =
-      via.source_net_id ??
-      via.source_trace_id ??
-      (via.pcb_trace_id && traceOwners.get(via.pcb_trace_id))
-    const net = owner && netAliases.getNetConnectedToId(owner)
+    const net = desiredConnectivity.getNetConnectedToId(via.pcb_via_id)
     const islands = net && islandsByNet.get(net)
     if (!islands) continue
     const layers: readonly string[] = via.layers

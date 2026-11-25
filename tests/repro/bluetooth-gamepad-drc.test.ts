@@ -73,14 +73,16 @@ test("the Bluetooth gamepad routes with zero copper errors, connected terminals 
     includeBoardClearance: true,
     drcOptions: {
       traceClearance: input.minTraceToPadEdgeClearance,
-      // Connectivity through the poured planes is resolved by the board renderer.
+      // Check continuity through poured copper below, using the exported board.
       includeTraceContinuity: false,
     },
   }
   const { errors, locationAwareErrors, circuitJson } =
     evaluateRelaxedDrc(snapshotInput)
   expect(locationAwareErrors).toHaveLength(errors.length)
-  expect(checkTraceContinuity(circuitJson, input)).toHaveLength(0)
+  expect(checkTraceContinuity(circuitJson)).toHaveLength(0)
+  const withoutPours = circuitJson.filter((e) => e.type !== "pcb_copper_pour")
+  expect(checkTraceContinuity(withoutPours).length).toBeGreaterThan(0)
   await expect(
     getBugReportSnapshotSvg(snapshotInput, { showErrorLocations: true }),
   ).toMatchSvgSnapshot(import.meta.path)

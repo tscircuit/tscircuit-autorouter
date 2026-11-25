@@ -1,7 +1,3 @@
-import {
-  getConnectionPointLayers,
-  type SimpleRouteJson,
-} from "lib/types/srj-types"
 import { getViasConnectedByCopperPour } from "./getViasConnectedByCopperPour"
 import { getPrimaryId } from "@tscircuit/circuit-json-util"
 import {
@@ -16,6 +12,7 @@ import type {
   PcbPort,
   PcbSmtPad,
   PcbTrace,
+  SourceTrace,
 } from "circuit-json"
 import {
   ConnectivityMap,
@@ -240,10 +237,8 @@ const getMissingConnectionCenter = (
 
 /** For each emitted route, source connections identify its expected terminals.
  * Compare those requirements with copper contact on the PCB layers. */
-export const checkTraceContinuity = (
-  circuitJson: AnyCircuitElement[],
-  routingRequest?: SimpleRouteJson,
-): Record<string, unknown>[] => {
+export const inspectTraceContinuity = (circuitJson: AnyCircuitElement[]) => {
+  const openEnds: OpenTraceEnd[] = []
   const errors: Record<string, unknown>[] = []
   const ports = circuitJson.filter((element) => element.type === "pcb_port")
   const traces = circuitJson.filter((element) => element.type === "pcb_trace")
@@ -265,7 +260,7 @@ export const checkTraceContinuity = (
     else padsByPort.set(pad.pcb_port_id, [pad])
   }
   const board = circuitJson.find((element) => element.type === "pcb_board")
-  const layerCount = routingRequest?.layerCount ?? board?.num_layers
+  const layerCount = board?.num_layers
   const stack: string[] = [
     "top",
     ...all_layers
@@ -450,46 +445,26 @@ export const checkTraceContinuity = (
       touchedPadsByTrace,
       viaConnections: [
         ...routeViaContacts,
-        ...(routingRequest
-          ? getViasConnectedByCopperPour(routingRequest, circuitJson)
-          : []),
+        ...getViasConnectedByCopperPour(circuitJson, desiredConnectivity),
       ],
     }))
-  // A routing target can be a coordinate on the boundary of a partial board.
-  // It has no pad of its own and cannot bridge traces on different layers.
-  const routingPoints = new Map<
-    string,
-    { point: Point; layers: string[]; copperIds: string[] }
-  >()
-  for (const connection of routingRequest?.connections ?? []) {
-    for (const point of connection.pointsToConnect) {
-      const id = point.pointId
+  const copperAt = (point: Point, layers: string[]): string[] => {
+    const copperIds = new Set<string>()
+    for (const { trace, start, end } of segments) {
       if (
-        !id ||
-        point.pcb_port_id ||
-        portsById.has(id) ||
-        ("terminalVia" in point && point.terminalVia) ||
-        routingPoints.has(id)
+        layers.includes(start.layer) &&
+        pointToSegmentDistance(point, start, end) <= start.width / 2
       )
-        continue
-      const layers = getConnectionPointLayers(point)
-      const copperIds = new Set<string>()
-      for (const { trace, start, end } of segments) {
-        if (
-          layers.includes(start.layer) &&
-          pointToSegmentDistance(point, start, end) <= start.width / 2
-        )
-          copperIds.add(trace.pcb_trace_id)
-      }
-      for (const via of viaContacts) {
-        if (
-          via.layers.some((layer) => layers.includes(layer)) &&
-          Math.hypot(point.x - via.x, point.y - via.y) <= (via.radius ?? 0)
-        )
-          copperIds.add(via.id)
-      }
-      routingPoints.set(id, { point, layers, copperIds: [...copperIds] })
+        copperIds.add(trace.pcb_trace_id)
     }
+    for (const via of viaContacts) {
+      if (
+        via.layers.some((layer) => layers.includes(layer)) &&
+        Math.hypot(point.x - via.x, point.y - via.y) <= (via.radius ?? 0)
+      )
+        copperIds.add(via.id)
+    }
+    return [...copperIds]
   }
   const endpointTouchesCopper = (
     trace: PcbTrace,
@@ -557,7 +532,10 @@ export const checkTraceContinuity = (
       )
     })
   }
-  const checkedSourceTraceIds = new Set<string>()
+  const reaches = (traceId: string, ids: string[]): boolean =>
+    ids.some((id) => id === traceId || padContacts.areIdsConnected(traceId, id)) ||
+    ids.some((id) => getPhysicalConnectivity().areIdsConnected(traceId, id))
+  const firstTraceBySource = new Map<SourceTrace, PcbTrace>()
   for (const trace of traces) {
     if (trace.route.length === 0) continue
     const first = trace.route[0]!
@@ -629,42 +607,16 @@ export const checkTraceContinuity = (
         pcb_port_ids: [],
       })
     }
-    const targets = (sourceTrace?.connected_source_net_ids ?? []).flatMap(
-      (id) => {
-        const target = routingPoints.get(id)
-        return target ? [{ id, ...target }] : []
-      },
-    )
-    const reaches = (ids: string[]): boolean =>
-      ids.some(
-        (id) =>
-          id === trace.pcb_trace_id ||
-          padContacts.areIdsConnected(trace.pcb_trace_id, id),
-      ) ||
-      ids.some((id) =>
-        getPhysicalConnectivity().areIdsConnected(trace.pcb_trace_id, id),
-      )
-    if (!checkedSourceTraceIds.has(sourceTraceId)) {
-      checkedSourceTraceIds.add(sourceTraceId)
-      for (const {
-        id,
-        point: { x, y },
-        copperIds,
-      } of targets) {
-        if (reaches(copperIds)) continue
-        errors.push({
-          ...commonError,
-          message: `Trace [${sourceTraceId}] is missing a connection to routing point ${id}`,
-          pcb_trace_error_id: `missing_connection_${trace.pcb_trace_id}_${id}`,
-          center: { x, y },
-          pcb_port_ids: [],
-        })
-      }
+    if (sourceTrace && !firstTraceBySource.has(sourceTrace)) {
+      firstTraceBySource.set(sourceTrace, trace)
       for (const port of expectedPorts) {
         const portPads = padsByPort.get(port.pcb_port_id)
         if (
           !portPads?.length ||
-          reaches(portPads.map((pad) => getPrimaryId(pad)!))
+          reaches(
+            trace.pcb_trace_id,
+            portPads.map((pad) => getPrimaryId(pad)!),
+          )
         )
           continue
         const kind =
@@ -697,16 +649,6 @@ export const checkTraceContinuity = (
       if (endpoint.route_type !== "wire") continue
       if (index === 1 && sameEndpoints && firstDisconnected) continue
       if (
-        targets.some(
-          ({ point, layers, copperIds }) =>
-            copperIds.includes(trace.pcb_trace_id) &&
-            layers.includes(endpoint.layer) &&
-            Math.hypot(point.x - endpoint.x, point.y - endpoint.y) <=
-              endpoint.width / 2,
-        )
-      )
-        continue
-      if (
         pads.some(
           (pad) =>
             desiredConnectivity.areIdsConnected(
@@ -718,15 +660,54 @@ export const checkTraceContinuity = (
       )
         continue
       if (index === 0) firstDisconnected = true
-      traceName ??= getDrcReadableTraceName(circuitJson, trace.pcb_trace_id)
-      errors.push({
-        ...commonError,
-        message: `Trace [${traceName}] has disconnected endpoint at (${endpoint.x.toFixed(2)}, ${endpoint.y.toFixed(2)})`,
-        pcb_trace_error_id: `disconnected_endpoint_${trace.pcb_trace_id}_${index === 0 ? "start" : "end"}`,
-        center: { x: endpoint.x, y: endpoint.y },
-        pcb_port_ids: [],
+      openEnds.push({
+        trace,
+        point: endpoint,
+        sourceTrace,
+        end: index === 0 ? "start" : "end",
       })
     }
   }
-  return errors
+  return {
+    errors,
+    openEnds,
+    firstTraceBySource,
+    portsById,
+    copperAt,
+    reaches,
+    disconnectedEndpointError: (end: OpenTraceEnd) =>
+      disconnectedEndpointError(circuitJson, end),
+  }
+}
+
+type OpenTraceEnd = {
+  trace: PcbTrace
+  sourceTrace?: SourceTrace
+  point: Wire
+  end: "start" | "end"
+}
+
+function disconnectedEndpointError(
+  circuitJson: AnyCircuitElement[],
+  { trace, point, end }: OpenTraceEnd,
+): Record<string, unknown> {
+  return {
+    type: "pcb_trace_error",
+    error_type: "pcb_trace_error",
+    source_trace_id: trace.source_trace_id ?? `!${trace.pcb_trace_id}`,
+    pcb_trace_id: trace.pcb_trace_id,
+    pcb_component_ids: [],
+    message: `Trace [${getDrcReadableTraceName(circuitJson, trace.pcb_trace_id)}] has disconnected endpoint at (${point.x.toFixed(2)}, ${point.y.toFixed(2)})`,
+    pcb_trace_error_id: `disconnected_endpoint_${trace.pcb_trace_id}_${end}`,
+    center: { x: point.x, y: point.y },
+    pcb_port_ids: [],
+  }
+}
+
+export function checkTraceContinuity(
+  circuitJson: AnyCircuitElement[],
+): Record<string, unknown>[] {
+  const { errors, openEnds, disconnectedEndpointError } =
+    inspectTraceContinuity(circuitJson)
+  return [...errors, ...openEnds.map(disconnectedEndpointError)]
 }

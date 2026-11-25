@@ -13,7 +13,8 @@ import { createDrcConnectivityMap } from "lib/utils/createDrcConnectivityMap"
 import { RELAXED_DRC_OPTIONS } from "lib/utils/drcPresets"
 import { annotateTraceEndpointPorts } from "lib/utils/autorouting-drc/annotateTraceEndpointPorts"
 import { checkBoardTraceClearance } from "lib/utils/autorouting-drc/checkBoardTraceClearance"
-import { checkTraceContinuity } from "lib/utils/autorouting-drc/checkTraceContinuity"
+import { inspectTraceContinuity } from "lib/utils/autorouting-drc/checkTraceContinuity"
+import { checkRoutedTraceEndpoints } from "lib/utils/autorouting-drc/checkRoutedTraceEndpoints"
 import { checkViaPairClearance } from "lib/utils/autorouting-drc/checkViaPairClearance"
 import { createTraceObstacleClearanceEvaluator } from "lib/utils/autorouting-drc/createTraceObstacleClearanceEvaluator"
 import { createViaPadClearanceEvaluator } from "lib/utils/autorouting-drc/createViaPadClearanceEvaluator"
@@ -60,18 +61,16 @@ export const createPipeline9AutoroutingDrcEvaluator = ({
     includeOriginalConnections: true,
     connectivityMaps,
   }
-  const board = includeBoardClearance
-    ? createPcbBoardElement({
-        ...inputSrj,
-        minBoardEdgeClearance: inputSrj.minBoardEdgeClearance ?? 0,
-      })
-    : undefined
+  const board = createPcbBoardElement({
+    ...inputSrj,
+    minBoardEdgeClearance: inputSrj.minBoardEdgeClearance ?? 0,
+  })
   const representedPadObstacleIndexes = new Set<number>()
   const staticCircuitJson = convertToCircuitJson(srjWithPointPairs, [], {
     ...conversionOptions,
     representedPadObstacleIndexes,
   })
-  if (board) staticCircuitJson.push(board)
+  if (includeBoardClearance) staticCircuitJson.push(board)
   const evaluateTraceObstacles = createTraceObstacleClearanceEvaluator(
     staticCircuitJson,
     {
@@ -108,18 +107,28 @@ export const createPipeline9AutoroutingDrcEvaluator = ({
       traces,
       conversionOptions,
     )
-    if (board) circuitJson.push(board)
+    circuitJson.push(board)
     const connMap = createDrcConnectivityMap(circuitJson)
     annotateTraceEndpointPorts(circuitJson)
     const obstacleErrors = evaluateTraceObstacles(circuitJson, connMap)
+    const continuityErrors: DrcError[] = []
+    if (
+      (options.includeTraceContinuity ?? drcOptions.includeTraceContinuity) !==
+      false
+    ) {
+      const continuity = inspectTraceContinuity(circuitJson)
+      continuityErrors.push(
+        ...continuity.errors,
+        ...checkRoutedTraceEndpoints(continuity, srjWithPointPairs.connections),
+      )
+    }
     const errors = [
       ...obstacleErrors.traceErrors,
       ...evaluateFixedCopper(traces),
-      ...checkBoardTraceClearance(circuitJson, { board }),
-      ...((options.includeTraceContinuity ??
-        drcOptions.includeTraceContinuity) === false
-        ? []
-        : checkTraceContinuity(circuitJson, srjWithPointPairs)),
+      ...(includeBoardClearance
+        ? checkBoardTraceClearance(circuitJson, { board })
+        : []),
+      ...continuityErrors,
       ...(drcOptions.includeTypedTraceClearance === false
         ? []
         : [...obstacleErrors.viaErrors, ...obstacleErrors.padErrors]),

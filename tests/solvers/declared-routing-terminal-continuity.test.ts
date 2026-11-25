@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test"
 import { createPipeline9AutoroutingDrcEvaluator } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/createPipeline9AutoroutingDrcEvaluator"
+import { checkTraceContinuity } from "lib/utils/autorouting-drc/checkTraceContinuity"
 import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 
 test("a padless endpoint must reach the declared position and layer of its own connection", () => {
@@ -55,7 +56,17 @@ test("a padless endpoint must reach the declared position and layer of its own c
   expect(check([...split, wire("middle", -1, 1)]).errors).toEqual([])
   // Both wire ends touch a, leaving b completely untouched.
   expect(errorsAt(-2, 0, "top")).toContain("missing_connection_wire_b")
-  expect(errorsAt(2, 0, "top")).toEqual([])
+  const complete = check([wire("wire", -2, 2)])
+  expect(complete.errors).toEqual([])
+  // A cropped job may stop at a named coordinate. The standalone board
+  // still has two bare ends and no component ports at those coordinates.
+  expect(
+    checkTraceContinuity(complete.circuitJson).map((e) => e.pcb_trace_error_id),
+  ).toEqual([
+    "disconnected_endpoint_wire_start",
+    "disconnected_endpoint_wire_end",
+  ])
+  expect(complete.circuitJson.some((e) => e.type === "pcb_port")).toBe(false)
   expect(errorsAt(2, 0, "bottom")).toContain("disconnected_endpoint_wire_end")
   expect(errorsAt(2, 1, "top")).toContain("disconnected_endpoint_wire_end")
   expect(errorsAt(1, 0, "top")).toContain("disconnected_endpoint_wire_end")
