@@ -2,7 +2,7 @@ import {
   cellsPerBallPitch,
   type BgaEscapeRoutingSolverInput,
   type BgaTrace,
-} from "@tscircuit/high-density-phase-solver"
+} from "@tscircuit/bga-escape-routing-solver"
 import { BgaGrid } from "lib/solvers/BgaTopologyGeneratorSolver/bga-grid"
 import type { DetectedComponent } from "lib/solvers/ComponentDetectionSolver/ComponentDetectionSolver"
 import { getBgaLikeObstacleSubset } from "lib/solvers/ComponentDetectionSolver/detectors/bga/BgaComponentDetector"
@@ -13,8 +13,8 @@ import { getBgaSignalLayers } from "./getBgaSignalLayers"
 
 export type BgaEscapeBoard = {
   inputSrj: SimpleRouteJson
-  pointPairs: SimpleRouteConnection[]
-  components: DetectedComponent[]
+  pointPairs?: SimpleRouteConnection[]
+  components?: DetectedComponent[]
 }
 
 function hasSurfacePadConnections(srj: SimpleRouteJson): boolean {
@@ -72,6 +72,11 @@ export function getBgaEscapeRoutingInput({
 }: BgaEscapeBoard): BgaEscapeRoutingSolverInput | undefined {
   const clearance = inputSrj.minTraceToPadEdgeClearance
   if (clearance === undefined || !supportsBgaEscapeRouting(inputSrj)) return
+  if (!pointPairs || !components) {
+    throw new Error(
+      "BGA routing requires point-paired connections and detected components",
+    )
+  }
   const expectedPairs = inputSrj.connections.reduce(
     (total, connection) => total + connection.pointsToConnect.length - 1,
     0,
