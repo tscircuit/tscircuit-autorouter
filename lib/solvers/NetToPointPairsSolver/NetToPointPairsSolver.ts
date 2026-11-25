@@ -18,6 +18,7 @@ type ConnectionName = SimpleRouteConnection["name"]
 interface PathHop {
   fromPointId: PointId
   toPointId: PointId
+  nominalTraceWidth?: number
   /** Name of the point-pair connection emitted for this hop. */
   emittedConnectionName?: ConnectionName
 }
@@ -88,19 +89,24 @@ export class NetToPointPairsSolver extends BaseSolver {
         }
       },
     )
-    this.unprocessedConnections = mergeConnections(
-      connectionsWithBusTraceWidths,
-    )
-    this.newConnections = []
-    this.initiallyConnectedMap = initiallyConnectedMap
-    for (const { name, path } of ogSrj.connections) {
-      if (!path) continue
+    const connectionsForMst = connectionsWithBusTraceWidths.map((connection) => {
+      const { name, path, nominalTraceWidth, width } = connection
+      if (!path || path.length < 2) return connection
       const hops: PathHop[] = []
       for (let i = 1; i < path.length; i++) {
-        hops.push({ fromPointId: path[i - 1]!, toPointId: path[i]! })
+        hops.push({
+          fromPointId: path[i - 1]!,
+          toPointId: path[i]!,
+          nominalTraceWidth: nominalTraceWidth ?? width,
+        })
       }
       this.pathHopsByConnectionName.set(name, hops)
-    }
+      // The path owns its width. Only the other connections set the net width.
+      return { ...connection, nominalTraceWidth: undefined, width: undefined }
+    })
+    this.unprocessedConnections = mergeConnections(connectionsForMst)
+    this.newConnections = []
+    this.initiallyConnectedMap = initiallyConnectedMap
   }
 
   /** Zero-weight MST edges for the path pairs whose points are in `connection`. */
@@ -130,8 +136,16 @@ export class NetToPointPairsSolver extends BaseSolver {
     connection: SimpleRouteConnection,
     pathEdge?: PathEdge,
   ): void {
+    let pathWidth: number | undefined
     for (const hop of pathEdge?.hops ?? []) {
       hop.emittedConnectionName = connection.name
+      if (hop.nominalTraceWidth !== undefined) {
+        pathWidth = Math.max(pathWidth ?? 0, hop.nominalTraceWidth)
+      }
+    }
+    if (pathWidth !== undefined) {
+      connection.nominalTraceWidth = pathWidth
+      connection.width = pathWidth
     }
     this.newConnections.push(connection)
   }
@@ -143,6 +157,15 @@ export class NetToPointPairsSolver extends BaseSolver {
     }
     const connection = this.unprocessedConnections.pop()!
     const pathEdges = this.getPathEdges(connection)
+    const fixedWidthEdges = pathEdges.filter((edge) =>
+      edge.hops.some((hop) => hop.nominalTraceWidth !== undefined),
+    )
+    if (fixedWidthEdges.length && connection.nominalTraceWidth === undefined) {
+      connection.nominalTraceWidth =
+        connection.width ??
+        this.ogSrj.nominalTraceWidth ??
+        this.ogSrj.minTraceWidth
+    }
 
     const { zeroWeightEdges, arePointsConnected } =
       getInitiallyConnectedStateForConnection(
@@ -189,6 +212,13 @@ export class NetToPointPairsSolver extends BaseSolver {
       originalEdges,
       optimizedEdges,
     })
+    // Kruskal drops the last edge of a cycle. A requested width still needs
+    // that physical pair even when the other requested pairs already span it.
+    for (const pathEdge of fixedWidthEdges) {
+      if (pathEdge.from !== pathEdge.to && !edges.includes(pathEdge)) {
+        edges.push(pathEdge)
+      }
+    }
 
     let mstIdx = 0
     for (const edge of edges) {
