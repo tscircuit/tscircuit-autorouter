@@ -17,6 +17,7 @@ export const getBugReportSnapshotSvg = (
   options: {
     bounds?: EvaluateRelaxedDrcInput["inputSrj"]["bounds"]
     showErrorLocations?: boolean
+    showBoardOutline?: boolean
   } = {},
 ): string => {
   const { errors, locationAwareErrors } = evaluateRelaxedDrc(input)
@@ -34,6 +35,15 @@ export const getBugReportSnapshotSvg = (
         label: message,
       }))
     : []
+  const outline = input.inputSrj.outline
+  if (options.showBoardOutline && outline && outline.length >= 3) {
+    graphics.lines.push({
+      points: [...outline, outline[0]!],
+      strokeColor: "#111827",
+      strokeWidth: 0.2,
+      label: "Board outline",
+    })
+  }
   // An explicit frame keeps before/after cutouts at the same scale.
   if (options.bounds) {
     const { minX, minY, maxX, maxY } = options.bounds
