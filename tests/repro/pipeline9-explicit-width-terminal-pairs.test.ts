@@ -56,8 +56,8 @@ test("routes explicit width paths and a tap on the same net", async (): Promise<
   expect(wires).toMatchInlineSnapshot(`
     [
       "A–B · 0.8 mm",
-      "B–C · 0.8 mm",
-      "C–D · 0.8 mm",
+      "B–C · 0.25 mm",
+      "C–D · 0.2 mm",
     ]
   `)
   await expect(

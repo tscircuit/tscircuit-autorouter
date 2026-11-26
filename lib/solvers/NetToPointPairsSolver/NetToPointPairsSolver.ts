@@ -18,6 +18,7 @@ type ConnectionName = SimpleRouteConnection["name"]
 interface PathHop {
   fromPointId: PointId
   toPointId: PointId
+  nominalTraceWidth?: number
   /** Name of the point-pair connection emitted for this hop. */
   emittedConnectionName?: ConnectionName
 }
@@ -26,6 +27,17 @@ type PathEdge = {
   to: ConnectionPoint
   weight: number
   hops: PathHop[]
+}
+
+function isSamePadLocation(a: ConnectionPoint, b: ConnectionPoint): boolean {
+  if (a === b) return true
+  if (a.x !== b.x || a.y !== b.y) return false
+  const layersA = getConnectionPointLayers(a)
+  const layersB = getConnectionPointLayers(b)
+  return (
+    layersA.length === layersB.length &&
+    layersA.every((layer) => layersB.includes(layer))
+  )
 }
 
 /**
@@ -38,10 +50,8 @@ type PathEdge = {
  * Where we create the minimum number of pairs, we're using a minimum spanning
  * tree (MST). Consecutive IDs of a connection's `path` enter the MST as
  * zero-weight edges, so a written trace path is routed in order and the other
- * points of the net join it by distance.
- *
- * Sometimes it can be used to add additional traces to help make sure we
- * distribute load effectively. In this version we don't do that!
+ * points of the net join it by distance. An explicitly sized hop is kept with
+ * its own width even when it closes a loop.
  */
 export class NetToPointPairsSolver extends BaseSolver {
   override getSolverName(): string {
@@ -73,34 +83,34 @@ export class NetToPointPairsSolver extends BaseSolver {
         )
       }
     }
-    const connectionsWithBusTraceWidths = ogSrj.connections.map(
-      (connection) => {
-        const busTraceWidth = busTraceWidthsByConnectionName.get(
-          connection.name,
-        )
-        if (busTraceWidth === undefined) return connection
-        return {
-          ...connection,
-          nominalTraceWidth: Math.max(
-            connection.nominalTraceWidth ?? 0,
-            busTraceWidth,
-          ),
-        }
-      },
-    )
-    this.unprocessedConnections = mergeConnections(
-      connectionsWithBusTraceWidths,
-    )
-    this.newConnections = []
-    this.initiallyConnectedMap = initiallyConnectedMap
-    for (const { name, path } of ogSrj.connections) {
-      if (!path) continue
+    const connectionsForMst = ogSrj.connections.map((connection) => {
+      const { name, path } = connection
+      const busWidth = busTraceWidthsByConnectionName.get(name)
+      const traceWidth = connection.nominalTraceWidth ?? connection.width
+      const nominalTraceWidth =
+        busWidth === undefined
+          ? traceWidth
+          : Math.max(busWidth, traceWidth ?? 0)
+      if (!path || path.length < 2) {
+        if (nominalTraceWidth === connection.nominalTraceWidth)
+          return connection
+        return { ...connection, nominalTraceWidth }
+      }
       const hops: PathHop[] = []
       for (let i = 1; i < path.length; i++) {
-        hops.push({ fromPointId: path[i - 1]!, toPointId: path[i]! })
+        hops.push({
+          fromPointId: path[i - 1]!,
+          toPointId: path[i]!,
+          nominalTraceWidth,
+        })
       }
       this.pathHopsByConnectionName.set(name, hops)
-    }
+      // The bus width is the default for branches outside the written path.
+      return { ...connection, nominalTraceWidth: busWidth, width: undefined }
+    })
+    this.unprocessedConnections = mergeConnections(connectionsForMst)
+    this.newConnections = []
+    this.initiallyConnectedMap = initiallyConnectedMap
   }
 
   /** Zero-weight MST edges for the path pairs whose points are in `connection`. */
@@ -116,8 +126,10 @@ export class NetToPointPairsSolver extends BaseSolver {
         if (!from || !to) continue
         const sharedEdge = edges.find(
           (edge) =>
-            (edge.from === from && edge.to === to) ||
-            (edge.from === to && edge.to === from),
+            (isSamePadLocation(edge.from, from) &&
+              isSamePadLocation(edge.to, to)) ||
+            (isSamePadLocation(edge.from, to) &&
+              isSamePadLocation(edge.to, from)),
         )
         if (sharedEdge) sharedEdge.hops.push(hop)
         else edges.push({ from, to, weight: 0, hops: [hop] })
@@ -130,8 +142,16 @@ export class NetToPointPairsSolver extends BaseSolver {
     connection: SimpleRouteConnection,
     pathEdge?: PathEdge,
   ): void {
+    let pathWidth: number | undefined
     for (const hop of pathEdge?.hops ?? []) {
       hop.emittedConnectionName = connection.name
+      if (hop.nominalTraceWidth !== undefined) {
+        pathWidth = Math.max(pathWidth ?? 0, hop.nominalTraceWidth)
+      }
+    }
+    if (pathWidth !== undefined) {
+      connection.nominalTraceWidth = pathWidth
+      connection.width = pathWidth
     }
     this.newConnections.push(connection)
   }
@@ -143,6 +163,15 @@ export class NetToPointPairsSolver extends BaseSolver {
     }
     const connection = this.unprocessedConnections.pop()!
     const pathEdges = this.getPathEdges(connection)
+    const fixedWidthEdges = pathEdges.filter((edge) =>
+      edge.hops.some((hop) => hop.nominalTraceWidth !== undefined),
+    )
+    if (fixedWidthEdges.length && connection.nominalTraceWidth === undefined) {
+      connection.nominalTraceWidth =
+        connection.width ??
+        this.ogSrj.nominalTraceWidth ??
+        this.ogSrj.minTraceWidth
+    }
 
     const { zeroWeightEdges, arePointsConnected } =
       getInitiallyConnectedStateForConnection(
@@ -152,7 +181,12 @@ export class NetToPointPairsSolver extends BaseSolver {
 
     if (connection.pointsToConnect.length === 2) {
       const [startPoint, endPoint] = connection.pointsToConnect
-      if (startPoint && endPoint && arePointsConnected(startPoint, endPoint)) {
+      if (
+        startPoint &&
+        endPoint &&
+        (arePointsConnected(startPoint, endPoint) ||
+          (fixedWidthEdges.length && isSamePadLocation(startPoint, endPoint)))
+      ) {
         return
       }
       this.emitConnection(
@@ -189,6 +223,16 @@ export class NetToPointPairsSolver extends BaseSolver {
       originalEdges,
       optimizedEdges,
     })
+    // Kruskal drops the last edge of a cycle. A requested width still needs
+    // that physical pair even when the other requested pairs already span it.
+    for (const pathEdge of fixedWidthEdges) {
+      if (
+        !edges.includes(pathEdge) &&
+        !isSamePadLocation(pathEdge.from, pathEdge.to)
+      ) {
+        edges.push(pathEdge)
+      }
+    }
 
     let mstIdx = 0
     for (const edge of edges) {
