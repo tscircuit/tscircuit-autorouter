@@ -84,10 +84,12 @@ test("joint DRC repair exposes sequential child stages and propagates failures",
       "exactRepairSolver",
       "regionalB01RepairSolver",
       "boundedRegionalRepairSolver",
+      "finalDrcRepairSolver",
     ])
     expect(solver.activeSubSolver).toBeNull()
     expect(solver.regionalB01RepairSolver?.solved).toBeTrue()
     expect(solver.boundedRegionalRepairSolver?.solved).toBeTrue()
+    expect(solver.finalDrcRepairSolver?.solved).toBeTrue()
     expect(solver.progress).toBe(1)
     expect(solveSpies.every((spy) => spy.mock.calls.length === 0)).toBeTrue()
     const fixture = createBoundedRegionalRepairFixture()

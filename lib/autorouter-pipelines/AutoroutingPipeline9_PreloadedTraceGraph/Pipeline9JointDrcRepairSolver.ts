@@ -39,6 +39,7 @@ import {
 import { getPipeline9BoundedRepairBudget } from "./applyPipeline9BoundedRegionalRepairs"
 import { Pipeline9RegionalB01RepairSolver } from "./Pipeline9RegionalB01RepairSolver"
 import { Pipeline9BoundedRegionalRepairSolver } from "./Pipeline9BoundedRegionalRepairSolver"
+import { Pipeline9FinalDrcRepairSolver } from "./Pipeline9FinalDrcRepairSolver"
 import { applyPipeline9TerminalEscapeRelocations } from "./applyPipeline9TerminalEscapeRelocations"
 import { assignUniquePcbTraceIdsToNewTraces } from "./assignUniquePcbTraceIdsToNewTraces"
 import {
@@ -52,7 +53,6 @@ import { getPipeline9PreloadedViaPairTraceGroups } from "./getPipeline9Preloaded
 import { mergePipeline9MovablePreloadedVias } from "./mergePipeline9MovablePreloadedVias"
 import { normalizePipeline9DrcErrorsForRepair } from "./normalizePipeline9DrcErrorsForRepair"
 import {
-  getPipeline9DrcErrors,
   getPipeline9RouteIndexByTraceId,
   type Pipeline9CollapsedTraceParticipant,
   type Pipeline9PreloadRepairTraceIds,
@@ -690,7 +690,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     ReturnType<DrcEvaluator>
   >()
   private combinedOutput?: HighDensityRoute[]
-  private directContactRepairRoutes?: HighDensityRoute[]
+  private preRegionalRepairRoutes?: HighDensityRoute[]
   currentPipelineStepIndex = 0
   private regionalB01Params?: ConstructorParameters<
     typeof Pipeline9RegionalB01RepairSolver
@@ -802,9 +802,36 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       },
       onSolved: (): void => this.finishBoundedRegionalRepair(),
     },
+    {
+      solverName: "finalDrcRepairSolver",
+      createSolver: (): BaseSolver => {
+        const bounded = this.boundedRegionalRepairSolver
+        if (
+          !bounded?.solved ||
+          !this.preRegionalRepairRoutes ||
+          !this.cachedReferenceDrcEvaluator ||
+          !this.exactRepairParams
+        ) {
+          throw new Error("Pipeline9 final DRC repair is missing its inputs")
+        }
+        this.finalDrcRepairSolver = new Pipeline9FinalDrcRepairSolver({
+          regionalRoutes: bounded.getResult().routes,
+          preRegionalRoutes: this.preRegionalRepairRoutes,
+          contactGuard: this.traceContactGuard,
+          referenceDrcEvaluator: this.cachedReferenceDrcEvaluator,
+          contactRepairParams: {
+            ...this.exactRepairParams,
+            inputHdRoutes: this.traceContactInputHdRoutes,
+          },
+        })
+        return this.finalDrcRepairSolver
+      },
+      onSolved: (): void => this.finishFinalDrcRepair(),
+    },
   ]
   boundedRegionalRepairSolver?: Pipeline9BoundedRegionalRepairSolver
   regionalB01RepairSolver?: Pipeline9RegionalB01RepairSolver
+  finalDrcRepairSolver?: Pipeline9FinalDrcRepairSolver
 
   private cacheIndexedDrcResult(
     candidateKey: DrcCandidateKey,
@@ -2101,6 +2128,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       fixedPreloadedObstacleRoutes: this.fixedPreloadedObstacleRoutes,
       updatedPreloadedTraces: this.params.updatedPreloadedTraces,
     })
+    this.preRegionalRepairRoutes = structuredClone(terminalEscapeResult.routes)
     this.regionalB01Params = {
       srj: this.params.srj,
       routes: terminalEscapeResult.routes,
@@ -2138,21 +2166,6 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       terminalEscapeCandidateCount:
         terminalEscapeResult.attemptedCandidateCount,
       terminalEscapeAcceptedCount: terminalEscapeResult.acceptedCandidateCount,
-    }
-    // Keep the direct repair input while regional routing attempts to clear
-    // the interacting contacts. Projected fixed copper already goes regional.
-    if (
-      this.exactRepairSolver.stats.drcBranchPortfolioStoppedForTraceContacts ===
-        true &&
-      !exactReferenceDrcErrors.some(
-        (error) => error.drc_source === "fixed_copper",
-      ) &&
-      this.traceContactGuard.getNewContactPairs(terminalEscapeResult.routes)
-        .length > 1
-    ) {
-      this.directContactRepairRoutes = structuredClone(
-        terminalEscapeResult.routes,
-      )
     }
   }
 
@@ -2215,17 +2228,6 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     const boundedRegionalRepairResult =
       this.boundedRegionalRepairSolver.getResult()
     const regionalRepairBudget = this.boundedRegionalParams.budget
-    this.combinedOutput = boundedRegionalRepairResult.routes
-    // Supersede the direct repair only with a reference-clean route that
-    // also passes the physical contact guard.
-    if (
-      this.directContactRepairRoutes &&
-      (boundedRegionalRepairResult.publishedDrcIssueCount !== 0 ||
-        this.traceContactGuard.getNewContactPairs(this.combinedOutput).length >
-          0)
-    ) {
-      this.combinedOutput = this.directContactRepairRoutes
-    }
     this.stats = {
       ...this.stats,
       boundedRegionalRepairMaxRegions: regionalRepairBudget.maxRegions,
@@ -2276,6 +2278,15 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       indexedDrcCandidateCacheSize: this.indexedDrcCandidateCache.size,
       indexedDrcCandidateCacheCapacity: INDEXED_DRC_CANDIDATE_CACHE_SIZE,
     }
+  }
+
+  private finishFinalDrcRepair(): void {
+    const finalRepair = this.finalDrcRepairSolver
+    if (!finalRepair?.solved) {
+      throw new Error("Pipeline9 final DRC repair must solve before publishing")
+    }
+    this.combinedOutput = finalRepair.getOutput()
+    this.stats = { ...this.stats, ...finalRepair.stats }
     this.finishWithTraceContactCheck()
   }
 
