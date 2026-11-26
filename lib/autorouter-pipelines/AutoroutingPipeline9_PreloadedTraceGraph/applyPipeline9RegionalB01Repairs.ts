@@ -455,6 +455,7 @@ export const preparePipeline9RegionalB01Candidate = ({
     connMap,
     colorMap,
     obstacles: srj.obstacles,
+    boardGeometry: srj,
     layerCount: srj.layerCount,
     allowBlindAndBuriedVias: srj.allowBlindAndBuriedVias,
     viaDiameter,

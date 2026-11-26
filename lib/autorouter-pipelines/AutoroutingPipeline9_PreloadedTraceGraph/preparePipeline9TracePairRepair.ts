@@ -167,6 +167,7 @@ export const preparePipeline9TracePairRepair = ({
     connMap,
     colorMap: params.colorMap,
     obstacles: srj.obstacles,
+    boardGeometry: srj,
     layerCount: srj.layerCount,
     allowBlindAndBuriedVias: srj.allowBlindAndBuriedVias,
     viaDiameter,
