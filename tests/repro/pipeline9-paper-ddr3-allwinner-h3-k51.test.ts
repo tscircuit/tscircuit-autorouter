@@ -11,7 +11,9 @@ test("routes H3 K51 DDR3 beside the terminated clock and completed data bytes", 
     import.meta.url,
   )
   const { cases } = JSON.parse(
-    new TextDecoder().decode(Bun.gunzipSync(await Bun.file(fixtureUrl).bytes())),
+    new TextDecoder().decode(
+      Bun.gunzipSync(await Bun.file(fixtureUrl).bytes()),
+    ),
   ) as {
     cases: {
       case: string

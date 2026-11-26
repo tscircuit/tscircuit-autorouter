@@ -11,7 +11,9 @@ test("routes Zynq CLG400 DDR3 beside both completed data bytes", async (): Promi
     import.meta.url,
   )
   const { cases } = JSON.parse(
-    new TextDecoder().decode(Bun.gunzipSync(await Bun.file(fixtureUrl).bytes())),
+    new TextDecoder().decode(
+      Bun.gunzipSync(await Bun.file(fixtureUrl).bytes()),
+    ),
   ) as {
     cases: {
       case: string
@@ -44,9 +46,10 @@ test("routes Zynq CLG400 DDR3 beside both completed data bytes", async (): Promi
     routedTraces: solver.getOutputSimplifiedPcbTraces(),
   }
   const { circuitJson, errors } = evaluateRelaxedDrc(snapshotInput)
-  expect([...errors, ...checkEachPcbPortConnectedToPcbTraces(circuitJson)]).toEqual(
-    [],
-  )
+  expect([
+    ...errors,
+    ...checkEachPcbPortConnectedToPcbTraces(circuitJson),
+  ]).toEqual([])
 
   await expect(getBugReportSnapshotSvg(snapshotInput)).toMatchSvgSnapshot(
     import.meta.path,
