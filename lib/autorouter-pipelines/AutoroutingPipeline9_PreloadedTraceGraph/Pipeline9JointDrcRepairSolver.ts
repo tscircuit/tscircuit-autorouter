@@ -1799,7 +1799,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         this.activeSubSolver = null
       } else if (child.solved) {
         this.activeSubSolver = null
-        if (child === this.traceContactRepairSolver) {
+        if (child instanceof TraceContactRepairSolver) {
           this.finishTraceContactRepair(child)
           return
         }
@@ -1832,10 +1832,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
   }
 
   getCurrentPhase(): string {
-    if (
-      this.activeSubSolver &&
-      this.activeSubSolver === this.traceContactRepairSolver
-    ) {
+    if (this.activeSubSolver instanceof TraceContactRepairSolver) {
       return "traceContactRepairSolver"
     }
     return this.pipelineDef[this.currentPipelineStepIndex]?.solverName ?? "none"
