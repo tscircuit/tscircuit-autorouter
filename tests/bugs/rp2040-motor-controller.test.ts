@@ -25,23 +25,48 @@ test("RP2040 motor controller: default Pipeline 9 relaxed DRC", async (): Promis
   expect(solver.failed, solver.error ?? "").toBe(false)
   expect(solver.solved).toBe(true)
   const routedTraces = solver.getOutputSimplifiedPcbTraces()
+  const drcInput = {
+    inputSrj: input,
+    srjWithPointPairs: solver.srjWithPointPairs!,
+    routedTraces,
+  }
+  expect(evaluateRelaxedDrc(drcInput).errors).toEqual([])
   expect(
     evaluateRelaxedDrc({
-      inputSrj: input,
-      srjWithPointPairs: solver.srjWithPointPairs!,
-      routedTraces,
+      ...drcInput,
+      includeBoardClearance: true,
+      drcOptions: {
+        traceClearance: input.minTraceToPadEdgeClearance,
+        viaClearance: input.minViaHoleEdgeToViaHoleEdgeClearance,
+      },
     }).errors,
   ).toEqual([])
+
+  const vmHf = routedTraces.find(
+    (trace) =>
+      trace.connectsTo?.includes("pcb_port_253") &&
+      trace.connectsTo.includes("pcb_port_261"),
+  )
+  expect(
+    vmHf?.route.some((start, index, route) => {
+      const end = route[index + 1]
+      return (
+        start.route_type === "wire" &&
+        end?.route_type === "wire" &&
+        start.layer === end.layer &&
+        start.width === 0.8 &&
+        end.width === 0.8 &&
+        (start.x !== end.x || start.y !== end.y)
+      )
+    }),
+  ).toBe(true)
+
   // Native routing can produce different route variants across platforms.
   const snapshotPath =
     process.platform === "linux"
       ? import.meta.path.replace(/\.test\.ts$/, "-linux.test.ts")
       : import.meta.path
-  await expect(
-    getBugReportSnapshotSvg({
-      inputSrj: input,
-      srjWithPointPairs: solver.srjWithPointPairs!,
-      routedTraces,
-    }),
-  ).toMatchSvgSnapshot(snapshotPath)
+  await expect(getBugReportSnapshotSvg(drcInput)).toMatchSvgSnapshot(
+    snapshotPath,
+  )
 })

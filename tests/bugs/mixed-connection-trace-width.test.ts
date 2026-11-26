@@ -60,13 +60,19 @@ test("widens a supply connection that shares a pad with a sense connection", asy
   expect(solver.solved, solver.error ?? "").toBe(true)
 
   const routedTraces = solver.getOutputSimplifiedPcbTraces()
-  const supplyTrace = routedTraces.find((trace) =>
-    trace.connectsTo?.includes("pcb_port_supply"),
-  )
-  const supplyWireWidths = supplyTrace!.route.flatMap((point) =>
-    point.route_type === "wire" ? [point.width] : [],
-  )
-  expect(Math.min(...supplyWireWidths)).toBe(0.8)
+  for (const [point, width] of [
+    [sense, 0.15],
+    [supply, 0.8],
+  ] as const) {
+    const trace = routedTraces.find((trace) =>
+      trace.connectsTo?.includes(point.pcb_port_id!),
+    )
+    expect(trace).toBeDefined()
+    const wireWidths = trace!.route.flatMap((point) =>
+      point.route_type === "wire" ? [point.width] : [],
+    )
+    expect(new Set(wireWidths)).toEqual(new Set([width]))
+  }
 
   const drcInput = {
     inputSrj,

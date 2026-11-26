@@ -91,6 +91,7 @@ export const pipeline9TopologySteps = [
         inputSrj,
         pipeline.colorMap,
         getInitiallyConnectedMapFromSimpleRouteJson(inputSrj),
+        { preserveBranchWidths: true },
       ]
     },
     onSolved: (pipeline) => {

@@ -11,8 +11,16 @@ import { seededRandom } from "lib/utils/cloneAndShuffleArray"
 import { BaseSolver } from "../BaseSolver"
 import { buildMinimumSpanningTree } from "./buildMinimumSpanningTree"
 import { getInitiallyConnectedStateForConnection } from "./get-initially-connected-state-for-connection"
-import { mergeConnections } from "./mergeConnections"
+import { getMstEdgeTraceWidths } from "./getMstEdgeTraceWidths"
+import {
+  groupConnectionsBySharedPoints,
+  mergeConnectionGroup,
+} from "./mergeConnections"
 import { orderMstEdgesForStablePairNames } from "./orderMstEdgesForStablePairNames"
+
+export interface NetToPointPairsOptions {
+  preserveBranchWidths?: boolean
+}
 
 type ConnectionName = SimpleRouteConnection["name"]
 interface PathHop {
@@ -48,16 +56,21 @@ export class NetToPointPairsSolver extends BaseSolver {
     return "NetToPointPairsSolver"
   }
 
-  unprocessedConnections: Array<SimpleRouteConnection>
+  private readonly pendingConnectionGroups: SimpleRouteConnection[][]
   newConnections: Array<SimpleRouteConnection>
   readonly initiallyConnectedMap: ConnectivityMap
   /** Each connection's `path` as hops, in written order. */
   readonly pathHopsByConnectionName = new Map<ConnectionName, PathHop[]>()
 
+  get unprocessedConnections(): SimpleRouteConnection[] {
+    return this.pendingConnectionGroups.map(mergeConnectionGroup)
+  }
+
   constructor(
     public ogSrj: SimpleRouteJson,
     public colorMap: Record<string, string> = {},
     initiallyConnectedMap: ConnectivityMap,
+    private readonly options: NetToPointPairsOptions = {},
   ) {
     super()
     const busTraceWidthsByConnectionName = new Map<ConnectionName, number>()
@@ -88,7 +101,7 @@ export class NetToPointPairsSolver extends BaseSolver {
         }
       },
     )
-    this.unprocessedConnections = mergeConnections(
+    this.pendingConnectionGroups = groupConnectionsBySharedPoints(
       connectionsWithBusTraceWidths,
     )
     this.newConnections = []
@@ -137,11 +150,24 @@ export class NetToPointPairsSolver extends BaseSolver {
   }
 
   _step() {
-    if (this.unprocessedConnections.length === 0) {
+    const sources = this.pendingConnectionGroups.pop()
+    if (!sources) {
       this.solved = true
       return
     }
-    const connection = this.unprocessedConnections.pop()!
+    const connection = mergeConnectionGroup(sources)
+    const defaultWidth =
+      this.ogSrj.nominalTraceWidth ?? this.ogSrj.minTraceWidth
+    const sourceWidths =
+      this.options.preserveBranchWidths && sources.length > 1
+        ? sources.map(
+            (source) =>
+              source.nominalTraceWidth ?? source.width ?? defaultWidth,
+          )
+        : []
+    const hasMixedWidths = sourceWidths.some(
+      (width) => width !== sourceWidths[0],
+    )
     const pathEdges = this.getPathEdges(connection)
 
     const { zeroWeightEdges, arePointsConnected } =
@@ -158,6 +184,9 @@ export class NetToPointPairsSolver extends BaseSolver {
       this.emitConnection(
         {
           ...connection,
+          ...(hasMixedWidths && {
+            nominalTraceWidth: Math.max(...sourceWidths),
+          }),
           __rootConnectionNames: connection.__rootConnectionNames ?? [
             connection.name,
           ],
@@ -190,14 +219,29 @@ export class NetToPointPairsSolver extends BaseSolver {
       optimizedEdges,
     })
 
+    const branchWidths = hasMixedWidths
+      ? getMstEdgeTraceWidths(
+          connection.pointsToConnect,
+          edges,
+          sources,
+          defaultWidth,
+        )
+      : undefined
     let mstIdx = 0
     for (const edge of edges) {
       if (arePointsConnected(edge.from, edge.to)) {
         continue
       }
+      const branchWidth = branchWidths?.get(edge)
+      if (branchWidths && branchWidth === undefined) {
+        throw new Error(
+          `Missing width for a routed branch of "${connection.name}"`,
+        )
+      }
       this.emitConnection(
         {
           ...connection,
+          ...(branchWidth !== undefined && { nominalTraceWidth: branchWidth }),
           pointsToConnect: [edge.from, edge.to],
           name: `${connection.name}_mst${mstIdx++}`,
           __rootConnectionNames: connection.__rootConnectionNames ?? [
