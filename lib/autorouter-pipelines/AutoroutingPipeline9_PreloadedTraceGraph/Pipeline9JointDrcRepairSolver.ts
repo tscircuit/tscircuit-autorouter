@@ -2285,10 +2285,6 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       deferTraceContactGuard: false,
     })
     this.activeSubSolver = this.traceContactRepairSolver
-    this.MAX_ITERATIONS = Math.max(
-      this.MAX_ITERATIONS,
-      this.iterations + this.traceContactRepairSolver.MAX_ITERATIONS + 2,
-    )
   }
 
   private finishTraceContactRepair(solver: TraceContactRepairSolver): void {
