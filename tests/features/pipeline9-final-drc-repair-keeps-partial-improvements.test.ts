@@ -52,6 +52,8 @@ test("final DRC repair keeps the better contact-checked route with residual erro
         inputHdRoutes: routes,
         connMap,
         drcEvaluator,
+        broadMaxIterations: 12,
+        broadPassMultiplier: 3,
       },
     })
     solver.solve()
