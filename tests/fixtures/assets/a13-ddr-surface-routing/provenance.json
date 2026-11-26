@@ -1,0 +1,11 @@
+{
+  "board": "Allwinner A13 SBC DDR",
+  "source": "https://github.com/vd-rd/sbc_allwinner_a13/blob/8973c32c64349515da64e268cc03ea8c0789ca2a/hardware/module.kicad_pcb",
+  "circuit": "https://github.com/ShiboSoftwareDev/core-ddr-benchmark/blob/5376a569cd82ef0dc715d9ac142abed8c087961f/circuits/native-ddr-board.tsx",
+  "capture": "Remaining-phase SRJ emitted by the native TSX on tscircuit 0.0.3285 with board routingLayers and bus-lanes-solver PR 237. All 378 physical obstacles, 32 fixed data traces and 64 remaining nets match the previous capture.",
+  "inputSha256": "60487d2bfa01bbe200e30933a13a6d7285a1b10c6972df921e3b24d9bbd8b686",
+  "signalLayers": [
+    "top",
+    "bottom"
+  ]
+}
