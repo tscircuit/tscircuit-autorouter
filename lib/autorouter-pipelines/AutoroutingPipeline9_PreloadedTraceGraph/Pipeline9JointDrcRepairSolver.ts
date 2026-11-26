@@ -2100,6 +2100,8 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       fixedPreloadedObstacleRoutes: this.fixedPreloadedObstacleRoutes,
       updatedPreloadedTraces: this.params.updatedPreloadedTraces,
     })
+    // Regional routing can resolve interacting contacts before the final
+    // contact guard validates the repaired board.
     this.regionalB01Params = {
       srj: this.params.srj,
       routes: terminalEscapeResult.routes,
@@ -2137,20 +2139,6 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       terminalEscapeCandidateCount:
         terminalEscapeResult.attemptedCandidateCount,
       terminalEscapeAcceptedCount: terminalEscapeResult.acceptedCandidateCount,
-    }
-    // Projected earlier copper still needs regional routing; the final contact
-    // repair owns contacts between routed traces, not these fixed obstacles.
-    if (
-      this.exactRepairSolver.stats.drcBranchPortfolioStoppedForTraceContacts ===
-        true &&
-      !exactReferenceDrcErrors.some(
-        (error) => error.drc_source === "fixed_copper",
-      ) &&
-      this.traceContactGuard.getNewContactPairs(terminalEscapeResult.routes)
-        .length > 1
-    ) {
-      this.combinedOutput = terminalEscapeResult.routes
-      this.finishWithTraceContactCheck()
     }
   }
 

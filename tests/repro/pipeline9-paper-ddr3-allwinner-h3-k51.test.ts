@@ -45,7 +45,8 @@ test("routes H3 K51 DDR3 beside the terminated clock and completed data bytes", 
     srjWithPointPairs: referenceSrj,
     routedTraces: solver.getOutputSimplifiedPcbTraces(),
   }
-  const { circuitJson } = evaluateRelaxedDrc(snapshotInput)
+  const { circuitJson, errors } = evaluateRelaxedDrc(snapshotInput)
+  expect(errors).toEqual([])
   expect(checkEachPcbPortConnectedToPcbTraces(circuitJson)).toEqual([])
 
   await expect(getBugReportSnapshotSvg(snapshotInput)).toMatchSvgSnapshot(
