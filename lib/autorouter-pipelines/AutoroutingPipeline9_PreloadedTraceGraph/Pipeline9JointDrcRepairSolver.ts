@@ -49,12 +49,14 @@ import { filterPipeline9DrcErrorsAgainstBaseline } from "./filterPipeline9DrcErr
 import { getPipeline9ClearanceMarginErrors } from "./getPipeline9ClearanceMarginErrors"
 import { getPipeline9PreloadedTraceIdsInInitialDrcRegions } from "./getPipeline9PreloadedTraceIdsInInitialDrcRegions"
 import { getPipeline9PreloadedViaPairTraceGroups } from "./getPipeline9PreloadedViaPairTraceGroups"
+import { isPipeline9DrcPriorityImprovement } from "./isPipeline9DrcPriorityImprovement"
 import { mergePipeline9MovablePreloadedVias } from "./mergePipeline9MovablePreloadedVias"
 import { normalizePipeline9DrcErrorsForRepair } from "./normalizePipeline9DrcErrorsForRepair"
 import {
   getPipeline9DrcErrors,
   getPipeline9RouteIndexByTraceId,
   type Pipeline9CollapsedTraceParticipant,
+  type Pipeline9DrcError,
   type Pipeline9PreloadRepairTraceIds,
 } from "./pipeline9JointDrcRepairUtils"
 import { preparePipeline9DrcRoutedTracesWithMetadata } from "./preparePipeline9DrcRoutedTraces"
@@ -690,6 +692,12 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     ReturnType<DrcEvaluator>
   >()
   private combinedOutput?: HighDensityRoute[]
+  private contactRepairComparison?:
+    | { directRoutes: HighDensityRoute[] }
+    | {
+        regionalRoutes: HighDensityRoute[]
+        regionalErrors: Pipeline9DrcError[]
+      }
   currentPipelineStepIndex = 0
   private regionalB01Params?: ConstructorParameters<
     typeof Pipeline9RegionalB01RepairSolver
@@ -1792,7 +1800,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       }
       this.stats = { ...this.stats, ...solver.stats }
       this.activeSubSolver = null
-      this.solved = true
+      this.finishGuardedRepair()
       return
     }
     const pipelineStepDef = this.pipelineDef[this.currentPipelineStepIndex]
@@ -2140,6 +2148,21 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         terminalEscapeResult.attemptedCandidateCount,
       terminalEscapeAcceptedCount: terminalEscapeResult.acceptedCandidateCount,
     }
+    // The direct contact repair can still win if the regional route has
+    // residual errors. Keep both searches on the same pre-regional geometry.
+    if (
+      this.exactRepairSolver.stats.drcBranchPortfolioStoppedForTraceContacts ===
+        true &&
+      !exactReferenceDrcErrors.some(
+        (error) => error.drc_source === "fixed_copper",
+      ) &&
+      this.traceContactGuard.getNewContactPairs(terminalEscapeResult.routes)
+        .length > 1
+    ) {
+      this.contactRepairComparison = {
+        directRoutes: structuredClone(terminalEscapeResult.routes),
+      }
+    }
   }
 
   private finishRegionalB01Repair(): void {
@@ -2256,7 +2279,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
   }
 
   private finishWithTraceContactCheck(): void {
-    if (!this.combinedOutput || !this.exactRepairParams) {
+    if (!this.combinedOutput) {
       throw new Error(
         "Pipeline9 final trace contact check is missing repair state",
       )
@@ -2265,18 +2288,58 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       this.combinedOutput,
     )
     if (contacts.length === 0) {
-      this.solved = true
+      this.finishGuardedRepair()
       return
+    }
+    this.startTraceContactRepair(this.combinedOutput)
+  }
+
+  private startTraceContactRepair(routes: HighDensityRoute[]): void {
+    if (!this.exactRepairParams || !this.cachedReferenceDrcEvaluator) {
+      throw new Error("Pipeline9 trace contact repair is missing its input")
     }
     this.traceContactRepairSolver = new TraceContactRepairSolver({
       ...this.exactRepairParams,
-      hdRoutes: this.combinedOutput,
+      hdRoutes: routes,
       inputHdRoutes: this.traceContactInputHdRoutes,
-      tracePairDrcEvaluator: this.cachedReferenceDrcEvaluator!,
+      tracePairDrcEvaluator: this.cachedReferenceDrcEvaluator,
       deferTraceContactGuard: false,
     })
     this.activeSubSolver = this.traceContactRepairSolver
     this.MAX_ITERATIONS += this.traceContactRepairSolver.MAX_ITERATIONS
+  }
+
+  private finishGuardedRepair(): void {
+    const comparison = this.contactRepairComparison
+    if (comparison) {
+      const routes = this.combinedOutput
+      const evaluate = this.cachedReferenceDrcEvaluator
+      if (!routes || !evaluate) {
+        throw new Error(
+          "Pipeline9 contact repair comparison is missing its input",
+        )
+      }
+      const errors = getPipeline9DrcErrors(evaluate, routes)
+      if ("directRoutes" in comparison) {
+        if (errors.length > 0) {
+          this.contactRepairComparison = {
+            regionalRoutes: routes,
+            regionalErrors: errors,
+          }
+          this.startTraceContactRepair(comparison.directRoutes)
+          return
+        }
+      } else if (
+        isPipeline9DrcPriorityImprovement({
+          currentErrors: errors,
+          candidateErrors: comparison.regionalErrors,
+        })
+      ) {
+        this.combinedOutput = comparison.regionalRoutes
+      }
+      this.contactRepairComparison = undefined
+    }
+    this.solved = true
   }
 
   private getCombinedOutput(): HighDensityRoute[] {
