@@ -1,0 +1,10 @@
+{
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "replay-buses": "bun replay-buses.mjs"
+  },
+  "dependencies": {
+    "tscircuit": "0.0.3237"
+  }
+}
