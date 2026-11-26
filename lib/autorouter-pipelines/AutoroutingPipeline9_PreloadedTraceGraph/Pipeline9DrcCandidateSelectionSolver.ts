@@ -12,7 +12,7 @@ import {
   type Pipeline9DrcError,
 } from "./pipeline9JointDrcRepairUtils"
 
-type Pipeline9FinalDrcRepairParams = {
+type Pipeline9DrcCandidateSelectionParams = {
   regionalRoutes: HighDensityRoute[]
   preRegionalRoutes: HighDensityRoute[]
   contactGuard: TraceContactGuard
@@ -29,12 +29,12 @@ type ValidatedCandidate = {
 }
 
 /** Compare the completed regional result and its input after contact repair. */
-export class Pipeline9FinalDrcRepairSolver extends BaseSolver {
+export class Pipeline9DrcCandidateSelectionSolver extends BaseSolver {
   private readonly candidates: HighDensityRoute[][]
   private nextCandidateIndex = 0
   private bestCandidate?: ValidatedCandidate
 
-  constructor(readonly params: Pipeline9FinalDrcRepairParams) {
+  constructor(readonly params: Pipeline9DrcCandidateSelectionParams) {
     super()
     this.candidates = [params.regionalRoutes]
     if (
@@ -45,13 +45,13 @@ export class Pipeline9FinalDrcRepairSolver extends BaseSolver {
     }
   }
 
-  override getConstructorParams(): [Pipeline9FinalDrcRepairParams] {
+  override getConstructorParams(): [Pipeline9DrcCandidateSelectionParams] {
     return [this.params]
   }
 
   getOutput(): HighDensityRoute[] {
     if (!this.solved || !this.bestCandidate) {
-      throw new Error("Pipeline9 final DRC repair output requires a solve")
+      throw new Error("Pipeline9 DRC candidate selection requires a solve")
     }
     return this.bestCandidate.routes
   }
@@ -107,7 +107,7 @@ export class Pipeline9FinalDrcRepairSolver extends BaseSolver {
 
     const routes = this.candidates[this.nextCandidateIndex]
     if (!routes) {
-      throw new Error("Pipeline9 final DRC repair has no next candidate")
+      throw new Error("Pipeline9 DRC selection has no next candidate")
     }
     this.nextCandidateIndex++
     if (this.params.contactGuard.getNewContactPairs(routes).length === 0) {

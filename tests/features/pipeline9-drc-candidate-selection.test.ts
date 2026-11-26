@@ -1,11 +1,11 @@
 import { expect, test } from "bun:test"
 import { TraceContactGuard } from "high-density-repair03/lib"
-import { Pipeline9FinalDrcRepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9FinalDrcRepairSolver"
+import { Pipeline9DrcCandidateSelectionSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9DrcCandidateSelectionSolver"
 import { getPipeline9DrcErrors } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9JointDrcRepairUtils"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 import { createBoundedRegionalRepairFixture } from "../fixtures/pipeline9-bounded-regional-repair-fixture"
 
-test("final DRC repair keeps the better contact-checked route with residual errors", (): void => {
+test("DRC candidate selection keeps the better route with residual errors", (): void => {
   const { originalSrj, routes, drcEvaluator } =
     createBoundedRegionalRepairFixture(2)
   const [first, second] = routes
@@ -42,7 +42,7 @@ test("final DRC repair keeps the better contact-checked route with residual erro
     [partiallyRepairedRoutes, routes],
     [routes, partiallyRepairedRoutes],
   ] as const) {
-    const solver = new Pipeline9FinalDrcRepairSolver({
+    const solver = new Pipeline9DrcCandidateSelectionSolver({
       regionalRoutes,
       preRegionalRoutes,
       contactGuard,

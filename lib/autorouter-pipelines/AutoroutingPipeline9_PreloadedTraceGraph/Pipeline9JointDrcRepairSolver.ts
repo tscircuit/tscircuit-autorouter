@@ -39,7 +39,7 @@ import {
 import { getPipeline9BoundedRepairBudget } from "./applyPipeline9BoundedRegionalRepairs"
 import { Pipeline9RegionalB01RepairSolver } from "./Pipeline9RegionalB01RepairSolver"
 import { Pipeline9BoundedRegionalRepairSolver } from "./Pipeline9BoundedRegionalRepairSolver"
-import { Pipeline9FinalDrcRepairSolver } from "./Pipeline9FinalDrcRepairSolver"
+import { Pipeline9DrcCandidateSelectionSolver } from "./Pipeline9DrcCandidateSelectionSolver"
 import { applyPipeline9TerminalEscapeRelocations } from "./applyPipeline9TerminalEscapeRelocations"
 import { assignUniquePcbTraceIdsToNewTraces } from "./assignUniquePcbTraceIdsToNewTraces"
 import {
@@ -803,7 +803,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       onSolved: (): void => this.finishBoundedRegionalRepair(),
     },
     {
-      solverName: "finalDrcRepairSolver",
+      solverName: "drcCandidateSelectionSolver",
       createSolver: (): BaseSolver => {
         const bounded = this.boundedRegionalRepairSolver
         if (
@@ -812,9 +812,9 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
           !this.cachedReferenceDrcEvaluator ||
           !this.exactRepairParams
         ) {
-          throw new Error("Pipeline9 final DRC repair is missing its inputs")
+          throw new Error("Pipeline9 DRC selection is missing its inputs")
         }
-        this.finalDrcRepairSolver = new Pipeline9FinalDrcRepairSolver({
+        const selection = new Pipeline9DrcCandidateSelectionSolver({
           regionalRoutes: bounded.getResult().routes,
           preRegionalRoutes: this.preRegionalRepairRoutes,
           contactGuard: this.traceContactGuard,
@@ -824,14 +824,15 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
             inputHdRoutes: this.traceContactInputHdRoutes,
           },
         })
-        return this.finalDrcRepairSolver
+        this.drcCandidateSelectionSolver = selection
+        return selection
       },
-      onSolved: (): void => this.finishFinalDrcRepair(),
+      onSolved: (): void => this.finishDrcCandidateSelection(),
     },
   ]
   boundedRegionalRepairSolver?: Pipeline9BoundedRegionalRepairSolver
   regionalB01RepairSolver?: Pipeline9RegionalB01RepairSolver
-  finalDrcRepairSolver?: Pipeline9FinalDrcRepairSolver
+  drcCandidateSelectionSolver?: Pipeline9DrcCandidateSelectionSolver
 
   private cacheIndexedDrcResult(
     candidateKey: DrcCandidateKey,
@@ -2280,13 +2281,13 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     }
   }
 
-  private finishFinalDrcRepair(): void {
-    const finalRepair = this.finalDrcRepairSolver
-    if (!finalRepair?.solved) {
-      throw new Error("Pipeline9 final DRC repair must solve before publishing")
+  private finishDrcCandidateSelection(): void {
+    const selection = this.drcCandidateSelectionSolver
+    if (!selection?.solved) {
+      throw new Error("Pipeline9 DRC selection must solve before publishing")
     }
-    this.combinedOutput = finalRepair.getOutput()
-    this.stats = { ...this.stats, ...finalRepair.stats }
+    this.combinedOutput = selection.getOutput()
+    this.stats = { ...this.stats, ...selection.stats }
     this.finishWithTraceContactCheck()
   }
 
