@@ -119,7 +119,7 @@
     "@tscircuit/bga-escape-routing-solver": "github:tscircuit/bga-escape-routing-solver#a444afe551690e3d0abb9ab66c10aaa4da3fba9f",
     "@tscircuit/high-density-a01": "git+https://github.com/tscircuit/high-density-a01.git#e9a3642aae9d45aadb197cd1386dec2142529217",
     "@tscircuit/high-density-a13": "git+https://github.com/tscircuit/high-density-a01.git#4ae21d7a15c9fbfb30378c10f948aa168d7c9cb7",
-    "@tscircuit/high-density-b01": "git+https://github.com/tscircuit/high-density-b01.git#5c3215cb514a942318d1a5ffa5bc44bee8189c40"
+    "@tscircuit/high-density-b01": "git+https://github.com/tscircuit/high-density-b01.git#4db89e45384cbf9090d1ab9193cec3c42d1d1e51"
   },
   "dependencies": {
     "@tscircuit/solver-utils": "^0.0.23",
