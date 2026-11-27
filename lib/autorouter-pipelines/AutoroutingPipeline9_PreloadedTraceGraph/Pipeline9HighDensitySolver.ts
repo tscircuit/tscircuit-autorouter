@@ -313,6 +313,7 @@ export type Pipeline9RegularNodeSolverParams = {
   minViaHoleEdgeToViaHoleEdgeClearance?: number
   traceWidth: number
   obstacleMargin: number
+  viaToPadClearance?: number
   effort: number
   nodePfById:
     | Map<CapacityMeshNodeId, number | null>
@@ -323,6 +324,7 @@ export type Pipeline9RegularNodeSolverParams = {
   priorityDagSearch?: boolean
   priorityDiagnostics?: Record<string, number>
   captureSearchDebug?: boolean
+  checkForeignObstacleViaOverlap?: boolean
   layerCount: number
 }
 
@@ -342,8 +344,10 @@ export const createPipeline9RegularNodeSolver = ({
   priorityDiagnostics,
   priorityDagSearch = false,
   captureSearchDebug = false,
+  checkForeignObstacleViaOverlap = true,
   traceWidth,
   obstacleMargin,
+  viaToPadClearance,
   effort,
   nodePfById,
   obstacles,
@@ -359,6 +363,7 @@ export const createPipeline9RegularNodeSolver = ({
     viaDiameter,
     traceWidth,
     obstacleMargin,
+    viaToPadClearance,
     effort,
     nodePfById,
     obstacles,
@@ -371,6 +376,7 @@ export const createPipeline9RegularNodeSolver = ({
     boardGeometry,
     preserveTerminalPcbPortIds: false,
     growShrinkFallbackToInvalidGeometryOnFailure: false,
+    checkForeignObstacleViaOverlap,
     captureSearchDebug,
     priorityDagSearch,
     priorityDiagnostics,
@@ -679,6 +685,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       viaDiameter: this.viaDiameter,
       traceWidth: this.traceWidth,
       obstacleMargin: this.obstacleMargin,
+      viaToPadClearance: this.viaToPadClearance,
       effort: this.effort,
       nodePfById: this.nodePfById,
       obstacles: this.obstacles,
@@ -691,6 +698,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       priorityDiagnostics: this.benchmarkDiagnosticCounters,
       priorityDagSearch: true,
       captureSearchDebug: this.params.captureSearchDebug,
+      checkForeignObstacleViaOverlap: this.fixedHdRoutes.length === 0,
     })
     this.stats.regularNodeCount = Number(this.stats.regularNodeCount ?? 0) + 1
   }

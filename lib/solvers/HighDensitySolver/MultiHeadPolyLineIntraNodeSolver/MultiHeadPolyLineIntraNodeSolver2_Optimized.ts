@@ -1,4 +1,9 @@
 import { pointToSegmentClosestPoint } from "@tscircuit/math-utils"
+import {
+  pointToObstacleSignedDistance,
+  toBoardCoords,
+  viaOverlapsObstacleLayers,
+} from "./foreignObstacleGeometry"
 import { PolyLine2, MHPoint2, Candidate2 } from "./types2"
 import { MultiHeadPolyLineIntraNodeSolver } from "./MultiHeadPolyLineIntraNodeSolver"
 
@@ -173,6 +178,15 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
         collisionScore += this.obstacleMargin - gap
       }
     }
+    if (this.obstacleContext.hasForeignObstacles && candidate.polyLines) {
+      const surplus = this.getMinForeignObstacleSurplus(candidate.polyLines)
+      if (surplus < 0) {
+        collisionScore += -surplus
+        if (surplus < -this.obstacleMargin) {
+          collisionScore += this.obstacleMargin
+        }
+      }
+    }
     return collisionScore * 0.011 // 100 iterations @ hdpolyline09_optimized
   }
 
@@ -191,6 +205,7 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
       return
     }
     this.lastCandidate = currentCandidate
+    this.recordObstacleValidCandidate(currentCandidate)
 
     if (this.checkIfSolved(currentCandidate)) {
       this.solved = true
@@ -215,6 +230,7 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
     currentCandidate.minGaps = this.computeMinGapBtwPolyLines(
       currentCandidate.polyLines,
     )
+    this.recordObstacleValidCandidate(currentCandidate)
 
     if (this.checkIfSolved(currentCandidate)) {
       this.solved = true
@@ -637,6 +653,99 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
           newX = mPoint.x + currentForceX
           newY = mPoint.y + currentForceY
 
+          if (this.obstacleContext.hasForeignObstacles) {
+            const connName = polyLines[i]!.connectionName
+            const foreign =
+              this.obstacleContext.foreignObstaclesByConnection.get(connName) ??
+              []
+            const sameNetSmdPads =
+              this.obstacleContext.sameNetSmdPadsByConnection.get(connName) ??
+              []
+            if (foreign.length > 0 || sameNetSmdPads.length > 0) {
+              const scale = this.obstacleContext.coordinateScale
+              const nodeCenter = this.nodeWithPortPoints.center
+              let prevPushX = 0
+              let prevPushY = 0
+              for (let pass = 0; pass < 8; pass++) {
+                let sumPushX = 0
+                let sumPushY = 0
+                let violatedCount = 0
+                let maxDeficit = 0
+                const bp = toBoardCoords(
+                  { x: newX, y: newY },
+                  this.obstacleContext.nodeCenter,
+                  scale,
+                )
+                const pushAwayFromObstacle = (
+                  obs: (typeof foreign)[number],
+                  targetGap: number,
+                ) => {
+                  if (
+                    !viaOverlapsObstacleLayers(
+                      mPoint,
+                      obs,
+                      this.obstacleContext.allowBlindAndBuriedVias,
+                    )
+                  ) {
+                    return
+                  }
+                  const d = pointToObstacleSignedDistance(bp.x, bp.y, obs)
+                  const gap = d.signedDistanceToEdge - radius
+                  if (gap < targetGap) {
+                    const deficit = targetGap - gap + 5e-4
+                    violatedCount++
+                    if (deficit > maxDeficit) maxDeficit = deficit
+                    const toNodeX = this.obstacleContext.nodeCenter.x - bp.x
+                    const toNodeY = this.obstacleContext.nodeCenter.y - bp.y
+                    if (
+                      d.nx * toNodeX + d.ny * toNodeY < -EPSILON &&
+                      d.signedDistanceToEdge <= 0
+                    ) {
+                      const toNodeLen = Math.hypot(toNodeX, toNodeY)
+                      sumPushX += (toNodeX / toNodeLen) * deficit
+                      sumPushY += (toNodeY / toNodeLen) * deficit
+                    } else {
+                      sumPushX += d.nx * deficit
+                      sumPushY += d.ny * deficit
+                    }
+                  }
+                }
+                for (const obs of foreign) {
+                  pushAwayFromObstacle(obs, this.viaClearance)
+                }
+                for (const pad of sameNetSmdPads) {
+                  pushAwayFromObstacle(pad, 0.005)
+                }
+                if (violatedCount === 0) break
+                const pushLen = Math.hypot(sumPushX, sumPushY)
+                const opposedPrevPass =
+                  sumPushX * prevPushX + sumPushY * prevPushY < -1e-9
+                if (
+                  opposedPrevPass ||
+                  (violatedCount >= 2 && pushLen < maxDeficit * 0.8)
+                ) {
+                  const toCenterX = nodeCenter.x - newX
+                  const toCenterY = nodeCenter.y - newY
+                  const toCenterLen = Math.hypot(toCenterX, toCenterY)
+                  if (toCenterLen > EPSILON) {
+                    const step = Math.max(maxDeficit * 2, 0.14) * scale
+                    newX += (toCenterX / toCenterLen) * step
+                    newY += (toCenterY / toCenterLen) * step
+                  }
+                  prevPushX = 0
+                  prevPushY = 0
+                } else {
+                  newX += sumPushX * 1.05 * scale
+                  newY += sumPushY * 1.05 * scale
+                  prevPushX = sumPushX
+                  prevPushY = sumPushY
+                }
+              }
+              currentForceX = newX - mPoint.x
+              currentForceY = newY - mPoint.y
+            }
+          }
+
           // Optional: Clamp via position as a hard stop if force isn't enough?
           // newX = Math.max(this.bounds.minX + radius, Math.min(this.bounds.maxX - radius, newX));
           // newY = Math.max(this.bounds.minY + radius, Math.min(this.bounds.maxY - radius, newY));
@@ -652,6 +761,50 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
             this.bounds.minY + padding,
             Math.min(this.bounds.maxY - padding, newY),
           )
+          if (this.obstacleContext.hasForeignObstacles) {
+            const connName = polyLines[i]!.connectionName
+            const foreign =
+              this.obstacleContext.foreignObstaclesByConnection.get(connName) ??
+              []
+            if (foreign.length > 0) {
+              const scale = this.obstacleContext.coordinateScale
+              const minSegGap = Math.max(
+                0,
+                Math.min(
+                  this.obstacleContext.requiredGapByConnection.get(connName) ??
+                    this.obstacleMargin,
+                  this.obstacleMargin * 0.9,
+                ),
+              )
+              const traceRadius = this.traceWidth / 2
+              const bp = toBoardCoords(
+                { x: newX, y: newY },
+                this.obstacleContext.nodeCenter,
+                scale,
+              )
+              for (const obs of foreign) {
+                if (
+                  !obs.__zLayers.includes(mPoint.z2) &&
+                  !obs.isNonPlatedHole
+                ) {
+                  continue
+                }
+                const d = pointToObstacleSignedDistance(bp.x, bp.y, obs)
+                const gap = d.signedDistanceToEdge - traceRadius
+                if (gap < minSegGap) {
+                  const deficit = (minSegGap - gap + 1e-3) * scale
+                  newX = Math.max(
+                    this.bounds.minX + padding,
+                    Math.min(this.bounds.maxX - padding, newX + d.nx * deficit),
+                  )
+                  newY = Math.max(
+                    this.bounds.minY + padding,
+                    Math.min(this.bounds.maxY - padding, newY + d.ny * deficit),
+                  )
+                }
+              }
+            }
+          }
         }
 
         // Dampen force? Add friction? (Optional) - Applied before clamping/boundary force

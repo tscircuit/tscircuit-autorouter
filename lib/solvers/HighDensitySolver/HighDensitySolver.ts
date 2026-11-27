@@ -57,6 +57,7 @@ export class HighDensitySolver extends BaseSolver {
   viaDiameter: number
   traceWidth: number
   obstacleMargin: number
+  viaToPadClearance?: number
   effort: number
   obstacles: Obstacle[]
   layerCount: number
@@ -69,6 +70,7 @@ export class HighDensitySolver extends BaseSolver {
   preserveTerminalPcbPortIds: boolean
   growShrinkMaxInnerIterationsPerGrowthAttempt?: number
   growShrinkFallbackToInvalidGeometryOnFailure: boolean
+  checkForeignObstacleViaOverlap: boolean
   growShrinkSolutionValidator?: (routes: HighDensityIntraNodeRoute[]) => boolean
   captureSearchDebug: boolean
   readonly benchmarkDiagnosticCounters: Record<string, number>
@@ -105,6 +107,7 @@ export class HighDensitySolver extends BaseSolver {
     viaDiameter,
     traceWidth,
     obstacleMargin,
+    viaToPadClearance,
     effort,
     nodePfById,
     obstacles,
@@ -118,6 +121,7 @@ export class HighDensitySolver extends BaseSolver {
     preserveTerminalPcbPortIds,
     growShrinkMaxInnerIterationsPerGrowthAttempt,
     growShrinkFallbackToInvalidGeometryOnFailure,
+    checkForeignObstacleViaOverlap = false,
     growShrinkSolutionValidator,
     captureSearchDebug,
     priorityDagSearch = false,
@@ -134,6 +138,7 @@ export class HighDensitySolver extends BaseSolver {
     viaDiameter?: number
     traceWidth?: number
     obstacleMargin?: number
+    viaToPadClearance?: number
     effort?: number
     obstacles?: Obstacle[]
     layerCount?: number
@@ -146,6 +151,7 @@ export class HighDensitySolver extends BaseSolver {
     preserveTerminalPcbPortIds?: boolean
     growShrinkMaxInnerIterationsPerGrowthAttempt?: number
     growShrinkFallbackToInvalidGeometryOnFailure?: boolean
+    checkForeignObstacleViaOverlap?: boolean
     growShrinkSolutionValidator?: (
       routes: HighDensityIntraNodeRoute[],
     ) => boolean
@@ -171,6 +177,7 @@ export class HighDensitySolver extends BaseSolver {
     this.viaDiameter = viaDiameter ?? this.defaultViaDiameter
     this.traceWidth = traceWidth ?? this.defaultTraceThickness
     this.obstacleMargin = obstacleMargin ?? 0.15
+    this.viaToPadClearance = viaToPadClearance
     this.obstacles = obstacles ?? []
     this.layerCount = layerCount ?? 2
     this.enableNegotiatedSearch = enableNegotiatedSearch
@@ -185,6 +192,7 @@ export class HighDensitySolver extends BaseSolver {
       growShrinkMaxInnerIterationsPerGrowthAttempt
     this.growShrinkFallbackToInvalidGeometryOnFailure =
       growShrinkFallbackToInvalidGeometryOnFailure ?? false
+    this.checkForeignObstacleViaOverlap = checkForeignObstacleViaOverlap
     this.growShrinkSolutionValidator = growShrinkSolutionValidator
     this.captureSearchDebug = captureSearchDebug ?? true
     this.benchmarkDiagnosticCounters = priorityDiagnostics ?? {}
@@ -443,6 +451,7 @@ export class HighDensitySolver extends BaseSolver {
       viaDiameter: this.viaDiameter,
       traceWidth: this.traceWidth,
       obstacleMargin: this.obstacleMargin,
+      viaToPadClearance: this.viaToPadClearance,
       effort: this.effort,
       obstacles: this.obstacles,
       layerCount: this.layerCount,
@@ -450,6 +459,7 @@ export class HighDensitySolver extends BaseSolver {
         this.growShrinkMaxInnerIterationsPerGrowthAttempt,
       fallbackToInvalidGeometryOnFailure:
         this.growShrinkFallbackToInvalidGeometryOnFailure,
+      checkForeignObstacleViaOverlap: this.checkForeignObstacleViaOverlap,
       growShrinkSolutionValidator: this.growShrinkSolutionValidator,
       captureSearchDebug: this.captureSearchDebug,
     }
