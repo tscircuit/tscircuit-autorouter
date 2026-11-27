@@ -110,7 +110,9 @@ export class Pipeline9RepairResultSelectionSolver extends BaseSolver {
 
     const routes = this.routeSets[this.nextRouteSetIndex]
     if (!routes) {
-      throw new Error("Pipeline9 repair result selection has no routes to check")
+      throw new Error(
+        "Pipeline9 repair result selection has no routes to check",
+      )
     }
     this.nextRouteSetIndex++
     if (this.params.traceContactGuard.getNewContactPairs(routes).length === 0) {
