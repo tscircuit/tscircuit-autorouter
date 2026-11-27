@@ -304,11 +304,12 @@ test("autorouting continuity matches checks for endpoints, siblings, pad boundar
     layer: "top",
     pcb_port_id: "pcb_port_middle",
   })
-  for (const branchStart of [2, 2.6]) {
+  // The wire endpoints are separated, so the branches connect through the pad.
+  for (const branchStart of [2.2, 2.6]) {
     const circuit = convertToCircuitJson(sharedPadSrj, [
       createTrace("shared_a", [
         { x: 0, y: 0 },
-        { x: 2, y: 0 },
+        { x: 1.8, y: 0 },
       ]),
       createTrace("shared_b", [
         { x: branchStart, y: 0 },
@@ -317,6 +318,6 @@ test("autorouting continuity matches checks for endpoints, siblings, pad boundar
     ])
     const expected = checkTracesAreContiguous(circuit)
     expect<unknown>(checkTraceContinuity(circuit)).toEqual(expected)
-    expect(expected).toHaveLength(branchStart === 2 ? 0 : 1)
+    expect(expected).toHaveLength(branchStart === 2.2 ? 0 : 1)
   }
 })
