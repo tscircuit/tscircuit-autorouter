@@ -87,6 +87,8 @@ interface CapacityMeshSolverOptions {
   /** Retain low-level high-density search history for visualization. */
   captureSearchDebug?: boolean
   powerTraceExpansion?: PowerTraceExpanderOptions
+  /** Try additional via reductions on individual connections after clearance repair. */
+  optimizeVias?: boolean
 }
 export type AutoroutingPipelineSolverOptions = CapacityMeshSolverOptions
 
