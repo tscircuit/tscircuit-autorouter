@@ -8,6 +8,7 @@ import { safeTransparentize } from "lib/solvers/colors"
 import type { CapacityMeshNode, Obstacle, SimpleRouteJson } from "lib/types"
 import { createRectFromCapacityNode } from "lib/utils/createRectFromCapacityNode"
 import { getGlobalMeshNodesForTopologyMerging } from "./get-global-mesh-nodes-for-topology-merging"
+import { mergeCopperPourSeparatedSignalLayers } from "./merge-copper-pour-separated-signal-layers"
 import {
   ComponentTopologyBatchSolver,
   type ComponentTopologyBatchSolverOutput,
@@ -100,8 +101,17 @@ export class MultiGraphTopologyPlannerSolver extends BasePipelineSolver<MultiGra
       this.getStageOutput<{ meshNodes: CapacityMeshNode[] }>(
         "globalTopologySolver",
       )?.meshNodes ?? []
+    const globalMeshNodesWithThroughVias = mergeCopperPourSeparatedSignalLayers(
+      {
+        meshNodes: rawGlobalMeshNodes,
+        inputSrj: this.inputProblem.inputSrj,
+        components: this.normalizedInput.components,
+        viaDiameter: this.inputProblem.viaDiameter,
+        obstacleMargin: this.inputProblem.obstacleMargin,
+      },
+    )
     const globalMeshNodes = getGlobalMeshNodesForTopologyMerging({
-      meshNodes: rawGlobalMeshNodes,
+      meshNodes: globalMeshNodesWithThroughVias,
       components: this.normalizedInput.components,
     })
     const componentMeshNodes =

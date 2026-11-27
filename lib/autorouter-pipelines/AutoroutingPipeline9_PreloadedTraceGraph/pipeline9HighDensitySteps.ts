@@ -1,45 +1,51 @@
-import { Pipeline9HighDensityForceImproveSolver } from "./Pipeline9HighDensityForceImproveSolver"
-import { createPreloadedPortValidator } from "./createPreloadedPortValidator"
 import { UniformPortDistributionSolver } from "lib/solvers/UniformPortDistributionSolver/UniformPortDistributionSolver"
 import type { SimpleRouteConnection } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { Pipeline4HighDensityRepairSolver } from "../../solvers/HighDensityRepairSolver/Pipeline4HighDensityRepairSolver"
 import { MultipleHighDensityRouteStitchSolver3 } from "../../solvers/RouteStitchingSolver/MultipleHighDensityRouteStitchSolver3"
+import { Pipeline9HighDensityForceImproveSolver } from "./Pipeline9HighDensityForceImproveSolver"
+import { Pipeline9HighDensitySolver } from "./Pipeline9HighDensitySolver"
+import { createPipeline9UniformPortValidator } from "./createPipeline9UniformPortValidator"
+import { definePipeline9Step } from "./definePipeline9Step"
 import { removeChangedSectionsFromFixedHdRoutes } from "./materializeHypergraphPreloadedTraceSections"
 import { materializePipeline9HdRouteVias } from "./materializePipeline9HdRouteVias"
-import { simplifyPipeline9CollinearRoutePoints } from "./simplifyPipeline9CollinearRoutePoints"
-import { Pipeline9HighDensitySolver } from "./Pipeline9HighDensitySolver"
-import { definePipeline9Step } from "./definePipeline9Step"
 import {
-  getOriginalFixedHdRoutes,
   getChangedPreloadedTraceSections,
+  getOriginalFixedHdRoutes,
 } from "./pipeline9PreloadedTraceUpdates"
+import { simplifyPipeline9CollinearRoutePoints } from "./simplifyPipeline9CollinearRoutePoints"
 
 export const pipeline9HighDensitySteps = [
   definePipeline9Step({
     solverName: "uniformPortDistributionSolver",
     solverClass: UniformPortDistributionSolver,
-    getConstructorParams: (pipeline) => [
-      {
-        nodeWithPortPoints:
-          pipeline.portPointPathingSolver?.getOutput().nodesWithPortPoints ??
-          [],
-        inputNodesWithPortPoints:
-          pipeline.portPointPathingSolver?.getOutput()
-            .inputNodeWithPortPoints ?? [],
-        minTraceWidth: pipeline.minTraceWidth,
-        obstacles: pipeline.srj.obstacles,
-        layerCount: pipeline.srj.layerCount,
-        useLayerAwareGeometry: pipeline.srj.layerCount > 2,
-        preserveSolitaryPorts: Boolean(pipeline.srj.traces?.length),
-        isPortPointClear: createPreloadedPortValidator({
-          srj: pipeline.srj,
-          connMap: pipeline.connMap,
-          traceWidth: pipeline.minTraceWidth,
-          viaDiameter: pipeline.viaDiameter,
-        }),
-      },
-    ],
+    getConstructorParams: (pipeline) => {
+      const nodeWithPortPoints =
+        pipeline.portPointPathingSolver?.getOutput().nodesWithPortPoints ?? []
+      return [
+        {
+          nodeWithPortPoints,
+          inputNodesWithPortPoints:
+            pipeline.portPointPathingSolver?.getOutput()
+              .inputNodeWithPortPoints ?? [],
+          minTraceWidth: pipeline.minTraceWidth,
+          obstacles: pipeline.srj.obstacles,
+          layerCount: pipeline.srj.layerCount,
+          useLayerAwareGeometry: pipeline.srj.layerCount > 2,
+          preserveSolitaryPorts: Boolean(pipeline.srj.traces?.length),
+          isPortPointClear: createPipeline9UniformPortValidator({
+            srj: pipeline.srj,
+            connMap: pipeline.connMap,
+            traceWidth: pipeline.minTraceWidth,
+            viaDiameter: pipeline.viaDiameter,
+            nodesWithPortPoints: nodeWithPortPoints,
+            obstacleMargin:
+              pipeline.srj.minTraceToPadEdgeClearance ??
+              pipeline.srj.defaultObstacleMargin,
+          }),
+        },
+      ]
+    },
   }),
   definePipeline9Step({
     solverName: "highDensityRouteSolver",
