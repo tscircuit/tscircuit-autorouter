@@ -3,7 +3,7 @@ name: Build
 
 on:
   push:
-    branches: [main]
+    branches: [main, build/icepi-full-board-routing]
   pull_request:
     branches: [main]
 
