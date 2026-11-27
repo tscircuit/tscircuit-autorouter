@@ -11,7 +11,11 @@ type BoardEdge = {
     maxY: number
   }
 }
-type BoardTraceClearanceOptions = { board?: PcbBoard; margin?: number }
+type BoardTraceClearanceOptions = {
+  board?: PcbBoard
+  margin?: number
+  includeMeasurements?: boolean
+}
 
 const edgesByBoard = new WeakMap<PcbBoard, BoardEdge[]>()
 
@@ -101,19 +105,22 @@ export const checkBoardTraceClearance = (
         )
       }
       if (!(minimumDistance < requiredDistance)) continue
-      errors.push({
+      const error: Record<string, unknown> = {
         type: "pcb_trace_error",
         error_type: "pcb_trace_error",
         pcb_trace_error_id: `trace_too_close_to_board_${trace.pcb_trace_id}_segment_${index}`,
         message: `Trace too close to board edge (${minimumDistance.toFixed(3)}mm < ${requiredDistance.toFixed(3)}mm required, margin: ${margin}mm)`,
         pcb_trace_id: trace.pcb_trace_id,
-        actual_board_edge_clearance: minimumDistance - width / 2,
-        minimum_board_edge_clearance: margin,
         source_trace_id: trace.source_trace_id || "",
         center: { x: (start.x + end.x) / 2, y: (start.y + end.y) / 2 },
         pcb_component_ids: [],
         pcb_port_ids: [],
-      })
+      }
+      if (options.includeMeasurements) {
+        error.actual_board_edge_clearance = minimumDistance - width / 2
+        error.minimum_board_edge_clearance = margin
+      }
+      errors.push(error)
     }
   }
   return errors
