@@ -220,6 +220,54 @@ export class BgaGrid {
     }
   }
 
+  getGapAdjacentObstacles(bgaGap: BgaGap): Obstacle[] {
+    const slotOffsets: ReadonlyArray<readonly [number, number]> =
+      bgaGap.orientation === "horizontal"
+        ? [
+            [0, 0],
+            [0, 1],
+          ]
+        : bgaGap.orientation === "vertical"
+          ? [
+              [0, 0],
+              [1, 0],
+            ]
+          : [
+              [0, 0],
+              [1, 1],
+            ]
+
+    return slotOffsets.flatMap(([rowOffset, colOffset]) => {
+      const adjacentSlot = this.slots.get(
+        this.getSlotKey(bgaGap.row + rowOffset, bgaGap.col + colOffset),
+      )
+
+      return adjacentSlot?.obstacle ? [adjacentSlot.obstacle] : []
+    })
+  }
+
+  getAxisGapClearWidth(bgaGap: BgaGap): number | null {
+    if (bgaGap.orientation === "diagonal" || !bgaGap.isBetweenTwoPads) {
+      return null
+    }
+    const adjacentObstacles = this.getGapAdjacentObstacles(bgaGap)
+    if (adjacentObstacles.length !== 2) return null
+    const [firstObstacle, secondObstacle] = adjacentObstacles as [
+      Obstacle,
+      Obstacle,
+    ]
+    if (bgaGap.orientation === "horizontal") {
+      return (
+        Math.abs(secondObstacle.center.x - firstObstacle.center.x) -
+        (firstObstacle.width + secondObstacle.width) / 2
+      )
+    }
+    return (
+      Math.abs(secondObstacle.center.y - firstObstacle.center.y) -
+      (firstObstacle.height + secondObstacle.height) / 2
+    )
+  }
+
   getHorizontalGap(row: number, col: number): BgaGap {
     const leftPadCenter = this.getSlotCenter(row, col)
     const rightPadCenter = this.getSlotCenter(row, col + 1)

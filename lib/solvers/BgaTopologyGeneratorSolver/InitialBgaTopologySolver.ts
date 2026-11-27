@@ -9,6 +9,7 @@ import type { GraphicsObject } from "graphics-debug"
 import type { TopologyGeneratorSolverOutput } from "lib/solvers/TopologyPlanningSolver/TopologyGenerator"
 import type { CapacityMeshNode, Obstacle, SimpleRouteJson } from "lib/types"
 import { createRectFromCapacityNode } from "lib/utils/createRectFromCapacityNode"
+import { RELAXED_DRC_OPTIONS } from "lib/utils/drcPresets"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
 import { getViaToPadClearance } from "lib/utils/getViaToPadClearance"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
@@ -18,6 +19,16 @@ import type { BgaGap, MissingBgaSlot } from "./bga-grid"
 import { getObstacleTargetConnectionName } from "./getObstacleTargetConnectionName"
 
 const BGA_MULTILAYER_REGION_VIA_DIAMETER_FACTOR = 1.2
+const MAX_BGA_PAD_ASPECT_RATIO = 1.5
+const TRACE_CHANNEL_EPSILON = 1e-6
+
+function hasBgaPadAspectRatio(obstacle: Obstacle): boolean {
+  const minDimension = Math.min(obstacle.width, obstacle.height)
+  const maxDimension = Math.max(obstacle.width, obstacle.height)
+  return (
+    minDimension > 0 && maxDimension / minDimension <= MAX_BGA_PAD_ASPECT_RATIO
+  )
+}
 
 export type InitialBgaTopologySolverInput = {
   srj: SimpleRouteJson
@@ -94,10 +105,12 @@ function createMeshNodesFromBgaGap(input: {
   componentId: string
   bgaGap: BgaGap
   freeLayers: number[]
+  routableLayers?: number[]
   multiLayerThreshold: number
   hasClearViaCenter: boolean
 }): CapacityMeshNode[] {
   const { componentId, bgaGap, freeLayers, multiLayerThreshold } = input
+  const singleLayerZ = input.routableLayers ?? freeLayers
   const isLargeEnoughForMultiLayer =
     bgaGap.width > multiLayerThreshold && bgaGap.height > multiLayerThreshold
   let orientationKey: string = "d"
@@ -142,7 +155,7 @@ function createMeshNodesFromBgaGap(input: {
     ]
   }
 
-  return freeLayers.map((z) => ({
+  return singleLayerZ.map((z) => ({
     center: bgaGap.center,
     width: bgaGap.width,
     height: bgaGap.height,
@@ -376,12 +389,43 @@ export class InitialBgaTopologySolver extends BaseSolver {
       })
       return allObstaclesClear && boundingBoxBlocksVia
     }
+    const traceClearance =
+      srj.minTraceToPadEdgeClearance ??
+      srj.defaultObstacleMargin ??
+      RELAXED_DRC_OPTIONS.traceClearance
+    const minimumTraceChannelWidth = srj.minTraceWidth + 2 * traceClearance
+    const hasTwoDimensionalInterPadGaps = diagonalGaps.length > 0
+    const getAxisGapRoutableLayers = (bgaGap: BgaGap): number[] => {
+      if (!hasTwoDimensionalInterPadGaps) {
+        return freeLayers
+      }
+      const clearWidth = bgaGrid.getAxisGapClearWidth(bgaGap)
+      if (
+        clearWidth === null ||
+        clearWidth + TRACE_CHANNEL_EPSILON >= minimumTraceChannelWidth
+      ) {
+        return freeLayers
+      }
+      const adjacentObstacles = bgaGrid.getGapAdjacentObstacles(bgaGap)
+      if (!adjacentObstacles.every(hasBgaPadAspectRatio)) {
+        return freeLayers
+      }
+      const adjacentPadLayers = new Set(
+        adjacentObstacles.flatMap((obstacle) =>
+          obstacle.layers.map((layerName) =>
+            mapLayerNameToZ(layerName, srj.layerCount),
+          ),
+        ),
+      )
+      return freeLayers.filter((layer) => !adjacentPadLayers.has(layer))
+    }
     this.meshNodes = [
       ...axisGaps.flatMap((bgaGap) =>
         createMeshNodesFromBgaGap({
           componentId,
           bgaGap,
           freeLayers,
+          routableLayers: getAxisGapRoutableLayers(bgaGap),
           multiLayerThreshold,
           hasClearViaCenter: false,
         }),
