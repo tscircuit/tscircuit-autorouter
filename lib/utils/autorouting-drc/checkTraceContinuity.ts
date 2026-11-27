@@ -153,7 +153,9 @@ const routePointTouchesPad = (point: RoutePoint, pad: Pad): boolean => {
   return onPadLayer && pointIsInPad(point, pad)
 }
 
-const getPadSearchBounds = (pad: Pad): ReturnType<typeof getPcbElementBounds> => {
+const getPadSearchBounds = (
+  pad: Pad,
+): ReturnType<typeof getPcbElementBounds> => {
   // The polygon contact test uses a tolerance along rotated pad edges.
   if (pad.shape !== "circle" && pad.shape !== "rect") return null
   const bounds = getPcbElementBounds(pad)
@@ -212,8 +214,9 @@ const getTouchedPortsByTrace = (
     if (boundedPads.some(({ bounds }) => bounds === null)) {
       for (const { points, touchedPorts } of traceEndpoints) {
         if (
-          points.some((point) =>
-            point && portPads.some((pad) => routePointTouchesPad(point, pad)),
+          points.some(
+            (point) =>
+              point && portPads.some((pad) => routePointTouchesPad(point, pad)),
           )
         ) {
           touchedPorts.add(portId)
