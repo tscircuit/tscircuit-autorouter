@@ -28,7 +28,8 @@ export function optimizePaperDdr3Routing(
   ).map((trace) => ({
     ...trace,
     route: trace.route.map((point) => {
-      if (point.route_type === "wire" || point.route_type === "via") return point
+      if (point.route_type === "wire" || point.route_type === "via")
+        return point
       throw new Error(`Unsupported copper in ${trace.pcb_trace_id}`)
     }),
   }))

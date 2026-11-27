@@ -12,7 +12,9 @@ function makeIndependentCrossings(): HighDensityRoute[] {
       route: route.route.map((point) => ({
         ...point,
         x: point.x + 20 * index,
-        ...(point.pcb_port_id && { pcb_port_id: `${name}-${point.pcb_port_id}` }),
+        ...(point.pcb_port_id && {
+          pcb_port_id: `${name}-${point.pcb_port_id}`,
+        }),
       })),
       vias: route.vias.map((via) => ({ ...via, x: via.x + 20 * index })),
     })),

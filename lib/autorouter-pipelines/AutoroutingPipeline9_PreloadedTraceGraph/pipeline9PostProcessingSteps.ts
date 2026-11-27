@@ -57,7 +57,8 @@ function getProtectedViaOptimizationConnections(
       connection.__netConnectionName,
       ...(connection.__rootConnectionNames ?? []),
     ]
-    if (aliases.some((name) => name && names.has(name))) names.add(connection.name)
+    if (aliases.some((name) => name && names.has(name)))
+      names.add(connection.name)
   }
   return names
 }
