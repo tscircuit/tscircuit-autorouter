@@ -1,11 +1,11 @@
 import { expect, test } from "bun:test"
 import { TraceContactGuard } from "high-density-repair03/lib"
-import { Pipeline9DrcCandidateSelectionSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9DrcCandidateSelectionSolver"
+import { Pipeline9RepairResultSelectionSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9RepairResultSelectionSolver"
 import { getPipeline9DrcErrors } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9JointDrcRepairUtils"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 import { createBoundedRegionalRepairFixture } from "../fixtures/pipeline9-bounded-regional-repair-fixture"
 
-test("DRC candidate selection keeps the better route with residual errors", (): void => {
+test("repair result selection retains an improvement with residual DRC errors", (): void => {
   const { originalSrj, routes, drcEvaluator } =
     createBoundedRegionalRepairFixture(2)
   const [first, second] = routes
@@ -23,9 +23,9 @@ test("DRC candidate selection keeps the better route with residual errors", (): 
     second,
   ]
   const connMap = getConnectivityMapFromSimpleRouteJson(originalSrj)
-  const contactRepairSrj = { ...originalSrj, traces: undefined }
-  const contactGuard = new TraceContactGuard({
-    srj: contactRepairSrj,
+  const traceContactRepairSrj = { ...originalSrj, traces: undefined }
+  const traceContactGuard = new TraceContactGuard({
+    srj: traceContactRepairSrj,
     inputRoutes: routes,
     connMap,
   })
@@ -38,17 +38,17 @@ test("DRC candidate selection keeps the better route with residual errors", (): 
     getPipeline9DrcErrors(drcEvaluator, routes).length,
   )
 
-  for (const [regionalRoutes, preRegionalRoutes] of [
+  for (const [regionalRepairRoutes, preRegionalRepairRoutes] of [
     [partiallyRepairedRoutes, routes],
     [routes, partiallyRepairedRoutes],
   ] as const) {
-    const solver = new Pipeline9DrcCandidateSelectionSolver({
-      regionalRoutes,
-      preRegionalRoutes,
-      contactGuard,
-      referenceDrcEvaluator: drcEvaluator,
-      contactRepairParams: {
-        srj: contactRepairSrj,
+    const solver = new Pipeline9RepairResultSelectionSolver({
+      regionalRepairRoutes,
+      preRegionalRepairRoutes,
+      traceContactGuard,
+      drcEvaluator,
+      traceContactRepairParams: {
+        srj: traceContactRepairSrj,
         inputHdRoutes: routes,
         connMap,
         drcEvaluator,
@@ -60,6 +60,6 @@ test("DRC candidate selection keeps the better route with residual errors", (): 
 
     expect(solver.solved).toBeTrue()
     expect(solver.getOutput()).toEqual(partiallyRepairedRoutes)
-    expect(contactGuard.getNewContactPairs(solver.getOutput())).toEqual([])
+    expect(traceContactGuard.getNewContactPairs(solver.getOutput())).toEqual([])
   }
 })
