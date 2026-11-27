@@ -62,7 +62,7 @@
     "@tscircuit/hypergraph": "^0.0.71",
     "@tscircuit/jumper-topology-generator": "^0.0.4",
     "@tscircuit/krt-wasm": "^0.1.0",
-    "@tscircuit/length-matching-solver": "git+https://github.com/tscircuit/length-matching-solver.git#807fcd9286ad1d8b1caaab96a2875c836da0db97",
+    "@tscircuit/length-matching-solver": "git+https://github.com/tscircuit/length-matching-solver.git#13030e1fceabd14886180c8532194381dd409d5d",
     "@tscircuit/math-utils": "0.0.39",
     "@tscircuit/pcb-trace-linter": "github:tscircuit/pcb-trace-linter#4c035f9d40ffb03ba547a08975b5e64b20371123",
     "@tscircuit/power-trace-expander": "git+https://github.com/tscircuit/power-trace-expander.git#f056a94bc689d6a7a27ab93321462e63a4a788a5",
