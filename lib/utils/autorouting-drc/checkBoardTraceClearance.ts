@@ -107,6 +107,8 @@ export const checkBoardTraceClearance = (
         pcb_trace_error_id: `trace_too_close_to_board_${trace.pcb_trace_id}_segment_${index}`,
         message: `Trace too close to board edge (${minimumDistance.toFixed(3)}mm < ${requiredDistance.toFixed(3)}mm required, margin: ${margin}mm)`,
         pcb_trace_id: trace.pcb_trace_id,
+        actual_board_edge_clearance: minimumDistance - width / 2,
+        minimum_board_edge_clearance: margin,
         source_trace_id: trace.source_trace_id || "",
         center: { x: (start.x + end.x) / 2, y: (start.y + end.y) / 2 },
         pcb_component_ids: [],

@@ -222,11 +222,11 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
     this.state = { phase: "done" }
   }
 
-  private publish(context: ReferencedContext, repaired: boolean): void {
+  private publishCompleteRepair(context: ReferencedContext): void {
     this.result.routes = context.currentRoutes
     this.result.publishedDrcIssueCount = context.currentErrors.length
     this.result.finalDrcIssueCount = context.currentErrors.length
-    this.result.repaired = repaired
+    this.result.repaired = true
     this.finish()
   }
 
@@ -355,9 +355,10 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
       : reference.errors
     this.result.finalDrcIssueCount = context.currentErrors.length
     if (context.currentErrors.length === 0) {
-      this.publish(context, true)
+      this.publishCompleteRepair(context)
       return
     }
+    this.recordPublishablePartialRepair(context)
     this.state = { phase: "prepare-regions", context }
   }
 
@@ -800,21 +801,35 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
     if (this.budget.revisitChangedRegions) context.attemptedRegions.length = 0
     this.result.finalDrcIssueCount = candidateErrors.length
     if (candidateErrors.length === 0) {
-      this.publish(context, true)
+      this.publishCompleteRepair(context)
       return
     }
+    this.recordPublishablePartialRepair(context)
     this.state = { phase: "select-region", context }
   }
 
-  private publishPartial(context: RegionalContext): void {
+  private recordPublishablePartialRepair(context: ReferencedContext): void {
+    const publishedCount = this.result.publishedDrcIssueCount
     if (
+      publishedCount !== undefined &&
+      context.currentErrors.length < publishedCount &&
       canPublishPartialFixedObstacleRepair({
         originalSrj: this.params.originalSrj,
         initialErrors: context.initialErrors,
         remainingErrors: context.currentErrors,
       })
     ) {
-      this.publish(context, false)
+      this.result.routes = context.currentRoutes
+      this.result.publishedDrcIssueCount = context.currentErrors.length
+    }
+  }
+
+  private publishPartial(context: RegionalContext): void {
+    if (
+      this.result.routes !== this.params.routes &&
+      this.result.publishedDrcIssueCount === context.currentErrors.length
+    ) {
+      this.finish()
       return
     }
     this.state = { phase: "prepare-independent-projection", context }
@@ -916,10 +931,17 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
     })
     this.result.referenceValidationCount++
     const errors = Array.isArray(reference) ? reference : reference.errors
-    this.result.routes = state.independentRoutes
-    this.result.publishedDrcIssueCount = errors.length
-    this.result.finalDrcIssueCount = errors.length
-    this.result.repaired = errors.length === 0
+    // A regional path can reduce the error count while leaving a new
+    // conflict. Preserve any previously validated improvement.
+    if (
+      this.result.publishedDrcIssueCount !== undefined &&
+      errors.length < this.result.publishedDrcIssueCount
+    ) {
+      this.result.routes = state.independentRoutes
+      this.result.publishedDrcIssueCount = errors.length
+      this.result.finalDrcIssueCount = errors.length
+      this.result.repaired = errors.length === 0
+    }
     this.finish()
   }
 
