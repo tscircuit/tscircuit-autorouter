@@ -1,55 +1,12 @@
-import { checkEachPcbPortConnectedToPcbTraces } from "@tscircuit/checks"
 import { expect, test } from "bun:test"
-import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
-import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
-import { getBugReportSnapshotSvg } from "lib/testing/getBugReportSnapshotSvg"
-import type { SimpleRouteJson } from "lib/types"
+import {
+  expectPaperDdr3RoutingSnapshot,
+  runPaperDdr3Routing,
+} from "tests/fixtures/runPaperDdr3Routing"
 
-test("routes H3 K51 DDR3 beside the terminated clock and completed data bytes", async (): Promise<void> => {
-  const fixtureUrl = new URL(
-    "../../fixtures/repro/whole-route-ddr3.handoff.json.gz",
-    import.meta.url,
-  )
-  const { cases } = JSON.parse(
-    new TextDecoder().decode(
-      Bun.gunzipSync(await Bun.file(fixtureUrl).bytes()),
-    ),
-  ) as {
-    cases: {
-      case: string
-      inputSrj: SimpleRouteJson
-      preloadedConnections: SimpleRouteJson["connections"]
-    }[]
-  }
-  const handoff = cases.find((entry) => entry.case === "allwinner-h3-k51")
-  if (!handoff) throw new Error("Missing allwinner-h3-k51 handoff")
-  const { inputSrj, preloadedConnections } = handoff
-  expect(preloadedConnections).toHaveLength(17)
-  expect(inputSrj.connections).toHaveLength(34)
-  expect(inputSrj.differentialPairs).toHaveLength(2)
-
-  const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
-    structuredClone(inputSrj),
-    { cacheProvider: null },
-  )
-  solver.solve()
-  expect(solver.error).toBeNull()
-  expect(solver.solved).toBeTrue()
-
-  const referenceSrj = {
-    ...inputSrj,
-    connections: [...preloadedConnections, ...inputSrj.connections],
-  }
-  const snapshotInput = {
-    inputSrj: referenceSrj,
-    srjWithPointPairs: referenceSrj,
-    routedTraces: solver.getOutputSimplifiedPcbTraces(),
-  }
-  const { circuitJson, errors } = evaluateRelaxedDrc(snapshotInput)
-  expect(errors).toEqual([])
-  expect(checkEachPcbPortConnectedToPcbTraces(circuitJson)).toEqual([])
-
-  await expect(getBugReportSnapshotSvg(snapshotInput)).toMatchSvgSnapshot(
-    import.meta.path,
-  )
+test("routes the H3 K51 DDR3 bytes with Bus Lanes and completes the bus with Pipeline 9", async (): Promise<void> => {
+  const routing = await runPaperDdr3Routing("allwinner-h3-k51")
+  expect(routing.inputSrj.connections).toHaveLength(51)
+  expect(routing.inputSrj.differentialPairs).toHaveLength(2)
+  await expectPaperDdr3RoutingSnapshot(routing, import.meta.path)
 })

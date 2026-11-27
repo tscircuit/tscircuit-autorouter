@@ -18,9 +18,10 @@ export const getBugReportSnapshotSvg = (
     bounds?: EvaluateRelaxedDrcInput["inputSrj"]["bounds"]
     showErrorLocations?: boolean
     showBoardOutline?: boolean
+    showViaCount?: boolean
   } = {},
 ): string => {
-  const { errors, locationAwareErrors } = evaluateRelaxedDrc(input)
+  const { circuitJson, errors, locationAwareErrors } = evaluateRelaxedDrc(input)
   const graphics = convertSrjToGraphicsObject({
     ...input.inputSrj,
     traces: combinePreloadedAndRoutedTraces(
@@ -59,10 +60,15 @@ export const getBugReportSnapshotSvg = (
     backgroundColor: "white",
   })
   const color = errors.length === 0 ? "#166534" : "#b91c1c"
+  const summaryHeight = options.showViaCount ? 66 : 44
+  const markerY = options.showViaCount ? 99 : 77
   const markerLegend = options.showErrorLocations
-    ? '<circle cx="24" cy="77" r="4" fill="white" stroke="#5b21b6" stroke-width="2"/><text x="36" y="82" font-family="Arial, sans-serif" font-size="15" fill="#351568">DRC location</text>'
+    ? `<circle cx="24" cy="${markerY}" r="4" fill="white" stroke="#5b21b6" stroke-width="2"/><text x="36" y="${markerY + 5}" font-family="Arial, sans-serif" font-size="15" fill="#351568">DRC location</text>`
     : ""
-  const overlay = `<g data-testid="relaxed-drc-summary"><rect x="12" y="12" width="300" height="44" rx="6" fill="white" stroke="${color}"/><text x="24" y="40" font-family="Arial, sans-serif" font-size="20" font-weight="600" fill="${color}">Relaxed DRC errors: ${errors.length}</text>${markerLegend}</g>`
+  const viaSummary = options.showViaCount
+    ? `<text x="24" y="65" font-family="Arial, sans-serif" font-size="18" fill="#172554">${circuitJson.filter((element) => element.type === "pcb_via").length} vias</text>`
+    : ""
+  const overlay = `<g data-testid="relaxed-drc-summary"><rect x="12" y="12" width="300" height="${summaryHeight}" rx="6" fill="white" stroke="${color}"/><text x="24" y="40" font-family="Arial, sans-serif" font-size="20" font-weight="600" fill="${color}">Relaxed DRC errors: ${errors.length}</text>${viaSummary}${markerLegend}</g>`
   // Draw the markers above the copper, keeping their centers visible.
   const markerStyle = options.showErrorLocations
     ? '<style>circle[data-type="point"]{r:4px;fill:white;fill-opacity:0.35;stroke:#5b21b6;stroke-width:2}</style>'
