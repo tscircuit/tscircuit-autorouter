@@ -59,6 +59,7 @@ export function optimizePaperDdr3Routing(
     { ...reference, connections, traces },
     {
       searchPadding: 2.5,
+      maxCandidates: 256,
       validate: (candidate) => {
         const { circuitJson, errors } = evaluateRelaxedDrc(
           snapshotInput(candidate),
