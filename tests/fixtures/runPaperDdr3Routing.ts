@@ -43,7 +43,8 @@ export async function runPaperDdr3Routing(
   for (const phase of bytePhases) {
     const supplied: BusLanesTrace[] = traces.map((trace) => {
       const route = trace.route.map((point) => {
-        if (point.route_type === "wire" || point.route_type === "via") return point
+        if (point.route_type === "wire" || point.route_type === "via")
+          return point
         throw new Error(`Unsupported supplied copper in ${trace.pcb_trace_id}`)
       })
       return { ...trace, route }
@@ -99,7 +100,9 @@ export async function expectPaperDdr3RoutingSnapshot(
   )
   const routedNames = new Set(combined.map((trace) => trace.connection_name))
   expect(
-    snapshotInput.inputSrj.connections.filter(({ name }) => !routedNames.has(name)),
+    snapshotInput.inputSrj.connections.filter(
+      ({ name }) => !routedNames.has(name),
+    ),
   ).toEqual([])
   expect(errors).toEqual([])
   expect(checkEachPcbPortConnectedToPcbTraces(circuitJson)).toEqual([])
