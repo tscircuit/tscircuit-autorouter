@@ -192,6 +192,38 @@ test("Pipeline9 native DRC matches current reference rules and optional categori
     observedMessages.some((message) => message.includes("non-plated hole")),
   ).toBeTrue()
 
+  const evaluateCategorized = createPipeline9AutoroutingDrcEvaluator({
+    inputSrj: input,
+    srjWithPointPairs: input,
+    includeBoardClearance: true,
+  })
+  const brokenTraces = structuredClone(traces)
+  const horizontal = brokenTraces.find(
+    (trace) => trace.connection_name === "horizontal",
+  )
+  if (!horizontal) throw new Error("Missing horizontal trace")
+  horizontal.route = [
+    { route_type: "wire", x: -0.8, y: 1.5, layer: "top", width: 0.1 },
+    {
+      route_type: "via",
+      x: 0.2,
+      y: 1.5,
+      from_layer: "top",
+      to_layer: "bottom",
+    },
+    { route_type: "wire", x: 2.5, y: 1.5, layer: "top", width: 0.1 },
+  ]
+  const ordinaryFindings = evaluateCategorized(brokenTraces).errors
+  const categorizedFindings = evaluateCategorized(brokenTraces, {
+    includeFindingCategories: true,
+  }).errors
+  expect(
+    categorizedFindings.map(({ drc_category, ...finding }) => finding),
+  ).toEqual(ordinaryFindings)
+  expect(categorizedFindings.map((finding) => finding.drc_category)).toEqual(
+    expect.arrayContaining(["trace_continuity", "board_edge"]),
+  )
+
   const evaluateWidths = createPipeline9AutoroutingDrcEvaluator({
     inputSrj: input,
     srjWithPointPairs: input,
