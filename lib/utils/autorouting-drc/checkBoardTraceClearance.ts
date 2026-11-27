@@ -4,10 +4,12 @@ import type { AnyCircuitElement, PcbBoard } from "circuit-json"
 type BoardEdge = {
   start: Point
   end: Point
-  minX: number
-  minY: number
-  maxX: number
-  maxY: number
+  bounds: {
+    minX: number
+    minY: number
+    maxX: number
+    maxY: number
+  }
 }
 type BoardTraceClearanceOptions = { board?: PcbBoard; margin?: number }
 
@@ -57,10 +59,12 @@ export const checkBoardTraceClearance = (
       return {
         start,
         end,
-        minX: Math.min(start.x, end.x),
-        minY: Math.min(start.y, end.y),
-        maxX: Math.max(start.x, end.x),
-        maxY: Math.max(start.y, end.y),
+        bounds: {
+          minX: Math.min(start.x, end.x),
+          minY: Math.min(start.y, end.y),
+          maxX: Math.max(start.x, end.x),
+          maxY: Math.max(start.y, end.y),
+        },
       }
     })
     edgesByBoard.set(board, edges)
@@ -81,12 +85,13 @@ export const checkBoardTraceClearance = (
       const maxY = Math.max(start.y, end.y) + requiredDistance
       let minimumDistance = Number.POSITIVE_INFINITY
       for (const edge of edges) {
+        const { bounds } = edge
         // Edges outside the clearance envelope cannot cause or describe an error.
         if (
-          edge.maxX < minX ||
-          edge.minX > maxX ||
-          edge.maxY < minY ||
-          edge.minY > maxY
+          bounds.maxX < minX ||
+          bounds.minX > maxX ||
+          bounds.maxY < minY ||
+          bounds.minY > maxY
         ) {
           continue
         }
