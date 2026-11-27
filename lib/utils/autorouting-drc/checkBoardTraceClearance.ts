@@ -1,7 +1,16 @@
 import { type Point, segmentToSegmentMinDistance } from "@tscircuit/math-utils"
 import type { AnyCircuitElement, PcbBoard } from "circuit-json"
 
-type BoardEdge = { start: Point; end: Point }
+type BoardEdge = {
+  start: Point
+  end: Point
+  bounds: {
+    minX: number
+    minY: number
+    maxX: number
+    maxY: number
+  }
+}
 type BoardTraceClearanceOptions = { board?: PcbBoard; margin?: number }
 
 const edgesByBoard = new WeakMap<PcbBoard, BoardEdge[]>()
@@ -45,10 +54,19 @@ export const checkBoardTraceClearance = (
     } else {
       return []
     }
-    edges = points.map((start, index) => ({
-      start,
-      end: points[(index + 1) % points.length]!,
-    }))
+    edges = points.map((start, index) => {
+      const end = points[(index + 1) % points.length]!
+      return {
+        start,
+        end,
+        bounds: {
+          minX: Math.min(start.x, end.x),
+          minY: Math.min(start.y, end.y),
+          maxX: Math.max(start.x, end.x),
+          maxY: Math.max(start.y, end.y),
+        },
+      }
+    })
     edgesByBoard.set(board, edges)
   }
   const margin = options.margin ?? board.min_board_edge_clearance ?? 0.2
@@ -60,14 +78,28 @@ export const checkBoardTraceClearance = (
       const end = trace.route[index + 1]!
       if (start.route_type !== "wire" || end.route_type !== "wire") continue
       const width = start.width ?? end.width ?? 0.1
+      const requiredDistance = width / 2 + margin
+      const minX = Math.min(start.x, end.x) - requiredDistance
+      const minY = Math.min(start.y, end.y) - requiredDistance
+      const maxX = Math.max(start.x, end.x) + requiredDistance
+      const maxY = Math.max(start.y, end.y) + requiredDistance
       let minimumDistance = Number.POSITIVE_INFINITY
       for (const edge of edges) {
+        const { bounds } = edge
+        // Edges outside the clearance envelope cannot cause or describe an error.
+        if (
+          bounds.maxX < minX ||
+          bounds.minX > maxX ||
+          bounds.maxY < minY ||
+          bounds.minY > maxY
+        ) {
+          continue
+        }
         minimumDistance = Math.min(
           minimumDistance,
           segmentToSegmentMinDistance(start, end, edge.start, edge.end),
         )
       }
-      const requiredDistance = width / 2 + margin
       if (!(minimumDistance < requiredDistance)) continue
       errors.push({
         type: "pcb_trace_error",
