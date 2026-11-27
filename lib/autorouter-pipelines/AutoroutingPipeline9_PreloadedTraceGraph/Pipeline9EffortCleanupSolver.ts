@@ -6,10 +6,15 @@ import { BaseSolver } from "lib/solvers/BaseSolver"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 
 type CleanupCost = { vias: number; points: number }
+type ViaProposal = {
+  replacements: Map<number, HighDensityRoute>
+  viasSaved: number
+}
 type CleanupParams = {
   config: ConstructorParameters<typeof TraceSimplificationSolver>[0]
   effort: number
   viaRemovalPasses?: 1 | 2
+  viaOptimization?: { protectedConnectionNames: ReadonlySet<string> }
   getCost: (routes: HighDensityRoute[]) => CleanupCost
   isValid: (routes: HighDensityRoute[]) => boolean
   refineTraceWidths?: (routes: HighDensityRoute[]) => HighDensityRoute[]
@@ -23,6 +28,8 @@ export class Pipeline9EffortCleanupSolver extends BaseSolver {
   readonly cleanupPasses: number
   simplifier?: TraceSimplificationSolver
   viaRemovalSolver?: UselessViaRemovalSolver
+  private viaOptimizationRouteIndices?: number[]
+  private viaProposals?: ViaProposal[]
   readonly params: CleanupParams
 
   constructor(params: CleanupParams) {
@@ -34,7 +41,10 @@ export class Pipeline9EffortCleanupSolver extends BaseSolver {
       params.effort <= 1
         ? (params.viaRemovalPasses ?? 1)
         : Math.ceil(2 * params.effort)
-    this.MAX_ITERATIONS = 100e6 * Math.max(1, this.cleanupPasses)
+    this.MAX_ITERATIONS =
+      100e6 *
+      (Math.max(1, this.cleanupPasses) +
+        Number(params.viaOptimization !== undefined))
     if (params.effort <= 1) {
       // Path sampling already ran before repair. Only revisit removable vias
       // at default effort; repeated path and crossing searches are expensive.
@@ -53,11 +63,14 @@ export class Pipeline9EffortCleanupSolver extends BaseSolver {
     this.simplifier.MAX_ITERATIONS = this.MAX_ITERATIONS
   }
 
-  private createViaRemovalSolver(): UselessViaRemovalSolver {
+  private createViaRemovalSolver(
+    hdRoutes = this.bestRoutes,
+    otherHdRoutes = this.params.config.otherHdRoutes,
+  ): UselessViaRemovalSolver {
     const config = this.params.config
     const solver = new UselessViaRemovalSolver({
-      unsimplifiedHdRoutes: structuredClone(this.bestRoutes),
-      otherHdRoutes: config.otherHdRoutes,
+      unsimplifiedHdRoutes: structuredClone(hdRoutes),
+      otherHdRoutes,
       obstacles: [...config.obstacles],
       colorMap: config.colorMap,
       layerCount: config.layerCount,
@@ -76,6 +89,10 @@ export class Pipeline9EffortCleanupSolver extends BaseSolver {
   }
 
   override _step(): void {
+    if (this.viaProposals) {
+      this.evaluateNextViaProposal()
+      return
+    }
     if (this.viaRemovalSolver) {
       const remover = this.viaRemovalSolver
       remover.step()
@@ -87,6 +104,13 @@ export class Pipeline9EffortCleanupSolver extends BaseSolver {
       if (!remover.solved) return
       const candidate = remover.getOptimizedHdRoutes()
       if (!candidate) throw new Error("Via removal has no output")
+      if (this.viaOptimizationRouteIndices) {
+        this.viaProposals = this.getViaProposals(
+          this.viaOptimizationRouteIndices,
+          candidate,
+        )
+        return
+      }
       const cost = this.params.getCost(candidate)
       // Validate once, after the complete via pass, rather than after every
       // phase of multiple full simplification loops.
@@ -137,7 +161,90 @@ export class Pipeline9EffortCleanupSolver extends BaseSolver {
     if (simplifier.solved) this.finish()
   }
 
+  private getViaProposals(
+    indices: number[],
+    candidate: HighDensityRoute[],
+  ): ViaProposal[] {
+    if (candidate.length !== indices.length)
+      throw new Error("Via optimization did not return all routes")
+    const groups = new Map<string, Map<number, HighDensityRoute>>()
+    for (const [offset, index] of indices.entries()) {
+      const original = this.bestRoutes[index]!
+      const { route, vias, connectionName } = candidate[offset]!
+      if (connectionName !== original.connectionName)
+        throw new Error("Via optimization reordered its routes")
+      const rootName = original.rootConnectionName ?? connectionName
+      const replacements =
+        groups.get(rootName) ?? new Map<number, HighDensityRoute>()
+      replacements.set(index, { ...original, route, vias })
+      groups.set(rootName, replacements)
+    }
+    const proposals: ViaProposal[] = []
+    for (const replacements of groups.values()) {
+      const original = [...replacements.keys()].map(
+        (index) => this.bestRoutes[index]!,
+      )
+      const viasSaved =
+        this.params.getCost(original).vias -
+        this.params.getCost([...replacements.values()]).vias
+      if (viasSaved > 0) proposals.push({ replacements, viasSaved })
+    }
+    return proposals.sort((a, b) => a.viasSaved - b.viasSaved)
+  }
+
+  private evaluateNextViaProposal(): void {
+    const proposal = this.viaProposals!.pop()
+    if (!proposal) {
+      this.finish()
+      return
+    }
+    const candidate = this.bestRoutes.map(
+      (route, index) => proposal.replacements.get(index) ?? route,
+    )
+    const cost = this.params.getCost(candidate)
+    if (cost.vias < this.bestCost.vias && this.params.isValid(candidate)) {
+      this.bestRoutes = candidate
+      this.bestCost = cost
+    }
+  }
+
   private finish(): void {
+    const viaOptimization = this.params.viaOptimization
+    if (
+      viaOptimization &&
+      !this.viaOptimizationRouteIndices &&
+      this.bestCost.vias
+    ) {
+      // Grade one connection at a time against the accepted board. An invalid
+      // proposal for one connection cannot discard legal savings elsewhere.
+      const protectedNames = new Set(viaOptimization.protectedConnectionNames)
+      for (const route of this.bestRoutes) {
+        if (
+          protectedNames.has(route.connectionName) &&
+          route.rootConnectionName
+        ) {
+          protectedNames.add(route.rootConnectionName)
+        }
+      }
+      const indices: number[] = []
+      const routes: HighDensityRoute[] = []
+      const fixedRoutes = [...(this.params.config.otherHdRoutes ?? [])]
+      for (const [index, route] of this.bestRoutes.entries()) {
+        if (
+          protectedNames.has(route.rootConnectionName ?? route.connectionName)
+        ) {
+          fixedRoutes.push(route)
+        } else {
+          indices.push(index)
+          routes.push(route)
+        }
+      }
+      if (indices.length) {
+        this.viaOptimizationRouteIndices = indices
+        this.viaRemovalSolver = this.createViaRemovalSolver(routes, fixedRoutes)
+        return
+      }
+    }
     if (this.params.refineTraceWidths) {
       const refined = this.params.refineTraceWidths(this.bestRoutes)
       if (refined !== this.bestRoutes) {

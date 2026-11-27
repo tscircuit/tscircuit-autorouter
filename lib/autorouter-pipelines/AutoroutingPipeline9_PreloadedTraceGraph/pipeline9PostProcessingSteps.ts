@@ -44,6 +44,24 @@ function getCleanupTraces(
   )
 }
 
+function getProtectedViaOptimizationConnections(
+  pipeline: AutoroutingPipelineSolver9_PreloadedTraceGraph,
+): Set<string> {
+  const input = pipeline.originalSrj
+  const names = new Set([
+    ...(input.differentialPairs ?? []).flatMap((pair) => pair.connectionNames),
+    ...(input.buses ?? []).flatMap((bus) => bus.connectionNames),
+  ])
+  for (const connection of pipeline.netToPointPairsSolver!.newConnections) {
+    const aliases = [
+      connection.__netConnectionName,
+      ...(connection.__rootConnectionNames ?? []),
+    ]
+    if (aliases.some((name) => name && names.has(name))) names.add(connection.name)
+  }
+  return names
+}
+
 export const pipeline9PostProcessingSteps = [
   definePipeline9Step({
     solverName: "globalDrcForceImproveSolver",
@@ -139,6 +157,12 @@ export const pipeline9PostProcessingSteps = [
       return [
         {
           effort: pipeline.effort,
+          ...(pipeline.opts.optimizeVias && {
+            viaOptimization: {
+              protectedConnectionNames:
+                getProtectedViaOptimizationConnections(pipeline),
+            },
+          }),
           viaRemovalPasses:
             pipeline.pipeline9JointDrcRepairSolver!.stats
               .initialBoundedRegionalRepairAddedViaCount > 0
