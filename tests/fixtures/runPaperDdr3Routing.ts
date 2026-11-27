@@ -23,6 +23,7 @@ interface PaperDdr3Handoff {
 
 export async function runPaperDdr3Routing(
   caseName: string,
+  options: { optimizeVias?: boolean } = {},
 ): Promise<EvaluateRelaxedDrcInput> {
   const fixture = Bun.file(
     new URL(
@@ -69,7 +70,7 @@ export async function runPaperDdr3Routing(
 
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
     structuredClone({ ...inputSrj, traces }),
-    { cacheProvider: null },
+    { cacheProvider: null, optimizeVias: options.optimizeVias },
   )
   solver.solve()
   expect(solver.error).toBeNull()
