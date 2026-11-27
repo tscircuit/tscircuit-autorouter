@@ -43,7 +43,7 @@ export const getIntraNodeCrossingsFromSegments = (
     }
     for (const { connectionName: bConnName, point: B } of portPoints) {
       if (aConnName !== bConnName) continue
-      if (A === B) continue
+      if (A.x === B.x && A.y === B.y) continue
       pointPair.points.push(B)
 
       if (pointPair.points.some((p) => p.z !== pointPair.z)) {
