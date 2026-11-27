@@ -1,7 +1,6 @@
 import {
   circlePolygon,
   copperPolygonsTouch,
-  getPcbElementBounds,
   getPlatedHolePolygon,
   getTraceSegmentPolygon,
   getPrimaryId,
@@ -146,91 +145,8 @@ const routePointReferencesPort = (
 
 const routePointTouchesPad = (point: RoutePoint, pad: Pad): boolean => {
   if (point.route_type !== "wire") return false
-  const onPadLayer =
-    pad.type === "pcb_smtpad"
-      ? pad.layer === point.layer
-      : pad.layers.includes(point.layer)
-  return onPadLayer && pointIsInPad(point, pad)
-}
-
-const getPadSearchBounds = (
-  pad: Pad,
-): ReturnType<typeof getPcbElementBounds> => {
-  // The polygon contact test uses a tolerance along rotated pad edges.
-  if (pad.shape !== "circle" && pad.shape !== "rect") return null
-  const bounds = getPcbElementBounds(pad)
-  if (!bounds || !Object.values(bounds).every(Number.isFinite)) return null
-  return {
-    minX: bounds.minX - 1e-9,
-    minY: bounds.minY - 1e-9,
-    maxX: bounds.maxX + 1e-9,
-    maxY: bounds.maxY + 1e-9,
-  }
-}
-
-const getTouchedPortsByTrace = (
-  traces: PcbTrace[],
-  padsByPort: PadMap,
-): Map<string, Set<string>> => {
-  const touchedPortsByTrace = new Map<string, Set<string>>()
-  const traceEndpoints = traces.map((trace) => {
-    const points = [trace.route[0], trace.route.at(-1)]
-    const touchedPorts = new Set<string>()
-    touchedPortsByTrace.set(trace.pcb_trace_id, touchedPorts)
-    return { points, touchedPorts }
-  })
-  if (traceEndpoints.length === 0 || padsByPort.size === 0) {
-    return touchedPortsByTrace
-  }
-  const indexedEndpoints = traceEndpoints.flatMap(({ points, touchedPorts }) =>
-    points.flatMap((point) => {
-      if (
-        point?.route_type !== "wire" ||
-        !Number.isFinite(point.x) ||
-        !Number.isFinite(point.y)
-      ) {
-        return []
-      }
-      return [
-        {
-          point,
-          touchedPorts,
-          minX: point.x,
-          maxX: point.x,
-          minY: point.y,
-          maxY: point.y,
-        },
-      ]
-    }),
-  )
-  const endpointIndex = new RBush<(typeof indexedEndpoints)[number]>().load(
-    indexedEndpoints,
-  )
-  for (const [portId, portPads] of padsByPort) {
-    const boundedPads = portPads.map((pad) => ({
-      pad,
-      bounds: getPadSearchBounds(pad),
-    }))
-    if (boundedPads.some(({ bounds }) => bounds === null)) {
-      for (const { points, touchedPorts } of traceEndpoints) {
-        if (
-          points.some(
-            (point) =>
-              point && portPads.some((pad) => routePointTouchesPad(point, pad)),
-          )
-        ) {
-          touchedPorts.add(portId)
-        }
-      }
-      continue
-    }
-    for (const { pad, bounds } of boundedPads) {
-      for (const { point, touchedPorts } of endpointIndex.search(bounds!)) {
-        if (routePointTouchesPad(point, pad)) touchedPorts.add(portId)
-      }
-    }
-  }
-  return touchedPortsByTrace
+  const layers = pad.type === "pcb_smtpad" ? [pad.layer] : pad.layers
+  return layers.includes(point.layer) && pointIsInPad(point, pad)
 }
 
 const viaTouchesPad = (via: ViaContact, pad: Pad): boolean => {
@@ -375,24 +291,6 @@ export const checkTraceContinuity = (
   const sourceTraceById = new Map(
     sourceTraces.map((trace) => [trace.source_trace_id, trace]),
   )
-  const sourceTraceIdsBySourcePort = new Map<string, string[]>()
-  for (const trace of sourceTraceById.values()) {
-    for (const portId of new Set(trace.connected_source_port_ids)) {
-      const traceIds = sourceTraceIdsBySourcePort.get(portId)
-      if (traceIds) traceIds.push(trace.source_trace_id)
-      else sourceTraceIdsBySourcePort.set(portId, [trace.source_trace_id])
-    }
-  }
-  const expectedPortsBySourceTrace = new Map<string, PcbPort[]>()
-  for (const port of ports) {
-    const traceIds = sourceTraceIdsBySourcePort.get(port.source_port_id)
-    if (!traceIds) continue
-    for (const traceId of traceIds) {
-      const expectedPorts = expectedPortsBySourceTrace.get(traceId)
-      if (expectedPorts) expectedPorts.push(port)
-      else expectedPortsBySourceTrace.set(traceId, [port])
-    }
-  }
   const padsByPort: PadMap = new Map()
   const pads = [
     ...circuitJson.filter((element) => element.type === "pcb_smtpad"),
@@ -546,7 +444,22 @@ export const checkTraceContinuity = (
       }
     }
   }
-  const touchedPortsByTrace = getTouchedPortsByTrace(traces, padsByPort)
+  const touchedPortsByTrace = new Map(
+    traces.map((trace) => [
+      trace.pcb_trace_id,
+      new Set(
+        [...padsByPort]
+          .filter(([, portPads]) =>
+            [trace.route[0], trace.route.at(-1)].some(
+              (point) =>
+                point &&
+                portPads.some((pad) => routePointTouchesPad(point, pad)),
+            ),
+          )
+          .map(([portId]) => portId),
+      ),
+    ]),
+  )
   const traceIdsByTouchedPort = new Map<string, string[]>()
   for (const [traceId, portIds] of touchedPortsByTrace) {
     for (const portId of portIds) {
@@ -848,7 +761,9 @@ export const checkTraceContinuity = (
     const last = trace.route.at(-1)!
     const sourceTrace = sourceTraceById.get(trace.source_trace_id!)
     const expectedPorts = sourceTrace
-      ? (expectedPortsBySourceTrace.get(sourceTrace.source_trace_id) ?? [])
+      ? ports.filter((port) =>
+          sourceTrace.connected_source_port_ids?.includes(port.source_port_id),
+        )
       : []
     let traceName: string | undefined
     const sourceTraceId =
