@@ -28,12 +28,11 @@ test("Pipeline9 preserves regional repair for contacts left by a completed exact
     routedTraces,
   }
   const { errors, circuitJson } = evaluateRelaxedDrc(snapshotInput)
-  // The previous regional baseline crossed the outline and reported over
-  // 100 issues once the board-edge clearance was included.
   const edgeErrors = checkBoardTraceClearance(circuitJson, {
     board: createPcbBoardElement(scenario),
   })
-  expect(errors.length + edgeErrors.length).toBeLessThanOrEqual(18)
+  expect(errors.length).toBeLessThanOrEqual(4)
+  expect(edgeErrors.length).toBeLessThanOrEqual(8)
   expect(
     errors.filter((error) => error.message.includes("accidental contact"))
       .length,

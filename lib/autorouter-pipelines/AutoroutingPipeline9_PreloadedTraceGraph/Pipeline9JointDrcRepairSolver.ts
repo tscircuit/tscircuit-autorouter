@@ -1470,6 +1470,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     }
     const evaluateCandidateDrc = createPipeline9AutoroutingDrcEvaluator({
       includeBoardClearance: true,
+      includeBoardClearanceMeasurements: true,
       connectivityMaps,
       inputSrj: params.originalSrj,
       srjWithPointPairs: params.srjWithPointPairs,
