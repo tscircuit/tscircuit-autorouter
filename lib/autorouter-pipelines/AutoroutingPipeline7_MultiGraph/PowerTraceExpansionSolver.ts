@@ -13,7 +13,8 @@ export class PowerTraceExpansionSolver extends BaseSolver {
   readonly powerTraceExpanderSolver: PowerTraceExpanderSolver
 
   constructor(
-    public readonly inputSrj: SimpleRouteJson,
+    public readonly inputSrj: SimpleRouteJson &
+      Pick<PowerTraceExpanderInput, "boardOutline">,
     public readonly options: PowerTraceExpanderOptions = {},
   ) {
     super()
@@ -58,7 +59,7 @@ export class PowerTraceExpansionSolver extends BaseSolver {
   }
 
   override getConstructorParams(): readonly [
-    SimpleRouteJson,
+    typeof this.inputSrj,
     PowerTraceExpanderOptions,
   ] {
     return [this.inputSrj, this.options] as const

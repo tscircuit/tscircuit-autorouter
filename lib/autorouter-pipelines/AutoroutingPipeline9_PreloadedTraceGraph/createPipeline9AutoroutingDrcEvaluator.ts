@@ -43,6 +43,7 @@ export const createPipeline9AutoroutingDrcEvaluator = ({
   srjWithPointPairs,
   drcOptions = {},
   includeBoardClearance = false,
+  includeBoardClearanceMeasurements = false,
   clearanceTolerance,
   connectivityMaps,
 }: {
@@ -50,6 +51,7 @@ export const createPipeline9AutoroutingDrcEvaluator = ({
   srjWithPointPairs: SimpleRouteJson
   drcOptions?: GetDrcErrorsOptions
   includeBoardClearance?: boolean
+  includeBoardClearanceMeasurements?: boolean
   clearanceTolerance?: number
   connectivityMaps?: CircuitJsonConnectivityMaps
 }): Pipeline9AutoroutingDrcEvaluator => {
@@ -115,7 +117,10 @@ export const createPipeline9AutoroutingDrcEvaluator = ({
     const errors = [
       ...obstacleErrors.traceErrors,
       ...evaluateFixedCopper(traces),
-      ...checkBoardTraceClearance(circuitJson, { board }),
+      ...checkBoardTraceClearance(circuitJson, {
+        board,
+        includeMeasurements: includeBoardClearanceMeasurements,
+      }),
       ...((options.includeTraceContinuity ??
         drcOptions.includeTraceContinuity) === false
         ? []

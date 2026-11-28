@@ -26,6 +26,8 @@ import {
   getSrjWithMaterializedPreloadedTraces,
 } from "./pipeline9PreloadedTraceUpdates"
 
+const BOARD_EDGE_EXPANSION_PRECISION_MARGIN = 1e-6
+
 function getCleanupTraces(
   routes: HighDensityRoute[],
   pipeline: AutoroutingPipelineSolver9_PreloadedTraceGraph,
@@ -136,14 +138,32 @@ export const pipeline9PostProcessingSteps = [
             pipeline.originalSrj.minViaHoleEdgeToViaHoleEdgeClearance ?? 0.1,
         },
       })
+      const jointRepair = pipeline.pipeline9JointDrcRepairSolver!
+      const repairAddedVias =
+        jointRepair.stats.initialBoundedRegionalRepairAddedViaCount > 0
+      const recoverBoardRepairVias =
+        jointRepair.stats.boardEdgeRepairAddedViaCount > 0
       return [
         {
           effort: pipeline.effort,
-          viaRemovalPasses:
-            pipeline.pipeline9JointDrcRepairSolver!.stats
-              .initialBoundedRegionalRepairAddedViaCount > 0
-              ? 2
-              : 1,
+          viaRemovalPasses: repairAddedVias || recoverBoardRepairVias ? 2 : 1,
+          validateRefinedWidths:
+            jointRepair.stats.boardEdgeRepairAccepted === true,
+          planarViaCleanup: recoverBoardRepairVias
+            ? {
+                srj: {
+                  ...inputSrj,
+                  connections: [
+                    ...inputSrj.connections,
+                    ...pipeline.netToPointPairsSolver!.newConnections,
+                  ],
+                },
+                targetViaCount: pipeline
+                  .globalDrcForceImproveSolver!.getOutput()
+                  .reduce((count, route) => count + route.vias.length, 0),
+                viaHoleDiameter: pipeline.viaHoleDiameter,
+              }
+            : undefined,
           config: {
             hdRoutes,
             preserveRouteEndpoints: true,
@@ -249,14 +269,30 @@ export const pipeline9PostProcessingSteps = [
       const onlyConnectionNames =
         configuredOptions.onlyConnectionNames ??
         getPowerTraceExpansionConnectionNames(pipeline.originalSrj)
+      const input = preparePipeline7PowerTraceExpansionInput({
+        originalSrj: pipeline.originalSrj,
+        newlyRoutedTraces: pipeline.getNewTracesBeforePowerExpansion(),
+        currentPreloadedTraces: pipeline.getUpdatedPreloadedTraces(),
+        expandedConnectionNames: onlyConnectionNames,
+        resolveConnectedTraceAliases: true,
+      })
+      const protectBoardClearance =
+        pipeline.pipeline9JointDrcRepairSolver?.stats
+          .boardEdgeRepairAccepted === true
       return [
-        preparePipeline7PowerTraceExpansionInput({
-          originalSrj: pipeline.originalSrj,
-          newlyRoutedTraces: pipeline.getNewTracesBeforePowerExpansion(),
-          currentPreloadedTraces: pipeline.getUpdatedPreloadedTraces(),
-          expandedConnectionNames: onlyConnectionNames,
-          resolveConnectedTraceAliases: true,
-        }),
+        {
+          ...input,
+          ...(protectBoardClearance && input.minBoardEdgeClearance !== undefined
+            ? {
+                boardOutline: input.outline,
+                // Keep tangent widths clear of the exact DRC threshold after
+                // the expander applies its tolerance to the outline distance.
+                minBoardEdgeClearance:
+                  input.minBoardEdgeClearance +
+                  BOARD_EDGE_EXPANSION_PRECISION_MARGIN,
+              }
+            : {}),
+        },
         {
           allowNewVias: false,
           widenInPlaceAtSearchLimit: true,

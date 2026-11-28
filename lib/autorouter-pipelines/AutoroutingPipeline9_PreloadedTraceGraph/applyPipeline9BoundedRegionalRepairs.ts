@@ -88,6 +88,7 @@ export type Pipeline9BoundedRegionalRepairParams = {
   viaHoleDiameter?: number
   budget?: Pipeline9BoundedRepairBudget
   prioritizeConflictedRoutes?: boolean
+  useBoardEdgeClearanceSearch?: boolean
 }
 
 type RepairAllowance = {

@@ -4,10 +4,9 @@ import { isViaPadClearanceError } from "./isViaPadClearanceError"
 import type { Pipeline9DrcError } from "./pipeline9JointDrcRepairUtils"
 
 /**
- * Partial publication is limited to remaining fixed-pad errors covered by the
- * physical obstacle non-regression guard. Call only after that guard and the
- * new-via guard pass. Unknown, connectivity and moving
- * copper errors still require a completely reference-clean repair.
+ * Partial publication permits inherited pad and board-edge errors that did
+ * not worsen. Call only after the physical obstacle and new-via guards pass.
+ * Connectivity and moving copper errors require a complete repair.
  */
 export const canPublishPartialFixedObstacleRepair = ({
   originalSrj,
@@ -32,6 +31,30 @@ export const canPublishPartialFixedObstacleRepair = ({
   const unmatchedErrors = [...initialErrors]
   for (const error of remainingErrors) {
     if (typeof error.pcb_trace_id !== "string") return false
+    const boardEdgeClearance = error.actual_board_edge_clearance
+    const minimumBoardEdgeClearance = error.minimum_board_edge_clearance
+    if (
+      error.type === "pcb_trace_error" &&
+      typeof error.pcb_trace_error_id === "string" &&
+      typeof minimumBoardEdgeClearance === "number" &&
+      Number.isFinite(minimumBoardEdgeClearance) &&
+      typeof boardEdgeClearance === "number" &&
+      Number.isFinite(boardEdgeClearance)
+    ) {
+      const originalIndex = unmatchedErrors.findIndex(
+        (original) =>
+          original.type === error.type &&
+          original.pcb_trace_id === error.pcb_trace_id &&
+          original.pcb_trace_error_id === error.pcb_trace_error_id &&
+          original.minimum_board_edge_clearance === minimumBoardEdgeClearance &&
+          typeof original.actual_board_edge_clearance === "number" &&
+          Number.isFinite(original.actual_board_edge_clearance) &&
+          boardEdgeClearance >= original.actual_board_edge_clearance,
+      )
+      if (originalIndex === -1) return false
+      unmatchedErrors.splice(originalIndex, 1)
+      continue
+    }
     const prefix = `overlap_${error.pcb_trace_id}_`
     const overlapPadId =
       error.type === "pcb_trace_error" &&

@@ -11,7 +11,7 @@ import {
 import { doesSegmentCrossPolygonBoundary } from "lib/utils/polygonContainment"
 import { loadScenarioBySampleNumber } from "../../scripts/benchmark/scenarios"
 
-test("Pipeline9 preserves regional repair for contacts left by a completed exact portfolio", async (): Promise<void> => {
+test("Pipeline9 clears pad and outline violations on SRJ33 sample 3", async (): Promise<void> => {
   const { scenario } = await loadScenarioBySampleNumber("srj33", 3)
   const solver: AutoroutingPipelineSolver9_PreloadedTraceGraph =
     new AutoroutingPipelineSolver9_PreloadedTraceGraph(
@@ -28,16 +28,11 @@ test("Pipeline9 preserves regional repair for contacts left by a completed exact
     routedTraces,
   }
   const { errors, circuitJson } = evaluateRelaxedDrc(snapshotInput)
-  // The previous regional baseline crossed the outline and reported over
-  // 100 issues once the board-edge clearance was included.
   const edgeErrors = checkBoardTraceClearance(circuitJson, {
     board: createPcbBoardElement(scenario),
   })
-  expect(errors.length + edgeErrors.length).toBeLessThanOrEqual(18)
-  expect(
-    errors.filter((error) => error.message.includes("accidental contact"))
-      .length,
-  ).toBeLessThanOrEqual(4)
+  expect(errors).toEqual([])
+  expect(edgeErrors).toEqual([])
 
   const outline = scenario.outline
   if (!outline)
@@ -71,7 +66,12 @@ test("Pipeline9 preserves regional repair for contacts left by a completed exact
     minViaDiameter: scenario.minViaDiameter,
   })
   expect(checkViasInPads(outputCircuitJson)).toEqual([])
+  // Native routing can choose different valid paths on Linux and macOS.
+  const snapshotPath =
+    process.platform === "linux"
+      ? import.meta.path.replace(/\.test\.ts$/, "-linux.test.ts")
+      : import.meta.path
   await expect(
     getBugReportSnapshotSvg(snapshotInput, { showBoardOutline: true }),
-  ).toMatchSvgSnapshot(import.meta.path)
+  ).toMatchSvgSnapshot(snapshotPath)
 })
