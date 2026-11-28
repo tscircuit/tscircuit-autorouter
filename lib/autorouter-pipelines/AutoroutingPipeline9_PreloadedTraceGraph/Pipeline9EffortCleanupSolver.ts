@@ -4,12 +4,17 @@ import {
 } from "@tscircuit/trace-simplification-solver"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import type { HighDensityRoute } from "lib/types/high-density-types"
+import { removePipeline9PlanarViaPairs } from "./removePipeline9PlanarViaPairs"
 
 type CleanupCost = { vias: number; points: number }
 type CleanupParams = {
   config: ConstructorParameters<typeof TraceSimplificationSolver>[0]
   effort: number
   viaRemovalPasses?: 1 | 2
+  planarViaCleanup?: Pick<
+    Parameters<typeof removePipeline9PlanarViaPairs>[0],
+    "srj" | "targetViaCount" | "viaHoleDiameter"
+  >
   getCost: (routes: HighDensityRoute[]) => CleanupCost
   isValid: (routes: HighDensityRoute[]) => boolean
   refineTraceWidths?: (routes: HighDensityRoute[]) => HighDensityRoute[]
@@ -138,6 +143,24 @@ export class Pipeline9EffortCleanupSolver extends BaseSolver {
   }
 
   private finish(): void {
+    if (
+      this.params.planarViaCleanup &&
+      this.bestCost.vias > this.params.planarViaCleanup.targetViaCount
+    ) {
+      const reduced = removePipeline9PlanarViaPairs({
+        ...this.params.planarViaCleanup,
+        routes: this.bestRoutes,
+        fixedRoutes: this.params.config.otherHdRoutes ?? [],
+        isValid: this.params.isValid,
+      })
+      if (reduced !== this.bestRoutes) {
+        const cost = this.params.getCost(reduced)
+        if (cost.vias < this.bestCost.vias) {
+          this.bestRoutes = reduced
+          this.bestCost = cost
+        }
+      }
+    }
     if (this.params.refineTraceWidths) {
       const refined = this.params.refineTraceWidths(this.bestRoutes)
       if (refined !== this.bestRoutes) {

@@ -136,14 +136,28 @@ export const pipeline9PostProcessingSteps = [
             pipeline.originalSrj.minViaHoleEdgeToViaHoleEdgeClearance ?? 0.1,
         },
       })
+      const repairAddedVias =
+        pipeline.pipeline9JointDrcRepairSolver!.stats
+          .initialBoundedRegionalRepairAddedViaCount > 0
       return [
         {
           effort: pipeline.effort,
-          viaRemovalPasses:
-            pipeline.pipeline9JointDrcRepairSolver!.stats
-              .initialBoundedRegionalRepairAddedViaCount > 0
-              ? 2
-              : 1,
+          viaRemovalPasses: repairAddedVias ? 2 : 1,
+          planarViaCleanup: repairAddedVias
+            ? {
+                srj: {
+                  ...inputSrj,
+                  connections: [
+                    ...inputSrj.connections,
+                    ...pipeline.netToPointPairsSolver!.newConnections,
+                  ],
+                },
+                targetViaCount: pipeline
+                  .globalDrcForceImproveSolver!.getOutput()
+                  .reduce((count, route) => count + route.vias.length, 0),
+                viaHoleDiameter: pipeline.viaHoleDiameter,
+              }
+            : undefined,
           config: {
             hdRoutes,
             preserveRouteEndpoints: true,

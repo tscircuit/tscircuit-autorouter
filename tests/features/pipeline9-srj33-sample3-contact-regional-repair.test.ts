@@ -11,7 +11,7 @@ import {
 import { doesSegmentCrossPolygonBoundary } from "lib/utils/polygonContainment"
 import { loadScenarioBySampleNumber } from "../../scripts/benchmark/scenarios"
 
-test("Pipeline9 preserves regional repair for contacts left by a completed exact portfolio", async (): Promise<void> => {
+test("Pipeline9 clears pad and outline violations on SRJ33 sample 3", async (): Promise<void> => {
   const { scenario } = await loadScenarioBySampleNumber("srj33", 3)
   const solver: AutoroutingPipelineSolver9_PreloadedTraceGraph =
     new AutoroutingPipelineSolver9_PreloadedTraceGraph(
@@ -31,12 +31,8 @@ test("Pipeline9 preserves regional repair for contacts left by a completed exact
   const edgeErrors = checkBoardTraceClearance(circuitJson, {
     board: createPcbBoardElement(scenario),
   })
-  expect(errors.length).toBeLessThanOrEqual(4)
-  expect(edgeErrors.length).toBeLessThanOrEqual(8)
-  expect(
-    errors.filter((error) => error.message.includes("accidental contact"))
-      .length,
-  ).toBeLessThanOrEqual(4)
+  expect(errors).toEqual([])
+  expect(edgeErrors).toEqual([])
 
   const outline = scenario.outline
   if (!outline)
