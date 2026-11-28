@@ -3,6 +3,7 @@ import type { SerializedHyperGraph } from "@tscircuit/hypergraph"
 import type { GraphicsObject } from "graphics-debug"
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import { PreparedPortPointRoutingSolver } from "tiny-hypergraph/lib/prepared/PreparedPortPointRoutingSolver"
+import { BidirectionalStallPreparedPortPointRoutingSolver } from "./BidirectionalStallPreparedPortPointRoutingSolver"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import type { PreloadedTracePortAssignment } from "lib/solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
 import type {
@@ -261,6 +262,7 @@ const TINY_SECTION_SOLVER_BASE_OPTIONS: TinyHyperGraphSectionSolverOptions = {
 }
 const DUPLICATE_PORT_TRAVERSAL_PENALTY = 150
 const DEFAULT_CRAMPED_PORT_TRAVERSAL_PENALTY = 150
+const LARGE_GRAPH_PORT_COUNT_SCALE = 125_000
 
 const getEffortScale = (effort: number) => Math.max(effort, 1e-2)
 
@@ -282,7 +284,10 @@ const getTinyHyperGraphSolveGraphOptions = ({
 }): TinyHyperGraphSolverOptions => {
   const effortScale = getEffortScale(effort)
   // A fixed budget can expire before large graphs settle congestion.
-  const graphScale = Math.max(1, Math.floor(portCount / 125_000))
+  const graphScale = Math.max(
+    1,
+    Math.floor(portCount / LARGE_GRAPH_PORT_COUNT_SCALE),
+  )
   return {
     ...TINY_SOLVE_GRAPH_BASE_OPTIONS,
     ...getTinyViaSizeOptions(minViaPadDiameter),
@@ -974,9 +979,20 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
           "Tiny hypergraph pipeline is missing the solveGraph stage",
         )
       }
-      solveGraphStep.solverClass = usePreparedPortPointRouting
-        ? PreparedPortPointRoutingSolver
-        : SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments
+      const routeCount =
+        inputProblem.serializedHyperGraph.connections?.length ?? 0
+      const largeGraphBidirectionalMinRouteCount =
+        TINY_SOLVE_GRAPH_BASE_OPTIONS.PARTIAL_RIP_MAX_ROUTE_COUNT ?? 350
+      const useBidirectionalStallRouting =
+        usePreparedPortPointRouting &&
+        inputProblem.serializedHyperGraph.ports.length >=
+          LARGE_GRAPH_PORT_COUNT_SCALE &&
+        routeCount > largeGraphBidirectionalMinRouteCount
+      solveGraphStep.solverClass = useBidirectionalStallRouting
+        ? BidirectionalStallPreparedPortPointRoutingSolver
+        : usePreparedPortPointRouting
+          ? PreparedPortPointRoutingSolver
+          : SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments
     }
     this.MAX_ITERATIONS = getTinyHyperGraphPipelineMaxIterations(inputProblem)
   }
