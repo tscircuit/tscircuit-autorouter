@@ -40,6 +40,7 @@ import { getPipeline9BoundedRepairBudget } from "./applyPipeline9BoundedRegional
 import { Pipeline9RegionalB01RepairSolver } from "./Pipeline9RegionalB01RepairSolver"
 import { Pipeline9BoundedRegionalRepairSolver } from "./Pipeline9BoundedRegionalRepairSolver"
 import { Pipeline9RepairResultSelectionSolver } from "./Pipeline9RepairResultSelectionSolver"
+import { applyPipeline9BoardEdgeRepairs } from "./applyPipeline9BoardEdgeRepairs"
 import { applyPipeline9TerminalEscapeRelocations } from "./applyPipeline9TerminalEscapeRelocations"
 import { assignUniquePcbTraceIdsToNewTraces } from "./assignUniquePcbTraceIdsToNewTraces"
 import {
@@ -1824,7 +1825,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       }
       this.stats = { ...this.stats, ...solver.stats }
       this.activeSubSolver = null
-      this.solved = true
+      this.finishValidatedRoutes()
       return
     }
     const pipelineStepDef = this.pipelineDef[this.currentPipelineStepIndex]
@@ -2306,7 +2307,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       this.combinedOutput,
     )
     if (contacts.length === 0) {
-      this.solved = true
+      this.finishValidatedRoutes()
       return
     }
     this.traceContactRepairSolver = new TraceContactRepairSolver({
@@ -2318,6 +2319,36 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     })
     this.activeSubSolver = this.traceContactRepairSolver
     this.MAX_ITERATIONS += this.traceContactRepairSolver.MAX_ITERATIONS
+  }
+
+  private finishValidatedRoutes(): void {
+    if (
+      this.combinedOutput &&
+      this.cachedReferenceDrcEvaluator &&
+      this.stats.initialJointDrcIssueCount > 0 &&
+      this.params.originalSrj.outline
+    ) {
+      const candidate = applyPipeline9BoardEdgeRepairs({
+        srj: {
+          ...this.params.originalSrj,
+          connections: [
+            ...this.params.originalSrj.connections,
+            ...this.params.newConnections,
+          ],
+        },
+        routes: this.combinedOutput,
+        fixedTraces: this.getUpdatedPreloadedTraces(),
+        lockedConnectionNames: this.syntheticConnectionNames,
+        drcEvaluator: this.cachedReferenceDrcEvaluator,
+      })
+      if (
+        candidate !== this.combinedOutput &&
+        this.traceContactGuard.getNewContactPairs(candidate).length === 0
+      ) {
+        this.combinedOutput = candidate
+      }
+    }
+    this.solved = true
   }
 
   private getCombinedOutput(): HighDensityRoute[] {
