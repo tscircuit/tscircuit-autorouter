@@ -34,12 +34,13 @@ export function getPipeline9PortPointPathingInput(
         return availableZ.length > 0 ? [{ ...spp, availableZ }] : []
       })
     : segmentPortPoints
-  const filteredCapacityNodes = unionAllowedZ
-    ? pipeline.capacityNodes!.map((node) => {
-        const availableZ = node.availableZ.filter((z) => unionAllowedZ.has(z))
-        return availableZ.length > 0 ? { ...node, availableZ } : node
-      })
-    : pipeline.capacityNodes!
+  const filteredCapacityNodes =
+    unionAllowedZ?.size === 1
+      ? pipeline.capacityNodes!.map((node) => {
+          const availableZ = node.availableZ.filter((z) => unionAllowedZ.has(z))
+          return availableZ.length > 0 ? { ...node, availableZ } : node
+        })
+      : pipeline.capacityNodes!
 
   const { graph, connections } = buildHyperGraph({
     capacityMeshNodes: filteredCapacityNodes,

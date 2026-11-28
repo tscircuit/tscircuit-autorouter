@@ -39,6 +39,10 @@ export function narrowNodeAvailableZForBuses(
   const coversAllNodePorts = node.portPoints.every((pp) =>
     narrowedAvailableZ.includes(pp.z),
   )
-  if (!coversAllNodePorts || narrowedAvailableZ.length < 2) return node
+  const minAllowedLayers =
+    restrictedSets.length === node.portPoints.length ? 1 : 2
+  if (!coversAllNodePorts || narrowedAvailableZ.length < minAllowedLayers) {
+    return node
+  }
   return { ...node, availableZ: narrowedAvailableZ }
 }

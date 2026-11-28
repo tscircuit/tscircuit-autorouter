@@ -12,10 +12,10 @@ export interface RouteLayerMaskState {
 
 /** Reserve disallowed z-layer ports (`-2`) for the active route's `bus.allowedLayers` mask. */
 export function applyActiveRouteLayerMask(
-  solver: BaseSolver | null | undefined,
+  solver: BaseSolver,
   maskState: RouteLayerMaskState,
 ): void {
-  if (!maskState.allowedZByConnectionName?.size || !solver) return
+  if (!maskState.allowedZByConnectionName?.size) return
   const target =
     solver instanceof TinyHyperGraphSectionSolver
       ? solver.activeSubSolver instanceof TinyHyperGraphSolver

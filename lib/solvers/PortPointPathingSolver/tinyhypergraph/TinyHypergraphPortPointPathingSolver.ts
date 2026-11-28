@@ -1026,10 +1026,14 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
   }
 
   override _step() {
-    applyActiveRouteLayerMask(this.activeSubSolver, this.routeLayerMaskState)
+    if (this.activeSubSolver) {
+      applyActiveRouteLayerMask(this.activeSubSolver, this.routeLayerMaskState)
+    }
     super._step()
     this.configureSolver(this.activeSubSolver)
-    applyActiveRouteLayerMask(this.activeSubSolver, this.routeLayerMaskState)
+    if (this.activeSubSolver) {
+      applyActiveRouteLayerMask(this.activeSubSolver, this.routeLayerMaskState)
+    }
   }
 
   override getInitialVisualizationSolver() {
