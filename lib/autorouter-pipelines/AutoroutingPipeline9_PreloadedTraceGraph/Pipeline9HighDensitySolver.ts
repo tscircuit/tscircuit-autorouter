@@ -712,15 +712,12 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
 
   protected startRegularSolver(node: NodeWithPortPoints): void {
     this.activeNode = node
-    const fixedHdRoutes = this.includeBoardObstacles
-      ? this.fixedHdRoutes.some((route) => route.isFixed === true)
-        ? [...this.getUpdatedFixedHdRoutes(), ...this.routes]
-        : []
+    const fixedHdRoutes = this.includeBoardObstacles && this.fixedHdRoutes.some((route) => route.isFixed === true)
+      ? [...this.getUpdatedFixedHdRoutes(), ...this.routes]
       : undefined
     const validateRoutes = fixedHdRoutes
       ? createIntraNodeRouteValidator({
           fixedHdRoutes: fixedHdRoutes!, obstacles: this.obstacles,
-          viaHoleDiameter: this.params.viaHoleDiameter,
           reservedTerminals: this.reservedTerminals, connMap: this.connMap,
           layerCount: this.layerCount, clearance: this.obstacleMargin,
           allowViaInPad: this.params.allowViaInPad,
@@ -866,7 +863,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     fallbackProblem = expanded.problem
     }
     this.activeRegionalContext = undefined
-    if (hasImmutablePreload) {
+    if (this.includeBoardObstacles && hasImmutablePreload) {
       const requiredNodeIds = new Set<CapacityMeshNodeId>()
       for (const route of this.routes) {
         if (normalizedNode.portPoints.every((point) =>
@@ -973,13 +970,12 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     this.activeFallbackSolver = new Pipeline9RegionalFallbackSolver({
       captureSearchDebug: this.params.captureSearchDebug,
       nodeWithPortPoints: this.activeRegionalContext?.routingNode ?? fallbackProblem.nodeWithPortPoints,
-      reservedTerminals: this.includeBoardObstacles
+      reservedTerminals: hasImmutablePreload
         ? this.activeRegionalContext?.reservedTerminals ?? this.reservedTerminals
         : undefined,
       colorMap: this.colorMap,
       connMap: this.connMap,
       viaDiameter: this.viaDiameter,
-      viaHoleDiameter: this.params.viaHoleDiameter,
       traceWidth: this.traceWidth,
       obstacleMargin: this.obstacleMargin,
       minClearance: this.params.minClearance,
@@ -990,12 +986,12 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       boardObstacles: this.obstacles,
       allowViaInPad: this.params.allowViaInPad,
       fixedHdRoutes: regionalCopperRoutes,
-      preservePhysicalGeometry: this.includeBoardObstacles || regionalCopperRoutes.length > 0,
+      preservePhysicalGeometry:
+        hasImmutablePreload && regionalCopperRoutes.length > 0,
       immutableHdRoutes: regionalCopperRoutes.filter((route) =>
         ("isFixed" in route && route.isFixed === true) ||
         ("isThroughObstacle" in route && route.isThroughObstacle === true) ||
-        completedRoutes.includes(route) ||
-        (hasImmutablePreload && movableFixedRouteConnectionNames.has(route.connectionName)),
+        (hasImmutablePreload && (movableFixedRouteConnectionNames.has(route.connectionName) || completedRoutes.includes(route))),
       ),
       movablePreloadedConnectionNames: movableFixedRouteConnectionNames,
       movablePreloadedRouteSections: hasImmutablePreload ? [
@@ -1564,12 +1560,11 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
           convertObstacleToB01Obstacle({ obstacle, node, connMap: this.connMap, layerCount: this.layerCount }),
         ).filter((obstacle): obstacle is HighDensityRectObstacle => obstacle !== undefined)),
       ] as HighDensityObstacle[],
-      staticSegmentValidator: this.includeBoardObstacles
+      staticSegmentValidator: this.includeBoardObstacles && hasFixedCopper
         ? createIntraNodeSegmentValidator({
             fixedHdRoutes: [...this.getUpdatedFixedHdRoutes(), ...(hasFixedCopper ? this.routes : [])],
             reservedTerminals: hasFixedCopper ? this.reservedTerminals : undefined,
             obstacles: this.obstacles,
-            viaHoleDiameter: this.params.viaHoleDiameter,
             connMap: this.connMap,
             layerCount: this.layerCount,
             clearance: this.obstacleMargin,

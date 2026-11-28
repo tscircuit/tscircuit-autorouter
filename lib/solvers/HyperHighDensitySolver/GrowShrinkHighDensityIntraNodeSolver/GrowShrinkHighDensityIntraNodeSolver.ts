@@ -289,9 +289,6 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
     const scale = this.coordinateScale
     portfolioParams.traceWidth = (portfolioParams.traceWidth ?? 0.15) * scale
     portfolioParams.viaDiameter = (portfolioParams.viaDiameter ?? 0.3) * scale
-    if (portfolioParams.viaHoleDiameter !== undefined) {
-      portfolioParams.viaHoleDiameter *= scale
-    }
     portfolioParams.obstacleMargin =
       (portfolioParams.obstacleMargin ?? 0.15) * scale
     portfolioParams.reservedTerminals = portfolioParams.reservedTerminals?.map((terminal) => ({

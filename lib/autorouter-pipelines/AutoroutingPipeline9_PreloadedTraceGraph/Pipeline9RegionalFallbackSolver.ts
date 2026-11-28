@@ -27,7 +27,6 @@ type Pipeline9RegionalFallbackSolverParams = {
   colorMap: Record<string, string>
   connMap: ConnectivityMap
   viaDiameter: number
-  viaHoleDiameter?: number
   traceWidth: number
   obstacleMargin: number
   minClearance?: number
@@ -165,7 +164,6 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
     this.params = params
     this.validateBoardRoutes = createIntraNodeRouteValidator({
       reservedTerminals: params.reservedTerminals,
-      viaHoleDiameter: params.viaHoleDiameter,
       fixedHdRoutes: [], obstacles: params.boardObstacles, connMap: params.connMap,
       layerCount: params.layerCount, clearance: params.obstacleMargin,
       allowViaInPad: params.allowViaInPad,
@@ -182,7 +180,6 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
       colorMap: params.colorMap,
       connMap: params.connMap,
       viaDiameter: params.viaDiameter,
-      viaHoleDiameter: params.viaHoleDiameter,
       traceWidth: params.traceWidth,
       obstacleMargin: params.obstacleMargin,
       effort: params.effort,
@@ -193,7 +190,6 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
       preservePhysicalGeometry: params.preservePhysicalGeometry,
       layerCount: params.layerCount,
       allowViaInPad: params.allowViaInPad,
-      allowBlindAndBuriedVias: params.allowBlindAndBuriedVias,
       useGrowShrinkHighDensityIntraNodeSolver: true,
       rejectOverlappingTerminals: params.preservePhysicalGeometry,
       preserveTerminalPcbPortIds: false,

@@ -37,11 +37,13 @@ export const pipeline9HighDensitySteps = [
         useLayerAwareGeometry: pipeline.srj.layerCount > 2,
         preserveSolitaryPorts: Boolean(pipeline.srj.traces?.length),
         isPortPointClear: createPreloadedPortValidator(copperInput),
-        minimumPortSpacing: pipeline.minTraceWidth + (pipeline.originalSrj.minTraceToPadEdgeClearance ?? pipeline.originalSrj.defaultObstacleMargin ?? 0.1),
-        getPortPointClearSpans: (point, edge) => getClearSpans({
+        minimumPortSpacing: hasFixedCopper
+          ? pipeline.minTraceWidth + (pipeline.originalSrj.minTraceToPadEdgeClearance ?? pipeline.originalSrj.defaultObstacleMargin ?? 0.1)
+          : undefined,
+        getPortPointClearSpans: hasFixedCopper ? (point, edge) => getClearSpans({
           start: { x: edge.x1, y: edge.y1 }, end: { x: edge.x2, y: edge.y2 },
           z: point.z, connectionName: point.connectionName, rootConnectionName: point.rootConnectionName,
-        }),
+        }) : undefined,
       }]
     },
   }),
@@ -71,8 +73,16 @@ export const pipeline9HighDensitySteps = [
         fixedHdRoutes: originalFixedHdRoutes,
         sections: getChangedPreloadedTraceSections(pipeline),
       })
-      const obstacleMargin = pipeline.srj.minTraceToPadEdgeClearance ??
-        pipeline.srj.defaultObstacleMargin ?? 0.1
+      const hasImmutablePreloadedCopper = fixedHdRoutes.some(
+        (route) => route.isFixed === true,
+      )
+      let obstacleMargin = pipeline.srj.defaultObstacleMargin ?? 0.15
+      if (
+        hasImmutablePreloadedCopper &&
+        pipeline.srj.minTraceToPadEdgeClearance !== undefined
+      ) {
+        obstacleMargin = pipeline.srj.minTraceToPadEdgeClearance
+      }
 
       return [
         {

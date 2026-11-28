@@ -25,6 +25,7 @@ export function reservePreloadedCopperPorts({
   traceWidth: number
   viaDiameter: number
 }): void {
+  if (!srj.traces?.some((trace) => trace.isFixed)) return
   const { getBlockers } = createPreloadedCopperLookup({
     srj,
     connMap,

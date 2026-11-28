@@ -1,4 +1,3 @@
-import { getViaDimensions } from "lib/utils/getViaDimensions"
 import { createIntraNodeRouteValidator } from "lib/solvers/HyperHighDensitySolver/createIntraNodeRouteValidator"
 import { createFixedObstacleViolationEvaluator } from "@tscircuit/repair04"
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
@@ -35,10 +34,9 @@ export class Pipeline9HighDensityForceImproveSolver extends HighDensityForceImpr
   constructor(params: ForceImproveParams) {
     super(params)
     this.inputSrj = params.inputSrj
-    if (params.inputSrj.obstacles.length > 0 || params.inputSrj.traces?.some((trace) => trace.isFixed)) {
+    if (params.inputSrj.traces?.some((trace) => trace.isFixed)) {
       this.validateBoardRoutes = createIntraNodeRouteValidator({
         fixedHdRoutes: params.fixedHdRoutes ?? [],
-        viaHoleDiameter: getViaDimensions(params.inputSrj).holeDiameter,
         obstacles: params.inputSrj.obstacles,
         connMap: getConnectivityMapFromSimpleRouteJson(params.inputSrj),
         layerCount: params.inputSrj.layerCount,

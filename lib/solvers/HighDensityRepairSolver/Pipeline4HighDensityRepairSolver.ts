@@ -304,7 +304,7 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
     const viaLayerSpan: Pick<RepairVia, "minZ" | "maxZ"> = {}
     if (
       params.layerCount !== undefined &&
-      params.allowBlindAndBuriedVias === false
+      params.allowBlindAndBuriedVias !== true
     ) {
       viaLayerSpan.minZ = 0
       viaLayerSpan.maxZ = params.layerCount - 1

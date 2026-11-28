@@ -37,8 +37,10 @@ export function getPipeline9PortPointPathingInput(
     preserveTerminalPcbPortIds: true,
     captureSearchDebug: pipeline.opts.captureSearchDebug ?? false,
     minViaPadDiameter: pipeline.viaDiameter,
-    minimumPortSpacing: pipeline.minTraceWidth +
-        (pipeline.originalSrj.minTraceToPadEdgeClearance ?? pipeline.originalSrj.defaultObstacleMargin ?? 0.1),
+    minimumPortSpacing: pipeline.originalSrj.traces?.some((trace) => trace.isFixed)
+      ? pipeline.minTraceWidth +
+        (pipeline.originalSrj.minTraceToPadEdgeClearance ?? pipeline.originalSrj.defaultObstacleMargin ?? 0.1)
+      : undefined,
     flags: {
       FORCE_CENTER_FIRST: true,
       RIPPING_ENABLED: true,

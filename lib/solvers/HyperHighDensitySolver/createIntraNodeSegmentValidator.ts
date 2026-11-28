@@ -22,7 +22,6 @@ type IntraNodeCopperInput = {
   connMap: ConnectivityMap
   layerCount: number
   clearance: number
-  viaHoleDiameter?: number
   allowViaInPad?: boolean
   allowBlindAndBuriedVias?: boolean
 }
@@ -164,8 +163,8 @@ export function createIntraNodeSegmentValidator(
     }
     for (const obstacle of nearbyObstacles) {
       const connected = isObstacleConnectedToRoute(obstacle, segment, input.connMap)
-      if (connected && (!via || input.allowViaInPad === true)) continue
-      const required = connected ? (input.viaHoleDiameter ?? segment.viaDiameter / 2) / 2 : reach
+      if (connected && (!via || input.allowViaInPad !== false)) continue
+      const required = connected ? width / 2 : reach
       if ((obstacle.isNonPlatedHole || obstacle.layers.some((layer) => layers.has(layer))) &&
         getSegmentToObstacleDistance({start: segment.start, end: segment.end, obstacle}) < required - 1e-9
       ) return false
