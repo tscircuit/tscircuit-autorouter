@@ -57,12 +57,15 @@ function getFixedTracePortPoint({
   primitive,
   z,
 }: BoundaryCrossing): SegmentPortPoint | undefined {
-  const crossing = getSegmentIntersection(
-    primitive.start,
-    primitive.end,
-    segment.start,
-    segment.end,
-  )
+  const crossing =
+    primitive.start.x === primitive.end.x && primitive.start.y === primitive.end.y
+      ? primitive.start
+      : getSegmentIntersection(
+          primitive.start,
+          primitive.end,
+          segment.start,
+          segment.end,
+        )
   // A collinear trace has no unique crossing along the shared edge.
   if (!crossing) return getClosestPortPoint({ segment, primitive, z })
 

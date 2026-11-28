@@ -13,10 +13,12 @@ export function getPreloadedClearanceGapPorts({
   segment,
   z,
   copperLookup,
+  originalSegment = segment,
 }: {
   segment: SharedEdgeSegment
   z: number
   copperLookup: PreloadedCopperLookup
+  originalSegment?: SharedEdgeSegment
 }): ClearanceGapPort[] {
   const dx = segment.end.x - segment.start.x
   const dy = segment.end.y - segment.start.y
@@ -26,7 +28,9 @@ export function getPreloadedClearanceGapPorts({
   const layerPorts = segment.portPoints.filter((port) =>
     port.availableZ.includes(z),
   )
-  const template = layerPorts[0]
+  const template = originalSegment.portPoints.find((port) =>
+    port.availableZ.includes(z),
+  )
   if (!template) return []
   const freePortFractions = layerPorts
     .filter((port) => !port._preloadedTracePortAssignments?.length)

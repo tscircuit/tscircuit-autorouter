@@ -278,7 +278,7 @@ type CircuitJsonSourceTraceIdResolver = {
   circuitJsonSourceTraceIdsByConnectivityNetId: CircuitJsonSourceTraceIdsByConnectivityNetId
 }
 
-const getCircuitJsonSourceTraceId = (
+export const getCircuitJsonSourceTraceId = (
   connection: SimpleRouteJson["connections"][number],
 ): CircuitJsonSourceTraceId =>
   (connection.__netConnectionName ??
@@ -562,35 +562,33 @@ function createSourceTraces(
       const connectedSourcePortIdSet = new Set(
         (trace.connectsTo ?? []).filter((id) => declaredPcbPortIds.has(id)),
       )
-      // Completed routing phases can omit their nets from the active requests.
-      // Their pad ownership still exists in the SRJ connectivity map.
-      if (declaredSourceTraceId === undefined) {
-        const connMap = circuitJsonSourceTraceIdResolver.connMap
-        let traceNetId =
-          connMap.getNetConnectedToId(trace.connection_name) ??
-          (connMap.netMap[trace.connection_name]
-            ? trace.connection_name
-            : undefined)
-        if (!traceNetId) {
-          for (const reference of trace.connectsTo ?? []) {
-            traceNetId =
-              connMap.getNetConnectedToId(reference) ??
-              (connMap.netMap[reference] ? reference : undefined)
-            if (traceNetId) break
-          }
+      // Component-internal pad aliases retain their declared net in every phase.
+      const connMap = circuitJsonSourceTraceIdResolver.connMap
+      let traceNetId =
+        connMap.getNetConnectedToId(trace.connection_name) ??
+        (connMap.netMap[trace.connection_name]
+          ? trace.connection_name
+          : undefined)
+      if (!traceNetId) {
+        for (const reference of trace.connectsTo ?? []) {
+          traceNetId =
+            connMap.getNetConnectedToId(reference) ??
+            (connMap.netMap[reference] ? reference : undefined)
+          if (traceNetId) break
         }
-        if (traceNetId) {
-          for (const reference of connMap.netMap[traceNetId]!) {
-            if (declaredPcbPortIds.has(reference)) {
-              connectedSourcePortIdSet.add(reference)
-            }
-          }
+      }
+      const aliasedPcbPortIds = traceNetId
+        ? connMap.netMap[traceNetId]!.filter((reference) => declaredPcbPortIds.has(reference))
+        : []
+      if (declaredSourceTraceId === undefined) {
+        for (const pcbPortId of aliasedPcbPortIds) {
+          connectedSourcePortIdSet.add(pcbPortId)
         }
       }
       const connectedSourcePortIds = [...connectedSourcePortIdSet]
       const connectedSourceNetIds = [
         ...new Set(
-          (trace.connectsTo ?? []).filter(
+          [...(trace.connectsTo ?? []), ...aliasedPcbPortIds].filter(
             (id) => !connectedSourcePortIdSet.has(id),
           ),
         ),

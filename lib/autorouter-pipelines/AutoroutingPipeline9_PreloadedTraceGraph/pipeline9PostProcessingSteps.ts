@@ -95,7 +95,7 @@ export const pipeline9PostProcessingSteps = [
             ),
           ),
           connMap: pipeline.connMap,
-          obstacles: pipeline.srj.obstacles,
+          obstacles: pipeline.originalSrj.obstacles,
           layerCount: pipeline.srj.layerCount,
           defaultViaDiameter: pipeline.viaDiameter,
           defaultViaHoleDiameter: pipeline.viaHoleDiameter,

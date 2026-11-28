@@ -29,12 +29,25 @@ export class PreloadedTraceGraphSolver extends BaseSolver {
   private readonly primitives: PreloadedTracePrimitive[]
   readonly clearanceGapsByPortId = new Map<PortPointId, ClearanceGapPort>()
   private readonly boundaryIndex: Flatbush | null
+  private readonly originalSegmentByEdgeId: Map<string, SharedEdgeSegment>
 
   constructor(
     private readonly sharedEdgeSegments: SharedEdgeSegment[],
     private readonly srj: SimpleRouteJson,
+    originalSharedEdgeSegments: SharedEdgeSegment[] = sharedEdgeSegments,
   ) {
     super()
+    this.originalSegmentByEdgeId = new Map(
+      originalSharedEdgeSegments.map((segment) => [segment.edgeId, segment]),
+    )
+    if (srj.traces?.some((trace) => trace.isFixed)) {
+      const retainedEdgeIds = new Set(sharedEdgeSegments.map((segment) => segment.edgeId))
+      for (const segment of originalSharedEdgeSegments) {
+        if (retainedEdgeIds.has(segment.edgeId)) continue
+        // Pad-only pruning has not considered the saved copper's clear gaps.
+        sharedEdgeSegments.push({ ...segment, portPoints: [] })
+      }
+    }
     this.MAX_ITERATIONS = 1
     this.primitives = getPreloadedTracePrimitives(srj)
     this.boundaryIndex =
@@ -133,11 +146,16 @@ export class PreloadedTraceGraphSolver extends BaseSolver {
       viaDiameter: this.srj.minViaDiameter ?? 0.3,
     })
     for (const segment of this.sharedEdgeSegments) {
+      const originalSegment = this.originalSegmentByEdgeId.get(segment.edgeId)
+      if (!originalSegment) {
+        throw new Error(`Missing original shared boundary "${segment.edgeId}"`)
+      }
       for (const z of segment.availableZ) {
         for (const gap of getPreloadedClearanceGapPorts({
           segment,
           z,
           copperLookup,
+          originalSegment,
         })) {
           segment.portPoints.push(gap.port)
           this.clearanceGapsByPortId.set(

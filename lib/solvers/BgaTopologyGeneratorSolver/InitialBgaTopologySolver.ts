@@ -237,6 +237,7 @@ function createObstacleMeshNode(
   return {
     capacityMeshNodeId: `obstacle-${componentId}-${obstacleNodeToken}-${obstacleLayers.join(",")}-${obstacle.center.x}-${obstacle.center.y}`,
     _containsObstacle: true,
+    _connectedTo: [...obstacle.connectedTo],
     ...(targetConnectionName
       ? {
           _containsTarget: true,

@@ -365,6 +365,7 @@ const getMissingConnectionCenter = (
 /** Validates routed endpoints and via alignment without invoking board-wide checks. */
 export const checkTraceContinuity = (
   circuitJson: AnyCircuitElement[],
+  options: { sourceTraceIdsToComplete?: ReadonlySet<string> } = {},
 ): Record<string, unknown>[] => {
   const errors: Record<string, unknown>[] = []
   const ports = circuitJson.filter((element) => element.type === "pcb_port")
@@ -911,6 +912,13 @@ export const checkTraceContinuity = (
         pcb_port_ids: [],
       })
     }
+    // Imported escape traces may belong to a later routing request. Their
+    // existing layer transitions still need to be valid, but this solve only
+    // promises complete endpoint connectivity for its requested nets.
+    if (
+      options.sourceTraceIdsToComplete &&
+      !options.sourceTraceIdsToComplete.has(sourceTraceId)
+    ) continue
     if (sourceTrace && expectedPorts.length > 0) {
       if (checkedSourceTraceIds.has(sourceTrace.source_trace_id)) continue
       checkedSourceTraceIds.add(sourceTrace.source_trace_id)

@@ -146,6 +146,32 @@ export class BgaTopologyGeneratorSolver extends BasePipelineSolver<TopologyGener
     this.unmarkedComponentObstacles = unmarkedComponentObstacles
   }
 
+  private hasFixedSurfaceRoutes(): boolean {
+    const surfaceLayers = new Set(
+      this.unmarkedComponentObstacles.flatMap((obstacle) => obstacle.layers),
+    )
+    const bounds = this.inputProblem.detectedComponent.bounds
+    return this.inputProblem.inputSrj.traces?.some((trace) =>
+      trace.isFixed && trace.route.some((point, index) => {
+        const previous = trace.route[index - 1]
+        if (
+          point.route_type !== "wire" ||
+          previous?.route_type !== "wire" ||
+          previous.layer !== point.layer ||
+          !surfaceLayers.has(point.layer) ||
+          Math.hypot(point.x - previous.x, point.y - previous.y) < 1e-9
+        ) return false
+        const radius = Math.max(previous.width, point.width) / 2
+        return doBoundsOverlap(bounds, {
+          minX: Math.min(previous.x, point.x) - radius,
+          maxX: Math.max(previous.x, point.x) + radius,
+          minY: Math.min(previous.y, point.y) - radius,
+          maxY: Math.max(previous.y, point.y) + radius,
+        })
+      }),
+    ) === true
+  }
+
   private findTargetsNeedingViaAccess(): void {
     if (this.unmarkedComponentObstacles.length === 0) return
 
@@ -157,8 +183,17 @@ export class BgaTopologyGeneratorSolver extends BasePipelineSolver<TopologyGener
     const hasNarrowPadGaps =
       bgaGrid.pitchX - bgaGrid.padWidth < viaDiameter ||
       bgaGrid.pitchY - bgaGrid.padHeight < viaDiameter
-    if (!hasNarrowPadGaps) return
+    const hasFixedCopper = this.hasFixedSurfaceRoutes()
+    if (!hasNarrowPadGaps && !hasFixedCopper) return
 
+    // Fixed copper can close a surface exit that is open in the pad-only grid.
+    // Retain continuous via space beside targets before reserving that copper.
+    if (hasFixedCopper) {
+      this.targetsNeedingViaAccess = this.mergeMeshNodes.getOutput().filter(
+        (node) => node._containsTarget,
+      )
+      return
+    }
     this.targetsNeedingViaAccess = getBgaTargetsNeedingViaAccess({
       routingRegions: this.mergeMeshNodes.getOutput(),
       bounds: getBoundsForObstacles(this.markedComponentObstacles),
@@ -186,6 +221,7 @@ export class BgaTopologyGeneratorSolver extends BasePipelineSolver<TopologyGener
       this.inputProblem.obstacleMargin ??
       0.15
     const minimumViaRegionDimension = viaDiameter + viaClearance * 2
+    const hasFixedCopper = this.hasFixedSurfaceRoutes()
     const viaRegions = this.freeSpaceTopology
       .getOutput()
       .meshNodes.filter(
@@ -195,9 +231,9 @@ export class BgaTopologyGeneratorSolver extends BasePipelineSolver<TopologyGener
           node.availableZ.length === srj.layerCount &&
           node.width > minimumViaRegionDimension &&
           node.height > minimumViaRegionDimension &&
-          this.targetsNeedingViaAccess.some((target) =>
+          (hasFixedCopper || this.targetsNeedingViaAccess.some((target) =>
             areNodesBordering(node, target),
-          ),
+          )),
       )
       .map((node) => ({
         ...node,

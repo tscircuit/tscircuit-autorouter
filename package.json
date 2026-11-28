@@ -67,7 +67,7 @@
     "@tscircuit/power-trace-expander": "git+https://github.com/tscircuit/power-trace-expander.git#f056a94bc689d6a7a27ab93321462e63a4a788a5",
     "@tscircuit/power-trace-expander-baseline": "git+https://github.com/tscircuit/power-trace-expander.git#01ce27085607c0ee22573a39cce232d73580b7c0",
     "@tscircuit/rectdiff": "0.0.56",
-    "@tscircuit/repair04": "https://codeload.github.com/tscircuit/repair04/tar.gz/6d286e24c11fd8e8405f1f5ace4bd38e05eb8694",
+    "@tscircuit/repair04": "https://codeload.github.com/tscircuit/repair04/tar.gz/49031cef30819cdf04fdb39421a66613639bc4a8",
     "@tscircuit/trace-simplification-solver": "github:tscircuit/trace-simplification-solver#4a148029c93c53d17d1c69fabf69bb724b02fbdf",
     "@types/bun": "^1.2.23",
     "@types/fast-json-stable-stringify": "^2.1.2",
@@ -102,7 +102,7 @@
     "recharts": "^2.15.1",
     "tailwind-merge": "^3.2.0",
     "terser": "^5.43.1",
-    "tiny-hypergraph": "https://codeload.github.com/tscircuit/tiny-hypergraph/tar.gz/3de30e6d3de543ad16604201085213fc88657207",
+    "tiny-hypergraph": "https://codeload.github.com/tscircuit/tiny-hypergraph/tar.gz/d9d7745e3b62420bea68edf2828ab6fe007f0467",
     "tiny-hypergraph-poly": "git+https://github.com/tscircuit/tiny-hypergraph.git#7b93b4c",
     "tsup": "^8.3.6",
     "tscircuit-for-pipeline9-fixtures": "npm:tscircuit@0.0.2467",
@@ -114,12 +114,12 @@
     "vite-tsconfig-paths": "^5.1.4",
     "zdwiel-dataset": "git+https://github.com/dwiel/tscircuit-benchmark.git#be36518b5bf51755dae92c230061ab3cf4e3e063",
     "high-density-repair01": "git+https://github.com/tscircuit/high-density-repair01.git#bf60f51a6afb008485136749f8365d56d2f99475",
-    "high-density-repair02": "https://codeload.github.com/tscircuit/high-density-repair02/tar.gz/cac656f51535aca0d9c7f09e5860b4e82a78f3cf",
+    "high-density-repair02": "https://codeload.github.com/tscircuit/high-density-repair02/tar.gz/6c014bcb1ecd708880b48d417286829e5bfdcb14",
     "high-density-repair03": "https://codeload.github.com/tscircuit/high-density-repair03/tar.gz/166b6153464b24735db47a35979d93dccb7ec888",
     "@tscircuit/bga-escape-routing-solver": "github:tscircuit/bga-escape-routing-solver#a444afe551690e3d0abb9ab66c10aaa4da3fba9f",
-    "@tscircuit/high-density-a01": "git+https://github.com/tscircuit/high-density-a01.git#e9a3642aae9d45aadb197cd1386dec2142529217",
+    "@tscircuit/high-density-a01": "https://codeload.github.com/tscircuit/high-density-a01/tar.gz/3dc64dd53caecb387f4a099c1476bafc6c3589f4",
     "@tscircuit/high-density-a13": "git+https://github.com/tscircuit/high-density-a01.git#4ae21d7a15c9fbfb30378c10f948aa168d7c9cb7",
-    "@tscircuit/high-density-b01": "git+https://github.com/tscircuit/high-density-b01.git#4db89e45384cbf9090d1ab9193cec3c42d1d1e51"
+    "@tscircuit/high-density-b01": "https://codeload.github.com/tscircuit/high-density-b01/tar.gz/74c6f7c066eee4f64128fe0ffc545b6dfadf7dbd"
   },
   "dependencies": {
     "@tscircuit/solver-utils": "^0.0.23",

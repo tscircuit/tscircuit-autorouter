@@ -1,3 +1,4 @@
+import { arePipeline9RoutesOnSameNet, getPipeline9RouteCopperGeometry, type Pipeline9RouteViaSpan } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9FixedRouteCopper"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
 import { BaseSolver } from "lib/solvers/BaseSolver"
@@ -77,6 +78,8 @@ export class SingleTransitionThroughObstacleIntraNodeSolver extends BaseSolver {
     layerCount?: number
     viaDiameter?: number
     traceThickness?: number
+    fixedHdRoutes?: HighDensityIntraNodeRoute[]
+    allowBlindAndBuriedVias?: boolean
   }) {
     super()
 
@@ -112,45 +115,116 @@ export class SingleTransitionThroughObstacleIntraNodeSolver extends BaseSolver {
       return
     }
 
-    const containingObstacles = this.routes.map((route) =>
-      this.getContainingThroughObstacle(route),
-    )
-    if (containingObstacles.some((obstacle) => !obstacle)) {
+    const conductors = this.routes.map((route) => {
+      const obstacle = this.getContainingThroughObstacle(route)
+      if (obstacle) return { type: "obstacle" as const, obstacle }
+      const via = this.getContainingExistingVia(route, params)
+      return via ? { type: "via" as const, via } : undefined
+    })
+    if (conductors.some((conductor) => !conductor)) {
       this.failed = true
       this.error = "No same-net multilayer obstacle contains every route"
       return
     }
 
     this.solvedRoutes.push(
-      ...this.routes.map((route, routeIndex) => ({
-        connectionName: route.connectionName,
-        rootConnectionName: route.rootConnectionName,
-        regionId: this.nodeWithPortPoints.capacityMeshNodeId,
-        route: [
-          {
-            x: route.A.x,
-            y: route.A.y,
-            z: route.A.z!,
-            ...(route.A.z !== route.B.z
-              ? {
-                  toNextSegmentType: "through_obstacle" as const,
-                  ...(containingObstacles[routeIndex]!.circuitJsonMetadata
-                    ? {
-                        toNextSegmentCircuitJsonMetadata:
-                          containingObstacles[routeIndex]!.circuitJsonMetadata,
-                      }
-                    : {}),
-                }
-              : {}),
-          },
-          { x: route.B.x, y: route.B.y, z: route.B.z! },
-        ],
-        traceThickness: this.traceThickness,
-        viaDiameter: this.viaDiameter,
-        vias: [],
-      })),
+      ...this.routes.map((route, routeIndex): HighDensityIntraNodeRoute => {
+        const conductor = conductors[routeIndex]!
+        return conductor.type === "obstacle"
+          ? this.createRouteThroughObstacle(route, conductor.obstacle)
+          : this.createRouteThroughExistingVia(route, conductor.via)
+      }),
     )
     this.solved = true
+  }
+
+  /** Reuse a same-net barrel in this board-world routing cell (mm, +X right, +Y up). */
+  private getContainingExistingVia(route: Route, params: {
+    fixedHdRoutes?: HighDensityIntraNodeRoute[]
+    layerCount?: number
+    allowBlindAndBuriedVias?: boolean
+  }): Pipeline9RouteViaSpan | undefined {
+    const node = this.nodeWithPortPoints
+    const candidates: Pipeline9RouteViaSpan[] = []
+    for (const fixed of params.fixedHdRoutes ?? []) {
+      const sameRoot = (route.rootConnectionName ?? route.connectionName) ===
+        (fixed.rootConnectionName ?? fixed.connectionName)
+      if (!sameRoot && (!this.connMap ||
+        !arePipeline9RoutesOnSameNet({ left: route, right: fixed }, this.connMap))) continue
+      const geometry = getPipeline9RouteCopperGeometry(fixed, {
+        layerCount: params.layerCount ?? 2,
+        allowBlindAndBuriedVias: params.allowBlindAndBuriedVias,
+      })
+      for (const via of geometry.viaSpans) {
+        if (!fixed.vias.some((barrel) => Math.hypot(barrel.x - via.center.x,
+          barrel.y - via.center.y) <= CONTAINS_POINT_TOLERANCE)) continue
+        if (via.minZ > Math.min(route.A.z, route.B.z) || via.maxZ < Math.max(route.A.z, route.B.z)) continue
+        if (Math.abs(via.center.x - node.center.x) > node.width / 2 + CONTAINS_POINT_TOLERANCE ||
+          Math.abs(via.center.y - node.center.y) > node.height / 2 + CONTAINS_POINT_TOLERANCE) continue
+        candidates.push(via)
+      }
+    }
+    candidates.sort((a, b) =>
+      Math.hypot(a.center.x - (route.A.x + route.B.x) / 2, a.center.y - (route.A.y + route.B.y) / 2) -
+      Math.hypot(b.center.x - (route.A.x + route.B.x) / 2, b.center.y - (route.A.y + route.B.y) / 2),
+    )
+    return candidates[0]
+  }
+
+  private createRouteThroughExistingVia(route: Route, via: Pipeline9RouteViaSpan): HighDensityIntraNodeRoute {
+    const transition = route.A.z !== route.B.z
+    return {
+      connectionName: route.connectionName,
+      rootConnectionName: route.rootConnectionName,
+      regionId: this.nodeWithPortPoints.capacityMeshNodeId,
+      traceThickness: this.traceThickness,
+      viaDiameter: via.diameter,
+      vias: transition ? [via.center] : [],
+      route: transition ? [route.A, { ...via.center, z: route.A.z },
+        { ...via.center, z: route.B.z }, route.B] : [route.A, route.B],
+    }
+  }
+
+  private createRouteThroughObstacle(
+    route: Route,
+    obstacle: LayeredObstacle,
+  ): HighDensityIntraNodeRoute {
+    const points: HighDensityIntraNodeRoute["route"] = [
+      { x: route.A.x, y: route.A.y, z: route.A.z },
+    ]
+    if (route.A.z !== route.B.z) {
+      // Change layers at the existing barrel, then approach each contact on
+      // its own layer. A diagonal bridge would add copper on every layer.
+      if (
+        route.A.x !== obstacle.center.x ||
+        route.A.y !== obstacle.center.y
+      ) {
+        points.push({ ...obstacle.center, z: route.A.z })
+      }
+      const transition = points[points.length - 1]!
+      transition.toNextSegmentType = "through_obstacle"
+      if (obstacle.circuitJsonMetadata) {
+        transition.toNextSegmentCircuitJsonMetadata = obstacle.circuitJsonMetadata
+      }
+      points.push({ ...obstacle.center, z: route.B.z })
+    }
+    const last = points[points.length - 1]!
+    if (
+      route.A.z === route.B.z ||
+      last.x !== route.B.x ||
+      last.y !== route.B.y
+    ) {
+      points.push({ x: route.B.x, y: route.B.y, z: route.B.z })
+    }
+    return {
+      connectionName: route.connectionName,
+      rootConnectionName: route.rootConnectionName,
+      regionId: this.nodeWithPortPoints.capacityMeshNodeId,
+      route: points,
+      traceThickness: this.traceThickness,
+      viaDiameter: this.viaDiameter,
+      vias: [],
+    }
   }
 
   static isApplicable(params: {
@@ -158,6 +232,8 @@ export class SingleTransitionThroughObstacleIntraNodeSolver extends BaseSolver {
     obstacles?: Obstacle[]
     connMap?: ConnectivityMap
     layerCount?: number
+    fixedHdRoutes?: HighDensityIntraNodeRoute[]
+    allowBlindAndBuriedVias?: boolean
   }) {
     const solver = new SingleTransitionThroughObstacleIntraNodeSolver(params)
     return solver.solved

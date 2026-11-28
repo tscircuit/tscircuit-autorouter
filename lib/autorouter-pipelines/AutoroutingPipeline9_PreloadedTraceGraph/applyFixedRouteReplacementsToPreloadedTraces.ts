@@ -52,19 +52,25 @@ const pointsAreEqual = (
 const appendConnectedRoute = (
   combinedPoints: HighDensityRoute["route"],
   route: HighDensityRoute,
+  defaultTraceThickness: number,
 ) => {
+  const points = route.route
   if (combinedPoints.length === 0) {
-    combinedPoints.push(...route.route)
+    combinedPoints.push(...points)
     return
   }
 
   const previousEnd = combinedPoints.at(-1)!
   if (route.route[0] && pointsAreEqual(previousEnd, route.route[0])) {
-    combinedPoints.push(...route.route.slice(1))
+    combinedPoints.push(...points.slice(
+      (previousEnd.traceThickness ?? defaultTraceThickness) === (points[0]!.traceThickness ?? defaultTraceThickness) && !points[0]!.toNextSegmentType ? 1 : 0,
+    ))
     return
   }
   if (route.route.at(-1) && pointsAreEqual(previousEnd, route.route.at(-1)!)) {
-    combinedPoints.push(...route.route.slice(0, -1).reverse())
+    combinedPoints.push(...points.slice(0,
+      (previousEnd.traceThickness ?? defaultTraceThickness) === (points.at(-1)!.traceThickness ?? defaultTraceThickness) ? -1 : undefined,
+    ).reverse())
     return
   }
 
@@ -116,14 +122,14 @@ const convertUpdatedTraceRoutes = ({
     )
   }
   const combinedPoints: HighDensityRoute["route"] = []
-  let traceThickness = 0
+  const traceThickness = getMaximumOriginalTraceThickness(trace) ??
+    Math.max(...updatedTraceRoutes.map((route) => route.traceThickness))
   let viaDiameter = 0
   let rootConnectionName: string | undefined
   for (const updatedTraceRoute of [...updatedTraceRoutes].sort(
     comparePreloadedRouteOrder,
   )) {
-    appendConnectedRoute(combinedPoints, updatedTraceRoute)
-    traceThickness = Math.max(traceThickness, updatedTraceRoute.traceThickness)
+    appendConnectedRoute(combinedPoints, updatedTraceRoute, traceThickness)
     viaDiameter = Math.max(viaDiameter, updatedTraceRoute.viaDiameter)
     rootConnectionName ??= updatedTraceRoute.rootConnectionName
   }

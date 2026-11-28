@@ -2,6 +2,7 @@ import { pointToSegmentDistance, type Point3 } from "@tscircuit/math-utils"
 import { RbushIndex } from "lib/data-structures/RbushIndex"
 import type { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
 import { minimumDistanceBetweenSegments } from "lib/utils/minimumDistanceBetweenSegments"
+import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 
 export type StitchSegment = {
   connectionName: string
@@ -62,6 +63,7 @@ const preservesEndpointClearance = ({
 
 export class RouteStitchClearanceValidator {
   private readonly minClearance: number
+  private readonly connMap?: ConnectivityMap
   private readonly rootsByConnection = new Map<
     ConnectionName,
     Set<RootConnectionName>
@@ -80,11 +82,14 @@ export class RouteStitchClearanceValidator {
   constructor({
     hdRoutes,
     minClearance = DEFAULT_AUTOROUTING_CLEARANCE,
+    connMap,
   }: {
     hdRoutes: HighDensityIntraNodeRoute[]
     minClearance?: number
+    connMap?: ConnectivityMap
   }) {
     this.minClearance = minClearance
+    this.connMap = connMap
     for (const hdRoute of hdRoutes) {
       this.addRoute(hdRoute)
     }
@@ -94,7 +99,11 @@ export class RouteStitchClearanceValidator {
   addRoute(hdRoute: HighDensityIntraNodeRoute): void {
     const roots =
       this.rootsByConnection.get(hdRoute.connectionName) ?? new Set()
-    roots.add(hdRoute.rootConnectionName ?? hdRoute.connectionName)
+    const root = hdRoute.rootConnectionName ?? hdRoute.connectionName
+    roots.add(
+      this.connMap?.getNetConnectedToId(hdRoute.connectionName) ??
+      this.connMap?.getNetConnectedToId(root) ?? root,
+    )
     this.rootsByConnection.set(hdRoute.connectionName, roots)
     this.sameNetCache.clear()
 

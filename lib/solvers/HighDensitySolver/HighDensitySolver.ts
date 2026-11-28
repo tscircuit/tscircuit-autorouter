@@ -1,3 +1,4 @@
+import type { ReservedRoutingTerminal } from "../HyperHighDensitySolver/createIntraNodeSegmentValidator"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
 import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
@@ -47,6 +48,7 @@ export class HighDensitySolver extends BaseSolver {
 
   unsolvedNodePortPoints: NodeWithPortPoints[]
   routes: HighDensityIntraNodeRoute[]
+  readonly reservedTerminals?: readonly ReservedRoutingTerminal[]
   readonly fixedHdRoutes: HighDensityIntraNodeRoute[]
   readonly preservePhysicalGeometry?: boolean
   colorMap: Record<string, string>
@@ -76,6 +78,7 @@ export class HighDensitySolver extends BaseSolver {
     priorityDagSearch: boolean
     viaHoleDiameter?: number
     minViaHoleEdgeToViaHoleEdgeClearance?: number
+    allowViaInPad?: boolean
     allowBlindAndBuriedVias?: boolean
   }
 
@@ -99,6 +102,7 @@ export class HighDensitySolver extends BaseSolver {
   constructor({
     nodePortPoints,
     fixedHdRoutes = [],
+    reservedTerminals,
     preservePhysicalGeometry,
     colorMap,
     connMap,
@@ -125,8 +129,10 @@ export class HighDensitySolver extends BaseSolver {
     viaHoleDiameter,
     minViaHoleEdgeToViaHoleEdgeClearance,
     allowBlindAndBuriedVias,
+    allowViaInPad,
   }: {
     nodePortPoints: NodeWithPortPoints[]
+    reservedTerminals?: readonly ReservedRoutingTerminal[]
     fixedHdRoutes?: HighDensityIntraNodeRoute[]
     preservePhysicalGeometry?: boolean
     colorMap?: Record<string, string>
@@ -154,12 +160,14 @@ export class HighDensitySolver extends BaseSolver {
     priorityDiagnostics?: Record<string, number>
     viaHoleDiameter?: number
     minViaHoleEdgeToViaHoleEdgeClearance?: number
+    allowViaInPad?: boolean
     allowBlindAndBuriedVias?: boolean
     nodePfById?:
       | Map<CapacityMeshNodeId, number | null>
       | Record<string, number | null>
   }) {
     super()
+    this.reservedTerminals = reservedTerminals
     this.fixedHdRoutes = fixedHdRoutes
     this.preservePhysicalGeometry = preservePhysicalGeometry
     this.unsolvedNodePortPoints = nodePortPoints
@@ -193,6 +201,7 @@ export class HighDensitySolver extends BaseSolver {
       viaHoleDiameter,
       minViaHoleEdgeToViaHoleEdgeClearance,
       allowBlindAndBuriedVias,
+      allowViaInPad,
     }
     this.MAX_ITERATIONS =
       10e6 *
@@ -430,6 +439,7 @@ export class HighDensitySolver extends BaseSolver {
     const intraNodeSolverParams = {
       nodeWithPortPoints: node,
       fixedHdRoutes: this.fixedHdRoutes,
+      reservedTerminals: this.reservedTerminals,
       preservePhysicalGeometry: this.preservePhysicalGeometry,
       ...this.priorityDagOptions,
       priorityDiagnostics: this.benchmarkDiagnosticCounters,

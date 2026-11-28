@@ -1,3 +1,5 @@
+import type { ReservedRoutingTerminal } from "lib/solvers/HyperHighDensitySolver/createIntraNodeSegmentValidator"
+import { createIntraNodeRouteValidator } from "lib/solvers/HyperHighDensitySolver/createIntraNodeRouteValidator"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
 import { RegionalForceImproveSolver } from "high-density-repair01"
@@ -20,6 +22,7 @@ import {
 } from "./pipeline9FixedRouteCopper"
 
 type Pipeline9RegionalFallbackSolverParams = {
+  reservedTerminals?: readonly ReservedRoutingTerminal[]
   nodeWithPortPoints: NodeWithPortPoints
   colorMap: Record<string, string>
   connMap: ConnectivityMap
@@ -37,9 +40,14 @@ type Pipeline9RegionalFallbackSolverParams = {
   fixedHdRoutes?: HighDensityRoute[]
   preservePhysicalGeometry?: boolean
   immutableHdRoutes?: HighDensityRoute[]
+  movablePreloadedRouteSections?: readonly {
+    connectionName: string
+    routes: readonly HighDensityRoute[]
+  }[]
   movablePreloadedConnectionNames?: ReadonlySet<string>
   viaToPadClearance?: number
   layerCount: number
+  allowViaInPad?: boolean
   allowBlindAndBuriedVias?: boolean
   captureSearchDebug?: boolean
 }
@@ -106,9 +114,8 @@ export const isPipeline9ObstacleConnectedToRoute = ({
   })
 }
 
-const hasPreloadedViaToBoardObstacleConflict = ({
+const hasViaToBoardObstacleConflict = ({
   routes,
-  movablePreloadedConnectionNames,
   boardObstacles,
   connMap,
   layerCount,
@@ -116,7 +123,6 @@ const hasPreloadedViaToBoardObstacleConflict = ({
   allowBlindAndBuriedVias,
 }: {
   routes: HighDensityRoute[]
-  movablePreloadedConnectionNames: ReadonlySet<string>
   boardObstacles: Obstacle[]
   connMap: ConnectivityMap
   layerCount: number
@@ -124,9 +130,6 @@ const hasPreloadedViaToBoardObstacleConflict = ({
   allowBlindAndBuriedVias?: boolean
 }): boolean =>
   routes.some((route) => {
-    if (!movablePreloadedConnectionNames.has(route.connectionName)) {
-      return false
-    }
     const viaSpans = getPipeline9RouteCopperGeometry(route, {
       layerCount,
       allowBlindAndBuriedVias,
@@ -154,10 +157,18 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
   forceImproveSolver?: RegionalForceImproveSolver
   repairSolver?: Pipeline4HighDensityRepairSolver
   private validatedRoutes?: HighDensityRoute[]
+  private readonly validateBoardRoutes: ReturnType<typeof createIntraNodeRouteValidator>
 
   constructor(params: Pipeline9RegionalFallbackSolverParams) {
     super()
     this.params = params
+    this.validateBoardRoutes = createIntraNodeRouteValidator({
+      reservedTerminals: params.reservedTerminals,
+      fixedHdRoutes: [], obstacles: params.boardObstacles, connMap: params.connMap,
+      layerCount: params.layerCount, clearance: params.obstacleMargin,
+      allowViaInPad: params.allowViaInPad,
+      allowBlindAndBuriedVias: params.allowBlindAndBuriedVias,
+    })
     this.stats = {
       preloadedViaCandidateRejectionCount: 0,
       forceImproveCandidateRejectionCount: 0,
@@ -175,8 +186,10 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
       nodePfById: params.nodePfById,
       obstacles: params.obstacles,
       fixedHdRoutes: params.fixedHdRoutes,
+      reservedTerminals: params.reservedTerminals,
       preservePhysicalGeometry: params.preservePhysicalGeometry,
       layerCount: params.layerCount,
+      allowViaInPad: params.allowViaInPad,
       useGrowShrinkHighDensityIntraNodeSolver: true,
       rejectOverlappingTerminals: params.preservePhysicalGeometry,
       preserveTerminalPcbPortIds: false,
@@ -193,8 +206,16 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
   }
 
   private validateCandidateRoutes(routes: HighDensityRoute[]): boolean {
+    if (this.params.preservePhysicalGeometry && !this.validateBoardRoutes(routes)) return false
+    const replacementNames = new Set(routes.map((route) => route.connectionName))
+    const retainedRoutes = [
+      ...(this.params.immutableHdRoutes ?? []),
+      ...(this.params.movablePreloadedRouteSections ?? [])
+        .filter((section) => !replacementNames.has(section.connectionName))
+        .flatMap((section) => section.routes),
+    ]
     for (const route of routes) {
-      for (const fixedRoute of this.params.immutableHdRoutes ?? []) {
+      for (const fixedRoute of retainedRoutes) {
         if (
           arePipeline9RoutesOnSameNet(
             { left: route, right: fixedRoute },
@@ -216,21 +237,12 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
         }
       }
     }
-    const {
-      boardObstacles,
-      movablePreloadedConnectionNames,
-      viaToPadClearance,
-    } = this.params
-    if (
-      !boardObstacles ||
-      !movablePreloadedConnectionNames ||
-      viaToPadClearance === undefined
-    ) {
+    const { boardObstacles, viaToPadClearance } = this.params
+    if (!boardObstacles || viaToPadClearance === undefined) {
       return true
     }
-    const hasViaConflict = hasPreloadedViaToBoardObstacleConflict({
+    const hasViaConflict = hasViaToBoardObstacleConflict({
       routes,
-      movablePreloadedConnectionNames,
       boardObstacles,
       connMap: this.params.connMap,
       layerCount: this.params.layerCount,
@@ -280,6 +292,7 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
       nodeWithPortPoints: [this.params.nodeWithPortPoints],
       hdRoutes: forceImprovedRoutes,
       fixedHdRoutes,
+      reservedTerminals: this.params.reservedTerminals,
       layerCount: this.params.layerCount,
       allowBlindAndBuriedVias: this.params.allowBlindAndBuriedVias,
       obstacles: this.params.obstacles,

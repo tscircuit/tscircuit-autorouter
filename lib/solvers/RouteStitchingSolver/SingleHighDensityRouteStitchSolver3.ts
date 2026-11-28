@@ -371,7 +371,7 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
         {
           x: this.start.x,
           y: this.start.y,
-          z: closestFirstRoutePoint.z,
+          z: this.start.z,
         },
       ],
       vias: [],
@@ -414,7 +414,7 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
   _step() {
     const endpoint = this.mergedHdRoute.route.at(-1)!
     const reachedTerminal =
-      this.mergedHdRoute.endPcbPortId !== undefined &&
+      this.mergedHdRoute.route.length > 1 &&
       endpoint.z === this.end.z &&
       distance(endpoint, this.end) < GEOMETRIC_TOLERANCE
     // A terminal-to-terminal path is complete here. Following leftover stubs

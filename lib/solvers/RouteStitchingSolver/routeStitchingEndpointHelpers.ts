@@ -1,5 +1,8 @@
 import { distance, type Point3 } from "@tscircuit/math-utils"
 import type { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
+import type { SimpleRouteConnection } from "lib/types"
+import { getConnectionPointLayers } from "lib/types/srj-types"
+import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import {
   comparePoints,
   compareRoutes,
@@ -14,6 +17,42 @@ import {
 export const ENDPOINT_MATCH_TOLERANCE = 0.1
 
 type EndpointHash = string
+
+export function getTerminalPointOnRoutedLayer(params: {
+  point: SimpleRouteConnection["pointsToConnect"][number]
+  hdRoutes: readonly HighDensityIntraNodeRoute[]
+  layerCount: number
+}): Point3 & { pcb_port_id?: string } {
+  const layers = getConnectionPointLayers(params.point).map((layer) =>
+    mapLayerNameToZ(layer, params.layerCount),
+  )
+  if (layers.length === 1) return { ...params.point, z: layers[0]! }
+  const endpoints: Point3[] = []
+  for (const route of params.hdRoutes) {
+    for (const direction of [1, -1]) {
+      let index = direction === 1 ? 0 : route.route.length - 1
+      while (index >= 0 && index < route.route.length) {
+        const point = route.route[index]!
+        const next = route.route[index + direction]
+        if (!next) break
+        const edgeStart = direction === 1 ? point : next
+        if (point.z === next.z && distance(point, next) > 1e-9 &&
+          edgeStart.toNextSegmentType !== "through_obstacle") {
+          if (layers.includes(point.z)) endpoints.push(point)
+          break
+        }
+        index += direction
+      }
+    }
+  }
+  endpoints.sort((a, b) =>
+    distance(a, params.point) - distance(b, params.point) || comparePoints(a, b),
+  )
+  if (!endpoints[0]) {
+    throw new Error("Route stitching has no endpoint on a terminal's permitted layers")
+  }
+  return { ...params.point, z: endpoints[0].z }
+}
 
 type EndpointEdge = {
   nextHash: EndpointHash
@@ -252,6 +291,7 @@ export const snapIslandEndpointToNearestTerminal = (params: {
   const candidates = params.preferSameLayerTerminalEndpoints
     ? sameLayerTerminals
     : params.terminals
+  if (candidates.length === 0) return params.islandEndpoint
   const sortedTerminals = [...candidates].sort(comparePoints)
   let closestTerminal = sortedTerminals[0]
   let closestDistance = distance(params.islandEndpoint, closestTerminal)

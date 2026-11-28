@@ -1,3 +1,4 @@
+import { getFixedCopperObstacles } from "./getFixedCopperObstacles"
 import { isExistingMultilayerObstacle } from "lib/utils/isExistingMultilayerObstacle"
 import { RELAXED_DRC_OPTIONS } from "lib/utils/drcPresets"
 import type { AnyCircuitElement } from "circuit-json"
@@ -730,11 +731,14 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
           )
         }
         this.initialBoundedRegionalRepairStartedAt = performance.now()
+        // Earlier copper enters this stage as read-only route geometry, with
+        // its original net and drill span, instead of as raw SRJ traces.
         this.initialBoundedRegionalRepairSolver =
           new Pipeline9BoundedRegionalRepairSolver({
             connMap: this.params.connMap,
             originalSrj: {
               ...this.params.originalSrj,
+              traces: undefined,
               connections: [
                 ...this.params.originalSrj.connections,
                 ...this.params.newConnections,
@@ -743,6 +747,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
             routes:
               this.clearanceProjectionSolver?.getOutput() ??
               this.exactRepairParams.hdRoutes,
+            fixedHdRoutes: this.fixedPreloadedObstacleRoutes,
             viaHoleDiameter: this.params.defaultViaHoleDiameter,
             syntheticConnectionNames: this.syntheticConnectionNames,
             drcEvaluator: this.cachedReferenceDrcEvaluator,
@@ -876,11 +881,15 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     )
     // Repair candidates change copper geometry, but their connection metadata
     // and obstacle connectivity remain fixed throughout this solver's lifetime.
+    const exportObstacles = [
+      ...params.obstacles,
+      ...getFixedCopperObstacles({ ...params.originalSrj, traces: params.updatedPreloadedTraces }),
+    ]
     const convertNewRoutes = createHdRoutesToSimplifiedPcbTracesConverter({
       connections: params.newConnections,
       originalConnections: params.originalSrj.connections,
       layerCount: params.layerCount,
-      obstacles: params.obstacles,
+      obstacles: exportObstacles,
       defaultViaHoleDiameter: params.defaultViaHoleDiameter,
       connMap: params.connMap,
     })
@@ -1292,7 +1301,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         prioritizeCircuitJsonErrors: boolean
       }
     >()
-    const multilayerObstacles = params.obstacles.filter((obstacle) =>
+    const multilayerObstacles = exportObstacles.filter((obstacle) =>
       isExistingMultilayerObstacle(obstacle),
     )
     const connectedObstaclesByConnectionName = new Map<
@@ -1781,12 +1790,9 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       this.finishWithTraceContactCheck()
       return
     }
-    // Defer raw preloads until final repair can represent their movable
-    // sections as routes and the remaining copper as fixed obstacles.
-    if (
-      params.updatedPreloadedTraces.length > 0 ||
-      (params.originalSrj.traces?.length ?? 0) > 0
-    ) {
+    // Movable preloaded sections wait for the final regional stage, which
+    // adds their synthetic connections. Copper that stays fixed needs no wait.
+    if (this.movablePreloadedSections.length > 0) {
       this.pipelineDef.splice(1, 1)
     }
     // Resolve hole clearance before detour repair, without moving preloaded copper.
