@@ -1,5 +1,6 @@
 import { Pipeline9HighDensityForceImproveSolver } from "./Pipeline9HighDensityForceImproveSolver"
 import { createPreloadedPortValidator } from "./createPreloadedPortValidator"
+import { narrowNodeAvailableZForBuses } from "./narrowNodeAvailableZForBuses"
 import { UniformPortDistributionSolver } from "lib/solvers/UniformPortDistributionSolver/UniformPortDistributionSolver"
 import type { SimpleRouteConnection } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
@@ -55,8 +56,15 @@ export const pipeline9HighDensitySteps = [
       const uniformNodes =
         pipeline.uniformPortDistributionSolver?.getOutput() ?? []
       const fallbackNodes = portPointPathingOutput.nodesWithPortPoints
-      const nodePortPointsSource =
+      const rawNodePortPointsSource =
         uniformNodes.length > 0 ? uniformNodes : fallbackNodes
+      const nodePortPointsSource = rawNodePortPointsSource.map((node) =>
+        narrowNodeAvailableZForBuses(node, {
+          srj: pipeline.originalSrj,
+          connections: pipeline.srjWithPointPairs?.connections,
+          fallbackLayerCount: pipeline.srj.layerCount,
+        }),
+      )
 
       pipeline.highDensityNodePortPoints = structuredClone(nodePortPointsSource)
       const originalFixedHdRoutes = getOriginalFixedHdRoutes(pipeline)
