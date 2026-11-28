@@ -66,7 +66,12 @@ test("Pipeline9 clears pad and outline violations on SRJ33 sample 3", async (): 
     minViaDiameter: scenario.minViaDiameter,
   })
   expect(checkViasInPads(outputCircuitJson)).toEqual([])
+  // Native routing can choose different valid paths on Linux and macOS.
+  const snapshotPath =
+    process.platform === "linux"
+      ? import.meta.path.replace(/\.test\.ts$/, "-linux.test.ts")
+      : import.meta.path
   await expect(
     getBugReportSnapshotSvg(snapshotInput, { showBoardOutline: true }),
-  ).toMatchSvgSnapshot(import.meta.path)
+  ).toMatchSvgSnapshot(snapshotPath)
 })

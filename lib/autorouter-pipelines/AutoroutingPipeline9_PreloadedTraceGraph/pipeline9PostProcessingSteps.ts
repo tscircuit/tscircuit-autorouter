@@ -26,6 +26,8 @@ import {
   getSrjWithMaterializedPreloadedTraces,
 } from "./pipeline9PreloadedTraceUpdates"
 
+const BOARD_EDGE_EXPANSION_PRECISION_MARGIN = 1e-6
+
 function getCleanupTraces(
   routes: HighDensityRoute[],
   pipeline: AutoroutingPipelineSolver9_PreloadedTraceGraph,
@@ -274,15 +276,22 @@ export const pipeline9PostProcessingSteps = [
         expandedConnectionNames: onlyConnectionNames,
         resolveConnectedTraceAliases: true,
       })
+      const protectBoardClearance =
+        pipeline.pipeline9JointDrcRepairSolver!.stats
+          .boardEdgeRepairAccepted === true
       return [
         {
           ...input,
-          // The expander distinguishes the physical outline from SRJ bounds.
-          boardOutline:
-            pipeline.pipeline9JointDrcRepairSolver!.stats
-              .boardEdgeRepairAccepted === true
-              ? input.outline
-              : undefined,
+          ...(protectBoardClearance && input.minBoardEdgeClearance !== undefined
+            ? {
+                boardOutline: input.outline,
+                // Keep tangent widths clear of the exact DRC threshold after
+                // the expander applies its tolerance to the outline distance.
+                minBoardEdgeClearance:
+                  input.minBoardEdgeClearance +
+                  BOARD_EDGE_EXPANSION_PRECISION_MARGIN,
+              }
+            : {}),
         },
         {
           allowNewVias: false,
