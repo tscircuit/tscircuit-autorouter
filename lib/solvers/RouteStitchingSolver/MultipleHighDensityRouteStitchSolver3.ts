@@ -1,17 +1,23 @@
-import { getPreloadedViaBridges } from "./getPreloadedViaBridges"
 import { distance, type Point3 } from "@tscircuit/math-utils"
 import { ConnectivityMap } from "connectivity-map"
 import { GraphicsObject } from "graphics-debug"
 import type { NetId, SimpleRouteConnection } from "lib/types"
 import { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
-import { getConnectionPointLayer, getConnectionPointLayers } from "lib/types/srj-types"
+import {
+  getConnectionPointLayer,
+  getConnectionPointLayers,
+} from "lib/types/srj-types"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 import { getJumpersGraphics } from "lib/utils/getJumperGraphics"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { BaseSolver } from "../BaseSolver"
 import { safeTransparentize } from "../colors"
+import { getPreloadedViaBridges } from "./getPreloadedViaBridges"
 import { RouteStitchClearanceValidator } from "./route-stitch-clearance-validator"
-import { SingleHighDensityRouteStitchSolver3 } from "./SingleHighDensityRouteStitchSolver3"
+import {
+  SingleHighDensityRouteStitchSolver3,
+  type StitchClearanceMode,
+} from "./SingleHighDensityRouteStitchSolver3"
 import {
   EndpointClusterIndex,
   getTerminalPointOnRoutedLayer,
@@ -61,6 +67,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     start: Point3
     end: Point3
     defaultTraceThickness?: number
+    stitchClearanceMode?: StitchClearanceMode
   }): boolean {
     const stitchSolver = new SingleHighDensityRouteStitchSolver3({
       connectionName: params.connectionName,
@@ -78,7 +85,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       ),
       isStitchSegmentClear: (stitchSegment) =>
         this.clearanceValidator.isSegmentClear(stitchSegment),
-      stitchClearanceMode: "require_clear",
+      stitchClearanceMode: params.stitchClearanceMode ?? "require_clear",
     })
 
     while (
@@ -114,13 +121,26 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     start: Point3
     end: Point3
   }): HighDensityIntraNodeRoute[] | null {
+    // Retain a complete path before borrowing another same-net connection.
+    if (
+      this.canStitchBetweenTerminals({
+        connectionName: params.connectionName,
+        hdRoutes: params.hdRoutes,
+        start: params.start,
+        end: params.end,
+        stitchClearanceMode: "prefer_clear",
+      })
+    ) {
+      return null
+    }
     const currentRouteSet = new Set(params.hdRoutes)
     // Routing stages may use different aliases for the same electrical net.
     const sameRootRoutes = params.allHdRoutes.filter(
-      (route) => params.connMap.areIdsConnected(
-        route.connectionName,
-        params.connectionName,
-      ),
+      (route) =>
+        params.connMap.areIdsConnected(
+          route.connectionName,
+          params.connectionName,
+        ),
     )
 
     if (sameRootRoutes.every((route) => currentRouteSet.has(route))) {
@@ -143,12 +163,16 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     if (!includesSharedRootBridge) return null
     // Selection may require every route in a small net. Validate the terminal
     // path itself rather than rejecting it by the number of route fragments.
-    if (!this.canStitchBetweenTerminals({
-      connectionName: params.connectionName,
-      hdRoutes: pathRoutes,
-      start: params.start,
-      end: params.end,
-    })) return null
+    if (
+      !this.canStitchBetweenTerminals({
+        connectionName: params.connectionName,
+        hdRoutes: pathRoutes,
+        start: params.start,
+        end: params.end,
+      })
+    ) {
+      return null
+    }
 
     return pathRoutes
   }
@@ -199,7 +223,11 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
 
     const canonicalHdRoutes = [
       ...params.hdRoutes,
-      ...getPreloadedViaBridges({ ...params, otherHdRoutes: params.otherHdRoutes ?? [], connMap }),
+      ...getPreloadedViaBridges({
+        ...params,
+        otherHdRoutes: params.otherHdRoutes ?? [],
+        connMap,
+      }),
     ].sort(compareRoutes)
     this.clearanceValidator = new RouteStitchClearanceValidator({
       hdRoutes: [...canonicalHdRoutes, ...(params.otherHdRoutes ?? [])],
@@ -337,20 +365,18 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
           preferSameLayerTerminalEndpoints:
             this.preferSameLayerTerminalEndpoints,
         })
-        const sharedTerminal = terminalGroups.find((group) =>
-          group.some((point) => point === snappedStart) &&
-          group.some((point) => point === snappedEnd),
+        const sharedTerminal = terminalGroups.find(
+          (group) =>
+            group.some((point) => point === snappedStart) &&
+            group.some((point) => point === snappedEnd),
         )
         if (sharedTerminal) {
-          const startIsCloser = distance(start, snappedStart) <= distance(end, snappedEnd)
-          const terminals = terminalPoints.filter((point) => !sharedTerminal.includes(point))
-          const other = snapIslandEndpointToNearestTerminal({
-            islandEndpoint: startIsCloser ? end : start,
-            terminals,
-            preferSameLayerTerminalEndpoints: this.preferSameLayerTerminalEndpoints,
-          })
-          start = startIsCloser ? snappedStart : other
-          end = startIsCloser ? other : snappedEnd
+          // A local island can terminate beside one pad without spanning the net.
+          if (distance(start, snappedStart) <= distance(end, snappedEnd)) {
+            start = snappedStart
+          } else {
+            end = snappedEnd
+          }
         } else {
           start = snappedStart
           end = snappedEnd
@@ -436,15 +462,14 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       const hdRoutes = unsolvedRoutes.flatMap(
         (unsolvedRoute) => unsolvedRoute.hdRoutes,
       )
-      const sharedRootPathRoutes =
-          this.getSharedRootPathRoutes({
-              connectionName,
-              connMap,
-              hdRoutes,
-              allHdRoutes: canonicalHdRoutes,
-              start,
-              end,
-            })
+      const sharedRootPathRoutes = this.getSharedRootPathRoutes({
+        connectionName,
+        connMap,
+        hdRoutes,
+        allHdRoutes: canonicalHdRoutes,
+        start,
+        end,
+      })
 
       if (!hasDegenerateRoute && !hasStitchableGap && !sharedRootPathRoutes) {
         return unsolvedRoutes

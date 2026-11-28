@@ -138,6 +138,10 @@ export class UniformPortDistributionSolver extends BaseSolver {
     this.ownerPairsToProcess.sort((a, b) => {
       const edgeA = this.mapOfOwnerPairToSharedEdge.get(a)!
       const edgeB = this.mapOfOwnerPairToSharedEdge.get(b)!
+      // Reserve narrow crossings before adjacent edges consume their clearance.
+      if (input.getPortPointClearSpans && edgeA.length !== edgeB.length) {
+        return edgeA.length - edgeB.length
+      }
       return edgeA.center.x - edgeB.center.x || edgeA.center.y - edgeB.center.y
     })
   }

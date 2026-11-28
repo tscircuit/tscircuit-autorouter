@@ -148,7 +148,6 @@ export function getSrjWithMaterializedPreloadedTraces(
 ): SimpleRouteJson {
   return {
     ...pipeline.srjWithPointPairs!,
-    obstacles: pipeline.originalSrj.obstacles,
     traces:
       getPreloadedTraceUpdatesAfterHighDensity(pipeline).updatedPreloadedTraces,
   }
