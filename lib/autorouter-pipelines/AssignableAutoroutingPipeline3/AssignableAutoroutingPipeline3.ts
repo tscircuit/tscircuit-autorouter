@@ -1,4 +1,5 @@
 import { RectDiffPipeline } from "@tscircuit/rectdiff"
+import { TraceSimplificationSolver } from "@tscircuit/trace-simplification-solver"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject, Line } from "graphics-debug"
 import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
@@ -15,13 +16,15 @@ import {
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
 import { createObstacleLabelFormatter } from "lib/utils/formatObstacleLabel"
+import { getInitiallyConnectedMapFromSimpleRouteJson } from "lib/utils/get-initially-connected-map-from-simple-route-json"
+import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 import {
   getGraphicsLayerForConnectionPoint,
   getGraphicsLayerForObstacle,
 } from "lib/utils/getGraphicsObjectLayer"
-import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
-import { getInitiallyConnectedMapFromSimpleRouteJson } from "lib/utils/get-initially-connected-map-from-simple-route-json"
+import { getPresuppliedTraceVisualization } from "lib/utils/getPresuppliedTraceVisualization"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
+import { preprocessAssignableSimpleRouteJson } from "lib/utils/preprocessAssignableSimpleRouteJson"
 import { AvailableSegmentPointSolver } from "../../solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
 import { BaseSolver } from "../../solvers/BaseSolver"
 import { CapacityMeshEdgeSolver } from "../../solvers/CapacityMeshSolver/CapacityMeshEdgeSolver"
@@ -45,7 +48,6 @@ import { MultipleHighDensityRouteStitchSolver } from "../../solvers/RouteStitchi
 import { MultipleHighDensityRouteStitchSolver2 } from "../../solvers/RouteStitchingSolver/MultipleHighDensityRouteStitchSolver2"
 import { SingleLayerNodeMergerSolver } from "../../solvers/SingleLayerNodeMerger/SingleLayerNodeMergerSolver"
 import { StrawSolver } from "../../solvers/StrawSolver/StrawSolver"
-import { TraceSimplificationSolver } from "@tscircuit/trace-simplification-solver"
 import { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolver"
 import { getColorMap } from "../../solvers/colors"
 import type {
@@ -145,6 +147,8 @@ export class AssignableAutoroutingPipeline3 extends BaseSolver {
 
   activeSubSolver?: BaseSolver | null = null
   connMap: ConnectivityMap
+  originalSrj: SimpleRouteJson
+  srj: SimpleRouteJson
   srjWithPointPairs?: SimpleRouteJson
   capacityNodes: CapacityMeshNode[] | null = null
   capacityEdges: CapacityMeshEdge[] | null = null
@@ -402,25 +406,6 @@ export class AssignableAutoroutingPipeline3 extends BaseSolver {
         },
       ],
     ),
-    // definePipelineStep(
-    //   "traceSimplificationSolver",
-    //   TraceSimplificationSolver,
-    //   (cms) => [
-    //     {
-    //       hdRoutes:
-    //         cms.highDensityStitchSolver?.mergedHdRoutes ??
-    //         cms.highDensitySolver?.routes ??
-    //         cms.highDensityRouteSolver?.routes!,
-    //       obstacles: cms.srj.obstacles,
-    //       connMap: cms.connMap,
-    //       colorMap: cms.colorMap,
-    //       outline: cms.srj.outline,
-    //       defaultViaDiameter: cms.viaDiameter,
-    //       layerCount: cms.srj.layerCount,
-    //       iterations: 2,
-    //     },
-    //   ],
-    // ),
     definePipelineStep("traceKeepoutSolver", TraceKeepoutSolver, (cms) => [
       {
         hdRoutes:
@@ -456,14 +441,15 @@ export class AssignableAutoroutingPipeline3 extends BaseSolver {
   ]
 
   constructor(
-    public readonly srj: SimpleRouteJson,
+    srj: SimpleRouteJson,
     public readonly opts: CapacityMeshSolverOptions = {},
   ) {
     super()
-    this.srj = srj
+    this.originalSrj = srj
+    this.srj = preprocessAssignableSimpleRouteJson(srj)
     this.opts = { ...opts }
-    this.viaDiameter = getViaDimensions(srj).padDiameter
-    this.minTraceWidth = srj.minTraceWidth
+    this.viaDiameter = getViaDimensions(this.srj).padDiameter
+    this.minTraceWidth = this.srj.minTraceWidth
     const mutableOpts = this.opts
     this.effort = mutableOpts.effort ?? 1
     // scale with effort so the outer cap never decapitates inner solvers
@@ -472,8 +458,8 @@ export class AssignableAutoroutingPipeline3 extends BaseSolver {
     // If capacityDepth is not provided, calculate it automatically
     if (mutableOpts.capacityDepth === undefined) {
       // Calculate max width/height from bounds for initial node size
-      const boundsWidth = srj.bounds.maxX - srj.bounds.minX
-      const boundsHeight = srj.bounds.maxY - srj.bounds.minY
+      const boundsWidth = this.srj.bounds.maxX - this.srj.bounds.minX
+      const boundsHeight = this.srj.bounds.maxY - this.srj.bounds.minY
       const maxWidthHeight = Math.max(boundsWidth, boundsHeight)
 
       // Use the calculateOptimalCapacityDepth function to determine the right depth
@@ -484,8 +470,8 @@ export class AssignableAutoroutingPipeline3 extends BaseSolver {
       )
     }
 
-    this.connMap = getConnectivityMapFromSimpleRouteJson(srj)
-    this.colorMap = getColorMap(srj, this.connMap)
+    this.connMap = getConnectivityMapFromSimpleRouteJson(this.srj)
+    this.colorMap = getColorMap(this.srj, this.connMap)
     this.cacheProvider =
       mutableOpts.cacheProvider === undefined
         ? getGlobalInMemoryCache()
@@ -498,7 +484,7 @@ export class AssignableAutoroutingPipeline3 extends BaseSolver {
   }
 
   getConstructorParams() {
-    return [this.srj, this.opts] as const
+    return [this.originalSrj, this.opts] as const
   }
 
   currentPipelineStepIndex = 0
@@ -659,6 +645,9 @@ export class AssignableAutoroutingPipeline3 extends BaseSolver {
       this.solved
         ? combineVisualizations(
             { lines: problemLines },
+            ...(this.originalSrj.traces?.length
+              ? [getPresuppliedTraceVisualization({ srj: this.originalSrj })]
+              : []),
             convertSrjToGraphicsObject(this.getOutputSimpleRouteJson()),
           )
         : null,
@@ -745,7 +734,6 @@ export class AssignableAutoroutingPipeline3 extends BaseSolver {
     for (const [index, obstacle] of this.srj.obstacles.entries()) {
       if (!obstacle.offBoardConnectsTo?.length) continue
       const obstacleId = obstacle.obstacleId ?? `__obs${index}`
-      obstacle.obstacleId = obstacleId
 
       const netId = this.connMap.getNetConnectedToId(obstacleId)
       if (!netId) continue
@@ -824,7 +812,7 @@ export class AssignableAutoroutingPipeline3 extends BaseSolver {
   getOutputSimpleRouteJson(): SimpleRouteJson {
     const jumpers = this.getOutputJumpers()
     return {
-      ...this.srj,
+      ...this.originalSrj,
       traces: this.getOutputSimplifiedPcbTraces(),
       jumpers: jumpers.length > 0 ? jumpers : undefined,
     }
