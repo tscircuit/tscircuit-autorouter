@@ -1,4 +1,4 @@
-import { createIntraNodeSegmentValidator } from "./createIntraNodeSegmentValidator"
+import { createIntraNodeSegmentValidator, type ReservedRoutingTerminal } from "./createIntraNodeSegmentValidator"
 import {
   HighDensitySolverA01,
   HighDensitySolverA03 as HighDensityA03Solver,
@@ -60,6 +60,8 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     typeof CachedIntraNodeRouteSolver
   >[0] & {
     boardGeometry?: HighDensityBoardGeometry
+    allowViaInPad?: boolean
+    reservedTerminals?: readonly ReservedRoutingTerminal[]
     preservePhysicalGeometry?: boolean
     solutionValidator?: (routes: HighDensityIntraNodeRoute[]) => boolean
   }
@@ -134,7 +136,9 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       gridSearchWorkScale?: number
       rejectOverlappingTerminals?: boolean
       boardGeometry?: HighDensityBoardGeometry
-      preservePhysicalGeometry?: boolean
+      allowViaInPad?: boolean
+    reservedTerminals?: readonly ReservedRoutingTerminal[]
+    preservePhysicalGeometry?: boolean
       solutionValidator?: (routes: HighDensityIntraNodeRoute[]) => boolean
     },
   ) {
@@ -184,13 +188,17 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     }
   }
 
-  private getGridSearchIterationBudget(): number {
+  private getGridSearchIterationBudget(gridStates: number): number {
     const node = this.nodeWithPortPoints
     const layerCount =
       node.availableZ?.length ??
       new Set(node.portPoints.map((point) => point.z)).size
-    const states =
-      Math.floor(node.width / 0.1) * Math.floor(node.height / 0.1) * layerCount
+    const preservePhysicalGeometry =
+      this.constructorParams.preservePhysicalGeometry ??
+      Boolean(this.constructorParams.fixedHdRoutes?.length)
+    const states = preservePhysicalGeometry
+      ? gridStates
+      : Math.floor(node.width / 0.1) * Math.floor(node.height / 0.1) * layerCount
     // Avoid the external solvers' two-million-iteration floor on small grids,
     // while retaining room for interacting connections on crowded nodes.
     const budgetScale = layerCount > 2 ? this.gridSearchWorkScale : 1
@@ -420,7 +428,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     ) {
       solver.MAX_ITERATIONS = Math.min(
         solver.MAX_ITERATIONS,
-        this.getGridSearchIterationBudget(),
+        this.getGridSearchIterationBudget(solver.gridStats.states),
       )
     }
   }
@@ -704,9 +712,13 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       }
       let staticSegmentValidator: StaticSegmentValidator | undefined
       const fixedHdRoutes = this.constructorParams.fixedHdRoutes
-      if (preservePhysicalGeometry && fixedHdRoutes?.length) {
+      if (preservePhysicalGeometry) {
         staticSegmentValidator = createIntraNodeSegmentValidator({
-          fixedHdRoutes,
+          fixedHdRoutes: fixedHdRoutes ?? [],
+          viaHoleDiameter: this.constructorParams.viaHoleDiameter,
+          reservedTerminals: this.constructorParams.reservedTerminals,
+          allowViaInPad: this.constructorParams.allowViaInPad,
+          obstacles: this.constructorParams.obstacles,
           connMap: this.connMap ?? new ConnectivityMap({}),
           layerCount: this.constructorParams.layerCount ?? 2,
           clearance: this.constructorParams.obstacleMargin ?? 0.1,
@@ -714,15 +726,23 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
             this.constructorParams.allowBlindAndBuriedVias,
         })
       }
+      const resolutionScale = preservePhysicalGeometry
+        ? 2 ** Math.max(0, Math.ceil(Math.log2(0.1 / (traceThickness / 4))))
+        : 1
       const solver = new HighDensityA03Solver({
         nodeWithPortPoints: this.nodeWithPortPoints,
-        highResolutionCellSize: 0.1,
-        highResolutionCellThickness: 8,
-        lowResolutionCellSize: 0.4,
+        // The native copper validator checks the full diagonal segment.
+        enableDiagonalMoves: preservePhysicalGeometry,
+        highResolutionCellSize: 0.1 / resolutionScale,
+        highResolutionCellThickness: 8 * resolutionScale,
+        // A physical repair can leave the cell through the same narrow pad gaps.
+        lowResolutionCellSize: preservePhysicalGeometry
+          ? 0.1 / resolutionScale
+          : 0.4,
         staticSegmentValidator,
         viaDiameter: this.constructorParams.viaDiameter ?? 0.3,
         viaMinDistFromBorder: (this.constructorParams.viaDiameter ?? 0.3) / 2,
-        traceMargin,
+        traceMargin: preservePhysicalGeometry ? traceMargin + traceThickness / 2 : traceMargin,
         traceThickness,
         effort: this.effort,
         hyperParameters,
@@ -745,6 +765,8 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       return new SingleTransitionIntraNodeSolver({
         nodeWithPortPoints: this.nodeWithPortPoints,
         viaDiameter: this.constructorParams.viaDiameter,
+        traceThickness: this.constructorParams.traceWidth,
+        obstacleMargin: this.constructorParams.obstacleMargin,
       }) as any
     }
     if (hyperParameters.THROUGH_OBSTACLE) {
@@ -753,6 +775,8 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
         obstacles: this.constructorParams.obstacles,
         connMap: this.connMap,
         layerCount: this.constructorParams.layerCount,
+        fixedHdRoutes: this.constructorParams.fixedHdRoutes,
+        allowBlindAndBuriedVias: this.constructorParams.allowBlindAndBuriedVias,
         viaDiameter: this.constructorParams.viaDiameter,
         traceThickness: this.constructorParams.traceWidth,
       }) as any

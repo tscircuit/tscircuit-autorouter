@@ -53,12 +53,18 @@ const areSameXyPoint = (
 const pointInsideObstacle = (
   point: Pick<Point, "x" | "y">,
   obstacle: Obstacle,
-) => pointToBoxDistance(point, obstacle) <= SAME_NET_OBSTACLE_TOLERANCE
+): boolean => {
+  if (obstacle.shape === "circle") {
+    return distance(point, obstacle.center) <= obstacle.width / 2 + SAME_NET_OBSTACLE_TOLERANCE
+  }
+  return pointToBoxDistance(point, obstacle) <= SAME_NET_OBSTACLE_TOLERANCE
+}
 
 const isThroughObstacleSegment = (
   hdRoute: HdRouteWithOptionalJumpers,
   start: Point,
   end: Point,
+  layerCount: number,
   opts: ConvertHdRouteToSimplifiedRouteOptions,
 ) => {
   if (start.toNextSegmentType === "through_obstacle") return true
@@ -66,6 +72,8 @@ const isThroughObstacleSegment = (
   if (opts.connectedMultilayerObstacles) {
     return opts.connectedMultilayerObstacles.some(
       (obstacle) =>
+        obstacle.layers.includes(mapZToLayerName(start.z, layerCount)) &&
+        obstacle.layers.includes(mapZToLayerName(end.z, layerCount)) &&
         pointInsideObstacle(start, obstacle) &&
         pointInsideObstacle(end, obstacle),
     )
@@ -75,6 +83,8 @@ const isThroughObstacleSegment = (
     opts.obstacles?.some(
       (obstacle) =>
         isExistingMultilayerObstacle(obstacle) &&
+        obstacle.layers.includes(mapZToLayerName(start.z, layerCount)) &&
+        obstacle.layers.includes(mapZToLayerName(end.z, layerCount)) &&
         pointInsideObstacle(start, obstacle) &&
         pointInsideObstacle(end, obstacle) &&
         isObstacleConnectedToRoute(obstacle, hdRoute, opts.connMap),
@@ -301,6 +311,66 @@ const attachExistingTerminalViaTransitions = ({
   return [...prepend, ...route, ...append]
 }
 
+/** Keep a terminal on its actual wire approach; the existing barrel carries
+ * the connection through its other layers without extra zero-length tails. */
+const trimExistingTerminalTransitions = (
+  route: SimplifiedPcbTraces[number]["route"],
+  hdRoute: HdRouteWithOptionalJumpers,
+  opts: ConvertHdRouteToSimplifiedRouteOptions,
+): SimplifiedPcbTraces[number]["route"] => {
+  const copper = opts.connectedMultilayerObstacles ?? opts.obstacles?.filter(
+    (obstacle) => isExistingMultilayerObstacle(obstacle) &&
+      isObstacleConnectedToRoute(obstacle, hdRoute, opts.connMap),
+  ) ?? []
+  let result = route
+  for (const side of ["start", "end"] as const) {
+    const direction = side === "start" ? 1 : -1
+    const endpointIndex = side === "start" ? 0 : result.length - 1
+    const endpoint = result[endpointIndex]
+    if (endpoint?.route_type !== "wire") continue
+    let selectedIndex = endpointIndex
+    for (const obstacle of copper) {
+      if (!obstacle.layers.includes(endpoint.layer) || !pointInsideObstacle(endpoint, obstacle)) continue
+      let index = endpointIndex
+      let layer = endpoint.layer
+      let crossedBarrel = false
+      while (index + direction >= 0 && index + direction < result.length) {
+        const nextIndex = index + direction
+        const point = result[nextIndex]!
+        if (point.route_type === "wire") {
+          if (point.layer !== layer) break
+          if (!areSameXyPoint(point, endpoint)) {
+            const approach = result[index]!
+            const terminalAllowsLayer = !(opts.connectionPoints ?? []).some(
+              (terminal) => terminal.pcb_port_id && areSameXyPoint(terminal, endpoint) &&
+                !getConnectionPointLayers(terminal).includes(layer),
+            )
+            const width = side === "start" ? approach.route_type === "wire" ? approach.width : 0 : point.width
+            if (approach.route_type === "wire" && Number.isFinite(width) && width > 0 &&
+              crossedBarrel && terminalAllowsLayer &&
+              Math.abs(index - endpointIndex) > Math.abs(selectedIndex - endpointIndex)) {
+              selectedIndex = index
+            }
+            break
+          }
+        } else if (point.route_type === "through_obstacle") {
+          const from = side === "start" ? point.from_layer : point.to_layer
+          const to = side === "start" ? point.to_layer : point.from_layer
+          if (from !== layer || !obstacle.layers.includes(to) ||
+            !areSameXyPoint(point.start, endpoint) || !areSameXyPoint(point.end, endpoint)) break
+          layer = to
+          crossedBarrel = true
+        } else {
+          break
+        }
+        index = nextIndex
+      }
+    }
+    result = side === "start" ? result.slice(selectedIndex) : result.slice(0, selectedIndex + 1)
+  }
+  return result
+}
+
 export const convertHdRouteToSimplifiedRoute = (
   hdRoute: HdRouteWithOptionalJumpers,
   layerCount: number,
@@ -335,7 +405,7 @@ export const convertHdRouteToSimplifiedRoute = (
       const nextLayerName = mapZToLayerName(point.z, layerCount)
       if (
         previousPoint &&
-        isThroughObstacleSegment(hdRoute, previousPoint, point, opts)
+        isThroughObstacleSegment(hdRoute, previousPoint, point, layerCount, opts)
       ) {
         result.push({
           route_type: "through_obstacle",
@@ -384,9 +454,14 @@ export const convertHdRouteToSimplifiedRoute = (
         !areSameXyPoint(
           currentLayerPoints[currentLayerPoints.length - 1],
           point,
-        )
+        ) ||
+        (currentLayerPoints.at(-1)?.traceThickness ?? hdRoute.traceThickness) !==
+          (point.traceThickness ?? hdRoute.traceThickness)
       ) {
         currentLayerPoints.push(point)
+      } else if (point.toNextSegmentType) {
+        // The last duplicate carries the outgoing segment's copper transition.
+        currentLayerPoints[currentLayerPoints.length - 1] = point
       }
     }
   }
@@ -428,9 +503,10 @@ export const convertHdRouteToSimplifiedRoute = (
     tolerance: opts.terminalViaAttachTolerance,
     defaultViaHoleDiameter: opts.defaultViaHoleDiameter,
   })
-  return attachExistingTerminalViaTransitions({
+  const routeWithExistingTerminals = attachExistingTerminalViaTransitions({
     route: routeWithTerminalVias,
     connectionPoints: opts.connectionPoints ?? [],
     obstacles: opts.connectedMultilayerObstacles ?? opts.obstacles ?? [],
   })
+  return trimExistingTerminalTransitions(routeWithExistingTerminals, hdRoute, opts)
 }

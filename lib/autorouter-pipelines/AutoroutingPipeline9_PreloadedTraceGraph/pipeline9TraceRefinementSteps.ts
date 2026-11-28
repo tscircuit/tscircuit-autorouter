@@ -119,6 +119,12 @@ export const pipeline9TraceRefinementSteps = [
     getConstructorParams: (pipeline) => [
       {
         hdRoutes: pipeline.traceSimplificationSolver!.simplifiedHdRoutes,
+        otherHdRoutes: pipeline.highDensityRouteSolver!.getUpdatedFixedHdRoutes().map(
+          (route) => ({
+            ...route,
+            rootConnectionName: pipeline.originalSrj.traces![route.preloadedTraceIndex]!.connection_name,
+          }),
+        ),
         obstacles: pipeline.srj.obstacles,
         connMap: pipeline.connMap,
         colorMap: pipeline.colorMap,

@@ -247,8 +247,16 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
         }),
     )
     if (this.preservePhysicalGeometry) {
-      nodeWithPortPoints.width *= this.scaleFactor
-      nodeWithPortPoints.height *= this.scaleFactor
+      // Expand by physical copper clearance rather than preserving a skinny
+      // cell's aspect ratio or magnifying its long side into a huge search grid.
+      const clearanceRadius =
+        (this.constructorParams.viaDiameter ?? 0.3) / 2 +
+        (this.constructorParams.traceWidth ?? 0.15) / 2 +
+        (this.constructorParams.obstacleMargin ?? 0.15)
+      const growth = 2 * (this.scaleFactor - 1) *
+        clearanceRadius * this.coordinateScale
+      nodeWithPortPoints.width += growth
+      nodeWithPortPoints.height += growth
       this.scalePhysicalConstraints(portfolioParams)
     }
     this.activeSubSolver = new PortfolioSingleIntraNodeSolver({
@@ -281,8 +289,15 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
     const scale = this.coordinateScale
     portfolioParams.traceWidth = (portfolioParams.traceWidth ?? 0.15) * scale
     portfolioParams.viaDiameter = (portfolioParams.viaDiameter ?? 0.3) * scale
+    if (portfolioParams.viaHoleDiameter !== undefined) {
+      portfolioParams.viaHoleDiameter *= scale
+    }
     portfolioParams.obstacleMargin =
       (portfolioParams.obstacleMargin ?? 0.15) * scale
+    portfolioParams.reservedTerminals = portfolioParams.reservedTerminals?.map((terminal) => ({
+      ...scalePoint(terminal, { center, scaleFactor: scale }),
+      traceThickness: terminal.traceThickness * scale,
+    }))
     portfolioParams.obstacles = portfolioParams.obstacles?.map((obstacle) => ({
       ...obstacle,
       center: scalePoint(obstacle.center, { center, scaleFactor: scale }),

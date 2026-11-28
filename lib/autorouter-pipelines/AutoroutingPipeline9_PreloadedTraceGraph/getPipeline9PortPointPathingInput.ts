@@ -9,7 +9,7 @@ import type { HgPortPointPathingSolverParams } from "lib/solvers/PortPointPathin
 export function getPipeline9PortPointPathingInput(
   segmentPortPoints: SegmentPortPoint[],
   pipeline: AutoroutingPipelineSolver9_PreloadedTraceGraph,
-): HgPortPointPathingSolverParams & { captureSearchDebug: boolean } {
+): HgPortPointPathingSolverParams & { captureSearchDebug: boolean; minimumPortSpacing?: number } {
   const { graph, connections } = buildHyperGraph({
     capacityMeshNodes: pipeline.capacityNodes!,
     layerCount: pipeline.srj.layerCount,
@@ -23,7 +23,7 @@ export function getPipeline9PortPointPathingInput(
 
   reservePreloadedCopperPorts({
     graph,
-    srj: pipeline.srj,
+    srj: { ...pipeline.originalSrj, traces: pipeline.srj.traces },
     connMap: pipeline.connMap,
     traceWidth: pipeline.minTraceWidth,
     viaDiameter: pipeline.viaDiameter,
@@ -37,6 +37,8 @@ export function getPipeline9PortPointPathingInput(
     preserveTerminalPcbPortIds: true,
     captureSearchDebug: pipeline.opts.captureSearchDebug ?? false,
     minViaPadDiameter: pipeline.viaDiameter,
+    minimumPortSpacing: pipeline.minTraceWidth +
+        (pipeline.originalSrj.minTraceToPadEdgeClearance ?? pipeline.originalSrj.defaultObstacleMargin ?? 0.1),
     flags: {
       FORCE_CENTER_FIRST: true,
       RIPPING_ENABLED: true,

@@ -1,15 +1,18 @@
-import { pointToSegmentDistance } from "@tscircuit/math-utils"
+import { getBoundingBox, pointToSegmentDistance } from "@tscircuit/math-utils"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { FlatbushIndex } from "lib/data-structures/FlatbushIndex"
-import type { SimpleRouteJson } from "lib/types"
+import type { Obstacle, SimpleRouteJson } from "lib/types"
 import type { PortPoint } from "lib/types/high-density-types"
 import { RELAXED_DRC_OPTIONS } from "lib/utils/drcPresets"
 import { getSegmentCapsuleInterval } from "lib/utils/getSegmentCapsuleInterval"
+import { getSegmentObstacleClearanceInterval } from "lib/utils/getSegmentObstacleClearanceInterval"
+import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 import {
   convertPreloadedTraceToHdRoutes,
   type PreloadedHighDensityRoute,
 } from "./convertPreloadedTraceToHdRoutes"
-import { getPipeline9RouteCopperGeometry } from "./pipeline9FixedRouteCopper"
+import { arePipeline9RoutesOnSameNet, getPipeline9RouteCopperGeometry } from "./pipeline9FixedRouteCopper"
+import { isObstacleConnectedToRoute } from "lib/solvers/TraceWidthSolver/isObstacleConnectedToRoute"
 
 type Point = { x: number; y: number }
 type CopperPrimitive = {
@@ -27,9 +30,13 @@ export type PreloadedCopperInput = {
   traceWidth: number
   viaDiameter: number
 }
-type CopperSegment = { start: Point; end: Point; z: number }
+type CopperSegment = { start: Point; end: Point; z: number; connectionName?: string; rootConnectionName?: string }
 type CopperLookupContext = {
-  index: FlatbushIndex<CopperPrimitive>
+  index?: FlatbushIndex<CopperPrimitive>
+  connMap: ConnectivityMap
+  activeNets: Set<string>
+  padIndex?: FlatbushIndex<Obstacle>
+  layerCount: number
   traceWidth: number
   clearance: number
 }
@@ -110,12 +117,12 @@ function getCopperBlockers(
 ): PreloadedHighDensityRoute[] {
   let radius = traceWidth / 2
   if (includeClearance !== false) radius += clearance
-  const nearbyCopper = index.search(
+  const nearbyCopper = index?.search(
     point.x - radius,
     point.y - radius,
     point.x + radius,
     point.y + radius,
-  )
+  ) ?? []
   const blockers: PreloadedHighDensityRoute[] = []
   for (const primitive of nearbyCopper) {
     const isOnLayer = point.z >= primitive.minZ && point.z <= primitive.maxZ
@@ -131,19 +138,21 @@ function getCopperBlockers(
 }
 
 function getClearCopperSpans(
-  { start, end, z }: CopperSegment,
-  { index, traceWidth, clearance }: CopperLookupContext,
+  segment: CopperSegment,
+  { index, padIndex, layerCount, traceWidth, clearance, connMap, activeNets }: CopperLookupContext,
 ): Array<[number, number]> {
+  const { start, end, z } = segment
   const radius = traceWidth / 2 + clearance
-  const nearbyCopper = index.search(
+  const nearbyCopper = index?.search(
     Math.min(start.x, end.x) - radius,
     Math.min(start.y, end.y) - radius,
     Math.max(start.x, end.x) + radius,
     Math.max(start.y, end.y) + radius,
-  )
+  ) ?? []
   const intervals: Array<[number, number]> = []
   for (const primitive of nearbyCopper) {
     if (!primitive.route.isFixed) continue
+    if (segment.connectionName && arePipeline9RoutesOnSameNet({ left: { ...segment, connectionName: segment.connectionName }, right: primitive.route }, connMap)) continue
     if (z < primitive.minZ || z > primitive.maxZ) continue
     const interval = getSegmentCapsuleInterval({
       start,
@@ -153,6 +162,25 @@ function getClearCopperSpans(
       radius: primitive.radius + radius,
     })
     if (interval) intervals.push(interval)
+  }
+  if (padIndex) {
+    const layer = mapZToLayerName(z, layerCount)
+    const pads = padIndex.search(
+      Math.min(start.x, end.x) - radius, Math.min(start.y, end.y) - radius,
+      Math.max(start.x, end.x) + radius, Math.max(start.y, end.y) + radius,
+    )
+    for (const obstacle of pads) {
+      // Unassigned portals retain the native-pad policy. Saved copper already
+      // has an exact capsule index above; mesh approximation boxes are not pads.
+      if (!segment.connectionName && !obstacle.circuitJsonMetadata?.pcb_smtpad_id &&
+        !obstacle.circuitJsonMetadata?.pcb_plated_hole_id) continue
+      if (!obstacle.isNonPlatedHole && !obstacle.layers.includes(layer)) continue
+      if (segment.connectionName
+        ? isObstacleConnectedToRoute(obstacle, { ...segment, connectionName: segment.connectionName }, connMap)
+        : obstacle.connectedTo.some((id) => activeNets.has(connMap.getNetConnectedToId(id) ?? id))) continue
+      const interval = getSegmentObstacleClearanceInterval({ start, end, obstacle, margin: radius })
+      if (interval) intervals.push(interval)
+    }
   }
   intervals.sort((a, b) => a[0] - b[0])
   const clearSpans: Array<[number, number]> = []
@@ -170,15 +198,31 @@ export function createPreloadedCopperLookup(
   input: PreloadedCopperInput,
 ): PreloadedCopperLookup {
   const index = createPreloadedCopperIndex(input)
-  if (!index) {
-    return { getBlockers: () => [], getClearSpans: () => [[0, 1]] }
-  }
   const clearance =
     input.srj.minTraceToPadEdgeClearance ??
     input.srj.defaultObstacleMargin ??
     RELAXED_DRC_OPTIONS.traceClearance
+  const activeNets = new Set(
+    input.srj.connections.map(({ name }) =>
+      input.connMap.getNetConnectedToId(name) ?? name,
+    ),
+  )
+  const pads = input.srj.obstacles
+  let padIndex: FlatbushIndex<Obstacle> | undefined
+  if (pads.length > 0) {
+    padIndex = new FlatbushIndex(pads.length)
+    for (const pad of pads) {
+      const bounds = getBoundingBox(pad)
+      padIndex.insert(pad, bounds.minX, bounds.minY, bounds.maxX, bounds.maxY)
+    }
+    padIndex.finish()
+  }
   const context: CopperLookupContext = {
     index,
+    connMap: input.connMap,
+    activeNets,
+    padIndex,
+    layerCount: input.srj.layerCount,
     traceWidth: input.traceWidth,
     clearance,
   }

@@ -1,3 +1,4 @@
+import { createPreloadedCopperLookup } from "./createPreloadedCopperLookup"
 import { Pipeline9HighDensityForceImproveSolver } from "./Pipeline9HighDensityForceImproveSolver"
 import { createPreloadedPortValidator } from "./createPreloadedPortValidator"
 import { UniformPortDistributionSolver } from "lib/solvers/UniformPortDistributionSolver/UniformPortDistributionSolver"
@@ -19,31 +20,37 @@ export const pipeline9HighDensitySteps = [
   definePipeline9Step({
     solverName: "uniformPortDistributionSolver",
     solverClass: UniformPortDistributionSolver,
-    getConstructorParams: (pipeline) => [
-      {
-        nodeWithPortPoints:
-          pipeline.portPointPathingSolver?.getOutput().nodesWithPortPoints ??
-          [],
-        inputNodesWithPortPoints:
-          pipeline.portPointPathingSolver?.getOutput()
-            .inputNodeWithPortPoints ?? [],
+    getConstructorParams: (pipeline) => {
+      const fixedTraces = pipeline.originalSrj.traces?.filter((trace) => trace.isFixed)
+      const hasFixedCopper = Boolean(fixedTraces?.length)
+      const copperInput = {
+        srj: hasFixedCopper ? { ...pipeline.originalSrj, traces: fixedTraces } : pipeline.srj,
+        connMap: pipeline.connMap, traceWidth: pipeline.minTraceWidth, viaDiameter: pipeline.viaDiameter,
+      }
+      const { getClearSpans } = createPreloadedCopperLookup(copperInput)
+      return [{
+        nodeWithPortPoints: pipeline.portPointPathingSolver!.getOutput().nodesWithPortPoints,
+        inputNodesWithPortPoints: pipeline.portPointPathingSolver!.getOutput().inputNodeWithPortPoints,
         minTraceWidth: pipeline.minTraceWidth,
         obstacles: pipeline.srj.obstacles,
         layerCount: pipeline.srj.layerCount,
         useLayerAwareGeometry: pipeline.srj.layerCount > 2,
         preserveSolitaryPorts: Boolean(pipeline.srj.traces?.length),
-        isPortPointClear: createPreloadedPortValidator({
-          srj: pipeline.srj,
-          connMap: pipeline.connMap,
-          traceWidth: pipeline.minTraceWidth,
-          viaDiameter: pipeline.viaDiameter,
+        isPortPointClear: createPreloadedPortValidator(copperInput),
+        minimumPortSpacing: pipeline.minTraceWidth + (pipeline.originalSrj.minTraceToPadEdgeClearance ?? pipeline.originalSrj.defaultObstacleMargin ?? 0.1),
+        getPortPointClearSpans: (point, edge) => getClearSpans({
+          start: { x: edge.x1, y: edge.y1 }, end: { x: edge.x2, y: edge.y2 },
+          z: point.z, connectionName: point.connectionName, rootConnectionName: point.rootConnectionName,
         }),
-      },
-    ],
+      }]
+    },
   }),
   definePipeline9Step({
     solverName: "highDensityRouteSolver",
     solverClass: Pipeline9HighDensitySolver,
+    onSolved: (pipeline) => {
+      pipeline.highDensityNodePortPoints = pipeline.highDensityRouteSolver!.getUpdatedNodePortPoints()
+    },
     getConstructorParams: (pipeline) => {
       const portPointPathingSolver = pipeline.portPointPathingSolver
       if (!portPointPathingSolver) {
@@ -55,8 +62,7 @@ export const pipeline9HighDensitySteps = [
       const uniformNodes =
         pipeline.uniformPortDistributionSolver?.getOutput() ?? []
       const fallbackNodes = portPointPathingOutput.nodesWithPortPoints
-      const nodePortPointsSource =
-        uniformNodes.length > 0 ? uniformNodes : fallbackNodes
+      const nodePortPointsSource = uniformNodes.length > 0 ? uniformNodes : fallbackNodes
 
       pipeline.highDensityNodePortPoints = structuredClone(nodePortPointsSource)
       const originalFixedHdRoutes = getOriginalFixedHdRoutes(pipeline)
@@ -65,16 +71,8 @@ export const pipeline9HighDensitySteps = [
         fixedHdRoutes: originalFixedHdRoutes,
         sections: getChangedPreloadedTraceSections(pipeline),
       })
-      const hasImmutablePreloadedCopper = fixedHdRoutes.some(
-        (route) => route.isFixed === true,
-      )
-      let obstacleMargin = pipeline.srj.defaultObstacleMargin ?? 0.15
-      if (
-        hasImmutablePreloadedCopper &&
-        pipeline.srj.minTraceToPadEdgeClearance !== undefined
-      ) {
-        obstacleMargin = pipeline.srj.minTraceToPadEdgeClearance
-      }
+      const obstacleMargin = pipeline.srj.minTraceToPadEdgeClearance ??
+        pipeline.srj.defaultObstacleMargin ?? 0.1
 
       return [
         {
@@ -92,9 +90,11 @@ export const pipeline9HighDensitySteps = [
           fixedHdRoutes,
           connMap: pipeline.connMap,
           colorMap: pipeline.colorMap,
-          obstacles: pipeline.srj.obstacles,
+          obstacles: pipeline.originalSrj.traces?.some((trace) => trace.isFixed)
+            ? pipeline.originalSrj.obstacles : pipeline.srj.obstacles,
           layerCount: pipeline.srj.layerCount,
           allowBlindAndBuriedVias: pipeline.srj.allowBlindAndBuriedVias,
+          allowViaInPad: pipeline.srj.allowViaInPad,
           viaDiameter: pipeline.viaDiameter,
           viaHoleDiameter: pipeline.viaHoleDiameter,
           minViaHoleEdgeToViaHoleEdgeClearance:
@@ -117,11 +117,11 @@ export const pipeline9HighDensitySteps = [
     solverClass: Pipeline9HighDensityForceImproveSolver,
     getConstructorParams: (pipeline) => [
       {
-        inputSrj: pipeline.srj,
+        inputSrj: pipeline.originalSrj.traces?.some((trace) => trace.isFixed)
+          ? pipeline.originalSrj : pipeline.srj,
         nodeWithPortPoints: pipeline.highDensityNodePortPoints ?? [],
         fixedHdRoutes: pipeline
-          .highDensityRouteSolver!.getUpdatedFixedHdRoutes()
-          .filter((route) => route.isFixed === true),
+          .highDensityRouteSolver!.getUpdatedFixedHdRoutes(),
         hdRoutes: simplifyPipeline9CollinearRoutePoints(
           materializePipeline9HdRouteVias(
             pipeline.highDensityRouteSolver!.routes,
@@ -146,7 +146,10 @@ export const pipeline9HighDensitySteps = [
         hdRoutes:
           pipeline.highDensityForceImproveSolver?.getOutput() ??
           pipeline.highDensityRouteSolver!.routes,
-        obstacles: pipeline.srj.obstacles,
+        fixedHdRoutes: pipeline
+          .highDensityRouteSolver!.getUpdatedFixedHdRoutes(),
+        obstacles: pipeline.originalSrj.traces?.some((trace) => trace.isFixed)
+          ? pipeline.originalSrj.obstacles : pipeline.srj.obstacles,
         colorMap: pipeline.colorMap,
         repairMargin: pipeline.srj.defaultObstacleMargin ?? 0.2,
         minimumTraceWidth: pipeline.srj.minTraceWidth,
@@ -189,6 +192,7 @@ export const pipeline9HighDensitySteps = [
         colorMap: pipeline.colorMap,
         layerCount: pipeline.srj.layerCount,
         defaultViaDiameter: pipeline.viaDiameter,
+        allowBlindAndBuriedVias: pipeline.srj.allowBlindAndBuriedVias,
         preserveTerminalPcbPortIds: true,
         preferSameLayerTerminalEndpoints: true,
       },

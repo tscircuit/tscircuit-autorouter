@@ -50,6 +50,14 @@ export const getConnectivityMapFromSimpleRouteJson = (
           obstacle.obstacleId!,
           ...obstacle.connectedTo,
           ...offBoardConnections,
+          ...(!obstacle.representsFutureVia &&
+            !obstacle.isNonPlatedHole &&
+            (obstacle.circuitJsonMetadata?.pcb_via_id ||
+              obstacle.circuitJsonMetadata?.pcb_plated_hole_id)
+            ? obstacle.layers.map((layer) =>
+                `${pointHash(obstacle.center)}:${mapLayerNameToZ(layer, srj.layerCount)}`,
+              )
+            : []),
           `${pointHash(obstacle.center)}:${obstacle.layers
             .map((l) => mapLayerNameToZ(l, srj.layerCount))
             .sort()

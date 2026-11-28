@@ -100,6 +100,8 @@ export interface HgPortPointPathingSolverParams {
   effort: number
   preserveTerminalPcbPortIds?: boolean
   minViaPadDiameter?: number
+  /** Physical center spacing between boundary crossings, in board-world mm. */
+  minimumPortSpacing?: number
   flags: {
     FORCE_CENTER_FIRST: boolean
     RIPPING_ENABLED: boolean

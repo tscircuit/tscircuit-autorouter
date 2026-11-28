@@ -1,3 +1,5 @@
+import { getSrjWithFixedViaHandoffLayers } from "./getSrjWithFixedViaHandoffLayers"
+import { getFixedCopperObstacles } from "./getFixedCopperObstacles"
 import type { SimpleRouteJson } from "lib/types"
 import { addApproximatingRectsToSrj } from "lib/utils/addApproximatingRectsToSrj"
 import { createSrjWithBoardValidObstacleLayers } from "lib/utils/create-srj-with-board-valid-obstacle-layers"
@@ -25,7 +27,10 @@ export class PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver extends Prepro
     const { traces, ...inputSrjWithoutTraces } = this.inputSrj
     const srjWithBoardValidObstacleLayers =
       createSrjWithBoardValidObstacleLayers(
-        inputSrjWithoutTraces as SimpleRouteJson,
+        {
+          ...inputSrjWithoutTraces,
+          obstacles: [...inputSrjWithoutTraces.obstacles, ...getFixedCopperObstacles(this.inputSrj)],
+        } as SimpleRouteJson,
       )
     const srjWithApproximatingRects = addApproximatingRectsToSrj(
       filterObstaclesOutsideBoard(srjWithBoardValidObstacleLayers),
@@ -40,7 +45,9 @@ export class PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver extends Prepro
       return
     }
 
-    this.outputSrj = traces === undefined ? outputSrj : { ...outputSrj, traces }
+    this.outputSrj = getSrjWithFixedViaHandoffLayers(
+      traces === undefined ? outputSrj : { ...outputSrj, traces },
+    )
     this.solved = true
   }
 }

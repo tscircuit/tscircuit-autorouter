@@ -247,6 +247,7 @@ export const pipeline9TopologySteps = [
     getConstructorParams: (pipeline) => [
       pipeline.sharedEdgeSegmentsWithNecessaryCrampedPortPoints!,
       pipeline.srjWithPointPairs!,
+      pipeline.availableSegmentPointSolver!.unfilteredSharedEdgeSegments,
     ],
   }),
 ]

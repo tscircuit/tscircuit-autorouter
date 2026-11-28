@@ -1,3 +1,4 @@
+import { constrainPortPointsToClearSpans, type PortPointClearSpans } from "./constrainPortPointsToClearSpans"
 import { BaseSolver } from "@tscircuit/solver-utils"
 import { GraphicsObject } from "graphics-debug"
 import { Obstacle } from "lib/types"
@@ -28,6 +29,8 @@ export interface UniformPortDistributionSolverInput {
   inputNodesWithPortPoints: InputNodeWithPortPoints[]
   obstacles: Obstacle[]
   layerCount?: number
+  minimumPortSpacing?: number
+  getPortPointClearSpans?: PortPointClearSpans
   /** Redistribute using physical bounds and per-layer obstacles. */
   useLayerAwareGeometry?: boolean
   preserveSolitaryPorts?: boolean
@@ -57,6 +60,7 @@ export class UniformPortDistributionSolver extends BaseSolver {
   ownerPairsToProcess: OwnerPairKey[] = []
   currentOwnerPairBeingProcessed: OwnerPairKey | null = null
   redistributedNodes: NodeWithPortPoints[] = []
+  private readonly reservedPortPoints: NodeWithPortPoints["portPoints"] = []
   private readonly inputNodeById = new Map<
     CapacityMeshNodeId,
     InputNodeWithPortPoints
@@ -116,6 +120,13 @@ export class UniformPortDistributionSolver extends BaseSolver {
       }
     }
 
+    for (const points of this.mapOfOwnerPairToPortPoints.values()) {
+      for (const point of points) {
+        if (shouldIgnorePortPoint({ portPoint: point, ownerNodeIds: point.ownerNodeIds,
+          inputNodeById: this.inputNodeById })) this.reservedPortPoints.push(point)
+      }
+    }
+
     this.mapOfOwnerPairToSharedEdge = precomputeSharedEdges({
       ownerPairs: Array.from(uniqueOwnerPairs.values()),
       nodeBounds: this.mapOfNodeIdToBounds,
@@ -129,6 +140,20 @@ export class UniformPortDistributionSolver extends BaseSolver {
       const edgeB = this.mapOfOwnerPairToSharedEdge.get(b)!
       return edgeA.center.x - edgeB.center.x || edgeA.center.y - edgeB.center.y
     })
+  }
+
+  private isPortPointClear(
+    point: NodeWithPortPoints["portPoints"][number],
+    options?: { includeClearance?: boolean },
+  ): boolean {
+    if (this.input.isPortPointClear?.(point, options) === false) return false
+    const minimumSpacing = this.input.minimumPortSpacing ?? 0
+    if (minimumSpacing <= 0) return true
+    return this.reservedPortPoints.every((fixed) =>
+      fixed.z !== point.z || (fixed.rootConnectionName ?? fixed.connectionName) ===
+        (point.rootConnectionName ?? point.connectionName) ||
+      Math.hypot(fixed.x - point.x, fixed.y - point.y) >= minimumSpacing - 1e-9,
+    )
   }
 
   step(): void {
@@ -163,17 +188,17 @@ export class UniformPortDistributionSolver extends BaseSolver {
       if (
         this.input.preserveSolitaryPorts &&
         blockedOnAnotherLayer &&
-        portCountByLayer.get(portPoint.z) === 1
+        portCountByLayer.get(portPoint.z) === 1 && this.isPortPointClear(portPoint)
       ) {
         continue
       }
       if (
-        !shouldIgnoreSharedEdge({
+        (this.input.getPortPointClearSpans || !shouldIgnoreSharedEdge({
           sharedEdge,
           obstacles: this.input.obstacles,
           z: this.input.useLayerAwareGeometry ? portPoint.z : undefined,
           layerCount: this.input.layerCount,
-        }) &&
+        })) &&
         !shouldIgnorePortPoint({
           portPoint,
           ownerNodeIds: portPoint.ownerNodeIds,
@@ -184,14 +209,14 @@ export class UniformPortDistributionSolver extends BaseSolver {
       }
     }
 
-    const redistributed = redistributePortPointsOnSharedEdge({
+    let redistributed = redistributePortPointsOnSharedEdge({
       sharedEdge,
       portPoints: family,
     })
 
     // Preserve solitary crossings that avoid copper. Restore crowded layer
     // families only when every planned crossing satisfies clearance.
-    const isPortPointClear = this.input.isPortPointClear
+    const isPortPointClear = this.isPortPointClear.bind(this)
     if (isPortPointClear) {
       for (const z of portCountByLayer.keys()) {
         const layerFamily = redistributed.filter((point) => point.z === z)
@@ -219,7 +244,21 @@ export class UniformPortDistributionSolver extends BaseSolver {
         }
       }
     }
+    if (this.input.getPortPointClearSpans) {
+      redistributed = constrainPortPointsToClearSpans({ sharedEdge, portPoints: redistributed,
+        getClearSpans: this.input.getPortPointClearSpans,
+        minimumSpacing: this.input.minimumPortSpacing ?? 0,
+        fixedPortPoints: this.reservedPortPoints,
+      })
+    }
     this.mapOfOwnerPairToPortPoints.set(ownerPairKey, redistributed)
+    if (this.input.getPortPointClearSpans) {
+      // Later edges must also clear crossings already placed around a corner.
+      // Shared ports keep the same position in both neighboring cells.
+      const placed = new Map(familyRaw.map((point) => [point.portPointId, point]))
+      for (const point of redistributed) placed.set(point.portPointId, point)
+      this.reservedPortPoints.push(...placed.values())
+    }
   }
 
   rebuildNodes(): void {

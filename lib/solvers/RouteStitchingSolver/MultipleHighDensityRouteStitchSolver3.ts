@@ -1,9 +1,10 @@
+import { getPreloadedViaBridges } from "./getPreloadedViaBridges"
 import { distance, type Point3 } from "@tscircuit/math-utils"
 import { ConnectivityMap } from "connectivity-map"
 import { GraphicsObject } from "graphics-debug"
 import type { NetId, SimpleRouteConnection } from "lib/types"
 import { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
-import { getConnectionPointLayer } from "lib/types/srj-types"
+import { getConnectionPointLayer, getConnectionPointLayers } from "lib/types/srj-types"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 import { getJumpersGraphics } from "lib/utils/getJumperGraphics"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
@@ -13,6 +14,7 @@ import { RouteStitchClearanceValidator } from "./route-stitch-clearance-validato
 import { SingleHighDensityRouteStitchSolver3 } from "./SingleHighDensityRouteStitchSolver3"
 import {
   EndpointClusterIndex,
+  getTerminalPointOnRoutedLayer,
   hasStitchableGapBetweenUnsolvedRoutes,
   selectIslandEndpoints,
   selectRoutesAlongEndpointPath,
@@ -106,20 +108,19 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
 
   private getSharedRootPathRoutes(params: {
     connectionName: string
-    rootConnectionName?: string
+    connMap: ReturnType<typeof getConnectivityMapFromSimpleRouteJson>
     hdRoutes: HighDensityIntraNodeRoute[]
     allHdRoutes: HighDensityIntraNodeRoute[]
     start: Point3
     end: Point3
-  }) {
-    const rootConnectionName = params.rootConnectionName
-    if (!rootConnectionName) return null
-
+  }): HighDensityIntraNodeRoute[] | null {
     const currentRouteSet = new Set(params.hdRoutes)
+    // Routing stages may use different aliases for the same electrical net.
     const sameRootRoutes = params.allHdRoutes.filter(
-      (route) =>
-        (route.rootConnectionName ?? route.connectionName) ===
-        rootConnectionName,
+      (route) => params.connMap.areIdsConnected(
+        route.connectionName,
+        params.connectionName,
+      ),
     )
 
     if (sameRootRoutes.every((route) => currentRouteSet.has(route))) {
@@ -139,10 +140,15 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     const includesSharedRootBridge = pathRoutes.some(
       (route) => !currentRouteSet.has(route),
     )
-    // The endpoint path helper returns all candidate routes as a fallback when
-    // no path is found, so only accept a strict same-root subset.
-    if (!includesSharedRootBridge || pathRoutes.length >= sameRootRoutes.length)
-      return null
+    if (!includesSharedRootBridge) return null
+    // Selection may require every route in a small net. Validate the terminal
+    // path itself rather than rejecting it by the number of route fragments.
+    if (!this.canStitchBetweenTerminals({
+      connectionName: params.connectionName,
+      hdRoutes: pathRoutes,
+      start: params.start,
+      end: params.end,
+    })) return null
 
     return pathRoutes
   }
@@ -150,6 +156,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
   constructor(params: {
     connections: SimpleRouteConnection[]
     hdRoutes: HighDensityIntraNodeRoute[]
+    allowBlindAndBuriedVias?: boolean
     otherHdRoutes?: HighDensityIntraNodeRoute[]
     minClearance?: number
     colorMap?: Record<string, string>
@@ -190,10 +197,14 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       this.terminalPcbPortIdsByConnection.set(connection.name, terminalIds)
     }
 
-    const canonicalHdRoutes = [...params.hdRoutes].sort(compareRoutes)
+    const canonicalHdRoutes = [
+      ...params.hdRoutes,
+      ...getPreloadedViaBridges({ ...params, otherHdRoutes: params.otherHdRoutes ?? [], connMap }),
+    ].sort(compareRoutes)
     this.clearanceValidator = new RouteStitchClearanceValidator({
       hdRoutes: [...canonicalHdRoutes, ...(params.otherHdRoutes ?? [])],
       minClearance: params.minClearance,
+      connMap,
     })
 
     const firstRoute = canonicalHdRoutes[0]
@@ -276,8 +287,8 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
         continue
       }
 
-      let start: Point3
-      let end: Point3
+      let start: HighDensityIntraNodeRoute["route"][number]
+      let end: HighDensityIntraNodeRoute["route"][number]
 
       if (candidateEndpoints.length >= 2) {
         const globalStart = {
@@ -294,6 +305,13 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
             params.layerCount,
           ),
         }
+        const terminalGroups = connection.pointsToConnect.map((point) =>
+          getConnectionPointLayers(point).map((layer) => ({
+            ...point,
+            z: mapLayerNameToZ(layer, params.layerCount),
+          })),
+        )
+        const terminalPoints = terminalGroups.flat()
         ;({ start, end } = selectIslandEndpoints({
           possibleEndpoints: candidateEndpoints,
           globalStart,
@@ -307,18 +325,36 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
           ;[start, end] = [end, start]
         }
 
-        start = snapIslandEndpointToNearestTerminal({
+        const snappedStart = snapIslandEndpointToNearestTerminal({
           islandEndpoint: start,
-          terminals: [globalStart, globalEnd],
+          terminals: terminalPoints,
           preferSameLayerTerminalEndpoints:
             this.preferSameLayerTerminalEndpoints,
         })
-        end = snapIslandEndpointToNearestTerminal({
+        const snappedEnd = snapIslandEndpointToNearestTerminal({
           islandEndpoint: end,
-          terminals: [globalStart, globalEnd],
+          terminals: terminalPoints,
           preferSameLayerTerminalEndpoints:
             this.preferSameLayerTerminalEndpoints,
         })
+        const sharedTerminal = terminalGroups.find((group) =>
+          group.some((point) => point === snappedStart) &&
+          group.some((point) => point === snappedEnd),
+        )
+        if (sharedTerminal) {
+          const startIsCloser = distance(start, snappedStart) <= distance(end, snappedEnd)
+          const terminals = terminalPoints.filter((point) => !sharedTerminal.includes(point))
+          const other = snapIslandEndpointToNearestTerminal({
+            islandEndpoint: startIsCloser ? end : start,
+            terminals,
+            preferSameLayerTerminalEndpoints: this.preferSameLayerTerminalEndpoints,
+          })
+          start = startIsCloser ? snappedStart : other
+          end = startIsCloser ? other : snappedEnd
+        } else {
+          start = snappedStart
+          end = snappedEnd
+        }
       } else {
         start = {
           ...connection.pointsToConnect[0],
@@ -383,37 +419,32 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
 
       if (!connection) return unsolvedRoutes
 
-      const start = {
-        ...connection.pointsToConnect[0],
-        z: mapLayerNameToZ(
-          getConnectionPointLayer(connection.pointsToConnect[0]),
-          params.layerCount,
-        ),
-      }
-      const end = {
-        ...connection.pointsToConnect[1],
-        z: mapLayerNameToZ(
-          getConnectionPointLayer(connection.pointsToConnect[1]),
-          params.layerCount,
-        ),
-      }
+      const netRoutes = canonicalHdRoutes.filter((route) =>
+        connMap.areIdsConnected(route.connectionName, connectionName),
+      )
+      const start = getTerminalPointOnRoutedLayer({
+        point: connection.pointsToConnect[0],
+        hdRoutes: netRoutes,
+        layerCount: params.layerCount,
+      })
+      const end = getTerminalPointOnRoutedLayer({
+        point: connection.pointsToConnect[1],
+        hdRoutes: netRoutes,
+        layerCount: params.layerCount,
+      })
 
       const hdRoutes = unsolvedRoutes.flatMap(
         (unsolvedRoute) => unsolvedRoute.hdRoutes,
       )
       const sharedRootPathRoutes =
-        unsolvedRoutes.length > 1
-          ? this.getSharedRootPathRoutes({
+          this.getSharedRootPathRoutes({
               connectionName,
-              rootConnectionName:
-                connection.__rootConnectionNames?.[0] ??
-                hdRoutes[0]?.rootConnectionName,
+              connMap,
               hdRoutes,
               allHdRoutes: canonicalHdRoutes,
               start,
               end,
             })
-          : null
 
       if (!hasDegenerateRoute && !hasStitchableGap && !sharedRootPathRoutes) {
         return unsolvedRoutes

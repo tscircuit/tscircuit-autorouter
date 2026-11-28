@@ -1,3 +1,4 @@
+import { getFixedCopperObstacles } from "./getFixedCopperObstacles"
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import type { Pipeline9EffortCleanupSolver } from "./Pipeline9EffortCleanupSolver"
 import type { RectDiffPipeline } from "@tscircuit/rectdiff"
@@ -553,7 +554,10 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       originalConnections: this.originalSrj.connections,
       hdRoutes: canonicalizePipeline9HdRoutes(this._getOutputHdRoutes()),
       layerCount: this.srj.layerCount,
-      obstacles: this.srj.obstacles,
+      obstacles: [
+        ...this.originalSrj.obstacles,
+        ...getFixedCopperObstacles({ ...this.originalSrj, traces: this.getUpdatedPreloadedTraces() }),
+      ],
       defaultViaHoleDiameter: this.viaHoleDiameter,
       connMap: this.connMap,
     })

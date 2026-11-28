@@ -261,8 +261,10 @@ export const createRegionalFallbackProblem = (
         a.sourceRoute.preloadedRouteIndex - b.sourceRoute.preloadedRouteIndex,
     )
   const movableFixedRoutes = new Set(slices.map((slice) => slice.sourceRoute))
-  const fixedObstacleRoutes = localSlices
-    .map((slice) => slice.sourceRoute)
+  const hasImmutablePreload = fixedRoutes.some((route) => route.isFixed === true)
+  const fixedObstacleRoutes = (hasImmutablePreload
+    ? fixedRoutes
+    : localSlices.map((slice) => slice.sourceRoute))
     .filter((route) => !movableFixedRoutes.has(route))
   const sections: FixedRouteSection[] = []
 
@@ -311,6 +313,36 @@ export const createRegionalFallbackProblem = (
     fallbackPortPairs.push(createFallbackPortPair(section))
   }
 
+  if (hasImmutablePreload) {
+    // Only the cut section moves. Keep its unchanged prefix and suffix in
+    // the regional solver's physical copper context.
+    const replacedRoutes = new Set([...fixedRouteSectionsByConnectionName.values()]
+      .flatMap((section) => section.sourceRoutes))
+    for (const slice of slices) {
+      if (!replacedRoutes.has(slice.sourceRoute)) continue
+      const source = slice.sourceRoute
+      const prefix = source.route.slice(0, slice.start.segmentIndex + 1)
+      const suffix = source.route.slice(slice.end.segmentIndex + 1)
+      const startWidth = Math.max(
+        source.route[slice.start.segmentIndex]!.traceThickness ?? source.traceThickness,
+        source.route[slice.start.segmentIndex + 1]!.traceThickness ?? source.traceThickness,
+      )
+      const endWidth = Math.max(
+        source.route[slice.end.segmentIndex]!.traceThickness ?? source.traceThickness,
+        source.route[slice.end.segmentIndex + 1]!.traceThickness ?? source.traceThickness,
+      )
+      if (!prefix.length || !pointsAreEqual(prefix.at(-1)!, slice.start.point))
+        prefix.push({ ...slice.start.point, traceThickness: startWidth })
+      if (!suffix.length || !pointsAreEqual(suffix[0]!, slice.end.point))
+        suffix.unshift({ ...slice.end.point, traceThickness: endWidth })
+      for (const points of [prefix, suffix]) {
+        if (points.length < 2) continue
+        fixedObstacleRoutes.push({ ...source, route: points, vias: getViasFromRoutePoints(points) })
+      }
+    }
+
+  }
+
   return {
     nodeWithPortPoints: {
       ...node,
@@ -340,6 +372,10 @@ const orientReplacementPoints = (
       `Pipeline9 regional fallback produced an empty replacement for "${section.sourceRoutes[0]!.connectionName}"`,
     )
   }
+
+  // A pure barrel's anchors share XY; their layers determine orientation.
+  if (pointsAreEqual(last, section.start.point) &&
+    pointsAreEqual(first, section.end.point)) return [...points].reverse()
 
   const forwardDistance =
     Math.hypot(
@@ -414,7 +450,17 @@ export const spliceFixedRouteSectionWithMutationMask = ({
   }
   const firstSourceRoute = section.sourceRoutes[0]!
   const lastSourceRoute = section.sourceRoutes.at(-1)!
+  const defaultTraceThickness = Math.max(...section.sourceRoutes.map((route) => route.traceThickness))
+  const withWidth = (point: RoutePoint, traceThickness: number): RoutePoint => {
+    if (point.traceThickness !== undefined || traceThickness === defaultTraceThickness) {
+      return point
+    }
+    return { ...point, traceThickness }
+  }
   const replacementPoints = orientReplacementPoints(replacement, section)
+    .map((point) => withWidth(point, replacement.traceThickness))
+  const firstSourcePoints = firstSourceRoute.route.map((point) => withWidth(point, firstSourceRoute.traceThickness))
+  const lastSourcePoints = lastSourceRoute.route.map((point) => withWidth(point, lastSourceRoute.traceThickness))
   const route: RoutePoint[] = []
   const mutatedSegments: boolean[] = []
 
@@ -438,7 +484,7 @@ export const spliceFixedRouteSectionWithMutationMask = ({
       return
     }
     const sameXY = previousPoint.x === point.x && previousPoint.y === point.y
-    if (sameXY && previousPoint.z === point.z) return
+    if (sameXY && previousPoint.z === point.z && (previousPoint.traceThickness ?? defaultTraceThickness) === (point.traceThickness ?? defaultTraceThickness)) return
     if (previousPoint.z !== point.z && !sameXY) {
       const impliedTransitionPoint = { ...point, z: previousPoint.z }
       route.push(impliedTransitionPoint)
@@ -448,26 +494,36 @@ export const spliceFixedRouteSectionWithMutationMask = ({
     mutatedSegments.push(mutated)
   }
 
-  appendPoint(firstSourceRoute.route[0]!, false)
+  appendPoint(firstSourcePoints[0]!, false)
   for (
     let pointIndex = 1;
     pointIndex <= section.start.segmentIndex;
     pointIndex++
   ) {
     appendPoint(
-      firstSourceRoute.route[pointIndex]!,
+      firstSourcePoints[pointIndex]!,
       getSourceSegmentMutation(firstSourceRoute, pointIndex - 1),
     )
   }
   appendPoint(
-    section.start.point,
+    withWidth(section.start.point, Math.max(
+      firstSourceRoute.route[section.start.segmentIndex]!.traceThickness ?? firstSourceRoute.traceThickness,
+      firstSourceRoute.route[section.start.segmentIndex + 1]!.traceThickness ?? firstSourceRoute.traceThickness,
+    )),
     getSourceSegmentMutation(firstSourceRoute, section.start.segmentIndex),
   )
   const segmentCountBeforeReplacement = mutatedSegments.length
+  appendPoint(replacementPoints[0]!, replacementIsMutated)
   for (const replacementPoint of replacementPoints.slice(1, -1)) {
     appendPoint(replacementPoint, replacementIsMutated)
   }
-  appendPoint(section.end.point, replacementIsMutated)
+  appendPoint(replacementPoints.at(-1)!, replacementIsMutated)
+  appendPoint(withWidth(section.end.point, Math.max(
+    lastSourceRoute.route[section.end.segmentIndex]!.traceThickness ?? lastSourceRoute.traceThickness,
+    lastSourceRoute.route[section.end.segmentIndex + 1]!.traceThickness ?? lastSourceRoute.traceThickness,
+  )),
+    getSourceSegmentMutation(lastSourceRoute, section.end.segmentIndex),
+  )
   const replacementProducedSegment =
     mutatedSegments.length > segmentCountBeforeReplacement
   for (
@@ -476,10 +532,15 @@ export const spliceFixedRouteSectionWithMutationMask = ({
     pointIndex++
   ) {
     appendPoint(
-      lastSourceRoute.route[pointIndex]!,
+      lastSourcePoints[pointIndex]!,
       getSourceSegmentMutation(lastSourceRoute, pointIndex - 1),
     )
   }
+
+  // Coincident replacement points may collapse during splicing. Preserve
+  // the original physical endpoints and their source metadata.
+  route[0] = firstSourcePoints[0]!
+  route[route.length - 1] = lastSourcePoints.at(-1)!
 
   if (mutatedSegments.length !== route.length - 1) {
     throw new Error(

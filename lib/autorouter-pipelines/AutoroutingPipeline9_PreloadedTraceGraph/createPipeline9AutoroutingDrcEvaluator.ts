@@ -3,6 +3,7 @@ import {
   type CircuitJsonConnectivityMaps,
   convertToCircuitJson,
   createPcbBoardElement,
+  getCircuitJsonSourceTraceId,
 } from "lib/utils/convertToCircuitJson"
 import type {
   GetDrcErrorsOptions,
@@ -95,6 +96,9 @@ export const createPipeline9AutoroutingDrcEvaluator = ({
     traceClearance: drcOptions.traceClearance,
     viaClearance: drcOptions.viaToPadClearance,
   })
+  const sourceTraceIdsToComplete = new Set(
+    inputSrj.connections.map(getCircuitJsonSourceTraceId),
+  )
   const evaluate = (
     routedTraces: SimplifiedPcbTrace[],
     options: { includeTraceContinuity?: boolean } = {},
@@ -119,7 +123,7 @@ export const createPipeline9AutoroutingDrcEvaluator = ({
       ...((options.includeTraceContinuity ??
         drcOptions.includeTraceContinuity) === false
         ? []
-        : checkTraceContinuity(circuitJson)),
+        : checkTraceContinuity(circuitJson, { sourceTraceIdsToComplete })),
       ...(drcOptions.includeTypedTraceClearance === false
         ? []
         : [...obstacleErrors.viaErrors, ...obstacleErrors.padErrors]),

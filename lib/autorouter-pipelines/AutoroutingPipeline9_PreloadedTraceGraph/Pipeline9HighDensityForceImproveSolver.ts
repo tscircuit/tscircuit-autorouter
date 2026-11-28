@@ -1,7 +1,10 @@
+import { getViaDimensions } from "lib/utils/getViaDimensions"
+import { createIntraNodeRouteValidator } from "lib/solvers/HyperHighDensitySolver/createIntraNodeRouteValidator"
 import { createFixedObstacleViolationEvaluator } from "@tscircuit/repair04"
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import { HighDensityForceImproveSolver } from "high-density-repair01/lib/HighDensityForceImproveSolver"
 import type { SimpleRouteJson } from "lib/types"
+import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 import { convertToCircuitJson } from "lib/utils/convertToCircuitJson"
 import { RELAXED_DRC_OPTIONS } from "lib/utils/drcPresets"
 import { getViaToPadClearance } from "lib/utils/getViaToPadClearance"
@@ -20,6 +23,7 @@ type ForceImproveConstructorParams = ReturnType<
 type ViaClearanceViolationKey = string
 
 export class Pipeline9HighDensityForceImproveSolver extends HighDensityForceImproveSolver {
+  private readonly validateBoardRoutes?: ReturnType<typeof createIntraNodeRouteValidator>
   private asyncRunning = false
   private completedSample?: Pipeline9HighDensityForceImproveSampleOutput
   private readonly inputSrj: SimpleRouteJson
@@ -31,6 +35,18 @@ export class Pipeline9HighDensityForceImproveSolver extends HighDensityForceImpr
   constructor(params: ForceImproveParams) {
     super(params)
     this.inputSrj = params.inputSrj
+    if (params.inputSrj.obstacles.length > 0 || params.inputSrj.traces?.some((trace) => trace.isFixed)) {
+      this.validateBoardRoutes = createIntraNodeRouteValidator({
+        fixedHdRoutes: params.fixedHdRoutes ?? [],
+        viaHoleDiameter: getViaDimensions(params.inputSrj).holeDiameter,
+        obstacles: params.inputSrj.obstacles,
+        connMap: getConnectivityMapFromSimpleRouteJson(params.inputSrj),
+        layerCount: params.inputSrj.layerCount,
+        clearance: params.inputSrj.minTraceToPadEdgeClearance ?? params.inputSrj.defaultObstacleMargin ?? 0.1,
+        allowViaInPad: params.inputSrj.allowViaInPad,
+        allowBlindAndBuriedVias: params.inputSrj.allowBlindAndBuriedVias,
+      })
+    }
     const representedPadObstacleIndexes = new Set<number>()
     convertToCircuitJson(params.inputSrj, [], {
       originalSrj: params.inputSrj,
@@ -78,7 +94,7 @@ export class Pipeline9HighDensityForceImproveSolver extends HighDensityForceImpr
   }
 
   private validateImprovedSample(routeIndexes: number[]): void {
-    if (this.fixedViaObstacleIndexes.size === 0) return
+    if (!this.validateBoardRoutes && this.fixedViaObstacleIndexes.size === 0) return
     const originalRoutes = routeIndexes.map(
       (routeIndex) => this.originalHdRoutes[routeIndex],
     )
@@ -97,7 +113,9 @@ export class Pipeline9HighDensityForceImproveSolver extends HighDensityForceImpr
         )
         .map((violation) => [violation.key, violation.severity]),
     )
-    const worsensViaClearance = this.evaluateFixedObstacles(
+    const worsensViaClearance = this.validateBoardRoutes
+      ? !this.validateBoardRoutes(candidateRoutes)
+      : this.evaluateFixedObstacles(
       candidateRoutes,
     ).some(
       (violation) =>

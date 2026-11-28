@@ -1,3 +1,4 @@
+import type { ReservedRoutingTerminal } from "../HyperHighDensitySolver/createIntraNodeSegmentValidator"
 import { isExistingMultilayerObstacle } from "lib/utils/isExistingMultilayerObstacle"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
@@ -240,6 +241,7 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
     nodeWithPortPoints: NodeWithPortPoints[]
     hdRoutes: HighDensityRoute[]
     fixedHdRoutes?: HighDensityRoute[]
+    reservedTerminals?: readonly ReservedRoutingTerminal[]
     obstacles: Obstacle[]
     repairMargin?: number
     minimumTraceWidth?: number
@@ -397,7 +399,7 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
               .search(bounds.minX, bounds.minY, bounds.maxX, bounds.maxY)
               .filter(({ routeIndex }) => !ownedIndexes.has(routeIndex))
               .map(({ routeIndex }) => repairRoutes[routeIndex]),
-            clearanceObstacles: layeredObstacles
+            clearanceObstacles: [...layeredObstacles
               .filter((obstacle) =>
                 doesRectOverlap(bounds, getObstacleBounds(obstacle)),
               )
@@ -418,6 +420,24 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
                   ),
                 ],
               })),
+              ...(params.reservedTerminals ?? [])
+                .filter((terminal) =>
+                  terminal.x + terminal.traceThickness / 2 >= bounds.minX &&
+                  terminal.x - terminal.traceThickness / 2 <= bounds.maxX &&
+                  terminal.y + terminal.traceThickness / 2 >= bounds.minY &&
+                  terminal.y - terminal.traceThickness / 2 <= bounds.maxY,
+                )
+                .map((terminal) => ({
+                  type: "routing_terminal",
+                  shape: "circle" as const,
+                  center: { x: terminal.x, y: terminal.y },
+                  width: terminal.traceThickness,
+                  height: terminal.traceThickness,
+                  zLayers: [terminal.z],
+                  connectedTo: [params.connMap?.getNetConnectedToId(terminal.connectionName) ??
+                    terminal.rootConnectionName ?? terminal.connectionName],
+                })),
+            ],
             adjacentObstacles: getAdjacentObstacles(
               node,
               this.obstacleSHI,

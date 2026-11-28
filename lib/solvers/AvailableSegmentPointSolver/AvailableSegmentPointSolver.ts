@@ -93,6 +93,7 @@ export class AvailableSegmentPointSolver extends BaseSolver {
 
   /** All shared edge segments with their port points */
   sharedEdgeSegments: SharedEdgeSegment[] = []
+  unfilteredSharedEdgeSegments: SharedEdgeSegment[] = []
 
   /** Map from edgeId to SharedEdgeSegment for quick lookup */
   edgeSegmentMap: Map<string, SharedEdgeSegment> = new Map()
@@ -144,6 +145,7 @@ export class AvailableSegmentPointSolver extends BaseSolver {
 
   _step() {
     this.computeAllSharedEdgeSegments()
+    this.unfilteredSharedEdgeSegments = this.sharedEdgeSegments
     if (this.connections) {
       this.sharedEdgeSegments = retainActiveNumericalGapSegments({
         segments: this.sharedEdgeSegments,

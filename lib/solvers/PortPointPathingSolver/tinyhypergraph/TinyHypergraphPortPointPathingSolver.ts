@@ -39,7 +39,9 @@ import type {
   HgPortPointPathingSolverParams,
 } from "../hgportpointpathingsolver/types"
 import { createTinyRouteNetIndexer } from "./createTinyRouteNetIndexer"
+import { getPhysicalPortConflicts } from "./getPhysicalPortConflicts"
 import { getRegionNetIdByRegionId } from "./getRegionNetIdByRegionId"
+import { selectConnectionPointRegion } from "../hgportpointpathingsolver/select-connection-point-region"
 import { SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments } from "tiny-hypergraph/lib/prepared/SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments"
 import {
   getSerializedPreloadedTraceStats,
@@ -627,6 +629,55 @@ const buildSerializedTinyGraph = (
     startRegion?.pointIds.push(startTerminalPortId)
     endRegion?.pointIds.push(endTerminalPortId)
 
+    for (const endpoint of [
+      { point: startPoint, region: startRegion, terminalRegionId: startTerminalRegionId, terminalPortId: startTerminalPortId, z: startZ, side: "start" },
+      { point: endPoint, region: endRegion, terminalRegionId: endTerminalRegionId, terminalPortId: endTerminalPortId, z: endZ, side: "end" },
+    ]) {
+      if (!endpoint.point || !endpoint.region) continue
+      const layers = [...new Set(getConnectionPointLayers(endpoint.point))]
+      if (layers.length < 2) continue
+      const layerRegions = layers.flatMap((layer) => {
+        const region = selectConnectionPointRegion({
+          graph: params.graph,
+          point: { x: endpoint.point!.x, y: endpoint.point!.y, layer },
+          layerCount: params.layerCount,
+        })
+        const serializedRegion = region && serializedRegionById.get(region.regionId)
+        return serializedRegion ? [{ region: serializedRegion, z: mapLayerNameToZ(layer, params.layerCount) }] : []
+      })
+      const availableZ = layerRegions.map(({ z }) => z)
+      if (availableZ.length < 2) continue
+      const terminalRegion = regions.find((region) => region.regionId === endpoint.terminalRegionId)
+      const terminalPort = ports.find((port) => port.portId === endpoint.terminalPortId)
+      if (!terminalRegion || !terminalPort) throw new Error("Missing multilayer terminal topology")
+      const anchorRegionId = `${endpoint.terminalRegionId}:anchor`
+      regions.push({
+        ...terminalRegion,
+        regionId: anchorRegionId,
+        pointIds: [endpoint.terminalPortId],
+        d: { ...terminalRegion.d, capacityMeshNodeId: anchorRegionId },
+      })
+      terminalRegion.d = { ...terminalRegion.d, availableZ }
+      terminalPort.region1Id = endpoint.terminalRegionId
+      terminalPort.region2Id = anchorRegionId
+      endpoint.region.pointIds = endpoint.region.pointIds.filter((id) => id !== endpoint.terminalPortId)
+      for (const { z, region } of layerRegions) {
+        const portId = `${endpoint.terminalPortId}:z${z}`
+        ports.push({
+          portId,
+          region1Id: region.regionId,
+          region2Id: endpoint.terminalRegionId,
+          d: { ...terminalPort.d, portId, z },
+        })
+        region.pointIds.push(portId)
+        terminalRegion.pointIds.push(portId)
+      }
+      const serializedConnection = connections.find((candidate) => candidate.connectionId === connection.connectionId)
+      if (!serializedConnection) throw new Error("Missing multilayer terminal connection")
+      if (endpoint.side === "start") serializedConnection.startRegionId = endpoint.terminalRegionId
+      else serializedConnection.endRegionId = endpoint.terminalRegionId
+    }
+
     solvedRoutes.push({
       connection: {
         connectionId: connection.connectionId,
@@ -956,6 +1007,7 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
     inputProblem: TinyHyperGraphSectionPipelineInput,
     useSelectiveReripRouting: boolean,
     usePreparedPortPointRouting = false,
+    private readonly minimumPortSpacing?: number,
   ) {
     super(inputProblem)
     this.useSelectiveReripRouting = useSelectiveReripRouting
@@ -983,6 +1035,9 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
 
   override loadHyperGraph(serializedHyperGraph: SerializedHyperGraph) {
     const loaded = super.loadHyperGraph(serializedHyperGraph)
+    if (this.minimumPortSpacing !== undefined) {
+      loaded.problem.portConflicts = getPhysicalPortConflicts(loaded.topology, this.minimumPortSpacing)
+    }
     restorePreloadedTraceSectionMetadata(
       loaded,
       this.inputProblem.serializedHyperGraph,
@@ -1222,6 +1277,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         tinyPipelineInput,
         params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
         params.flags.USE_PREPARED_PORT_POINT_ROUTING === true,
+        params.minimumPortSpacing,
       )
     this.primaryTinyPipelineSolver = this.tinyPipelineSolver
     if (
@@ -1573,6 +1629,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
             this.alternativeTinyPipelineInput!,
             this.params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
             this.params.flags.USE_PREPARED_PORT_POINT_ROUTING === true,
+            this.params.minimumPortSpacing,
           )
         this.tinyPipelineSolver = this.alternativeTinyPipelineSolver
         this.candidatePortfolioPhase = "alternative"
