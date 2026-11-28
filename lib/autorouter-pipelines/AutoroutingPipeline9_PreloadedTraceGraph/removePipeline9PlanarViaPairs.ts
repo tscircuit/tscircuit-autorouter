@@ -104,7 +104,7 @@ export function removePipeline9PlanarViaPairs({
 }: {
   srj: SimpleRouteJson
   routes: HighDensityRoute[]
-  fixedRoutes: HighDensityRoute[]
+  fixedRoutes: readonly HighDensityRoute[]
   targetViaCount: number
   viaHoleDiameter: number
   isValid: (routes: HighDensityRoute[]) => boolean
