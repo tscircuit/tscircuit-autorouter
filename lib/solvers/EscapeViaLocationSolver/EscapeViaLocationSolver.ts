@@ -1,3 +1,4 @@
+import { isViaInKeepout } from "lib/utils/isViaInKeepout"
 import {
   distance,
   doSegmentsIntersect,
@@ -758,6 +759,19 @@ export class EscapeViaLocationSolver extends BaseSolver {
 
       for (const candidate of candidates) {
         if (!this.isInsideBoard(candidate)) continue
+        if (
+          isViaInKeepout(
+            candidate,
+            this.viaDiameter,
+            this.ogSrj.viaKeepouts ?? [],
+            this.ogSrj.layerCount,
+            this.ogSrj.allowBlindAndBuriedVias ? Math.min(sourceZ, targetZ) : 0,
+            this.ogSrj.allowBlindAndBuriedVias
+              ? Math.max(sourceZ, targetZ)
+              : this.ogSrj.layerCount - 1,
+          )
+        )
+          continue
         if (!isPointInRect(candidate, copperPour)) continue
         if (
           !this.hasClearEscapePath({

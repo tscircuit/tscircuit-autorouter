@@ -95,6 +95,9 @@ export const pipeline9HighDensitySteps = [
           obstacles: pipeline.srj.obstacles,
           layerCount: pipeline.srj.layerCount,
           allowBlindAndBuriedVias: pipeline.srj.allowBlindAndBuriedVias,
+          preserveNodeLayerConstraints: Boolean(
+            pipeline.srj.viaKeepouts?.length,
+          ),
           viaDiameter: pipeline.viaDiameter,
           viaHoleDiameter: pipeline.viaHoleDiameter,
           minViaHoleEdgeToViaHoleEdgeClearance:

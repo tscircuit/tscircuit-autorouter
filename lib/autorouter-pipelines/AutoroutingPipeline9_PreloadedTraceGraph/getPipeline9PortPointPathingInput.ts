@@ -35,6 +35,7 @@ export function getPipeline9PortPointPathingInput(
     layerCount: pipeline.srj.layerCount,
     effort: Math.min(1, pipeline.effort),
     preserveTerminalPcbPortIds: true,
+    preserveMultilayerTerminalAccess: Boolean(pipeline.srj.viaKeepouts?.length),
     captureSearchDebug: pipeline.opts.captureSearchDebug ?? false,
     minViaPadDiameter: pipeline.viaDiameter,
     flags: {
