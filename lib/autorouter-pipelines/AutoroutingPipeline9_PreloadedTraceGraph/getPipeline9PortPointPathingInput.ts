@@ -1,4 +1,5 @@
 import { buildHyperGraph } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver"
+import { getAllowedZByConnectionName } from "./getAllowedZByConnectionName"
 import { reservePreloadedCopperPorts } from "./reservePreloadedCopperPorts"
 import { getExistingViaInPadByPcbPortId } from "lib/utils/getExistingViaInPadByPcbPortId"
 import type { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "./AutoroutingPipelineSolver9_PreloadedTraceGraph"
@@ -10,12 +11,43 @@ export function getPipeline9PortPointPathingInput(
   segmentPortPoints: SegmentPortPoint[],
   pipeline: AutoroutingPipelineSolver9_PreloadedTraceGraph,
 ): HgPortPointPathingSolverParams & { captureSearchDebug: boolean } {
+  const pointPairConnections = pipeline.srjWithPointPairs!.connections
+  const allowedZByConnectionName = getAllowedZByConnectionName(
+    pipeline.originalSrj,
+    pointPairConnections,
+  )
+  const everyConnectionRestricted =
+    pointPairConnections.length > 0 &&
+    pointPairConnections.every((conn) =>
+      allowedZByConnectionName.has(conn.name),
+    )
+  const unionAllowedZ = everyConnectionRestricted
+    ? new Set(
+        pointPairConnections.flatMap((conn) => [
+          ...(allowedZByConnectionName.get(conn.name) ?? []),
+        ]),
+      )
+    : undefined
+  const filteredSegmentPortPoints = unionAllowedZ
+    ? segmentPortPoints.flatMap((spp) => {
+        const availableZ = spp.availableZ.filter((z) => unionAllowedZ.has(z))
+        return availableZ.length > 0 ? [{ ...spp, availableZ }] : []
+      })
+    : segmentPortPoints
+  const filteredCapacityNodes =
+    unionAllowedZ?.size === 1
+      ? pipeline.capacityNodes!.map((node) => {
+          const availableZ = node.availableZ.filter((z) => unionAllowedZ.has(z))
+          return availableZ.length > 0 ? { ...node, availableZ } : node
+        })
+      : pipeline.capacityNodes!
+
   const { graph, connections } = buildHyperGraph({
-    capacityMeshNodes: pipeline.capacityNodes!,
+    capacityMeshNodes: filteredCapacityNodes,
     layerCount: pipeline.srj.layerCount,
     connectivityMap: pipeline.connMap,
-    segmentPortPoints,
-    simpleRouteJsonConnections: pipeline.srjWithPointPairs!.connections,
+    segmentPortPoints: filteredSegmentPortPoints,
+    simpleRouteJsonConnections: pointPairConnections,
     existingViaInPadByPcbPortId: getExistingViaInPadByPcbPortId(
       pipeline.srjWithPointPairs!,
     ),
@@ -37,6 +69,7 @@ export function getPipeline9PortPointPathingInput(
     preserveTerminalPcbPortIds: true,
     captureSearchDebug: pipeline.opts.captureSearchDebug ?? false,
     minViaPadDiameter: pipeline.viaDiameter,
+    ...(allowedZByConnectionName.size > 0 ? { allowedZByConnectionName } : {}),
     flags: {
       FORCE_CENTER_FIRST: true,
       RIPPING_ENABLED: true,

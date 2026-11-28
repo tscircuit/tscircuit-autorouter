@@ -39,6 +39,10 @@ import type {
   HgPortPointPathingSolverParams,
 } from "../hgportpointpathingsolver/types"
 import { createTinyRouteNetIndexer } from "./createTinyRouteNetIndexer"
+import {
+  applyActiveRouteLayerMask,
+  type RouteLayerMaskState,
+} from "./applyActiveRouteLayerMask"
 import { getRegionNetIdByRegionId } from "./getRegionNetIdByRegionId"
 import { SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments } from "tiny-hypergraph/lib/prepared/SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments"
 import {
@@ -944,6 +948,7 @@ const applyMetadataPortPenalties = (loaded: LoadedTinyGraph) => {
 
 class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSectionPipelineSolver {
   private configuredSolvers = new WeakSet<BaseSolver>()
+  private readonly routeLayerMaskState: RouteLayerMaskState
   duplicatePortPenaltyCount = 0
   metadataPortPenaltyCount = 0
   crampedPortPenaltyCount = 0
@@ -954,11 +959,24 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
 
   constructor(
     inputProblem: TinyHyperGraphSectionPipelineInput,
-    useSelectiveReripRouting: boolean,
-    usePreparedPortPointRouting = false,
+    options: {
+      useSelectiveReripRouting: boolean
+      usePreparedPortPointRouting?: boolean
+      allowedZByConnectionName?: ReadonlyMap<string, ReadonlySet<number>>
+    },
   ) {
     super(inputProblem)
+    const {
+      useSelectiveReripRouting,
+      usePreparedPortPointRouting = false,
+      allowedZByConnectionName,
+    } = options
     this.useSelectiveReripRouting = useSelectiveReripRouting
+    this.routeLayerMaskState = {
+      allowedZByConnectionName,
+      baseReservationBySolver: new WeakMap(),
+      lastMaskedRouteIdBySolver: new WeakMap(),
+    }
     this.crampedPortTraversalPenalty = DEFAULT_CRAMPED_PORT_TRAVERSAL_PENALTY
     const preloadedStats = getSerializedPreloadedTraceStats(
       inputProblem.serializedHyperGraph,
@@ -1008,8 +1026,14 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
   }
 
   override _step() {
+    if (this.activeSubSolver) {
+      applyActiveRouteLayerMask(this.activeSubSolver, this.routeLayerMaskState)
+    }
     super._step()
     this.configureSolver(this.activeSubSolver)
+    if (this.activeSubSolver) {
+      applyActiveRouteLayerMask(this.activeSubSolver, this.routeLayerMaskState)
+    }
   }
 
   override getInitialVisualizationSolver() {
@@ -1218,11 +1242,13 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       partialRipEligibilityCount,
     )
     this.tinyPipelineSolver =
-      new TinyHyperGraphSectionPipelineWithTerminalNetIds(
-        tinyPipelineInput,
-        params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
-        params.flags.USE_PREPARED_PORT_POINT_ROUTING === true,
-      )
+      new TinyHyperGraphSectionPipelineWithTerminalNetIds(tinyPipelineInput, {
+        useSelectiveReripRouting:
+          params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
+        usePreparedPortPointRouting:
+          params.flags.USE_PREPARED_PORT_POINT_ROUTING === true,
+        allowedZByConnectionName: params.allowedZByConnectionName,
+      })
     this.primaryTinyPipelineSolver = this.tinyPipelineSolver
     if (
       connections.length >= TRACE_DENSITY_PORTFOLIO_MIN_ROUTE_COUNT &&
@@ -1571,8 +1597,13 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         this.alternativeTinyPipelineSolver =
           new TinyHyperGraphSectionPipelineWithTerminalNetIds(
             this.alternativeTinyPipelineInput!,
-            this.params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
-            this.params.flags.USE_PREPARED_PORT_POINT_ROUTING === true,
+            {
+              useSelectiveReripRouting:
+                this.params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
+              usePreparedPortPointRouting:
+                this.params.flags.USE_PREPARED_PORT_POINT_ROUTING === true,
+              allowedZByConnectionName: this.params.allowedZByConnectionName,
+            },
           )
         this.tinyPipelineSolver = this.alternativeTinyPipelineSolver
         this.candidatePortfolioPhase = "alternative"

@@ -100,6 +100,7 @@ export interface HgPortPointPathingSolverParams {
   effort: number
   preserveTerminalPcbPortIds?: boolean
   minViaPadDiameter?: number
+  allowedZByConnectionName?: ReadonlyMap<string, ReadonlySet<number>>
   flags: {
     FORCE_CENTER_FIRST: boolean
     RIPPING_ENABLED: boolean

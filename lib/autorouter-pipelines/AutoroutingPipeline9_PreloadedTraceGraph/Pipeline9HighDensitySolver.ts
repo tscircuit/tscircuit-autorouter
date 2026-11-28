@@ -6,6 +6,7 @@ import {
 import { getBgaEscapeHdRoutes } from "./getBgaEscapeHdRoutes"
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import { Pipeline9HighDensityBatchSolver } from "./Pipeline9HighDensityBatchSolver"
+import { narrowNodeAvailableZForBuses } from "./narrowNodeAvailableZForBuses"
 import {
   defaultB01Params,
   HighDensitySolverB01,
@@ -708,14 +709,21 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       this.activeNode,
       this.connMap,
     )
-    const regionalNode = {
-      ...normalizedNode,
-      // The capacity path fixes each ordinary node to its assigned layers.
-      // Once B01 has proved that assignment unroutable, the regional repair
-      // must be able to add a legal layer transition; board obstacles still
-      // constrain which of these layers it can actually use.
-      availableZ: Array.from({ length: this.layerCount }, (_, z) => z),
-    }
+    const regionalNode = narrowNodeAvailableZForBuses(
+      {
+        ...normalizedNode,
+        // The capacity path fixes each ordinary node to its assigned layers.
+        // Once B01 has proved that assignment unroutable, the regional repair
+        // must be able to add a legal layer transition; board obstacles still
+        // constrain which of these layers it can actually use.
+        availableZ: Array.from({ length: this.layerCount }, (_, z) => z),
+      },
+      {
+        srj: this.params.bgaEscapeBoard?.inputSrj,
+        connections: this.params.bgaEscapeBoard?.pointPairs,
+        fallbackLayerCount: this.layerCount,
+      },
+    )
     const fixedHdRoutes = this.getUpdatedFixedHdRoutes()
     const hasImmutablePreload = this.fixedHdRoutes.some(
       (route) => route.isFixed === true,

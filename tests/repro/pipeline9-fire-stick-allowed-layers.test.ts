@@ -59,6 +59,6 @@ beforeAll(async (): Promise<void> => {
   ).toMatchSvgSnapshot(import.meta.path)
 })
 
-test.failing("Pipeline 9 keeps bus wires on their allowed layers", (): void => {
+test("Pipeline 9 keeps bus wires on their allowed layers", (): void => {
   expect(forbiddenSegments).toEqual([])
 })
