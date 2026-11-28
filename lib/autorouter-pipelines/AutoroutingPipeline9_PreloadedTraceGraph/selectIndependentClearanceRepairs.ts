@@ -19,10 +19,14 @@ export const selectIndependentClearanceRepairs = ({
   srj,
   routes,
   proposedRoutes,
+  boardOutline,
+  fixedTraces,
 }: {
   srj: SimpleRouteJson
   routes: HighDensityRoute[]
   proposedRoutes: HighDensityRoute[]
+  boardOutline?: PowerTraceExpanderInput["boardOutline"]
+  fixedTraces?: PowerTraceExpanderInput["fixedTraces"]
 }): HighDensityRoute[] => {
   if (routes.length !== proposedRoutes.length) {
     throw new Error("Clearance projection changed the route count")
@@ -57,6 +61,8 @@ export const selectIndependentClearanceRepairs = ({
   const indexInput: PowerTraceExpanderInput = {
     ...srj,
     minBoardEdgeClearance: srj.minBoardEdgeClearance ?? 0,
+    boardOutline,
+    fixedTraces,
     traces,
   } as PowerTraceExpanderInput
   const resolver = new ConnectionNameResolver(indexInput)

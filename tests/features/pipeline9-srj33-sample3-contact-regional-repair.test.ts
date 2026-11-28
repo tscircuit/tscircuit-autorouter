@@ -32,7 +32,7 @@ test("Pipeline9 preserves regional repair for contacts left by a completed exact
     board: createPcbBoardElement(scenario),
   })
   expect(errors.length).toBeLessThanOrEqual(4)
-  expect(edgeErrors.length).toBeLessThanOrEqual(8)
+  expect(edgeErrors).toEqual([])
   expect(
     errors.filter((error) => error.message.includes("accidental contact"))
       .length,
