@@ -713,7 +713,9 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   protected startRegularSolver(node: NodeWithPortPoints): void {
     this.activeNode = node
     const fixedHdRoutes = this.includeBoardObstacles
-      ? [...this.getUpdatedFixedHdRoutes(), ...this.routes]
+      ? this.fixedHdRoutes.some((route) => route.isFixed === true)
+        ? [...this.getUpdatedFixedHdRoutes(), ...this.routes]
+        : []
       : undefined
     const validateRoutes = fixedHdRoutes
       ? createIntraNodeRouteValidator({
@@ -779,7 +781,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     const hasImmutablePreload = this.fixedHdRoutes.some(
       (route) => route.isFixed === true,
     )
-    if (this.includeBoardObstacles) {
+    if (hasImmutablePreload) {
     promotedFixedRouteConnectionNames = new Set([
       ...promotedFixedRouteConnectionNames,
       ...[...getMutableRoutesBlockingNodePorts({
@@ -846,7 +848,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
         promotedFixedRouteConnectionNames,
       )
     }
-    if (this.includeBoardObstacles) {
+    if (hasImmutablePreload) {
     const expanded = expandRegionalFallbackForRoutedCopper({
       node: regionalNode,
       problem: fallbackProblem,
@@ -864,7 +866,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     fallbackProblem = expanded.problem
     }
     this.activeRegionalContext = undefined
-    if (this.includeBoardObstacles) {
+    if (hasImmutablePreload) {
       const requiredNodeIds = new Set<CapacityMeshNodeId>()
       for (const route of this.routes) {
         if (normalizedNode.portPoints.every((point) =>
@@ -963,7 +965,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     )
     let regionalCopperRoutes: HighDensityRoute[] =
       this.activeFallbackFixedObstacleRoutes
-    if (this.includeBoardObstacles) {
+    if (hasImmutablePreload) {
       // Growth can leave the initial cell. Every completed route stays fixed
       // throughout the expanded physical search.
       regionalCopperRoutes = [...regionalCopperRoutes, ...completedRoutes]
