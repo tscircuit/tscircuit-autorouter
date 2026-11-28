@@ -11,6 +11,7 @@ type CleanupParams = {
   config: ConstructorParameters<typeof TraceSimplificationSolver>[0]
   effort: number
   viaRemovalPasses?: 1 | 2
+  validateRefinedWidths?: boolean
   planarViaCleanup?: Pick<
     Parameters<typeof removePipeline9PlanarViaPairs>[0],
     "srj" | "targetViaCount" | "viaHoleDiameter"
@@ -163,7 +164,10 @@ export class Pipeline9EffortCleanupSolver extends BaseSolver {
     }
     if (this.params.refineTraceWidths) {
       const refined = this.params.refineTraceWidths(this.bestRoutes)
-      if (refined !== this.bestRoutes) {
+      if (
+        refined !== this.bestRoutes &&
+        (!this.params.validateRefinedWidths || this.params.isValid(refined))
+      ) {
         this.bestRoutes = refined
         this.bestCost = this.params.getCost(refined)
       }

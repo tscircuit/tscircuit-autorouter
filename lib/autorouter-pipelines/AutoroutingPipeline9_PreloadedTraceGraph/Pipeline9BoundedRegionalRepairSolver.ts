@@ -583,9 +583,6 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
         }
       }
     }
-    const repairsBoardEdge = context.initialErrors.some(
-      (error) => typeof error.minimum_board_edge_clearance === "number",
-    )
     const solver = new NegotiateTraceClearanceSolver({
       srj: region.srj,
       routes: localRoutes,
@@ -616,8 +613,8 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
         RELAXED_DRC_OPTIONS.viaClearance,
       viaHoleDiameter: this.params.viaHoleDiameter,
       searchDirectionCount: this.budget.searchDirectionCount ?? 1,
-      preserveBlockedAnchorApproaches: repairsBoardEdge,
-      useExactBoardEdgeClearance: repairsBoardEdge,
+      preserveBlockedAnchorApproaches: this.params.useBoardEdgeClearanceSearch,
+      useExactBoardEdgeClearance: this.params.useBoardEdgeClearanceSearch,
     })
     this.state = {
       phase: "negotiate",

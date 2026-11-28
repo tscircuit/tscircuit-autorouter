@@ -53,6 +53,7 @@ import { getPipeline9PreloadedViaPairTraceGroups } from "./getPipeline9Preloaded
 import { mergePipeline9MovablePreloadedVias } from "./mergePipeline9MovablePreloadedVias"
 import { normalizePipeline9DrcErrorsForRepair } from "./normalizePipeline9DrcErrorsForRepair"
 import {
+  getPipeline9DrcErrors,
   getPipeline9RouteIndexByTraceId,
   type Pipeline9CollapsedTraceParticipant,
   type Pipeline9PreloadRepairTraceIds,
@@ -700,6 +701,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
   >[0]
   private boundedRegionalRepairStartedAt?: number
   initialBoundedRegionalRepairSolver?: Pipeline9BoundedRegionalRepairSolver
+  boardEdgeRepairSolver?: Pipeline9BoundedRegionalRepairSolver
   private initialBoundedRegionalRepairStartedAt?: number
   private initialBoundedRepairCandidate?: HighDensityRoute[]
   private readonly prioritizeConflictedRoutes: boolean
@@ -1807,6 +1809,19 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
   }
 
   override _step(): void {
+    if (this.boardEdgeRepairSolver) {
+      const solver = this.boardEdgeRepairSolver
+      solver.step()
+      this.MAX_ITERATIONS = Math.max(
+        this.MAX_ITERATIONS,
+        this.iterations + solver.MAX_ITERATIONS - solver.iterations + 2,
+      )
+      if (solver.failed) {
+        throw new Error(`Pipeline9 board-edge repair failed: ${solver.error}`)
+      }
+      if (solver.solved) this.finishBoardEdgeRepair(solver)
+      return
+    }
     if (this.traceContactRepairSolver) {
       const solver = this.traceContactRepairSolver
       solver.step()
@@ -1824,7 +1839,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       }
       this.stats = { ...this.stats, ...solver.stats }
       this.activeSubSolver = null
-      this.solved = true
+      this.startBoardEdgeRepair()
       return
     }
     const pipelineStepDef = this.pipelineDef[this.currentPipelineStepIndex]
@@ -1845,6 +1860,10 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         this.activeSubSolver = null
       } else if (child.solved) {
         pipelineStepDef.onSolved()
+        if (this.boardEdgeRepairSolver) {
+          this.activeSubSolver = this.boardEdgeRepairSolver
+          return
+        }
         if (this.traceContactRepairSolver) {
           this.activeSubSolver = this.traceContactRepairSolver
           return
@@ -1871,6 +1890,8 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
   }
 
   getCurrentPhase(): string {
+    if (this.boardEdgeRepairSolver && !this.solved)
+      return "boardEdgeRepairSolver"
     return this.pipelineDef[this.currentPipelineStepIndex]?.solverName ?? "none"
   }
 
@@ -2306,7 +2327,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       this.combinedOutput,
     )
     if (contacts.length === 0) {
-      this.solved = true
+      this.startBoardEdgeRepair()
       return
     }
     this.traceContactRepairSolver = new TraceContactRepairSolver({
@@ -2318,6 +2339,94 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     })
     this.activeSubSolver = this.traceContactRepairSolver
     this.MAX_ITERATIONS += this.traceContactRepairSolver.MAX_ITERATIONS
+  }
+
+  private startBoardEdgeRepair(): void {
+    const { originalSrj, newConnections, defaultViaHoleDiameter, connMap } =
+      this.params
+    const routes = this.combinedOutput
+    const drcEvaluator = this.cachedReferenceDrcEvaluator
+    if (
+      !routes ||
+      !drcEvaluator ||
+      !originalSrj.outline?.length ||
+      (originalSrj.minBoardEdgeClearance ?? 0) <= 0 ||
+      originalSrj.traces?.length
+    ) {
+      this.solved = true
+      return
+    }
+    // Reopen a region only when its surviving route needs both an outline
+    // correction and a copper clearance repair.
+    const errors = getPipeline9DrcErrors(drcEvaluator, routes)
+    const edgeTraceIds = new Set(
+      errors.flatMap((error) =>
+        typeof error.minimum_board_edge_clearance === "number" &&
+        typeof error.pcb_trace_id === "string"
+          ? [error.pcb_trace_id]
+          : [],
+      ),
+    )
+    const needsCoordinatedRepair = errors.some(
+      (error) =>
+        error.type === "pcb_trace_error" &&
+        error.minimum_board_edge_clearance === undefined &&
+        typeof error.pcb_trace_id === "string" &&
+        edgeTraceIds.has(error.pcb_trace_id),
+    )
+    if (!needsCoordinatedRepair) {
+      this.solved = true
+      return
+    }
+    // Joint clearance projection retains more room to exchange lanes than
+    // the later independent repairs. Keep it as a separate candidate.
+    const searchRoutes =
+      this.initialBoundedRegionalRepairSolver?.params.routes ?? routes
+    const solver = new Pipeline9BoundedRegionalRepairSolver({
+      originalSrj: {
+        ...originalSrj,
+        connections: [...originalSrj.connections, ...newConnections],
+      },
+      routes: searchRoutes,
+      connMap,
+      viaHoleDiameter: defaultViaHoleDiameter,
+      syntheticConnectionNames: this.syntheticConnectionNames,
+      prioritizeConflictedRoutes: this.prioritizeConflictedRoutes,
+      drcEvaluator,
+      budget: getPipeline9BoundedRepairBudget(
+        routes.length,
+        errors.length,
+        this.params.effort,
+      ),
+      useBoardEdgeClearanceSearch: true,
+    })
+    this.boardEdgeRepairSolver = solver
+    this.activeSubSolver = solver
+    this.MAX_ITERATIONS += solver.MAX_ITERATIONS
+  }
+
+  private finishBoardEdgeRepair(
+    solver: Pipeline9BoundedRegionalRepairSolver,
+  ): void {
+    const { routes, publishedDrcIssueCount, pathSearchNodeCount } =
+      solver.getResult()
+    const accepted =
+      publishedDrcIssueCount === 0 &&
+      this.traceContactGuard.getNewContactPairs(routes).length === 0
+    this.stats.boardEdgeRepairAccepted = accepted
+    this.stats.boardEdgeRepairPathSearchNodeCount = pathSearchNodeCount
+    if (accepted) {
+      const previousViaCount = this.getCombinedOutput().reduce(
+        (count, route) => count + route.vias.length,
+        0,
+      )
+      this.stats.boardEdgeRepairAddedViaCount =
+        routes.reduce((count, route) => count + route.vias.length, 0) -
+        previousViaCount
+      this.combinedOutput = routes
+    }
+    this.activeSubSolver = null
+    this.solved = true
   }
 
   private getCombinedOutput(): HighDensityRoute[] {

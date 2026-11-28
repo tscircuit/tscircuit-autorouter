@@ -136,14 +136,18 @@ export const pipeline9PostProcessingSteps = [
             pipeline.originalSrj.minViaHoleEdgeToViaHoleEdgeClearance ?? 0.1,
         },
       })
+      const jointRepair = pipeline.pipeline9JointDrcRepairSolver!
       const repairAddedVias =
-        pipeline.pipeline9JointDrcRepairSolver!.stats
-          .initialBoundedRegionalRepairAddedViaCount > 0
+        jointRepair.stats.initialBoundedRegionalRepairAddedViaCount > 0
+      const recoverBoardRepairVias =
+        jointRepair.stats.boardEdgeRepairAddedViaCount > 0
       return [
         {
           effort: pipeline.effort,
-          viaRemovalPasses: repairAddedVias ? 2 : 1,
-          planarViaCleanup: repairAddedVias
+          viaRemovalPasses: repairAddedVias || recoverBoardRepairVias ? 2 : 1,
+          validateRefinedWidths:
+            jointRepair.stats.boardEdgeRepairAccepted === true,
+          planarViaCleanup: recoverBoardRepairVias
             ? {
                 srj: {
                   ...inputSrj,
@@ -263,14 +267,23 @@ export const pipeline9PostProcessingSteps = [
       const onlyConnectionNames =
         configuredOptions.onlyConnectionNames ??
         getPowerTraceExpansionConnectionNames(pipeline.originalSrj)
+      const input = preparePipeline7PowerTraceExpansionInput({
+        originalSrj: pipeline.originalSrj,
+        newlyRoutedTraces: pipeline.getNewTracesBeforePowerExpansion(),
+        currentPreloadedTraces: pipeline.getUpdatedPreloadedTraces(),
+        expandedConnectionNames: onlyConnectionNames,
+        resolveConnectedTraceAliases: true,
+      })
       return [
-        preparePipeline7PowerTraceExpansionInput({
-          originalSrj: pipeline.originalSrj,
-          newlyRoutedTraces: pipeline.getNewTracesBeforePowerExpansion(),
-          currentPreloadedTraces: pipeline.getUpdatedPreloadedTraces(),
-          expandedConnectionNames: onlyConnectionNames,
-          resolveConnectedTraceAliases: true,
-        }),
+        {
+          ...input,
+          // The expander distinguishes the physical outline from SRJ bounds.
+          boardOutline:
+            pipeline.pipeline9JointDrcRepairSolver!.stats
+              .boardEdgeRepairAccepted === true
+              ? input.outline
+              : undefined,
+        },
         {
           allowNewVias: false,
           widenInPlaceAtSearchLimit: true,
