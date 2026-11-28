@@ -1,5 +1,27 @@
+import {
+  MultiSimplifiedPathSolver,
+  UselessViaRemovalSolver,
+} from "@tscircuit/trace-simplification-solver"
+import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject, Line } from "graphics-debug"
-import { combineVisualizations } from "lib/utils/combineVisualizations"
+import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
+import { CacheProvider } from "lib/cache/types"
+import { BaseSolver } from "lib/solvers/BaseSolver"
+import { CapacityEdgeToPortSegmentSolver } from "lib/solvers/CapacityMeshSolver/CapacityEdgeToPortSegmentSolver"
+import { CapacityMeshEdgeSolver } from "lib/solvers/CapacityMeshSolver/CapacityMeshEdgeSolver"
+import { CapacityMeshEdgeSolver2_NodeTreeOptimization } from "lib/solvers/CapacityMeshSolver/CapacityMeshEdgeSolver2_NodeTreeOptimization"
+import { CapacityMeshNodeSolver } from "lib/solvers/CapacityMeshSolver/CapacityMeshNodeSolver1"
+import { CapacitySegmentToPointSolver } from "lib/solvers/CapacityMeshSolver/CapacitySegmentToPointSolver"
+import { CapacityNodeTargetMerger } from "lib/solvers/CapacityNodeTargetMerger/CapacityNodeTargetMerger"
+import { CapacityPathingMultiSectionSolver } from "lib/solvers/CapacityPathingSectionSolver/CapacityPathingMultiSectionSolver" // Added import
+import { CapacitySegmentPointOptimizer } from "lib/solvers/CapacitySegmentPointOptimizer/CapacitySegmentPointOptimizer"
+import { DeadEndSolver } from "lib/solvers/DeadEndSolver/DeadEndSolver"
+import { HighDensitySolver } from "lib/solvers/HighDensitySolver/HighDensitySolver"
+import { NetToPointPairsSolver } from "lib/solvers/NetToPointPairsSolver/NetToPointPairsSolver"
+import { MultipleHighDensityRouteStitchSolver } from "lib/solvers/RouteStitchingSolver/MultipleHighDensityRouteStitchSolver"
+import { StrawSolver } from "lib/solvers/StrawSolver/StrawSolver"
+import { UnravelMultiSectionSolver } from "lib/solvers/UnravelSolver/UnravelMultiSectionSolver"
+import { getColorMap } from "lib/solvers/colors"
 import type {
   CapacityMeshEdge,
   CapacityMeshNode,
@@ -7,48 +29,28 @@ import type {
   SimplifiedPcbTrace,
   SimplifiedPcbTraces,
 } from "lib/types"
-import { BaseSolver } from "lib/solvers/BaseSolver"
-import { CapacityMeshEdgeSolver } from "lib/solvers/CapacityMeshSolver/CapacityMeshEdgeSolver"
-import { CapacityMeshNodeSolver } from "lib/solvers/CapacityMeshSolver/CapacityMeshNodeSolver1"
-import { CapacityMeshNodeSolver_OnlyTraverseLayersInAssignableObstacles } from "./CapacityMeshNodeSolver_OnlyTraverseLayersInAssignableObstacles"
-import { CapacityEdgeToPortSegmentSolver } from "lib/solvers/CapacityMeshSolver/CapacityEdgeToPortSegmentSolver"
-import { getColorMap } from "lib/solvers/colors"
-import { CapacitySegmentToPointSolver } from "lib/solvers/CapacityMeshSolver/CapacitySegmentToPointSolver"
-import { HighDensitySolver } from "lib/solvers/HighDensitySolver/HighDensitySolver"
 import type { NodePortSegment } from "lib/types/capacity-edges-to-port-segments-types"
-import { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
-import { getInitiallyConnectedMapFromSimpleRouteJson } from "lib/utils/get-initially-connected-map-from-simple-route-json"
-import { CapacityNodeTargetMerger } from "lib/solvers/CapacityNodeTargetMerger/CapacityNodeTargetMerger"
-import { CapacitySegmentPointOptimizer } from "lib/solvers/CapacitySegmentPointOptimizer/CapacitySegmentPointOptimizer"
-import { calculateOptimalCapacityDepth } from "lib/utils/getTunedTotalCapacity1"
-import { NetToPointPairsSolver } from "lib/solvers/NetToPointPairsSolver/NetToPointPairsSolver"
+import { HighDensityRoute } from "lib/types/high-density-types"
+import { combineVisualizations } from "lib/utils/combineVisualizations"
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
-import { MultipleHighDensityRouteStitchSolver } from "lib/solvers/RouteStitchingSolver/MultipleHighDensityRouteStitchSolver"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
 import { createObstacleLabelFormatter } from "lib/utils/formatObstacleLabel"
+import { getInitiallyConnectedMapFromSimpleRouteJson } from "lib/utils/get-initially-connected-map-from-simple-route-json"
+import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 import {
   getGraphicsLayerForConnectionPoint,
   getGraphicsLayerForObstacle,
 } from "lib/utils/getGraphicsObjectLayer"
-import { UnravelMultiSectionSolver } from "lib/solvers/UnravelSolver/UnravelMultiSectionSolver"
-import { CapacityPathingMultiSectionSolver } from "lib/solvers/CapacityPathingSectionSolver/CapacityPathingMultiSectionSolver" // Added import
-import { StrawSolver } from "lib/solvers/StrawSolver/StrawSolver"
-import { SingleLayerNodeMergerSolver_OnlyMergeTargets } from "./SingleLayerNodeMergerSolver_OnlyMergeTargets"
-import { AssignableViaNodeMergerSolver } from "./AssignableViaNodeMergerSolver"
-import {
-  MultiSimplifiedPathSolver,
-  UselessViaRemovalSolver,
-} from "@tscircuit/trace-simplification-solver"
-import { HighDensityRoute } from "lib/types/high-density-types"
-import { CapacityMeshEdgeSolver2_NodeTreeOptimization } from "lib/solvers/CapacityMeshSolver/CapacityMeshEdgeSolver2_NodeTreeOptimization"
-import { DeadEndSolver } from "lib/solvers/DeadEndSolver/DeadEndSolver"
-import { CacheProvider } from "lib/cache/types"
-import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
-import { HyperAssignableViaCapacityPathingSolver } from "./HyperAssignableViaCapacityPathingSolver"
+import { getPresuppliedTraceVisualization } from "lib/utils/getPresuppliedTraceVisualization"
+import { calculateOptimalCapacityDepth } from "lib/utils/getTunedTotalCapacity1"
+import { preprocessAssignableSimpleRouteJson } from "lib/utils/preprocessAssignableSimpleRouteJson"
 import { AssignableViaCapacityPathingSolver_DirectiveSubOptimal } from "./AssignableViaCapacityPathing/AssignableViaCapacityPathingSolver_DirectiveSubOptimal"
+import { AssignableViaNodeMergerSolver } from "./AssignableViaNodeMergerSolver"
+import { CapacityMeshNodeSolver_OnlyTraverseLayersInAssignableObstacles } from "./CapacityMeshNodeSolver_OnlyTraverseLayersInAssignableObstacles"
+import { HyperAssignableViaCapacityPathingSolver } from "./HyperAssignableViaCapacityPathingSolver"
 import { OffboardCapacityNodeSolver } from "./OffboardCapacityNodeSolver"
 import { OffboardPathFragmentSolver } from "./OffboardPathFragmentSolver"
+import { SingleLayerNodeMergerSolver_OnlyMergeTargets } from "./SingleLayerNodeMergerSolver_OnlyMergeTargets"
 
 interface CapacityMeshSolverOptions {
   capacityDepth?: number
@@ -123,6 +125,8 @@ export class AssignableAutoroutingPipeline1Solver extends BaseSolver {
 
   activeSubSolver?: BaseSolver | null = null
   connMap: ConnectivityMap
+  originalSrj: SimpleRouteJson
+  srj: SimpleRouteJson
   srjWithPointPairs?: SimpleRouteJson
   capacityNodes: CapacityMeshNode[] | null = null
   capacityEdges: CapacityMeshEdge[] | null = null
@@ -337,17 +341,6 @@ export class AssignableAutoroutingPipeline1Solver extends BaseSolver {
         ]
       },
     ),
-    // definePipelineStep(
-    //   "segmentToPointOptimizer",
-    //   CapacitySegmentPointOptimizer,
-    //   (cms) => [
-    //     {
-    //       assignedSegments: cms.segmentToPointSolver?.solvedSegments || [],
-    //       colorMap: cms.colorMap,
-    //       nodes: cms.nodeTargetMerger?.newNodes || [],
-    //     },
-    //   ],
-    // ),
     definePipelineStep(
       "unravelMultiSectionSolver",
       UnravelMultiSectionSolver,
@@ -441,11 +434,12 @@ export class AssignableAutoroutingPipeline1Solver extends BaseSolver {
   ]
 
   constructor(
-    public readonly srj: SimpleRouteJson,
+    srj: SimpleRouteJson,
     public readonly opts: CapacityMeshSolverOptions = {},
   ) {
     super()
-    this.srj = srj
+    this.originalSrj = srj
+    this.srj = preprocessAssignableSimpleRouteJson(srj)
     this.opts = { ...opts }
     this.MAX_ITERATIONS = 100e6
     const mutableOpts = this.opts
@@ -453,8 +447,8 @@ export class AssignableAutoroutingPipeline1Solver extends BaseSolver {
     // If capacityDepth is not provided, calculate it automatically
     if (mutableOpts.capacityDepth === undefined) {
       // Calculate max width/height from bounds for initial node size
-      const boundsWidth = srj.bounds.maxX - srj.bounds.minX
-      const boundsHeight = srj.bounds.maxY - srj.bounds.minY
+      const boundsWidth = this.srj.bounds.maxX - this.srj.bounds.minX
+      const boundsHeight = this.srj.bounds.maxY - this.srj.bounds.minY
       const maxWidthHeight = Math.max(boundsWidth, boundsHeight)
 
       // Use the calculateOptimalCapacityDepth function to determine the right depth
@@ -465,8 +459,8 @@ export class AssignableAutoroutingPipeline1Solver extends BaseSolver {
       )
     }
 
-    this.connMap = getConnectivityMapFromSimpleRouteJson(srj)
-    this.colorMap = getColorMap(srj, this.connMap)
+    this.connMap = getConnectivityMapFromSimpleRouteJson(this.srj)
+    this.colorMap = getColorMap(this.srj, this.connMap)
     this.cacheProvider =
       mutableOpts.cacheProvider === undefined
         ? getGlobalInMemoryCache()
@@ -479,7 +473,7 @@ export class AssignableAutoroutingPipeline1Solver extends BaseSolver {
   }
 
   getConstructorParams() {
-    return [this.srj, this.opts] as const
+    return [this.originalSrj, this.opts] as const
   }
 
   currentPipelineStepIndex = 0
@@ -644,6 +638,9 @@ export class AssignableAutoroutingPipeline1Solver extends BaseSolver {
       this.solved
         ? combineVisualizations(
             { lines: problemLines },
+            ...(this.originalSrj.traces?.length
+              ? [getPresuppliedTraceVisualization({ srj: this.originalSrj })]
+              : []),
             convertSrjToGraphicsObject(this.getOutputSimpleRouteJson()),
           )
         : null,
@@ -753,7 +750,7 @@ export class AssignableAutoroutingPipeline1Solver extends BaseSolver {
 
   getOutputSimpleRouteJson(): SimpleRouteJson {
     return {
-      ...this.srj,
+      ...this.originalSrj,
       traces: this.getOutputSimplifiedPcbTraces(),
     }
   }
