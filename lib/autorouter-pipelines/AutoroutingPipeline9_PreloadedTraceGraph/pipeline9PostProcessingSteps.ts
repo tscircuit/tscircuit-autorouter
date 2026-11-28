@@ -277,7 +277,7 @@ export const pipeline9PostProcessingSteps = [
         resolveConnectedTraceAliases: true,
       })
       const protectBoardClearance =
-        pipeline.pipeline9JointDrcRepairSolver!.stats
+        pipeline.pipeline9JointDrcRepairSolver?.stats
           .boardEdgeRepairAccepted === true
       return [
         {
